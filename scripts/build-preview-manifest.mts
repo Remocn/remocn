@@ -1,7 +1,7 @@
 import { writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { getDefaults } from "@/lib/customizer-config";
+import { getDefaults, toProps } from "@/lib/customizer-config";
 import registry, { loadComponentConfig } from "@/registry/__index__";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -106,7 +106,7 @@ async function main() {
       compositionHeight: config.compositionHeight,
     };
     if (config.previewBackdrop) entry.previewBackdrop = config.previewBackdrop;
-    entry.defaults = getDefaults(config.controls);
+    entry.defaults = toProps(config.controls, getDefaults(config.controls));
     const props = cardProps(config);
     const card: Record<string, unknown> = {};
     if (Object.keys(props).length > 0) card.props = props;

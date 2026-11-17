@@ -8,15 +8,23 @@ import {
 
 const AGENT_BUTTONS = new Set(["Reset", "Undo", "Redo"]);
 
+/** A colour control's way back to its theme colour (`Accent: auto`). */
+const AUTO_COLOR = /: auto$/;
+
 /**
  * The panel's buttons that write to the clipboard or leave the page are a
  * person's to press; an agent may change values, open groups, step through
- * the history and reset.
+ * the history, reset, and set a colour back to auto.
  */
 export function allowStep(
   step: Pick<AgentAction, "component" | "label">,
 ): boolean {
-  return step.component !== "button" || AGENT_BUTTONS.has(step.label ?? "");
+  const label = step.label ?? "";
+  return (
+    step.component !== "button" ||
+    AGENT_BUTTONS.has(label) ||
+    AUTO_COLOR.test(label)
+  );
 }
 
 let agent: ReturnType<typeof createAgent> | undefined;

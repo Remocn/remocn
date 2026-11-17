@@ -74,7 +74,7 @@ export const phyllotaxisConfig: ComponentConfig = {
       default: "#111111",
       description: "Background",
     },
-    color: { type: "color", default: "#FFFFFF", description: "Seeds" },
+    color: { type: "color", default: "#FFFFFF", description: "Seed color" },
     accent: { type: "color", default: "#E5322D", description: "Arm" },
   },
   durationInFrames: 165,

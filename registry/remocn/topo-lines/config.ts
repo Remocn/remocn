@@ -73,7 +73,7 @@ export const topoLinesConfig: ComponentConfig = {
       default: "#111111",
       description: "Background",
     },
-    color: { type: "color", default: "#FFFFFF", description: "Contours" },
+    color: { type: "color", default: "#FFFFFF", description: "Contour color" },
     accent: { type: "color", default: "#E5322D", description: "Accent" },
   },
   durationInFrames: 300,

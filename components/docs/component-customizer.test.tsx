@@ -32,6 +32,25 @@ const controls: ControlConfig = {
     label: "Theme",
   },
   loop: { type: "boolean", default: false, label: "Loop" },
+  ink: { type: "color", default: "", label: "Ink" },
+  lines: {
+    type: "list",
+    default: ["First line", "Second line"],
+    label: "Lines",
+  },
+  pair: {
+    type: "list",
+    default: ["Before", "After"],
+    label: "Pair",
+    min: 2,
+    max: 2,
+  },
+  fontFamily: {
+    type: "font",
+    default: "Golos Text",
+    options: ["Golos Text", "Inter", "Fraunces"],
+    label: "Font",
+  },
 };
 
 const defaults = () =>
@@ -128,6 +147,59 @@ describe("customizer controls", () => {
   });
 });
 
+describe("Launch Pack controls", () => {
+  test("an auto colour reads Auto until a colour is picked, and goes back", async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    const trigger = screen.getByRole("button", { name: "Ink" });
+    expect(within(trigger).getByText("Auto")).toBeTruthy();
+    await user.click(trigger);
+    // Nothing to go back to yet.
+    expect(screen.queryByRole("button", { name: "Ink: auto" })).toBeNull();
+    const hex = screen.getByRole("textbox", { name: "Ink hex" });
+    await user.clear(hex);
+    await user.type(hex, "#ff0000{Enter}");
+    expect(latest.ink).toBe("#ff0000");
+    await user.click(await screen.findByRole("button", { name: "Ink: auto" }));
+    expect(latest.ink).toBe("");
+  });
+
+  test("a list takes one item per line and keeps the line being typed", async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    const field = screen.getByLabelText("Lines") as HTMLTextAreaElement;
+    expect(field.value).toBe("First line\nSecond line");
+    await user.clear(field);
+    await user.type(field, "One{Enter}");
+    // The blank line being started stays in the field but not in the prop.
+    expect(field.value).toBe("One\n");
+    expect(latest.lines).toEqual(["One"]);
+    await user.type(field, "{Enter}  Two  ");
+    expect(latest.lines).toEqual(["One", "Two"]);
+  });
+
+  test("a fixed-length list keeps its length", async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    const field = screen.getByLabelText("Pair");
+    expect(screen.getByText("2 lines")).toBeTruthy();
+    await user.clear(field);
+    await user.type(field, "Old{Enter}New{Enter}Extra");
+    expect(latest.pair).toEqual(["Old", "New"]);
+    await user.clear(field);
+    await user.type(field, "Only");
+    expect(latest.pair).toEqual(["Only", "After"]);
+  });
+
+  test("a font is picked from the component's face and the preview fonts", async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    await user.click(screen.getByRole("combobox", { name: "Font" }));
+    await user.click(screen.getByRole("option", { name: "Fraunces" }));
+    expect(latest.fontFamily).toBe("Fraunces");
+  });
+});
+
 describe("agent", () => {
   const agent = createAgent();
 
@@ -156,6 +228,8 @@ describe("agent", () => {
 
     const result = await agent.act({
       steps: [
+        { ref: "Lines", action: "setValue", args: ["Alpha\nBeta"] },
+        { ref: "Font", action: "setValue", args: ["Inter"] },
         { ref: "Title", action: "setValue", args: ["Atlas"] },
         { ref: "Speed", action: "setValue", args: [1.5] },
         { ref: "Frames", action: "setValue", args: [240] },
@@ -166,6 +240,8 @@ describe("agent", () => {
     });
     expect(result.ok, result.error?.message).toBe(true);
     expect(latest).toMatchObject({
+      lines: ["Alpha", "Beta"],
+      fontFamily: "Inter",
       title: "Atlas",
       speed: 1.5,
       frames: 240,

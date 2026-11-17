@@ -141,6 +141,9 @@ describe("agent", () => {
     expect(allowStep({ component: "button", label: "Reset" })).toBe(true);
     expect(allowStep({ component: "button", label: "Copy code" })).toBe(false);
     expect(allowStep({ component: "button", label: "Share link" })).toBe(false);
+    expect(allowStep({ component: "button", label: "Accent: auto" })).toBe(
+      true,
+    );
     expect(allowStep({ component: "collapsible", label: "Timing" })).toBe(true);
     expect(allowStep({ component: "slider", label: "Speed" })).toBe(true);
   });
