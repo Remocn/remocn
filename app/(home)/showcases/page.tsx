@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { JsonLd } from "@/components/json-ld";
+import { collectionPageJsonLd } from "@/lib/structured-data";
 import { ShowcaseReel } from "./components/reel/showcase-reel";
 import {
   SHOWCASES_DESCRIPTION as DESCRIPTION,
@@ -37,6 +39,18 @@ export default async function ShowcasesPage() {
 
   return (
     <>
+      <JsonLd
+        data={collectionPageJsonLd({
+          url: "/showcases",
+          title: "Showcases",
+          description: DESCRIPTION,
+          crumbs: [{ label: "Showcases" }],
+          items: reel.clips.map((clip) => ({
+            url: `/showcases/${clip.slug}`,
+            name: clip.title,
+          })),
+        })}
+      />
       <ShowcasesHeader clips={reel.clips.length} total={reel.total} />
       {reel.clips.length > 0 ? (
         <ShowcaseReel reel={reel} />

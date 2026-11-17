@@ -32,12 +32,14 @@ const paperMono = localFont({
 
 const SITE_URL = "https://remocn.dev";
 const SITE_TITLE = "Remocn - Make a product demo video with your AI agent";
+const SEARCH_TITLE =
+  "Remocn - shadcn/ui for Remotion: AI-made product demo videos";
 
 export const metadata: Metadata = {
   // Resolves the relative `/hero.png` below into an absolute URL for crawlers.
   metadataBase: new URL(SITE_URL),
   title: {
-    default: SITE_TITLE,
+    default: SEARCH_TITLE,
     template: "%s · Remocn",
   },
   description: SITE_DESCRIPTION,

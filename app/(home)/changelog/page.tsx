@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import type { ComponentProps } from "react";
 import { changelog } from "@/.source/server";
+import { JsonLd } from "@/components/json-ld";
 import { SITE_PAGES, sitePageOgImage } from "@/config/site-pages";
 import {
   changelogDateFormatter,
   changelogSlug,
   sortByDateDesc,
 } from "@/lib/changelog";
+import { collectionPageJsonLd } from "@/lib/structured-data";
 import { getMDXComponents } from "@/mdx-components";
 import { ChangelogEntry, EntryActionLink } from "./components/changelog-entry";
 import { ChangelogHeader } from "./components/changelog-header";
@@ -47,6 +49,18 @@ export default function ChangelogPage() {
 
   return (
     <>
+      <JsonLd
+        data={collectionPageJsonLd({
+          url: "/changelog",
+          title: "Changelog",
+          description: DESCRIPTION,
+          crumbs: [{ label: "Changelog" }],
+          items: entries.map((entry) => ({
+            url: `/changelog#${changelogSlug(entry)}`,
+            name: entry.title,
+          })),
+        })}
+      />
       <ChangelogHeader
         active="text"
         eyebrow={`Changelog, ${entries.length} releases`}

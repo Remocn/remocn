@@ -1,0 +1,104 @@
+---
+title: "Make Remotion videos with ChatGPT and Codex"
+navTitle: Remotion with ChatGPT
+description: "How to make a Remotion video with ChatGPT: connect Remocn's free MCP server to plan it and preview components, then build and render it with Codex."
+---
+
+_Last updated: November 17, 2026_
+
+**Short answer:** ChatGPT can plan a Remotion video, but it can't build one on its own: a chat has
+no terminal, so it can't install components or render an MP4. Add Remocn's free MCP server
+(`https://remocn.dev/mcp`) to ChatGPT to search components, plan the video beat by beat and preview
+components in the chat. Then hand the plan to [Codex](#3-build-it-with-codex), which installs the
+components into your Remotion project, writes the video and renders it.
+
+Looking for an animated ChatGPT composer to put _inside_ your video? That's the
+[ChatGPT component](/docs/ai/chat-gpt).
+
+## What each tool does
+
+| Step | Tool | What happens |
+|---|---|---|
+| Plan | ChatGPT + Remocn MCP | Finds components that fit the brief, plans beats and transitions, previews components |
+| Tune | ChatGPT's built-in browser + [WebMCP](/docs/getting-started/webmcp) | Sets a component's props on its docs page from a plain-language request |
+| Build | Codex + [Remocn plugin](/docs/getting-started/plugin) | Installs components with the shadcn CLI and writes the video into your project |
+| Render | Remotion CLI | `npx remotion render` turns the composition into an MP4 on your machine |
+
+## 1. Connect Remocn to ChatGPT
+
+The Remocn MCP server is hosted, free and read-only, and needs no key or account. In ChatGPT on the
+web, following [OpenAI's guide to custom MCP servers](https://developers.openai.com/api/docs/guides/custom-mcp-server):
+
+1. Open **Plugins**, select **+** and choose **Add custom MCP server**.
+2. Name it `Remocn` and enter `https://remocn.dev/mcp` as the **Server URL**.
+3. Set authentication to **No authentication**.
+4. Confirm the warning and select **Create as a plugin**, then install it.
+
+Custom MCP servers depend on your ChatGPT plan and workspace settings, and the menu names have
+moved during 2026. If you don't see these options, check OpenAI's guide for your account.
+
+## 2. Plan the video in the chat
+
+Ask for the video you want, in your own words:
+
+```text
+Plan a 30-second launch video for my CLI tool, Shipit. Three features: one-command deploys,
+preview URLs, rollbacks. Dark, technical look. Use Remocn components.
+```
+
+ChatGPT calls the server's tools:
+
+- `plan_video` turns the brief into a storyboard: beats with frame ranges, component options for
+  each beat, transitions and one install command.
+- `search_components` finds alternatives for any beat ("something calmer for the logo").
+- `get_component` reads a component's props and usage before it suggests settings.
+- `preview_component` returns a live preview link, with your props applied.
+
+Keep the conversation going until the storyboard reads right, then copy it.
+
+## 3. Build it with Codex
+
+Building needs an agent that can run commands in your project. Codex is OpenAI's: install the
+Remocn plugin there,
+
+```bash
+codex plugin marketplace add Remocn/remocn
+codex plugin add remocn@remocn
+```
+
+then paste the storyboard from ChatGPT and ask Codex to build it. Codex installs the components
+with the shadcn CLI, writes the composition and checks stills. If you'd rather not install the
+plugin, add the MCP server alone with `codex mcp add remocn --url https://remocn.dev/mcp`.
+
+The [plugin page](/docs/getting-started/plugin) covers the full workflow, and it works the same in
+Claude Code.
+
+## 4. Tune a component in ChatGPT's browser
+
+The browser built into the ChatGPT desktop app can drive a component's Customize panel on its docs
+page. Turn on **Settings → Browser → Permissions → Enable site tools**, open a component page and ask
+for changes in plain words ("slower, and in our brand purple"). Then use **Open in** to take the
+code to your project. Setup and limits are on the [WebMCP page](/docs/getting-started/webmcp).
+
+## 5. Render the MP4
+
+```bash
+npx remotion render <composition-id>
+```
+
+[Exporting your video](/docs/guides/exporting-your-video) covers sizes, formats and settings.
+
+## FAQ
+
+<Faq>
+
+**Can ChatGPT make a Remotion video by itself?**
+Not end to end. ChatGPT can write Remotion code for you to paste into a project, and with the Remocn MCP server it can plan a video from real components and preview them. Installing components, running the project and rendering the MP4 need a terminal, which is what Codex or Claude Code adds.
+
+**Is the Remocn MCP server free to use in ChatGPT?**
+Yes. It's hosted at `https://remocn.dev/mcp`, needs no API key or account, and the components it returns are MIT licensed.
+
+**Does it work in Claude too?**
+Yes. Add the same URL as a custom connector in claude.ai or Claude Desktop, and build in Claude Code with the [plugin](/docs/getting-started/plugin). The [MCP Server page](/docs/getting-started/mcp-server) lists the steps for every client.
+
+</Faq>

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { JsonLd } from "@/components/json-ld";
 import { SITE_PAGES, sitePageOgImage } from "@/config/site-pages";
+import { collectionPageJsonLd } from "@/lib/structured-data";
 import { BlogHeader } from "./components/blog-header";
 import { FeaturedPost } from "./components/featured-post";
 import { PostIndex } from "./components/post-index";
@@ -39,6 +41,18 @@ export default async function BlogPage() {
 
   return (
     <>
+      <JsonLd
+        data={collectionPageJsonLd({
+          url: "/blog",
+          title: "Blog",
+          description: DESCRIPTION,
+          crumbs: [{ label: "Blog" }],
+          items: posts.map((post) => ({
+            url: `/blog/${post.slug}`,
+            name: post.title,
+          })),
+        })}
+      />
       <BlogHeader count={posts.length} />
       {featured && <FeaturedPost post={featured} />}
       <PostIndex
