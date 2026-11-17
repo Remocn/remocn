@@ -46,6 +46,15 @@ export interface CardPushLineProps {
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /** Typeface for the line and the card copy. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Frames between words as the line rises in. */
+  stagger?: number;
+  /** Size of the line and card, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
 }
 
 const THEMES = {
@@ -128,7 +137,7 @@ function buildMeasure(_version: number): Measure {
   };
 }
 
-function useMeasure() {
+function useMeasure(fontFamily: string) {
   const [version, setVersion] = useState(0);
   const [handle] = useState(() => delayRender("card-push-line: measuring"));
   const released = useRef(false);
@@ -141,8 +150,8 @@ function useMeasure() {
     Promise.all([
       sans.waitUntilDone(),
       mono.waitUntilDone(),
-      document.fonts.load(`300 100px "${sans.fontFamily}"`),
-      document.fonts.load(`400 100px "${sans.fontFamily}"`),
+      document.fonts.load(`300 100px "${fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
       document.fonts.load(`400 100px "${mono.fontFamily}"`),
     ])
       .catch(() => undefined)
@@ -157,7 +166,7 @@ function useMeasure() {
       live = false;
       document.fonts.removeEventListener("loadingdone", bump);
     };
-  }, [handle]);
+  }, [handle, fontFamily]);
   return useMemo(() => buildMeasure(version), [version]);
 }
 
@@ -204,6 +213,22 @@ function wrap(words: string[], room: number, w: (s: string) => number) {
   return lines;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function CardPushLine({
   line = "You can just write it",
   command = "/launch-video",
@@ -219,8 +244,13 @@ export function CardPushLine({
   theme = "dark",
   ground,
   groundParams,
+  fontFamily = sans.fontFamily,
+  stagger = BEAT.wordStep,
+  scale = 1,
+  delay = 0,
+  speed = 1,
 }: CardPushLineProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
@@ -228,15 +258,15 @@ export function CardPushLine({
   const preset = ground ?? c.ground;
   const gParams = groundParams ?? (ground ? undefined : c.groundParams);
   const bg = background ?? gshParams(preset, gParams).background;
-  const m = useMeasure();
+  const m = useMeasure(fontFamily);
   const portrait = H > W * 1.1;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const f = frame;
 
   let content: ReactNode = <div />;
   if (m) {
-    const lineFont = `300 @ "${sans.fontFamily}"`;
-    const uiFont = `400 @ "${sans.fontFamily}"`;
+    const lineFont = `300 @ "${fontFamily}"`;
+    const uiFont = `400 @ "${fontFamily}"`;
     const monoFont = `400 @ "${mono.fontFamily}"`;
     const room = W * (portrait ? 0.84 : 0.7);
     const words = line.split(" ").filter(Boolean);
@@ -350,7 +380,7 @@ export function CardPushLine({
                   top: y - L / 2,
                   display: "flex",
                   whiteSpace: "pre",
-                  fontFamily: sans.fontFamily,
+                  fontFamily,
                   fontWeight: 300,
                   fontSize: L,
                   lineHeight: 1,
@@ -359,7 +389,7 @@ export function CardPushLine({
                 }}
               >
                 {s.split(" ").map((w, wi) => {
-                  const at = (before + wi) * BEAT.wordStep - 4;
+                  const at = (before + wi) * stagger - 4;
                   const e = interpolate(f, [at, at + BEAT.enter], [0, 1], {
                     ...CLAMP,
                     easing: ENTER,
@@ -446,7 +476,7 @@ export function CardPushLine({
             position: "absolute",
             left: pad + pl.x,
             top: top0 + li * PLH + (PLH - T) / 2,
-            fontFamily: sans.fontFamily,
+            fontFamily,
             fontWeight: 400,
             fontSize: T,
             lineHeight: 1,
@@ -576,7 +606,7 @@ export function CardPushLine({
                 display: "flex",
                 flexDirection: "column",
                 gap: 3 * u,
-                fontFamily: sans.fontFamily,
+                fontFamily,
                 fontWeight: 400,
                 lineHeight: 1.1,
               }}
@@ -600,7 +630,7 @@ export function CardPushLine({
               position: "absolute",
               left: pad,
               top: top0 + (PLH - T) / 2,
-              fontFamily: sans.fontFamily,
+              fontFamily,
               fontWeight: 400,
               fontSize: T,
               lineHeight: 1,
@@ -638,7 +668,7 @@ export function CardPushLine({
               display: "flex",
               alignItems: "center",
               gap: 8 * u,
-              fontFamily: sans.fontFamily,
+              fontFamily,
               fontWeight: 400,
               fontSize: labelF,
               color: c.muted,
@@ -740,18 +770,22 @@ export function CardPushLine({
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      <GshGround
-        preset={preset}
-        params={gParams}
-        timeOffset={c.groundOffset}
-        timeScale={0.6}
-      />
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(${portrait ? "90% 50%" : "70% 64%"} at 50% 50%, rgba(${c.scrim},${c.scrimAlpha}) 0%, rgba(${c.scrim},0) 100%)`,
-        }}
-      />
-      {content}
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={preset}
+            params={gParams}
+            timeOffset={c.groundOffset}
+            timeScale={0.6}
+          />
+          <AbsoluteFill
+            style={{
+              background: `radial-gradient(${portrait ? "90% 50%" : "70% 64%"} at 50% 50%, rgba(${c.scrim},${c.scrimAlpha}) 0%, rgba(${c.scrim},0) 100%)`,
+            }}
+          />
+        </>
+      ) : null}
+      <ScaleLayer scale={scale}>{content}</ScaleLayer>
     </AbsoluteFill>
   );
 }

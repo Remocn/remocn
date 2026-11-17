@@ -16,7 +16,7 @@ import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const hanken = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -41,7 +41,21 @@ export interface NotificationAvalancheProps {
   counterLabel?: string;
   surface?: "phone" | "desktop";
   wallpaper?: string;
+  /** Date line on the lock screen. */
+  date?: string;
+  /** Clock on the lock screen. */
+  time?: string;
   accent?: string;
+  /** Text color of the counter and caption; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Size of the phone and copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "light" | "dark";
   ground?: GshPresetId;
@@ -494,12 +508,16 @@ function LockScreen({
   fps,
   list,
   wallpaper,
+  date,
+  time,
   lk,
 }: {
   f: number;
   fps: number;
   list: AvalancheNotification[];
   wallpaper: string;
+  date: string;
+  time: string;
   lk: Look;
 }) {
   return (
@@ -598,7 +616,7 @@ function LockScreen({
           opacity: 0.86,
         }}
       >
-        Tuesday 9 January
+        {date}
       </div>
       <div
         style={{
@@ -614,7 +632,7 @@ function LockScreen({
           fontVariantNumeric: "tabular-nums",
         }}
       >
-        9:41
+        {time}
       </div>
       <div style={{ position: "absolute", top: 268, left: 14 }}>
         <Stack
@@ -826,6 +844,22 @@ function SideCopy({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function NotificationAvalanche({
   notifications = DEFAULT_NOTIFICATIONS,
   clearLabel = "All caught up.",
@@ -834,18 +868,26 @@ export function NotificationAvalanche({
   counterLabel = "unread before 10 am",
   surface = "phone",
   wallpaper = staticFile("reel/reel-1.jpg"),
+  date = "Tuesday 9 January",
+  time = "9:41",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = hanken.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
   ground,
   groundParams,
 }: NotificationAvalancheProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay);
   const { fps, width, height } = useVideoConfig();
   const f = frame * speed;
   const list = notifications.length ? notifications : DEFAULT_NOTIFICATIONS;
   const dark = theme === "dark";
-  const lk = look(dark);
+  const themed = look(dark);
+  const lk = ink ? { ...themed, ink } : themed;
   const tall = height > width;
 
   const buzzAmp = interpolate(
@@ -856,21 +898,28 @@ export function NotificationAvalanche({
   );
   const buzz = Math.sin(f * 2.9) * buzzAmp;
 
-  const groundLayer = (
-    <>
-      <GshGround
-        preset={ground ?? (dark ? "earthshine" : "glasswork")}
-        params={groundParams}
-        timeOffset={dark ? 3 : 5}
-        timeScale={0.35}
-      />
+  const groundLayer =
+    background === undefined ? (
+      <>
+        <GshGround
+          preset={ground ?? (dark ? "earthshine" : "glasswork")}
+          params={groundParams}
+          timeOffset={dark ? 3 : 5}
+          timeScale={0.35}
+        />
+        <AbsoluteFill
+          style={{
+            background: dark ? "rgba(2,3,8,0.28)" : "rgba(244,243,240,0.3)",
+          }}
+        />
+      </>
+    ) : (
       <AbsoluteFill
         style={{
-          background: dark ? "rgba(2,3,8,0.28)" : "rgba(244,243,240,0.3)",
+          background: background === "transparent" ? undefined : background,
         }}
       />
-    </>
-  );
+    );
 
   const copyProps = {
     f,
@@ -888,37 +937,39 @@ export function NotificationAvalanche({
     return (
       <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
         {groundLayer}
-        <div
-          style={{
-            position: "absolute",
-            top: 72 * u,
-            right: 72 * u,
-            width: cardW,
-            transform: `scale(${u * 1.15}) translateX(${buzz}px)`,
-            transformOrigin: "100% 0%",
-          }}
-        >
-          <Stack
-            f={f}
-            fps={fps}
-            list={list}
-            width={cardW}
-            radius={16}
-            maxRows={6}
-            from="right"
-            lk={lk}
-          />
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: width * 0.08,
-            bottom: height * 0.1,
-            width: width * 0.5,
-          }}
-        >
-          <SideCopy {...copyProps} size={height * 0.24} align="left" />
-        </div>
+        <ScaleLayer scale={scale}>
+          <div
+            style={{
+              position: "absolute",
+              top: 72 * u,
+              right: 72 * u,
+              width: cardW,
+              transform: `scale(${u * 1.15}) translateX(${buzz}px)`,
+              transformOrigin: "100% 0%",
+            }}
+          >
+            <Stack
+              f={f}
+              fps={fps}
+              list={list}
+              width={cardW}
+              radius={16}
+              maxRows={6}
+              from="right"
+              lk={lk}
+            />
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: width * 0.08,
+              bottom: height * 0.1,
+              width: width * 0.5,
+            }}
+          >
+            <SideCopy {...copyProps} size={height * 0.24} align="left" />
+          </div>
+        </ScaleLayer>
       </AbsoluteFill>
     );
   }
@@ -946,67 +997,71 @@ export function NotificationAvalanche({
       }}
     >
       {groundLayer}
-      <div
-        style={{
-          position: "absolute",
-          left: tall ? width * 0.09 : width * 0.075,
-          width: tall ? width * 0.82 : width * 0.42,
-          ...(tall
-            ? { top: height * 0.06 }
-            : { top: height / 2 - copySize * 0.75 }),
-        }}
-      >
-        <SideCopy
-          {...copyProps}
-          size={copySize}
-          align={tall ? "center" : "left"}
-        />
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          left: phoneCx - (SW / 2 + BEZEL),
-          top: phoneCy - (SH / 2 + BEZEL),
-          width: SW + BEZEL * 2,
-          height: SH + BEZEL * 2,
-          borderRadius: 68,
-          background: lk.frame,
-          boxShadow: `${lk.rim}, 0 2px 6px rgba(0,0,0,${dark ? 0.45 : 0.14}), 0 30px 70px -18px rgba(0,0,0,${dark ? 0.7 : 0.32})`,
-          transform: `translateX(${buzz}px) translateY(${(1 - enter) * 60 + focusY}px) scale(${k * push * interpolate(enter, [0, 1], [0.94, 1])})`,
-          opacity: interpolate(enter, [0, 0.35], [0, 1], clamp),
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: BEZEL,
-            top: BEZEL,
-            width: SW,
-            height: SH,
-            borderRadius: 56,
-            overflow: "hidden",
+            left: tall ? width * 0.09 : width * 0.075,
+            width: tall ? width * 0.82 : width * 0.42,
+            ...(tall
+              ? { top: height * 0.06 }
+              : { top: height / 2 - copySize * 0.75 }),
           }}
         >
-          <LockScreen
-            f={f}
-            fps={fps}
-            list={list}
-            wallpaper={wallpaper}
-            lk={lk}
+          <SideCopy
+            {...copyProps}
+            size={copySize}
+            align={tall ? "center" : "left"}
           />
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            left: phoneCx - (SW / 2 + BEZEL),
+            top: phoneCy - (SH / 2 + BEZEL),
+            width: SW + BEZEL * 2,
+            height: SH + BEZEL * 2,
+            borderRadius: 68,
+            background: lk.frame,
+            boxShadow: `${lk.rim}, 0 2px 6px rgba(0,0,0,${dark ? 0.45 : 0.14}), 0 30px 70px -18px rgba(0,0,0,${dark ? 0.7 : 0.32})`,
+            transform: `translateX(${buzz}px) translateY(${(1 - enter) * 60 + focusY}px) scale(${k * push * interpolate(enter, [0, 1], [0.94, 1])})`,
+            opacity: interpolate(enter, [0, 0.35], [0, 1], clamp),
+          }}
+        >
           <div
             style={{
               position: "absolute",
-              top: 11,
-              left: (SW - 126) / 2,
-              width: 126,
-              height: 37,
-              borderRadius: 19,
-              background: "#000",
+              left: BEZEL,
+              top: BEZEL,
+              width: SW,
+              height: SH,
+              borderRadius: 56,
+              overflow: "hidden",
             }}
-          />
+          >
+            <LockScreen
+              f={f}
+              fps={fps}
+              list={list}
+              wallpaper={wallpaper}
+              date={date}
+              time={time}
+              lk={lk}
+            />
+            <div
+              style={{
+                position: "absolute",
+                top: 11,
+                left: (SW - 126) / 2,
+                width: 126,
+                height: 37,
+                borderRadius: 19,
+                background: "#000",
+              }}
+            />
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

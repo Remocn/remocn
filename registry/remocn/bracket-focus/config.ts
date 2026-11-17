@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const bracketFocusConfig: ComponentConfig = {
   componentName: "BracketFocus",
@@ -13,11 +19,6 @@ export const bracketFocusConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     subject: {
       type: "text-content",
       default: "1.8s",
@@ -28,6 +29,30 @@ export const bracketFocusConfig: ComponentConfig = {
       default: "Render time",
       description: "Tag",
     },
+    fontWeight: {
+      type: "number",
+      default: 500,
+      min: 100,
+      max: 900,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    fly: {
+      type: "number",
+      default: 22,
+      min: 6,
+      max: 60,
+      step: 1,
+      description: "Fly-in (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Geist", ink: false, grain: true }),
     speed: {
       type: "number",
       default: 1,

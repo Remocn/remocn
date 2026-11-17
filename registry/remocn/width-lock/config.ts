@@ -1,8 +1,20 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const widthLockConfig: ComponentConfig = {
   componentName: "WidthLock",
   importPath: "@/components/remocn/width-lock",
+  lists: {
+    words: {
+      default: ["trailer", "transitions", "captions", "launch video"],
+      description: "Words",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -12,11 +24,6 @@ export const widthLockConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     before: {
       type: "text-content",
@@ -37,6 +44,21 @@ export const widthLockConfig: ComponentConfig = {
       description: "Hold",
       hiddenFromList: false,
     },
+    fontWeight: {
+      type: "number",
+      default: 480,
+      min: 100,
+      max: 1000,
+      step: 10,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Roboto Flex", grain: true }),
     speed: {
       type: "number",
       default: 1,

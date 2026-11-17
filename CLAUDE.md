@@ -73,6 +73,16 @@ Solo builders и маленькие команды (1-2 чел), фронтен�
 - Текст поискового запроса агента пишется в аналитику (до 200 символов) — политика конфиденциальности (`app/(home)/legal/content.tsx`, «MCP server») это описывает. Брифы `plan_video` и пропсы `preview_component` не пишутся: расширять запись можно только вместе с правкой политики
 - `bun run search:eval` меряет поиск на `evals/search/golden.json` (топ-1/5/10 для слов и для гибрида). Меняешь ранжирование, модель или правила `askedAs` — сверяйся с ним; новые запросы в эталон приветствуются
 
+## Пропсы сцен Launch Pack
+
+Сцены Launch Pack (typography, numbers, product scenes, logo stings, social, media, ui-blocks…) делят один набор пропсов. Новая сцена получает их сразу, а не отдельным проходом потом.
+
+- Общие пропсы там, где они имеют смысл: `fontFamily` (основной шрифт копирайта; mono и логотип не трогаем), `ink` (основной цвет текста), `background` (сплошная заливка или `"transparent"`; на сцене с `GshGround` заменяет градиент), `scale` (передний план вокруг центра, фон на месте), `delay` (кадры до начала движения: `Math.max(0, useCurrentFrame() - delay) * speed`), `speed`, `grain` (только где рисуется зерно), `logo` (только где рисуется знак remocn)
+- `scale` — через локальный `ScaleLayer`, который при `scale === 1` возвращает `children` без обёртки. Лишний элемент даже без transform меняет дерево слоёв Chrome и сдвигает сглаживание
+- Значения по умолчанию равны прежним константам: рендер с дефолтами не меняется ни на пиксель. Проверка — `bun run review:props` до и после правки и `bun scripts/diff-stills.mts <до> <после>` («tiny» — шум рендера, «DIFF» — регрессия)
+- Конфиг: `...sceneControls({ font: "<Family>", grain })` после своих полей и перед `speed`; `ground: groundControl()`; цвет, который берётся из темы, — `{ type: "color", default: undefined }`, панель показывает Auto; `string[]` и кортежи строк — в `lists` рядом с `controls` (в схеме Remotion нет массива строк)
+- Шрифт из панели превью грузит сам (`lib/previews/fonts.ts`) и отдаёт компоненту после загрузки: сцены меряют текст при монтировании
+
 ## Changelog
 
 Любая ветка, которая добавляет или заметно меняет компоненты registry, обязана содержать запись ченджлога — в том же PR, что и сама фича.
@@ -133,6 +143,7 @@ bun run typecheck        # tsc --noEmit
 bun run lint             # biome check
 bun run test:dom         # vitest + jsdom для components/**/*.test.tsx
 bun run report:customizer -- --days 30 --out report.md  # какие пропсы крутят в кастомайзере (OpenPanel, ключи из .env)
+bun run review:props -- --names a,b --out out/after [--props '{"scale":0.8}']  # кадры компонентов для сверки до/после
 bun run registry:build   # пересборка registry-artifacts из registry/
 bun run search:build     # семантический индекс поиска + модель в .search/
 bun run search:eval      # качество поиска на evals/search/golden.json

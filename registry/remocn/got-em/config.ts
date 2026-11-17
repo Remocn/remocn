@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const gotEmConfig: ComponentConfig = {
   componentName: "GotEm",
@@ -12,11 +18,6 @@ export const gotEmConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     pending: {
       type: "text-content",
@@ -33,6 +34,30 @@ export const gotEmConfig: ComponentConfig = {
       default: "You got remocn 2.0.",
       description: "Subline",
     },
+    pause: {
+      type: "number",
+      default: 14,
+      min: 0,
+      max: 40,
+      step: 1,
+      description: "Pause (frames)",
+      hiddenFromList: false,
+    },
+    rays: {
+      type: "number",
+      default: 40,
+      min: 12,
+      max: 72,
+      step: 1,
+      description: "Rays",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Unbounded" }),
     speed: {
       type: "number",
       default: 1,

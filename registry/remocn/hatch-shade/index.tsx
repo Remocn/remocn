@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont as loadDisplay } from "@remotion/google-fonts/Fraunces";
+import type React from "react";
 import { useId } from "react";
 import {
   AbsoluteFill,
@@ -24,6 +25,21 @@ export interface HatchShadeProps {
   value?: string;
   caption?: string;
   accent?: string;
+  /** Color of the etched lines and outline; overrides the theme ink. */
+  ink?: string;
+  /** Background fill in place of the copper plate; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Fraunces by default. */
+  fontFamily?: string;
+  /** Weight of the figure. */
+  fontWeight?: number;
+  /** Hatch density; 2 packs the lines twice as tight. */
+  density?: number;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -126,17 +142,42 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function HatchShade({
   value = "24",
   caption = "new components, drawn for launch week",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = display,
+  fontWeight = 500,
+  density = 1,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: HatchShadeProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
   const stage = THEMES[theme];
+  const fg = ink ?? stage.fg;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const bodyId = `b${uid}`;
   const shadeId = `s${uid}`;
@@ -168,8 +209,8 @@ export function HatchShade({
     x: cx,
     y: baseline,
     textAnchor: "middle" as const,
-    fontFamily: display,
-    fontWeight: 500,
+    fontFamily,
+    fontWeight,
     fontSize: size,
     letterSpacing: `${-0.02 * size}px`,
   };
@@ -186,8 +227,8 @@ export function HatchShade({
   );
 
   const passes = PASSES.map((pass, pi) => {
-    const lines = hatchLines(box, pass.angle, pass.gap * u);
-    const color = pass.ink === "copper" ? `url(#${copperId})` : stage.fg;
+    const lines = hatchLines(box, pass.angle, (pass.gap * u) / density);
+    const color = pass.ink === "copper" ? `url(#${copperId})` : fg;
     const opacity = pass.ink === "copper" ? 1 : stage.ink;
     const els = lines.map((l, i) => {
       const order = pi === 1 ? l.k : l.k;
@@ -225,132 +266,142 @@ export function HatchShade({
   });
 
   return (
-    <AbsoluteFill style={{ background: stage.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          background: isDark
-            ? [
-                `radial-gradient(60% 45% at ${18 + drift * 4}% ${20 + drift * 3}%, ${GRAIN[2]}47 0%, transparent 62%)`,
-                `linear-gradient(150deg, ${GRAIN[3]}e6 0%, ${GRAIN[3]}66 38%, transparent 70%)`,
-                `radial-gradient(50% 40% at 88% 96%, ${GRAIN[2]}2e 0%, transparent 70%)`,
-              ].join(", ")
-            : [
-                `radial-gradient(60% 45% at ${18 + drift * 4}% ${20 + drift * 3}%, ${GRAIN[0]}8c 0%, transparent 60%)`,
-                `linear-gradient(150deg, ${GRAIN[0]}66 0%, transparent 60%)`,
-              ].join(", "),
-        }}
-      />
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <linearGradient
-            id={copperId}
-            gradientUnits="userSpaceOnUse"
-            x1={box.x}
-            y1={box.y}
-            x2={box.x + box.w}
-            y2={box.y + box.h}
-          >
-            <stop offset={0} stopColor={isDark ? GRAIN[0] : GRAIN[1]} />
-            <stop offset={0.45} stopColor={isDark ? GRAIN[1] : GRAIN[2]} />
-            <stop offset={1} stopColor={isDark ? GRAIN[2] : GRAIN[3]} />
-          </linearGradient>
-          <mask
-            id={bodyId}
-            maskUnits="userSpaceOnUse"
-            x={0}
-            y={0}
-            width={W}
-            height={H}
-          >
-            <text {...textProps} fill="#fff">
-              {value}
-            </text>
-          </mask>
-          <mask
-            id={shadeId}
-            maskUnits="userSpaceOnUse"
-            x={0}
-            y={0}
-            width={W}
-            height={H}
-          >
-            <text {...textProps} fill="#fff">
-              {value}
-            </text>
-            <text
-              {...textProps}
-              x={cx - shift}
-              y={baseline - shift}
-              fill="#000"
-            >
-              {value}
-            </text>
-          </mask>
-          <filter
-            id={rimId}
-            x={0}
-            y={0}
-            width={W}
-            height={H}
-            filterUnits="userSpaceOnUse"
-          >
-            <feMorphology
-              in="SourceAlpha"
-              operator="erode"
-              radius={hair * 0.9}
-              result="inner"
-            />
-            <feComposite
-              in="SourceAlpha"
-              in2="inner"
-              operator="out"
-              result="rim"
-            />
-            <feFlood floodColor={stage.fg} />
-            <feComposite in2="rim" operator="in" />
-          </filter>
-        </defs>
-        <text {...textProps} fill={accent} opacity={ghost * stage.ghost}>
-          {value}
-        </text>
-        {passes}
-        <text
-          {...textProps}
-          fill="#000"
-          filter={`url(#${rimId})`}
-          opacity={outline}
-        >
-          {value}
-        </text>
-      </svg>
-      {caption ? (
-        <div
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? stage.bg),
+        overflow: "hidden",
+      }}
+    >
+      {background === undefined ? (
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: baseline + gapBelow + (1 - capIn) * 10 * u,
-            textAlign: "center",
-            fontFamily: display,
-            fontStyle: "italic",
-            fontWeight: 400,
-            fontSize: capSize * 1.2,
-            letterSpacing: "-0.005em",
-            lineHeight: 1.3,
-            color: stage.muted,
-            opacity: capIn,
+            background: isDark
+              ? [
+                  `radial-gradient(60% 45% at ${18 + drift * 4}% ${20 + drift * 3}%, ${GRAIN[2]}47 0%, transparent 62%)`,
+                  `linear-gradient(150deg, ${GRAIN[3]}e6 0%, ${GRAIN[3]}66 38%, transparent 70%)`,
+                  `radial-gradient(50% 40% at 88% 96%, ${GRAIN[2]}2e 0%, transparent 70%)`,
+                ].join(", ")
+              : [
+                  `radial-gradient(60% 45% at ${18 + drift * 4}% ${20 + drift * 3}%, ${GRAIN[0]}8c 0%, transparent 60%)`,
+                  `linear-gradient(150deg, ${GRAIN[0]}66 0%, transparent 60%)`,
+                ].join(", "),
           }}
-        >
-          {caption}
-        </div>
+        />
       ) : null}
-      <Grain opacity={stage.grain} />
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            <linearGradient
+              id={copperId}
+              gradientUnits="userSpaceOnUse"
+              x1={box.x}
+              y1={box.y}
+              x2={box.x + box.w}
+              y2={box.y + box.h}
+            >
+              <stop offset={0} stopColor={isDark ? GRAIN[0] : GRAIN[1]} />
+              <stop offset={0.45} stopColor={isDark ? GRAIN[1] : GRAIN[2]} />
+              <stop offset={1} stopColor={isDark ? GRAIN[2] : GRAIN[3]} />
+            </linearGradient>
+            <mask
+              id={bodyId}
+              maskUnits="userSpaceOnUse"
+              x={0}
+              y={0}
+              width={W}
+              height={H}
+            >
+              <text {...textProps} fill="#fff">
+                {value}
+              </text>
+            </mask>
+            <mask
+              id={shadeId}
+              maskUnits="userSpaceOnUse"
+              x={0}
+              y={0}
+              width={W}
+              height={H}
+            >
+              <text {...textProps} fill="#fff">
+                {value}
+              </text>
+              <text
+                {...textProps}
+                x={cx - shift}
+                y={baseline - shift}
+                fill="#000"
+              >
+                {value}
+              </text>
+            </mask>
+            <filter
+              id={rimId}
+              x={0}
+              y={0}
+              width={W}
+              height={H}
+              filterUnits="userSpaceOnUse"
+            >
+              <feMorphology
+                in="SourceAlpha"
+                operator="erode"
+                radius={hair * 0.9}
+                result="inner"
+              />
+              <feComposite
+                in="SourceAlpha"
+                in2="inner"
+                operator="out"
+                result="rim"
+              />
+              <feFlood floodColor={fg} />
+              <feComposite in2="rim" operator="in" />
+            </filter>
+          </defs>
+          <text {...textProps} fill={accent} opacity={ghost * stage.ghost}>
+            {value}
+          </text>
+          {passes}
+          <text
+            {...textProps}
+            fill="#000"
+            filter={`url(#${rimId})`}
+            opacity={outline}
+          >
+            {value}
+          </text>
+        </svg>
+        {caption ? (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: baseline + gapBelow + (1 - capIn) * 10 * u,
+              textAlign: "center",
+              fontFamily,
+              fontStyle: "italic",
+              fontWeight: 400,
+              fontSize: capSize * 1.2,
+              letterSpacing: "-0.005em",
+              lineHeight: 1.3,
+              color: stage.muted,
+              opacity: capIn,
+            }}
+          >
+            {caption}
+          </div>
+        ) : null}
+      </ScaleLayer>
+      {grain ? <Grain opacity={stage.grain} /> : null}
     </AbsoluteFill>
   );
 }

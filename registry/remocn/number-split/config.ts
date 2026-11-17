@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const numberSplitConfig: ComponentConfig = {
   componentName: "NumberSplit",
@@ -13,11 +19,6 @@ export const numberSplitConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     total: {
       type: "text-content",
       default: "300+",
@@ -28,6 +29,30 @@ export const numberSplitConfig: ComponentConfig = {
       default: "components",
       description: "Label",
     },
+    hold: {
+      type: "number",
+      default: 36,
+      min: 6,
+      max: 90,
+      step: 1,
+      description: "Hold before split (frames)",
+      hiddenFromList: false,
+    },
+    barHeight: {
+      type: "number",
+      default: 16,
+      min: 4,
+      max: 40,
+      step: 1,
+      description: "Bar height",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Fraunces", grain: true }),
     speed: {
       type: "number",
       default: 1,

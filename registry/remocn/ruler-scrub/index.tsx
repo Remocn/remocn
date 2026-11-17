@@ -24,6 +24,20 @@ export interface RulerScrubProps {
   format?: string | ((value: number) => string);
   label?: string;
   accent?: string;
+  /** Color of the label and the landed tick value; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the numbers and label. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Frames the ruler takes to scrub to `to`. */
+  scrubLength?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the ruler and copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -120,6 +134,8 @@ function Ticks({
   centerLit,
   heroOut,
   labelSize,
+  fg,
+  fontFamily,
 }: {
   pos: number;
   steps: number;
@@ -133,6 +149,8 @@ function Ticks({
   centerLit: number;
   heroOut: number;
   labelSize: number;
+  fg: string;
+  fontFamily: string;
 }) {
   const span = width / 2 / gap + 1;
   const first = Math.floor((pos - span) * SUBDIV);
@@ -170,13 +188,13 @@ function Ticks({
             width: gap,
             top: -h * 0.098 - labelSize,
             textAlign: "center",
-            fontFamily: sans,
+            fontFamily,
             fontWeight: 500,
             fontSize: labelSize,
             lineHeight: 1,
             letterSpacing: "-0.005em",
             fontVariantNumeric: "tabular-nums",
-            color: isHero ? p.fg : p.muted,
+            color: isHero ? fg : p.muted,
             opacity: future * (isHero ? 1 - heroOut : 1),
           }}
         >
@@ -206,6 +224,22 @@ function Ticks({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function RulerScrub({
   from = 2012,
   to = 2026,
@@ -213,13 +247,23 @@ export function RulerScrub({
   format = "{value}",
   label = "The year launch videos became code",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = display,
+  scrubLength = SCRUB_END,
+  grain = true,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: RulerScrubProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = height / 720;
   const p: Palette = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? p.bg);
   const inc = step > 0 ? step : 1;
   const steps = Math.max(1, Math.round((to - from) / inc));
   const dec = decimalsOf(inc);
@@ -233,25 +277,25 @@ export function RulerScrub({
 
   const gap = Math.max(width * 0.115, 96 * u);
   const scrubAt = (f: number) => {
-    const x = Math.min(1, Math.max(0, f / SCRUB_END));
+    const x = Math.min(1, Math.max(0, f / scrubLength));
     const main = (1 - (1 - x) ** 3) * 0.93 + x * 0.07;
-    if (f <= SCRUB_END) return steps * main;
-    const dt = f - SCRUB_END;
-    const v0 = (0.07 * steps) / SCRUB_END;
+    if (f <= scrubLength) return steps * main;
+    const dt = f - scrubLength;
+    const v0 = (0.07 * steps) / scrubLength;
     return steps + (v0 / 0.9) * Math.sin(dt * 0.9) * Math.exp(-dt * 0.5);
   };
   const pos = scrubAt(t);
   const vel = (scrubAt(t) - scrubAt(t - 1)) * gap;
   const ghost = interpolate(Math.abs(vel), [8 * u, 60 * u], [0, 1], CLAMP);
 
-  const lift = interpolate(t, [SCRUB_END + 6, SCRUB_END + 38], [0, 1], {
+  const lift = interpolate(t, [scrubLength + 6, scrubLength + 38], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
   const rulerY = interpolate(lift, [0, 1], [height * 0.56, height * 0.68]);
   const centerLit = interpolate(
     t,
-    [SCRUB_END - 4, SCRUB_END + 2],
+    [scrubLength - 4, scrubLength + 2],
     [0, 1],
     CLAMP,
   );
@@ -259,7 +303,7 @@ export function RulerScrub({
   const enter = interpolate(t, [0, 10], [0, 1], { ...CLAMP, easing: EASE_OUT });
   const flash = interpolate(
     t,
-    [SCRUB_END - 2, SCRUB_END + 1, SCRUB_END + 14],
+    [scrubLength - 2, scrubLength + 1, scrubLength + 14],
     [0, 1, 0],
     CLAMP,
   );
@@ -274,14 +318,19 @@ export function RulerScrub({
   const heroY = interpolate(lift, [0, 1], [heroStartY, heroEndY]);
   const heroScale =
     interpolate(lift, [0, 1], [heroScale0, 1]) *
-    interpolate(t, [SCRUB_END + 38, SCRUB_END + 110], [1, 1.02], CLAMP);
+    interpolate(t, [scrubLength + 38, scrubLength + 110], [1, 1.02], CLAMP);
   const heroWeight = interpolate(lift, [0, 1], [450, 500]);
-  const sheen = interpolate(t, [SCRUB_END, SCRUB_END + 110], [-4, 4], CLAMP);
+  const sheen = interpolate(
+    t,
+    [scrubLength, scrubLength + 110],
+    [-4, 4],
+    CLAMP,
+  );
 
   const markTop = -height * 0.075 * (1 + centerLit * 0.35) - 6 * u;
   const markBottom = height * 0.034;
 
-  const labelIn = interpolate(t, [SCRUB_END + 30, SCRUB_END + 54], [0, 1], {
+  const labelIn = interpolate(t, [scrubLength + 30, scrubLength + 54], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -300,10 +349,12 @@ export function RulerScrub({
     accent,
     text,
     labelSize,
+    fg,
+    fontFamily,
   };
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <AbsoluteFill
         style={{
           background: [
@@ -313,144 +364,146 @@ export function RulerScrub({
           ].join(", "),
         }}
       />
-      <svg width={0} height={0} style={{ position: "absolute" }} aria-hidden>
-        <filter id={blurId} x="-10%" y="-10%" width="120%" height="120%">
-          <feGaussianBlur stdDeviation={`${blur} 0`} />
-        </filter>
-      </svg>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: rulerY - height * 0.25,
-          width,
-          height: height * 0.3,
-          opacity: enter,
-          maskImage: fade,
-          WebkitMaskImage: fade,
-        }}
-      >
+      <ScaleLayer scale={scale}>
+        <svg width={0} height={0} style={{ position: "absolute" }} aria-hidden>
+          <filter id={blurId} x="-10%" y="-10%" width="120%" height="120%">
+            <feGaussianBlur stdDeviation={`${blur} 0`} />
+          </filter>
+        </svg>
         <div
           style={{
             position: "absolute",
             left: 0,
-            top: height * 0.25,
+            top: rulerY - height * 0.25,
             width,
-            height: Math.max(1, u),
-            background: p.minor,
+            height: height * 0.3,
+            opacity: enter,
+            maskImage: fade,
+            WebkitMaskImage: fade,
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              top: height * 0.25,
+              width,
+              height: Math.max(1, u),
+              background: p.minor,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              filter: blur > 0.4 ? `url(#${blurId})` : undefined,
+            }}
+          >
+            <div style={{ position: "absolute", left: 0, top: height * 0.25 }}>
+              {ghosts.map((g) =>
+                ghost > 0.01 ? (
+                  <div
+                    key={g}
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      top: 0,
+                      opacity: ghost * 0.22 * (1.25 - g),
+                      transform: `translateX(${vel * g * 0.7}px)`,
+                    }}
+                  >
+                    <Ticks {...tickProps} centerLit={0} heroOut={0} />
+                  </div>
+                ) : null,
+              )}
+              <div style={{ position: "absolute", left: 0, top: 0 }}>
+                <Ticks {...tickProps} centerLit={centerLit} heroOut={heroOut} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          style={{
+            position: "absolute",
+            left: width / 2 - u,
+            top: rulerY + markTop,
+            width: 2 * u,
+            height: markBottom - markTop,
+            background: accent,
+            borderRadius: u,
+            opacity: enter,
           }}
         />
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            filter: blur > 0.4 ? `url(#${blurId})` : undefined,
+            left: width / 2 - 4.5 * u,
+            top: rulerY + markBottom - 4.5 * u,
+            width: 9 * u,
+            height: 9 * u,
+            borderRadius: 9 * u,
+            background: accent,
+            opacity: enter,
+            boxShadow: `0 0 0 ${flash * 7 * u}px ${accent}2E`,
           }}
-        >
-          <div style={{ position: "absolute", left: 0, top: height * 0.25 }}>
-            {ghosts.map((g) =>
-              ghost > 0.01 ? (
-                <div
-                  key={g}
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    top: 0,
-                    opacity: ghost * 0.22 * (1.25 - g),
-                    transform: `translateX(${vel * g * 0.7}px)`,
-                  }}
-                >
-                  <Ticks {...tickProps} centerLit={0} heroOut={0} />
-                </div>
-              ) : null,
-            )}
-            <div style={{ position: "absolute", left: 0, top: 0 }}>
-              <Ticks {...tickProps} centerLit={centerLit} heroOut={heroOut} />
-            </div>
-          </div>
-        </div>
-      </div>
+        />
 
-      <div
-        style={{
-          position: "absolute",
-          left: width / 2 - u,
-          top: rulerY + markTop,
-          width: 2 * u,
-          height: markBottom - markTop,
-          background: accent,
-          borderRadius: u,
-          opacity: enter,
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: width / 2 - 4.5 * u,
-          top: rulerY + markBottom - 4.5 * u,
-          width: 9 * u,
-          height: 9 * u,
-          borderRadius: 9 * u,
-          background: accent,
-          opacity: enter,
-          boxShadow: `0 0 0 ${flash * 7 * u}px ${accent}2E`,
-        }}
-      />
-
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          width,
-          top: heroY,
-          height: 0,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          opacity: heroOut,
-        }}
-      >
         <div
           style={{
-            fontFamily: display,
-            fontWeight: heroWeight,
-            fontSize: heroSize,
-            lineHeight: 1,
-            letterSpacing: `${interpolate(lift, [0, 1], [-0.005, -0.05])}em`,
-            fontVariantNumeric: "tabular-nums",
-            color: "transparent",
-            backgroundImage: p.hero(sheen),
-            WebkitBackgroundClip: "text",
-            backgroundClip: "text",
-            padding: "0.08em 0.06em",
-            whiteSpace: "nowrap",
-            transform: `scale(${heroScale})`,
+            position: "absolute",
+            left: 0,
+            width,
+            top: heroY,
+            height: 0,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            opacity: heroOut,
           }}
         >
-          {text(steps)}
+          <div
+            style={{
+              fontFamily,
+              fontWeight: heroWeight,
+              fontSize: heroSize,
+              lineHeight: 1,
+              letterSpacing: `${interpolate(lift, [0, 1], [-0.005, -0.05])}em`,
+              fontVariantNumeric: "tabular-nums",
+              color: "transparent",
+              backgroundImage: p.hero(sheen),
+              WebkitBackgroundClip: "text",
+              backgroundClip: "text",
+              padding: "0.08em 0.06em",
+              whiteSpace: "nowrap",
+              transform: `scale(${heroScale})`,
+            }}
+          >
+            {text(steps)}
+          </div>
         </div>
-      </div>
 
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          width,
-          top: height * 0.83,
-          display: "flex",
-          justifyContent: "center",
-          fontFamily: sans,
-          fontWeight: 400,
-          fontSize: 28 * u,
-          letterSpacing: "-0.015em",
-          color: p.fg,
-          opacity: labelIn,
-          transform: `translateY(${(1 - labelIn) * 14 * u}px)`,
-        }}
-      >
-        {label}
-      </div>
-      <Grain opacity={p.grain} />
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            width,
+            top: height * 0.83,
+            display: "flex",
+            justifyContent: "center",
+            fontFamily,
+            fontWeight: 400,
+            fontSize: 28 * u,
+            letterSpacing: "-0.015em",
+            color: fg,
+            opacity: labelIn,
+            transform: `translateY(${(1 - labelIn) * 14 * u}px)`,
+          }}
+        >
+          {label}
+        </div>
+      </ScaleLayer>
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

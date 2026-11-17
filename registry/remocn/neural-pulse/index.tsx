@@ -38,6 +38,20 @@ export interface NeuralPulseProps {
   /** Replaces the remocn R mark next to the output. */
   logo?: React.ReactNode;
   accent?: string;
+  /** Color of the tokens and the output; overrides the theme ink. */
+  ink?: string;
+  /** Stage fill; "transparent" drops it with the beam and grain. */
+  background?: string;
+  /** Typeface for the output. Load it yourself; Manrope by default. */
+  fontFamily?: string;
+  /** Frames for the pulse to hop from one layer to the next. */
+  hop?: number;
+  /** Size of the network and lockup, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -57,7 +71,6 @@ const T_FIRE = 54;
 const T_HOP0 = 62;
 const HOP = 15;
 const TRAVEL = 13;
-const T_RESOLVE = T_HOP0 + 4 * HOP;
 
 // gradients.sh "beam" palette: bg #02030a, [#f4f7ff, #8fb4ff, #3d5bff, #1a1660]
 const PALETTES = {
@@ -116,7 +129,7 @@ interface Edge {
 }
 
 /** Deterministic layered net: positions, attention weights, activations, path. */
-function buildNet(tokenLengths: number[], u: number) {
+function buildNet(tokenLengths: number[], u: number, hop: number) {
   const tokens = tokenLengths.length;
   const longest = Math.max(...tokenLengths);
   const sizes = [tokens, ...HIDDEN, 1];
@@ -173,7 +186,7 @@ function buildNet(tokenLengths: number[], u: number) {
           i,
           j: jj,
           w: weight(k, i, jj),
-          start: T_HOP0 + k * HOP + Math.round(hash(k * 7 + i * 13 + jj) * 3),
+          start: T_HOP0 + k * hop + Math.round(hash(k * 7 + i * 13 + jj) * 3),
           primary: path.has(`${k}-${i}-${jj}`),
         });
       }
@@ -182,8 +195,24 @@ function buildNet(tokenLengths: number[], u: number) {
   return { layers, edges, primaryToken };
 }
 
-function arrival(k: number) {
-  return k === 0 ? T_HOP0 : T_HOP0 + (k - 1) * HOP + TRAVEL + 2;
+function arrival(k: number, hop: number) {
+  return k === 0 ? T_HOP0 : T_HOP0 + (k - 1) * hop + TRAVEL + 2;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 function Grain({ opacity }: { opacity: number }) {
@@ -215,19 +244,29 @@ export function NeuralPulse({
   output = "remocn",
   logo,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = manrope.fontFamily,
+  hop = HOP,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: NeuralPulseProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
+  const T_RESOLVE = T_HOP0 + 4 * hop;
   const { width, height } = useVideoConfig();
   const u = height / 720;
   const p: Palette = PALETTES[theme];
   const fg = p.fg;
+  const transparent = background === "transparent";
 
   const tokens = input.split(/\s+/).filter(Boolean).slice(0, 5);
   const { layers, edges, primaryToken } = buildNet(
     tokens.map((tk) => tk.length),
     u,
+    hop,
   );
   const outK = layers.length - 1;
 
@@ -296,7 +335,7 @@ export function NeuralPulse({
     interpolate(t, [2 + k * 4 + i * 1.5, 22 + k * 4 + i * 1.5], [0, 1], CLAMP);
 
   const nodeLit = (k: number, i: number) => {
-    const a = arrival(k);
+    const a = arrival(k, hop);
     const act = k === 0 ? 1 : layers[k][i].act;
     const env = interpolate(t, [a, a + 4, a + 26], [0, 1, 0.4], CLAMP);
     const bloom = interpolate(t, [a, a + 5, a + 18], [0, 1, 0], CLAMP);
@@ -433,7 +472,7 @@ export function NeuralPulse({
             fontWeight: 400,
             fontSize: tokSize,
             letterSpacing: "0em",
-            color: rgba(fg, 0.92),
+            color: ink ?? rgba(fg, 0.92),
             whiteSpace: "nowrap",
           }}
         >
@@ -493,7 +532,7 @@ export function NeuralPulse({
 
   // ---- output node: fires, blooms, settles into the mark's dot
   const outP = proj[outK][0];
-  const outFire = arrival(outK);
+  const outFire = arrival(outK, hop);
   const outIn = intro(outK, 0);
   const outBloom = interpolate(
     t,
@@ -538,7 +577,7 @@ export function NeuralPulse({
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const fgSolid = rgba(fg, 1);
+  const fgSolid = ink ?? rgba(fg, 1);
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const gradId = `rfill${uid}`;
 
@@ -557,156 +596,167 @@ export function NeuralPulse({
   const wordX = markLeft + markW + gap;
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill style={{ background: beamBg }} />
+    <AbsoluteFill
+      style={{
+        background: transparent ? "transparent" : (background ?? p.bg),
+        overflow: "hidden",
+      }}
+    >
+      {!transparent ? <AbsoluteFill style={{ background: beamBg }} /> : null}
 
-      <AbsoluteFill
-        style={{
-          filter: netBlur > 0.2 ? `blur(${netBlur * u}px)` : undefined,
-          opacity: netOpacity,
-        }}
-      >
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
+            filter: netBlur > 0.2 ? `blur(${netBlur * u}px)` : undefined,
+            opacity: netOpacity,
+          }}
+        >
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            {edgeEls}
+            {pulseEls}
+          </svg>
+          {nodeEls}
+        </AbsoluteFill>
+        <AbsoluteFill
+          style={{
+            filter: resolveP > 0.01 ? `blur(${resolveP * 5 * u}px)` : undefined,
+            opacity: netOpacity,
+          }}
+        >
+          {tokenEls}
+        </AbsoluteFill>
+
+        {/* lockup: R outline traced by the node, gradient fill, then "emocn" */}
         <svg
           width={width}
           height={height}
-          style={{ position: "absolute", inset: 0 }}
+          style={{ position: "absolute", inset: 0, overflow: "visible" }}
           aria-hidden
         >
-          {edgeEls}
-          {pulseEls}
+          <defs>
+            <linearGradient
+              id={gradId}
+              gradientUnits="userSpaceOnUse"
+              x1={R_W * (0.2 + 0.06 * Math.sin(t / 45))}
+              y1={0}
+              x2={R_W * 0.55}
+              y2={R_H}
+            >
+              <stop offset="0%" stopColor={p.rFill[0]} />
+              <stop offset="58%" stopColor={p.rFill[1]} />
+              <stop offset="100%" stopColor={p.rFill[2]} />
+            </linearGradient>
+          </defs>
+          {!logo && (
+            <g transform={rTransform}>
+              <path
+                d={REMOCN_R_PATH}
+                fill={`url(#${gradId})`}
+                opacity={fillP}
+              />
+              {strokeO > 0 && (
+                <path
+                  d={REMOCN_R_PATH}
+                  fill="none"
+                  stroke={rgba(fg, 1)}
+                  strokeWidth={(1 * u) / rk}
+                  opacity={strokeO * 0.16 * (1 - fillP)}
+                />
+              )}
+              {strokeO > 0 && (
+                <path
+                  d={REMOCN_R_PATH}
+                  fill="none"
+                  stroke={accent}
+                  strokeWidth={(2.2 * u) / rk}
+                  strokeLinejoin="round"
+                  pathLength={1}
+                  strokeDasharray={`${traceP} 2`}
+                  opacity={strokeO}
+                />
+              )}
+            </g>
+          )}
         </svg>
-        {nodeEls}
-      </AbsoluteFill>
-      <AbsoluteFill
-        style={{
-          filter: resolveP > 0.01 ? `blur(${resolveP * 5 * u}px)` : undefined,
-          opacity: netOpacity,
-        }}
-      >
-        {tokenEls}
-      </AbsoluteFill>
-
-      {/* lockup: R outline traced by the node, gradient fill, then "emocn" */}
-      <svg
-        width={width}
-        height={height}
-        style={{ position: "absolute", inset: 0, overflow: "visible" }}
-        aria-hidden
-      >
-        <defs>
-          <linearGradient
-            id={gradId}
-            gradientUnits="userSpaceOnUse"
-            x1={R_W * (0.2 + 0.06 * Math.sin(t / 45))}
-            y1={0}
-            x2={R_W * 0.55}
-            y2={R_H}
+        {logo ? (
+          <div
+            style={{
+              position: "absolute",
+              left: markLeft,
+              top: markTop,
+              width: markW,
+              height: markH,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: interpolate(t, [T_TRACE, T_TRACE + 14], [0, 1], CLAMP),
+            }}
           >
-            <stop offset="0%" stopColor={p.rFill[0]} />
-            <stop offset="58%" stopColor={p.rFill[1]} />
-            <stop offset="100%" stopColor={p.rFill[2]} />
-          </linearGradient>
-        </defs>
-        {!logo && (
-          <g transform={rTransform}>
-            <path d={REMOCN_R_PATH} fill={`url(#${gradId})`} opacity={fillP} />
-            {strokeO > 0 && (
-              <path
-                d={REMOCN_R_PATH}
-                fill="none"
-                stroke={rgba(fg, 1)}
-                strokeWidth={(1 * u) / rk}
-                opacity={strokeO * 0.16 * (1 - fillP)}
-              />
-            )}
-            {strokeO > 0 && (
-              <path
-                d={REMOCN_R_PATH}
-                fill="none"
-                stroke={accent}
-                strokeWidth={(2.2 * u) / rk}
-                strokeLinejoin="round"
-                pathLength={1}
-                strokeDasharray={`${traceP} 2`}
-                opacity={strokeO}
-              />
-            )}
-          </g>
-        )}
-      </svg>
-      {logo ? (
+            {logo}
+          </div>
+        ) : null}
+        <svg
+          width={width}
+          height={height}
+          style={{
+            position: "absolute",
+            inset: 0,
+            opacity: nameP,
+            filter: nameP < 0.98 ? `blur(${(1 - nameP) * 8 * u}px)` : undefined,
+            transform: `translateX(${(1 - nameP) * -14 * u}px)`,
+          }}
+          aria-hidden
+        >
+          <text
+            x={wordX}
+            y={baselineY}
+            fill={fgSolid}
+            style={{
+              fontFamily,
+              fontWeight: brand ? 600 : 500,
+              fontSize: nameSize,
+              letterSpacing: `${0.05 - nameP * 0.075}em`,
+            }}
+          >
+            {word}
+          </text>
+        </svg>
+
+        {/* output node: stays sharp, it is where focus lands */}
         <div
           style={{
             position: "absolute",
-            left: markLeft,
-            top: markTop,
-            width: markW,
-            height: markH,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: interpolate(t, [T_TRACE, T_TRACE + 14], [0, 1], CLAMP),
+            left: outP.x - outR * 4,
+            top: outP.y - outR * 4,
+            width: outR * 8,
+            height: outR * 8,
+            borderRadius: "50%",
+            border: `${Math.max(1, u)}px solid ${accent}`,
+            transform: `scale(${0.25 + ringP * 0.75})`,
+            opacity: (1 - ringP) * 0.5 * outLit,
           }}
-        >
-          {logo}
-        </div>
-      ) : null}
-      <svg
-        width={width}
-        height={height}
-        style={{
-          position: "absolute",
-          inset: 0,
-          opacity: nameP,
-          filter: nameP < 0.98 ? `blur(${(1 - nameP) * 8 * u}px)` : undefined,
-          transform: `translateX(${(1 - nameP) * -14 * u}px)`,
-        }}
-        aria-hidden
-      >
-        <text
-          x={wordX}
-          y={baselineY}
-          fill={fgSolid}
+        />
+        <div
           style={{
-            fontFamily: manrope.fontFamily,
-            fontWeight: brand ? 600 : 500,
-            fontSize: nameSize,
-            letterSpacing: `${0.05 - nameP * 0.075}em`,
+            position: "absolute",
+            left: nodeX - outR,
+            top: nodeY - outR,
+            width: outR * 2,
+            height: outR * 2,
+            borderRadius: "50%",
+            background: outLit > 0 ? accent : rgba(fg, 0.35),
+            opacity: outIn * nodeFade,
+            boxShadow: `0 0 0 ${outR * 0.9 * Math.max(outBloom, head ? 0.6 : 0)}px ${accent}2E`,
           }}
-        >
-          {word}
-        </text>
-      </svg>
+        />
+      </ScaleLayer>
 
-      {/* output node: stays sharp, it is where focus lands */}
-      <div
-        style={{
-          position: "absolute",
-          left: outP.x - outR * 4,
-          top: outP.y - outR * 4,
-          width: outR * 8,
-          height: outR * 8,
-          borderRadius: "50%",
-          border: `${Math.max(1, u)}px solid ${accent}`,
-          transform: `scale(${0.25 + ringP * 0.75})`,
-          opacity: (1 - ringP) * 0.5 * outLit,
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: nodeX - outR,
-          top: nodeY - outR,
-          width: outR * 2,
-          height: outR * 2,
-          borderRadius: "50%",
-          background: outLit > 0 ? accent : rgba(fg, 0.35),
-          opacity: outIn * nodeFade,
-          boxShadow: `0 0 0 ${outR * 0.9 * Math.max(outBloom, head ? 0.6 : 0)}px ${accent}2E`,
-        }}
-      />
-
-      <Grain opacity={p.grain} />
+      {!transparent && grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

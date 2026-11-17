@@ -68,9 +68,44 @@ A big word fades in on the left, then a series of short glosses slide in one at 
       description: "Color of the last gloss; defaults to the theme accent.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Stage background color; overrides the theme ground.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Albert Sans\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "500",
+      description: "Weight of the big word.",
+    },
+    {
+      name: "hold",
+      type: "number",
+      default: "46",
+      description: "Frames the last gloss holds before the end; the glosses before it share the rest.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/BricolageGrotesque";
+import type React from "react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -21,8 +22,22 @@ export interface CaseFlipProps {
   accentWord?: string;
   /** Frames between neighbouring glyphs in each wave. */
   stagger?: number;
+  /** Frames each glyph takes to flip. */
+  flip?: number;
+  /** Frames between the end of the first wave and the start of the second. */
+  pause?: number;
   showGuides?: boolean;
   accent?: string;
+  /** Text and guide color as a hex; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the headline. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Size of the headline, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -74,7 +89,7 @@ function isUpperLetter(ch: string) {
   return ch !== ch.toLowerCase() && ch === ch.toUpperCase();
 }
 
-function measure(forms: Forms[]): Metrics {
+function measure(forms: Forms[], fontFamily: string): Metrics {
   const ctx = document.createElement("canvas").getContext("2d");
   const fallback = forms.map((f) =>
     [0, 1, 2].map((s) => [0, 1, 2].map(() => (f[s] === " " ? 0.26 : 0.6))),
@@ -87,7 +102,7 @@ function measure(forms: Forms[]): Metrics {
       capHeight: 0.73,
     };
   }
-  ctx.font = `${WEIGHT} ${PROBE}px "${face.fontFamily}"`;
+  ctx.font = `${WEIGHT} ${PROBE}px "${fontFamily}"`;
   const w = (s: string) => ctx.measureText(s).width / PROBE;
   const adv = forms.map((f, i) => {
     const next = forms[i + 1];
@@ -111,7 +126,7 @@ function measure(forms: Forms[]): Metrics {
   };
 }
 
-function useMetrics(forms: Forms[]) {
+function useMetrics(forms: Forms[], fontFamily: string) {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("case-flip: measuring glyphs"));
   const released = useRef(false);
@@ -120,12 +135,12 @@ function useMetrics(forms: Forms[]) {
     let live = true;
     Promise.all([
       face.waitUntilDone(),
-      document.fonts.load(`${WEIGHT} 100px "${face.fontFamily}"`),
+      document.fonts.load(`${WEIGHT} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setMetrics(measure(forms));
+        setMetrics(measure(forms, fontFamily));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -134,7 +149,7 @@ function useMetrics(forms: Forms[]) {
     return () => {
       live = false;
     };
-  }, [forms, handle]);
+  }, [forms, handle, fontFamily]);
 
   return metrics;
 }
@@ -168,44 +183,70 @@ function wordIndexOf(text: string, word: string) {
   return at < 0 ? [-1, -1] : [at, at + word.length];
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function CaseFlip({
   text = "Launch it LOUD",
   accentWord = "LOUD",
   stagger = 2,
+  flip = FLIP,
+  pause = 12,
   showGuides = true,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = face.fontFamily,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: CaseFlipProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
+  const bg =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
   const u = W / 1280;
   const haloId = `cfh${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   const forms = useMemo(() => buildForms(text), [text]);
-  const metrics = useMetrics(forms);
+  const metrics = useMetrics(forms, fontFamily);
   const [accentFrom, accentTo] = wordIndexOf(text, accentWord);
 
   if (!metrics)
-    return <div style={{ position: "absolute", inset: 0, background: c.bg }} />;
+    return <div style={{ position: "absolute", inset: 0, background: bg }} />;
 
   const n = forms.length;
   const wave1 = 16;
-  const wave2 = wave1 + (n - 1) * stagger + FLIP + 12;
-  const settled = wave2 + (n - 1) * stagger + FLIP;
+  const wave2 = wave1 + (n - 1) * stagger + flip + pause;
+  const settled = wave2 + (n - 1) * stagger + flip;
 
   // Stage of each slot (0 lower → 1 UPPER → 2 final) and its flip clocks.
   const local = forms.map((_, i) => {
     const q1 = interpolate(
       t,
-      [wave1 + i * stagger, wave1 + i * stagger + FLIP],
+      [wave1 + i * stagger, wave1 + i * stagger + flip],
       [0, 1],
       CLAMP,
     );
     const q2 = interpolate(
       t,
-      [wave2 + i * stagger, wave2 + i * stagger + FLIP],
+      [wave2 + i * stagger, wave2 + i * stagger + flip],
       [0, 1],
       CLAMP,
     );
@@ -306,7 +347,7 @@ export function CaseFlip({
     // The wave front carries a brief accent tint; the accent word then takes
     // the halo gradient, faded in over its second flip.
     const pulse = changes ? Math.sin(Math.PI * q) * 0.55 : 0;
-    const fill = pulse > 0 ? mix(c.fg, accent, pulse) : c.fg;
+    const fill = pulse > 0 ? mix(fg, accent, pulse) : fg;
     const lit = inAccent ? EASE_OUT(q2) : 0;
     const cx = x + (slot - ownSlot) / 2 + glyphW / 2;
     const glyph = (paint: string, opacity: number, key: string) => (
@@ -315,7 +356,7 @@ export function CaseFlip({
         x={cx}
         y={baseline}
         textAnchor="middle"
-        fontFamily={face.fontFamily}
+        fontFamily={fontFamily}
         fontWeight={WEIGHT}
         fontSize={size}
         fill={paint}
@@ -339,48 +380,50 @@ export function CaseFlip({
   const guideYs = [baseline, baseline - xh, baseline - cap];
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <linearGradient
-            id={haloId}
-            gradientUnits="userSpaceOnUse"
-            x1={accentL - accentW * 0.05}
-            y1={baseline - cap}
-            x2={accentL + accentW * 1.05}
-            y2={baseline}
-          >
-            <stop offset={0.04 - drift} stopColor={halo[0]} />
-            <stop offset={0.5 - drift} stopColor={halo[1]} />
-            <stop offset={1 - drift} stopColor={halo[2]} />
-          </linearGradient>
-        </defs>
-        {showGuides
-          ? guideYs.map((y, k) => (
-              <rect
-                key={y}
-                x={W / 2 - guideHalf}
-                y={y - hair / 2}
-                width={guideHalf * 2}
-                height={hair}
-                fill={c.fg}
-                opacity={guidesIn * (k === 0 ? 0.16 : 0.1) * guidesOut}
-              />
-            ))
-          : null}
-        <g
-          opacity={enter}
-          transform={`translate(0 ${(1 - enter) * cap * 0.12})`}
+    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
         >
-          {glyphs}
-        </g>
-      </svg>
+          <defs>
+            <linearGradient
+              id={haloId}
+              gradientUnits="userSpaceOnUse"
+              x1={accentL - accentW * 0.05}
+              y1={baseline - cap}
+              x2={accentL + accentW * 1.05}
+              y2={baseline}
+            >
+              <stop offset={0.04 - drift} stopColor={halo[0]} />
+              <stop offset={0.5 - drift} stopColor={halo[1]} />
+              <stop offset={1 - drift} stopColor={halo[2]} />
+            </linearGradient>
+          </defs>
+          {showGuides
+            ? guideYs.map((y, k) => (
+                <rect
+                  key={y}
+                  x={W / 2 - guideHalf}
+                  y={y - hair / 2}
+                  width={guideHalf * 2}
+                  height={hair}
+                  fill={fg}
+                  opacity={guidesIn * (k === 0 ? 0.16 : 0.1) * guidesOut}
+                />
+              ))
+            : null}
+          <g
+            opacity={enter}
+            transform={`translate(0 ${(1 - enter) * cap * 0.12})`}
+          >
+            {glyphs}
+          </g>
+        </svg>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

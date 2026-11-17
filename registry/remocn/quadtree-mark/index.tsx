@@ -2,6 +2,7 @@
 
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { getLength, getPointAtLength, getSubpaths } from "@remotion/paths";
+import type React from "react";
 import { useId, useMemo } from "react";
 import {
   AbsoluteFill,
@@ -22,6 +23,19 @@ export interface QuadtreeMarkProps {
   /** Text set after the mark. Defaults to "emocn", so the lockup reads "Remocn". */
   name?: string;
   accent?: string;
+  /** Color of the name; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Frames between the name's letters as they slide in. */
+  stagger?: number;
+  /** Levels of subdivision: the grid is 2^depth cells across (3–6). */
+  depth?: number;
+  /** Size of the mark and name, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -253,18 +267,45 @@ function buildTree(filled: Uint8Array, n: number) {
   return { root, count: seq };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function QuadtreeMark({
   logo,
   name = "emocn",
   accent = "#3B5BFD",
+  ink,
+  background,
+  stagger = 2.5,
+  depth = DEPTH,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: QuadtreeMarkProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const pal = THEMES[theme];
+  const fg = ink ?? pal.fg;
+  const transparent = background === "transparent";
+  const stage = transparent ? "transparent" : (background ?? pal.bg);
+  const knock = transparent ? pal.bg : stage;
   const isR = !logo;
 
   const paths = useMemo(
@@ -272,7 +313,7 @@ export function QuadtreeMark({
     [logo],
   );
   const shape = useMemo(() => flattenLogo(paths), [paths]);
-  const N = 2 ** DEPTH;
+  const N = 2 ** Math.max(1, Math.min(DEPTH, Math.round(depth)));
 
   const tree = useMemo(() => {
     const side = Math.max(shape.w, shape.h);
@@ -447,140 +488,149 @@ export function QuadtreeMark({
   const wordLeft = markLeft + markW + wordGap;
 
   return (
-    <AbsoluteFill style={{ background: pal.bg, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: W,
-          height: H,
-          transformOrigin: "0 0",
-          transform: `translate(${W / 2}px, ${H / 2}px) scale(${sc * cam}) translate(${-focusX}px, ${-H / 2}px)`,
-        }}
-      >
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: markLeft + markW / 2 - markH * 1.3,
-            top: H / 2 - markH * 1.1,
-            width: markH * 2.6,
-            height: markH * 2.2,
-            opacity: glowK,
-            background: `radial-gradient(closest-side, ${pal.glow}, transparent)`,
+            left: 0,
+            top: 0,
+            width: W,
+            height: H,
+            transformOrigin: "0 0",
+            transform: `translate(${W / 2}px, ${H / 2}px) scale(${sc * cam}) translate(${-focusX}px, ${-H / 2}px)`,
           }}
-        />
-        <svg
-          width={W}
-          height={H}
-          viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0, overflow: "visible" }}
-          aria-hidden
         >
-          <defs>
-            <linearGradient
-              id={gradId}
-              gradientUnits="userSpaceOnUse"
-              x1={gx - Math.cos(angle) * gLen}
-              y1={gy - Math.sin(angle) * gLen}
-              x2={gx + Math.cos(angle) * gLen}
-              y2={gy + Math.sin(angle) * gLen}
+          <div
+            style={{
+              position: "absolute",
+              left: markLeft + markW / 2 - markH * 1.3,
+              top: H / 2 - markH * 1.1,
+              width: markH * 2.6,
+              height: markH * 2.2,
+              opacity: glowK,
+              background: `radial-gradient(closest-side, ${pal.glow}, transparent)`,
+            }}
+          />
+          <svg
+            width={W}
+            height={H}
+            viewBox={`0 0 ${W} ${H}`}
+            style={{ position: "absolute", inset: 0, overflow: "visible" }}
+            aria-hidden
+          >
+            <defs>
+              <linearGradient
+                id={gradId}
+                gradientUnits="userSpaceOnUse"
+                x1={gx - Math.cos(angle) * gLen}
+                y1={gy - Math.sin(angle) * gLen}
+                x2={gx + Math.cos(angle) * gLen}
+                y2={gy + Math.sin(angle) * gLen}
+              >
+                {pal.stops.map(([o, c]) => (
+                  <stop
+                    key={o}
+                    offset={o}
+                    stopColor={c === "accent" ? accent : c}
+                  />
+                ))}
+              </linearGradient>
+              <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
+                {paths.map((d) => (
+                  <path key={d} d={d} transform={markTransform} />
+                ))}
+              </clipPath>
+            </defs>
+            <g opacity={appear * (1 - merge)}>{rects}</g>
+            {merge > 0 ? (
+              <g clipPath={`url(#${clipId})`} opacity={merge}>
+                <rect
+                  x={ox}
+                  y={oy}
+                  width={rootPx}
+                  height={rootPx}
+                  fill={`url(#${gradId})`}
+                />
+                <path
+                  d={lattice}
+                  fill="none"
+                  stroke={knock}
+                  strokeWidth={gap}
+                  opacity={0.55 + 0.45 * (1 - merge)}
+                />
+              </g>
+            ) : null}
+            <g
+              opacity={guide}
+              stroke={pal.hair}
+              strokeWidth={1.25 * u}
+              fill="none"
             >
-              {pal.stops.map(([o, c]) => (
-                <stop
-                  key={o}
-                  offset={o}
-                  stopColor={c === "accent" ? accent : c}
+              {corners.map(([cx, cy, dx, dy]) => (
+                <path
+                  key={`${cx}-${cy}`}
+                  d={`M${cx} ${cy + dy * tick}V${cy}H${cx + dx * tick}`}
                 />
               ))}
-            </linearGradient>
-            <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
-              {paths.map((d) => (
-                <path key={d} d={d} transform={markTransform} />
-              ))}
-            </clipPath>
-          </defs>
-          <g opacity={appear * (1 - merge)}>{rects}</g>
-          {merge > 0 ? (
-            <g clipPath={`url(#${clipId})`} opacity={merge}>
-              <rect
-                x={ox}
-                y={oy}
-                width={rootPx}
-                height={rootPx}
-                fill={`url(#${gradId})`}
-              />
-              <path
-                d={lattice}
-                fill="none"
-                stroke={pal.bg}
-                strokeWidth={gap}
-                opacity={0.55 + 0.45 * (1 - merge)}
-              />
             </g>
-          ) : null}
-          <g
-            opacity={guide}
-            stroke={pal.hair}
-            strokeWidth={1.25 * u}
-            fill="none"
-          >
-            {corners.map(([cx, cy, dx, dy]) => (
-              <path
-                key={`${cx}-${cy}`}
-                d={`M${cx} ${cy + dy * tick}V${cy}H${cx + dx * tick}`}
-              />
-            ))}
-          </g>
-          {letters.map((ch, i) => {
-            const k = interpolate(t - WORD_AT - i * 2.5, [0, 14], [0, 1], {
-              ...CLAMP,
-              easing: EASE_OUT,
-            });
-            return (
-              <text
-                key={`${uid}-${i}`}
-                x={wordLeft + offsets[i]}
-                y={baseline}
-                opacity={k}
-                transform={`translate(${(1 - k) * 18 * u} 0)`}
-                fill={pal.fg}
-                style={{
-                  fontFamily: manrope.fontFamily,
-                  fontWeight: 600,
-                  fontSize,
-                  whiteSpace: "pre",
-                }}
-              >
-                {ch}
-              </text>
-            );
-          })}
+            {letters.map((ch, i) => {
+              const k = interpolate(
+                t - WORD_AT - i * stagger,
+                [0, 14],
+                [0, 1],
+                {
+                  ...CLAMP,
+                  easing: EASE_OUT,
+                },
+              );
+              return (
+                <text
+                  key={`${uid}-${i}`}
+                  x={wordLeft + offsets[i]}
+                  y={baseline}
+                  opacity={k}
+                  transform={`translate(${(1 - k) * 18 * u} 0)`}
+                  fill={fg}
+                  style={{
+                    fontFamily: manrope.fontFamily,
+                    fontWeight: 600,
+                    fontSize,
+                    whiteSpace: "pre",
+                  }}
+                >
+                  {ch}
+                </text>
+              );
+            })}
+          </svg>
+        </div>
+      </ScaleLayer>
+      {!transparent && grain ? (
+        <svg
+          width="100%"
+          height="100%"
+          style={{
+            position: "absolute",
+            inset: 0,
+            opacity: pal.grain,
+            pointerEvents: "none",
+          }}
+          aria-hidden
+        >
+          <filter id={`${uid}-grain`}>
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.9"
+              numOctaves={2}
+              seed={13}
+              stitchTiles="stitch"
+            />
+            <feColorMatrix values="0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0.9 0" />
+          </filter>
+          <rect width="100%" height="100%" filter={`url(#${uid}-grain)`} />
         </svg>
-      </div>
-      <svg
-        width="100%"
-        height="100%"
-        style={{
-          position: "absolute",
-          inset: 0,
-          opacity: pal.grain,
-          pointerEvents: "none",
-        }}
-        aria-hidden
-      >
-        <filter id={`${uid}-grain`}>
-          <feTurbulence
-            type="fractalNoise"
-            baseFrequency="0.9"
-            numOctaves={2}
-            seed={13}
-            stitchTiles="stitch"
-          />
-          <feColorMatrix values="0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0.9 0" />
-        </filter>
-        <rect width="100%" height="100%" filter={`url(#${uid}-grain)`} />
-      </svg>
+      ) : null}
     </AbsoluteFill>
   );
 }

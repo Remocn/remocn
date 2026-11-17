@@ -1,8 +1,20 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const radialBarsConfig: ComponentConfig = {
   componentName: "RadialBars",
   importPath: "@/components/remocn/radial-bars",
+  lists: {
+    ticks: {
+      default: ["00:00", "06:00", "12:00", "18:00"],
+      description: "Ticks",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -12,11 +24,6 @@ export const radialBarsConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     value: {
       type: "text-content",
@@ -28,6 +35,30 @@ export const radialBarsConfig: ComponentConfig = {
       default: "renders in the peak hour",
       description: "Label",
     },
+    sweep: {
+      type: "number",
+      default: 54,
+      min: 10,
+      max: 120,
+      step: 1,
+      description: "Sweep (frames)",
+      hiddenFromList: false,
+    },
+    group: {
+      type: "number",
+      default: 5,
+      min: 1,
+      max: 15,
+      step: 2,
+      description: "Group size",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Geist", grain: true }),
     speed: {
       type: "number",
       default: 1,

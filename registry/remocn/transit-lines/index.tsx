@@ -69,6 +69,23 @@ export interface TransitLinesProps {
   kicker?: string;
   lines?: TransitLine[];
   accent?: string;
+  /** Text color of the title; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the title, kicker and labels. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Replaces the remocn mark shown when the title is "remocn". */
+  logo?: React.ReactNode;
+  /** Frames between one line reaching the hub and the next. */
+  stagger?: number;
+  /** Frames each line takes to draw in. */
+  draw?: number;
+  /** Size of the map and title, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -236,15 +253,15 @@ function alongPoly(pts: Pt[], q: Pt) {
   return best < 0.05 ? at / Math.max(1e-6, run) : -1;
 }
 
-function reachFrame(start: number, f: number) {
+function reachFrame(start: number, f: number, drawLen: number) {
   if (f <= 0) return start;
-  for (let fr = start; fr <= start + DRAW_LEN; fr += 0.5) {
+  for (let fr = start; fr <= start + drawLen; fr += 0.5) {
     if (
-      DRAW_EASE(interpolate(fr, [start, start + DRAW_LEN], [0, 1], CLAMP)) >= f
+      DRAW_EASE(interpolate(fr, [start, start + drawLen], [0, 1], CLAMP)) >= f
     )
       return fr;
   }
-  return start + DRAW_LEN;
+  return start + drawLen;
 }
 
 function textW(text: string, size: number) {
@@ -275,18 +292,46 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function TransitLines({
   title = "remocn",
   kicker = "Next stop",
   lines = DEFAULT_LINES,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  logo,
+  stagger = LINE_GAP,
+  draw = DRAW_LEN,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: TransitLinesProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const u = Math.min(W / 1280, H / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? p.bg);
   const color = (tone: Tone) => (tone === "accent" ? accent : p.tones[tone]);
   const hubGradId = `hub${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const isLogo = title.trim().toLowerCase() === "remocn";
@@ -344,19 +389,19 @@ export function TransitLines({
         : [l.points.slice(0, hub + 1), l.points.slice(hub).reverse()].filter(
             (s) => s.length > 1,
           );
-    const arrive = ARRIVE + li * LINE_GAP;
+    const arrive = ARRIVE + li * stagger;
     return segs.map((pts) => ({
       li,
       tone: l.tone,
       pts,
-      start: arrive - DRAW_LEN,
+      start: arrive - draw,
       d: roundedPath(
         pts.map(([x, y]): Pt => [X(x), Y(y)]),
         g * 0.75,
       ),
     }));
   });
-  const lastArrive = ARRIVE + (lines.length - 1) * LINE_GAP;
+  const lastArrive = ARRIVE + (lines.length - 1) * stagger;
   const GROW = lastArrive + 4;
   const TITLE = GROW + 8;
 
@@ -369,7 +414,7 @@ export function TransitLines({
       for (const h of halves) {
         if (h.li !== li) continue;
         const f = alongPoly(h.pts, s);
-        if (f >= 0) at = Math.min(at, reachFrame(h.start, f));
+        if (f >= 0) at = Math.min(at, reachFrame(h.start, f, draw));
       }
       return { li, s, at: Number.isFinite(at) ? at : ARRIVE };
     });
@@ -417,7 +462,7 @@ export function TransitLines({
       const shift = (1 - a) * 6 * u;
       const base: React.CSSProperties = {
         position: "absolute",
-        fontFamily: sans,
+        fontFamily,
         fontWeight: 500,
         fontSize: labelSize,
         lineHeight: 1,
@@ -464,150 +509,154 @@ export function TransitLines({
   const driftK = interpolate(t, [0, 135], [0, 1], CLAMP);
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: `radial-gradient(${16 * g}px ${11 * g}px at ${hubX - 2 * g + 3 * g * driftK}px ${hubY + 2 * g}px, ${p.glow} 0%, transparent 70%), radial-gradient(${14 * g}px ${9 * g}px at ${hubX + 9 * g}px ${hubY - 3 * g}px, ${p.glow2} 0%, transparent 70%)`,
-          opacity: grow,
-        }}
-      />
-      <svg
-        width={W}
-        height={H}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        {halves.map((h) => {
-          const k = DRAW_EASE(
-            interpolate(t, [h.start, h.start + DRAW_LEN], [0, 1], CLAMP),
-          );
-          if (k <= 0) return null;
-          const evo = evolvePath(k, h.d);
-          return (
-            <path
-              key={`${h.li}-${h.pts[0][0]}-${h.pts[0][1]}`}
-              d={h.d}
-              fill="none"
-              stroke={color(h.tone)}
-              strokeWidth={lineW}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeDasharray={evo.strokeDasharray}
-              strokeDashoffset={evo.strokeDashoffset}
-            />
-          );
-        })}
-        {stationList.map((st) => {
-          if (t < st.at) return null;
-          const pop = spring({
-            frame: t - st.at,
-            fps,
-            config: { damping: 12, stiffness: 220, mass: 0.5 },
-          });
-          return (
-            <circle
-              key={`${st.li}-${st.s[0]}-${st.s[1]}`}
-              cx={X(st.s[0])}
-              cy={Y(st.s[1])}
-              r={stR * (0.55 + 0.45 * pop)}
-              fill={p.station}
-              stroke={p.hair}
-              strokeWidth={p.hairW * u}
-              opacity={Math.min(1, pop * 1.6)}
-            />
-          );
-        })}
-        <defs>
-          {/* gradients.sh "beam", set inside the interchange roundel. */}
-          <radialGradient
-            id={hubGradId}
-            cx={0.5}
-            cy={1.12 - 0.1 * driftK}
-            r={1.05}
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: `radial-gradient(${16 * g}px ${11 * g}px at ${hubX - 2 * g + 3 * g * driftK}px ${hubY + 2 * g}px, ${p.glow} 0%, transparent 70%), radial-gradient(${14 * g}px ${9 * g}px at ${hubX + 9 * g}px ${hubY - 3 * g}px, ${p.glow2} 0%, transparent 70%)`,
+            opacity: grow,
+          }}
+        />
+        <svg
+          width={W}
+          height={H}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          {halves.map((h) => {
+            const k = DRAW_EASE(
+              interpolate(t, [h.start, h.start + draw], [0, 1], CLAMP),
+            );
+            if (k <= 0) return null;
+            const evo = evolvePath(k, h.d);
+            return (
+              <path
+                key={`${h.li}-${h.pts[0][0]}-${h.pts[0][1]}`}
+                d={h.d}
+                fill="none"
+                stroke={color(h.tone)}
+                strokeWidth={lineW}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeDasharray={evo.strokeDasharray}
+                strokeDashoffset={evo.strokeDashoffset}
+              />
+            );
+          })}
+          {stationList.map((st) => {
+            if (t < st.at) return null;
+            const pop = spring({
+              frame: t - st.at,
+              fps,
+              config: { damping: 12, stiffness: 220, mass: 0.5 },
+            });
+            return (
+              <circle
+                key={`${st.li}-${st.s[0]}-${st.s[1]}`}
+                cx={X(st.s[0])}
+                cy={Y(st.s[1])}
+                r={stR * (0.55 + 0.45 * pop)}
+                fill={p.station}
+                stroke={p.hair}
+                strokeWidth={p.hairW * u}
+                opacity={Math.min(1, pop * 1.6)}
+              />
+            );
+          })}
+          <defs>
+            {/* gradients.sh "beam", set inside the interchange roundel. */}
+            <radialGradient
+              id={hubGradId}
+              cx={0.5}
+              cy={1.12 - 0.1 * driftK}
+              r={1.05}
+            >
+              <stop offset={0} stopColor="#f4f7ff" />
+              <stop offset={0.26} stopColor="#8fb4ff" />
+              <stop offset={0.62} stopColor={accent} />
+              <stop offset={1} stopColor="#2e3fd0" />
+            </radialGradient>
+          </defs>
+          {t >= firstArrive ? (
+            <g opacity={Math.min(1, hubPop * 1.6)}>
+              <circle
+                cx={hubX}
+                cy={hubY}
+                r={hubR + hubStroke / 2 + p.hairW * u}
+                fill={p.hair}
+              />
+              <circle
+                cx={hubX}
+                cy={hubY}
+                r={hubR}
+                fill={p.ringFill}
+                stroke={p.ring}
+                strokeWidth={hubStroke}
+              />
+              <circle
+                cx={hubX}
+                cy={hubY}
+                r={Math.max(0, hubR - hubStroke / 2)}
+                fill={`url(#${hubGradId})`}
+                opacity={grow}
+              />
+            </g>
+          ) : null}
+        </svg>
+        {labels}
+        <div
+          style={{
+            position: "absolute",
+            left: hubX + 3.1 * g,
+            top: hubY,
+            transform: `translateY(calc(-50% - ${(kickerSize * 1.2 + 8 * u) / 2}px))`,
+            whiteSpace: "nowrap",
+          }}
+        >
+          <div
+            style={{
+              fontFamily,
+              fontWeight: 400,
+              fontSize: kickerSize,
+              letterSpacing: "0",
+              color: p.muted,
+              marginBottom: 10 * u,
+              opacity: kickerIn,
+              transform: `translateY(${(1 - kickerIn) * 6 * u}px)`,
+            }}
           >
-            <stop offset={0} stopColor="#f4f7ff" />
-            <stop offset={0.26} stopColor="#8fb4ff" />
-            <stop offset={0.62} stopColor={accent} />
-            <stop offset={1} stopColor="#2e3fd0" />
-          </radialGradient>
-        </defs>
-        {t >= firstArrive ? (
-          <g opacity={Math.min(1, hubPop * 1.6)}>
-            <circle
-              cx={hubX}
-              cy={hubY}
-              r={hubR + hubStroke / 2 + p.hairW * u}
-              fill={p.hair}
-            />
-            <circle
-              cx={hubX}
-              cy={hubY}
-              r={hubR}
-              fill={p.ringFill}
-              stroke={p.ring}
-              strokeWidth={hubStroke}
-            />
-            <circle
-              cx={hubX}
-              cy={hubY}
-              r={Math.max(0, hubR - hubStroke / 2)}
-              fill={`url(#${hubGradId})`}
-              opacity={grow}
-            />
-          </g>
-        ) : null}
-      </svg>
-      {labels}
-      <div
-        style={{
-          position: "absolute",
-          left: hubX + 3.1 * g,
-          top: hubY,
-          transform: `translateY(calc(-50% - ${(kickerSize * 1.2 + 8 * u) / 2}px))`,
-          whiteSpace: "nowrap",
-        }}
-      >
-        <div
-          style={{
-            fontFamily: sans,
-            fontWeight: 400,
-            fontSize: kickerSize,
-            letterSpacing: "0",
-            color: p.muted,
-            marginBottom: 10 * u,
-            opacity: kickerIn,
-            transform: `translateY(${(1 - kickerIn) * 6 * u}px)`,
-          }}
-        >
-          {kicker}
+            {kicker}
+          </div>
+          <div
+            style={{
+              fontFamily,
+              fontWeight: 500,
+              fontSize: heroSize,
+              lineHeight: 0.95,
+              letterSpacing: "-0.035em",
+              color: fg,
+              opacity: titleIn,
+              transform: `translateX(${(1 - titleIn) * -18 * u}px)`,
+              filter:
+                titleIn < 0.99 ? `blur(${(1 - titleIn) * 6 * u}px)` : undefined,
+            }}
+          >
+            {isLogo
+              ? (logo ?? <RemocnLogo fontSize={heroSize} color={fg} />)
+              : title}
+          </div>
         </div>
-        <div
-          style={{
-            fontFamily: sans,
-            fontWeight: 500,
-            fontSize: heroSize,
-            lineHeight: 0.95,
-            letterSpacing: "-0.035em",
-            color: p.fg,
-            opacity: titleIn,
-            transform: `translateX(${(1 - titleIn) * -18 * u}px)`,
-            filter:
-              titleIn < 0.99 ? `blur(${(1 - titleIn) * 6 * u}px)` : undefined,
-          }}
-        >
-          {isLogo ? <RemocnLogo fontSize={heroSize} color={p.fg} /> : title}
-        </div>
-      </div>
+      </ScaleLayer>
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${p.bg} 100%)`,
+          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${stage} 100%)`,
           opacity: 0.5,
           pointerEvents: "none",
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const beforeAfterConfig: ComponentConfig = {
   componentName: "BeforeAfter",
@@ -12,11 +19,6 @@ export const beforeAfterConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     beforeLabel: {
       type: "text-content",
@@ -51,6 +53,31 @@ export const beforeAfterConfig: ComponentConfig = {
       description: "Pause at",
       hiddenFromList: false,
     },
+    hold: {
+      type: "number",
+      default: 54,
+      min: 10,
+      max: 90,
+      step: 1,
+      description: "Hold (frames)",
+      hiddenFromList: false,
+    },
+    radius: {
+      type: "number",
+      default: 16,
+      min: 0,
+      max: 48,
+      step: 1,
+      description: "Corner radius",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Hanken Grotesk" }),
     speed: {
       type: "number",
       default: 1,

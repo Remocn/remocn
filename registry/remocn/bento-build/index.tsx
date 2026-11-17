@@ -16,7 +16,7 @@ import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const { fontFamily: geist } = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -58,8 +58,24 @@ export interface BentoBuildProps {
   eyebrow?: string;
   heading?: string;
   columns?: number;
+  /** Frames between tiles as the grid builds. */
+  stagger?: number;
+  /** Frames each spotlit tile holds the focus. */
+  hold?: number;
+  /** Corner radius of the tiles, in px at 1280×720. */
+  radius?: number;
   theme?: "light" | "dark";
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the grid, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -657,23 +673,48 @@ function AvatarsVisual({ pal, reveal, u }: VisualProps) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function BentoBuild({
   tiles = DEFAULT_TILES,
   highlightOrder = [0, 1, 4],
   eyebrow = "Features",
   heading = "Everything a launch video needs.",
   columns = 4,
+  stagger = BUILD_STAGGER,
+  hold = HIGHLIGHT_LEN,
+  radius = 18,
   theme = "dark",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = geist,
+  scale = 1,
+  delay = 0,
   speed = 1,
   ground,
   groundParams,
 }: BentoBuildProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width;
   const u = tall ? width / 760 : Math.min(width / 1280, height / 720);
-  const pal = palette(theme);
+  const themePal = palette(theme);
+  const pal: Palette = ink ? { ...themePal, text: ink } : themePal;
   const cols = tall ? Math.min(2, columns) : columns;
   const { placed, rowCount } = pack(tiles, cols);
 
@@ -687,15 +728,15 @@ export function BentoBuild({
   const cellW = (gridW - gap * (cols - 1)) / cols;
   const cellH = (gridH - gap * (rowCount - 1)) / Math.max(1, rowCount);
 
-  const buildEnd = BUILD_STAGGER * tiles.length + 26;
+  const buildEnd = stagger * tiles.length + 26;
   const focusOf = (i: number) => {
     let v = 0;
     highlightOrder.forEach((idx, k) => {
       if (idx !== i) return;
-      const s = HIGHLIGHT_START + k * HIGHLIGHT_LEN;
+      const s = HIGHLIGHT_START + k * hold;
       v += interpolate(
         frame,
-        [s - 5, s + 5, s + HIGHLIGHT_LEN - 5, s + HIGHLIGHT_LEN + 5],
+        [s - 5, s + 5, s + hold - 5, s + hold + 5],
         [0, 1, 1, 0],
         { ...CL, easing: MOVE },
       );
@@ -730,186 +771,200 @@ export function BentoBuild({
 
   return (
     <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={ground ?? (pal.dark ? "film-blue" : "glasswork")}
-        params={groundParams}
-        timeOffset={pal.dark ? 6 : 3}
-        timeScale={0.3}
-      />
-      <AbsoluteFill style={{ background: pal.scrim }} />
-      <AbsoluteFill
-        style={{
-          transform: `translate(${camX}px, ${camY}px) scale(${camScale})`,
-          transformOrigin: "50% 55%",
-        }}
-      >
-        <div
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? (pal.dark ? "film-blue" : "glasswork")}
+            params={groundParams}
+            timeOffset={pal.dark ? 6 : 3}
+            timeScale={0.3}
+          />
+          <AbsoluteFill style={{ background: pal.scrim }} />
+        </>
+      ) : (
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: padX,
-            right: padX,
-            top: headTop,
-            opacity: 1 - 0.4 * anyFocus,
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
+            transform: `translate(${camX}px, ${camY}px) scale(${camScale})`,
+            transformOrigin: "50% 55%",
           }}
         >
-          {eyebrow ? (
-            <div
-              style={{
-                fontSize: (tall ? 22 : 17) * u,
-                color: pal.muted,
-                opacity: eyeIn,
-                transform: `translateY(${(1 - eyeIn) * 8 * u}px)`,
-              }}
-            >
-              {eyebrow}
-            </div>
-          ) : null}
-          <div style={{ overflow: "hidden", paddingBottom: 6 * u }}>
-            <div
-              style={{
-                fontSize: headSize,
-                fontWeight: 300,
-                letterSpacing: "-0.035em",
-                lineHeight: 1.08,
-                textWrap: "balance",
-                color: pal.text,
-                marginTop: 6 * u,
-                transform: `translateY(${(1 - headIn) * 110}%)`,
-              }}
-            >
-              {heading}
-            </div>
-          </div>
-        </div>
-
-        {tiles.map((tile, i) => {
-          const p = placed[i];
-          const x = padX + p.col * (cellW + gap);
-          const y = top + p.row * (cellH + gap);
-          const w = p.cols * cellW + (p.cols - 1) * gap;
-          const h = p.rows * cellH + (p.rows - 1) * gap;
-          const delay = 4 + i * BUILD_STAGGER;
-
-          const cx = x + w / 2 - width / 2;
-          const cy = y + h / 2 - height / 2;
-          const edges = [
-            [cx >= 0 ? 1 : -1, 0],
-            [0, cy >= 0 ? 1 : -1],
-          ];
-          const [ex, ey] = edges[i % 2];
-          const dist = 72 * u;
-          const jitter = (hash(i) - 0.5) * 24 * u;
-          const tilt = (hash(i + 7) > 0.5 ? 1 : -1) * (1.5 + hash(i + 3) * 1.5);
-
-          const move = spring({ frame: frame - delay, fps, config: CARD });
-          const lockAt = delay + 12;
-          const click = interpolate(
-            frame,
-            [lockAt, lockAt + 2, lockAt + 7],
-            [0, 1, 0],
-            CL,
-          );
-          const tx = (1 - move) * (ex * dist + (ey ? jitter : 0));
-          const ty = (1 - move) * (ey * dist + (ex ? jitter : 0));
-          const rot = (1 - move) * tilt;
-          const sc = interpolate(move, [0, 1], [0.94, 1]) * (1 - 0.012 * click);
-
-          const f = focus[i];
-          const lift = 1 + 0.02 * f;
-          const dim = 1 - 0.45 * Math.max(0, anyFocus - f);
-
-          const textIn = interpolate(frame, [delay + 4, delay + 16], [0, 1], {
-            ...CL,
-            easing: ENTER,
-          });
-          const reveal = spring({
-            frame: frame - (delay + 8),
-            fps,
-            config: MORPH,
-            durationInFrames: 30,
-          });
-          const big = p.rows > 1;
-          const wide = p.cols > 1 && !big;
-          const visual = tile.visual ?? "none";
-          const vp: VisualProps = { pal, accent, reveal, focus: f, frame, u };
-          const textW = wide && visual !== "none" ? "46%" : "100%";
-          const titleSize = (big ? 24 : 18) * u;
-
-          return (
-            <div
-              key={`${tile.title}-${i}`}
-              style={{
-                position: "absolute",
-                left: x,
-                top: y,
-                width: w,
-                height: h,
-                zIndex: Math.round(f * 10),
-                opacity: dim * interpolate(move, [0, 0.45], [0, 1], CL),
-                filter:
-                  move < 0.99
-                    ? `blur(${Math.max(0, 1 - move) * 6}px)`
-                    : undefined,
-                transform: `translate(${tx}px, ${ty}px) rotate(${rot}deg) scale(${sc * lift})`,
-              }}
-            >
+          <div
+            style={{
+              position: "absolute",
+              left: padX,
+              right: padX,
+              top: headTop,
+              opacity: 1 - 0.4 * anyFocus,
+            }}
+          >
+            {eyebrow ? (
               <div
                 style={{
-                  position: "absolute",
-                  inset: 0,
-                  borderRadius: 18 * u,
-                  overflow: "hidden",
-                  background: pal.tile,
-                  backdropFilter: "blur(24px) saturate(1.3)",
-                  boxShadow: `${pal.edge}${
-                    click > 0.01 || f > 0.01
-                      ? `, inset 0 0 0 1px ${withAlpha(accent, Math.max(0.4 * click, 0.7 * f))}`
-                      : ""
-                  }${pal.lift(f)}`,
+                  fontSize: (tall ? 22 : 17) * u,
+                  color: pal.muted,
+                  opacity: eyeIn,
+                  transform: `translateY(${(1 - eyeIn) * 8 * u}px)`,
                 }}
               >
-                {visual === "chart" ? <ChartVisual {...vp} /> : null}
-                {visual === "toggle" ? <ToggleVisual {...vp} /> : null}
-                {visual === "code" ? <CodeVisual {...vp} /> : null}
-                {visual === "chips" ? (
-                  <ChipsVisual {...vp} wide={wide || big} />
-                ) : null}
-                {visual === "avatars" ? <AvatarsVisual {...vp} /> : null}
+                {eyebrow}
+              </div>
+            ) : null}
+            <div style={{ overflow: "hidden", paddingBottom: 6 * u }}>
+              <div
+                style={{
+                  fontSize: headSize,
+                  fontWeight: 300,
+                  letterSpacing: "-0.035em",
+                  lineHeight: 1.08,
+                  textWrap: "balance",
+                  color: pal.text,
+                  marginTop: 6 * u,
+                  transform: `translateY(${(1 - headIn) * 110}%)`,
+                }}
+              >
+                {heading}
+              </div>
+            </div>
+          </div>
 
+          {tiles.map((tile, i) => {
+            const p = placed[i];
+            const x = padX + p.col * (cellW + gap);
+            const y = top + p.row * (cellH + gap);
+            const w = p.cols * cellW + (p.cols - 1) * gap;
+            const h = p.rows * cellH + (p.rows - 1) * gap;
+            const at = 4 + i * stagger;
+
+            const cx = x + w / 2 - width / 2;
+            const cy = y + h / 2 - height / 2;
+            const edges = [
+              [cx >= 0 ? 1 : -1, 0],
+              [0, cy >= 0 ? 1 : -1],
+            ];
+            const [ex, ey] = edges[i % 2];
+            const dist = 72 * u;
+            const jitter = (hash(i) - 0.5) * 24 * u;
+            const tilt =
+              (hash(i + 7) > 0.5 ? 1 : -1) * (1.5 + hash(i + 3) * 1.5);
+
+            const move = spring({ frame: frame - at, fps, config: CARD });
+            const lockAt = at + 12;
+            const click = interpolate(
+              frame,
+              [lockAt, lockAt + 2, lockAt + 7],
+              [0, 1, 0],
+              CL,
+            );
+            const tx = (1 - move) * (ex * dist + (ey ? jitter : 0));
+            const ty = (1 - move) * (ey * dist + (ex ? jitter : 0));
+            const rot = (1 - move) * tilt;
+            const sc =
+              interpolate(move, [0, 1], [0.94, 1]) * (1 - 0.012 * click);
+
+            const f = focus[i];
+            const lift = 1 + 0.02 * f;
+            const dim = 1 - 0.45 * Math.max(0, anyFocus - f);
+
+            const textIn = interpolate(frame, [at + 4, at + 16], [0, 1], {
+              ...CL,
+              easing: ENTER,
+            });
+            const reveal = spring({
+              frame: frame - (at + 8),
+              fps,
+              config: MORPH,
+              durationInFrames: 30,
+            });
+            const big = p.rows > 1;
+            const wide = p.cols > 1 && !big;
+            const visual = tile.visual ?? "none";
+            const vp: VisualProps = { pal, accent, reveal, focus: f, frame, u };
+            const textW = wide && visual !== "none" ? "46%" : "100%";
+            const titleSize = (big ? 24 : 18) * u;
+
+            return (
+              <div
+                key={`${tile.title}-${i}`}
+                style={{
+                  position: "absolute",
+                  left: x,
+                  top: y,
+                  width: w,
+                  height: h,
+                  zIndex: Math.round(f * 10),
+                  opacity: dim * interpolate(move, [0, 0.45], [0, 1], CL),
+                  filter:
+                    move < 0.99
+                      ? `blur(${Math.max(0, 1 - move) * 6}px)`
+                      : undefined,
+                  transform: `translate(${tx}px, ${ty}px) rotate(${rot}deg) scale(${sc * lift})`,
+                }}
+              >
                 <div
                   style={{
                     position: "absolute",
-                    left: 20 * u,
-                    bottom: 18 * u,
-                    width: textW,
-                    paddingRight: 20 * u,
-                    boxSizing: "border-box",
-                    fontSize: titleSize,
-                    lineHeight: 1.3,
-                    letterSpacing: "-0.012em",
-                    textWrap: "pretty",
-                    opacity: textIn,
-                    transform: `translateY(${(1 - textIn) * 10 * u}px)`,
+                    inset: 0,
+                    borderRadius: radius * u,
+                    overflow: "hidden",
+                    background: pal.tile,
+                    backdropFilter: "blur(24px) saturate(1.3)",
+                    boxShadow: `${pal.edge}${
+                      click > 0.01 || f > 0.01
+                        ? `, inset 0 0 0 1px ${withAlpha(accent, Math.max(0.4 * click, 0.7 * f))}`
+                        : ""
+                    }${pal.lift(f)}`,
                   }}
                 >
-                  <span style={{ color: pal.text }}>
-                    {typeof tile.icon === "string" ? (
-                      <Glyph
-                        name={tile.icon as BentoIconName}
-                        color={pal.text}
-                      />
-                    ) : (
-                      (tile.icon ?? null)
-                    )}
-                    {tile.title}
-                  </span>{" "}
-                  <span style={{ color: pal.muted }}>{tile.description}</span>
+                  {visual === "chart" ? <ChartVisual {...vp} /> : null}
+                  {visual === "toggle" ? <ToggleVisual {...vp} /> : null}
+                  {visual === "code" ? <CodeVisual {...vp} /> : null}
+                  {visual === "chips" ? (
+                    <ChipsVisual {...vp} wide={wide || big} />
+                  ) : null}
+                  {visual === "avatars" ? <AvatarsVisual {...vp} /> : null}
+
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 20 * u,
+                      bottom: 18 * u,
+                      width: textW,
+                      paddingRight: 20 * u,
+                      boxSizing: "border-box",
+                      fontSize: titleSize,
+                      lineHeight: 1.3,
+                      letterSpacing: "-0.012em",
+                      textWrap: "pretty",
+                      opacity: textIn,
+                      transform: `translateY(${(1 - textIn) * 10 * u}px)`,
+                    }}
+                  >
+                    <span style={{ color: pal.text }}>
+                      {typeof tile.icon === "string" ? (
+                        <Glyph
+                          name={tile.icon as BentoIconName}
+                          color={pal.text}
+                        />
+                      ) : (
+                        (tile.icon ?? null)
+                      )}
+                      {tile.title}
+                    </span>{" "}
+                    <span style={{ color: pal.muted }}>{tile.description}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </AbsoluteFill>
+            );
+          })}
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

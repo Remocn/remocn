@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const halftoneCutConfig: ComponentConfig = {
   componentName: "HalftoneCut",
@@ -28,6 +34,25 @@ export const halftoneCutConfig: ComponentConfig = {
       default: "Final cut",
       description: "To",
     },
+    spread: {
+      type: "number",
+      default: 34,
+      min: 10,
+      max: 70,
+      step: 1,
+      description: "Wave (frames)",
+      hiddenFromList: false,
+    },
+    dotSize: {
+      type: "number",
+      default: 20,
+      min: 8,
+      max: 48,
+      step: 1,
+      description: "Dot size",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Fraunces", grain: true }),
     speed: {
       type: "number",
       default: 1,

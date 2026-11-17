@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/FunnelDisplay";
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -27,7 +28,18 @@ export interface RiddleCluesProps {
   closer?: RiddleClue;
   label?: string;
   accent?: string;
+  /** Text color of the clues; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Funnel Display by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Frames between words as a line rises in. */
+  stagger?: number;
+  /** Size of the text block, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -81,18 +93,18 @@ const MIN_HOLD = 30;
 
 let measureCtx: CanvasRenderingContext2D | null = null;
 
-function em(s: string) {
+function em(s: string, font: string) {
   if (!measureCtx) {
     measureCtx = document.createElement("canvas").getContext("2d");
   }
   if (!measureCtx) throw new Error("riddle-clues: no 2d context");
-  measureCtx.font = `${WGHT} ${MEASURE_PX}px "${funnel.fontFamily}"`;
+  measureCtx.font = font;
   return (
     measureCtx.measureText(s).width / MEASURE_PX + TRACK * Array.from(s).length
   );
 }
 
-function useFontsReady() {
+function useFontsReady(fontFamily: string, fontWeight: number) {
   const [ready, setReady] = useState(false);
   const [handle] = useState(() => delayRender("riddle-clues: fonts"));
   const released = useRef(false);
@@ -100,7 +112,7 @@ function useFontsReady() {
     let live = true;
     Promise.all([
       funnel.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${funnel.fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -113,7 +125,7 @@ function useFontsReady() {
     return () => {
       live = false;
     };
-  }, [handle]);
+  }, [handle, fontFamily, fontWeight]);
   return ready;
 }
 
@@ -137,23 +149,23 @@ function split(s: string) {
   return s.split(/\s+/).filter(Boolean);
 }
 
-function toPart(words: string[]): Part {
-  const space = em(" ");
+function toPart(words: string[], font: string): Part {
+  const space = em(" ", font);
   let x = 0;
   const out = words.map((text) => {
     const at = x;
-    x += em(text) + space;
+    x += em(text, font) + space;
     return { text, x: at };
   });
-  return { words: out, w: em(words.join(" ")) };
+  return { words: out, w: em(words.join(" "), font) };
 }
 
-function greedy(words: string[], maxEm: number): string[][] {
+function greedy(words: string[], maxEm: number, font: string): string[][] {
   const rows: string[][] = [];
   let cur: string[] = [];
   for (const w of words) {
     const next = [...cur, w];
-    if (cur.length > 0 && em(next.join(" ")) > maxEm) {
+    if (cur.length > 0 && em(next.join(" "), font) > maxEm) {
       rows.push(cur);
       cur = [w];
     } else {
@@ -164,27 +176,27 @@ function greedy(words: string[], maxEm: number): string[][] {
   return rows;
 }
 
-function wrap(s: string, maxEm: number): Part[] {
+function wrap(s: string, maxEm: number, font: string): Part[] {
   const words = split(s);
-  let rows = greedy(words, maxEm);
+  let rows = greedy(words, maxEm, font);
   let m = maxEm;
   for (let guard = 0; guard < 30 && rows.length > 1; guard++) {
     m *= 0.96;
-    const next = greedy(words, m);
+    const next = greedy(words, m, font);
     if (next.length > rows.length) break;
     rows = next;
   }
-  return rows.map(toPart);
+  return rows.map((r) => toPart(r, font));
 }
 
-function buildLayout(items: RiddleClue[], W: number, H: number) {
+function buildLayout(items: RiddleClue[], W: number, H: number, font: string) {
   const portrait = H > W * 1.1;
   const maxW = W * (portrait ? 0.8 : 0.58);
   const F = Math.min(W, H) * (portrait ? 0.052 : 0.05);
-  const gap = em(" ");
+  const gap = em(" ", font);
   const out: Item[] = items.map((it) => {
-    const line = wrap(it.line, maxW / F);
-    const turn = wrap(it.turn, maxW / F);
+    const line = wrap(it.line, maxW / F, font);
+    const turn = wrap(it.turn, maxW / F, font);
     const inline =
       line.length === 1 &&
       turn.length === 1 &&
@@ -194,27 +206,51 @@ function buildLayout(items: RiddleClue[], W: number, H: number) {
   return { items: out, F, gap, portrait };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function RiddleClues({
   clues = DEFAULT_CLUES,
   closer = DEFAULT_CLOSER,
   label = "Clue",
   accent,
+  ink,
   background,
+  fontFamily = funnel.fontFamily,
+  fontWeight = WGHT,
+  stagger = STAGGER,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: RiddleCluesProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const ready = useFontsReady();
+  const ready = useFontsReady(fontFamily, fontWeight);
+  const font = `${fontWeight} ${MEASURE_PX}px "${fontFamily}"`;
 
   const all = useMemo(() => [...clues, closer], [clues, closer]);
   const layout = useMemo(
-    () => (ready ? buildLayout(all, W, H) : null),
-    [ready, all, W, H],
+    () => (ready ? buildLayout(all, W, H, font) : null),
+    [ready, all, W, H, font],
   );
 
   if (!layout) {
@@ -230,7 +266,7 @@ export function RiddleClues({
     0,
   );
   const motionEnd =
-    (n - 1) * STEP + TURN_AT + 4 + (lastTurnWords - 1) * STAGGER + IN_LEN;
+    (n - 1) * STEP + TURN_AT + 4 + (lastTurnWords - 1) * stagger + IN_LEN;
   const room = durationInFrames * speed - MIN_HOLD;
   const k = Math.max(0.6, Math.min(1, room / motionEnd));
   const t = (frame * speed) / k;
@@ -345,7 +381,7 @@ export function RiddleClues({
         }}
       >
         {part.words.map((w, wi) => {
-          const q = rise(at + (first + wi) * STAGGER);
+          const q = rise(at + (first + wi) * stagger);
           const dy = (1 - q) * rowH - out * rowH;
           return (
             <div
@@ -355,8 +391,8 @@ export function RiddleClues({
                 left: w.x * F + F * 0.2,
                 top: 0,
                 height: rowH,
-                fontFamily: funnel.fontFamily,
-                fontWeight: WGHT,
+                fontFamily,
+                fontWeight,
                 fontSize: F,
                 lineHeight: `${rowH}px`,
                 letterSpacing: `${TRACK}em`,
@@ -392,8 +428,8 @@ export function RiddleClues({
           >
             <div
               style={{
-                fontFamily: funnel.fontFamily,
-                fontWeight: WGHT,
+                fontFamily,
+                fontWeight,
                 fontSize: LF,
                 lineHeight: `${LF * 1.6}px`,
                 letterSpacing: "0.14em",
@@ -411,7 +447,7 @@ export function RiddleClues({
             p.part,
             p.x,
             p.y,
-            p.turn ? hi : c.ink,
+            p.turn ? hi : fg,
             p.turn ? TURN_AT + 4 : 0,
             p.first,
             `r-${i}-${pi}`,
@@ -423,7 +459,7 @@ export function RiddleClues({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

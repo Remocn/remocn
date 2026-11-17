@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const dumbbellShiftConfig: ComponentConfig = {
   componentName: "DumbbellShift",
@@ -13,11 +19,6 @@ export const dumbbellShiftConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     beforeLabel: {
       type: "text-content",
       default: "Before",
@@ -28,6 +29,30 @@ export const dumbbellShiftConfig: ComponentConfig = {
       default: "With remocn",
       description: "After label",
     },
+    stagger: {
+      type: "number",
+      default: 5,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Row stagger",
+      hiddenFromList: false,
+    },
+    slideDuration: {
+      type: "number",
+      default: 26,
+      min: 8,
+      max: 60,
+      step: 1,
+      description: "Slide (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Schibsted Grotesk", grain: true }),
     speed: {
       type: "number",
       default: 1,

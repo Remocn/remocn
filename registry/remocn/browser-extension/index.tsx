@@ -15,7 +15,7 @@ import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const { fontFamily: instrument } = loadFont("normal", {
   weights: ["400"],
   subsets: ["latin"],
 });
@@ -38,9 +38,25 @@ export interface BrowserExtensionProps {
   extensionName?: string;
   collection?: string;
   saveLabel?: string;
+  /** Heading over the summary in the popup. */
+  summaryLabel?: string;
+  /** Status line while the extension reads the page. */
+  readingLabel?: string;
+  /** Button label in the saved toast. */
+  openLabel?: string;
   highlightColor?: string;
   theme?: "light" | "dark";
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the browser and popup copy. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Size of the browser window, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -421,6 +437,22 @@ function Paragraph({
   return <>{parts}</>;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function BrowserExtension({
   url = "quarry.blog/notes/why-small-teams-ship-faster",
   siteName = "Quarry Journal",
@@ -435,21 +467,30 @@ export function BrowserExtension({
   extensionName = "remocn",
   collection = "Reading list",
   saveLabel = "Save to remocn",
+  summaryLabel = "Summary",
+  readingLabel = "Reading page",
+  openLabel = "Open",
   highlightColor,
   theme = "light",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = instrument,
+  scale = 1,
+  delay = 0,
   speed = 1,
   ground,
   groundParams,
 }: BrowserExtensionProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const L = H > W ? LAYOUT_TALL : LAYOUT_WIDE;
   const WIN = L.win;
   const EXT = extOf(WIN.w);
   const POP = popOf(WIN.w);
   const u = W / L.w;
-  const pal = palette(theme);
+  const themePal = palette(theme);
+  const pal: Pal = ink ? { ...themePal, ink } : themePal;
   const hlColor =
     highlightColor ??
     (pal.dark ? "rgba(250,204,21,0.26)" : "rgba(250,204,21,0.36)");
@@ -507,7 +548,6 @@ export function BrowserExtension({
     ...clampX,
     easing: camE,
   });
-  const ink = pal.dark ? "#EDEDEF" : "#171717";
   const favicon = (size: number) => (
     <div
       style={{
@@ -516,7 +556,7 @@ export function BrowserExtension({
         borderRadius: size * 0.25,
         background: pal.well,
         boxShadow: `inset 0 0 0 1px ${pal.line}`,
-        color: ink,
+        color: pal.ink,
         fontFamily: serif,
         fontSize: size * 0.55,
         display: "flex",
@@ -535,122 +575,195 @@ export function BrowserExtension({
         fontFamily,
         overflow: "hidden",
         WebkitFontSmoothing: "antialiased",
-        background: pal.base,
+        background:
+          background === undefined
+            ? pal.base
+            : background === "transparent"
+              ? undefined
+              : background,
       }}
     >
-      <GshGround
-        preset={ground ?? (pal.dark ? "velvet-hour" : "glasswork")}
-        params={groundParams}
-        timeOffset={pal.dark ? 6 : 2}
-        timeScale={0.3}
-      />
-      <AbsoluteFill style={{ background: pal.scrim }} />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: L.w,
-          height: L.h,
-          transformOrigin: "0 0",
-          transform: `scale(${u})`,
-        }}
-      >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? (pal.dark ? "velvet-hour" : "glasswork")}
+            params={groundParams}
+            timeOffset={pal.dark ? 6 : 2}
+            timeScale={0.3}
+          />
+          <AbsoluteFill style={{ background: pal.scrim }} />
+        </>
+      ) : null}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transform: `scale(${cam})`,
-            transformOrigin: `${(extPt.x / L.w) * 100}% ${(extPt.y / L.h) * 100}%`,
+            left: 0,
+            top: 0,
+            width: L.w,
+            height: L.h,
+            transformOrigin: "0 0",
+            transform: `scale(${u})`,
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: WIN.x,
-              top: WIN.y,
-              width: WIN.w,
-              height: WIN.h,
-              borderRadius: 14,
-              overflow: "hidden",
-              background: pal.page,
-              boxShadow: pal.shadow,
-              opacity: Math.min(1, enter * 1.6),
-              transform: `translateY(${(1 - enter) * 48}px) scale(${0.97 + 0.03 * enter})`,
+              inset: 0,
+              transform: `scale(${cam})`,
+              transformOrigin: `${(extPt.x / L.w) * 100}% ${(extPt.y / L.h) * 100}%`,
             }}
           >
             <div
               style={{
-                height: TABS_H,
-                background: pal.tabs,
-                display: "flex",
-                alignItems: "flex-end",
-                padding: "0 12px",
+                position: "absolute",
+                left: WIN.x,
+                top: WIN.y,
+                width: WIN.w,
+                height: WIN.h,
+                borderRadius: 14,
+                overflow: "hidden",
+                background: pal.page,
+                boxShadow: pal.shadow,
+                opacity: Math.min(1, enter * 1.6),
+                transform: `translateY(${(1 - enter) * 48}px) scale(${0.97 + 0.03 * enter})`,
               }}
             >
               <div
                 style={{
+                  height: TABS_H,
+                  background: pal.tabs,
                   display: "flex",
-                  gap: 8,
-                  alignSelf: "center",
-                  marginRight: 16,
-                }}
-              >
-                {[0, 1, 2].map((c) => (
-                  <div
-                    key={c}
-                    style={{
-                      width: 12,
-                      height: 12,
-                      borderRadius: 99,
-                      boxShadow: `inset 0 0 0 1px ${pal.border}`,
-                    }}
-                  />
-                ))}
-              </div>
-              <div
-                style={{
-                  width: 280,
-                  height: 32,
-                  borderRadius: "10px 10px 0 0",
-                  background: pal.tab,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
+                  alignItems: "flex-end",
                   padding: "0 12px",
-                  fontSize: 13,
-                  color: pal.ink,
                 }}
               >
-                {favicon(16)}
-                <span
+                <div
                   style={{
-                    flex: 1,
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
+                    display: "flex",
+                    gap: 8,
+                    alignSelf: "center",
+                    marginRight: 16,
                   }}
                 >
-                  {title}
-                </span>
-              </div>
-            </div>
-
-            <div
-              style={{
-                height: BAR_H,
-                background: pal.bar,
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-                padding: "0 10px",
-                borderBottom: `1px solid ${pal.line}`,
-                position: "relative",
-              }}
-            >
-              {(["back", "fwd", "reload"] as IconName[]).map((n) => (
+                  {[0, 1, 2].map((c) => (
+                    <div
+                      key={c}
+                      style={{
+                        width: 12,
+                        height: 12,
+                        borderRadius: 99,
+                        boxShadow: `inset 0 0 0 1px ${pal.border}`,
+                      }}
+                    />
+                  ))}
+                </div>
                 <div
-                  key={n}
+                  style={{
+                    width: 280,
+                    height: 32,
+                    borderRadius: "10px 10px 0 0",
+                    background: pal.tab,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "0 12px",
+                    fontSize: 13,
+                    color: pal.ink,
+                  }}
+                >
+                  {favicon(16)}
+                  <span
+                    style={{
+                      flex: 1,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {title}
+                  </span>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  height: BAR_H,
+                  background: pal.bar,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                  padding: "0 10px",
+                  borderBottom: `1px solid ${pal.line}`,
+                  position: "relative",
+                }}
+              >
+                {(["back", "fwd", "reload"] as IconName[]).map((n) => (
+                  <div
+                    key={n}
+                    style={{
+                      width: 32,
+                      height: 32,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Icon
+                      name={n}
+                      color={n === "fwd" ? pal.faint : pal.muted}
+                      size={17}
+                      stroke={1.5}
+                    />
+                  </div>
+                ))}
+                <div
+                  style={{
+                    flex: 1,
+                    height: 34,
+                    borderRadius: 99,
+                    background: pal.omni,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "0 14px",
+                    fontSize: 14,
+                    color: pal.faint,
+                    marginRight: 8,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                  }}
+                >
+                  <span style={{ color: pal.ink }}>{url.split("/")[0]}</span>
+                  <span style={{ marginLeft: -8 }}>
+                    /{url.split("/").slice(1).join("/")}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    left: EXT.x,
+                    top: EXT.y - TABS_H,
+                    width: EXT.s,
+                    height: EXT.s,
+                    borderRadius: 8,
+                    background:
+                      open > 0.01 && popOp > 0
+                        ? pal.hover
+                        : withAlpha(
+                            pal.dark ? "#ffffff" : "#111318",
+                            (pal.dark ? 0.1 : 0.07) * hoverExt,
+                          ),
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transform: `scale(${1 - 0.04 * tap(T.click)})`,
+                  }}
+                >
+                  <ExtMark accent={accent} size={18} />
+                </div>
+                <div style={{ width: EXT.s }} />
+                <div
                   style={{
                     width: 32,
                     height: 32,
@@ -660,540 +773,490 @@ export function BrowserExtension({
                   }}
                 >
                   <Icon
-                    name={n}
-                    color={n === "fwd" ? pal.faint : pal.muted}
+                    name="puzzle"
+                    color={pal.muted}
                     size={17}
                     stroke={1.5}
                   />
                 </div>
-              ))}
-              <div
-                style={{
-                  flex: 1,
-                  height: 34,
-                  borderRadius: 99,
-                  background: pal.omni,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "0 14px",
-                  fontSize: 14,
-                  color: pal.faint,
-                  marginRight: 8,
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                }}
-              >
-                <span style={{ color: pal.ink }}>{url.split("/")[0]}</span>
-                <span style={{ marginLeft: -8 }}>
-                  /{url.split("/").slice(1).join("/")}
-                </span>
+                <div
+                  style={{
+                    width: 26,
+                    height: 26,
+                    borderRadius: 99,
+                    marginLeft: 4,
+                    background: pal.well,
+                    boxShadow: `inset 0 0 0 1px ${pal.line}`,
+                    color: pal.muted,
+                    fontSize: 11,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  LP
+                </div>
               </div>
-              <div
-                style={{
-                  position: "absolute",
-                  left: EXT.x,
-                  top: EXT.y - TABS_H,
-                  width: EXT.s,
-                  height: EXT.s,
-                  borderRadius: 8,
-                  background:
-                    open > 0.01 && popOp > 0
-                      ? pal.hover
-                      : withAlpha(
-                          pal.dark ? "#ffffff" : "#111318",
-                          (pal.dark ? 0.1 : 0.07) * hoverExt,
-                        ),
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  transform: `scale(${1 - 0.04 * tap(T.click)})`,
-                }}
-              >
-                <ExtMark accent={accent} size={18} />
-              </div>
-              <div style={{ width: EXT.s }} />
-              <div
-                style={{
-                  width: 32,
-                  height: 32,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Icon name="puzzle" color={pal.muted} size={17} stroke={1.5} />
-              </div>
-              <div
-                style={{
-                  width: 26,
-                  height: 26,
-                  borderRadius: 99,
-                  marginLeft: 4,
-                  background: pal.well,
-                  boxShadow: `inset 0 0 0 1px ${pal.line}`,
-                  color: pal.muted,
-                  fontSize: 11,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                LP
-              </div>
-            </div>
 
-            <div
-              style={{
-                position: "absolute",
-                top: CHROME,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                overflow: "hidden",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  padding: `${L.padTop}px 56px 0`,
-                  transform: `translateY(${-scroll}px)`,
-                }}
-              >
-                <article style={{ width: L.articleW }}>
-                  <div
-                    style={{
-                      fontSize: 13,
-                      color: pal.faint,
-                      fontVariantNumeric: "tabular-nums",
-                    }}
-                  >
-                    {kicker}
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: serif,
-                      fontSize: L.title,
-                      fontWeight: 400,
-                      lineHeight: 1.08,
-                      letterSpacing: "-0.025em",
-                      color: pal.ink,
-                      marginTop: 10,
-                      textWrap: "balance",
-                    }}
-                  >
-                    {title}
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: serif,
-                      fontSize: L.body + 1,
-                      fontWeight: 300,
-                      color: pal.muted,
-                      marginTop: 10,
-                      lineHeight: 1.45,
-                    }}
-                  >
-                    {dek}
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      marginTop: 18,
-                      fontSize: 14,
-                    }}
-                  >
-                    <span style={{ color: pal.ink }}>{author}</span>
-                    <span style={{ color: pal.faint }}>{date}</span>
-                  </div>
-                  <div
-                    style={{
-                      height: 1,
-                      background: pal.line,
-                      margin: "22px 0 22px",
-                    }}
-                  />
-                  {paragraphs.map((p) => (
-                    <p
-                      key={p.slice(0, 24)}
-                      style={{
-                        fontFamily: serif,
-                        fontSize: L.body,
-                        lineHeight: 1.65,
-                        color: pal.body,
-                        margin: "0 0 18px",
-                        textWrap: "pretty",
-                      }}
-                    >
-                      <Paragraph
-                        text={p}
-                        marks={marks.filter((m) => p.includes(m.text))}
-                        frame={frame}
-                        color={hlColor}
-                      />
-                    </p>
-                  ))}
-                </article>
-              </div>
               <div
                 style={{
                   position: "absolute",
-                  top: 0,
+                  top: CHROME,
                   left: 0,
                   right: 0,
-                  height: 58,
-                  background: pal.page,
-                  display: "flex",
-                  alignItems: "center",
-                  padding: "0 56px",
-                  borderBottom: `1px solid ${pal.line}`,
-                }}
-              >
-                <span
-                  style={{
-                    fontFamily: serif,
-                    fontSize: 21,
-                    color: pal.ink,
-                    letterSpacing: "-0.01em",
-                  }}
-                >
-                  {siteName}
-                </span>
-                <span
-                  style={{
-                    marginLeft: 36,
-                    display: "flex",
-                    gap: 22,
-                    fontSize: 14,
-                    color: pal.muted,
-                  }}
-                >
-                  <span>Essays</span>
-                  <span style={{ color: pal.ink }}>Notes</span>
-                  <span>About</span>
-                </span>
-              </div>
-            </div>
-
-            {popOp > 0 ? (
-              <div
-                style={{
-                  position: "absolute",
-                  left: POP.x,
-                  top: POP.top,
-                  width: POP_W,
-                  borderRadius: 14,
-                  background: pal.pop,
-                  boxShadow: pal.popShadow,
-                  opacity: popOp,
-                  transform: `translateY(${(1 - open) * -8 - closeP * 6}px) scale(${0.94 + 0.06 * open - 0.03 * closeP})`,
-                  transformOrigin: `${EXT.x + EXT.s / 2 - POP.x}px -8px`,
+                  bottom: 0,
                   overflow: "hidden",
                 }}
               >
                 <div
                   style={{
                     display: "flex",
+                    padding: `${L.padTop}px 56px 0`,
+                    transform: `translateY(${-scroll}px)`,
+                  }}
+                >
+                  <article style={{ width: L.articleW }}>
+                    <div
+                      style={{
+                        fontSize: 13,
+                        color: pal.faint,
+                        fontVariantNumeric: "tabular-nums",
+                      }}
+                    >
+                      {kicker}
+                    </div>
+                    <div
+                      style={{
+                        fontFamily: serif,
+                        fontSize: L.title,
+                        fontWeight: 400,
+                        lineHeight: 1.08,
+                        letterSpacing: "-0.025em",
+                        color: pal.ink,
+                        marginTop: 10,
+                        textWrap: "balance",
+                      }}
+                    >
+                      {title}
+                    </div>
+                    <div
+                      style={{
+                        fontFamily: serif,
+                        fontSize: L.body + 1,
+                        fontWeight: 300,
+                        color: pal.muted,
+                        marginTop: 10,
+                        lineHeight: 1.45,
+                      }}
+                    >
+                      {dek}
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        marginTop: 18,
+                        fontSize: 14,
+                      }}
+                    >
+                      <span style={{ color: pal.ink }}>{author}</span>
+                      <span style={{ color: pal.faint }}>{date}</span>
+                    </div>
+                    <div
+                      style={{
+                        height: 1,
+                        background: pal.line,
+                        margin: "22px 0 22px",
+                      }}
+                    />
+                    {paragraphs.map((p) => (
+                      <p
+                        key={p.slice(0, 24)}
+                        style={{
+                          fontFamily: serif,
+                          fontSize: L.body,
+                          lineHeight: 1.65,
+                          color: pal.body,
+                          margin: "0 0 18px",
+                          textWrap: "pretty",
+                        }}
+                      >
+                        <Paragraph
+                          text={p}
+                          marks={marks.filter((m) => p.includes(m.text))}
+                          frame={frame}
+                          color={hlColor}
+                        />
+                      </p>
+                    ))}
+                  </article>
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 58,
+                    background: pal.page,
+                    display: "flex",
                     alignItems: "center",
-                    gap: 9,
-                    padding: "14px 16px",
+                    padding: "0 56px",
                     borderBottom: `1px solid ${pal.line}`,
                   }}
                 >
-                  <ExtMark accent={accent} size={20} />
-                  <span style={{ fontSize: 15, color: pal.ink }}>
-                    {extensionName}
+                  <span
+                    style={{
+                      fontFamily: serif,
+                      fontSize: 21,
+                      color: pal.ink,
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
+                    {siteName}
                   </span>
-                  <span style={{ marginLeft: "auto" }}>
-                    <Icon
-                      name="close"
-                      color={pal.faint}
-                      size={15}
-                      stroke={1.5}
-                    />
+                  <span
+                    style={{
+                      marginLeft: 36,
+                      display: "flex",
+                      gap: 22,
+                      fontSize: 14,
+                      color: pal.muted,
+                    }}
+                  >
+                    <span>Essays</span>
+                    <span style={{ color: pal.ink }}>Notes</span>
+                    <span>About</span>
                   </span>
                 </div>
+              </div>
 
-                <div style={{ padding: "14px 16px 16px" }}>
-                  <div
-                    style={{ display: "flex", gap: 11, alignItems: "center" }}
-                  >
-                    {favicon(36)}
-                    <div style={{ minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontSize: 15,
-                          color: pal.ink,
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        {title}
-                      </div>
-                      <div
-                        style={{ fontSize: 13, color: pal.faint, marginTop: 2 }}
-                      >
-                        {url.split("/")[0]} · {author}
-                      </div>
-                    </div>
-                  </div>
-
+              {popOp > 0 ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: POP.x,
+                    top: POP.top,
+                    width: POP_W,
+                    borderRadius: 14,
+                    background: pal.pop,
+                    boxShadow: pal.popShadow,
+                    opacity: popOp,
+                    transform: `translateY(${(1 - open) * -8 - closeP * 6}px) scale(${0.94 + 0.06 * open - 0.03 * closeP})`,
+                    transformOrigin: `${EXT.x + EXT.s / 2 - POP.x}px -8px`,
+                    overflow: "hidden",
+                  }}
+                >
                   <div
                     style={{
-                      marginTop: 14,
                       display: "flex",
                       alignItems: "center",
-                      gap: 8,
-                      fontSize: 13,
-                      color: pal.muted,
-                      height: 18,
+                      gap: 9,
+                      padding: "14px 16px",
+                      borderBottom: `1px solid ${pal.line}`,
+                    }}
+                  >
+                    <ExtMark accent={accent} size={20} />
+                    <span style={{ fontSize: 15, color: pal.ink }}>
+                      {extensionName}
+                    </span>
+                    <span style={{ marginLeft: "auto" }}>
+                      <Icon
+                        name="close"
+                        color={pal.faint}
+                        size={15}
+                        stroke={1.5}
+                      />
+                    </span>
+                  </div>
+
+                  <div style={{ padding: "14px 16px 16px" }}>
+                    <div
+                      style={{ display: "flex", gap: 11, alignItems: "center" }}
+                    >
+                      {favicon(36)}
+                      <div style={{ minWidth: 0 }}>
+                        <div
+                          style={{
+                            fontSize: 15,
+                            color: pal.ink,
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {title}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 13,
+                            color: pal.faint,
+                            marginTop: 2,
+                          }}
+                        >
+                          {url.split("/")[0]} · {author}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 14,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        fontSize: 13,
+                        color: pal.muted,
+                        height: 18,
+                        fontVariantNumeric: "tabular-nums",
+                      }}
+                    >
+                      {reading < 1 ? (
+                        <>
+                          <Spinner color={pal.muted} size={13} frame={frame} />
+                          {readingLabel}
+                          <span style={{ marginLeft: "auto" }}>
+                            {Math.round(reading * 100)}%
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <Icon
+                            name="highlighter"
+                            color={pal.muted}
+                            size={14}
+                            stroke={1.5}
+                          />
+                          <span>
+                            {hlCount}{" "}
+                            {hlCount === 1 ? "highlight" : "highlights"}
+                          </span>
+                          <span
+                            style={{ marginLeft: "auto", color: pal.faint }}
+                          >
+                            6 min read
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 8,
+                        height: 2,
+                        borderRadius: 99,
+                        background: pal.well,
+                        overflow: "hidden",
+                        opacity: 1 - tween(frame, T.hl[0], T.hl[0] + 6, exitE),
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          background: pal.ink,
+                          transformOrigin: "0 50%",
+                          transform: `scaleX(${reading})`,
+                        }}
+                      />
+                    </div>
+
+                    <div
+                      style={{ marginTop: 14, fontSize: 13, color: pal.faint }}
+                    >
+                      {summaryLabel}
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 8,
+                        minHeight: 160,
+                        position: "relative",
+                      }}
+                    >
+                      {summary.map((s, i) => {
+                        const a = sumIn(i);
+                        return (
+                          <div
+                            key={s}
+                            style={{
+                              display: "flex",
+                              gap: 10,
+                              fontSize: 14,
+                              lineHeight: 1.5,
+                              color: pal.ink,
+                              marginBottom: 10,
+                              opacity: a,
+                              transform: `translateY(${(1 - a) * 8}px)`,
+                            }}
+                          >
+                            <span
+                              style={{
+                                width: 14,
+                                color: pal.faint,
+                                fontVariantNumeric: "tabular-nums",
+                                flexShrink: 0,
+                              }}
+                            >
+                              {i + 1}
+                            </span>
+                            <span style={{ textWrap: "pretty" }}>{s}</span>
+                          </div>
+                        );
+                      })}
+                      {frame < T.sum + 6 ? (
+                        <div
+                          style={{
+                            position: "absolute",
+                            inset: "4px 0 auto 24px",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 12,
+                            opacity:
+                              tween(frame, T.read + 4, T.read + 10) *
+                              (1 - tween(frame, T.sum - 2, T.sum + 4, exitE)),
+                          }}
+                        >
+                          {[92, 74, 86, 58].map((w) => (
+                            <div
+                              key={w}
+                              style={{
+                                width: `${w}%`,
+                                height: 10,
+                                borderRadius: 5,
+                                background: pal.well,
+                              }}
+                            />
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        height: 40,
+                        borderTop: `1px solid ${pal.line}`,
+                        fontSize: 14,
+                      }}
+                    >
+                      <span style={{ color: pal.faint }}>Collection</span>
+                      <span style={{ marginLeft: "auto", color: pal.ink }}>
+                        {collection}
+                      </span>
+                      <Icon
+                        name="chevDown"
+                        color={pal.faint}
+                        size={15}
+                        stroke={1.5}
+                      />
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 8,
+                        height: 40,
+                        borderRadius: 8,
+                        background: saved
+                          ? withAlpha(pal.green, pal.dark ? 0.14 : 0.1)
+                          : accent,
+                        color: saved ? pal.green : "#fff",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 8,
+                        fontSize: 15,
+                        transform: `scale(${1 - 0.04 * tap(T.save)})`,
+                        filter: `brightness(${saved ? 1 : 1 - 0.08 * saveHover})`,
+                      }}
+                    >
+                      {saving ? (
+                        <Spinner color="#fff" size={14} frame={frame} />
+                      ) : saved ? (
+                        <span
+                          style={{
+                            opacity: Math.min(1, savedIn),
+                            transform: `scale(${0.4 + 0.6 * savedIn})`,
+                          }}
+                        >
+                          <Icon
+                            name="check"
+                            color={pal.green}
+                            size={16}
+                            stroke={2}
+                          />
+                        </span>
+                      ) : null}
+                      <span>
+                        {saving
+                          ? "Saving"
+                          : saved
+                            ? `Saved to ${collection}`
+                            : saveLabel}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
+              {toastOp > 0 ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    right: 20,
+                    top: POP.top,
+                    transform: `translateY(${(1 - toast) * -18}px) scale(${0.96 + 0.04 * toast})`,
+                    transformOrigin: "100% 0",
+                    opacity: toastOp,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    height: 52,
+                    padding: "0 8px 0 16px",
+                    borderRadius: 12,
+                    background: pal.pop,
+                    boxShadow: pal.popShadow,
+                    color: pal.ink,
+                    fontSize: 15,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  <Icon name="check" color={pal.green} size={16} stroke={2} />
+                  <span>Saved to {collection}</span>
+                  <span
+                    style={{
+                      color: pal.faint,
                       fontVariantNumeric: "tabular-nums",
                     }}
                   >
-                    {reading < 1 ? (
-                      <>
-                        <Spinner color={pal.muted} size={13} frame={frame} />
-                        Reading page
-                        <span style={{ marginLeft: "auto" }}>
-                          {Math.round(reading * 100)}%
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <Icon
-                          name="highlighter"
-                          color={pal.muted}
-                          size={14}
-                          stroke={1.5}
-                        />
-                        <span>
-                          {hlCount} {hlCount === 1 ? "highlight" : "highlights"}
-                        </span>
-                        <span style={{ marginLeft: "auto", color: pal.faint }}>
-                          6 min read
-                        </span>
-                      </>
-                    )}
-                  </div>
-                  <div
+                    {highlights.length} highlights
+                  </span>
+                  <span
                     style={{
-                      marginTop: 8,
-                      height: 2,
-                      borderRadius: 99,
-                      background: pal.well,
-                      overflow: "hidden",
-                      opacity: 1 - tween(frame, T.hl[0], T.hl[0] + 6, exitE),
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        background: ink,
-                        transformOrigin: "0 50%",
-                        transform: `scaleX(${reading})`,
-                      }}
-                    />
-                  </div>
-
-                  <div
-                    style={{ marginTop: 14, fontSize: 13, color: pal.faint }}
-                  >
-                    Summary
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 8,
-                      minHeight: 160,
-                      position: "relative",
-                    }}
-                  >
-                    {summary.map((s, i) => {
-                      const a = sumIn(i);
-                      return (
-                        <div
-                          key={s}
-                          style={{
-                            display: "flex",
-                            gap: 10,
-                            fontSize: 14,
-                            lineHeight: 1.5,
-                            color: pal.ink,
-                            marginBottom: 10,
-                            opacity: a,
-                            transform: `translateY(${(1 - a) * 8}px)`,
-                          }}
-                        >
-                          <span
-                            style={{
-                              width: 14,
-                              color: pal.faint,
-                              fontVariantNumeric: "tabular-nums",
-                              flexShrink: 0,
-                            }}
-                          >
-                            {i + 1}
-                          </span>
-                          <span style={{ textWrap: "pretty" }}>{s}</span>
-                        </div>
-                      );
-                    })}
-                    {frame < T.sum + 6 ? (
-                      <div
-                        style={{
-                          position: "absolute",
-                          inset: "4px 0 auto 24px",
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: 12,
-                          opacity:
-                            tween(frame, T.read + 4, T.read + 10) *
-                            (1 - tween(frame, T.sum - 2, T.sum + 4, exitE)),
-                        }}
-                      >
-                        {[92, 74, 86, 58].map((w) => (
-                          <div
-                            key={w}
-                            style={{
-                              width: `${w}%`,
-                              height: 10,
-                              borderRadius: 5,
-                              background: pal.well,
-                            }}
-                          />
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                      height: 40,
-                      borderTop: `1px solid ${pal.line}`,
-                      fontSize: 14,
-                    }}
-                  >
-                    <span style={{ color: pal.faint }}>Collection</span>
-                    <span style={{ marginLeft: "auto", color: pal.ink }}>
-                      {collection}
-                    </span>
-                    <Icon
-                      name="chevDown"
-                      color={pal.faint}
-                      size={15}
-                      stroke={1.5}
-                    />
-                  </div>
-
-                  <div
-                    style={{
-                      marginTop: 8,
-                      height: 40,
+                      marginLeft: 4,
+                      height: 36,
+                      padding: "0 14px",
                       borderRadius: 8,
-                      background: saved
-                        ? withAlpha(pal.green, pal.dark ? 0.14 : 0.1)
-                        : accent,
-                      color: saved ? pal.green : "#fff",
+                      background: pal.well,
                       display: "flex",
                       alignItems: "center",
-                      justifyContent: "center",
-                      gap: 8,
-                      fontSize: 15,
-                      transform: `scale(${1 - 0.04 * tap(T.save)})`,
-                      filter: `brightness(${saved ? 1 : 1 - 0.08 * saveHover})`,
                     }}
                   >
-                    {saving ? (
-                      <Spinner color="#fff" size={14} frame={frame} />
-                    ) : saved ? (
-                      <span
-                        style={{
-                          opacity: Math.min(1, savedIn),
-                          transform: `scale(${0.4 + 0.6 * savedIn})`,
-                        }}
-                      >
-                        <Icon
-                          name="check"
-                          color={pal.green}
-                          size={16}
-                          stroke={2}
-                        />
-                      </span>
-                    ) : null}
-                    <span>
-                      {saving
-                        ? "Saving"
-                        : saved
-                          ? `Saved to ${collection}`
-                          : saveLabel}
-                    </span>
-                  </div>
+                    {openLabel}
+                  </span>
                 </div>
-              </div>
-            ) : null}
+              ) : null}
+            </div>
 
-            {toastOp > 0 ? (
-              <div
-                style={{
-                  position: "absolute",
-                  right: 20,
-                  top: POP.top,
-                  transform: `translateY(${(1 - toast) * -18}px) scale(${0.96 + 0.04 * toast})`,
-                  transformOrigin: "100% 0",
-                  opacity: toastOp,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  height: 52,
-                  padding: "0 8px 0 16px",
-                  borderRadius: 12,
-                  background: pal.pop,
-                  boxShadow: pal.popShadow,
-                  color: pal.ink,
-                  fontSize: 15,
-                  whiteSpace: "nowrap",
-                }}
-              >
-                <Icon name="check" color={pal.green} size={16} stroke={2} />
-                <span>Saved to {collection}</span>
-                <span
-                  style={{
-                    color: pal.faint,
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  {highlights.length} highlights
-                </span>
-                <span
-                  style={{
-                    marginLeft: 4,
-                    height: 36,
-                    padding: "0 14px",
-                    borderRadius: 8,
-                    background: pal.well,
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  Open
-                </span>
+            {cursorOp > 0 ? (
+              <div style={{ opacity: cursorOp }}>
+                <Cursor x={cur.x} y={cur.y} press={press} />
               </div>
             ) : null}
           </div>
-
-          {cursorOp > 0 ? (
-            <div style={{ opacity: cursorOp }}>
-              <Cursor x={cur.x} y={cur.y} press={press} />
-            </div>
-          ) : null}
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

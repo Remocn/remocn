@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const gearShiftConfig: ComponentConfig = {
   componentName: "GearShift",
@@ -64,6 +70,17 @@ export const gearShiftConfig: ComponentConfig = {
       description: "Gears",
       hiddenFromList: false,
     },
+    pause: {
+      type: "number",
+      default: 4,
+      min: 0,
+      max: 20,
+      step: 1,
+      description: "Gear pause (frames)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Plus Jakarta Sans" }),
     speed: {
       type: "number",
       default: 1,

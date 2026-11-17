@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont as loadFamiljen } from "@remotion/google-fonts/FamiljenGrotesk";
+import type React from "react";
 import { useEffect, useId, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -23,7 +24,19 @@ export interface TimesTurnProps {
   before?: string;
   label?: string;
   accent?: string;
+  /** Text color of the figure and label; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Familjen Grotesk by default. */
+  fontFamily?: string;
+  /** Weight of the figure. */
+  fontWeight?: number;
+  /** Frames between words of the label. */
+  stagger?: number;
+  /** Size of the figure and label, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -63,12 +76,17 @@ interface Metrics {
   baseOff: number;
 }
 
-function measure(value: string, unit: string): Metrics {
+function measure(
+  value: string,
+  unit: string,
+  fontFamily: string,
+  fontWeight: number,
+): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("times-turn: no 2d context");
-  const fam = `"${familjen.fontFamily}"`;
-  ctx.font = `500 100px ${fam}`;
+  const fam = `"${fontFamily}"`;
+  ctx.font = `${fontWeight} 100px ${fam}`;
   const n = Array.from(value).length;
   const digits = ctx.measureText(value).width / 100 + TRACK * n;
   const unitW = unit
@@ -82,8 +100,13 @@ function measure(value: string, unit: string): Metrics {
   return { digits, unit: unitW, figH, baseOff };
 }
 
-function useMetrics(value: string, unit: string) {
-  const key = `${value}\u0001${unit}`;
+function useMetrics(
+  value: string,
+  unit: string,
+  fontFamily: string,
+  fontWeight: number,
+) {
+  const key = `${value}\u0001${unit}\u0001${fontFamily}\u0001${fontWeight}`;
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("times-turn: measuring"));
   const released = useRef(false);
@@ -92,13 +115,13 @@ function useMetrics(value: string, unit: string) {
     const [v, u] = key.split("\u0001");
     Promise.all([
       familjen.waitUntilDone(),
-      document.fonts.load(`500 100px "${familjen.fontFamily}"`),
-      document.fonts.load(`400 100px "${familjen.fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measure(v, u) });
+        setState({ key, m: measure(v, u, fontFamily, fontWeight) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -107,8 +130,24 @@ function useMetrics(value: string, unit: string) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily, fontWeight]);
   return state && state.key === key ? state.m : null;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function TimesTurn({
@@ -116,15 +155,22 @@ export function TimesTurn({
   before = "%",
   label = "more launch cuts from the same storyboard",
   accent,
+  ink,
   background,
+  fontFamily = familjen.fontFamily,
+  fontWeight = 500,
+  stagger = 2,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: TimesTurnProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const gid = `tt${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
-  const m = useMetrics(value, before);
+  const m = useMetrics(value, before, fontFamily, fontWeight);
 
   const transparent = background === "transparent";
   const hot = accent ?? ORANGE;
@@ -219,16 +265,16 @@ export function TimesTurn({
   const maskTop = baseY - m.figH * F - F * 0.12;
   const maskH = m.figH * F + F * 0.16;
 
-  const quietInk = `color-mix(in srgb, ${c.ink} 42%, ${field})`;
+  const quietInk = `color-mix(in srgb, ${fg} 42%, ${field})`;
   const quietSign = `color-mix(in srgb, ${c.inkOnAccent} 45%, ${hot})`;
-  const signInk = transparent ? c.ink : c.inkOnAccent;
+  const signInk = transparent ? fg : c.inkOnAccent;
 
   const labelWords = label ? label.split(" ") : [];
 
   const textStyle = {
     position: "absolute" as const,
-    fontFamily: familjen.fontFamily,
-    fontWeight: 500,
+    fontFamily,
+    fontWeight,
     fontSize: F,
     lineHeight: `${F}px`,
     letterSpacing: `${TRACK}em`,
@@ -258,139 +304,144 @@ export function TimesTurn({
         />
       )}
 
-      <svg
-        width={W}
-        height={H}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <clipPath id={`${gid}s`}>
-            <rect
-              x={signBox.x}
-              y={signClipTop}
-              width={signBox.w}
-              height={signClipH}
-            />
-          </clipPath>
-        </defs>
-        <g clipPath={`url(#${gid}s)`}>
-          <g
-            transform={`translate(${signCx.toFixed(2)} ${(signCy + signDy).toFixed(2)}) rotate(${angle.toFixed(3)})`}
-          >
-            {[quietSign, signInk].map((paint, k) => (
-              <g key={paint} opacity={k === 0 ? 1 - fill : fill}>
-                <rect
-                  x={-arm / 2}
-                  y={-stroke / 2}
-                  width={arm}
-                  height={stroke}
-                  style={{ fill: paint }}
-                />
-                <rect
-                  x={-stroke / 2}
-                  y={-arm / 2}
-                  width={stroke}
-                  height={arm}
-                  style={{ fill: paint }}
-                />
-              </g>
-            ))}
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            <clipPath id={`${gid}s`}>
+              <rect
+                x={signBox.x}
+                y={signClipTop}
+                width={signBox.w}
+                height={signClipH}
+              />
+            </clipPath>
+          </defs>
+          <g clipPath={`url(#${gid}s)`}>
+            <g
+              transform={`translate(${signCx.toFixed(2)} ${(signCy + signDy).toFixed(2)}) rotate(${angle.toFixed(3)})`}
+            >
+              {[quietSign, signInk].map((paint, k) => (
+                <g key={paint} opacity={k === 0 ? 1 - fill : fill}>
+                  <rect
+                    x={-arm / 2}
+                    y={-stroke / 2}
+                    width={arm}
+                    height={stroke}
+                    style={{ fill: paint }}
+                  />
+                  <rect
+                    x={-stroke / 2}
+                    y={-arm / 2}
+                    width={stroke}
+                    height={arm}
+                    style={{ fill: paint }}
+                  />
+                </g>
+              ))}
+            </g>
           </g>
-        </g>
-      </svg>
+        </svg>
 
-      <div
-        style={{
-          position: "absolute",
-          left: numBox.x,
-          width: numBox.w,
-          top: maskTop,
-          height: maskH,
-          overflow: "hidden",
-        }}
-      >
         <div
           style={{
-            ...textStyle,
-            left: digitsLeft - numBox.x,
-            top: lineTop - maskTop + (1 - digitsRise) * maskH,
-            transform: `skewX(${(-lean).toFixed(2)}deg)`,
-            transformOrigin: `0 ${(m.baseOff * F).toFixed(1)}px`,
+            position: "absolute",
+            left: numBox.x,
+            width: numBox.w,
+            top: maskTop,
+            height: maskH,
+            overflow: "hidden",
           }}
         >
-          <span style={{ position: "relative", display: "inline-block" }}>
-            <span style={{ color: quietInk, opacity: 1 - fill }}>{value}</span>
-            <span
-              style={{
-                position: "absolute",
-                left: 0,
-                top: 0,
-                opacity: fill,
-                color: c.ink,
-              }}
-            >
-              {value}
-            </span>
-          </span>
-        </div>
-        {before ? (
           <div
             style={{
               ...textStyle,
-              left: digitsLeft - numBox.x + (m.digits + GAP) * F,
-              top: lineTop - maskTop + (1 - unitRise) * maskH + pctOut * maskH,
-              color: quietInk,
-              opacity: 1 - pctOut * pctOut,
+              left: digitsLeft - numBox.x,
+              top: lineTop - maskTop + (1 - digitsRise) * maskH,
               transform: `skewX(${(-lean).toFixed(2)}deg)`,
               transformOrigin: `0 ${(m.baseOff * F).toFixed(1)}px`,
             }}
           >
-            {before}
-          </div>
-        ) : null}
-      </div>
-
-      {label ? (
-        <div
-          style={{
-            position: "absolute",
-            left: digitsLeft,
-            width: Math.min(innerW, labelFs * 14),
-            bottom: H - numBox.y - numBox.h + pad - labelFs * 0.2,
-            display: "flex",
-            flexWrap: "wrap",
-            columnGap: "0.26em",
-            fontFamily: familjen.fontFamily,
-            fontWeight: 400,
-            fontSize: labelFs,
-            lineHeight: 1.25,
-            letterSpacing: "-0.01em",
-            color: c.ink,
-          }}
-        >
-          {labelWords.map((w, k) => {
-            const p = interpolate(
-              t,
-              [LABEL_AT + k * 2, LABEL_AT + k * 2 + 16],
-              [0, 1],
-              { ...CLAMP, easing: EASE_OUT },
-            );
-            return (
+            <span style={{ position: "relative", display: "inline-block" }}>
+              <span style={{ color: quietInk, opacity: 1 - fill }}>
+                {value}
+              </span>
               <span
-                key={`${w}-${k}`}
                 style={{
-                  display: "inline-block",
-                  opacity: p,
-                  transform: `translateY(${((1 - p) * labelFs * 0.7).toFixed(2)}px)`,
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  opacity: fill,
+                  color: fg,
                 }}
               >
-                {w}
+                {value}
               </span>
-            );
-          })}
+            </span>
+          </div>
+          {before ? (
+            <div
+              style={{
+                ...textStyle,
+                left: digitsLeft - numBox.x + (m.digits + GAP) * F,
+                top:
+                  lineTop - maskTop + (1 - unitRise) * maskH + pctOut * maskH,
+                color: quietInk,
+                opacity: 1 - pctOut * pctOut,
+                transform: `skewX(${(-lean).toFixed(2)}deg)`,
+                transformOrigin: `0 ${(m.baseOff * F).toFixed(1)}px`,
+              }}
+            >
+              {before}
+            </div>
+          ) : null}
         </div>
-      ) : null}
+
+        {label ? (
+          <div
+            style={{
+              position: "absolute",
+              left: digitsLeft,
+              width: Math.min(innerW, labelFs * 14),
+              bottom: H - numBox.y - numBox.h + pad - labelFs * 0.2,
+              display: "flex",
+              flexWrap: "wrap",
+              columnGap: "0.26em",
+              fontFamily,
+              fontWeight: 400,
+              fontSize: labelFs,
+              lineHeight: 1.25,
+              letterSpacing: "-0.01em",
+              color: fg,
+            }}
+          >
+            {labelWords.map((w, k) => {
+              const p = interpolate(
+                t,
+                [LABEL_AT + k * stagger, LABEL_AT + k * stagger + 16],
+                [0, 1],
+                { ...CLAMP, easing: EASE_OUT },
+              );
+              return (
+                <span
+                  key={`${w}-${k}`}
+                  style={{
+                    display: "inline-block",
+                    opacity: p,
+                    transform: `translateY(${((1 - p) * labelFs * 0.7).toFixed(2)}px)`,
+                  }}
+                >
+                  {w}
+                </span>
+              );
+            })}
+          </div>
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

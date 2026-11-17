@@ -1,8 +1,25 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const indentStepsConfig: ComponentConfig = {
   componentName: "IndentSteps",
   importPath: "@/components/remocn/indent-steps",
+  lists: {
+    lines: {
+      default: [
+        "Write it in React.",
+        "Render it in Remotion.",
+        "Ship it tonight.",
+      ],
+      description: "Lines",
+      max: 5,
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -12,11 +29,6 @@ export const indentStepsConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     highlight: {
       type: "text-content",
@@ -33,6 +45,21 @@ export const indentStepsConfig: ComponentConfig = {
       default: false,
       description: "Exit",
     },
+    stagger: {
+      type: "number",
+      default: 20,
+      min: 4,
+      max: 40,
+      step: 1,
+      description: "Line stagger",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Hanken Grotesk", grain: true }),
     speed: {
       type: "number",
       default: 1,

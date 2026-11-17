@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const featureFlagRolloutConfig: ComponentConfig = {
   componentName: "FeatureFlagRollout",
@@ -12,11 +19,6 @@ export const featureFlagRolloutConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     flagName: {
       type: "text-content",
@@ -47,6 +49,32 @@ export const featureFlagRolloutConfig: ComponentConfig = {
       description: "Total users",
       hiddenFromList: false,
     },
+    doneLabel: {
+      type: "text-content",
+      default: "Fully rolled out",
+      description: "Done label",
+    },
+    passingLabel: {
+      type: "text-content",
+      default: "All passing",
+      description: "Passing label",
+    },
+    stepGap: {
+      type: "number",
+      default: 48,
+      min: 24,
+      max: 72,
+      step: 4,
+      description: "Step gap (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Figtree" }),
     speed: {
       type: "number",
       default: 1,

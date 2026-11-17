@@ -168,8 +168,36 @@ export interface FloodStingProps {
   flood?: string;
   logoColor?: string;
   hops?: string[];
+  /** Replaces the remocn logo that lands after the flood. */
+  logo?: ReactNode;
+  /** Frames between tiles as the row pops in. */
+  stagger?: number;
+  /** Corner radius of the hopping highlight, as a share of the tile size. */
+  radius?: number;
+  /** Size of the row and logo, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Playback multiplier. */
+  speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 const THEMES = {
@@ -263,10 +291,16 @@ export function FloodSting({
   flood,
   logoColor,
   hops,
+  logo,
+  stagger = 2,
+  radius = 0.24,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   ground,
   groundParams,
 }: FloodStingProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const t = THEMES[theme];
   const portrait = H > W;
@@ -392,81 +426,86 @@ export function FloodSting({
           backgroundImage: `radial-gradient(60% 55% at 50% 50%, ${t.paperGlow} 0%, transparent 70%), radial-gradient(120% 90% at 50% 50%, transparent 55%, rgba(0,0,0,${theme === "light" ? 0.06 : 0.35}) 100%)`,
         }}
       />
-      <AbsoluteFill style={{ transform: `scale(${push})` }}>
-        <div
-          style={{
-            position: "absolute",
-            left: box.x,
-            top: box.y,
-            width: box.w,
-            height: box.h,
-            boxShadow: `inset 0 0 0 1px ${t.hairline}`,
-            opacity: selIn * (1 - floodP),
-            transform: `scale(${1.06 - 0.06 * selIn})`,
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            left: hx - (S * 1.36) / 2,
-            top: cy - (S * 1.36) / 2,
-            width: S * 1.36,
-            height: S * 1.36,
-            borderRadius: S * 0.24,
-            backgroundColor: hlColor,
-            transform: `scale(${hlIn * pressScale})`,
-            boxShadow: `0 ${S * 0.08}px ${S * 0.24}px rgba(0,0,0,${theme === "light" ? 0.12 : 0.4})`,
-          }}
-        />
-        {icons.map((_, k) => {
-          const pop = sp(beat("row") + k * 2, CHIP);
-          const isPick = k === target && frame >= beat("hop5");
-          const overlap =
-            hlIn *
-            Math.max(0, Math.min(1, 1.6 - Math.abs(hx - slotX(k)) / (S * 0.5)));
-          const color = interpolateColors(
-            overlap,
-            [0, 1],
-            [
-              inkC,
-              isPick
-                ? "#ffffff"
-                : (t.hopInk[hopIdx % t.hopInk.length] as string),
-            ],
-          );
-          return (
-            <div
-              key={`slot-${k}`}
-              style={{
-                position: "absolute",
-                left: slotX(k) - S / 2,
-                top: cy - S / 2,
-                width: S,
-                height: S,
-                overflow: "hidden",
-                transform: `scale(${pop * (isPick ? pressScale : 1)})`,
-                opacity: Math.min(1, pop * 1.5),
-              }}
-            >
-              {glyphAt(k).map((l, li) => (
-                <div
-                  key={`${l.name}-${li}`}
-                  style={{
-                    position: "absolute",
-                    inset: S * 0.06,
-                    transform: `translateY(${l.y * S * 1.1}px)`,
-                  }}
-                >
-                  <Glyph name={l.name} color={color} />
-                </div>
-              ))}
-            </div>
-          );
-        })}
-      </AbsoluteFill>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill style={{ transform: `scale(${push})` }}>
+          <div
+            style={{
+              position: "absolute",
+              left: box.x,
+              top: box.y,
+              width: box.w,
+              height: box.h,
+              boxShadow: `inset 0 0 0 1px ${t.hairline}`,
+              opacity: selIn * (1 - floodP),
+              transform: `scale(${1.06 - 0.06 * selIn})`,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: hx - (S * 1.36) / 2,
+              top: cy - (S * 1.36) / 2,
+              width: S * 1.36,
+              height: S * 1.36,
+              borderRadius: S * radius,
+              backgroundColor: hlColor,
+              transform: `scale(${hlIn * pressScale})`,
+              boxShadow: `0 ${S * 0.08}px ${S * 0.24}px rgba(0,0,0,${theme === "light" ? 0.12 : 0.4})`,
+            }}
+          />
+          {icons.map((_, k) => {
+            const pop = sp(beat("row") + k * stagger, CHIP);
+            const isPick = k === target && frame >= beat("hop5");
+            const overlap =
+              hlIn *
+              Math.max(
+                0,
+                Math.min(1, 1.6 - Math.abs(hx - slotX(k)) / (S * 0.5)),
+              );
+            const color = interpolateColors(
+              overlap,
+              [0, 1],
+              [
+                inkC,
+                isPick
+                  ? "#ffffff"
+                  : (t.hopInk[hopIdx % t.hopInk.length] as string),
+              ],
+            );
+            return (
+              <div
+                key={`slot-${k}`}
+                style={{
+                  position: "absolute",
+                  left: slotX(k) - S / 2,
+                  top: cy - S / 2,
+                  width: S,
+                  height: S,
+                  overflow: "hidden",
+                  transform: `scale(${pop * (isPick ? pressScale : 1)})`,
+                  opacity: Math.min(1, pop * 1.5),
+                }}
+              >
+                {glyphAt(k).map((l, li) => (
+                  <div
+                    key={`${l.name}-${li}`}
+                    style={{
+                      position: "absolute",
+                      inset: S * 0.06,
+                      transform: `translateY(${l.y * S * 1.1}px)`,
+                    }}
+                  >
+                    <Glyph name={l.name} color={color} />
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </AbsoluteFill>
+      </ScaleLayer>
       <AbsoluteFill
         style={{
-          clipPath: `circle(${floodR}px at ${cx + (fx - cx) * push}px ${cy}px)`,
+          clipPath: `circle(${floodR}px at ${cx + (fx - cx) * push * scale}px ${cy}px)`,
           opacity: frame >= beat("flood") ? 1 : 0,
         }}
       >
@@ -477,81 +516,83 @@ export function FloodSting({
           timeScale={0.6}
         />
       </AbsoluteFill>
-      <AbsoluteFill style={{ transform: `scale(${push})` }}>
-        {frame >= beat("flood") && pickedOut < 1 ? (
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill style={{ transform: `scale(${push})` }}>
+          {frame >= beat("flood") && pickedOut < 1 ? (
+            <div
+              style={{
+                position: "absolute",
+                left: fx - S / 2,
+                top: cy - S / 2,
+                width: S,
+                height: S,
+                padding: S * 0.06,
+                boxSizing: "border-box",
+                transform: `scale(${1 - 0.5 * pickedOut})`,
+                opacity: 1 - pickedOut,
+                filter: `blur(${pickedOut * 6}px)`,
+              }}
+            >
+              <Glyph
+                name={
+                  glyphAt(target)[glyphAt(target).length - 1]?.name ?? "globe"
+                }
+                color="#ffffff"
+              />
+            </div>
+          ) : null}
+          {corners.map(([x0, y0, side], i) => {
+            const before = interpolate(
+              frame,
+              [beat("select") + i, beat("select") + i + 8],
+              [0, 1],
+              CLAMP,
+            );
+            const popIn = sp(beat("select") + i * 2, CHIP);
+            const tx = cx + side * flankGap;
+            const x = x0 + (tx - x0) * flank;
+            const y = y0 + (cy - y0) * flank;
+            const col = interpolateColors(
+              floodP,
+              [0, 0.6, 1],
+              [floodC, floodC, logoC],
+            );
+            const merge = i >= 2 ? 1 - flank : 1;
+            const s = popIn * (1 - tuck) * merge;
+            return (
+              <div
+                key={`dot-${i}`}
+                style={{
+                  position: "absolute",
+                  left: x - dot / 2,
+                  top: y - dot / 2,
+                  width: dot,
+                  height: dot,
+                  borderRadius: "50%",
+                  backgroundColor: col,
+                  opacity: before,
+                  transform: `scale(${Math.max(0, s)})`,
+                }}
+              />
+            );
+          })}
           <div
             style={{
               position: "absolute",
-              left: fx - S / 2,
-              top: cy - S / 2,
-              width: S,
-              height: S,
-              padding: S * 0.06,
-              boxSizing: "border-box",
-              transform: `scale(${1 - 0.5 * pickedOut})`,
-              opacity: 1 - pickedOut,
-              filter: `blur(${pickedOut * 6}px)`,
+              left: 0,
+              right: 0,
+              top: cy - logoSize * 0.5,
+              display: "flex",
+              justifyContent: "center",
+              opacity: Math.min(1, logoIn * 1.6),
+              transform: `translateY(${(1 - logoIn) * logoSize * 0.3}px) scale(${0.86 + 0.14 * logoIn})`,
+              filter: logoIn < 0.98 ? `blur(${(1 - logoIn) * 8}px)` : undefined,
             }}
           >
-            <Glyph
-              name={
-                glyphAt(target)[glyphAt(target).length - 1]?.name ?? "globe"
-              }
-              color="#ffffff"
-            />
+            {logo ?? <RemocnLogo fontSize={logoSize} color={logoC} />}
           </div>
-        ) : null}
-        {corners.map(([x0, y0, side], i) => {
-          const before = interpolate(
-            frame,
-            [beat("select") + i, beat("select") + i + 8],
-            [0, 1],
-            CLAMP,
-          );
-          const popIn = sp(beat("select") + i * 2, CHIP);
-          const tx = cx + side * flankGap;
-          const x = x0 + (tx - x0) * flank;
-          const y = y0 + (cy - y0) * flank;
-          const col = interpolateColors(
-            floodP,
-            [0, 0.6, 1],
-            [floodC, floodC, logoC],
-          );
-          const merge = i >= 2 ? 1 - flank : 1;
-          const s = popIn * (1 - tuck) * merge;
-          return (
-            <div
-              key={`dot-${i}`}
-              style={{
-                position: "absolute",
-                left: x - dot / 2,
-                top: y - dot / 2,
-                width: dot,
-                height: dot,
-                borderRadius: "50%",
-                backgroundColor: col,
-                opacity: before,
-                transform: `scale(${Math.max(0, s)})`,
-              }}
-            />
-          );
-        })}
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: cy - logoSize * 0.5,
-            display: "flex",
-            justifyContent: "center",
-            opacity: Math.min(1, logoIn * 1.6),
-            transform: `translateY(${(1 - logoIn) * logoSize * 0.3}px) scale(${0.86 + 0.14 * logoIn})`,
-            filter: logoIn < 0.98 ? `blur(${(1 - logoIn) * 8}px)` : undefined,
-          }}
-        >
-          <RemocnLogo fontSize={logoSize} color={logoC} />
-        </div>
-      </AbsoluteFill>
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

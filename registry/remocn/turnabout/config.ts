@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const turnaboutConfig: ComponentConfig = {
   componentName: "Turnabout",
@@ -28,6 +34,26 @@ export const turnaboutConfig: ComponentConfig = {
       default: "you.",
       description: "Highlight",
     },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    fontWeight: {
+      type: "number",
+      default: 500,
+      min: 400,
+      max: 500,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "DM Sans" }),
     speed: {
       type: "number",
       default: 1,

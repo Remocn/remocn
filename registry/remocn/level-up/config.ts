@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const levelUpConfig: ComponentConfig = {
   componentName: "LevelUp",
@@ -13,15 +19,25 @@ export const levelUpConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     title: {
       type: "text-content",
       default: "LEVEL UP",
       description: "Title",
+    },
+    barLabel: {
+      type: "text-content",
+      default: "EXPERIENCE",
+      description: "Bar label",
+    },
+    maxLabel: {
+      type: "text-content",
+      default: "MAX",
+      description: "Max label",
+    },
+    unit: {
+      type: "text-content",
+      default: "XP",
+      description: "Unit",
     },
     level: {
       type: "number",
@@ -50,6 +66,12 @@ export const levelUpConfig: ComponentConfig = {
       description: "Max xp",
       hiddenFromList: false,
     },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Chakra Petch" }),
     speed: {
       type: "number",
       default: 1,

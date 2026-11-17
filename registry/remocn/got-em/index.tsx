@@ -65,8 +65,21 @@ export interface GotEmProps {
   subline?: string;
   /** Replaces the logo inside the subline. */
   logo?: React.ReactNode;
+  /** Frames everything stops dead before the payoff explodes. */
+  pause?: number;
+  /** Ticks on the ring, and rays after the boom. */
+  rays?: number;
   /** Kept for the shared draft API; the rays take the "halo" gradient. */
   accent?: string;
+  /** Text and tick color; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the payoff. Load it yourself; Unbounded by default. Its size is fitted to Unbounded. */
+  fontFamily?: string;
+  /** Size of the ring and copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -148,24 +161,56 @@ function shake(d: number, amp: number, seed: number) {
   };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function GotEm({
   pending = "Entry submitted",
   title = "GOT ’EM",
   subline = "You got remocn 2.0.",
   logo,
+  pause = BOOM_AT - PAUSE_AT,
+  rays: rayCount = RAYS,
+  ink,
+  background,
+  fontFamily = display,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: GotEmProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = Math.min(W / 1280, H / 720);
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.stage);
+  // The subline's pill cuts the rays behind it, so it stays opaque.
+  const pill =
+    background === undefined || background === "transparent"
+      ? c.stage
+      : background;
+  const boomAt = PAUSE_AT + pause;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const cx = W / 2;
   const cy = H * 0.47;
 
   // ── Suspense ──
-  const boomed = t >= BOOM_AT;
+  const boomed = t >= boomAt;
   const intro = SLAM(ramp(t, 0, 12));
   const paused = t >= PAUSE_AT;
   const dots = paused
@@ -175,41 +220,41 @@ export function GotEm({
       : Math.min(3, Math.floor((t - 8) / 6) % 4);
   const head = (Math.min(t, PAUSE_AT) - 6) * 13; // degrees, clockwise
   const settle = ramp(t, PAUSE_AT, 6);
-  const creep = interpolate(t, [PAUSE_AT, BOOM_AT], [1, 1.035], {
+  const creep = interpolate(t, [PAUSE_AT, boomAt], [1, 1.035], {
     ...CLAMP,
     easing: Easing.bezier(0.33, 0, 0.67, 1),
   });
 
   // ── Boom ──
-  const d = t - BOOM_AT;
-  const zoom = SLAM(ramp(t, BOOM_AT, 8));
+  const d = t - boomAt;
+  const zoom = SLAM(ramp(t, boomAt, 8));
   const camScale = boomed ? 1.16 - 0.16 * zoom + 0.03 * kick(d - 5) : creep;
   const sh = shake(d - 5, 11 * u, 2.2);
-  const titleP = SLAM(ramp(t, BOOM_AT, 6));
+  const titleP = SLAM(ramp(t, boomAt, 6));
   const titleScale = 1.6 - 0.6 * titleP;
   const titleBlur = (1 - titleP) * 18;
   const flash = interpolate(
     t,
-    [BOOM_AT, BOOM_AT + 1, BOOM_AT + 5],
+    [boomAt, boomAt + 1, boomAt + 5],
     [0, 0.7, 0],
     CLAMP,
   );
   const spin = boomed ? d * 0.12 : 0;
-  const drift = ramp(t, BOOM_AT, 70);
-  const rise = SLAM(ramp(t, BOOM_AT + 12, 16));
+  const drift = ramp(t, boomAt, 70);
+  const rise = SLAM(ramp(t, boomAt + 12, 16));
 
   // ── Rays: ticks on a ring, then full-frame bars ──
   const R0 = 0.29 * H;
   const tickLen = 0.04 * H;
   const reach = Math.hypot(W, H) * 0.62;
-  const rays = Array.from({ length: RAYS }, (_, i) => {
-    const a0 = (i / RAYS) * 360;
-    const drawn = SLAM(ramp(t, (i / RAYS) * 10, 6));
+  const rays = Array.from({ length: rayCount }, (_, i) => {
+    const a0 = (i / rayCount) * 360;
+    const drawn = SLAM(ramp(t, (i / rayCount) * 10, 6));
     // spinner brightness: a tail behind the head
     const behind = (((head - a0) % 360) + 360) % 360;
     const lit = Math.max(0, 1 - behind / 150) ** 1.6;
     const glow = (0.22 + 0.78 * lit) * (1 - settle) + 0.4 * settle;
-    const shoot = SLAM(ramp(t, BOOM_AT + (i % 3), 9));
+    const shoot = SLAM(ramp(t, boomAt + (i % 3), 9));
     const inner = R0 + (0.15 * H - R0) * shoot;
     const outer =
       R0 + tickLen + (reach * (0.86 + 0.14 * (i % 2)) - R0 - tickLen) * shoot;
@@ -232,184 +277,186 @@ export function GotEm({
   const subFs = 0.05 * H;
 
   return (
-    <AbsoluteFill style={{ background: c.stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          transform: `translate(${boomed ? sh.x : 0}px, ${boomed ? sh.y : 0}px) scale(${camScale})`,
-          transformOrigin: `${cx}px ${cy}px`,
-        }}
-      >
-        <svg
-          width={W}
-          height={H}
-          viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0, overflow: "visible" }}
-          role="img"
-          aria-label={boomed ? `${title} ${subline}` : `${pending}…`}
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: `translate(${boomed ? sh.x : 0}px, ${boomed ? sh.y : 0}px) scale(${camScale})`,
+            transformOrigin: `${cx}px ${cy}px`,
+          }}
         >
-          <defs>
-            <radialGradient
-              id={`${uid}rays`}
-              gradientUnits="userSpaceOnUse"
-              cx={cx}
-              cy={cy}
-              r={reach * (0.95 + 0.08 * drift)}
-            >
-              <stop offset="0.12" stopColor={c.rays[0]} />
-              <stop offset={0.42 - 0.04 * drift} stopColor={c.rays[1]} />
-              <stop offset={0.7 - 0.04 * drift} stopColor={c.rays[2]} />
-              <stop offset="1" stopColor={c.rays[3]} />
-            </radialGradient>
-          </defs>
-
-          <g
-            fill={boomed ? `url(#${uid}rays)` : c.ink}
-            opacity={boomed ? c.rayAlpha : 1}
+          <svg
+            width={W}
+            height={H}
+            viewBox={`0 0 ${W} ${H}`}
+            style={{ position: "absolute", inset: 0, overflow: "visible" }}
+            role="img"
+            aria-label={boomed ? `${title} ${subline}` : `${pending}…`}
           >
-            {rays.map((r) => {
-              const rad = ((r.a - 90) * Math.PI) / 180;
-              const nx = Math.cos(rad);
-              const ny = Math.sin(rad);
-              const px = -ny;
-              const py = nx;
-              const len = r.inner + (r.outer - r.inner) * r.drawn;
-              const pts = [
-                [r.inner, -r.w0 / 2],
-                [len, -r.w1 / 2],
-                [len, r.w1 / 2],
-                [r.inner, r.w0 / 2],
-              ]
-                .map(
-                  ([along, across]) =>
-                    `${(cx + nx * along + px * across).toFixed(2)},${(cy + ny * along + py * across).toFixed(2)}`,
-                )
-                .join(" ");
-              return (
-                <polygon
-                  key={r.a - spin}
-                  points={pts}
-                  opacity={boomed ? 1 : r.glow * r.drawn}
-                />
-              );
-            })}
-          </g>
+            <defs>
+              <radialGradient
+                id={`${uid}rays`}
+                gradientUnits="userSpaceOnUse"
+                cx={cx}
+                cy={cy}
+                r={reach * (0.95 + 0.08 * drift)}
+              >
+                <stop offset="0.12" stopColor={c.rays[0]} />
+                <stop offset={0.42 - 0.04 * drift} stopColor={c.rays[1]} />
+                <stop offset={0.7 - 0.04 * drift} stopColor={c.rays[2]} />
+                <stop offset="1" stopColor={c.rays[3]} />
+              </radialGradient>
+            </defs>
 
-          {boomed ? (
-            <text
-              x={cx}
-              y={titleBase}
-              textAnchor="middle"
-              fontFamily={display}
-              fontWeight={500}
-              fontSize={titleFs}
-              fill={c.ink}
-              style={{
-                letterSpacing: `${TRACK}em`,
-                transform: `scale(${titleScale})`,
-                transformOrigin: `${cx}px ${cy}px`,
-                filter:
-                  titleBlur > 0.2 ? `blur(${titleBlur * u}px)` : undefined,
-              }}
-              opacity={ramp(t, BOOM_AT, 2)}
+            <g
+              fill={boomed ? `url(#${uid}rays)` : fg}
+              opacity={boomed ? c.rayAlpha : 1}
             >
-              {title}
-            </text>
-          ) : null}
-        </svg>
+              {rays.map((r) => {
+                const rad = ((r.a - 90) * Math.PI) / 180;
+                const nx = Math.cos(rad);
+                const ny = Math.sin(rad);
+                const px = -ny;
+                const py = nx;
+                const len = r.inner + (r.outer - r.inner) * r.drawn;
+                const pts = [
+                  [r.inner, -r.w0 / 2],
+                  [len, -r.w1 / 2],
+                  [len, r.w1 / 2],
+                  [r.inner, r.w0 / 2],
+                ]
+                  .map(
+                    ([along, across]) =>
+                      `${(cx + nx * along + px * across).toFixed(2)},${(cy + ny * along + py * across).toFixed(2)}`,
+                  )
+                  .join(" ");
+                return (
+                  <polygon
+                    key={r.a - spin}
+                    points={pts}
+                    opacity={boomed ? 1 : r.glow * r.drawn}
+                  />
+                );
+              })}
+            </g>
 
-        {/* Suspense line inside the ring. */}
-        {!boomed ? (
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              top: cy - pendFs * 0.62,
-              display: "flex",
-              justifyContent: "center",
-              fontFamily: geist,
-              fontWeight: 400,
-              fontSize: pendFs,
-              letterSpacing: "-0.02em",
-              lineHeight: 1.2,
-              color: c.ink,
-              opacity: intro,
-              transform: `translateY(${(1 - intro) * 12 * u}px)`,
-              whiteSpace: "nowrap",
-            }}
-          >
-            <span>{pending}</span>
-            <span
+            {boomed ? (
+              <text
+                x={cx}
+                y={titleBase}
+                textAnchor="middle"
+                fontFamily={fontFamily}
+                fontWeight={500}
+                fontSize={titleFs}
+                fill={fg}
+                style={{
+                  letterSpacing: `${TRACK}em`,
+                  transform: `scale(${titleScale})`,
+                  transformOrigin: `${cx}px ${cy}px`,
+                  filter:
+                    titleBlur > 0.2 ? `blur(${titleBlur * u}px)` : undefined,
+                }}
+                opacity={ramp(t, boomAt, 2)}
+              >
+                {title}
+              </text>
+            ) : null}
+          </svg>
+
+          {/* Suspense line inside the ring. */}
+          {!boomed ? (
+            <div
               style={{
-                display: "inline-block",
-                width: `${DOTS[3]}em`,
-                overflow: "hidden",
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: cy - pendFs * 0.62,
+                display: "flex",
+                justifyContent: "center",
+                fontFamily: geist,
+                fontWeight: 400,
+                fontSize: pendFs,
+                letterSpacing: "-0.02em",
+                lineHeight: 1.2,
+                color: fg,
+                opacity: intro,
+                transform: `translateY(${(1 - intro) * 12 * u}px)`,
+                whiteSpace: "nowrap",
               }}
             >
+              <span>{pending}</span>
               <span
                 style={{
                   display: "inline-block",
-                  width: `${DOTS[dots]}em`,
+                  width: `${DOTS[3]}em`,
                   overflow: "hidden",
-                  verticalAlign: "top",
                 }}
               >
-                …
+                <span
+                  style={{
+                    display: "inline-block",
+                    width: `${DOTS[dots]}em`,
+                    overflow: "hidden",
+                    verticalAlign: "top",
+                  }}
+                >
+                  …
+                </span>
               </span>
-            </span>
-          </div>
-        ) : null}
+            </div>
+          ) : null}
 
-        {/* Subline with the logo. */}
-        {boomed ? (
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              top: titleBase + 0.06 * H,
-              display: "flex",
-              justifyContent: "center",
-              fontFamily: geist,
-              fontWeight: 400,
-              fontSize: subFs,
-              letterSpacing: "-0.02em",
-              lineHeight: 1,
-              color: c.ink,
-              whiteSpace: "pre",
-              opacity: rise,
-              transform: `translateY(${(1 - rise) * 14 * u}px)`,
-            }}
-          >
+          {/* Subline with the logo. */}
+          {boomed ? (
             <div
               style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: titleBase + 0.06 * H,
                 display: "flex",
-                alignItems: "baseline",
-                background: c.stage,
-                borderRadius: 999,
-                padding: `${0.024 * H}px ${0.034 * H}px ${0.026 * H}px`,
+                justifyContent: "center",
+                fontFamily: geist,
+                fontWeight: 400,
+                fontSize: subFs,
+                letterSpacing: "-0.02em",
+                lineHeight: 1,
+                color: fg,
+                whiteSpace: "pre",
+                opacity: rise,
+                transform: `translateY(${(1 - rise) * 14 * u}px)`,
               }}
             >
-              {parts.map((p, i) =>
-                p.toLowerCase() === "remocn" ? (
-                  <span
-                    key={`${i}${p}`}
-                    style={{ display: "inline-flex", alignItems: "baseline" }}
-                  >
-                    {logo ?? (
-                      <RemocnLogo fontSize={subFs * 1.04} color={c.ink} />
-                    )}
-                  </span>
-                ) : (
-                  <span key={`${i}${p}`}>{p}</span>
-                ),
-              )}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "baseline",
+                  background: pill,
+                  borderRadius: 999,
+                  padding: `${0.024 * H}px ${0.034 * H}px ${0.026 * H}px`,
+                }}
+              >
+                {parts.map((p, i) =>
+                  p.toLowerCase() === "remocn" ? (
+                    <span
+                      key={`${i}${p}`}
+                      style={{ display: "inline-flex", alignItems: "baseline" }}
+                    >
+                      {logo ?? (
+                        <RemocnLogo fontSize={subFs * 1.04} color={fg} />
+                      )}
+                    </span>
+                  ) : (
+                    <span key={`${i}${p}`}>{p}</span>
+                  ),
+                )}
+              </div>
             </div>
-          </div>
-        ) : null}
-      </div>
+          ) : null}
+        </div>
+      </ScaleLayer>
 
       <div
         style={{

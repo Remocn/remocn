@@ -41,6 +41,24 @@ export interface GhostCompleteProps {
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /** Label of the key pressed to accept a suggestion. */
+  keyLabel?: string;
+  /** Text next to the key. */
+  hintLabel?: string;
+  /** Frames a ghost suggestion waits before it is accepted. */
+  hold?: number;
+  /** Replaces the remocn mark. */
+  logo?: React.ReactNode;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the card and key, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
 }
 
@@ -168,6 +186,22 @@ interface Segment {
   fillDur: number;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function GhostComplete({
   title = "Launch notes",
   typed = "Ship the",
@@ -177,14 +211,24 @@ export function GhostComplete({
   theme = "dark",
   ground,
   groundParams,
+  keyLabel = "Tab",
+  hintLabel = "to accept",
+  hold = HOLD_GHOST,
+  logo,
+  ink,
+  background,
+  fontFamily = geist,
+  scale = 1,
+  delay = 0,
   speed = 1,
 }: GhostCompleteProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const tall = H > W;
   const u = tall ? W / 1000 : H / 720;
   const c = THEMES[theme];
   const dark = theme === "dark";
+  const fg = ink ?? c.fg;
   const resolvedGround: GshPresetId | undefined =
     ground ?? (groundParams ? undefined : dark ? "hearth" : undefined);
   const resolvedParams = groundParams ?? (dark ? undefined : LIGHT_GROUND);
@@ -207,7 +251,7 @@ export function GhostComplete({
       });
       const fillDur = Math.max(7, Math.min(12, chars.length * 0.6));
       const ghostIn = clock;
-      const accept = ghostIn + HOLD_GHOST + (k === 0 ? 6 : 0);
+      const accept = ghostIn + hold + (k === 0 ? 6 : 0);
       segs.push({
         start,
         length: chars.length,
@@ -230,7 +274,7 @@ export function GhostComplete({
       lineCount: lines.length,
       end: clock,
     };
-  }, [typed, suggestions]);
+  }, [typed, suggestions, hold]);
   const { glyphs, segs } = plan;
   const last = segs[segs.length - 1];
 
@@ -296,7 +340,7 @@ export function GhostComplete({
     : interpolate(phase, [0, 0.45, 0.55, 0.95, 1], [1, 1, 0, 0, 1], CLAMP);
 
   const styleOf = (g: Glyph): React.CSSProperties => {
-    if (g.seg < 0) return { color: c.fg };
+    if (g.seg < 0) return { color: fg };
     const s = segs[g.seg];
     const appear = interpolate(
       t,
@@ -315,7 +359,7 @@ export function GhostComplete({
           });
     if (filled <= 0) return { color: c.ghost, opacity: appear };
     if (settle > 0) {
-      return { color: interpolateColors(settle, [0, 1], [c.fill, c.fg]) };
+      return { color: interpolateColors(settle, [0, 1], [c.fill, fg]) };
     }
     return { color: interpolateColors(filled, [0, 1], [c.ghost, c.fill]) };
   };
@@ -399,7 +443,7 @@ export function GhostComplete({
   if (caret >= glyphs.length) nodes.push(caretEl);
 
   const label = (size: number): React.CSSProperties => ({
-    fontFamily: geist,
+    fontFamily,
     fontWeight: 400,
     fontSize: size,
     letterSpacing: "-0.01em",
@@ -424,7 +468,7 @@ export function GhostComplete({
         color: interpolateColors(
           press,
           [0, 1],
-          [c.fg, dark ? "#1A0E06" : "#FFFFFF"],
+          [fg, dark ? "#1A0E06" : "#FFFFFF"],
         ),
         fontFamily: mono,
         fontWeight: 400,
@@ -432,7 +476,7 @@ export function GhostComplete({
         letterSpacing: "0.02em",
       }}
     >
-      Tab
+      {keyLabel}
     </div>
   );
 
@@ -443,156 +487,172 @@ export function GhostComplete({
   });
 
   return (
-    <AbsoluteFill style={{ background: c.base, overflow: "hidden" }}>
-      <GshGround
-        preset={resolvedGround}
-        params={resolvedParams}
-        timeOffset={dark ? 6 : 2}
-        timeScale={0.45}
-      />
-      <AbsoluteFill style={{ background: c.scrim }} />
-      <AbsoluteFill style={{ transform: `scale(${push})` }}>
-        <div
-          style={{
-            position: "absolute",
-            left: cardLeft,
-            top: cardTop,
-            width: cardW,
-            height: cardH,
-            borderRadius: 28 * u,
-            background: c.card,
-            boxShadow: c.depth,
-            overflow: "hidden",
-            opacity: interpolate(cardIn, [0, 0.4], [0, 1], CLAMP),
-            transform: `translateY(${(1 - cardIn) * 40 * u}px) scale(${0.96 + 0.04 * cardIn})`,
-          }}
-        >
+    <AbsoluteFill
+      style={{
+        background:
+          background === undefined
+            ? c.base
+            : background === "transparent"
+              ? undefined
+              : background,
+        overflow: "hidden",
+      }}
+    >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={resolvedGround}
+            params={resolvedParams}
+            timeOffset={dark ? 6 : 2}
+            timeScale={0.45}
+          />
+          <AbsoluteFill style={{ background: c.scrim }} />
+        </>
+      ) : null}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill style={{ transform: `scale(${push})` }}>
           <div
             style={{
               position: "absolute",
-              left: padX,
-              top: 0,
-              height: headH,
-              display: "flex",
-              alignItems: "flex-end",
-              gap: 10 * u,
+              left: cardLeft,
+              top: cardTop,
+              width: cardW,
+              height: cardH,
+              borderRadius: 28 * u,
+              background: c.card,
+              boxShadow: c.depth,
+              overflow: "hidden",
+              opacity: interpolate(cardIn, [0, 0.4], [0, 1], CLAMP),
+              transform: `translateY(${(1 - cardIn) * 40 * u}px) scale(${0.96 + 0.04 * cardIn})`,
             }}
           >
-            <svg
-              viewBox="0 0 24 24"
-              width={(tall ? 28 : 22) * u}
-              height={(tall ? 28 : 22) * u}
-              style={{ marginBottom: 1 * u }}
-              aria-hidden
+            <div
+              style={{
+                position: "absolute",
+                left: padX,
+                top: 0,
+                height: headH,
+                display: "flex",
+                alignItems: "flex-end",
+                gap: 10 * u,
+              }}
             >
-              <g
-                fill="none"
-                stroke={c.dim}
-                strokeWidth={1.5}
-                strokeLinecap="round"
-                strokeLinejoin="round"
+              <svg
+                viewBox="0 0 24 24"
+                width={(tall ? 28 : 22) * u}
+                height={(tall ? 28 : 22) * u}
+                style={{ marginBottom: 1 * u }}
+                aria-hidden
               >
-                <path d="M6.5 3.5h7l4 4v13h-11z" />
-                <path d="M13.5 3.5v4h4M9.5 12.5h5M9.5 16h5" />
-              </g>
-            </svg>
-            <div style={label((tall ? 26 : 19) * u)}>{title}</div>
+                <g
+                  fill="none"
+                  stroke={c.dim}
+                  strokeWidth={1.5}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M6.5 3.5h7l4 4v13h-11z" />
+                  <path d="M13.5 3.5v4h4M9.5 12.5h5M9.5 16h5" />
+                </g>
+              </svg>
+              <div style={label((tall ? 26 : 19) * u)}>{title}</div>
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                left: padX,
+                top: padTop,
+                width: blockW + F,
+                fontFamily,
+                fontWeight: 400,
+                fontSize: F,
+                lineHeight: LEADING,
+                letterSpacing: `${TRACK}em`,
+                whiteSpace: "pre",
+                fontKerning: "normal",
+              }}
+            >
+              {nodes}
+            </div>
+            {tall ? null : (
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: footH,
+                  borderTop: `1px solid ${c.divider}`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: `0 ${padX - 10 * u}px 0 ${padX}px`,
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12 * u,
+                    opacity: (0.35 + 0.65 * hintArmed) * (1 - hintOut),
+                  }}
+                >
+                  {keyCap(u, false)}
+                  <div style={label(19 * u)}>{hintLabel}</div>
+                </div>
+                {showLogo ? (
+                  <div
+                    style={{
+                      opacity: logoIn,
+                      transform: `translateY(${(1 - logoIn) * 8 * u}px)`,
+                    }}
+                  >
+                    {logo ?? <RemocnLogo fontSize={24 * u} color={c.logo} />}
+                  </div>
+                ) : null}
+              </div>
+            )}
           </div>
-          <div
-            style={{
-              position: "absolute",
-              left: padX,
-              top: padTop,
-              width: blockW + F,
-              fontFamily: geist,
-              fontWeight: 400,
-              fontSize: F,
-              lineHeight: LEADING,
-              letterSpacing: `${TRACK}em`,
-              whiteSpace: "pre",
-              fontKerning: "normal",
-            }}
-          >
-            {nodes}
-          </div>
-          {tall ? null : (
+          {tall ? (
             <div
               style={{
                 position: "absolute",
                 left: 0,
                 right: 0,
-                bottom: 0,
-                height: footH,
-                borderTop: `1px solid ${c.divider}`,
+                top: bigKeyY,
                 display: "flex",
+                flexDirection: "column",
                 alignItems: "center",
-                justifyContent: "space-between",
-                padding: `0 ${padX - 10 * u}px 0 ${padX}px`,
+                gap: 30 * u,
+                opacity:
+                  Math.min(1, keyIn * 1.4) *
+                  (0.35 + 0.65 * hintArmed) *
+                  (1 - 0.5 * hintOut),
+                transform: `translateY(${(1 - keyIn) * 40 * u}px)`,
               }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12 * u,
-                  opacity: (0.35 + 0.65 * hintArmed) * (1 - hintOut),
-                }}
-              >
-                {keyCap(u, false)}
-                <div style={label(19 * u)}>to accept</div>
-              </div>
-              {showLogo ? (
-                <div
-                  style={{
-                    opacity: logoIn,
-                    transform: `translateY(${(1 - logoIn) * 8 * u}px)`,
-                  }}
-                >
-                  <RemocnLogo fontSize={24 * u} color={c.logo} />
-                </div>
-              ) : null}
+              {keyCap(3.4 * u, true)}
+              <div style={label(34 * u)}>{hintLabel}</div>
             </div>
-          )}
-        </div>
-        {tall ? (
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              top: bigKeyY,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 30 * u,
-              opacity:
-                Math.min(1, keyIn * 1.4) *
-                (0.35 + 0.65 * hintArmed) *
-                (1 - 0.5 * hintOut),
-              transform: `translateY(${(1 - keyIn) * 40 * u}px)`,
-            }}
-          >
-            {keyCap(3.4 * u, true)}
-            <div style={label(34 * u)}>to accept</div>
-          </div>
-        ) : null}
-        {tall && showLogo ? (
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              top: bigKeyY + 290 * u,
-              display: "flex",
-              justifyContent: "center",
-              opacity: logoIn,
-              transform: `translateY(${(1 - logoIn) * 12 * u}px)`,
-            }}
-          >
-            <RemocnLogo fontSize={40 * u} color={c.logo} />
-          </div>
-        ) : null}
-      </AbsoluteFill>
+          ) : null}
+          {tall && showLogo ? (
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: bigKeyY + 290 * u,
+                display: "flex",
+                justifyContent: "center",
+                opacity: logoIn,
+                transform: `translateY(${(1 - logoIn) * 12 * u}px)`,
+              }}
+            >
+              {logo ?? <RemocnLogo fontSize={40 * u} color={c.logo} />}
+            </div>
+          ) : null}
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

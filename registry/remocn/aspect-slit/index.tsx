@@ -2,6 +2,7 @@
 
 import { loadFont as loadSans } from "@remotion/google-fonts/InstrumentSans";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
+import type React from "react";
 import { useEffect, useId, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -25,6 +26,20 @@ export interface AspectSlitProps {
   /** Height of the narrowest slit, as a share of the frame height. */
   slit?: number;
   accent?: string;
+  /** Text color of the title; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the lit gradient; "transparent" drops it. */
+  background?: string;
+  /** Color of the letterbox bars. */
+  barColor?: string;
+  /** Typeface for the title. Load it yourself; Instrument Serif by default. */
+  fontFamily?: string;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the title and caption, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -74,13 +89,13 @@ interface TitleMetrics {
   width: number;
 }
 
-function measureTitle(title: string): TitleMetrics {
+function measureTitle(title: string, fontFamily: string): TitleMetrics {
   const ctx = document.createElement("canvas").getContext("2d");
   const n = Math.max(1, [...title].length);
   if (!ctx) {
     return { capTop: 0.2, baseline: 0.85, descent: 0.22, width: n * 0.42 };
   }
-  ctx.font = `400 200px "${serif.fontFamily}"`;
+  ctx.font = `400 200px "${fontFamily}"`;
   const box = ctx.measureText("H");
   const run = ctx.measureText(title);
   const asc = box.fontBoundingBoxAscent / 200;
@@ -94,7 +109,7 @@ function measureTitle(title: string): TitleMetrics {
   };
 }
 
-function useTitleMetrics(title: string) {
+function useTitleMetrics(title: string, fontFamily: string) {
   const [metrics, setMetrics] = useState<TitleMetrics | null>(null);
   const [handle] = useState(() => delayRender("aspect-slit: measuring"));
   const released = useRef(false);
@@ -103,12 +118,12 @@ function useTitleMetrics(title: string) {
     Promise.all([
       serif.waitUntilDone(),
       sans.waitUntilDone(),
-      document.fonts.load(`400 100px "${serif.fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setMetrics(measureTitle(title));
+        setMetrics(measureTitle(title, fontFamily));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -117,7 +132,7 @@ function useTitleMetrics(title: string) {
     return () => {
       live = false;
     };
-  }, [title, handle]);
+  }, [title, handle, fontFamily]);
   return metrics;
 }
 
@@ -189,18 +204,42 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function AspectSlit({
   title = "Now showing.",
   caption = "A launch film, built in React.",
   slit = 0.125,
   accent = "#3B5BFD",
+  ink,
+  background,
+  barColor = "#0A0A0B",
+  fontFamily = serif.fontFamily,
+  grain = true,
+  scale: zoom = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: AspectSlitProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
-  const metrics = useTitleMetrics(title);
+  const fg = ink ?? c.ink;
+  const metrics = useTitleMetrics(title, fontFamily);
 
   // Bar height per side.
   const scopeBar = Math.max(0, (H - W / 2.39) / 2);
@@ -226,7 +265,7 @@ export function AspectSlit({
     x: Math.sin(frame / 44 + k * 1.7) * 3,
     y: Math.cos(frame / 57 + k * 2.3) * 2.5,
   });
-  const ground = [
+  const lit = [
     ...BLOBS[theme].map((b, k) => {
       const o = drift(k);
       const col = b.color === "#ACCENT" ? accent : b.color;
@@ -234,6 +273,12 @@ export function AspectSlit({
     }),
     c.ground,
   ].join(", ");
+  const ground =
+    background === undefined
+      ? lit
+      : background === "transparent"
+        ? undefined
+        : background;
 
   const bars = (
     <>
@@ -244,7 +289,7 @@ export function AspectSlit({
           top: 0,
           width: W,
           height: Math.ceil(bar),
-          backgroundColor: c.bars,
+          backgroundColor: barColor,
         }}
       />
       <div
@@ -254,7 +299,7 @@ export function AspectSlit({
           bottom: 0,
           width: W,
           height: Math.ceil(bar),
-          backgroundColor: c.bars,
+          backgroundColor: barColor,
         }}
       />
     </>
@@ -328,61 +373,63 @@ export function AspectSlit({
 
   return (
     <AbsoluteFill style={{ background: ground, overflow: "hidden" }}>
-      <Grain opacity={c.grain} />
-      {rise > 0 ? (
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            width: W,
-            top: titleTop,
-            height: heroSize,
-            display: "flex",
-            justifyContent: "center",
-          }}
-        >
+      {grain ? <Grain opacity={c.grain} /> : null}
+      <ScaleLayer scale={zoom}>
+        {rise > 0 ? (
           <div
             style={{
-              fontFamily: serif.fontFamily,
-              fontWeight: 400,
-              fontSize: heroSize,
-              lineHeight: 1,
-              letterSpacing: `${tracking}em`,
-              color: c.ink,
-              whiteSpace: "nowrap",
-              transform: `scale(${scale})`,
-              transformOrigin: "50% 0%",
-              // letter-spacing trails the last glyph; pad it back to centre the ink
-              paddingRight: `${-tracking}em`,
+              position: "absolute",
+              left: 0,
+              width: W,
+              top: titleTop,
+              height: heroSize,
+              display: "flex",
+              justifyContent: "center",
             }}
           >
-            {body}
-            {period ? <span style={{ color: accent }}>.</span> : null}
+            <div
+              style={{
+                fontFamily,
+                fontWeight: 400,
+                fontSize: heroSize,
+                lineHeight: 1,
+                letterSpacing: `${tracking}em`,
+                color: fg,
+                whiteSpace: "nowrap",
+                transform: `scale(${scale})`,
+                transformOrigin: "50% 0%",
+                // letter-spacing trails the last glyph; pad it back to centre the ink
+                paddingRight: `${-tracking}em`,
+              }}
+            >
+              {body}
+              {period ? <span style={{ color: accent }}>.</span> : null}
+            </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
 
-      {caption && captionIn > 0 ? (
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: baseline + descender + captionGap - captionSize * 0.2,
-            textAlign: "center",
-            fontFamily: sans.fontFamily,
-            fontWeight: 400,
-            fontSize: captionSize,
-            lineHeight: 1.2,
-            letterSpacing: "-0.005em",
-            color: c.caption,
-            opacity: captionIn,
-            transform: `translateY(${(1 - captionIn) * H * 0.012}px)`,
-          }}
-        >
-          {caption}
-        </div>
-      ) : null}
+        {caption && captionIn > 0 ? (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: baseline + descender + captionGap - captionSize * 0.2,
+              textAlign: "center",
+              fontFamily: sans.fontFamily,
+              fontWeight: 400,
+              fontSize: captionSize,
+              lineHeight: 1.2,
+              letterSpacing: "-0.005em",
+              color: c.caption,
+              opacity: captionIn,
+              transform: `translateY(${(1 - captionIn) * H * 0.012}px)`,
+            }}
+          >
+            {caption}
+          </div>
+        ) : null}
+      </ScaleLayer>
 
       {bars}
     </AbsoluteFill>

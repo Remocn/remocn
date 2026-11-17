@@ -36,6 +36,21 @@ export interface PassSwapProps {
   /** Fill the last word of the final line with the object gradient. */
   accentLastWord?: boolean;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the headline. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Frames one pass of the object takes to cross the frame. */
+  passLength?: number;
+  /** Frames from the start of one pass to the start of the next. */
+  passGap?: number;
+  /** Size of the headline and object, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -123,19 +138,46 @@ function halfPlane(
   return `polygon(${pts.map(([x, y]) => `${x.toFixed(1)}px ${y.toFixed(1)}px`).join(", ")})`;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function PassSwap({
   lines = ["Copy the code.", "Own every frame.", "Ship the film."],
   shape = "mixed",
   src,
   accentLastWord = true,
   accent = "#3B5BFD",
+  ink: inkProp,
+  background,
+  fontFamily = display,
+  passLength = PASS_LEN,
+  passGap = PASS_GAP,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: PassSwapProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
   const c = THEMES[theme];
+  const fg = inkProp ?? c.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const blurId = `ps-blur-${uid}`;
 
@@ -149,10 +191,10 @@ export function PassSwap({
   let index = 0;
   let passP = -1;
   for (let i = 0; i < passes; i++) {
-    const t0 = FIRST_PASS + i * PASS_GAP;
+    const t0 = FIRST_PASS + i * passGap;
     if (frame >= t0) {
       index = i;
-      passP = (frame - t0) / PASS_LEN;
+      passP = (frame - t0) / passLength;
     }
   }
   const passing = passP >= 0 && passP < 1;
@@ -175,7 +217,7 @@ export function PassSwap({
   const cx = sweepAt(passP);
   const vel =
     Math.abs(
-      sweepAt(passP + 0.5 / PASS_LEN) - sweepAt(passP - 0.5 / PASS_LEN),
+      sweepAt(passP + 0.5 / passLength) - sweepAt(passP - 0.5 / passLength),
     ) * speed;
   const tilt = dir * interpolate(passP, [0, 1], [11, 4], CLAMP);
   const cy = H / 2 + interpolate(passP, [0, 0.5, 1], [10, 0, -10], CLAMP) * u;
@@ -190,10 +232,10 @@ export function PassSwap({
     easing: SETTLE,
   });
   // New line is dragged a touch by the object and settles.
-  const tStart = FIRST_PASS + index * PASS_GAP;
+  const tStart = FIRST_PASS + index * passGap;
   const drag = interpolate(
     frame,
-    [tStart + PASS_LEN * 0.3, tStart + PASS_LEN + 16],
+    [tStart + passLength * 0.3, tStart + passLength + 16],
     [1, 0],
     { ...CLAMP, easing: SETTLE },
   );
@@ -222,12 +264,12 @@ export function PassSwap({
     return (
       <div
         style={{
-          fontFamily: display,
+          fontFamily,
           fontWeight: 500,
           fontSize: fs,
           letterSpacing: "-0.035em",
           lineHeight: 1,
-          color: c.fg,
+          color: fg,
           whiteSpace: "pre",
           textAlign: "center",
         }}
@@ -298,7 +340,7 @@ export function PassSwap({
   );
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <svg width={0} height={0} style={{ position: "absolute" }} aria-hidden>
         <filter
           id={blurId}
@@ -312,44 +354,46 @@ export function PassSwap({
         </filter>
       </svg>
 
-      {passing ? (
-        <>
-          {lineBox(fromLine, index, {
-            clipPath: halfPlane(cx, cy, tilt, dir, L),
-          })}
-          {lineBox(toLine, index + 1, {
-            clipPath: halfPlane(cx, cy, tilt, -dir as 1 | -1, L),
-            transform: `translateX(${toOffset}px)`,
-          })}
-        </>
-      ) : (
-        lineBox(current, done ? index + 1 : index, {
-          opacity: index === 0 && !done ? intro : 1,
-          transform: `translateX(${done ? toOffset : 0}px) translateY(${index === 0 && !done ? (1 - intro) * 14 * u : 0}px)`,
-          filter:
-            index === 0 && !done && intro < 1
-              ? `blur(${(1 - intro) * 10 * u}px)`
-              : undefined,
-        })
-      )}
+      <ScaleLayer scale={scale}>
+        {passing ? (
+          <>
+            {lineBox(fromLine, index, {
+              clipPath: halfPlane(cx, cy, tilt, dir, L),
+            })}
+            {lineBox(toLine, index + 1, {
+              clipPath: halfPlane(cx, cy, tilt, -dir as 1 | -1, L),
+              transform: `translateX(${toOffset}px)`,
+            })}
+          </>
+        ) : (
+          lineBox(current, done ? index + 1 : index, {
+            opacity: index === 0 && !done ? intro : 1,
+            transform: `translateX(${done ? toOffset : 0}px) translateY(${index === 0 && !done ? (1 - intro) * 14 * u : 0}px)`,
+            filter:
+              index === 0 && !done && intro < 1
+                ? `blur(${(1 - intro) * 10 * u}px)`
+                : undefined,
+          })
+        )}
 
-      {passing && (
-        <div
-          style={{
-            position: "absolute",
-            left: cx - ow / 2,
-            top: cy - oh / 2,
-            width: ow,
-            height: oh,
-            transform: `rotate(${tilt}deg)`,
-            filter: blur > 0.4 ? `url(#${blurId})` : undefined,
-          }}
-        >
-          {object}
-        </div>
-      )}
+        {passing && (
+          <div
+            style={{
+              position: "absolute",
+              left: cx - ow / 2,
+              top: cy - oh / 2,
+              width: ow,
+              height: oh,
+              transform: `rotate(${tilt}deg)`,
+              filter: blur > 0.4 ? `url(#${blurId})` : undefined,
+            }}
+          >
+            {object}
+          </div>
+        )}
+      </ScaleLayer>
 
-      <Grain opacity={c.grain} />
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

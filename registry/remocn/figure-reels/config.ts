@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const figureReelsConfig: ComponentConfig = {
   componentName: "FigureReels",
@@ -44,6 +51,32 @@ export const figureReelsConfig: ComponentConfig = {
       max: 1200,
       step: 1,
       description: "To",
+      hiddenFromList: false,
+    },
+    fontWeight: {
+      type: "number",
+      default: 300,
+      min: 100,
+      max: 900,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    motionBlur: {
+      type: "boolean",
+      default: true,
+      description: "Motion blur",
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ground: groundControl(),
+    ...sceneControls({ font: "Figtree" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
       hiddenFromList: false,
     },
   },

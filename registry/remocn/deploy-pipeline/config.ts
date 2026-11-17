@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const deployPipelineConfig: ComponentConfig = {
   componentName: "DeployPipeline",
@@ -12,11 +19,6 @@ export const deployPipelineConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     project: {
       type: "text-content",
@@ -48,6 +50,21 @@ export const deployPipelineConfig: ComponentConfig = {
       default: "remocn-web.kitebase.app",
       description: "Domain",
     },
+    environment: {
+      type: "text-content",
+      default: "Production",
+      description: "Environment",
+    },
+    logsTitle: {
+      type: "text-content",
+      default: "Build logs",
+      description: "Logs title",
+    },
+    visitLabel: {
+      type: "text-content",
+      default: "Visit",
+      description: "Visit button",
+    },
     buildSeconds: {
       type: "number",
       default: 21,
@@ -57,6 +74,13 @@ export const deployPipelineConfig: ComponentConfig = {
       description: "Build seconds",
       hiddenFromList: false,
     },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Geist" }),
     speed: {
       type: "number",
       default: 1,

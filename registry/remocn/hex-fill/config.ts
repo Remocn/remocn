@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const hexFillConfig: ComponentConfig = {
   componentName: "HexFill",
@@ -13,15 +19,15 @@ export const hexFillConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     label: {
       type: "text-content",
       default: "of renders served from cache",
       description: "Label",
+    },
+    unit: {
+      type: "text-content",
+      default: "%",
+      description: "Unit",
     },
     value: {
       type: "number",
@@ -41,6 +47,30 @@ export const hexFillConfig: ComponentConfig = {
       description: "Rings",
       hiddenFromList: false,
     },
+    fontWeight: {
+      type: "number",
+      default: 300,
+      min: 200,
+      max: 800,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    fillLength: {
+      type: "number",
+      default: 70,
+      min: 10,
+      max: 120,
+      step: 1,
+      description: "Fill length (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Bricolage Grotesque", grain: true }),
     speed: {
       type: "number",
       default: 1,

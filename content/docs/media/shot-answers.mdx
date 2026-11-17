@@ -83,14 +83,37 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Aspect ratio of the screenshot.",
     },
     {
+      name: "stagger",
+      type: "number",
+      default: "1.6",
+      description: "Frames between question words appearing, at the default 140-frame length.",
+    },
+    {
+      name: "answerAt",
+      type: "number",
+      default: "58",
+      description: "Frame the question starts turning into the answer, at the default 140-frame length.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Color of new words in the answer. Defaults depend on theme.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Solid background. Use 'transparent' to drop the ground.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Onest\"",
+      description: "Typeface for the copy. Load the font in your project first.",
     },
     {
       name: "ground",
@@ -107,6 +130,18 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       type: "string",
       default: "\"remocn.dev/studio\"",
       description: "Address shown in the frame's title bar.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

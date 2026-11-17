@@ -1,5 +1,7 @@
 import type { InteractivitySchema, InteractivitySchemaField } from "remotion";
+import { PREVIEW_FONTS } from "@/lib/previews/fonts";
 import type { BackdropFill } from "@/registry/remocn/backdrop";
+import { GSH_PRESETS, type GshPresetId } from "@/registry/remocn/gsh/presets";
 
 /**
  * Internal control descriptors consumed by the docs customizer UI and the
@@ -24,9 +26,32 @@ export type ControlType =
       step: number;
       label: string;
     }
+  /** `default: ""` is auto: the component picks the colour from its theme. */
   | { type: "color"; default: string; label: string }
   | { type: "select"; default: string; options: string[]; label: string }
-  | { type: "boolean"; default: boolean; label: string };
+  /** A `fontFamily` prop: the component's own face plus `PREVIEW_FONTS`. */
+  | { type: "font"; default: string; options: string[]; label: string }
+  | { type: "boolean"; default: boolean; label: string }
+  /** A `string[]` prop, edited one item per line. */
+  | {
+      type: "list";
+      default: string[];
+      label: string;
+      min?: number;
+      max?: number;
+    };
+
+/**
+ * A `string[]` prop in the docs customizer. Remotion's schema has no array of
+ * strings, so lists sit beside `controls` and never reach Studio. A tuple
+ * prop such as `[string, string]` sets `min` and `max` to its length.
+ */
+export type ListField = {
+  default: readonly string[];
+  description: string;
+  min?: number;
+  max?: number;
+};
 
 export type ControlConfig = Record<string, ControlType>;
 
@@ -40,6 +65,8 @@ export interface ComponentConfig {
    * type allows `undefined`.
    */
   controls: InteractivitySchema;
+  /** `string[]` props the customizer edits one item per line. */
+  lists?: Record<string, ListField>;
   /**
    * Element bounding box in composition pixels (1920×1080 space) for the
    * Studio element payload. Sized to the rendered content at default props,
@@ -195,6 +222,7 @@ export function schemaFieldToControl(
   field: InteractivitySchemaField,
 ): ControlType | null {
   switch (field.type) {
+    case "string":
     case "text-content":
       return {
         type: "text",
@@ -214,12 +242,22 @@ export function schemaFieldToControl(
         : { type: "number", max: field.max, ...base };
     }
     case "color":
-      if (field.default === undefined) return null;
+      // No default: the component derives the colour from its theme, so the
+      // control starts on auto instead of pinning one theme's value.
       return {
         type: "color",
-        default: field.default,
+        default: field.default ?? "",
         label: field.description ?? "",
       };
+    case "font-family": {
+      const own = field.default ?? "";
+      return {
+        type: "font",
+        default: own,
+        options: [...new Set([own, ...PREVIEW_FONTS].filter(Boolean))],
+        label: field.description ?? "",
+      };
+    }
     case "remotion-captions":
       return {
         type: "text",
@@ -253,18 +291,144 @@ export function schemaToControls(schema: InteractivitySchema): ControlConfig {
   return out;
 }
 
+function listToControl(field: ListField): ControlType {
+  return {
+    type: "list",
+    default: [...field.default],
+    label: field.description,
+    ...(field.min === undefined ? {} : { min: field.min }),
+    ...(field.max === undefined ? {} : { max: field.max }),
+  };
+}
+
+/** Lists lead: they hold the copy, which the panel shows first. */
 export function resolveControls(
   slug: string,
   schema: InteractivitySchema,
+  lists: Record<string, ListField> = {},
 ): ControlConfig {
-  return schemaToControls(resolveSchema(slug, schema));
+  const out: ControlConfig = {};
+  for (const [key, field] of Object.entries(lists)) {
+    out[key] = listToControl(field);
+  }
+  return { ...out, ...schemaToControls(resolveSchema(slug, schema)) };
 }
 
 export function resolveConfig(
   slug: string,
   config: ComponentConfig,
 ): ResolvedComponentConfig {
-  return { ...config, controls: resolveControls(slug, config.controls) };
+  return {
+    ...config,
+    controls: resolveControls(slug, config.controls, config.lists),
+  };
+}
+
+/**
+ * A select option that leaves the prop unset, so the component picks the
+ * value from its theme (a scene's gradient ground).
+ */
+export const AUTO = "auto";
+
+/** Customizer values as component props: auto colours and selects are left out. */
+export function toProps(
+  controls: ControlConfig,
+  values: Record<string, unknown>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(values)) {
+    const type = controls[key]?.type;
+    if (type === "color" && value === "") continue;
+    if (type === "select" && value === AUTO) continue;
+    out[key] = value;
+  }
+  return out;
+}
+
+/**
+ * Props the Launch Pack scenes share, as customizer fields. Spread it into a
+ * config's `controls` after the component's own fields:
+ * `...sceneControls({ font: "Golos Text", grain: true })`.
+ *
+ * - `font`: the family the component loads for its copy; leave it out for a
+ *   scene without text.
+ * - `ink`, `background`: on by default, as theme-driven auto colours. Turn
+ *   one off when the scene has no text or draws no background of its own,
+ *   or when its config already has a field for it.
+ * - `grain`: only for scenes that draw film grain.
+ */
+export function sceneControls(options: {
+  font?: string;
+  ink?: boolean;
+  background?: boolean;
+  grain?: boolean;
+}): InteractivitySchema {
+  const { font, ink = true, background = true, grain = false } = options;
+  return {
+    ...(font
+      ? {
+          fontFamily: {
+            type: "font-family",
+            default: font,
+            description: "Font",
+          },
+        }
+      : {}),
+    ...(ink
+      ? {
+          ink: { type: "color", default: undefined, description: "Text color" },
+        }
+      : {}),
+    ...(background
+      ? {
+          background: {
+            type: "color",
+            default: undefined,
+            description: "Background",
+          },
+        }
+      : {}),
+    scale: {
+      type: "number",
+      default: 1,
+      min: 0.5,
+      max: 1.5,
+      step: 0.05,
+      description: "Scale",
+      hiddenFromList: false,
+    },
+    delay: {
+      type: "number",
+      default: 0,
+      min: 0,
+      max: 60,
+      step: 1,
+      description: "Delay (frames)",
+      hiddenFromList: false,
+    },
+    ...(grain
+      ? { grain: { type: "boolean", default: true, description: "Grain" } }
+      : {}),
+  };
+}
+
+export const GSH_PRESET_IDS = Object.keys(GSH_PRESETS) as GshPresetId[];
+
+/**
+ * The animated gradient ground of a scene that has one (`ground` prop).
+ * Starts on auto: the scene's theme picks its own ground. A scene with two
+ * grounds (a transition's A and B) names each one, since labels identify
+ * controls for people and agents alike.
+ */
+export function groundControl(
+  description = "Ground",
+): InteractivitySchemaField {
+  return {
+    type: "enum",
+    default: AUTO,
+    variants: enumVariants([AUTO, ...GSH_PRESET_IDS]),
+    description,
+  };
 }
 
 export function getDefaults(controls: ControlConfig): Record<string, unknown> {

@@ -3,6 +3,7 @@
 import { loadFont as loadGeist } from "@remotion/google-fonts/Geist";
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
+import type React from "react";
 import {
   AbsoluteFill,
   Easing,
@@ -142,6 +143,25 @@ export interface PromptSwellProps {
   url?: string;
   steps?: string[];
   tiers?: PromptSwellTier[];
+  /** Headline of the generated page's hero. */
+  headline?: string;
+  /** Heading over the pricing tiers. */
+  pricingTitle?: string;
+  /** Label of the waitlist buttons in the nav and the form. */
+  ctaLabel?: string;
+  /** Replaces the remocn mark in the generated page's nav. */
+  logo?: React.ReactNode;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the window, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
 }
@@ -151,6 +171,22 @@ const DEFAULT_FEATURES = [
   ["Every component", "4K renders", "Studio templates"],
   ["Shared library", "Brand presets", "Priority support"],
 ];
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
 
 export function PromptSwell({
   theme = "dark",
@@ -164,10 +200,20 @@ export function PromptSwell({
     { name: "Pro", price: "$19" },
     { name: "Team", price: "$49" },
   ],
+  headline = "Launch videos, built from code.",
+  pricingTitle = "Simple pricing",
+  ctaLabel = "Join waitlist",
+  logo,
+  ink: inkProp,
+  background,
+  fontFamily = geist.fontFamily,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   ground,
   groundParams,
 }: PromptSwellProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
@@ -175,7 +221,7 @@ export function PromptSwell({
   const stageH = portrait ? 1280 : 720;
   const k = width / stageW;
 
-  const ink = dark ? "#f2f1f6" : "#17161b";
+  const ink = inkProp ?? (dark ? "#f2f1f6" : "#17161b");
   const muted = dark ? "rgba(236,234,244,0.56)" : "rgba(23,22,27,0.54)";
   const faint = dark ? "rgba(236,234,244,0.32)" : "rgba(23,22,27,0.32)";
   const hair = dark ? "rgba(255,255,255,0.09)" : "rgba(23,22,27,0.09)";
@@ -505,7 +551,7 @@ export function PromptSwell({
           opacity: heroIn,
         }}
       >
-        <RemocnLogo fontSize={22} color={ink} />
+        {logo ?? <RemocnLogo fontSize={22} color={ink} />}
         <span style={{ flex: 1 }} />
         {(portrait ? ["Docs"] : ["Components", "Pricing", "Docs"]).map((l) => (
           <span key={l} style={{ fontSize: 15, color: muted }}>
@@ -524,7 +570,7 @@ export function PromptSwell({
             alignItems: "center",
           }}
         >
-          Join waitlist
+          {ctaLabel}
         </span>
       </div>
       <div
@@ -570,7 +616,7 @@ export function PromptSwell({
               transform: `translateY(${mix(70, 0, heroIn)}px)`,
             }}
           >
-            Launch videos, built from code.
+            {headline}
           </div>
         </div>
         <div
@@ -633,7 +679,7 @@ export function PromptSwell({
             opacity: ramp(frame, B.scroll1 + 2, 12),
           }}
         >
-          Simple pricing
+          {pricingTitle}
         </div>
         <div
           style={{
@@ -715,7 +761,7 @@ export function PromptSwell({
               boxShadow: "inset 0 1px 0 rgba(255,255,255,0.3)",
             }}
           >
-            Join waitlist
+            {ctaLabel}
           </div>
         </div>
       </div>
@@ -723,469 +769,495 @@ export function PromptSwell({
   );
 
   return (
-    <AbsoluteFill style={{ fontFamily: geist.fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={resolvedPreset}
-        params={resolvedParams}
-        timeOffset={2.5}
-        timeScale={0.45}
-      />
+    <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
+      {background === undefined ? (
+        <GshGround
+          preset={resolvedPreset}
+          params={resolvedParams}
+          timeOffset={2.5}
+          timeScale={0.45}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
       <DirBlur id="ps-swell" y={swBlur} />
       <DirBlur id="ps-scroll" y={scrollBlur} />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: stageW,
-          height: stageH,
-          transform: `scale(${k})`,
-          transformOrigin: "0 0",
-          perspective: 2200,
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: stageW / 2,
-            top: stageH / 2,
-            width: 0,
-            height: 0,
-            transformStyle: "preserve-3d",
-            transform: `scale(${push}) rotateX(${rotX}deg) rotateY(${rotY}deg)`,
+            left: 0,
+            top: 0,
+            width: stageW,
+            height: stageH,
+            transform: `scale(${k})`,
+            transformOrigin: "0 0",
+            perspective: 2200,
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: -W / 2,
-              top: -H / 2,
-              width: W,
-              height: H,
-              borderRadius: mix(28, 18, sw),
-              background: surface,
-              border: `1px solid ${hair}`,
-              boxShadow: shadow,
-              overflow: "hidden",
-              opacity: Math.min(1, cardIn * 1.5),
-              transform: `translateY(${mix(50, 0, cardIn)}px)`,
-              filter: swBlur > 0.4 ? "url(#ps-swell)" : undefined,
+              left: stageW / 2,
+              top: stageH / 2,
+              width: 0,
+              height: 0,
+              transformStyle: "preserve-3d",
+              transform: `scale(${push}) rotateX(${rotX}deg) rotateY(${rotY}deg)`,
             }}
           >
             <div
               style={{
                 position: "absolute",
-                left: (W - cardW) / 2,
-                top: (H - cardH) / 2,
-                width: cardW,
-                height: cardH,
-                opacity: 1 - promptOut,
-                transform: `scale(${mix(1, 1.1, promptOut)})`,
+                left: -W / 2,
+                top: -H / 2,
+                width: W,
+                height: H,
+                borderRadius: mix(28, 18, sw),
+                background: surface,
+                border: `1px solid ${hair}`,
+                boxShadow: shadow,
+                overflow: "hidden",
+                opacity: Math.min(1, cardIn * 1.5),
+                transform: `translateY(${mix(50, 0, cardIn)}px)`,
+                filter: swBlur > 0.4 ? "url(#ps-swell)" : undefined,
               }}
             >
               <div
                 style={{
                   position: "absolute",
-                  left: 28,
-                  right: 28,
-                  top: 24,
-                  fontSize: portrait ? 28 : 27,
-                  fontWeight: 300,
-                  lineHeight: 1.32,
-                  color: typed.length ? ink : faint,
-                  letterSpacing: "-0.02em",
-                }}
-              >
-                {typed.length ? typed : "Describe what you want to build"}
-                <span
-                  style={{
-                    display: "inline-block",
-                    width: 2,
-                    height: 30,
-                    marginLeft: 2,
-                    verticalAlign: "-6px",
-                    background: accent,
-                    opacity: caretOn ? 1 : 0,
-                  }}
-                />
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  left: 18,
-                  right: 18,
-                  bottom: 16,
-                  height: 44,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
+                  left: (W - cardW) / 2,
+                  top: (H - cardH) / 2,
+                  width: cardW,
+                  height: cardH,
+                  opacity: 1 - promptOut,
+                  transform: `scale(${mix(1, 1.1, promptOut)})`,
                 }}
               >
                 <div
                   style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 20,
-                    border: `1px solid ${hair}`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
+                    position: "absolute",
+                    left: 28,
+                    right: 28,
+                    top: 24,
+                    fontSize: portrait ? 28 : 27,
+                    fontWeight: 300,
+                    lineHeight: 1.32,
+                    color: typed.length ? ink : faint,
+                    letterSpacing: "-0.02em",
                   }}
                 >
-                  <svg viewBox="0 0 24 24" width={19} height={19} aria-hidden>
-                    <path d="M12 5v14M5 12h14" {...line(muted)} />
-                  </svg>
-                </div>
-                <div
-                  style={{
-                    height: 36,
-                    padding: "0 13px",
-                    borderRadius: 18,
-                    border: `1px solid ${hair}`,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    fontSize: 16,
-                    color: ink,
-                  }}
-                >
-                  <svg viewBox="0 0 24 24" width={17} height={17} aria-hidden>
-                    <path
-                      d="M4 5.5h16v13H4zM4 9.5h16M8 13.5h5"
-                      {...line(muted)}
-                    />
-                  </svg>
-                  Web app
-                </div>
-                <div style={{ flex: 1 }} />
-                <span
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    fontSize: 16,
-                    color: muted,
-                  }}
-                >
-                  remocn-2
-                  <svg viewBox="0 0 24 24" width={14} height={14} aria-hidden>
-                    <path d="m7 10 5 5 5-5" {...line(muted)} />
-                  </svg>
-                </span>
-                <svg viewBox="0 0 24 24" width={20} height={20} aria-hidden>
-                  <path
-                    d="M12 3.5a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0v-5a3 3 0 0 0-3-3ZM6 11.5a6 6 0 0 0 12 0M12 17.5v3"
-                    {...line(muted)}
+                  {typed.length ? typed : "Describe what you want to build"}
+                  <span
+                    style={{
+                      display: "inline-block",
+                      width: 2,
+                      height: 30,
+                      marginLeft: 2,
+                      verticalAlign: "-6px",
+                      background: accent,
+                      opacity: caretOn ? 1 : 0,
+                    }}
                   />
-                </svg>
-                {sendButton}
-              </div>
-            </div>
-
-            <div
-              style={{
-                position: "absolute",
-                left: (W - winW) / 2,
-                top: (H - winH) / 2,
-                width: winW,
-                height: winH,
-                opacity: win,
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  top: 0,
-                  height: chromeH,
-                  borderBottom: `1px solid ${hair}`,
-                  display: "flex",
-                  alignItems: "center",
-                  padding: "0 16px",
-                  gap: 12,
-                }}
-              >
-                <div style={{ display: "flex", gap: 8 }}>
-                  {[0, 1, 2].map((i) => (
-                    <span
-                      key={i}
-                      style={{
-                        width: 12,
-                        height: 12,
-                        borderRadius: 6,
-                        background: fill,
-                        border: `1px solid ${hair}`,
-                      }}
-                    />
-                  ))}
                 </div>
-                {portrait ? null : (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 18,
+                    right: 18,
+                    bottom: 16,
+                    height: 44,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                  }}
+                >
                   <div
                     style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 20,
+                      border: `1px solid ${hair}`,
                       display: "flex",
                       alignItems: "center",
-                      gap: 8,
-                      marginLeft: 10,
-                      fontSize: 15,
-                      color: ink,
+                      justifyContent: "center",
                     }}
                   >
-                    <RemocnR height={15} color={ink} />
-                    <span style={{ color: muted }}>/</span>
-                    launch-page
+                    <svg viewBox="0 0 24 24" width={19} height={19} aria-hidden>
+                      <path d="M12 5v14M5 12h14" {...line(muted)} />
+                    </svg>
                   </div>
-                )}
-                <div
-                  style={{ flex: 1, display: "flex", justifyContent: "center" }}
-                >
                   <div
                     style={{
-                      height: 30,
-                      padding: "0 14px",
-                      borderRadius: 9,
-                      background: fill,
+                      height: 36,
+                      padding: "0 13px",
+                      borderRadius: 18,
                       border: `1px solid ${hair}`,
                       display: "flex",
                       alignItems: "center",
                       gap: 8,
-                      fontFamily: mono.fontFamily,
-                      fontSize: 14,
+                      fontSize: 16,
+                      color: ink,
+                    }}
+                  >
+                    <svg viewBox="0 0 24 24" width={17} height={17} aria-hidden>
+                      <path
+                        d="M4 5.5h16v13H4zM4 9.5h16M8 13.5h5"
+                        {...line(muted)}
+                      />
+                    </svg>
+                    Web app
+                  </div>
+                  <div style={{ flex: 1 }} />
+                  <span
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      fontSize: 16,
                       color: muted,
                     }}
                   >
-                    <svg viewBox="0 0 24 24" width={13} height={13} aria-hidden>
-                      <path
-                        d="M7.5 11V8a4.5 4.5 0 0 1 9 0v3M6 11h12v9H6z"
-                        {...line(muted, 2)}
-                      />
+                    remocn-2
+                    <svg viewBox="0 0 24 24" width={14} height={14} aria-hidden>
+                      <path d="m7 10 5 5 5-5" {...line(muted)} />
                     </svg>
-                    {url}
-                  </div>
-                </div>
-                <div
-                  style={{
-                    height: 32,
-                    padding: "0 14px",
-                    borderRadius: 9,
-                    position: "relative",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 7,
-                    fontSize: 15,
-                    color: "#fff",
-                    background: accent,
-                    transform: `scale(${pubDip})`,
-                    boxShadow: `inset 0 1px 0 rgba(255,255,255,0.3), 0 6px 16px color-mix(in oklab, ${accent} 40%, transparent)`,
-                  }}
-                >
-                  {live ? (
-                    <span
-                      style={{
-                        width: 7,
-                        height: 7,
-                        borderRadius: 4,
-                        background: "#fff",
-                      }}
-                    />
-                  ) : null}
-                  {live ? "Live" : "Publish"}
-                </div>
-              </div>
-
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  top: chromeH,
-                  width: chatW,
-                  height: chatH,
-                  padding: portrait ? "18px 22px" : "20px 20px",
-                  boxSizing: "border-box",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 16,
-                }}
-              >
-                <div
-                  style={{
-                    alignSelf: "flex-end",
-                    maxWidth: portrait ? "86%" : "100%",
-                    padding: "12px 15px",
-                    borderRadius: "16px 16px 4px 16px",
-                    background: fill,
-                    border: `1px solid ${hair}`,
-                    fontSize: 16,
-                    lineHeight: 1.4,
-                    color: ink,
-                  }}
-                >
-                  {prompt}
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div
-                    style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: 8,
-                      background: ink,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <RemocnR height={13} color={page} />
-                  </div>
-                  <span style={{ fontSize: 16, color: muted }}>
-                    {frame >= B.tick3 + 6
-                      ? "Your page is ready."
-                      : "Building your page…"}
                   </span>
+                  <svg viewBox="0 0 24 24" width={20} height={20} aria-hidden>
+                    <path
+                      d="M12 3.5a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0v-5a3 3 0 0 0-3-3ZM6 11.5a6 6 0 0 0 12 0M12 17.5v3"
+                      {...line(muted)}
+                    />
+                  </svg>
+                  {sendButton}
                 </div>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 12,
-                    paddingLeft: 2,
-                  }}
-                >
-                  {steps.slice(0, 3).map((st, i) => {
-                    const t = tick(i);
-                    return (
-                      <div
-                        key={st}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 11,
-                          fontSize: 16,
-                          color: t > 0.5 ? ink : muted,
-                        }}
-                      >
-                        {check(t, 22, ink, hair)}
-                        <span style={{ flex: 1 }}>{st}</span>
-                        <span
-                          style={{
-                            fontFamily: mono.fontFamily,
-                            fontSize: 13,
-                            color: faint,
-                          }}
-                        >
-                          {["hero.tsx", "pricing.tsx", "waitlist.tsx"][i]}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-                {portrait ? null : (
-                  <>
-                    <div style={{ flex: 1 }} />
-                    <div
-                      style={{
-                        height: 50,
-                        borderRadius: 14,
-                        border: `1px solid ${hair}`,
-                        background: fill,
-                        display: "flex",
-                        alignItems: "center",
-                        padding: "0 8px 0 14px",
-                        fontSize: 16,
-                        color: faint,
-                      }}
-                    >
-                      <span style={{ flex: 1 }}>Ask for changes</span>
-                      <div
-                        style={{
-                          width: 34,
-                          height: 34,
-                          borderRadius: 17,
-                          background: fill,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <svg
-                          viewBox="0 0 24 24"
-                          width={16}
-                          height={16}
-                          aria-hidden
-                        >
-                          <path
-                            d="M12 19V5M6 11l6-6 6 6"
-                            {...line(muted, 1.8)}
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  </>
-                )}
               </div>
 
               <div
                 style={{
                   position: "absolute",
-                  left: view.x,
-                  top: view.y,
-                  width: view.w,
-                  height: view.h,
-                  borderRadius: 14,
-                  overflow: "hidden",
-                  background: page,
-                  border: `1px solid ${hair}`,
-                  boxShadow: dark
-                    ? "inset 0 1px 0 rgba(255,255,255,0.04)"
-                    : "0 1px 3px rgba(30,30,60,0.06)",
+                  left: (W - winW) / 2,
+                  top: (H - winH) / 2,
+                  width: winW,
+                  height: winH,
+                  opacity: win,
                 }}
               >
-                {pageContent}
                 <div
                   style={{
                     position: "absolute",
-                    left: "50%",
-                    bottom: 18,
-                    height: 44,
-                    padding: "0 16px 0 10px",
-                    borderRadius: 22,
-                    background: dark ? "#1b1b22" : "#17161b",
-                    color: "#fff",
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    height: chromeH,
+                    borderBottom: `1px solid ${hair}`,
                     display: "flex",
                     alignItems: "center",
-                    gap: 10,
-                    fontSize: 15,
-                    whiteSpace: "nowrap",
-                    boxShadow:
-                      "inset 0 1px 0 rgba(255,255,255,0.1), 0 12px 30px rgba(0,0,0,0.35)",
-                    opacity: frame >= B.toast ? Math.min(1, toast * 2) : 0,
-                    transform: `translate(-50%, ${mix(70, 0, toast)}px) scale(${mix(0.85, 1, toast)})`,
+                    padding: "0 16px",
+                    gap: 12,
                   }}
                 >
-                  <span
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {[0, 1, 2].map((i) => (
+                      <span
+                        key={i}
+                        style={{
+                          width: 12,
+                          height: 12,
+                          borderRadius: 6,
+                          background: fill,
+                          border: `1px solid ${hair}`,
+                        }}
+                      />
+                    ))}
+                  </div>
+                  {portrait ? null : (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        marginLeft: 10,
+                        fontSize: 15,
+                        color: ink,
+                      }}
+                    >
+                      <RemocnR height={15} color={ink} />
+                      <span style={{ color: muted }}>/</span>
+                      launch-page
+                    </div>
+                  )}
+                  <div
                     style={{
-                      width: 26,
-                      height: 26,
-                      borderRadius: 13,
-                      background: "#2fbf71",
+                      flex: 1,
                       display: "flex",
-                      alignItems: "center",
                       justifyContent: "center",
                     }}
                   >
-                    <svg viewBox="0 0 24 24" width={15} height={15} aria-hidden>
-                      <path d="m6 12.5 4 4 8-9" {...line("#fff", 2.4)} />
-                    </svg>
-                  </span>
-                  Live at
-                  <span style={{ fontFamily: mono.fontFamily, opacity: 0.7 }}>
-                    {url}
-                  </span>
+                    <div
+                      style={{
+                        height: 30,
+                        padding: "0 14px",
+                        borderRadius: 9,
+                        background: fill,
+                        border: `1px solid ${hair}`,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        fontFamily: mono.fontFamily,
+                        fontSize: 14,
+                        color: muted,
+                      }}
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        width={13}
+                        height={13}
+                        aria-hidden
+                      >
+                        <path
+                          d="M7.5 11V8a4.5 4.5 0 0 1 9 0v3M6 11h12v9H6z"
+                          {...line(muted, 2)}
+                        />
+                      </svg>
+                      {url}
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      height: 32,
+                      padding: "0 14px",
+                      borderRadius: 9,
+                      position: "relative",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 7,
+                      fontSize: 15,
+                      color: "#fff",
+                      background: accent,
+                      transform: `scale(${pubDip})`,
+                      boxShadow: `inset 0 1px 0 rgba(255,255,255,0.3), 0 6px 16px color-mix(in oklab, ${accent} 40%, transparent)`,
+                    }}
+                  >
+                    {live ? (
+                      <span
+                        style={{
+                          width: 7,
+                          height: 7,
+                          borderRadius: 4,
+                          background: "#fff",
+                        }}
+                      />
+                    ) : null}
+                    {live ? "Live" : "Publish"}
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: chromeH,
+                    width: chatW,
+                    height: chatH,
+                    padding: portrait ? "18px 22px" : "20px 20px",
+                    boxSizing: "border-box",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 16,
+                  }}
+                >
+                  <div
+                    style={{
+                      alignSelf: "flex-end",
+                      maxWidth: portrait ? "86%" : "100%",
+                      padding: "12px 15px",
+                      borderRadius: "16px 16px 4px 16px",
+                      background: fill,
+                      border: `1px solid ${hair}`,
+                      fontSize: 16,
+                      lineHeight: 1.4,
+                      color: ink,
+                    }}
+                  >
+                    {prompt}
+                  </div>
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 10 }}
+                  >
+                    <div
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: 8,
+                        background: ink,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <RemocnR height={13} color={page} />
+                    </div>
+                    <span style={{ fontSize: 16, color: muted }}>
+                      {frame >= B.tick3 + 6
+                        ? "Your page is ready."
+                        : "Building your page…"}
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 12,
+                      paddingLeft: 2,
+                    }}
+                  >
+                    {steps.slice(0, 3).map((st, i) => {
+                      const t = tick(i);
+                      return (
+                        <div
+                          key={st}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 11,
+                            fontSize: 16,
+                            color: t > 0.5 ? ink : muted,
+                          }}
+                        >
+                          {check(t, 22, ink, hair)}
+                          <span style={{ flex: 1 }}>{st}</span>
+                          <span
+                            style={{
+                              fontFamily: mono.fontFamily,
+                              fontSize: 13,
+                              color: faint,
+                            }}
+                          >
+                            {["hero.tsx", "pricing.tsx", "waitlist.tsx"][i]}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {portrait ? null : (
+                    <>
+                      <div style={{ flex: 1 }} />
+                      <div
+                        style={{
+                          height: 50,
+                          borderRadius: 14,
+                          border: `1px solid ${hair}`,
+                          background: fill,
+                          display: "flex",
+                          alignItems: "center",
+                          padding: "0 8px 0 14px",
+                          fontSize: 16,
+                          color: faint,
+                        }}
+                      >
+                        <span style={{ flex: 1 }}>Ask for changes</span>
+                        <div
+                          style={{
+                            width: 34,
+                            height: 34,
+                            borderRadius: 17,
+                            background: fill,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            width={16}
+                            height={16}
+                            aria-hidden
+                          >
+                            <path
+                              d="M12 19V5M6 11l6-6 6 6"
+                              {...line(muted, 1.8)}
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <div
+                  style={{
+                    position: "absolute",
+                    left: view.x,
+                    top: view.y,
+                    width: view.w,
+                    height: view.h,
+                    borderRadius: 14,
+                    overflow: "hidden",
+                    background: page,
+                    border: `1px solid ${hair}`,
+                    boxShadow: dark
+                      ? "inset 0 1px 0 rgba(255,255,255,0.04)"
+                      : "0 1px 3px rgba(30,30,60,0.06)",
+                  }}
+                >
+                  {pageContent}
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: "50%",
+                      bottom: 18,
+                      height: 44,
+                      padding: "0 16px 0 10px",
+                      borderRadius: 22,
+                      background: dark ? "#1b1b22" : "#17161b",
+                      color: "#fff",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      fontSize: 15,
+                      whiteSpace: "nowrap",
+                      boxShadow:
+                        "inset 0 1px 0 rgba(255,255,255,0.1), 0 12px 30px rgba(0,0,0,0.35)",
+                      opacity: frame >= B.toast ? Math.min(1, toast * 2) : 0,
+                      transform: `translate(-50%, ${mix(70, 0, toast)}px) scale(${mix(0.85, 1, toast)})`,
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 26,
+                        height: 26,
+                        borderRadius: 13,
+                        background: "#2fbf71",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        width={15}
+                        height={15}
+                        aria-hidden
+                      >
+                        <path d="m6 12.5 4 4 8-9" {...line("#fff", 2.4)} />
+                      </svg>
+                    </span>
+                    Live at
+                    <span style={{ fontFamily: mono.fontFamily, opacity: 0.7 }}>
+                      {url}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

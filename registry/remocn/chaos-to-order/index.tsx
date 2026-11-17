@@ -11,7 +11,7 @@ import {
   useVideoConfig,
 } from "remotion";
 
-const { fontFamily } = loadFont("normal", {
+const inter = loadFont("normal", {
   weights: ["400", "500", "600", "700"],
   subsets: ["latin"],
 });
@@ -21,7 +21,20 @@ export interface ChaosToOrderProps {
   items?: string[];
   /** Your product window. Falls back to a built-in issues list. */
   children?: React.ReactNode;
+  /** Workspace name in the built-in issues window. */
+  workspace?: string;
+  /** Frame the pile is pulled into the window; the chaos builds until then. */
+  hold?: number;
   accent?: string;
+  /** Text color of the built-in issues window; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Inter by default. */
+  fontFamily?: string;
+  /** Size of the pile and window, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "light" | "dark";
 }
@@ -127,7 +140,6 @@ const PIECES: Piece[] = [
 
 const PULL = 56;
 const PULL_LEN = 18;
-const WIN_IN = PULL + 10;
 const WIN_W = 880;
 const WIN_H = 530;
 
@@ -1312,17 +1324,24 @@ function IssuesWindow({
   f,
   fps,
   dark,
+  winIn,
+  workspace,
+  ink,
 }: {
   accent: string;
   f: number;
   fps: number;
   dark: boolean;
+  winIn: number;
+  workspace: string;
+  ink?: string;
 }) {
-  const p = palette(dark);
+  const base = palette(dark);
+  const p = ink === undefined ? base : { ...base, text: ink };
   let n = 0;
   const rowIn = (): React.CSSProperties => {
     const s = spring({
-      frame: f - WIN_IN - 3 - n++ * 1.3,
+      frame: f - winIn - 3 - n++ * 1.3,
       fps,
       config: { damping: 30, stiffness: 260 },
     });
@@ -1408,7 +1427,7 @@ function IssuesWindow({
           >
             r
           </div>
-          <span style={{ fontWeight: 600, fontSize: 13 }}>remocn</span>
+          <span style={{ fontWeight: 600, fontSize: 13 }}>{workspace}</span>
           <Icon d={I.chevron} size={10} color={p.muted} />
           <div style={flex({ marginLeft: "auto", gap: 10 })}>
             <Icon d={I.search} size={14} color={p.muted} />
@@ -1590,33 +1609,59 @@ function IssuesWindow({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ChaosToOrder({
   items = DEFAULT_ITEMS,
   children,
+  workspace = "remocn",
+  hold = PULL,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = inter.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: ChaosToOrderProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay);
   const { fps, width, height } = useVideoConfig();
   const f = frame * speed;
   const dark = theme === "dark";
   const u = Math.min(width / 1280, height / 720);
   const label = (i: number) => items[i] ?? DEFAULT_ITEMS[i];
+  const winIn = hold + 10;
 
   // the unread counter on the chat rail climbs faster and faster
   const unread = Math.round(
-    2 + 110 * interpolate(f, [6, PULL - 4], [0, 1], clamp) ** 2.2,
+    2 + 110 * interpolate(f, [6, Math.max(7, hold - 4)], [0, 1], clamp) ** 2.2,
   );
   const badge = unread > 99 ? "99+" : String(unread);
 
   // slow push-in while the pile builds, then the camera settles on the window
-  const cam = interpolate(f, [0, PULL, PULL + PULL_LEN + 10], [1, 1.04, 1], {
+  // interpolate needs a strictly increasing range, so a hold of 0 still starts at 1
+  const camAt = Math.max(1, hold);
+  const cam = interpolate(f, [0, camAt, camAt + PULL_LEN + 10], [1, 1.04, 1], {
     ...clamp,
     easing: IN_OUT,
   });
   const win = spring({
-    frame: f - WIN_IN,
+    frame: f - winIn,
     fps,
     config: { damping: 200, stiffness: 170 },
   });
@@ -1628,7 +1673,7 @@ export function ChaosToOrder({
       config: { damping: 14, stiffness: 200, mass: 0.8 },
     });
     const order = Math.hypot(p.x - 640, p.y - 360) / 700; // far pieces leave first
-    const start = PULL + (1 - order) * 5;
+    const start = hold + (1 - order) * 5;
     const pull = interpolate(f, [start, start + PULL_LEN], [0, 1], {
       ...clamp,
       easing: IN_OUT,
@@ -1686,7 +1731,10 @@ export function ChaosToOrder({
     <AbsoluteFill
       style={{
         fontFamily,
-        background: dark ? "#09090B" : "#F1F1F3",
+        background:
+          background === "transparent"
+            ? "transparent"
+            : (background ?? (dark ? "#09090B" : "#F1F1F3")),
         overflow: "hidden",
         WebkitFontSmoothing: "antialiased",
       }}
@@ -1699,40 +1747,50 @@ export function ChaosToOrder({
             "radial-gradient(ellipse at center, #000 30%, transparent 75%)",
         }}
       />
-      <div
-        style={{
-          position: "absolute",
-          left: (width - 1280 * u) / 2,
-          top: (height - 720 * u) / 2,
-          width: 1280,
-          height: 720,
-          transform: `scale(${u * cam})`,
-          transformOrigin: "640px 360px",
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: 640 - WIN_W / 2,
-            top: 360 - WIN_H / 2,
-            width: WIN_W,
-            height: WIN_H,
-            borderRadius: 14,
-            overflow: "hidden",
-            background: dark ? "#141416" : "#fff",
-            opacity: interpolate(win, [0, 0.35], [0, 1], clamp),
-            transform: `translateY(${(1 - win) * 14}px) scale(${interpolate(win, [0, 1], [0.94, 1])})`,
-            boxShadow: dark
-              ? "0 0 0 1px rgba(255,255,255,0.09), 0 24px 64px -12px rgba(0,0,0,0.7)"
-              : "0 0 0 1px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.04), 0 24px 64px -16px rgba(16,16,24,0.22)",
+            left: (width - 1280 * u) / 2,
+            top: (height - 720 * u) / 2,
+            width: 1280,
+            height: 720,
+            transform: `scale(${u * cam})`,
+            transformOrigin: "640px 360px",
           }}
         >
-          {children ?? (
-            <IssuesWindow accent={accent} f={f} fps={fps} dark={dark} />
-          )}
+          <div
+            style={{
+              position: "absolute",
+              left: 640 - WIN_W / 2,
+              top: 360 - WIN_H / 2,
+              width: WIN_W,
+              height: WIN_H,
+              borderRadius: 14,
+              overflow: "hidden",
+              background: dark ? "#141416" : "#fff",
+              opacity: interpolate(win, [0, 0.35], [0, 1], clamp),
+              transform: `translateY(${(1 - win) * 14}px) scale(${interpolate(win, [0, 1], [0.94, 1])})`,
+              boxShadow: dark
+                ? "0 0 0 1px rgba(255,255,255,0.09), 0 24px 64px -12px rgba(0,0,0,0.7)"
+                : "0 0 0 1px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.04), 0 24px 64px -16px rgba(16,16,24,0.22)",
+            }}
+          >
+            {children ?? (
+              <IssuesWindow
+                accent={accent}
+                f={f}
+                fps={fps}
+                dark={dark}
+                winIn={winIn}
+                workspace={workspace}
+                ink={ink}
+              />
+            )}
+          </div>
+          {f < hold + PULL_LEN + 6 ? pieces : null}
         </div>
-        {f < PULL + PULL_LEN + 6 ? pieces : null}
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

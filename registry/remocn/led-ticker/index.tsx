@@ -1,5 +1,6 @@
 "use client";
 
+import type React from "react";
 import { useId, useMemo } from "react";
 import {
   AbsoluteFill,
@@ -13,6 +14,20 @@ export interface LedTickerProps {
   text?: string;
   highlightWord?: string;
   accent?: string;
+  /** Frames the line takes to scroll in and settle. */
+  scroll?: number;
+  /** Radius of a lit dot, as a share of the grid pitch. */
+  dotSize?: number;
+  /** Color of the lit dots; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Size of the dot matrix, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -188,21 +203,47 @@ function layout(text: string, highlightWord?: string) {
 
 const ENTER = 2;
 const SCROLL_DUR = 54;
-const HOT_START = ENTER + SCROLL_DUR + 14;
 const HOT_STEP = 0.8;
 const HOT_DUR = 6;
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
 
 export function LedTicker({
   text = "remocn is live",
   highlightWord = "live",
   accent = "#3B5BFD",
+  scroll = SCROLL_DUR,
+  dotSize = 0.45,
+  ink: inkColor,
+  background,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: LedTickerProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const pal = THEMES[theme];
+  const fg = inkColor ?? pal.ink;
+  const bg =
+    background === "transparent" ? "transparent" : (background ?? pal.bg);
+  const hotStart = ENTER + scroll + 14;
 
   const {
     cells,
@@ -218,10 +259,10 @@ export function LedTicker({
   const home = Math.round((cols - textCols) / 2);
   const band = Math.round((rows - ROWS) / 2);
   const rOff = pitch * 0.3;
-  const rOn = pitch * 0.45;
+  const rOn = pitch * dotSize;
 
   const offsetAt = (f: number) => {
-    const p = interpolate(f, [ENTER, ENTER + SCROLL_DUR], [0, 1], CLAMP);
+    const p = interpolate(f, [ENTER, ENTER + scroll], [0, 1], CLAMP);
     return home + Math.round((cols - home) * (1 - SCROLL(p)));
   };
 
@@ -258,7 +299,7 @@ export function LedTicker({
     let b = v.b * falloff * (0.94 + hash(key * 0.37) * 0.06);
     let isHot = false;
     if (v.hot > 0 && v.b === 1) {
-      const start = HOT_START + (v.hot - 1) * HOT_STEP;
+      const start = hotStart + (v.hot - 1) * HOT_STEP;
       const p = (t - start) / HOT_DUR;
       if (p > 0) {
         const dip = p < 0.45 ? 1 - p / 0.45 : Math.min(1, (p - 0.45) / 0.55);
@@ -278,7 +319,7 @@ export function LedTicker({
     }
   }
 
-  const total = HOT_START + hotWidth * HOT_STEP + HOT_DUR + 40;
+  const total = hotStart + hotWidth * HOT_STEP + HOT_DUR + 40;
   const cam = interpolate(t, [0, total], [1.035, 1], {
     ...CLAMP,
     easing: EASE_IO,
@@ -286,94 +327,98 @@ export function LedTicker({
   const bucketOpacity = (i: number) => (i + 1) / BUCKETS;
 
   return (
-    <AbsoluteFill style={{ background: pal.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{ transform: `scale(${cam})`, transformOrigin: "50% 50%" }}
-      >
-        <svg
-          width={W}
-          height={H}
-          viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
+    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{ transform: `scale(${cam})`, transformOrigin: "50% 50%" }}
         >
-          <defs>
-            <pattern
-              id={`${uid}-dot`}
-              patternUnits="userSpaceOnUse"
-              x={x0}
-              y={y0}
-              width={pitch}
-              height={pitch}
-            >
-              <circle
-                cx={pitch / 2}
-                cy={pitch / 2}
-                r={rOff}
-                fill={pal.off}
-                fillOpacity={pal.offAlpha}
-              />
-            </pattern>
-            <radialGradient id={`${uid}-fall`} cx="50%" cy="50%" r="62%">
-              <stop offset="0%" stopColor="#fff" stopOpacity={1} />
-              <stop offset="55%" stopColor="#fff" stopOpacity={0.62} />
-              <stop offset="100%" stopColor="#fff" stopOpacity={0.18} />
-            </radialGradient>
-            <mask id={`${uid}-mask`}>
-              <rect width={W} height={H} fill={`url(#${uid}-fall)`} />
-            </mask>
-          </defs>
-          <rect
+          <svg
             width={W}
             height={H}
-            fill={`url(#${uid}-dot)`}
-            mask={`url(#${uid}-mask)`}
-          />
-          {ink.map((segs, i) =>
-            segs.length ? (
-              <path
-                key={`i${i}`}
-                d={segs.join("")}
-                fill={pal.ink}
-                opacity={bucketOpacity(i)}
-              />
-            ) : null,
-          )}
-          {hot.map((segs, i) =>
-            segs.length ? (
-              <path
-                key={`h${i}`}
-                d={segs.join("")}
-                fill={hotColors[i % HOT_STEPS]}
-                opacity={bucketOpacity(Math.floor(i / HOT_STEPS))}
-              />
-            ) : null,
-          )}
+            viewBox={`0 0 ${W} ${H}`}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            <defs>
+              <pattern
+                id={`${uid}-dot`}
+                patternUnits="userSpaceOnUse"
+                x={x0}
+                y={y0}
+                width={pitch}
+                height={pitch}
+              >
+                <circle
+                  cx={pitch / 2}
+                  cy={pitch / 2}
+                  r={rOff}
+                  fill={pal.off}
+                  fillOpacity={pal.offAlpha}
+                />
+              </pattern>
+              <radialGradient id={`${uid}-fall`} cx="50%" cy="50%" r="62%">
+                <stop offset="0%" stopColor="#fff" stopOpacity={1} />
+                <stop offset="55%" stopColor="#fff" stopOpacity={0.62} />
+                <stop offset="100%" stopColor="#fff" stopOpacity={0.18} />
+              </radialGradient>
+              <mask id={`${uid}-mask`}>
+                <rect width={W} height={H} fill={`url(#${uid}-fall)`} />
+              </mask>
+            </defs>
+            <rect
+              width={W}
+              height={H}
+              fill={`url(#${uid}-dot)`}
+              mask={`url(#${uid}-mask)`}
+            />
+            {ink.map((segs, i) =>
+              segs.length ? (
+                <path
+                  key={`i${i}`}
+                  d={segs.join("")}
+                  fill={fg}
+                  opacity={bucketOpacity(i)}
+                />
+              ) : null,
+            )}
+            {hot.map((segs, i) =>
+              segs.length ? (
+                <path
+                  key={`h${i}`}
+                  d={segs.join("")}
+                  fill={hotColors[i % HOT_STEPS]}
+                  opacity={bucketOpacity(Math.floor(i / HOT_STEPS))}
+                />
+              ) : null,
+            )}
+          </svg>
+        </AbsoluteFill>
+      </ScaleLayer>
+      {grain ? (
+        <svg
+          width="100%"
+          height="100%"
+          style={{
+            position: "absolute",
+            inset: 0,
+            opacity: pal.grain,
+            pointerEvents: "none",
+          }}
+          aria-hidden
+        >
+          <filter id={`${uid}-grain`}>
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.9"
+              numOctaves={2}
+              seed={5}
+              stitchTiles="stitch"
+            />
+            <feColorMatrix values="0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0.9 0" />
+          </filter>
+          <rect width="100%" height="100%" filter={`url(#${uid}-grain)`} />
         </svg>
-      </AbsoluteFill>
-      <svg
-        width="100%"
-        height="100%"
-        style={{
-          position: "absolute",
-          inset: 0,
-          opacity: pal.grain,
-          pointerEvents: "none",
-        }}
-        aria-hidden
-      >
-        <filter id={`${uid}-grain`}>
-          <feTurbulence
-            type="fractalNoise"
-            baseFrequency="0.9"
-            numOctaves={2}
-            seed={5}
-            stitchTiles="stitch"
-          />
-          <feColorMatrix values="0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0.9 0" />
-        </filter>
-        <rect width="100%" height="100%" filter={`url(#${uid}-grain)`} />
-      </svg>
+      ) : null}
     </AbsoluteFill>
   );
 }

@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const hairlineOpenConfig: ComponentConfig = {
   componentName: "HairlineOpen",
@@ -28,6 +34,21 @@ export const hairlineOpenConfig: ComponentConfig = {
       default: "Ship the film",
       description: "To",
     },
+    italic: {
+      type: "boolean",
+      default: true,
+      description: "Italic incoming line",
+    },
+    hold: {
+      type: "number",
+      default: 10,
+      min: 0,
+      max: 40,
+      step: 1,
+      description: "Hairline hold (frames)",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Instrument Serif", grain: true }),
     speed: {
       type: "number",
       default: 1,

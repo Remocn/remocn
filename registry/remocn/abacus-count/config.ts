@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const abacusCountConfig: ComponentConfig = {
   componentName: "AbacusCount",
@@ -12,11 +18,6 @@ export const abacusCountConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     label: {
       type: "text-content",
@@ -32,6 +33,26 @@ export const abacusCountConfig: ComponentConfig = {
       description: "Value",
       hiddenFromList: false,
     },
+    separator: {
+      type: "text-content",
+      default: ",",
+      description: "Separator",
+    },
+    fontWeight: {
+      type: "number",
+      default: 300,
+      min: 100,
+      max: 900,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Geist", grain: true }),
     speed: {
       type: "number",
       default: 1,

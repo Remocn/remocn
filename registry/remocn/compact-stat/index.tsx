@@ -26,7 +26,21 @@ export interface CompactStatProps {
   prefix?: string;
   label?: string;
   accent?: string;
+  /** Text color of the figure; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the figure and label. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Weight of the figure. */
+  fontWeight?: number;
+  /** Frames between characters as the full number rises in. */
+  stagger?: number;
+  /** Size of the figure and label, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -171,18 +185,23 @@ function layout(ctx: CanvasRenderingContext2D, chars: string[]) {
   return { x, w, total };
 }
 
-function measure(p: Plan, label: string): Metrics {
+function measure(
+  p: Plan,
+  label: string,
+  fontFamily: string,
+  fontWeight: number,
+): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("compact-stat: no 2d context");
-  ctx.font = `500 ${FONT_PX}px "${hanken.fontFamily}"`;
+  ctx.font = `${fontWeight} ${FONT_PX}px "${fontFamily}"`;
   const f = layout(ctx, p.full);
   const s = layout(ctx, p.short);
   const zm = ctx.measureText("0");
   const cap = zm.actualBoundingBoxAscent / FONT_PX;
   const asc = zm.fontBoundingBoxAscent / FONT_PX;
   const desc = zm.fontBoundingBoxDescent / FONT_PX;
-  ctx.font = `400 ${FONT_PX}px "${hanken.fontFamily}"`;
+  ctx.font = `400 ${FONT_PX}px "${fontFamily}"`;
   return {
     xf: f.x,
     wf: f.w,
@@ -196,7 +215,12 @@ function measure(p: Plan, label: string): Metrics {
   };
 }
 
-function useMetrics(p: Plan, label: string) {
+function useMetrics(
+  p: Plan,
+  label: string,
+  fontFamily: string,
+  fontWeight: number,
+) {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("compact-stat: measuring"));
   const released = useRef(false);
@@ -204,13 +228,13 @@ function useMetrics(p: Plan, label: string) {
     let live = true;
     Promise.all([
       hanken.waitUntilDone(),
-      document.fonts.load(`500 100px "${hanken.fontFamily}"`),
-      document.fonts.load(`400 100px "${hanken.fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setMetrics(measure(p, label));
+        setMetrics(measure(p, label, fontFamily, fontWeight));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -219,7 +243,7 @@ function useMetrics(p: Plan, label: string) {
     return () => {
       live = false;
     };
-  }, [p, label, handle]);
+  }, [p, label, fontFamily, fontWeight, handle]);
   return metrics;
 }
 
@@ -252,6 +276,22 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function CompactStat({
   value = 1200000,
   decimals = 1,
@@ -259,20 +299,28 @@ export function CompactStat({
   prefix = "",
   label = "frames rendered with remocn",
   accent = "#3B5BFD",
+  ink,
   background,
+  fontFamily = hanken.fontFamily,
+  fontWeight = 500,
+  stagger = RISE_GAP,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: CompactStatProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const bg = background ?? c.bg;
 
   const p = useMemo(
     () => plan(value, decimals, suffix, prefix),
     [value, decimals, suffix, prefix],
   );
-  const m = useMetrics(p, label);
+  const m = useMetrics(p, label, fontFamily, fontWeight);
 
   if (!m) {
     return <div style={{ position: "absolute", inset: 0, background: bg }} />;
@@ -347,11 +395,11 @@ export function CompactStat({
         left: x,
         top: baseY - maskTop - m.base * F + (1 - rise) * maskH * 1.05,
         height: F,
-        fontFamily: hanken.fontFamily,
-        fontWeight: 500,
+        fontFamily,
+        fontWeight,
         fontSize: F,
         lineHeight: `${F}px`,
-        color: c.ink,
+        color: fg,
         whiteSpace: "pre",
         fontFeatureSettings: '"lnum" 1',
         ...extra,
@@ -364,7 +412,7 @@ export function CompactStat({
   const riseOf = (i: number) =>
     interpolate(
       t,
-      [RISE_AT + i * RISE_GAP, RISE_AT + i * RISE_GAP + RISE_LEN],
+      [RISE_AT + i * stagger, RISE_AT + i * stagger + RISE_LEN],
       [0, 1],
       { ...CLAMP, easing: EASE_OUT },
     );
@@ -432,60 +480,62 @@ export function CompactStat({
           }}
         />
       )}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          width: W,
-          top: maskTop,
-          height: maskH,
-          overflow: "hidden",
-        }}
-      >
-        {kept}
-        <div
-          style={{
-            position: "absolute",
-            left: slotPx,
-            top: 0,
-            width: Math.max(0, W - slotPx),
-            height: maskH,
-            overflow: "hidden",
-          }}
-        >
-          {tail}
-          {magGlyphs}
-        </div>
-      </div>
-      {label ? (
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
             left: 0,
             width: W,
-            top: baseY + gap - labelSize * 0.2,
-            height: labelSize * 1.4,
+            top: maskTop,
+            height: maskH,
             overflow: "hidden",
-            textAlign: "center",
-            fontFamily: hanken.fontFamily,
-            fontWeight: 400,
-            fontSize: labelSize,
-            lineHeight: `${labelSize * 1.2}px`,
-            letterSpacing: "-0.01em",
-            color: c.muted,
-            whiteSpace: "pre",
           }}
         >
+          {kept}
           <div
             style={{
-              transform: `translateY(${((1 - labelP) * labelSize * 1.3).toFixed(2)}px)`,
+              position: "absolute",
+              left: slotPx,
+              top: 0,
+              width: Math.max(0, W - slotPx),
+              height: maskH,
+              overflow: "hidden",
             }}
           >
-            {label}
+            {tail}
+            {magGlyphs}
           </div>
         </div>
-      ) : null}
-      {bg === "transparent" ? null : <Grain opacity={c.grain} />}
+        {label ? (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              width: W,
+              top: baseY + gap - labelSize * 0.2,
+              height: labelSize * 1.4,
+              overflow: "hidden",
+              textAlign: "center",
+              fontFamily,
+              fontWeight: 400,
+              fontSize: labelSize,
+              lineHeight: `${labelSize * 1.2}px`,
+              letterSpacing: "-0.01em",
+              color: c.muted,
+              whiteSpace: "pre",
+            }}
+          >
+            <div
+              style={{
+                transform: `translateY(${((1 - labelP) * labelSize * 1.3).toFixed(2)}px)`,
+              }}
+            >
+              {label}
+            </div>
+          </div>
+        ) : null}
+      </ScaleLayer>
+      {bg === "transparent" || !grain ? null : <Grain opacity={c.grain} />}
     </AbsoluteFill>
   );
 }

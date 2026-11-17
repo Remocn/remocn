@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Lexend";
+import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -28,7 +29,19 @@ export interface RsvpProps {
   rsvpLabel?: string;
   rsvp?: string;
   accent?: string;
+  /** Text color of the headline and values; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Lexend by default. */
+  fontFamily?: string;
+  /** Weight of the headline. */
+  fontWeight?: number;
+  /** Frames between headline words as they rise in. */
+  stagger?: number;
+  /** Size of the invite, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -54,7 +67,7 @@ interface Spec {
   weight: number;
 }
 
-function useWidths(specs: Spec[]) {
+function useWidths(specs: Spec[], fontFamily: string) {
   const key = specs.map((s) => `${s.weight}|${s.text}`).join("\u0001");
   const [state, setState] = useState<{
     key: string;
@@ -70,7 +83,7 @@ function useWidths(specs: Spec[]) {
     Promise.all([
       lexend.waitUntilDone(),
       ...weights.map((wt) =>
-        document.fonts.load(`${wt} 100px "${lexend.fontFamily}"`),
+        document.fonts.load(`${wt} 100px "${fontFamily}"`),
       ),
     ])
       .catch(() => undefined)
@@ -81,7 +94,7 @@ function useWidths(specs: Spec[]) {
         for (const s of ref.current) {
           const k = `${s.weight}|${s.text}`;
           if (ctx) {
-            ctx.font = `${s.weight} 100px "${lexend.fontFamily}"`;
+            ctx.font = `${s.weight} 100px "${fontFamily}"`;
             w[k] = ctx.measureText(s.text).width / 100;
           } else {
             w[k] = s.text.length * 0.56;
@@ -96,7 +109,7 @@ function useWidths(specs: Spec[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily]);
   return state && state.key === key ? state.w : null;
 }
 
@@ -151,21 +164,44 @@ const DEFAULT_FIELDS: RsvpField[] = [
   { label: "Bring", value: "The story. We brought the parts." },
 ];
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function Rsvp({
   headline = "You’re invited.",
   fields = DEFAULT_FIELDS,
   rsvpLabel = "RSVP",
   rsvp = "npx shadcn add @remocn/whip-pan",
   accent,
+  ink,
   background,
+  fontFamily = lexend.fontFamily,
+  fontWeight = 500,
+  stagger = 4,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: RsvpProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const Tt = durationInFrames * speed;
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
@@ -175,13 +211,16 @@ export function Rsvp({
   ];
   const headWords = splitWords(headline);
   const rowWords = rows.map((r) => splitWords(r.value));
-  const w = useWidths([
-    { text: " ", weight: 500 },
-    { text: " ", weight: 400 },
-    ...headWords.map((text) => ({ text, weight: 500 })),
-    ...rows.map((r) => ({ text: r.label, weight: 400 })),
-    ...rowWords.flat().map((text) => ({ text, weight: 400 })),
-  ]);
+  const w = useWidths(
+    [
+      { text: " ", weight: fontWeight },
+      { text: " ", weight: 400 },
+      ...headWords.map((text) => ({ text, weight: fontWeight })),
+      ...rows.map((r) => ({ text: r.label, weight: 400 })),
+      ...rowWords.flat().map((text) => ({ text, weight: 400 })),
+    ],
+    fontFamily,
+  );
 
   if (!w) {
     return (
@@ -190,10 +229,10 @@ export function Rsvp({
   }
 
   const headAdv = (s: string) =>
-    (w[`500|${s}`] ?? s.length * 0.56) + TRACK * Array.from(s).length;
+    (w[`${fontWeight}|${s}`] ?? s.length * 0.56) + TRACK * Array.from(s).length;
   const rowAdv = (s: string) =>
     (w[`400|${s}`] ?? s.length * 0.56) + ROW_TRACK * Array.from(s).length;
-  const headSpace = w["500| "] ?? 0.25;
+  const headSpace = w[`${fontWeight}| `] ?? 0.25;
   const rowSpace = w["400| "] ?? 0.25;
 
   const portrait = H > W * 1.1;
@@ -272,14 +311,14 @@ export function Rsvp({
         height: LH * fH,
         lineHeight: `${LH * fH}px`,
         fontSize: fH,
-        fontWeight: 500,
+        fontWeight,
         whiteSpace: "pre",
         letterSpacing: `${TRACK}em`,
-        color: c.ink,
+        color: fg,
       }}
     >
       {line.map((word, wi) => {
-        const s = 3 + wordIndex * 4;
+        const s = 3 + wordIndex * stagger;
         wordIndex++;
         const e = interpolate(t, [s, s + 20], [0, 1], {
           ...CLAMP,
@@ -351,7 +390,7 @@ export function Rsvp({
             left: B.labelCol,
             top: labelH * fR,
             fontWeight: 400,
-            color: isRsvp ? hi : c.ink,
+            color: isRsvp ? hi : fg,
           }}
         >
           {B.valueLines[k].map((line, li) => {
@@ -394,11 +433,13 @@ export function Rsvp({
       style={{
         background: stage,
         overflow: "hidden",
-        fontFamily: lexend.fontFamily,
+        fontFamily,
       }}
     >
-      {headNodes}
-      {rowNodes}
+      <ScaleLayer scale={scale}>
+        {headNodes}
+        {rowNodes}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

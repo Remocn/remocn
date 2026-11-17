@@ -23,7 +23,20 @@ export interface PlusOpenProps {
   label?: string;
   next?: string;
   accent?: string;
+  /** Color of the figure and the statement; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for all copy. Load it yourself; Sora by default. */
+  fontFamily?: string;
+  /** Frames before the plus starts to open. */
+  hold?: number;
+  /** Frames between words of the statement. */
+  stagger?: number;
+  grain?: boolean;
+  /** Size of the figure and statement, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -85,11 +98,11 @@ interface Metrics {
   label: number;
 }
 
-function measure(chars: string[], label: string): Metrics {
+function measure(chars: string[], label: string, fontFamily: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("plus-open: no 2d context");
-  ctx.font = `400 ${FONT_PX}px "${sora.fontFamily}"`;
+  ctx.font = `400 ${FONT_PX}px "${fontFamily}"`;
   const x: number[] = [];
   let prefix = "";
   for (let i = 0; i < chars.length; i++) {
@@ -102,7 +115,7 @@ function measure(chars: string[], label: string): Metrics {
   const zm = ctx.measureText("0");
   const asc = zm.fontBoundingBoxAscent / FONT_PX;
   const desc = zm.fontBoundingBoxDescent / FONT_PX;
-  ctx.font = `300 ${FONT_PX}px "${sora.fontFamily}"`;
+  ctx.font = `300 ${FONT_PX}px "${fontFamily}"`;
   return {
     x,
     width,
@@ -112,7 +125,7 @@ function measure(chars: string[], label: string): Metrics {
   };
 }
 
-function useMetrics(chars: string[], label: string) {
+function useMetrics(chars: string[], label: string, fontFamily: string) {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("plus-open: measuring"));
   const released = useRef(false);
@@ -120,14 +133,14 @@ function useMetrics(chars: string[], label: string) {
     let live = true;
     Promise.all([
       sora.waitUntilDone(),
-      document.fonts.load(`400 100px "${sora.fontFamily}"`),
-      document.fonts.load(`300 100px "${sora.fontFamily}"`),
-      document.fonts.load(`500 100px "${sora.fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
+      document.fonts.load(`300 100px "${fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setMetrics(measure(chars, label));
+        setMetrics(measure(chars, label, fontFamily));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -136,7 +149,7 @@ function useMetrics(chars: string[], label: string) {
     return () => {
       live = false;
     };
-  }, [chars, label, handle]);
+  }, [chars, label, fontFamily, handle]);
   return metrics;
 }
 
@@ -206,17 +219,27 @@ export function PlusOpen({
   label = "updates in this release",
   next = "Here’s everything new.",
   accent = "#3B5BFD",
+  ink,
   background,
+  fontFamily = sora.fontFamily,
+  hold = ARMS_AT,
+  stagger = 3,
+  grain = true,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: PlusOpenProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
   const bg = background ?? c.bg;
+  const armsAt = hold;
+  const openAt = hold + OPEN_AT - ARMS_AT;
+  const nextAt = hold + NEXT_AT - ARMS_AT;
 
   const chars = useMemo(() => Array.from(value), [value]);
-  const m = useMetrics(chars, label);
+  const m = useMetrics(chars, label, fontFamily);
 
   if (!m) {
     return <div style={{ position: "absolute", inset: 0, background: bg }} />;
@@ -226,12 +249,18 @@ export function PlusOpen({
   const stroke = 0.082;
   const plusGap = 0.07;
   const lockW = m.width + plusGap + plusSpan;
-  const F = Math.min(H * 0.4, (W * 0.74) / lockW);
+  // Scale sizes the copy instead of a ScaleLayer: the plus cuts the whole
+  // frame at the figure's position, so a transformed layer would split them.
+  const F = Math.min(H * 0.4, (W * 0.74) / lockW) * scale;
 
   const labelSize = label
-    ? Math.min(Math.max(F * 0.13, H * 0.04), H * 0.052, (W * 0.8) / m.label)
+    ? Math.min(
+        Math.max((F / scale) * 0.13, H * 0.04),
+        H * 0.052,
+        (W * 0.8) / m.label,
+      ) * scale
     : 0;
-  const gap = label ? Math.max(F * 0.26, H * 0.05) : 0;
+  const gap = label ? Math.max(F * 0.26, H * 0.05 * scale) : 0;
   const blockH = m.cap * F + gap + labelSize;
   const baseY = (H - blockH) / 2 + m.cap * F;
   const left = (W - lockW * F) / 2;
@@ -250,11 +279,11 @@ export function PlusOpen({
   const plusAngle = (-Math.PI / 2) * (1 - land);
   const plusOn = interpolate(t, [PLUS_AT, PLUS_AT + 5], [0, 1], CLAMP);
 
-  const armH = interpolate(t, [ARMS_AT, ARMS_AT + ARMS_LEN], [0, 1], {
+  const armH = interpolate(t, [armsAt, armsAt + ARMS_LEN], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const armV = interpolate(t, [ARMS_AT + 3, ARMS_AT + 3 + ARMS_LEN], [0, 1], {
+  const armV = interpolate(t, [armsAt + 3, armsAt + 3 + ARMS_LEN], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -264,12 +293,12 @@ export function PlusOpen({
     u: arm0 + (cy + 4 - arm0) * armV,
     d: arm0 + (H - cy + 4 - arm0) * armV,
   };
-  const open = interpolate(t, [OPEN_AT, OPEN_AT + OPEN_LEN], [0, 1], {
+  const open = interpolate(t, [openAt, openAt + OPEN_LEN], [0, 1], {
     ...CLAMP,
     easing: EASE_OPEN,
   });
   const spread = open * Math.max(cx, W - cx, cy, H - cy) * 1.04;
-  const split = t >= OPEN_AT;
+  const split = t >= openAt;
 
   const drift = t / 30;
   const blobs = c.blobs(accent);
@@ -324,11 +353,11 @@ export function PlusOpen({
               position: "absolute",
               left: left + m.x[i] * F,
               top: baseY - maskTop - m.base * F + (1 - rise(i)) * maskH * 1.05,
-              fontFamily: sora.fontFamily,
+              fontFamily,
               fontWeight: 400,
               fontSize: F,
               lineHeight: `${F}px`,
-              color: c.ink,
+              color: ink ?? c.ink,
               whiteSpace: "pre",
               fontFeatureSettings: '"lnum" 1',
             }}
@@ -347,7 +376,7 @@ export function PlusOpen({
             height: labelSize * 1.5,
             overflow: "hidden",
             textAlign: "center",
-            fontFamily: sora.fontFamily,
+            fontFamily,
             fontWeight: 300,
             fontSize: labelSize,
             lineHeight: `${labelSize * 1.3}px`,
@@ -394,7 +423,7 @@ export function PlusOpen({
   });
 
   const nextWords = next.split(" ");
-  const nextSize = Math.min(H * 0.13, W * 0.1);
+  const nextSize = Math.min(H * 0.13, W * 0.1) * scale;
 
   const nextScene = (
     <>
@@ -411,21 +440,21 @@ export function PlusOpen({
       >
         <div
           style={{
-            fontFamily: sora.fontFamily,
+            fontFamily,
             fontWeight: 400,
             fontSize: nextSize,
             lineHeight: 1.08,
             letterSpacing: "-0.035em",
-            color: c.nextInk,
+            color: ink ?? c.nextInk,
             textAlign: "center",
             textWrap: "balance",
-            maxWidth: W * 0.84,
+            maxWidth: W * 0.84 * scale,
           }}
         >
           {nextWords.map((w, k) => {
             const p = interpolate(
               t,
-              [NEXT_AT + k * 3, NEXT_AT + k * 3 + 18],
+              [nextAt + k * stagger, nextAt + k * stagger + 18],
               [0, 1],
               { ...CLAMP, easing: EASE_OUT },
             );
@@ -456,7 +485,7 @@ export function PlusOpen({
     </>
   );
 
-  const lit = 1 - interpolate(t, [OPEN_AT - 2, OPEN_AT + 14], [0, 1], CLAMP);
+  const lit = 1 - interpolate(t, [openAt - 2, openAt + 14], [0, 1], CLAMP);
   const boost =
     lit > 0
       ? `brightness(${(1 + c.boost * lit).toFixed(3)}) saturate(${(1 + 0.25 * lit).toFixed(3)})`
@@ -500,7 +529,7 @@ export function PlusOpen({
           </div>
         </>
       )}
-      {bg === "transparent" ? null : <Grain opacity={c.grain} />}
+      {grain && bg !== "transparent" ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

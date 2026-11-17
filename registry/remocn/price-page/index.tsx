@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/AlbertSans";
+import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -23,7 +24,17 @@ export interface PricePageProps {
   price?: string;
   note?: string;
   accent?: string;
+  /** Color of the label, lines and note; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Albert Sans by default. */
+  fontFamily?: string;
+  /** Frames the full list holds before the lines start leaving. */
+  hold?: number;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -55,8 +66,8 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
-function useWidths(keys: string[]) {
-  const key = keys.join("\u0001");
+function useWidths(keys: string[], fontFamily: string) {
+  const key = [fontFamily, ...keys].join("\u0001");
   const [state, setState] = useState<{
     key: string;
     w: Record<string, number>;
@@ -69,8 +80,8 @@ function useWidths(keys: string[]) {
     let live = true;
     Promise.all([
       albert.waitUntilDone(),
-      document.fonts.load(`400 100px "${albert.fontFamily}"`),
-      document.fonts.load(`500 100px "${albert.fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -81,7 +92,7 @@ function useWidths(keys: string[]) {
           const cut = k.indexOf("|");
           const wt = k.slice(0, cut);
           const s = k.slice(cut + 1);
-          if (ctx) ctx.font = `${wt} 100px "${albert.fontFamily}"`;
+          if (ctx) ctx.font = `${wt} 100px "${fontFamily}"`;
           w[k] = ctx ? ctx.measureText(s).width / 100 : s.length * 0.5;
         }
         setState({ key, w });
@@ -93,8 +104,24 @@ function useWidths(keys: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily]);
   return state && state.key === key ? state.w : null;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function PricePage({
@@ -103,15 +130,21 @@ export function PricePage({
   price = "Free.",
   note = "That’s the whole pricing page.",
   accent,
+  ink,
   background,
+  fontFamily = albert.fontFamily,
+  hold = 40,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: PricePageProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const T = durationInFrames * speed;
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
@@ -122,7 +155,7 @@ export function PricePage({
     `400|${note}`,
     `400|${label}`,
   ];
-  const w = useWidths(keys);
+  const w = useWidths(keys, fontFamily);
 
   if (!w) {
     return (
@@ -165,7 +198,7 @@ export function PricePage({
   const labelH = Fs * 2.1;
   const noteH = note ? Fn * 1.9 : 0;
 
-  const intro = 40;
+  const intro = hold;
   const tail = 44;
   const land = 22;
   const gap =
@@ -228,7 +261,7 @@ export function PricePage({
         fontSize={F}
         fontWeight={400}
         letterSpacing={`${TRACK_LINE}em`}
-        fill={c.ink}
+        fill={fg}
         opacity={enter * interpolate(out, [0.55, 1], [1, 0], CLAMP)}
         transform={`translate(${dx.toFixed(2)} ${dy.toFixed(2)})`}
       >
@@ -250,58 +283,60 @@ export function PricePage({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        fontFamily={albert.fontFamily}
-        aria-hidden
-      >
-        <text
-          x={right}
-          y={top + Fs}
-          textAnchor="end"
-          fontSize={Fs}
-          fontWeight={400}
-          fill={c.ink}
-          opacity={labelIn * 0.55}
-          transform={`translate(0 ${((1 - labelIn) * Fs * 0.4).toFixed(2)})`}
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          fontFamily={fontFamily}
+          aria-hidden
         >
-          {label}
-        </text>
-        {lineNodes}
-        {priceIn > 0 ? (
           <text
             x={right}
-            y={priceBase}
+            y={top + Fs}
             textAnchor="end"
-            fontSize={Fp}
-            fontWeight={500}
-            letterSpacing={`${TRACK_PRICE}em`}
-            fill={hi}
-            opacity={priceIn}
-            transform={`translate(0 ${((1 - priceIn) * Fp * 0.22).toFixed(2)})`}
-          >
-            {price}
-          </text>
-        ) : null}
-        {note && noteIn > 0 ? (
-          <text
-            x={right}
-            y={noteBase}
-            textAnchor="end"
-            fontSize={Fn}
+            fontSize={Fs}
             fontWeight={400}
-            letterSpacing="-0.005em"
-            fill={c.ink}
-            opacity={noteIn}
-            transform={`translate(0 ${((1 - noteIn) * Fn * 0.5).toFixed(2)})`}
+            fill={fg}
+            opacity={labelIn * 0.55}
+            transform={`translate(0 ${((1 - labelIn) * Fs * 0.4).toFixed(2)})`}
           >
-            {note}
+            {label}
           </text>
-        ) : null}
-      </svg>
+          {lineNodes}
+          {priceIn > 0 ? (
+            <text
+              x={right}
+              y={priceBase}
+              textAnchor="end"
+              fontSize={Fp}
+              fontWeight={500}
+              letterSpacing={`${TRACK_PRICE}em`}
+              fill={hi}
+              opacity={priceIn}
+              transform={`translate(0 ${((1 - priceIn) * Fp * 0.22).toFixed(2)})`}
+            >
+              {price}
+            </text>
+          ) : null}
+          {note && noteIn > 0 ? (
+            <text
+              x={right}
+              y={noteBase}
+              textAnchor="end"
+              fontSize={Fn}
+              fontWeight={400}
+              letterSpacing="-0.005em"
+              fill={fg}
+              opacity={noteIn}
+              transform={`translate(0 ${((1 - noteIn) * Fn * 0.5).toFixed(2)})`}
+            >
+              {note}
+            </text>
+          ) : null}
+        </svg>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

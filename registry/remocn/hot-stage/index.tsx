@@ -2,6 +2,7 @@
 
 import { loadFont as loadSpaceGrotesk } from "@remotion/google-fonts/SpaceGrotesk";
 import { loadFont as loadSpaceMono } from "@remotion/google-fonts/SpaceMono";
+import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -27,7 +28,17 @@ export interface HotStageProps {
   log?: string[];
   stage?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the lines. Load it yourself; Space Grotesk by default. */
+  fontFamily?: string;
+  /** Frames the first line holds alone before the next one ignites. */
+  hold?: number;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -68,7 +79,7 @@ interface Metrics {
   base: number;
 }
 
-function measure(lines: string[], log: string[]): Metrics {
+function measure(lines: string[], log: string[], fontFamily: string): Metrics {
   const ctx = document.createElement("canvas").getContext("2d");
   if (!ctx)
     return {
@@ -77,7 +88,7 @@ function measure(lines: string[], log: string[]): Metrics {
       cap: 0.7,
       base: 0.8,
     };
-  ctx.font = `400 ${PROBE_PX}px "${grotesk.fontFamily}"`;
+  ctx.font = `400 ${PROBE_PX}px "${fontFamily}"`;
   const widths = lines.map(
     (l) =>
       ctx.measureText(l).width / PROBE_PX +
@@ -99,7 +110,7 @@ function measure(lines: string[], log: string[]): Metrics {
   };
 }
 
-function useMetrics(lines: string[], log: string[]) {
+function useMetrics(lines: string[], log: string[], fontFamily: string) {
   const key = `${lines.join("\u0001")}\u0002${log.join("\u0001")}`;
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("hot-stage: measuring"));
@@ -109,7 +120,7 @@ function useMetrics(lines: string[], log: string[]) {
     Promise.all([
       grotesk.waitUntilDone(),
       mono.waitUntilDone(),
-      document.fonts.load(`400 100px "${grotesk.fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
       document.fonts.load(`400 100px "${mono.fontFamily}"`),
     ])
       .catch(() => undefined)
@@ -118,7 +129,7 @@ function useMetrics(lines: string[], log: string[]) {
         const [l, g] = key.split("\u0002");
         setState({
           key,
-          m: measure(l.split("\u0001"), g ? g.split("\u0001") : []),
+          m: measure(l.split("\u0001"), g ? g.split("\u0001") : [], fontFamily),
         });
         if (!released.current) {
           released.current = true;
@@ -128,8 +139,24 @@ function useMetrics(lines: string[], log: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily]);
   return state && state.key === key ? state.m : null;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function HotStage({
@@ -141,16 +168,22 @@ export function HotStage({
   log = ["T+00:00  Liftoff", "T+02:41  Hot staging", "T+08:32  Orbit"],
   stage = 44,
   accent,
+  ink,
   background,
+  fontFamily = grotesk.fontFamily,
+  hold = FIRST_AT,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: HotStageProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
-  const vent = accent ?? c.ink;
+  const fg = ink ?? c.ink;
+  const vent = accent ?? fg;
   const list = lines.length > 0 ? lines : [""];
-  const m = useMetrics(list, log);
+  const m = useMetrics(list, log, fontFamily);
 
   const transparent = background === "transparent";
   const stageFill = transparent ? "transparent" : (background ?? c.bg);
@@ -177,7 +210,7 @@ export function HotStage({
   const y0 = portrait ? H * 0.56 : H / 2 + (m.cap * F) / 2;
   const n = list.length;
   const last = n - 1;
-  const ign = (i: number) => FIRST_AT + (i - 1) * stage;
+  const ign = (i: number) => hold + (i - 1) * stage;
 
   type Pose = {
     y: number;
@@ -284,89 +317,91 @@ export function HotStage({
 
   return (
     <AbsoluteFill style={{ background: stageFill, overflow: "hidden" }}>
-      {portrait ? (
-        <div
-          style={{
-            position: "absolute",
-            left: marginX,
-            right: marginX,
-            top: logTop + log.length * logFs * 1.9 + logFs,
-            height: stroke,
-            background: c.rule,
-          }}
-        />
-      ) : (
-        <div
-          style={{
-            position: "absolute",
-            left: split,
-            top: marginY,
-            bottom: marginY,
-            width: stroke,
-            background: c.rule,
-          }}
-        />
-      )}
-      {log.map((entry, i) => {
-        const at = i === 0 ? 0 : ign(i);
-        const p = interpolate(t, [at, at + 8], [0, 1], {
-          ...CLAMP,
-          easing: EASE_OUT,
-        });
-        return (
+      <ScaleLayer scale={scale}>
+        {portrait ? (
           <div
-            key={`${entry}${i}`}
             style={{
               position: "absolute",
               left: marginX,
-              top: logTop + i * logFs * 1.9,
-              whiteSpace: "pre",
-              fontFamily: mono.fontFamily,
-              fontWeight: 400,
-              fontSize: logFs,
-              lineHeight: 1,
-              color: i === Math.min(active, log.length - 1) ? c.ink : c.spent,
-              opacity: p,
+              right: marginX,
+              top: logTop + log.length * logFs * 1.9 + logFs,
+              height: stroke,
+              background: c.rule,
             }}
-          >
-            {entry}
-          </div>
-        );
-      })}
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        {list.map((_, i) => vents(i))}
-      </svg>
-      {list.map((line, i) => {
-        const p = pose(i);
-        if (!p) return null;
-        return (
+          />
+        ) : (
           <div
-            key={`${line}${i}`}
             style={{
               position: "absolute",
-              left: x0,
-              top: p.y - m.base * F,
-              height: F,
-              lineHeight: `${F}px`,
-              whiteSpace: "pre",
-              fontFamily: grotesk.fontFamily,
-              fontWeight: 400,
-              fontSize: F,
-              letterSpacing: `${TRACK}em`,
-              color: c.ink,
-              opacity: p.opacity * (1 - 0.7 * p.spent),
+              left: split,
+              top: marginY,
+              bottom: marginY,
+              width: stroke,
+              background: c.rule,
             }}
-          >
-            {line}
-          </div>
-        );
-      })}
+          />
+        )}
+        {log.map((entry, i) => {
+          const at = i === 0 ? 0 : ign(i);
+          const p = interpolate(t, [at, at + 8], [0, 1], {
+            ...CLAMP,
+            easing: EASE_OUT,
+          });
+          return (
+            <div
+              key={`${entry}${i}`}
+              style={{
+                position: "absolute",
+                left: marginX,
+                top: logTop + i * logFs * 1.9,
+                whiteSpace: "pre",
+                fontFamily: mono.fontFamily,
+                fontWeight: 400,
+                fontSize: logFs,
+                lineHeight: 1,
+                color: i === Math.min(active, log.length - 1) ? fg : c.spent,
+                opacity: p,
+              }}
+            >
+              {entry}
+            </div>
+          );
+        })}
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          {list.map((_, i) => vents(i))}
+        </svg>
+        {list.map((line, i) => {
+          const p = pose(i);
+          if (!p) return null;
+          return (
+            <div
+              key={`${line}${i}`}
+              style={{
+                position: "absolute",
+                left: x0,
+                top: p.y - m.base * F,
+                height: F,
+                lineHeight: `${F}px`,
+                whiteSpace: "pre",
+                fontFamily,
+                fontWeight: 400,
+                fontSize: F,
+                letterSpacing: `${TRACK}em`,
+                color: fg,
+                opacity: p.opacity * (1 - 0.7 * p.spent),
+              }}
+            >
+              {line}
+            </div>
+          );
+        })}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

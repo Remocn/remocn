@@ -62,9 +62,44 @@ A big statement builds word by word, then a sheepish parenthetical aside appears
       description: "Color of the corner aside; defaults to the theme accent.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Stage fill color; pass \"transparent\" to overlay your own footage.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Funnel Display\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "3",
+      description: "Frames between words as a denial rises in.",
+    },
+    {
+      name: "hold",
+      type: "number",
+      default: "28",
+      description: "Frames the aside stays readable before the round leaves.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

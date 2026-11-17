@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const specSheetConfig: ComponentConfig = {
   componentName: "SpecSheet",
@@ -12,11 +18,6 @@ export const specSheetConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     title: {
       type: "text-content",
@@ -37,6 +38,30 @@ export const specSheetConfig: ComponentConfig = {
       description: "Highlight",
       hiddenFromList: false,
     },
+    stagger: {
+      type: "number",
+      default: 5,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Row stagger",
+      hiddenFromList: false,
+    },
+    expandAt: {
+      type: "number",
+      default: 62,
+      min: 20,
+      max: 100,
+      step: 1,
+      description: "Expand at (frame)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Instrument Sans", grain: true }),
     speed: {
       type: "number",
       default: 1,

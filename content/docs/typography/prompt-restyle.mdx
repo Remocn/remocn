@@ -68,15 +68,50 @@ Small instruction lines are typed one after another, and after each the headline
       description: "Instruction lines typed in order; the last styles the highlight.",
     },
     {
+      name: "stepGap",
+      type: "number",
+      default: "20",
+      description: "Frames between one instruction landing and the next one being typed.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent colour (any CSS colour).",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Final headline color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Overrides the theme background colour.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Geist\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "accentFont",
+      type: "string",
+      default: "\"Instrument Serif\"",
+      description: "Italic typeface the highlight turns into. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

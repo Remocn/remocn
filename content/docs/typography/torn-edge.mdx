@@ -61,6 +61,52 @@ A gradient paper sheet tears across the frame, the halves part, and the headline
       description: "Mid colour of the sheet's gradient (gradients.sh \"fluted\").",
     },
     {
+      name: "tear",
+      type: "number",
+      default: "34",
+      description: "Frames for the tear to run across the sheet.",
+    },
+    {
+      name: "spread",
+      type: "number",
+      default: "0.205",
+      description: "How far each half pulls away, as a share of the frame height.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage fill under the sheet; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Bricolage Grotesque\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the headline around the frame's center; the sheet stays full-bleed.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
       name: "speed",
       type: "number",
       default: "1",

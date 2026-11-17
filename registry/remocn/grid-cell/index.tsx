@@ -2,6 +2,7 @@
 
 import { loadFont as loadGeist } from "@remotion/google-fonts/Geist";
 import { loadFont as loadGeistMono } from "@remotion/google-fonts/GeistMono";
+import type React from "react";
 import { useEffect, useId, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -27,8 +28,21 @@ export interface GridCellProps {
   title?: string;
   /** Tiny mono label in the cell's top-left corner. */
   label?: string;
+  /** Frames between typed characters. */
+  stagger?: number;
+  /** Grid cell size at 1280 wide; 80 tiles the frame 16 × 9. */
+  cellSize?: number;
   /** Caret and the label's marker. */
   accent?: string;
+  /** Text color of the headline; overrides the theme. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the headline. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the grid and cell, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -86,14 +100,14 @@ const T = {
 };
 
 /** Headline width in em, measured once the face is ready. */
-function useTitleWidth(title: string) {
+function useTitleWidth(title: string, fontFamily: string) {
   const [width, setWidth] = useState<number | null>(null);
   const [handle] = useState(() => delayRender("grid-cell: measuring"));
   const released = useRef(false);
 
   useEffect(() => {
     let live = true;
-    const font = `400 100px "${geist.fontFamily}"`;
+    const font = `400 100px "${fontFamily}"`;
     Promise.all([geist.waitUntilDone(), document.fonts.load(font)])
       .catch(() => undefined)
       .then(() => {
@@ -113,32 +127,58 @@ function useTitleWidth(title: string) {
     return () => {
       live = false;
     };
-  }, [title, handle]);
+  }, [title, handle, fontFamily]);
 
   return width ?? [...title].length * 0.52;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function GridCell({
   title = "Introducing remocn 2.0",
   label = "v2.0",
+  stagger = T.perChar,
+  cellSize = CELL,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = geist.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: GridCellProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const s = Math.min(W / 1280, H / 720);
-  const cell = CELL * s;
+  const cell = cellSize * s;
   const fontSize = FONT_SIZE * s;
   const cx = W / 2;
   const cy = H / 2;
 
   // The lit cell: two rows tall, an even number of columns so it stays centred
   // on the grid's middle line.
-  const titleEm = useTitleWidth(title);
+  const titleEm = useTitleWidth(title, fontFamily);
   let cols = Math.ceil(((titleEm + PAD_X * 2) * fontSize) / cell);
   if (cols % 2 === 1) cols += 1;
   cols = Math.max(4, cols);
@@ -206,9 +246,9 @@ export function GridCell({
   const chars = [...title];
   const typed = Math.max(
     0,
-    Math.min(chars.length, Math.floor((frame - T.typeStart) / T.perChar) + 1),
+    Math.min(chars.length, Math.floor((frame - T.typeStart) / stagger) + 1),
   );
-  const typingDone = T.typeStart + chars.length * T.perChar;
+  const typingDone = T.typeStart + chars.length * stagger;
   const caretOn =
     frame >= T.typeStart - 6 &&
     (frame < typingDone + 6 || Math.floor((frame - typingDone) / 15) % 2 === 1);
@@ -235,232 +275,234 @@ export function GridCell({
   ];
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <radialGradient
-            id={`${uid}-vig`}
-            cx={cx}
-            cy={cy}
-            r={Math.hypot(cx, cy)}
-            gradientUnits="userSpaceOnUse"
-          >
-            <stop offset="0" stopColor="#fff" stopOpacity={1} />
-            <stop offset="0.38" stopColor="#fff" stopOpacity={0.8} />
-            <stop offset="0.85" stopColor="#fff" stopOpacity={0.14} />
-            <stop offset="1" stopColor="#fff" stopOpacity={0.04} />
-          </radialGradient>
-          <mask
-            id={`${uid}-mask`}
-            maskUnits="userSpaceOnUse"
-            x={0}
-            y={0}
-            width={W}
-            height={H}
-          >
-            <rect width={W} height={H} fill={`url(#${uid}-vig)`} />
-            <rect
-              x={x0}
-              y={y0}
-              width={cw}
-              height={ch}
-              fill="#000"
-              fillOpacity={merge}
-            />
-          </mask>
-          <radialGradient
-            id={`${uid}-wash`}
-            cx={x0}
-            cy={y0}
-            r={cw * 0.7}
-            gradientUnits="userSpaceOnUse"
-          >
-            <stop offset="0" stopColor={c.wash} />
-            <stop offset="1" stopColor={c.wash} stopOpacity={0} />
-          </radialGradient>
-        </defs>
-
-        <g mask={`url(#${uid}-mask)`} opacity={dim}>
-          {verticals.map((k) => {
-            const x = cx + k * cell;
-            const p = grow(k);
-            if (p <= 0) return null;
-            const half = (H / 2 + cell) * p;
-            return (
-              <line
-                key={`v${k}`}
-                x1={x}
-                x2={x}
-                y1={cy - half}
-                y2={cy + half}
-                stroke={c.line}
-                strokeWidth={1}
-                shapeRendering="crispEdges"
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            <radialGradient
+              id={`${uid}-vig`}
+              cx={cx}
+              cy={cy}
+              r={Math.hypot(cx, cy)}
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop offset="0" stopColor="#fff" stopOpacity={1} />
+              <stop offset="0.38" stopColor="#fff" stopOpacity={0.8} />
+              <stop offset="0.85" stopColor="#fff" stopOpacity={0.14} />
+              <stop offset="1" stopColor="#fff" stopOpacity={0.04} />
+            </radialGradient>
+            <mask
+              id={`${uid}-mask`}
+              maskUnits="userSpaceOnUse"
+              x={0}
+              y={0}
+              width={W}
+              height={H}
+            >
+              <rect width={W} height={H} fill={`url(#${uid}-vig)`} />
+              <rect
+                x={x0}
+                y={y0}
+                width={cw}
+                height={ch}
+                fill="#000"
+                fillOpacity={merge}
               />
-            );
-          })}
-          {horizontals.map((k) => {
-            const y = cy + k * cell;
-            const p = grow(k * 1.6);
-            if (p <= 0) return null;
-            const half = (W / 2 + cell) * p;
-            return (
-              <line
-                key={`h${k}`}
-                x1={cx - half}
-                x2={cx + half}
-                y1={y}
-                y2={y}
-                stroke={c.line}
-                strokeWidth={1}
-                shapeRendering="crispEdges"
-              />
-            );
-          })}
-        </g>
+            </mask>
+            <radialGradient
+              id={`${uid}-wash`}
+              cx={x0}
+              cy={y0}
+              r={cw * 0.7}
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop offset="0" stopColor={c.wash} />
+              <stop offset="1" stopColor={c.wash} stopOpacity={0} />
+            </radialGradient>
+          </defs>
 
-        {/* The lit cell */}
-        <rect
-          x={x0}
-          y={y0}
-          width={cw}
-          height={ch}
-          fill={c.fill}
-          opacity={merge}
-        />
-        <rect
-          x={x0}
-          y={y0}
-          width={cw}
-          height={ch}
-          fill={`url(#${uid}-wash)`}
-          opacity={merge * (theme === "dark" ? 1 : 0.8)}
-        />
-        {edgeSegs.map((e) => (
-          <line
-            key={`${e.x1}-${e.y1}-${e.dx}`}
-            x1={e.x1 - e.dx * edge}
-            x2={e.x1 + e.dx * edge}
-            y1={e.y1 - e.dy * edge}
-            y2={e.y1 + e.dy * edge}
-            stroke={c.edge}
-            strokeWidth={1}
-            shapeRendering="crispEdges"
-            opacity={edge > 0 ? 1 : 0}
+          <g mask={`url(#${uid}-mask)`} opacity={dim}>
+            {verticals.map((k) => {
+              const x = cx + k * cell;
+              const p = grow(k);
+              if (p <= 0) return null;
+              const half = (H / 2 + cell) * p;
+              return (
+                <line
+                  key={`v${k}`}
+                  x1={x}
+                  x2={x}
+                  y1={cy - half}
+                  y2={cy + half}
+                  stroke={c.line}
+                  strokeWidth={1}
+                  shapeRendering="crispEdges"
+                />
+              );
+            })}
+            {horizontals.map((k) => {
+              const y = cy + k * cell;
+              const p = grow(k * 1.6);
+              if (p <= 0) return null;
+              const half = (W / 2 + cell) * p;
+              return (
+                <line
+                  key={`h${k}`}
+                  x1={cx - half}
+                  x2={cx + half}
+                  y1={y}
+                  y2={y}
+                  stroke={c.line}
+                  strokeWidth={1}
+                  shapeRendering="crispEdges"
+                />
+              );
+            })}
+          </g>
+
+          {/* The lit cell */}
+          <rect
+            x={x0}
+            y={y0}
+            width={cw}
+            height={ch}
+            fill={c.fill}
+            opacity={merge}
           />
-        ))}
-        <g opacity={ticks}>
-          {corners.map(([x, y]) => (
-            <g key={`${x}-${y}`} stroke={c.tick} strokeWidth={1}>
-              <line
-                x1={x - arm}
-                x2={x + arm}
-                y1={y}
-                y2={y}
-                shapeRendering="crispEdges"
-              />
-              <line
-                x1={x}
-                x2={x}
-                y1={y - arm}
-                y2={y + arm}
-                shapeRendering="crispEdges"
-              />
-            </g>
+          <rect
+            x={x0}
+            y={y0}
+            width={cw}
+            height={ch}
+            fill={`url(#${uid}-wash)`}
+            opacity={merge * (theme === "dark" ? 1 : 0.8)}
+          />
+          {edgeSegs.map((e) => (
+            <line
+              key={`${e.x1}-${e.y1}-${e.dx}`}
+              x1={e.x1 - e.dx * edge}
+              x2={e.x1 + e.dx * edge}
+              y1={e.y1 - e.dy * edge}
+              y2={e.y1 + e.dy * edge}
+              stroke={c.edge}
+              strokeWidth={1}
+              shapeRendering="crispEdges"
+              opacity={edge > 0 ? 1 : 0}
+            />
           ))}
-        </g>
-      </svg>
+          <g opacity={ticks}>
+            {corners.map(([x, y]) => (
+              <g key={`${x}-${y}`} stroke={c.tick} strokeWidth={1}>
+                <line
+                  x1={x - arm}
+                  x2={x + arm}
+                  y1={y}
+                  y2={y}
+                  shapeRendering="crispEdges"
+                />
+                <line
+                  x1={x}
+                  x2={x}
+                  y1={y - arm}
+                  y2={y + arm}
+                  shapeRendering="crispEdges"
+                />
+              </g>
+            ))}
+          </g>
+        </svg>
 
-      {/* Corner label */}
-      <div
-        style={{
-          position: "absolute",
-          left: x0 + 14 * s,
-          top: y0 + 12 * s,
-          display: "flex",
-          alignItems: "center",
-          gap: 7 * s,
-          fontFamily: geistMono.fontFamily,
-          fontWeight: 400,
-          fontSize: 12 * s,
-          letterSpacing: "0.02em",
-          lineHeight: 1,
-          color: c.muted,
-          opacity: labelIn,
-          filter: `blur(${(1 - labelIn) * 6 * s}px)`,
-          transform: `translateY(${(1 - labelIn) * 6 * s}px)`,
-        }}
-      >
-        <span
-          style={{
-            width: 5 * s,
-            height: 5 * s,
-            background: accent,
-            display: "block",
-          }}
-        />
-        {label}
-      </div>
-
-      {/* Headline, typed in place: untyped glyphs keep their slot */}
-      <div
-        style={{
-          position: "absolute",
-          left: x0,
-          top: y0,
-          width: cw,
-          height: ch,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+        {/* Corner label */}
         <div
           style={{
-            fontFamily: geist.fontFamily,
+            position: "absolute",
+            left: x0 + 14 * s,
+            top: y0 + 12 * s,
+            display: "flex",
+            alignItems: "center",
+            gap: 7 * s,
+            fontFamily: geistMono.fontFamily,
             fontWeight: 400,
-            fontSize,
-            letterSpacing: `${TRACK}em`,
+            fontSize: 12 * s,
+            letterSpacing: "0.02em",
             lineHeight: 1,
-            color: c.fg,
-            whiteSpace: "pre",
-            fontKerning: "normal",
-            transform: `translateY(${4 * s}px)`,
+            color: c.muted,
+            opacity: labelIn,
+            filter: `blur(${(1 - labelIn) * 6 * s}px)`,
+            transform: `translateY(${(1 - labelIn) * 6 * s}px)`,
           }}
         >
-          <span>{chars.slice(0, typed).join("")}</span>
           <span
             style={{
-              position: "relative",
-              display: "inline-block",
-              width: 0,
-              height: "1em",
-              verticalAlign: "-0.12em",
+              width: 5 * s,
+              height: 5 * s,
+              background: accent,
+              display: "block",
+            }}
+          />
+          {label}
+        </div>
+
+        {/* Headline, typed in place: untyped glyphs keep their slot */}
+        <div
+          style={{
+            position: "absolute",
+            left: x0,
+            top: y0,
+            width: cw,
+            height: ch,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div
+            style={{
+              fontFamily,
+              fontWeight: 400,
+              fontSize,
+              letterSpacing: `${TRACK}em`,
+              lineHeight: 1,
+              color: fg,
+              whiteSpace: "pre",
+              fontKerning: "normal",
+              transform: `translateY(${4 * s}px)`,
             }}
           >
+            <span>{chars.slice(0, typed).join("")}</span>
             <span
               style={{
-                position: "absolute",
-                left: 0.04 * fontSize,
-                top: 0.02 * fontSize,
-                width: Math.max(2, 2.5 * s),
-                height: 0.96 * fontSize,
-                background: accent,
-                opacity: caretOn ? caretIn : 0,
+                position: "relative",
+                display: "inline-block",
+                width: 0,
+                height: "1em",
+                verticalAlign: "-0.12em",
               }}
-            />
-          </span>
-          <span style={{ visibility: "hidden" }}>
-            {chars.slice(typed).join("")}
-          </span>
+            >
+              <span
+                style={{
+                  position: "absolute",
+                  left: 0.04 * fontSize,
+                  top: 0.02 * fontSize,
+                  width: Math.max(2, 2.5 * s),
+                  height: 0.96 * fontSize,
+                  background: accent,
+                  opacity: caretOn ? caretIn : 0,
+                }}
+              />
+            </span>
+            <span style={{ visibility: "hidden" }}>
+              {chars.slice(typed).join("")}
+            </span>
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

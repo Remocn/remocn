@@ -99,14 +99,43 @@ A heavy figure counts down from `from` to `value` while its stroke weight thins 
       description: "Final stroke weight, snapped to 100 through 500.",
     },
     {
+      name: "count",
+      type: "number",
+      default: "58",
+      description: "Frames the figure takes to count from `from` to `value`.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Barlow Condensed\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Color of the suffix; defaults to the theme accent.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Stage background color; overrides the theme ground.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

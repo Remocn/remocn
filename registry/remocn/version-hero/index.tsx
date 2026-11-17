@@ -33,6 +33,21 @@ export interface VersionHeroProps {
   /** Replaces the label's name: by default the remocn logo when `name` is "remocn". */
   logo?: React.ReactNode;
   accent?: string;
+  /** Text color of the label's name and logo; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the numeral and label. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Extrusion depth of the numeral, as a share of its font size. */
+  depth?: number;
+  /** Frames between slices as the stack docks. */
+  stagger?: number;
+  grain?: boolean;
+  /** Size of the numeral and label, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   /** Dark = brushed aluminium; light = matte paper stock. */
@@ -201,23 +216,49 @@ function Logo({ size, color }: { size: number; color: string }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function VersionHero({
   version = "2.0",
   name = "remocn",
   label = "Now available",
   logo,
   accent = "#3B5BFD",
+  ink,
+  background: backdrop,
+  fontFamily = bricolage,
+  depth: extrude = 0.2,
+  stagger = 2.2,
+  grain = true,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: VersionHeroProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = height / 720;
   const m: Material = MATERIALS[theme];
+  const fg = ink ?? m.fg;
+  const stage = backdrop === "transparent" ? "transparent" : (backdrop ?? m.bg);
 
   const chars = Array.from(version).length;
   const fontSize = Math.min(height * 0.7, (width * 0.6) / (chars * 0.5));
-  const depth = fontSize * 0.2;
+  const depth = fontSize * extrude;
   const dz = depth / (SLICES * SUB);
   const spreadMax = fontSize * 0.42;
   const boxW = width;
@@ -250,7 +291,7 @@ export function VersionHero({
   const glowY = 136 - 16 * glowP;
 
   const sliceP = (k: number) =>
-    interpolate(t, [4 + k * 2.2, 4 + k * 2.2 + 34], [0, 1], {
+    interpolate(t, [4 + k * stagger, 4 + k * stagger + 34], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -264,7 +305,7 @@ export function VersionHero({
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontFamily: bricolage,
+    fontFamily,
     fontWeight: 500,
     fontSize,
     lineHeight: 1,
@@ -373,7 +414,7 @@ export function VersionHero({
   const shadowO = interpolate(t, [10, 60], [0.35, 1], CLAMP);
 
   return (
-    <AbsoluteFill style={{ background: m.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       {/* overhead key light on the stage */}
       <AbsoluteFill
         style={{
@@ -390,107 +431,109 @@ export function VersionHero({
           ].join(", "),
         }}
       />
-      {/* contact shadow */}
-      <div
-        style={{
-          position: "absolute",
-          left: width / 2 - fontSize * 0.95,
-          top: cy + fontSize * 0.3,
-          width: fontSize * 1.9,
-          height: fontSize * 0.16,
-          borderRadius: "50%",
-          background: `radial-gradient(closest-side, ${m.shadow}, transparent)`,
-          filter: `blur(${14 * u}px)`,
-          opacity: shadowO,
-        }}
-      />
-
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          perspective: 2000 * u,
-          perspectiveOrigin: `50% ${(cy / height) * 100}%`,
-        }}
-      >
+      <ScaleLayer scale={scale}>
+        {/* contact shadow */}
         <div
           style={{
             position: "absolute",
-            left: width / 2,
-            top: cy,
-            width: 0,
-            height: 0,
-            transformStyle: "preserve-3d",
-            transform: `translateZ(${dolly}px) rotateX(${rotX}deg) rotateY(${rotY}deg)`,
-          }}
-        >
-          {layers}
-        </div>
-      </div>
-
-      {/* label */}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: labelTop,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: 16 * u,
-          fontFamily: bricolage,
-          fontSize: 22 * u,
-          lineHeight: 1,
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 9 * u,
-            opacity: labelP(0),
-            transform: `translateY(${(1 - labelP(0)) * 14 * u}px)`,
-          }}
-        >
-          {logo ??
-            (name.trim().toLowerCase() === "remocn" ? (
-              <Logo size={30 * u} color={m.fg} />
-            ) : (
-              <span
-                style={{
-                  color: m.fg,
-                  fontWeight: 500,
-                  letterSpacing: "-0.03em",
-                  fontSize: 26 * u,
-                }}
-              >
-                {name}
-              </span>
-            ))}
-        </div>
-        <div
-          style={{
-            width: Math.max(1, u),
-            height: 22 * u,
-            background: accent,
-            transform: `scaleY(${labelP(3)})`,
+            left: width / 2 - fontSize * 0.95,
+            top: cy + fontSize * 0.3,
+            width: fontSize * 1.9,
+            height: fontSize * 0.16,
+            borderRadius: "50%",
+            background: `radial-gradient(closest-side, ${m.shadow}, transparent)`,
+            filter: `blur(${14 * u}px)`,
+            opacity: shadowO,
           }}
         />
-        <span
+
+        <div
           style={{
-            color: m.muted,
-            fontWeight: 400,
-            letterSpacing: "-0.01em",
-            opacity: labelP(6),
-            transform: `translateY(${(1 - labelP(6)) * 14 * u}px)`,
+            position: "absolute",
+            inset: 0,
+            perspective: 2000 * u,
+            perspectiveOrigin: `50% ${(cy / height) * 100}%`,
           }}
         >
-          {label}
-        </span>
-      </div>
+          <div
+            style={{
+              position: "absolute",
+              left: width / 2,
+              top: cy,
+              width: 0,
+              height: 0,
+              transformStyle: "preserve-3d",
+              transform: `translateZ(${dolly}px) rotateX(${rotX}deg) rotateY(${rotY}deg)`,
+            }}
+          >
+            {layers}
+          </div>
+        </div>
 
-      <Grain opacity={m.grain} />
+        {/* label */}
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: labelTop,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 16 * u,
+            fontFamily,
+            fontSize: 22 * u,
+            lineHeight: 1,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 9 * u,
+              opacity: labelP(0),
+              transform: `translateY(${(1 - labelP(0)) * 14 * u}px)`,
+            }}
+          >
+            {logo ??
+              (name.trim().toLowerCase() === "remocn" ? (
+                <Logo size={30 * u} color={fg} />
+              ) : (
+                <span
+                  style={{
+                    color: fg,
+                    fontWeight: 500,
+                    letterSpacing: "-0.03em",
+                    fontSize: 26 * u,
+                  }}
+                >
+                  {name}
+                </span>
+              ))}
+          </div>
+          <div
+            style={{
+              width: Math.max(1, u),
+              height: 22 * u,
+              background: accent,
+              transform: `scaleY(${labelP(3)})`,
+            }}
+          />
+          <span
+            style={{
+              color: m.muted,
+              fontWeight: 400,
+              letterSpacing: "-0.01em",
+              opacity: labelP(6),
+              transform: `translateY(${(1 - labelP(6)) * 14 * u}px)`,
+            }}
+          >
+            {label}
+          </span>
+        </div>
+      </ScaleLayer>
+
+      {grain ? <Grain opacity={m.grain} /> : null}
     </AbsoluteFill>
   );
 }

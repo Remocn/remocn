@@ -54,7 +54,23 @@ export interface DotGlobeProps {
   prefix?: string;
   suffix?: string;
   routes?: GlobeRoute[];
+  /** Frames between one route taking off and the next. */
+  stagger?: number;
+  /** Frames each arc takes to fly from city to city. */
+  flight?: number;
   accent?: string;
+  /** Text color of the suffix and city names; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the counter, prefix and city names. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Size of the globe and counter, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -269,10 +285,12 @@ function Counter({
   since,
   fontSize,
   fill,
+  fontFamily,
 }: {
   value: number;
   since: number;
   fontSize: number;
+  fontFamily: string;
   /** Top → bottom stops painted through the digits. */
   fill: readonly string[];
 }) {
@@ -295,7 +313,7 @@ function Counter({
     <div
       style={{
         display: "flex",
-        fontFamily: sans,
+        fontFamily,
         fontWeight: 400,
         fontSize,
         lineHeight: 1,
@@ -352,19 +370,45 @@ function Counter({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function DotGlobe({
   count = 142,
   prefix = "Live in",
   suffix = "countries",
   routes = DEFAULT_ROUTES,
+  stagger = ROUTE_GAP,
+  flight = FLIGHT,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: DotGlobeProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = height / 720;
   const th: Theme = THEMES[theme];
+  const fg = ink ?? th.fg;
+  const fill = background ?? th.bg;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   // camera
@@ -444,7 +488,7 @@ export function DotGlobe({
   const pins: React.ReactNode[] = [];
   const labels: React.ReactNode[] = [];
   routes.forEach((route, ri) => {
-    const start = ROUTE_START + ri * ROUTE_GAP;
+    const start = ROUTE_START + ri * stagger;
     const lt = t - start;
     if (lt < -4) return;
     const a = toVec(route.from);
@@ -453,15 +497,15 @@ export function DotGlobe({
       Math.min(1, Math.max(-1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2])),
     );
     const lift = 0.07 + 0.34 * (ang / Math.PI);
-    const head = interpolate(lt, [0, FLIGHT], [0, 1], {
+    const head = interpolate(lt, [0, flight], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
-    const tail = interpolate(lt, [FLIGHT * 0.55, FLIGHT + 26], [0, 1], {
+    const tail = interpolate(lt, [flight * 0.55, flight + 26], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
-    const landAt = start + FLIGHT;
+    const landAt = start + flight;
     if (t >= landAt) {
       landed += 1;
       lastLanding = landAt;
@@ -518,7 +562,7 @@ export function DotGlobe({
           />,
         );
       }
-      if (lt < FLIGHT) {
+      if (lt < flight) {
         const g = slerp(a, b, head);
         const r = 1 + lift * Math.sin(Math.PI * head);
         const hp = rot([g[0] * r, g[1] * r, g[2] * r]);
@@ -594,7 +638,7 @@ export function DotGlobe({
           cy={by}
           r={(2.4 + 1.6 * (1 - pinP) + 0.6) * u}
           fill={accent}
-          stroke={th.bg}
+          stroke={fill}
           strokeWidth={1.2 * u}
           opacity={Math.min(1, pb[2] * 4)}
         />,
@@ -610,15 +654,15 @@ export function DotGlobe({
               position: "absolute",
               left: bx + 12 * u,
               top: by - 9 * u,
-              fontFamily: sans,
+              fontFamily,
               fontSize: 13 * u,
               fontWeight: 500,
               letterSpacing: "-0.005em",
-              color: th.fg,
+              color: fg,
               whiteSpace: "nowrap",
               opacity: labelO,
               transform: `translateX(${(1 - labelO) * -6 * u}px)`,
-              textShadow: `0 0 ${6 * u}px ${th.bg}, 0 0 ${2 * u}px ${th.bg}`,
+              textShadow: `0 0 ${6 * u}px ${fill}, 0 0 ${2 * u}px ${fill}`,
             }}
           >
             {route.to.name}
@@ -642,171 +686,174 @@ export function DotGlobe({
   });
 
   return (
-    <AbsoluteFill style={{ background: th.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: fill, overflow: "hidden" }}>
       <AbsoluteFill
         style={{
           background: `radial-gradient(ellipse 60% 70% at 62% 35%, ${th.stage}, transparent 72%)`,
         }}
       />
-      <svg
-        width={width}
-        height={height}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <radialGradient id={`body${uid}`} cx="38%" cy="30%" r="75%">
-            <stop offset="0%" stopColor={th.body0} />
-            <stop offset="100%" stopColor={th.body1} />
-          </radialGradient>
-          <radialGradient id={`rim${uid}`} cx="50%" cy="50%" r="50%">
-            <stop offset="80%" stopColor={th.rim} stopOpacity={0} />
-            <stop offset="96%" stopColor={th.rim} stopOpacity={0.35} />
-            <stop offset="100%" stopColor={th.rim} stopOpacity={0.9} />
-          </radialGradient>
-          <linearGradient id={`rimMask${uid}`} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#fff" stopOpacity={1} />
-            <stop offset="55%" stopColor="#fff" stopOpacity={0.15} />
-            <stop offset="100%" stopColor="#fff" stopOpacity={0} />
-          </linearGradient>
-          <mask id={`rm${uid}`}>
-            <rect
-              x={cx - R}
-              y={cy - R}
-              width={R * 2}
-              height={R * 2}
-              fill={`url(#rimMask${uid})`}
-            />
-          </mask>
-          {/* the lit limb: a thin bright edge falling off into deep violet */}
-          <radialGradient
-            id={`air${uid}`}
-            gradientUnits="userSpaceOnUse"
+      <ScaleLayer scale={scale}>
+        <svg
+          width={width}
+          height={height}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            <radialGradient id={`body${uid}`} cx="38%" cy="30%" r="75%">
+              <stop offset="0%" stopColor={th.body0} />
+              <stop offset="100%" stopColor={th.body1} />
+            </radialGradient>
+            <radialGradient id={`rim${uid}`} cx="50%" cy="50%" r="50%">
+              <stop offset="80%" stopColor={th.rim} stopOpacity={0} />
+              <stop offset="96%" stopColor={th.rim} stopOpacity={0.35} />
+              <stop offset="100%" stopColor={th.rim} stopOpacity={0.9} />
+            </radialGradient>
+            <linearGradient id={`rimMask${uid}`} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#fff" stopOpacity={1} />
+              <stop offset="55%" stopColor="#fff" stopOpacity={0.15} />
+              <stop offset="100%" stopColor="#fff" stopOpacity={0} />
+            </linearGradient>
+            <mask id={`rm${uid}`}>
+              <rect
+                x={cx - R}
+                y={cy - R}
+                width={R * 2}
+                height={R * 2}
+                fill={`url(#rimMask${uid})`}
+              />
+            </mask>
+            {/* the lit limb: a thin bright edge falling off into deep violet */}
+            <radialGradient
+              id={`air${uid}`}
+              gradientUnits="userSpaceOnUse"
+              cx={cx}
+              cy={cy}
+              r={R * 1.5}
+            >
+              <stop
+                offset={`${(100 / 1.5) * 0.96}%`}
+                stopColor={LIMB[1]}
+                stopOpacity={0}
+              />
+              <stop
+                offset={`${(100 / 1.5) * 1.0}%`}
+                stopColor={LIMB[0]}
+                stopOpacity={0.75}
+              />
+              <stop
+                offset={`${(100 / 1.5) * 1.03}%`}
+                stopColor={LIMB[1]}
+                stopOpacity={0.45}
+              />
+              <stop
+                offset={`${(100 / 1.5) * 1.12}%`}
+                stopColor={LIMB[2]}
+                stopOpacity={0.22}
+              />
+              <stop
+                offset={`${(100 / 1.5) * 1.3}%`}
+                stopColor={LIMB[3]}
+                stopOpacity={0.1}
+              />
+              <stop offset="100%" stopColor={LIMB[3]} stopOpacity={0} />
+            </radialGradient>
+            <radialGradient id={`sh${uid}`} cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor={th.shadow} />
+              <stop offset="100%" stopColor={th.shadow} stopOpacity={0} />
+            </radialGradient>
+          </defs>
+          {/* contact shadow (light theme) */}
+          <ellipse
+            cx={cx + R * 0.08}
+            cy={cy + R * 1.08}
+            rx={R * 0.85}
+            ry={R * 0.1}
+            fill={`url(#sh${uid})`}
+            opacity={settle}
+          />
+          <circle
             cx={cx}
             cy={cy}
             r={R * 1.5}
-          >
-            <stop
-              offset={`${(100 / 1.5) * 0.96}%`}
-              stopColor={LIMB[1]}
-              stopOpacity={0}
-            />
-            <stop
-              offset={`${(100 / 1.5) * 1.0}%`}
-              stopColor={LIMB[0]}
-              stopOpacity={0.75}
-            />
-            <stop
-              offset={`${(100 / 1.5) * 1.03}%`}
-              stopColor={LIMB[1]}
-              stopOpacity={0.45}
-            />
-            <stop
-              offset={`${(100 / 1.5) * 1.12}%`}
-              stopColor={LIMB[2]}
-              stopOpacity={0.22}
-            />
-            <stop
-              offset={`${(100 / 1.5) * 1.3}%`}
-              stopColor={LIMB[3]}
-              stopOpacity={0.1}
-            />
-            <stop offset="100%" stopColor={LIMB[3]} stopOpacity={0} />
-          </radialGradient>
-          <radialGradient id={`sh${uid}`} cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor={th.shadow} />
-            <stop offset="100%" stopColor={th.shadow} stopOpacity={0} />
-          </radialGradient>
-        </defs>
-        {/* contact shadow (light theme) */}
-        <ellipse
-          cx={cx + R * 0.08}
-          cy={cy + R * 1.08}
-          rx={R * 0.85}
-          ry={R * 0.1}
-          fill={`url(#sh${uid})`}
-          opacity={settle}
-        />
-        <circle
-          cx={cx}
-          cy={cy}
-          r={R * 1.5}
-          fill={`url(#air${uid})`}
-          opacity={
-            th.air *
-            interpolate(t, [0, 40, 210], [0, 0.85, 1], {
-              ...CLAMP,
-              easing: EASE_OUT,
-            })
-          }
-        />
-        <g opacity={interpolate(t, [0, 16], [0, 1], CLAMP)}>
-          <circle cx={cx} cy={cy} r={R} fill={`url(#body${uid})`} />
-        </g>
-        <g fill={dotFill}>{back}</g>
-        <g fill={dotFill}>{front}</g>
-        <circle
-          cx={cx}
-          cy={cy}
-          r={R}
-          fill={`url(#rim${uid})`}
-          mask={`url(#rm${uid})`}
-          opacity={interpolate(t, [4, 30], [0, 1], CLAMP)}
-        />
-        {arcs}
-        {pins}
-      </svg>
-      {labels}
-
-      {/* counter */}
-      <div
-        style={{
-          position: "absolute",
-          left: marginX,
-          top: height * 0.5 - (bigSize + smallSize * 2.4) / 2,
-          display: "flex",
-          flexDirection: "column",
-          gap: 6 * u,
-        }}
-      >
-        <div
-          style={{
-            ...textItem(0),
-            fontFamily: sans,
-            fontWeight: 400,
-            fontSize: smallSize,
-            letterSpacing: "-0.025em",
-            color: th.muted,
-            lineHeight: 1.1,
-          }}
-        >
-          {prefix}
-        </div>
-        <div style={{ ...textItem(3), marginLeft: -bigSize * 0.04 }}>
-          <Counter
-            value={value}
-            since={t - lastLanding}
-            fontSize={bigSize}
-            fill={th.count}
+            fill={`url(#air${uid})`}
+            opacity={
+              th.air *
+              interpolate(t, [0, 40, 210], [0, 0.85, 1], {
+                ...CLAMP,
+                easing: EASE_OUT,
+              })
+            }
           />
-        </div>
+          <g opacity={interpolate(t, [0, 16], [0, 1], CLAMP)}>
+            <circle cx={cx} cy={cy} r={R} fill={`url(#body${uid})`} />
+          </g>
+          <g fill={dotFill}>{back}</g>
+          <g fill={dotFill}>{front}</g>
+          <circle
+            cx={cx}
+            cy={cy}
+            r={R}
+            fill={`url(#rim${uid})`}
+            mask={`url(#rm${uid})`}
+            opacity={interpolate(t, [4, 30], [0, 1], CLAMP)}
+          />
+          {arcs}
+          {pins}
+        </svg>
+        {labels}
+
+        {/* counter */}
         <div
           style={{
-            ...textItem(6),
-            fontFamily: serif,
-            fontStyle: "italic",
-            fontWeight: 400,
-            fontSize: smallSize * 1.3,
-            letterSpacing: "-0.01em",
-            color: th.fg,
-            lineHeight: 1,
+            position: "absolute",
+            left: marginX,
+            top: height * 0.5 - (bigSize + smallSize * 2.4) / 2,
+            display: "flex",
+            flexDirection: "column",
+            gap: 6 * u,
           }}
         >
-          {suffix}
+          <div
+            style={{
+              ...textItem(0),
+              fontFamily,
+              fontWeight: 400,
+              fontSize: smallSize,
+              letterSpacing: "-0.025em",
+              color: th.muted,
+              lineHeight: 1.1,
+            }}
+          >
+            {prefix}
+          </div>
+          <div style={{ ...textItem(3), marginLeft: -bigSize * 0.04 }}>
+            <Counter
+              value={value}
+              since={t - lastLanding}
+              fontSize={bigSize}
+              fill={th.count}
+              fontFamily={fontFamily}
+            />
+          </div>
+          <div
+            style={{
+              ...textItem(6),
+              fontFamily: serif,
+              fontStyle: "italic",
+              fontWeight: 400,
+              fontSize: smallSize * 1.3,
+              letterSpacing: "-0.01em",
+              color: fg,
+              lineHeight: 1,
+            }}
+          >
+            {suffix}
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
 
-      <Grain opacity={th.grain} />
+      {grain ? <Grain opacity={th.grain} /> : null}
     </AbsoluteFill>
   );
 }

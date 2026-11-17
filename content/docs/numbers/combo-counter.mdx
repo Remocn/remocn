@@ -65,10 +65,55 @@ Feature names hit one after another with a star flash and slash, each hit faster
       description: "Ratings, swapped in as the count passes `from`. The last one is the poster's.",
     },
     {
+      name: "hitLabel",
+      type: "string",
+      default: "\"HIT\"",
+      description: "Big word next to the count.",
+    },
+    {
+      name: "comboLabel",
+      type: "string",
+      default: "\"COMBO\"",
+      description: "Small caps label under the hit label.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Small marker next to the rating.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Saira\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "theme",

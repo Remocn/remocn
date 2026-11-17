@@ -1,8 +1,20 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const fullBleedTypeConfig: ComponentConfig = {
   componentName: "FullBleedType",
   importPath: "@/components/remocn/full-bleed-type",
+  lists: {
+    words: {
+      default: ["NO", "DAYS", "OFF", "SHIP"],
+      description: "Words",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -13,11 +25,6 @@ export const fullBleedTypeConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     beat: {
       type: "number",
       default: 11,
@@ -27,6 +34,21 @@ export const fullBleedTypeConfig: ComponentConfig = {
       description: "Beat",
       hiddenFromList: false,
     },
+    slam: {
+      type: "number",
+      default: 8,
+      min: 2,
+      max: 24,
+      step: 1,
+      description: "Slam (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Barlow Condensed" }),
     speed: {
       type: "number",
       default: 1,

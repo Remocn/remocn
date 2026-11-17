@@ -69,14 +69,49 @@ The first line appears, then at `hitAt` it is hit and replaced by the second lin
       description: "Frame where the second hit lands.",
     },
     {
+      name: "hitGap",
+      type: "number",
+      default: "24",
+      description: "Frames between the first, small hit and the second, full one.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "400",
+      description: "Weight of the lines.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Accent colour (any CSS colour).",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Overrides the theme background colour.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Urbanist\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

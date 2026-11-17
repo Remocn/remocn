@@ -1,8 +1,20 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const slideDoorsConfig: ComponentConfig = {
   componentName: "SlideDoors",
   importPath: "@/components/remocn/slide-doors",
+  lists: {
+    lines: {
+      default: ["Scenes that move.", "Code you own.", "Arriving in your repo."],
+      description: "Lines",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -27,6 +39,17 @@ export const slideDoorsConfig: ComponentConfig = {
       description: "Hold",
       hiddenFromList: false,
     },
+    fontWeight: {
+      type: "number",
+      default: 400,
+      min: 300,
+      max: 700,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Plus Jakarta Sans" }),
     speed: {
       type: "number",
       default: 1,

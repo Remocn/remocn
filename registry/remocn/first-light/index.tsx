@@ -3,6 +3,7 @@
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadFont as loadSpaceGrotesk } from "@remotion/google-fonts/SpaceGrotesk";
 import { loadFont as loadSpaceMono } from "@remotion/google-fonts/SpaceMono";
+import type React from "react";
 import { useEffect, useId, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -39,7 +40,21 @@ export interface FirstLightProps {
   name?: string;
   tagline?: string;
   accent?: string;
+  /** Color of the name and tagline; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for a name other than "remocn". Load it yourself; Space Grotesk by default. */
+  fontFamily?: string;
+  /** Replaces the R mark when `name` is "remocn". */
+  logo?: React.ReactNode;
+  /** Frames the name takes to climb through the horizon line. */
+  rise?: number;
+  /** Ruler ticks along the horizon line. */
+  ticks?: boolean;
+  /** Size of the name, line and tagline, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -115,16 +130,16 @@ function measure(
   return { text, cap, desc };
 }
 
-function useMetrics(word: string, brand: boolean) {
-  const key = `${word}\u0001${brand ? 1 : 0}`;
+function useMetrics(word: string, brand: boolean, face: string) {
+  const key = `${word}\u0001${brand ? 1 : 0}\u0001${face}`;
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("first-light: measuring"));
   const released = useRef(false);
   useEffect(() => {
     let live = true;
-    const [w, b] = key.split("\u0001");
+    const [w, b, f] = key.split("\u0001");
     const isBrand = b === "1";
-    const family = isBrand ? manrope.fontFamily : grotesk.fontFamily;
+    const family = isBrand ? manrope.fontFamily : f;
     const weight = isBrand ? 600 : 400;
     Promise.all([
       manrope.waitUntilDone(),
@@ -152,25 +167,49 @@ function useMetrics(word: string, brand: boolean) {
   return state && state.key === key ? state.m : null;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function FirstLight({
   name = "remocn",
   tagline = "Every frame catches the light.",
   accent,
+  ink,
   background,
+  fontFamily = grotesk.fontFamily,
+  logo,
+  rise = CLIMB_LEN,
+  ticks: showTicks = true,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: FirstLightProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
-  const lineInk = accent ?? c.ink;
+  const fg = ink ?? c.ink;
+  const lineInk = accent ?? fg;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const isBrand = name.trim().toLowerCase() === "remocn";
   const word = isBrand ? "emocn" : name;
-  const family = isBrand ? manrope.fontFamily : grotesk.fontFamily;
+  const family = isBrand ? manrope.fontFamily : fontFamily;
   const weight = isBrand ? 600 : 400;
   const track = isBrand ? -0.025 : -0.035;
-  const m = useMetrics(word, isBrand);
+  const m = useMetrics(word, isBrand, fontFamily);
 
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
@@ -205,7 +244,7 @@ export function FirstLight({
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const k = interpolate(t, [CLIMB_AT, CLIMB_AT + CLIMB_LEN], [0, 1], {
+  const k = interpolate(t, [CLIMB_AT, CLIMB_AT + rise], [0, 1], {
     ...CLAMP,
     easing: EASE_CLIMB,
   });
@@ -213,7 +252,7 @@ export function FirstLight({
 
   const set = interpolate(
     t,
-    [CLIMB_AT + CLIMB_LEN - 14, CLIMB_AT + CLIMB_LEN + 22],
+    [CLIMB_AT + rise - 14, CLIMB_AT + rise + 22],
     [0, 1],
     { ...CLAMP, easing: Easing.bezier(0.45, 0, 0.55, 1) },
   );
@@ -229,9 +268,29 @@ export function FirstLight({
     <g
       transform={`translate(0 ${dy.toFixed(3)})`}
       filter={mode === "outline" ? `url(#${uid}ring)` : undefined}
-      fill={c.ink}
+      fill={fg}
     >
-      {isBrand ? (
+      {isBrand && logo ? (
+        <foreignObject
+          x={x0}
+          y={baseFinal - markH}
+          width={markW}
+          height={markH}
+        >
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: fg,
+            }}
+          >
+            {logo}
+          </div>
+        </foreignObject>
+      ) : isBrand ? (
         <path
           d={REMOCN_R_PATH}
           transform={`translate(${x0.toFixed(3)} ${(baseFinal - markH).toFixed(3)}) scale(${(markH / R_H).toFixed(5)})`}
@@ -260,7 +319,7 @@ export function FirstLight({
   const ticks = [];
   for (let i = 1; i < tickCount; i++) {
     const x = i * tickGap;
-    if (x > W * lineIn) break;
+    if (!showTicks || x > W * lineIn) break;
     const major = i % 4 === 0;
     ticks.push(
       <line
@@ -281,63 +340,71 @@ export function FirstLight({
   });
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <filter id={`${uid}ring`} x="-5%" y="-30%" width="110%" height="160%">
-            <feMorphology
-              in="SourceAlpha"
-              operator="erode"
-              radius={ring}
-              result="core"
-            />
-            <feComposite in="SourceGraphic" in2="core" operator="out" />
-          </filter>
-          <clipPath id={`${uid}lit`} clipPathUnits="userSpaceOnUse">
-            <rect x={0} y={-H} width={W} height={H + sunLine} />
-          </clipPath>
-          <clipPath id={`${uid}dark`} clipPathUnits="userSpaceOnUse">
-            <rect x={0} y={sunLine} width={W} height={H * 2} />
-          </clipPath>
-        </defs>
-        <g opacity={appear}>
-          <g clipPath={`url(#${uid}dark)`} opacity={0.55}>
-            {nameShapes("outline")}
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            <filter
+              id={`${uid}ring`}
+              x="-5%"
+              y="-30%"
+              width="110%"
+              height="160%"
+            >
+              <feMorphology
+                in="SourceAlpha"
+                operator="erode"
+                radius={ring}
+                result="core"
+              />
+              <feComposite in="SourceGraphic" in2="core" operator="out" />
+            </filter>
+            <clipPath id={`${uid}lit`} clipPathUnits="userSpaceOnUse">
+              <rect x={0} y={-H} width={W} height={H + sunLine} />
+            </clipPath>
+            <clipPath id={`${uid}dark`} clipPathUnits="userSpaceOnUse">
+              <rect x={0} y={sunLine} width={W} height={H * 2} />
+            </clipPath>
+          </defs>
+          <g opacity={appear}>
+            <g clipPath={`url(#${uid}dark)`} opacity={0.55}>
+              {nameShapes("outline")}
+            </g>
+            <g clipPath={`url(#${uid}lit)`}>{nameShapes("solid")}</g>
           </g>
-          <g clipPath={`url(#${uid}lit)`}>{nameShapes("solid")}</g>
-        </g>
-        <line
-          x1={0}
-          x2={W * lineIn}
-          y1={sunLine}
-          y2={sunLine}
-          stroke={lineInk}
-          strokeWidth={stroke}
-        />
-        {ticks}
-      </svg>
+          <line
+            x1={0}
+            x2={W * lineIn}
+            y1={sunLine}
+            y2={sunLine}
+            stroke={lineInk}
+            strokeWidth={stroke}
+          />
+          {ticks}
+        </svg>
 
-      <div
-        style={{
-          position: "absolute",
-          left: marginX,
-          top: sunLine + tagFs * 1.6,
-          whiteSpace: "pre",
-          fontFamily: mono.fontFamily,
-          fontWeight: 400,
-          fontSize: tagFs,
-          lineHeight: 1,
-          color: c.ink,
-          opacity: tagP,
-        }}
-      >
-        {tagline}
-      </div>
+        <div
+          style={{
+            position: "absolute",
+            left: marginX,
+            top: sunLine + tagFs * 1.6,
+            whiteSpace: "pre",
+            fontFamily: mono.fontFamily,
+            fontWeight: 400,
+            fontSize: tagFs,
+            lineHeight: 1,
+            color: fg,
+            opacity: tagP,
+          }}
+        >
+          {tagline}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

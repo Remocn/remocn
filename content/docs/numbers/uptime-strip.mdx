@@ -77,10 +77,62 @@ A sweep fills the strip tick by tick, with the days named in `incidents` standin
       description: "Italic word shown after the figure.",
     },
     {
+      name: "agoLabel",
+      type: "string",
+      default: "\"days ago\"",
+      description: "Axis label after the day count at the strip's left end.",
+    },
+    {
+      name: "todayLabel",
+      type: "string",
+      default: "\"Today\"",
+      description: "Axis label at the strip's right end.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Instrument Sans\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "2",
+      description: "Frames between characters of the figure as it rises.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "theme",

@@ -37,7 +37,7 @@ export const tinyPlanetConfig: ComponentConfig = {
     buildingColor: {
       type: "color",
       default: "#FFFFFF",
-      description: "Buildings",
+      description: "Building color",
     },
     groundColor: { type: "color", default: "#262626", description: "Ground" },
   },

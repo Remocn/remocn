@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const introducingConfig: ComponentConfig = {
   componentName: "Introducing",
@@ -12,11 +18,6 @@ export const introducingConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     eyebrow: {
       type: "text-content",
@@ -33,6 +34,30 @@ export const introducingConfig: ComponentConfig = {
       default: "Launch-video scenes for Remotion. Copy, paste, render.",
       description: "Tagline",
     },
+    pass: {
+      type: "number",
+      default: 44,
+      min: 12,
+      max: 80,
+      step: 1,
+      description: "Beam pass (frames)",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 2,
+      min: 0,
+      max: 8,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Geist", grain: true }),
     speed: {
       type: "number",
       default: 1,

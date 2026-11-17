@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const featherSettleConfig: ComponentConfig = {
   componentName: "FeatherSettle",
@@ -50,6 +56,17 @@ export const featherSettleConfig: ComponentConfig = {
       description: "Sway",
       hiddenFromList: false,
     },
+    tilt: {
+      type: "number",
+      default: 7,
+      min: 0,
+      max: 30,
+      step: 1,
+      description: "Tilt",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Lexend" }),
     speed: {
       type: "number",
       default: 1,

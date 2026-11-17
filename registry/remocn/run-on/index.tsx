@@ -23,8 +23,19 @@ export interface RunOnProps {
   promise?: string;
   highlight?: string;
   joiners?: string[];
+  /** Frames the full stop holds before the sentence drains away. */
+  hold?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; DM Sans by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -92,11 +103,11 @@ function layoutWords(s: string, em: (x: string) => number) {
   return out;
 }
 
-function measure(text: string, promise: string): Metrics {
+function measure(text: string, promise: string, font: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("run-on: no 2d context");
-  ctx.font = `${WGHT} ${PROBE}px "${dmSans.fontFamily}"`;
+  ctx.font = font;
   const em = (x: string) =>
     ctx.measureText(x).width / PROBE + TRACK * Array.from(x).length;
   const body = promise.replace(/\.$/, "");
@@ -108,7 +119,12 @@ function measure(text: string, promise: string): Metrics {
   };
 }
 
-function useMetrics(text: string, promise: string) {
+function useMetrics(
+  text: string,
+  promise: string,
+  fontFamily: string,
+  fontWeight: number,
+) {
   const key = `${text}\u0001${promise}`;
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("run-on: measuring"));
@@ -119,12 +135,19 @@ function useMetrics(text: string, promise: string) {
     let live = true;
     Promise.all([
       dmSans.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${dmSans.fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measure(src.current.text, src.current.promise) });
+        setState({
+          key,
+          m: measure(
+            src.current.text,
+            src.current.promise,
+            `${fontWeight} ${PROBE}px "${fontFamily}"`,
+          ),
+        });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -133,8 +156,24 @@ function useMetrics(text: string, promise: string) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily, fontWeight]);
   return state && state.key === key ? state.m : null;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function RunOn({
@@ -142,22 +181,29 @@ export function RunOn({
   promise = "Or change one line.",
   highlight = "one line",
   joiners = ["and", "then"],
+  hold = HOLD,
   accent,
+  ink,
   background,
+  fontFamily = dmSans.fontFamily,
+  fontWeight = WGHT,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: RunOnProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const k = Math.min(1, durationInFrames / BASE);
   const t = (frame * speed) / k;
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
   const body = text.trim().replace(/[.!?…]+$/, "");
   const said = promise.trim();
-  const m = useMetrics(body, said);
+  const m = useMetrics(body, said, fontFamily, fontWeight);
 
   if (!m) {
     return (
@@ -193,7 +239,7 @@ export function RunOn({
     acc += FIRST_GAP + (LAST_GAP - FIRST_GAP) * p ** 0.6;
   }
   const stopAt = arrive[n - 1] + STOP_GAP;
-  const drainAt = stopAt + SLAM + HOLD;
+  const drainAt = stopAt + SLAM + hold;
   const promiseAt = drainAt + DRAIN - PROMISE_LAG;
 
   const need = (ln: number) => Math.max(0, top0 + (ln + 1) * pitch - floor);
@@ -249,8 +295,8 @@ export function RunOn({
         height: size * 1.2,
         lineHeight: `${size * 1.2}px`,
         whiteSpace: "pre",
-        fontFamily: dmSans.fontFamily,
-        fontWeight: WGHT,
+        fontFamily,
+        fontWeight,
         fontSize: size,
         letterSpacing: `${TRACK}em`,
         fontKerning: "normal",
@@ -284,7 +330,7 @@ export function RunOn({
           F,
           F * 0.3 * (1 - r),
           r * (1 - drain * 0.5),
-          join ? c.dim : c.ink,
+          join ? c.dim : fg,
         ),
       );
     });
@@ -334,8 +380,8 @@ export function RunOn({
     const inHi =
       hiStart >= 0 && w.start < hiEnd && w.start + w.text.length > hiStart;
     const color = inHi
-      ? `color-mix(in oklab, ${hi} ${(lit * 100).toFixed(1)}%, ${c.ink})`
-      : c.ink;
+      ? `color-mix(in oklab, ${hi} ${(lit * 100).toFixed(1)}%, ${fg})`
+      : fg;
     nodes.push(
       glyph(
         `p${i}`,
@@ -352,7 +398,7 @@ export function RunOn({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

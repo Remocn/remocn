@@ -83,10 +83,39 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Preview for image files; default exists only in the Remocn repo",
     },
     {
+      name: "prompt",
+      type: "string",
+      default: "\"Drop files here or\"",
+      description: "Line in the empty drop zone, before the browse link.",
+    },
+    {
+      name: "releaseLabel",
+      type: "string",
+      default: "\"Release to upload\"",
+      description: "Line in the drop zone while files hover over it.",
+    },
+    {
+      name: "hint",
+      type: "string",
+      default: "\"PDF, PNG or CSV, up to 50 MB\"",
+      description: "Accepted types and size limit under the prompt.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Geist\"",
+      description: "Typeface for the copy. Load the font in your project first.",
     },
     {
       name: "speed",
@@ -109,6 +138,23 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "groundParams",
       type: "Partial<GradientParams>",
       description: "Overrides for the backdrop shader parameters",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
   ]}
 />

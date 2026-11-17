@@ -70,6 +70,22 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Accent color; defaults to the theme accent",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color of the incoming line; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of both gradient grounds; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Geist\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
       name: "line",
       type: "string",
       default: "\"Now ship your first film.\"",
@@ -86,6 +102,23 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       type: "string",
       default: "\"remocn.dev/new\"",
       description: "URL text shown in scene B",
+    },
+    {
+      name: "request",
+      type: "string",
+      default: "\"Make the hero calmer and add the product shots.\"",
+      description: "Request in the chat bubble of the outgoing app window",
+    },
+    {
+      name: "headline",
+      type: "[string, string]",
+      default: "[\"Your next launch,\", \"already in motion.\"]",
+      description: "Two-line hero headline on the outgoing landing page",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark in the incoming pill.",
     },
     {
       name: "ground",
@@ -111,6 +144,24 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "transition",
       type: "LightBurnToLineProps",
       description: "Overrides for the transition presentation props",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of both scenes' foreground around the frame's center; the grounds stay put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
     },
   ]}
 />

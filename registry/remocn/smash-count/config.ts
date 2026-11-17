@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const smashCountConfig: ComponentConfig = {
   componentName: "SmashCount",
@@ -55,6 +61,26 @@ export const smashCountConfig: ComponentConfig = {
       description: "Cuts",
       hiddenFromList: false,
     },
+    firstGap: {
+      type: "number",
+      default: 13,
+      min: 2,
+      max: 30,
+      step: 1,
+      description: "First cut gap (frames)",
+      hiddenFromList: false,
+    },
+    lastGap: {
+      type: "number",
+      default: 6,
+      min: 2,
+      max: 30,
+      step: 1,
+      description: "Last cut gap (frames)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: "#E60012", description: "Accent" },
+    ...sceneControls({ font: "Rubik" }),
     speed: {
       type: "number",
       default: 1,

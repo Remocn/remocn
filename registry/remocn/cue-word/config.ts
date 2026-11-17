@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const cueWordConfig: ComponentConfig = {
   componentName: "CueWord",
@@ -13,6 +19,35 @@ export const cueWordConfig: ComponentConfig = {
       },
       description: "Theme",
     },
+    fontWeight: {
+      type: "number",
+      default: 500,
+      min: 400,
+      max: 500,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    hold: {
+      type: "number",
+      default: 36,
+      min: 0,
+      max: 90,
+      step: 1,
+      description: "Final hold (frames)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Syne" }),
     speed: {
       type: "number",
       default: 1,

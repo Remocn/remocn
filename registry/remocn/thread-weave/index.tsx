@@ -32,6 +32,23 @@ export interface ThreadWeaveProps {
   motif?: "value" | "mark";
   caption?: string;
   accent?: string;
+  /** Text color of the caption; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the caption. Load it yourself; Space Grotesk by default. */
+  fontFamily?: string;
+  /** Longest the weave may take, in frames; dense motifs speed up to fit. */
+  weave?: number;
+  /** The "ends × picks" counter under the cloth. */
+  stats?: boolean;
+  /** Replaces the remocn mark when `caption` is "remocn". */
+  logo?: React.ReactNode;
+  grain?: boolean;
+  /** Size of the cloth and caption, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -182,6 +199,22 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
 
 const WARP_IN = [-6, 22] as const;
@@ -193,13 +226,25 @@ export function ThreadWeave({
   motif = "value",
   caption = "frames per second",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  weave = WEAVE_BUDGET,
+  stats = true,
+  logo,
+  grain = true,
+  scale: zoom = 1,
+  delay: wait = 0,
   speed = 1,
   theme = "dark",
 }: ThreadWeaveProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - wait) * speed;
   const { width, height } = useVideoConfig();
   const u = height / 720;
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? p.bg);
 
   const bitmap = motifBitmap(value, motif);
   const [PAD_X, PAD_Y] = PAD[motif];
@@ -236,7 +281,7 @@ export function ThreadWeave({
   const raw = Array.from({ length: rows }, (_, r) =>
     lerp(6.6, 3.4, EASE_OUT(r / Math.max(1, rows - 1))),
   );
-  const fit = Math.min(1, WEAVE_BUDGET / raw.reduce((a, b) => a + b, 0));
+  const fit = Math.min(1, weave / raw.reduce((a, b) => a + b, 0));
   let acc = WEAVE_START;
   for (let r = 0; r < rows; r++) {
     const d = raw[r] * fit;
@@ -416,69 +461,71 @@ export function ThreadWeave({
   const scale = lerp(1.025, 1, EASE_IO(Math.min(1, t / (weaveEnd + 16))));
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          transform: `scale(${scale})`,
-          transformOrigin: "50% 46%",
-        }}
-      >
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
-        >
-          {warpEls}
-          {loopEls}
-          {weftEls}
-          {tickEls}
-        </svg>
-        <div
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={zoom}>
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left,
-            top: top + clothH + fringe + 18 * u,
-            width: clothW,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "baseline",
-            fontFamily: sans,
-            whiteSpace: "nowrap",
+            transform: `scale(${scale})`,
+            transformOrigin: "50% 46%",
           }}
         >
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            {warpEls}
+            {loopEls}
+            {weftEls}
+            {tickEls}
+          </svg>
           <div
             style={{
-              fontSize: 20 * u,
-              fontWeight: 500,
-              letterSpacing: "-0.015em",
-              color: p.fg,
-              opacity: capA,
-              transform: `translateY(${(1 - capA) * 8 * u}px)`,
+              position: "absolute",
+              left,
+              top: top + clothH + fringe + 18 * u,
+              width: clothW,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "baseline",
+              fontFamily,
+              whiteSpace: "nowrap",
             }}
           >
-            {caption === "remocn" ? (
-              <RemocnLogo fontSize={22 * u} color={p.fg} />
-            ) : (
-              caption
-            )}
+            <div
+              style={{
+                fontSize: 20 * u,
+                fontWeight: 500,
+                letterSpacing: "-0.015em",
+                color: fg,
+                opacity: capA,
+                transform: `translateY(${(1 - capA) * 8 * u}px)`,
+              }}
+            >
+              {caption === "remocn"
+                ? (logo ?? <RemocnLogo fontSize={22 * u} color={fg} />)
+                : caption}
+            </div>
+            {stats ? (
+              <div
+                style={{
+                  fontFamily: mono,
+                  fontSize: 14 * u,
+                  fontWeight: 400,
+                  letterSpacing: "0.01em",
+                  color: p.muted,
+                  fontVariantNumeric: "tabular-nums",
+                  opacity: footA * lerp(1, 0.85, settle),
+                }}
+              >
+                {`${cols} ends × ${picks} picks`}
+              </div>
+            ) : null}
           </div>
-          <div
-            style={{
-              fontFamily: mono,
-              fontSize: 14 * u,
-              fontWeight: 400,
-              letterSpacing: "0.01em",
-              color: p.muted,
-              fontVariantNumeric: "tabular-nums",
-              opacity: footA * lerp(1, 0.85, settle),
-            }}
-          >
-            {`${cols} ends × ${picks} picks`}
-          </div>
-        </div>
-      </AbsoluteFill>
-      <Grain opacity={p.grain} />
+        </AbsoluteFill>
+      </ScaleLayer>
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

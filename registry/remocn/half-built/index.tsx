@@ -27,7 +27,18 @@ export interface HalfBuiltProps {
   parts?: HalfBuiltPart[];
   progress?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the sentence. Load it yourself; Golos Text by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Frames between words as the sentence builds. */
+  stagger?: number;
+  /** Size of the sentence, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -87,24 +98,47 @@ function toUnits(parts: HalfBuiltPart[]) {
   return { units, planned: plan };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function HalfBuilt({
   parts = DEFAULT_PARTS,
   progress = 1.6,
   accent,
+  ink,
   background,
+  fontFamily = golos.fontFamily,
+  fontWeight = 500,
+  stagger = WORD_GAP,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: HalfBuiltProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const { units, planned } = toUnits(parts);
   const goal = Math.max(0, Math.min(planned, progress));
-  const wordsIn = 2 + units.length * WORD_GAP + 12;
+  const wordsIn = 2 + units.length * stagger + 12;
   const tagsAt = Math.max(16, wordsIn - 8);
   const fillAt = tagsAt + planned * TAG_GAP + 14;
   const segments: { start: number; end: number; amount: number }[] = [];
@@ -137,7 +171,7 @@ export function HalfBuilt({
     let live = true;
     Promise.all([
       golos.waitUntilDone(),
-      document.fonts.load(`500 100px "${golos.fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -146,7 +180,7 @@ export function HalfBuilt({
     return () => {
       live = false;
     };
-  }, []);
+  }, [fontFamily, fontWeight]);
 
   useLayoutEffect(() => {
     if (!fontsOk) return;
@@ -194,15 +228,15 @@ export function HalfBuilt({
     });
 
   const font: React.CSSProperties = {
-    fontFamily: golos.fontFamily,
-    fontWeight: 500,
+    fontFamily,
+    fontWeight,
     lineHeight: LH,
     letterSpacing: "-0.035em",
   };
   const stroke = `${Math.max(1, (size ?? 100) * 0.016).toFixed(2)}px`;
 
   const renderUnit = (u: Unit, i: number, live: boolean) => {
-    const p = live ? rise(2 + i * WORD_GAP) : 1;
+    const p = live ? rise(2 + i * stagger) : 1;
     const style: React.CSSProperties = {
       position: "relative",
       display: "inline-block",
@@ -213,7 +247,7 @@ export function HalfBuilt({
     };
     if (u.plan < 0) {
       return (
-        <span key={u.key} style={{ ...style, color: c.ink }}>
+        <span key={u.key} style={{ ...style, color: fg }}>
           {u.text}
         </span>
       );
@@ -226,7 +260,7 @@ export function HalfBuilt({
         <span
           style={{
             color: "transparent",
-            WebkitTextStroke: `${stroke} ${c.ink}`,
+            WebkitTextStroke: `${stroke} ${fg}`,
             opacity: c.hollow * (1 - done),
           }}
         >
@@ -238,7 +272,7 @@ export function HalfBuilt({
             position: "absolute",
             left: 0,
             top: 0,
-            color: done > 0 ? c.ink : hi,
+            color: done > 0 ? fg : hi,
             opacity: 1,
             clipPath: `inset(-20% ${((1 - fill) * 100).toFixed(2)}% -20% -2%)`,
           }}
@@ -249,7 +283,7 @@ export function HalfBuilt({
               position: "absolute",
               left: 0,
               top: 0,
-              color: c.ink,
+              color: fg,
               opacity: done,
             }}
           >
@@ -291,20 +325,22 @@ export function HalfBuilt({
       >
         {units.map((u, i) => renderUnit(u, i, false))}
       </div>
-      <div
-        style={{
-          ...font,
-          position: "absolute",
-          left: margin,
-          top: "50%",
-          width: boxW,
-          fontSize: size ?? sizeCap,
-          transform: "translateY(-50%)",
-          opacity: size === null ? 0 : 1,
-        }}
-      >
-        {units.map((u, i) => renderUnit(u, i, true))}
-      </div>
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            ...font,
+            position: "absolute",
+            left: margin,
+            top: "50%",
+            width: boxW,
+            fontSize: size ?? sizeCap,
+            transform: "translateY(-50%)",
+            opacity: size === null ? 0 : 1,
+          }}
+        >
+          {units.map((u, i) => renderUnit(u, i, true))}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

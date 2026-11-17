@@ -29,7 +29,20 @@ export interface CueWordScene {
 export interface CueWordProps {
   scenes?: CueWordScene[];
   accent?: string;
+  /** Text color on the base field; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the lines. Load it yourself; Syne by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Frames between words as the first line rises. */
+  stagger?: number;
+  /** Frames the last line holds before the end; the rest of the time goes to reading. */
+  hold?: number;
+  /** Size of the lines, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -77,7 +90,7 @@ const DEFAULT_SCENES: CueWordScene[] = [
   { text: "Every move is one line of code.", cue: "one line" },
 ];
 
-function useEmWidths(texts: string[]) {
+function useEmWidths(texts: string[], fontFamily: string, weight: number) {
   const key = texts.join("\u0001");
   const [state, setState] = useState<{
     key: string;
@@ -89,7 +102,7 @@ function useEmWidths(texts: string[]) {
     let live = true;
     Promise.all([
       syne.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${syne.fontFamily}"`),
+      document.fonts.load(`${weight} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -98,7 +111,7 @@ function useEmWidths(texts: string[]) {
         const ctx = canvas.getContext("2d");
         const em: Record<string, number> = {};
         if (ctx) {
-          ctx.font = `${WGHT} ${FONT_PX}px "${syne.fontFamily}"`;
+          ctx.font = `${weight} ${FONT_PX}px "${fontFamily}"`;
           for (const s of key.split("\u0001")) {
             em[s] =
               ctx.measureText(s).width / FONT_PX + TRACK * Array.from(s).length;
@@ -113,7 +126,7 @@ function useEmWidths(texts: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily, weight]);
   return state && state.key === key ? state.em : null;
 }
 
@@ -160,14 +173,22 @@ function lineCount(
 export function CueWord({
   scenes = DEFAULT_SCENES,
   accent,
+  ink,
   background,
+  fontFamily = syne.fontFamily,
+  fontWeight = WGHT,
+  stagger = STAGGER,
+  hold = FINAL_HOLD,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: CueWordProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const transparent = background === "transparent";
   const base = transparent ? "transparent" : (background ?? c.bg);
 
@@ -182,7 +203,7 @@ export function CueWord({
       }
     }
   }
-  const em = useEmWidths(texts);
+  const em = useEmWidths(texts, fontFamily, fontWeight);
 
   if (!em) {
     return <div style={{ position: "absolute", inset: 0, background: base }} />;
@@ -209,12 +230,12 @@ export function CueWord({
   const settleOf = (k: number) =>
     k === 0
       ? RISE +
-        Math.max(0, sceneWords[k].length - 1) * STAGGER +
+        Math.max(0, sceneWords[k].length - 1) * stagger +
         CUE_GAP +
         CUE_LAND
       : CUE_GAP + CUE_LAND;
   const moveOf = (k: number) => (list[k].cut === "cut" ? 0 : MOVE);
-  let fixed = FINAL_HOLD;
+  let fixed = hold;
   for (let k = 0; k < n; k++)
     fixed += settleOf(k) + (k < n - 1 ? moveOf(k) : 0);
   const read = Math.max(12, Math.floor((durationInFrames - fixed) / n));
@@ -279,16 +300,16 @@ export function CueWord({
 
     const onAccent = k % 2 === 1;
     const field = onAccent ? hi : base;
-    const inkCol = onAccent ? c.onAccent : c.ink;
+    const inkCol = onAccent ? c.onAccent : fg;
     const cueCol = onAccent ? c.cueOnAccent : hi;
     const F = sizes[k];
     const ws = sceneWords[k];
     const flags = cueMask(ws, list[k].cue);
     const t0 = arrive[k];
-    const restTime = (i: number) => (k === 0 ? t0 + i * STAGGER : -1e9);
+    const restTime = (i: number) => (k === 0 ? t0 + i * stagger : -1e9);
     const cueAt =
       k === 0
-        ? t0 + (ws.length - 1) * STAGGER + RISE + CUE_GAP - 8
+        ? t0 + (ws.length - 1) * stagger + RISE + CUE_GAP - 8
         : t0 + CUE_GAP - 5;
 
     const spans = ws.map((w, i) => {
@@ -346,12 +367,15 @@ export function CueWord({
             width: boxW,
             textAlign: "center",
             textWrap: "balance",
-            fontFamily: syne.fontFamily,
-            fontWeight: WGHT,
+            fontFamily,
+            fontWeight,
             fontSize: F,
             lineHeight: LH,
             letterSpacing: `${TRACK}em`,
             marginTop: -F * 0.06,
+            // Scaled in place: the text sits in each moving field, so a
+            // full-frame ScaleLayer would scale the fields too.
+            transform: scale === 1 ? undefined : `scale(${scale})`,
           }}
         >
           {spans}

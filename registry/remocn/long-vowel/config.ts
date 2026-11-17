@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const longVowelConfig: ComponentConfig = {
   componentName: "LongVowel",
@@ -13,15 +19,15 @@ export const longVowelConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     word: {
       type: "text-content",
       default: "Way",
       description: "Word",
+    },
+    letter: {
+      type: "text-content",
+      default: "",
+      description: "Letter",
     },
     rest: {
       type: "text-content",
@@ -37,6 +43,30 @@ export const longVowelConfig: ComponentConfig = {
       description: "Repeat",
       hiddenFromList: false,
     },
+    stretchAt: {
+      type: "number",
+      default: 28,
+      min: 0,
+      max: 90,
+      step: 1,
+      description: "Stretch at (frame)",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 4,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Copy stagger",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Fraunces", grain: true }),
     speed: {
       type: "number",
       default: 1,

@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const shedWeightConfig: ComponentConfig = {
   componentName: "ShedWeight",
@@ -32,6 +38,26 @@ export const shedWeightConfig: ComponentConfig = {
       description: "Sizes",
       hiddenFromList: false,
     },
+    fontWeight: {
+      type: "number",
+      default: 460,
+      min: 200,
+      max: 800,
+      step: 20,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    ratio: {
+      type: "number",
+      default: 1.42,
+      min: 1.1,
+      max: 1.8,
+      step: 0.01,
+      description: "Size ratio",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Bricolage Grotesque", grain: true }),
     speed: {
       type: "number",
       default: 1,

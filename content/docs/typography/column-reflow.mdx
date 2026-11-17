@@ -69,10 +69,40 @@ A justified serif paragraph sits in a column, then the column widens (or narrows
       description: "Whether the column starts narrow and widens, or the reverse.",
     },
     {
+      name: "measure",
+      type: "number",
+      default: "9.6",
+      description: "Width of the narrow column, in ems of the type.",
+    },
+    {
       name: "theme",
       type: "\"dark\" | \"light\"",
       default: "\"dark\"",
       description: "Color scheme; ships dark and light.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Newsreader\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "speed",
@@ -83,7 +113,17 @@ A justified serif paragraph sits in a column, then the column widens (or narrows
     {
       name: "accent",
       type: "string",
-      description: "Color of the accent word; also tints the glow.",
+      description: "Accepted for parity with the other pieces; not used. The accent word is set apart by its italic serif, not by color.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
     },
   ]}
 />

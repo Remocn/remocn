@@ -23,7 +23,18 @@ export interface FactorOutProps {
   heads?: string[];
   tail?: string;
   accent?: string;
+  /** Text color of the lines; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Rubik by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Frames between one line entering and the next. */
+  stagger?: number;
+  /** Size of the text block, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -49,11 +60,11 @@ const CLAMP = {
 
 type Metrics = Record<string, number>;
 
-function measureAll(texts: string[]): Metrics {
+function measureAll(texts: string[], font: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("factor-out: no 2d context");
-  ctx.font = `${WGHT} 100px "${rubik.fontFamily}"`;
+  ctx.font = font;
   const w: Metrics = {};
   for (const s of texts) {
     w[s] = ctx.measureText(s).width / 100 + TRACK * Array.from(s).length;
@@ -61,21 +72,22 @@ function measureAll(texts: string[]): Metrics {
   return w;
 }
 
-function useMetrics(texts: string[]) {
-  const key = texts.join("\u0001");
+function useMetrics(texts: string[], fontFamily: string, fontWeight: number) {
+  const font = `${fontWeight} 100px "${fontFamily}"`;
+  const key = `${font}\u0002${texts.join("\u0001")}`;
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("factor-out: measuring"));
   const released = useRef(false);
   useEffect(() => {
     let live = true;
-    Promise.all([
-      rubik.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${rubik.fontFamily}"`),
-    ])
+    Promise.all([rubik.waitUntilDone(), document.fonts.load(font)])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measureAll(key.split("\u0001")) });
+        setState({
+          key,
+          m: measureAll(key.split("\u0002")[1].split("\u0001"), font),
+        });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -84,28 +96,51 @@ function useMetrics(texts: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, font]);
   return state && state.key === key ? state.m : null;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function FactorOut({
   heads = DEFAULT_HEADS,
   tail = DEFAULT_TAIL,
   accent,
+  ink,
   background,
+  fontFamily = rubik.fontFamily,
+  fontWeight = WGHT,
+  stagger = 8,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: FactorOutProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const list = heads.length > 0 ? heads : DEFAULT_HEADS;
   const n = list.length;
-  const m = useMetrics([" ", tail, ...list]);
+  const m = useMetrics([" ", tail, ...list], fontFamily, fontWeight);
 
   if (!m) {
     return (
@@ -139,7 +174,7 @@ export function FactorOut({
 
   const span = durationInFrames * speed;
   const k = Math.min(1.5, Math.max(0.85, (span - 50) / 140));
-  const enterAt = (i: number) => (6 + i * 8) * k;
+  const enterAt = (i: number) => (6 + i * stagger) * k;
   const spotAt = (i: number) => (44 + i * 4) * k;
   const alignAt = 62 * k;
   const MERGE = 15 * k;
@@ -148,8 +183,8 @@ export function FactorOut({
   const LIFT = 26 * k;
 
   const lineStyle: React.CSSProperties = {
-    fontFamily: rubik.fontFamily,
-    fontWeight: WGHT,
+    fontFamily,
+    fontWeight,
     fontSize: F,
     lineHeight: `${rowH}px`,
     height: rowH,
@@ -197,7 +232,7 @@ export function FactorOut({
         <div
           style={{
             ...lineStyle,
-            color: c.ink,
+            color: fg,
             transform: `translateY(${rise.toFixed(2)}px)`,
           }}
         >
@@ -224,7 +259,7 @@ export function FactorOut({
       ) * 0.045;
     const xL = xA + (mX - xA) * lift;
     const yL = y + (finalY - y) * lift;
-    const scale = 1 + bump + (last ? (G - 1) * lift : 0);
+    const zoom = 1 + bump + (last ? (G - 1) * lift : 0);
     const tint = interpolate(t, [spotAt(i), spotAt(i) + 12], [0, 1], {
       ...CLAMP,
       easing: EASE_IN_OUT,
@@ -242,14 +277,14 @@ export function FactorOut({
           paddingTop: F * 0.1,
           overflow: pin >= 1 ? "visible" : "hidden",
           zIndex: last ? 2 : 1,
-          transform: `scale(${scale.toFixed(4)})`,
+          transform: `scale(${zoom.toFixed(4)})`,
           transformOrigin: `${F * 0.1}px ${F * 0.1}px`,
         }}
       >
         <div
           style={{
             ...lineStyle,
-            color: interpolateColors(tint, [0, 1], [c.ink, hi]),
+            color: interpolateColors(tint, [0, 1], [fg, hi]),
             opacity: interpolate(mp, [0.05, 0.85], [1, 0], CLAMP),
             transform: `translateY(${(rise + mp * rowH * 0.55).toFixed(2)}px)`,
           }}
@@ -262,7 +297,7 @@ export function FactorOut({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

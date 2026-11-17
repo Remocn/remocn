@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const milestoneRollConfig: ComponentConfig = {
   componentName: "MilestoneRoll",
@@ -13,16 +20,36 @@ export const milestoneRollConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     unit: {
       type: "text-content",
       default: "renders",
       description: "Unit",
     },
+    run: {
+      type: "number",
+      default: 15,
+      min: 4,
+      max: 40,
+      step: 1,
+      description: "Race (frames)",
+      hiddenFromList: false,
+    },
+    hold: {
+      type: "number",
+      default: 14,
+      min: 0,
+      max: 40,
+      step: 1,
+      description: "Hold (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Space Grotesk" }),
     speed: {
       type: "number",
       default: 1,

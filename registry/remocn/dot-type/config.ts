@@ -1,8 +1,20 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const dotTypeConfig: ComponentConfig = {
   componentName: "DotType",
   importPath: "@/components/remocn/dot-type",
+  lists: {
+    words: {
+      default: ["Think.", "Make.", "Ship."],
+      description: "Words",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -32,6 +44,25 @@ export const dotTypeConfig: ComponentConfig = {
       description: "Count",
       hiddenFromList: false,
     },
+    fontWeight: {
+      type: "number",
+      default: 500,
+      min: 100,
+      max: 800,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    hold: {
+      type: "number",
+      default: 22,
+      min: 0,
+      max: 60,
+      step: 1,
+      description: "Hold (frames)",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Sora", grain: true }),
     speed: {
       type: "number",
       default: 1,

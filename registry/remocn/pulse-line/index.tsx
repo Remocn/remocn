@@ -23,7 +23,21 @@ export interface PulseLineProps {
   highlight?: string;
   caption?: string;
   beats?: number;
+  /** Height of the pulse wave as it runs through the letters; 1 is the default lift. */
+  amplitude?: number;
   accent?: string;
+  /** Text color, as a hex value; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the line and caption. Load it yourself; Inter Tight by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Size of the line, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -113,7 +127,7 @@ interface Metrics {
   baseline: number;
 }
 
-function useMetrics(caption: string) {
+function useMetrics(caption: string, family: string, weight: number) {
   const [m, setM] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("pulse-line: measuring"));
   const released = useRef(false);
@@ -121,8 +135,8 @@ function useMetrics(caption: string) {
     let live = true;
     Promise.all([
       inter.waitUntilDone(),
-      document.fonts.load(`500 100px "${inter.fontFamily}"`),
-      document.fonts.load(`400 100px "${inter.fontFamily}"`),
+      document.fonts.load(`${weight} 100px "${family}"`),
+      document.fonts.load(`400 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -130,7 +144,7 @@ function useMetrics(caption: string) {
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
         if (!ctx) throw new Error("pulse-line: no 2d context");
-        ctx.font = `500 ${FONT_PX}px "${inter.fontFamily}"`;
+        ctx.font = `${weight} ${FONT_PX}px "${family}"`;
         const fm = ctx.measureText("Hg");
         const asc = fm.fontBoundingBoxAscent / FONT_PX;
         const desc = fm.fontBoundingBoxDescent / FONT_PX;
@@ -143,7 +157,7 @@ function useMetrics(caption: string) {
             (_, i) => raw(chars.slice(0, i).join("")) + TRACK * i,
           );
         };
-        ctx.font = `400 ${FONT_PX}px "${inter.fontFamily}"`;
+        ctx.font = `400 ${FONT_PX}px "${family}"`;
         const cap = caption ? ctx.measureText(caption).width / FONT_PX : 0;
         setM({
           width,
@@ -159,7 +173,7 @@ function useMetrics(caption: string) {
     return () => {
       live = false;
     };
-  }, [caption, handle]);
+  }, [caption, handle, family, weight]);
   return m;
 }
 
@@ -213,24 +227,53 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function PulseLine({
   text = "Every frame has a pulse.",
   highlight = "a pulse.",
   caption = "Motion components for Remotion. Copy one in, own every frame.",
   beats = 2,
+  amplitude = 1,
   accent = "#3B5BFD",
+  ink: inkProp,
+  background,
+  fontFamily = inter.fontFamily,
+  fontWeight = 500,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: PulseLineProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
-  const m = useMetrics(caption);
+  const fg = inkProp ?? c.ink;
+  const transparent = background === "transparent";
+  const stage = transparent ? "transparent" : (background ?? c.bg);
+  const m = useMetrics(caption, fontFamily, fontWeight);
 
   const words = useMemo(() => text.split(/\s+/).filter(Boolean), [text]);
 
   if (!m) {
-    return <div style={{ position: "absolute", inset: 0, background: c.bg }} />;
+    return (
+      <div style={{ position: "absolute", inset: 0, background: stage }} />
+    );
   }
 
   const maxW = W * 0.86;
@@ -354,20 +397,20 @@ export function PulseLine({
     const spike = Math.max(0, y) / WAVE[2].a;
     const sy = FLAT_SCALE + (1 - FLAT_SCALE) * alive + spike * 0.22 * alive;
     const sx = 1 - spike * 0.06;
-    const dy = -y * F * (lines.length > 1 ? 0.8 : 1);
-    const ink = alive > 0.02 ? c.ink : c.flat;
-    const restInk = mixHex(c.flat, c.ink, alive);
+    const dy = -y * F * (lines.length > 1 ? 0.8 : 1) * amplitude;
+    const ink = alive > 0.02 ? fg : c.flat;
+    const restInk = mixHex(c.flat, fg, alive);
     const col =
       heat > 0.001
-        ? heatColor(c.glow, ink === c.ink ? c.ink : restInk, heat)
+        ? heatColor(c.glow, ink === fg ? fg : restInk, heat)
         : restInk;
 
     const style: React.CSSProperties = {
       position: "absolute",
       left,
       top: baseY - m.baseline * F,
-      fontFamily: inter.fontFamily,
-      fontWeight: 500,
+      fontFamily,
+      fontWeight,
       fontSize: F,
       lineHeight: `${F}px`,
       whiteSpace: "pre",
@@ -411,37 +454,41 @@ export function PulseLine({
   const settled = interpolate(t, [endT, endT + 30], [0, 1], CLAMP);
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: c.ground(Math.max(breathe, settled * 0.35)),
-        }}
-      />
-      {nodes}
-      {caption ? (
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      {transparent ? null : (
         <div
           style={{
             position: "absolute",
-            left: 0,
-            width: W,
-            top: top0 + blockH + capGap,
-            textAlign: "center",
-            fontFamily: inter.fontFamily,
-            fontWeight: 400,
-            fontSize: capSize,
-            letterSpacing: "-0.01em",
-            lineHeight: 1.2,
-            color: c.muted,
-            opacity: capP,
-            transform: `translateY(${((1 - capP) * capSize * 0.7).toFixed(2)}px)`,
+            inset: 0,
+            background: c.ground(Math.max(breathe, settled * 0.35)),
           }}
-        >
-          {caption}
-        </div>
-      ) : null}
-      <Grain opacity={c.grain} />
+        />
+      )}
+      <ScaleLayer scale={scale}>
+        {nodes}
+        {caption ? (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              width: W,
+              top: top0 + blockH + capGap,
+              textAlign: "center",
+              fontFamily,
+              fontWeight: 400,
+              fontSize: capSize,
+              letterSpacing: "-0.01em",
+              lineHeight: 1.2,
+              color: c.muted,
+              opacity: capP,
+              transform: `translateY(${((1 - capP) * capSize * 0.7).toFixed(2)}px)`,
+            }}
+          >
+            {caption}
+          </div>
+        ) : null}
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

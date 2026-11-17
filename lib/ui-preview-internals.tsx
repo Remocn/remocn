@@ -3,6 +3,7 @@
 import { Player, type PlayerRef } from "@remotion/player";
 import { PlayIcon } from "lucide-react";
 import {
+  parseAsArrayOf,
   parseAsBoolean,
   parseAsFloat,
   parseAsString,
@@ -31,8 +32,13 @@ export function buildParsers(name: string, controls: ControlConfig) {
       parsers[key] = parseAsString.withDefault(ctrl.default);
     } else if (ctrl.type === "number" || ctrl.type === "number-input") {
       parsers[key] = parseAsFloat.withDefault(ctrl.default);
-    } else if (ctrl.type === "color") {
+    } else if (ctrl.type === "color" || ctrl.type === "font") {
       parsers[key] = parseAsString.withDefault(ctrl.default);
+    } else if (ctrl.type === "list") {
+      // One item per line, as the control edits them.
+      parsers[key] = parseAsArrayOf(parseAsString, "\n").withDefault(
+        ctrl.default,
+      );
     } else if (ctrl.type === "select") {
       parsers[key] = parseAsStringLiteral(
         ctrl.options as readonly string[],

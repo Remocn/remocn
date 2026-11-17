@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/FunnelDisplay";
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -28,7 +29,19 @@ export interface PeekShutProps {
   pan?: [number, number];
   zoom?: number;
   accent?: string;
+  /** Text color of the question and refusal; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Funnel Display by default. */
+  fontFamily?: string;
+  /** Frames between words as a line rises in. */
+  stagger?: number;
+  /** Frame the slot snaps shut; the refusal follows it. */
+  shutAt?: number;
+  /** Size of the copy and slot, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -77,18 +90,18 @@ const MIN_HOLD = 34;
 
 let measureCtx: CanvasRenderingContext2D | null = null;
 
-function em(s: string) {
+function em(s: string, family: string) {
   if (!measureCtx) {
     measureCtx = document.createElement("canvas").getContext("2d");
   }
   if (!measureCtx) throw new Error("peek-shut: no 2d context");
-  measureCtx.font = `${WGHT} ${MEASURE_PX}px "${funnel.fontFamily}"`;
+  measureCtx.font = `${WGHT} ${MEASURE_PX}px "${family}"`;
   return (
     measureCtx.measureText(s).width / MEASURE_PX + TRACK * Array.from(s).length
   );
 }
 
-function useFontsReady() {
+function useFontsReady(family: string) {
   const [ready, setReady] = useState(false);
   const [handle] = useState(() => delayRender("peek-shut: fonts"));
   const released = useRef(false);
@@ -96,7 +109,7 @@ function useFontsReady() {
     let live = true;
     Promise.all([
       funnel.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${funnel.fontFamily}"`),
+      document.fonts.load(`${WGHT} 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -109,7 +122,7 @@ function useFontsReady() {
     return () => {
       live = false;
     };
-  }, [handle]);
+  }, [handle, family]);
   return ready;
 }
 
@@ -122,23 +135,23 @@ function split(s: string) {
   return s.split(/\s+/).filter(Boolean);
 }
 
-function toRow(words: string[]): Row {
-  const space = em(" ");
+function toRow(words: string[], family: string): Row {
+  const space = em(" ", family);
   let x = 0;
   const out = words.map((text) => {
     const at = x;
-    x += em(text) + space;
+    x += em(text, family) + space;
     return { text, x: at };
   });
-  return { words: out, w: em(words.join(" ")) };
+  return { words: out, w: em(words.join(" "), family) };
 }
 
-function greedy(words: string[], maxEm: number): string[][] {
+function greedy(words: string[], maxEm: number, family: string): string[][] {
   const rows: string[][] = [];
   let cur: string[] = [];
   for (const w of words) {
     const next = [...cur, w];
-    if (cur.length > 0 && em(next.join(" ")) > maxEm) {
+    if (cur.length > 0 && em(next.join(" "), family) > maxEm) {
       rows.push(cur);
       cur = [w];
     } else {
@@ -149,17 +162,17 @@ function greedy(words: string[], maxEm: number): string[][] {
   return rows;
 }
 
-function wrap(s: string, maxEm: number): Row[] {
+function wrap(s: string, maxEm: number, family: string): Row[] {
   const words = split(s);
-  let rows = greedy(words, maxEm);
+  let rows = greedy(words, maxEm, family);
   let m = maxEm;
   for (let guard = 0; guard < 30 && rows.length > 1; guard++) {
     m *= 0.96;
-    const next = greedy(words, m);
+    const next = greedy(words, m, family);
     if (next.length > rows.length) break;
     rows = next;
   }
-  return rows.map(toRow);
+  return rows.map((row) => toRow(row, family));
 }
 
 function buildLayout(
@@ -168,6 +181,7 @@ function buildLayout(
   when: string,
   W: number,
   H: number,
+  family: string,
 ) {
   const portrait = H > W * 1.1;
   const measure = W * (portrait ? 0.84 : 0.66);
@@ -177,15 +191,31 @@ function buildLayout(
   let r: Row[] = [];
   let wn: Row[] = [];
   for (let guard = 0; guard < 16; guard++) {
-    q = wrap(question, measure / F);
-    r = wrap(refusal, measure / F);
-    wn = wrap(when, measure / F);
+    q = wrap(question, measure / F, family);
+    r = wrap(refusal, measure / F, family);
+    wn = wrap(when, measure / F, family);
     const room = H / 2 - hMax / 2 - F * 0.7 - H * (portrait ? 0.1 : 0.08);
     const tallest = Math.max(q.length, r.length + wn.length);
     if (((tallest - 1) * PITCH + 1.1) * F <= room) break;
     F *= 0.93;
   }
   return { q, r, wn, F, hMax, portrait };
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function PeekShut({
@@ -197,22 +227,31 @@ export function PeekShut({
   pan = DEFAULT_PAN,
   zoom = 3.2,
   accent,
+  ink,
   background,
+  fontFamily = funnel.fontFamily,
+  stagger = STAGGER,
+  shutAt = SHUT_AT,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: PeekShutProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
+  const rAt = R_AT + (shutAt - SHUT_AT);
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
   const image = src ?? staticFile("hero.png");
-  const ready = useFontsReady();
+  const ready = useFontsReady(fontFamily);
 
   const layout = useMemo(
-    () => (ready ? buildLayout(question, refusal, when, W, H) : null),
-    [ready, question, refusal, when, W, H],
+    () =>
+      ready ? buildLayout(question, refusal, when, W, H, fontFamily) : null,
+    [ready, question, refusal, when, W, H, fontFamily],
   );
 
   if (!layout) {
@@ -224,9 +263,12 @@ export function PeekShut({
   const { F, hMax, portrait } = layout;
   const lastWords = layout.wn.reduce((a, r) => a + r.words.length, 0);
   const rCount = layout.r.reduce((a, r) => a + r.words.length, 0);
-  const whenAt = Math.max(WHEN_AT, R_AT + rCount * STAGGER + 4);
-  const motionEnd = whenAt + (lastWords - 1) * STAGGER + WORD_LEN;
-  const room = durationInFrames * speed - MIN_HOLD;
+  const whenAt = Math.max(
+    WHEN_AT + (shutAt - SHUT_AT),
+    rAt + rCount * stagger + 4,
+  );
+  const motionEnd = whenAt + (lastWords - 1) * stagger + WORD_LEN;
+  const room = (durationInFrames - delay) * speed - MIN_HOLD;
   const k = Math.max(0.6, Math.min(1, room / motionEnd));
   const t = (frame * speed) / k;
 
@@ -245,12 +287,12 @@ export function PeekShut({
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const shut = interpolate(t, [SHUT_AT, SHUT_AT + SHUT_LEN], [0, 1], {
+  const shut = interpolate(t, [shutAt, shutAt + SHUT_LEN], [0, 1], {
     ...CLAMP,
     easing: EASE_SNAP,
   });
   const h = hMax * opened * (1 - shut);
-  const drift = interpolate(t, [OPEN_AT, SHUT_AT + SHUT_LEN], [0, 1], {
+  const drift = interpolate(t, [OPEN_AT, shutAt + SHUT_LEN], [0, 1], {
     ...CLAMP,
     easing: EASE_DRIFT,
   });
@@ -304,7 +346,7 @@ export function PeekShut({
           const i = wi++;
           const q = interpolate(
             t,
-            [at + i * STAGGER, at + i * STAGGER + WORD_LEN],
+            [at + i * stagger, at + i * stagger + WORD_LEN],
             [0, 1],
             { ...CLAMP, easing: EASE_OUT },
           );
@@ -316,7 +358,7 @@ export function PeekShut({
                 left: w.x * F + F * 0.1,
                 top: 0,
                 height: rowH,
-                fontFamily: funnel.fontFamily,
+                fontFamily,
                 fontWeight: WGHT,
                 fontSize: F,
                 lineHeight: `${rowH}px`,
@@ -336,66 +378,68 @@ export function PeekShut({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {block(layout.q, lineTop, Q_AT, c.ink, "q")}
-      {edge(0, reach, cy, "base")}
-      <div
-        style={{
-          position: "absolute",
-          left: slotX,
-          top: cy - h / 2,
-          width: slotW,
-          height: h,
-          overflow: "hidden",
-        }}
-      >
+      <ScaleLayer scale={scale}>
+        {block(layout.q, lineTop, Q_AT, fg, "q")}
+        {edge(0, reach, cy, "base")}
         <div
           style={{
             position: "absolute",
-            left: 0,
-            top: -(hMax - h) / 2,
+            left: slotX,
+            top: cy - h / 2,
             width: slotW,
-            height: hMax,
+            height: h,
+            overflow: "hidden",
           }}
         >
-          <Img
-            src={image}
+          <div
             style={{
               position: "absolute",
-              left: ix,
-              top: iy,
-              width: IW,
-              height: IH,
-              objectFit: "cover",
-              transformOrigin: `${fx * 100}% ${focusY * 100}%`,
-              transform: `scale(${settle.toFixed(4)})`,
+              left: 0,
+              top: -(hMax - h) / 2,
+              width: slotW,
+              height: hMax,
             }}
-          />
+          >
+            <Img
+              src={image}
+              style={{
+                position: "absolute",
+                left: ix,
+                top: iy,
+                width: IW,
+                height: IH,
+                objectFit: "cover",
+                transformOrigin: `${fx * 100}% ${focusY * 100}%`,
+                transform: `scale(${settle.toFixed(4)})`,
+              }}
+            />
+          </div>
         </div>
-      </div>
-      {h > hair * 1.5
-        ? [
-            edge(
-              slotX,
-              Math.min(reach, slotX + slotW) - slotX,
-              cy - h / 2,
-              "e-t",
-            ),
-            edge(
-              slotX,
-              Math.min(reach, slotX + slotW) - slotX,
-              cy + h / 2,
-              "e-b",
-            ),
-          ]
-        : null}
-      {block(layout.r, belowTop, R_AT, c.ink, "r")}
-      {block(
-        layout.wn,
-        belowTop + layout.r.length * PITCH * F,
-        whenAt,
-        hi,
-        "wn",
-      )}
+        {h > hair * 1.5
+          ? [
+              edge(
+                slotX,
+                Math.min(reach, slotX + slotW) - slotX,
+                cy - h / 2,
+                "e-t",
+              ),
+              edge(
+                slotX,
+                Math.min(reach, slotX + slotW) - slotX,
+                cy + h / 2,
+                "e-b",
+              ),
+            ]
+          : null}
+        {block(layout.r, belowTop, rAt, fg, "r")}
+        {block(
+          layout.wn,
+          belowTop + layout.r.length * PITCH * F,
+          whenAt,
+          hi,
+          "wn",
+        )}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

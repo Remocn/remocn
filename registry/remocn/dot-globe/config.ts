@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const dotGlobeConfig: ComponentConfig = {
   componentName: "DotGlobe",
@@ -12,11 +18,6 @@ export const dotGlobeConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     prefix: {
       type: "text-content",
@@ -37,6 +38,30 @@ export const dotGlobeConfig: ComponentConfig = {
       description: "Count",
       hiddenFromList: false,
     },
+    stagger: {
+      type: "number",
+      default: 20,
+      min: 4,
+      max: 40,
+      step: 1,
+      description: "Route stagger",
+      hiddenFromList: false,
+    },
+    flight: {
+      type: "number",
+      default: 32,
+      min: 12,
+      max: 60,
+      step: 1,
+      description: "Flight (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Instrument Sans", grain: true }),
     speed: {
       type: "number",
       default: 1,

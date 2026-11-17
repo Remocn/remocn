@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Fraunces";
+import type React from "react";
 import { useId, useMemo } from "react";
 import {
   AbsoluteFill,
@@ -19,7 +20,23 @@ const { fontFamily: sans } = loadFont("normal", {
 export interface KerningSnapProps {
   word?: string;
   interval?: number;
+  /** Frame the first letter snaps into place; the others follow every `interval`. */
+  firstSnap?: number;
   accent?: string;
+  /** Solid text color in place of the gradient fill. */
+  ink?: string;
+  background?: string;
+  /**
+   * Typeface for the word. Load it yourself; Fraunces by default.
+   * Layout uses Fraunces metrics, so another face may set looser or tighter.
+   */
+  fontFamily?: string;
+  /** Size of the word, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -167,16 +184,41 @@ function Tick({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function KerningSnap({
   word = "Typeset",
   interval = 7,
+  firstSnap = FIRST_SNAP,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: KerningSnapProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const chars = useMemo(() => Array.from(word), [word]);
   const n = chars.length;
@@ -221,12 +263,12 @@ export function KerningSnap({
     return seq;
   }, [anchor, n]);
   const snapAt = useMemo(() => {
-    const at = new Array<number>(n).fill(FIRST_SNAP - interval);
+    const at = new Array<number>(n).fill(firstSnap - interval);
     order.forEach((j, k) => {
-      at[j] = FIRST_SNAP + k * interval;
+      at[j] = firstSnap + k * interval;
     });
     return at;
-  }, [order, n, interval]);
+  }, [order, n, interval, firstSnap]);
 
   const spread = useMemo(() => {
     const span = W * 0.78;
@@ -240,7 +282,7 @@ export function KerningSnap({
     return raw.map((r) => -span / 2 + (r / total) * span);
   }, [n, W]);
 
-  const lastSnap = FIRST_SNAP + (n - 2) * interval;
+  const lastSnap = firstSnap + (n - 2) * interval;
   const gather = interpolate(t, [0, lastSnap + 4], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
@@ -268,80 +310,84 @@ export function KerningSnap({
   const anchorLift = (hash(anchor, 7) - 0.5) * F * 0.12 * (1 - gather);
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{ background: c.glow, opacity: 0.4 + 0.6 * gather }}
-      />
-      <AbsoluteFill
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          transform: `scale(${1 + push * 0.02})`,
-        }}
-      >
-        <div
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      {background === undefined ? (
+        <AbsoluteFill
+          style={{ background: c.glow, opacity: 0.4 + 0.6 * gather }}
+        />
+      ) : null}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
             display: "flex",
-            alignItems: "baseline",
-            whiteSpace: "pre",
-            fontFamily: sans,
-            fontWeight: 400,
-            fontSize: F,
-            lineHeight: 1,
-            letterSpacing: `${TRACK}em`,
-            fontKerning: "none",
-            color: c.fg,
-            transform: `translateY(${F * 0.04}px)`,
+            alignItems: "center",
+            justifyContent: "center",
+            transform: `scale(${1 + push * 0.02})`,
           }}
         >
-          {chars.map((ch, i) => {
-            const s = snap(i);
-            const loose = 1 - s;
-            const startOff =
-              spread[i] -
-              finalCenters[i] -
-              (spread[anchor] - finalCenters[anchor]);
-            const wander = 1 - 0.72 * gather;
-            const dx = anchorDrift + startOff * wander * loose;
-            const dy =
-              anchorLift + (hash(i, 7) - 0.5) * F * 0.5 * wander * loose;
-            const rot = (hash(i, 11) - 0.5) * 12 * wander * loose;
-            const o = interpolate(t, [2 + i * 2, 16 + i * 2], [0, 1], {
-              ...CLAMP,
-              easing: EASE_OUT,
-            });
-            const leftTick = i > anchor ? flash(i) : 0;
-            const rightTick = i < anchor ? flash(i) : 0;
-            return (
-              <span
-                key={`${i}-${ch}`}
-                style={{
-                  position: "relative",
-                  display: "inline-block",
-                  marginLeft: (kerns[i] - PAD_X) * F,
-                  marginRight: -PAD_X * F,
-                  padding: `${PAD_Y * F}px ${PAD_X * F}px`,
-                  color: "transparent",
-                  backgroundImage: c.fill,
-                  backgroundSize: `${(finalEm + PAD_X * 2) * F}px 100%`,
-                  backgroundPosition: `${-finalLefts[i]}px 0px`,
-                  backgroundRepeat: "no-repeat",
-                  WebkitBackgroundClip: "text",
-                  backgroundClip: "text",
-                  opacity: o,
-                  transform: `translate(${dx}px, ${dy}px) rotate(${rot}deg)`,
-                }}
-              >
-                {ch}
-                <Tick side="left" F={F} color={accent} flash={leftTick} />
-                <Tick side="right" F={F} color={accent} flash={rightTick} />
-              </span>
-            );
-          })}
-        </div>
-      </AbsoluteFill>
-      <Grain opacity={c.grain} />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "baseline",
+              whiteSpace: "pre",
+              fontFamily,
+              fontWeight: 400,
+              fontSize: F,
+              lineHeight: 1,
+              letterSpacing: `${TRACK}em`,
+              fontKerning: "none",
+              color: ink ?? c.fg,
+              transform: `translateY(${F * 0.04}px)`,
+            }}
+          >
+            {chars.map((ch, i) => {
+              const s = snap(i);
+              const loose = 1 - s;
+              const startOff =
+                spread[i] -
+                finalCenters[i] -
+                (spread[anchor] - finalCenters[anchor]);
+              const wander = 1 - 0.72 * gather;
+              const dx = anchorDrift + startOff * wander * loose;
+              const dy =
+                anchorLift + (hash(i, 7) - 0.5) * F * 0.5 * wander * loose;
+              const rot = (hash(i, 11) - 0.5) * 12 * wander * loose;
+              const o = interpolate(t, [2 + i * 2, 16 + i * 2], [0, 1], {
+                ...CLAMP,
+                easing: EASE_OUT,
+              });
+              const leftTick = i > anchor ? flash(i) : 0;
+              const rightTick = i < anchor ? flash(i) : 0;
+              return (
+                <span
+                  key={`${i}-${ch}`}
+                  style={{
+                    position: "relative",
+                    display: "inline-block",
+                    marginLeft: (kerns[i] - PAD_X) * F,
+                    marginRight: -PAD_X * F,
+                    padding: `${PAD_Y * F}px ${PAD_X * F}px`,
+                    color: ink ?? "transparent",
+                    backgroundImage: ink === undefined ? c.fill : undefined,
+                    backgroundSize: `${(finalEm + PAD_X * 2) * F}px 100%`,
+                    backgroundPosition: `${-finalLefts[i]}px 0px`,
+                    backgroundRepeat: "no-repeat",
+                    WebkitBackgroundClip: "text",
+                    backgroundClip: "text",
+                    opacity: o,
+                    transform: `translate(${dx}px, ${dy}px) rotate(${rot}deg)`,
+                  }}
+                >
+                  {ch}
+                  <Tick side="left" F={F} color={accent} flash={leftTick} />
+                  <Tick side="right" F={F} color={accent} flash={rightTick} />
+                </span>
+              );
+            })}
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

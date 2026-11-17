@@ -20,8 +20,18 @@ export interface TategakiTurnProps {
   text?: string;
   highlight?: number;
   hold?: number;
+  /** Frames between words dropping into their columns. */
+  stagger?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the text. Load it yourself; Zen Kaku Gothic New by default. */
+  fontFamily?: string;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -70,11 +80,11 @@ interface Metrics {
   colW: number;
 }
 
-function measure(words: string[]): Metrics {
+function measure(words: string[], fontFamily: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("tategaki-turn: no 2d context");
-  ctx.font = `500 100px "${kaku.fontFamily}"`;
+  ctx.font = `500 100px "${fontFamily}"`;
   const w = (s: string) => ctx.measureText(s).width / 100;
   const h = ctx.measureText("H");
   const asc = h.fontBoundingBoxAscent / 100;
@@ -106,7 +116,7 @@ function measure(words: string[]): Metrics {
   };
 }
 
-function useMetrics(words: string[]) {
+function useMetrics(words: string[], fontFamily: string) {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("tategaki-turn: measuring"));
   const released = useRef(false);
@@ -115,12 +125,12 @@ function useMetrics(words: string[]) {
     let live = true;
     Promise.all([
       kaku.waitUntilDone(),
-      document.fonts.load(`500 100px "${kaku.fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setMetrics(measure(JSON.parse(key) as string[]));
+        setMetrics(measure(JSON.parse(key) as string[], fontFamily));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -129,22 +139,44 @@ function useMetrics(words: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, fontFamily, handle]);
   return metrics;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function TategakiTurn({
   text = "Read it both ways.",
   highlight,
   hold = 16,
+  stagger = COL_STAGGER,
   accent,
+  ink,
   background,
+  fontFamily = kaku.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: TategakiTurnProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const bg = background ?? c.bg;
   const red = accent ?? VERMILION;
 
@@ -152,7 +184,7 @@ export function TategakiTurn({
     const ws = text.split(/\s+/).filter(Boolean);
     return ws.length ? ws : [" "];
   }, [text]);
-  const m = useMetrics(words);
+  const m = useMetrics(words, fontFamily);
 
   if (!m) {
     return <div style={{ position: "absolute", inset: 0, background: bg }} />;
@@ -247,7 +279,7 @@ export function TategakiTurn({
     H * (portrait ? 0.16 : 0.22),
   );
 
-  const lastStart = (n - 1) * COL_STAGGER + (maxLen - 1) * LETTER_STAGGER;
+  const lastStart = (n - 1) * stagger + (maxLen - 1) * LETTER_STAGGER;
   const turnAt = lastStart + LETTER_LEN + hold;
 
   const swing = m.words.map((_wd, j) =>
@@ -327,12 +359,12 @@ export function TategakiTurn({
   const oy = oyV + (oyH - oyV) * zoomP;
 
   const nodes: React.ReactNode[] = glyphs.map((g) => {
-    const startAt = g.j * COL_STAGGER + g.k * LETTER_STAGGER - 3;
+    const startAt = g.j * stagger + g.k * LETTER_STAGGER - 3;
     const rise = interpolate(t, [startAt, startAt + LETTER_LEN], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
-    const fill: React.CSSProperties = { color: g.j === hiIdx ? red : c.ink };
+    const fill: React.CSSProperties = { color: g.j === hiIdx ? red : fg };
     return (
       <div
         key={`${g.j}-${g.k}`}
@@ -343,7 +375,7 @@ export function TategakiTurn({
           width: g.adv * F,
           height: F * 1.4,
           opacity: rise,
-          fontFamily: kaku.fontFamily,
+          fontFamily,
           fontWeight: 500,
           fontSize: F,
           lineHeight: `${F}px`,
@@ -359,7 +391,7 @@ export function TategakiTurn({
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

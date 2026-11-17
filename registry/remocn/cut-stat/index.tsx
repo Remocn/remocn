@@ -2,6 +2,7 @@
 
 import { loadFont as loadPlexMono } from "@remotion/google-fonts/IBMPlexMono";
 import { loadFont as loadInstrument } from "@remotion/google-fonts/InstrumentSans";
+import type React from "react";
 import { Fragment, useId } from "react";
 import {
   AbsoluteFill,
@@ -27,7 +28,21 @@ export interface CutStatProps {
   fromLabel?: string;
   toLabel?: string;
   accent?: string;
+  /** Text color of the number, claim and readout; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the number and claim. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Weight of the number. */
+  fontWeight?: number;
+  /** Frames between the claim's words as they rise in. */
+  stagger?: number;
+  /** Size of the number block, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the bar. */
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -120,6 +135,22 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function CutStat({
   value = 44,
   decimals = 0,
@@ -130,14 +161,22 @@ export function CutStat({
   fromLabel = "Before",
   toLabel = "With remocn",
   accent = "#3B5BFD",
+  ink,
   background,
+  fontFamily = instrument.fontFamily,
+  fontWeight = 500,
+  stagger = 3,
+  scale: zoom = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: CutStatProps) {
-  const raw = useCurrentFrame();
+  const raw = Math.max(0, useCurrentFrame() - delay);
   const frame = raw * speed;
   const { width, height, durationInFrames } = useVideoConfig();
   const p = PALETTES[theme];
+  const fg = ink ?? p.fg;
 
   const portrait = height > width * 1.1;
   const u = Math.min(width, height) / 720;
@@ -178,7 +217,7 @@ export function CutStat({
   );
   const words = label.split(/\s+/).filter(Boolean);
   const wordT = (i: number) =>
-    interpolate(frame, [47 + i * 3, 65 + i * 3], [0, 1], {
+    interpolate(frame, [47 + i * stagger, 65 + i * stagger], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -332,13 +371,13 @@ export function CutStat({
   );
 
   const statStyle = {
-    fontFamily: instrument.fontFamily,
-    fontWeight: 500,
+    fontFamily,
+    fontWeight,
     fontSize: statFs,
     lineHeight: 0.9,
     letterSpacing: "-0.05em",
     fontVariantNumeric: "tabular-nums",
-    color: p.fg,
+    color: fg,
     whiteSpace: "nowrap",
   } as const;
 
@@ -351,7 +390,7 @@ export function CutStat({
     >
       {scale(p.tick, p.muted)}
       <div style={{ position: "absolute", inset: 0, opacity: intro }}>
-        {readout(p.fg, p.muted)}
+        {readout(fg, p.muted)}
       </div>
       <div
         style={{
@@ -362,101 +401,103 @@ export function CutStat({
           zIndex: 2,
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            ...(portrait
-              ? {
-                  left: margin,
-                  right: margin * 1.6,
-                  bottom: margin,
-                  height: Math.max(zone, height * 0.3) - margin,
-                  justifyContent: "flex-end",
-                }
-              : {
-                  right: margin,
-                  top: margin,
-                  bottom: margin * 1.45,
-                  width: Math.max(zone, width * 0.36) - margin * 1.6,
-                  justifyContent: "flex-end",
-                }),
-            display: "flex",
-            flexDirection: "column",
-            alignItems: portrait ? "flex-start" : "flex-end",
-            textAlign: portrait ? "left" : "right",
-          }}
-        >
+        <ScaleLayer scale={zoom}>
           <div
             style={{
-              ...statStyle,
-              marginRight: portrait ? 0 : -statFs * 0.04,
-              marginLeft: portrait ? -statFs * 0.04 : 0,
+              position: "absolute",
+              ...(portrait
+                ? {
+                    left: margin,
+                    right: margin * 1.6,
+                    bottom: margin,
+                    height: Math.max(zone, height * 0.3) - margin,
+                    justifyContent: "flex-end",
+                  }
+                : {
+                    right: margin,
+                    top: margin,
+                    bottom: margin * 1.45,
+                    width: Math.max(zone, width * 0.36) - margin * 1.6,
+                    justifyContent: "flex-end",
+                  }),
+              display: "flex",
+              flexDirection: "column",
+              alignItems: portrait ? "flex-start" : "flex-end",
+              textAlign: portrait ? "left" : "right",
             }}
           >
-            {prefix}
-            {fmt(counted)}
-            {suffix}
-          </div>
-          <div
-            style={{
-              marginTop: statFs * 0.14,
-              maxWidth: portrait
-                ? width - margin * 2
-                : Math.max(roomW, 300 * u),
-              fontFamily: instrument.fontFamily,
-              fontWeight: 400,
-              fontSize: (portrait ? 46 : 34) * u,
-              lineHeight: 1.12,
-              letterSpacing: "-0.02em",
-              color: p.fg,
-              textWrap: "balance",
-            }}
-          >
-            {words.map((w, k) => {
-              const t = wordT(k);
-              return (
-                <Fragment key={`${w}-${k}`}>
-                  {k > 0 ? " " : null}
-                  <span
-                    style={{
-                      display: "inline-block",
-                      overflow: "hidden",
-                      verticalAlign: "top",
-                      paddingBottom: "0.12em",
-                      marginBottom: "-0.12em",
-                    }}
-                  >
+            <div
+              style={{
+                ...statStyle,
+                marginRight: portrait ? 0 : -statFs * 0.04,
+                marginLeft: portrait ? -statFs * 0.04 : 0,
+              }}
+            >
+              {prefix}
+              {fmt(counted)}
+              {suffix}
+            </div>
+            <div
+              style={{
+                marginTop: statFs * 0.14,
+                maxWidth: portrait
+                  ? width - margin * 2
+                  : Math.max(roomW, 300 * u),
+                fontFamily,
+                fontWeight: 400,
+                fontSize: (portrait ? 46 : 34) * u,
+                lineHeight: 1.12,
+                letterSpacing: "-0.02em",
+                color: fg,
+                textWrap: "balance",
+              }}
+            >
+              {words.map((w, k) => {
+                const t = wordT(k);
+                return (
+                  <Fragment key={`${w}-${k}`}>
+                    {k > 0 ? " " : null}
                     <span
                       style={{
                         display: "inline-block",
-                        transform: `translateY(${(1 - t) * 105}%)`,
+                        overflow: "hidden",
+                        verticalAlign: "top",
+                        paddingBottom: "0.12em",
+                        marginBottom: "-0.12em",
                       }}
                     >
-                      {w}
+                      <span
+                        style={{
+                          display: "inline-block",
+                          transform: `translateY(${(1 - t) * 105}%)`,
+                        }}
+                      >
+                        {w}
+                      </span>
                     </span>
-                  </span>
-                </Fragment>
-              );
-            })}
-          </div>
-          {caption ? (
-            <div
-              style={{
-                marginTop: 16 * u,
-                fontFamily: plex.fontFamily,
-                fontWeight: 500,
-                fontSize: labelFs * (portrait ? 1.3 : 1),
-                letterSpacing: "0.04em",
-                textTransform: "uppercase",
-                color: p.muted,
-                opacity: capT,
-                transform: `translateY(${(1 - capT) * 8 * u}px)`,
-              }}
-            >
-              {caption}
+                  </Fragment>
+                );
+              })}
             </div>
-          ) : null}
-        </div>
+            {caption ? (
+              <div
+                style={{
+                  marginTop: 16 * u,
+                  fontFamily: plex.fontFamily,
+                  fontWeight: 500,
+                  fontSize: labelFs * (portrait ? 1.3 : 1),
+                  letterSpacing: "0.04em",
+                  textTransform: "uppercase",
+                  color: p.muted,
+                  opacity: capT,
+                  transform: `translateY(${(1 - capT) * 8 * u}px)`,
+                }}
+              >
+                {caption}
+              </div>
+            ) : null}
+          </div>
+        </ScaleLayer>
       </div>
 
       <div
@@ -468,7 +509,7 @@ export function CutStat({
           background: [...blobs, p.fieldBg].join(", "),
         }}
       >
-        <Grain opacity={0.1} />
+        {grain ? <Grain opacity={0.1} /> : null}
         {scale(p.fieldTick, p.fieldMuted)}
         {readout(p.fieldFg, p.fieldMuted)}
       </div>

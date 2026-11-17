@@ -3,6 +3,7 @@
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import { loadFont } from "@remotion/google-fonts/InterTight";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
+import type React from "react";
 import {
   AbsoluteFill,
   Easing,
@@ -71,6 +72,21 @@ export interface StatRailProps {
   accent?: string;
   card?: string;
   faded?: string;
+  /** Text color of the stat labels; overrides the theme. */
+  ink?: string;
+  /** Typeface for the tagline and stats. Load it yourself; Inter Tight by default. */
+  fontFamily?: string;
+  /** Frames the full-frame tagline holds before the card shrinks. */
+  hold?: number;
+  /** Frames between tagline words. */
+  stagger?: number;
+  /** Replaces the remocn mark above the tagline. */
+  logo?: React.ReactNode;
+  /** Size of the card and rail, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
 }
@@ -138,7 +154,7 @@ const BEATS = [
 ] as const;
 
 type BeatName = (typeof BEATS)[number]["name"];
-const beat = (n: BeatName) => BEATS.find((b) => b.name === n)?.at ?? 0;
+const beatAt = (n: BeatName) => BEATS.find((b) => b.name === n)?.at ?? 0;
 const STEPS: BeatName[] = ["step0", "step1", "step2", "step3"];
 
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
@@ -154,10 +170,12 @@ function Tagline({
   text,
   frame,
   start,
+  stagger,
 }: {
   text: string;
   frame: number;
   start: number;
+  stagger: number;
 }) {
   const parts = text.split(" ");
   return (
@@ -174,7 +192,7 @@ function Tagline({
         const word = isAccent ? raw.slice(1, -1) : raw;
         const p = interpolate(
           frame,
-          [start + i * 2, start + i * 2 + 13],
+          [start + i * stagger, start + i * stagger + 13],
           [0, 1],
           { ...CLAMP, easing: TYPE_IN },
         );
@@ -208,6 +226,22 @@ function Tagline({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function StatRail({
   stats = DEFAULT_STATS,
   image,
@@ -217,10 +251,20 @@ export function StatRail({
   accent,
   card,
   faded,
+  ink,
+  fontFamily = sans.fontFamily,
+  hold = 30,
+  stagger = 2,
+  logo,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   ground,
   groundParams,
 }: StatRailProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
+  const beat = (n: BeatName) =>
+    beatAt(n) + (n === "tagline" ? 0 : hold - beatAt("shrink"));
   const { width: W, height: H, fps } = useVideoConfig();
   const t = THEMES[theme];
   const acc = accent ?? t.accent;
@@ -304,194 +348,201 @@ export function StatRail({
         timeOffset={t.groundOffset}
         timeScale={0.5}
       />
-      <AbsoluteFill style={{ transform: `scale(${push})` }}>
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            top: railTop,
-            width: portrait ? W : endRect.x,
-            height: railBottom - railTop,
-            overflow: "hidden",
-            maskImage: fadeMask,
-            WebkitMaskImage: fadeMask,
-          }}
-        >
-          {stats.map((s, i) => {
-            const enter = sp(beat("railIn") + i * 3, CARD);
-            const y = slotY - railTop + (i - idx) * pitch;
-            const a = Math.max(0, 1 - Math.abs(idx - i));
-            const isPay = i === last;
-            const p = isPay ? payColor : 0;
-            const bg = interpolateColors(p, [0, 1], [cardBg, acc]);
-            const numColor = interpolateColors(
-              p,
-              [0, 1],
-              [interpolateColors(a, [0, 1], [fadedInk, acc]), t.payInk],
-            );
-            const labelColor = interpolateColors(
-              p,
-              [0, 1],
-              [
-                interpolateColors(a, [0, 1], [t.fadedLabel, t.label]),
-                "rgba(3,19,12,0.78)",
-              ],
-            );
-            const scale = 0.94 + 0.06 * a + (isPay ? (pay - 1) * 0.06 : 0);
-            return (
-              <div
-                key={`${s.value}-${i}`}
-                style={{
-                  position: "absolute",
-                  left: railX,
-                  top: y,
-                  transform: `translateY(-50%) translateY(${(1 - enter) * H * 0.08}px) scale(${scale})`,
-                  transformOrigin: "0% 50%",
-                  opacity: enter,
-                }}
-              >
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill style={{ transform: `scale(${push})` }}>
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              top: railTop,
+              width: portrait ? W : endRect.x,
+              height: railBottom - railTop,
+              overflow: "hidden",
+              maskImage: fadeMask,
+              WebkitMaskImage: fadeMask,
+            }}
+          >
+            {stats.map((s, i) => {
+              const enter = sp(beat("railIn") + i * 3, CARD);
+              const y = slotY - railTop + (i - idx) * pitch;
+              const a = Math.max(0, 1 - Math.abs(idx - i));
+              const isPay = i === last;
+              const p = isPay ? payColor : 0;
+              const bg = interpolateColors(p, [0, 1], [cardBg, acc]);
+              const numColor = interpolateColors(
+                p,
+                [0, 1],
+                [interpolateColors(a, [0, 1], [fadedInk, acc]), t.payInk],
+              );
+              const labelColor = interpolateColors(
+                p,
+                [0, 1],
+                [
+                  interpolateColors(a, [0, 1], [t.fadedLabel, ink ?? t.label]),
+                  "rgba(3,19,12,0.78)",
+                ],
+              );
+              const scale = 0.94 + 0.06 * a + (isPay ? (pay - 1) * 0.06 : 0);
+              return (
                 <div
+                  key={`${s.value}-${i}`}
                   style={{
-                    position: "relative",
-                    display: "flex",
-                    flexDirection: portrait ? "column" : "row",
-                    alignItems: portrait ? "flex-start" : "center",
-                    gap: portrait ? numSize * 0.08 : numSize * 0.2,
-                    width: cardW,
-                    boxSizing: "border-box",
-                    padding: portrait
-                      ? `${padY * 1.1}px ${padX}px ${padY * 1.3}px`
-                      : `${padY}px ${padX}px`,
-                    borderRadius: numSize * 0.2,
+                    position: "absolute",
+                    left: railX,
+                    top: y,
+                    transform: `translateY(-50%) translateY(${(1 - enter) * H * 0.08}px) scale(${scale})`,
+                    transformOrigin: "0% 50%",
+                    opacity: enter,
                   }}
                 >
                   <div
                     style={{
-                      position: "absolute",
-                      inset: 0,
-                      borderRadius: "inherit",
-                      backgroundColor: bg,
-                      backgroundImage:
-                        p > 0
-                          ? `radial-gradient(90% 140% at 0% 0%, rgba(255,255,255,${0.35 * p}) 0%, transparent 60%)`
-                          : `radial-gradient(90% 140% at 0% 100%, color-mix(in oklab, ${acc} 16%, transparent) 0%, transparent 62%)`,
-                      boxShadow: `inset 0 1px 0 ${t.highlight}, inset 0 0 0 1px ${t.hairline}, 0 1px 2px ${shadow(0.6)}, 0 ${numSize * 0.12}px ${numSize * 0.3}px ${shadow(0.7)}, 0 ${numSize * 0.4}px ${numSize * 0.9}px ${shadow(0.5)}`,
-                      opacity: a,
-                      transform: `scale(${0.9 + 0.1 * a})`,
-                      transformOrigin: "0% 50%",
-                    }}
-                  />
-                  <div
-                    style={{
                       position: "relative",
-                      fontFamily: sans.fontFamily,
-                      fontWeight: 300,
-                      fontSize: numSize,
-                      lineHeight: 0.86,
-                      letterSpacing: "-0.055em",
-                      color: numColor,
-                      fontVariantNumeric: "tabular-nums",
-                      paddingBottom: numSize * 0.04,
+                      display: "flex",
+                      flexDirection: portrait ? "column" : "row",
+                      alignItems: portrait ? "flex-start" : "center",
+                      gap: portrait ? numSize * 0.08 : numSize * 0.2,
+                      width: cardW,
+                      boxSizing: "border-box",
+                      padding: portrait
+                        ? `${padY * 1.1}px ${padX}px ${padY * 1.3}px`
+                        : `${padY}px ${padX}px`,
+                      borderRadius: numSize * 0.2,
                     }}
                   >
-                    {s.value}
-                  </div>
-                  <div
-                    style={{
-                      position: "relative",
-                      fontFamily: sans.fontFamily,
-                      fontWeight: 400,
-                      fontSize: labelSize,
-                      lineHeight: 1.2,
-                      letterSpacing: "-0.01em",
-                      color: labelColor,
-                      flex: portrait ? undefined : 1,
-                      textWrap: "balance",
-                      maxWidth: portrait ? "11em" : undefined,
-                    }}
-                  >
-                    {s.label}
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        borderRadius: "inherit",
+                        backgroundColor: bg,
+                        backgroundImage:
+                          p > 0
+                            ? `radial-gradient(90% 140% at 0% 0%, rgba(255,255,255,${0.35 * p}) 0%, transparent 60%)`
+                            : `radial-gradient(90% 140% at 0% 100%, color-mix(in oklab, ${acc} 16%, transparent) 0%, transparent 62%)`,
+                        boxShadow: `inset 0 1px 0 ${t.highlight}, inset 0 0 0 1px ${t.hairline}, 0 1px 2px ${shadow(0.6)}, 0 ${numSize * 0.12}px ${numSize * 0.3}px ${shadow(0.7)}, 0 ${numSize * 0.4}px ${numSize * 0.9}px ${shadow(0.5)}`,
+                        opacity: a,
+                        transform: `scale(${0.9 + 0.1 * a})`,
+                        transformOrigin: "0% 50%",
+                      }}
+                    />
+                    <div
+                      style={{
+                        position: "relative",
+                        fontFamily,
+                        fontWeight: 300,
+                        fontSize: numSize,
+                        lineHeight: 0.86,
+                        letterSpacing: "-0.055em",
+                        color: numColor,
+                        fontVariantNumeric: "tabular-nums",
+                        paddingBottom: numSize * 0.04,
+                      }}
+                    >
+                      {s.value}
+                    </div>
+                    <div
+                      style={{
+                        position: "relative",
+                        fontFamily,
+                        fontWeight: 400,
+                        fontSize: labelSize,
+                        lineHeight: 1.2,
+                        letterSpacing: "-0.01em",
+                        color: labelColor,
+                        flex: portrait ? undefined : 1,
+                        textWrap: "balance",
+                        maxWidth: portrait ? "11em" : undefined,
+                      }}
+                    >
+                      {s.label}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: rect.x,
-            top: rect.y,
-            width: rect.w,
-            height: rect.h,
-            borderRadius: radius,
-            overflow: "hidden",
-            boxShadow: `0 1px 2px ${shadow(0.5)}, 0 ${H * 0.02 * shrink}px ${H * 0.04 * shrink}px ${shadow(0.6)}, 0 ${H * 0.06 * shrink}px ${H * 0.12 * shrink}px ${shadow(0.6)}`,
-            filter:
-              shrinkBlur > 0.4 ? `blur(${shrinkBlur * 0.35}px)` : undefined,
-          }}
-        >
-          <Img
-            src={src}
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              transform: `scale(${imgScale})`,
-            }}
-          />
+              );
+            })}
+          </div>
           <div
             style={{
               position: "absolute",
-              inset: 0,
-              backgroundImage:
-                "radial-gradient(70% 55% at 50% 46%, rgba(6,10,14,0.46) 0%, rgba(6,10,14,0) 75%), linear-gradient(180deg, rgba(6,10,14,0.18) 0%, rgba(6,10,14,0) 40%, rgba(6,10,14,0.4) 100%)",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
+              left: rect.x,
+              top: rect.y,
+              width: rect.w,
+              height: rect.h,
               borderRadius: radius,
-              boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.12)",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              left: "50%",
-              top: "50%",
-              width: startRect.w,
-              transform: `translate(-50%, -50%) scale(${contentScale})`,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: tagSize * 0.36,
-              color: "#ffffff",
-              fontFamily: sans.fontFamily,
-              fontWeight: 400,
-              fontSize: tagSize,
-              lineHeight: 1.02,
-              letterSpacing: "-0.04em",
-              textAlign: "center",
+              overflow: "hidden",
+              boxShadow: `0 1px 2px ${shadow(0.5)}, 0 ${H * 0.02 * shrink}px ${H * 0.04 * shrink}px ${shadow(0.6)}, 0 ${H * 0.06 * shrink}px ${H * 0.12 * shrink}px ${shadow(0.6)}`,
+              filter:
+                shrinkBlur > 0.4 ? `blur(${shrinkBlur * 0.35}px)` : undefined,
             }}
           >
+            <Img
+              src={src}
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                transform: `scale(${imgScale})`,
+              }}
+            />
             <div
               style={{
-                opacity: interpolate(frame, [0, 8], [0.2, 1], CLAMP),
-                transform: `translateY(${(1 - sp(-4, CARD)) * logoSize}px)`,
+                position: "absolute",
+                inset: 0,
+                backgroundImage:
+                  "radial-gradient(70% 55% at 50% 46%, rgba(6,10,14,0.46) 0%, rgba(6,10,14,0) 75%), linear-gradient(180deg, rgba(6,10,14,0.18) 0%, rgba(6,10,14,0) 40%, rgba(6,10,14,0.4) 100%)",
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                borderRadius: radius,
+                boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.12)",
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                left: "50%",
+                top: "50%",
+                width: startRect.w,
+                transform: `translate(-50%, -50%) scale(${contentScale})`,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: tagSize * 0.36,
+                color: "#ffffff",
+                fontFamily,
+                fontWeight: 400,
+                fontSize: tagSize,
+                lineHeight: 1.02,
+                letterSpacing: "-0.04em",
+                textAlign: "center",
               }}
             >
-              <RemocnLogo fontSize={logoSize} color="#ffffff" />
-            </div>
-            <div style={{ maxWidth: portrait ? "8.6em" : "9.6em" }}>
-              <Tagline text={tagline} frame={frame} start={-3} />
+              <div
+                style={{
+                  opacity: interpolate(frame, [0, 8], [0.2, 1], CLAMP),
+                  transform: `translateY(${(1 - sp(-4, CARD)) * logoSize}px)`,
+                }}
+              >
+                {logo ?? <RemocnLogo fontSize={logoSize} color="#ffffff" />}
+              </div>
+              <div style={{ maxWidth: portrait ? "8.6em" : "9.6em" }}>
+                <Tagline
+                  text={tagline}
+                  frame={frame}
+                  start={-3}
+                  stagger={stagger}
+                />
+              </div>
             </div>
           </div>
-        </div>
-      </AbsoluteFill>
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

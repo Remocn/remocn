@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const lineReliefConfig: ComponentConfig = {
   componentName: "LineRelief",
@@ -13,16 +19,35 @@ export const lineReliefConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     word: {
       type: "text-content",
       default: "LAUNCH",
       description: "Word",
     },
+    count: {
+      type: "number",
+      default: 40,
+      min: 10,
+      max: 80,
+      step: 1,
+      description: "Lines",
+      hiddenFromList: false,
+    },
+    sweep: {
+      type: "number",
+      default: 16,
+      min: 0,
+      max: 60,
+      step: 1,
+      description: "Sweep (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ grain: true }),
     speed: {
       type: "number",
       default: 1,

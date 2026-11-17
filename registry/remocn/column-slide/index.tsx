@@ -22,6 +22,22 @@ export interface ColumnSlideProps {
   columns?: number;
   accent?: string;
   theme?: "dark" | "light";
+  /** Text color of both headlines; overrides the theme. */
+  ink?: string;
+  /** Fill of the outgoing scene and the stage; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the headlines. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Weight of the headlines. */
+  fontWeight?: number;
+  /** Frames between columns starting to slide. */
+  stagger?: number;
+  /** Size of the headlines, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   speed?: number;
 }
 
@@ -154,6 +170,8 @@ function Scene({
   size,
   color,
   scale,
+  fontFamily,
+  fontWeight,
 }: {
   W: number;
   H: number;
@@ -165,6 +183,8 @@ function Scene({
   size: number;
   color: string;
   scale: number;
+  fontFamily: string;
+  fontWeight: number;
 }) {
   const label: React.CSSProperties = {
     position: "absolute",
@@ -172,8 +192,8 @@ function Scene({
     width: W,
     top: H / 2 - 0.56 * size,
     textAlign: "center",
-    fontFamily: display,
-    fontWeight: 500,
+    fontFamily,
+    fontWeight,
     fontSize: size,
     letterSpacing: `${TRACK}em`,
     lineHeight: 1,
@@ -206,12 +226,21 @@ export function ColumnSlide({
   columns = 5,
   accent = "#3B5BFD",
   theme = "dark",
+  ink,
+  background,
+  fontFamily = display,
+  fontWeight = 500,
+  stagger = STEP,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
 }: ColumnSlideProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
   const stage = STAGES[theme];
+  const bg = background ?? stage.bg;
   const n = Math.min(7, Math.max(3, Math.round(columns)));
 
   const fsA = Math.min(128 * u, (0.8 * W) / widthEm(from));
@@ -231,7 +260,8 @@ export function ColumnSlide({
     const x0 = Math.round((k * W) / n);
     const x1 = Math.round(((k + 1) * W) / n);
     const order = k % 2 === 0 ? k / 2 : Math.floor(n / 2) + (k + 1) / 2;
-    const start = MOVE_AT + order * STEP;
+    // Capped so a long stagger can't push a column's start past the landing.
+    const start = Math.min(LAND - 1, MOVE_AT + order * stagger);
     const p = SLIDE(interpolate(t, [start, LAND], [0, 1], CLAMP));
     const up = k % 2 === 0;
     const yA = up ? -p * H : p * H;
@@ -242,7 +272,7 @@ export function ColumnSlide({
   });
 
   return (
-    <AbsoluteFill style={{ background: stage.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
       {cols.map((c) => (
         <div
           key={c.k}
@@ -261,12 +291,14 @@ export function ColumnSlide({
               H={H}
               left={-c.x0}
               top={c.yA}
-              background={stage.bg}
+              background={bg}
               overlay={lightA}
               text={from}
               size={fsA}
-              color={stage.fg}
-              scale={driftA}
+              color={ink ?? stage.fg}
+              scale={driftA * scale}
+              fontFamily={fontFamily}
+              fontWeight={fontWeight}
             />
           ) : null}
           {c.p > 0 ? (
@@ -279,8 +311,10 @@ export function ColumnSlide({
               overlay={sheenB}
               text={to}
               size={fsB}
-              color={stage.toFg}
-              scale={scaleB}
+              color={ink ?? stage.toFg}
+              scale={scaleB * scale}
+              fontFamily={fontFamily}
+              fontWeight={fontWeight}
             />
           ) : null}
           {c.moving ? (
@@ -310,7 +344,7 @@ export function ColumnSlide({
           ) : null}
         </div>
       ))}
-      <Grain opacity={theme === "light" ? 0.04 : 0.055} />
+      {grain ? <Grain opacity={theme === "light" ? 0.04 : 0.055} /> : null}
     </AbsoluteFill>
   );
 }

@@ -22,6 +22,19 @@ export interface TitleConvergeProps {
    */
   word?: string;
   accent?: string;
+  /** Outline color of the letters as they drift in; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Frame the camera settles and the last letter locks. */
+  converge?: number;
+  /** How far the camera starts zoomed in on the word. */
+  zoom?: number;
+  /** Size of the word and rules, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -155,6 +168,22 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 interface Letter {
   ch: string;
   mark: boolean;
@@ -165,13 +194,22 @@ interface Letter {
 export function TitleConverge({
   word = "remocn",
   accent = "#3B5BFD",
+  ink,
+  background,
+  converge = LOCK,
+  zoom = 5,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: TitleConvergeProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
+  const rulesAt = converge - (LOCK - RULES);
 
   // Kerned layout in em. The logo word swaps its "r" for the R mark.
   const layout = useMemo(() => {
@@ -219,15 +257,18 @@ export function TitleConverge({
         return {
           dx,
           dy,
-          end: LOCK - 30 + outer * 26 + hash(i, 3) * 6,
+          end: converge - 30 + outer * 26 + hash(i, 3) * 6,
         };
       }),
-    [letters, n],
+    [letters, n, converge],
   );
 
-  const s0 = 5;
-  const cam = interpolate(t, [0, LOCK], [0, 1], { ...CLAMP, easing: CAMERA });
-  const push = interpolate(t, [LOCK, LOCK + 70], [0, 1], CLAMP);
+  const s0 = zoom;
+  const cam = interpolate(t, [0, converge], [0, 1], {
+    ...CLAMP,
+    easing: CAMERA,
+  });
+  const push = interpolate(t, [converge, converge + 70], [0, 1], CLAMP);
   const s = Math.exp(Math.log(s0) * (1 - cam)) * (1 + push * 0.014);
   // Start framed on the middle of the word, a touch above centre.
   const focusY = -topH * 0.12 * (1 - cam);
@@ -236,7 +277,7 @@ export function TitleConverge({
   const ruleH = Math.max(1.5, 2.5 * u);
   const ruleW = layout.total * F + 0.02 * F;
   const slide = (d: number) =>
-    interpolate(t, [RULES + d, RULES + d + 26], [0, 1], {
+    interpolate(t, [rulesAt + d, rulesAt + d + 26], [0, 1], {
       ...CLAMP,
       easing: SLIDE,
     });
@@ -254,141 +295,149 @@ export function TitleConverge({
   const markScale = (MARK_H * F) / 134.26;
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <g transform={`translate(${W / 2} ${H / 2}) scale(${s})`}>
-          <g transform={`translate(0 ${-focusY})`}>
-            {letters.map((l, i) => {
-              const p = paths[i];
-              const k = DRIFT(Math.min(1, Math.max(0, t / p.end)));
-              const off = (1 - k) * F;
-              const ox = left(i) + p.dx * off;
-              const oy = baseline + p.dy * off;
-              const flood = interpolate(t, [p.end - 16, p.end + 2], [0, 1], {
-                ...CLAMP,
-                easing: Easing.bezier(0.45, 0, 0.25, 1),
-              });
-              const line = interpolate(t, [p.end, p.end + 10], [1, 0], CLAMP);
-              const glyphTop = -(l.mark ? MARK_H : heightOf(l.ch)) * F;
-              const top = glyphTop - 0.04 * F;
-              const bottom = 0.04 * F;
-              const edge = bottom + (top - bottom) * flood;
-              const shape = (props: Record<string, string | number>) =>
-                l.mark ? (
-                  <path
-                    d={REMOCN_R_PATH}
-                    transform={`translate(0 ${-MARK_H * F}) scale(${markScale})`}
-                    {...props}
-                    strokeWidth={
-                      props.strokeWidth
-                        ? Number(props.strokeWidth) / markScale
-                        : undefined
-                    }
-                  />
-                ) : (
-                  <text
-                    x={0}
-                    y={0}
-                    fontFamily={display}
-                    fontWeight={layout.weight}
-                    fontSize={F}
-                    style={{ fontKerning: "none" }}
-                    {...props}
-                  >
-                    {l.ch}
-                  </text>
-                );
-              return (
-                <g key={`${i}-${l.ch}`} transform={`translate(${ox} ${oy})`}>
-                  <defs>
-                    <linearGradient
-                      id={`${uid}-f${i}`}
-                      gradientUnits="userSpaceOnUse"
-                      x1={-gx - ox}
-                      y1={-gy - oy}
-                      x2={gx - ox}
-                      y2={gy - oy}
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? "transparent" : (background ?? c.bg),
+        overflow: "hidden",
+      }}
+    >
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <g transform={`translate(${W / 2} ${H / 2}) scale(${s})`}>
+            <g transform={`translate(0 ${-focusY})`}>
+              {letters.map((l, i) => {
+                const p = paths[i];
+                const k = DRIFT(Math.min(1, Math.max(0, t / p.end)));
+                const off = (1 - k) * F;
+                const ox = left(i) + p.dx * off;
+                const oy = baseline + p.dy * off;
+                const flood = interpolate(t, [p.end - 16, p.end + 2], [0, 1], {
+                  ...CLAMP,
+                  easing: Easing.bezier(0.45, 0, 0.25, 1),
+                });
+                const line = interpolate(t, [p.end, p.end + 10], [1, 0], CLAMP);
+                const glyphTop = -(l.mark ? MARK_H : heightOf(l.ch)) * F;
+                const top = glyphTop - 0.04 * F;
+                const bottom = 0.04 * F;
+                const edge = bottom + (top - bottom) * flood;
+                const shape = (props: Record<string, string | number>) =>
+                  l.mark ? (
+                    <path
+                      d={REMOCN_R_PATH}
+                      transform={`translate(0 ${-MARK_H * F}) scale(${markScale})`}
+                      {...props}
+                      strokeWidth={
+                        props.strokeWidth
+                          ? Number(props.strokeWidth) / markScale
+                          : undefined
+                      }
+                    />
+                  ) : (
+                    <text
+                      x={0}
+                      y={0}
+                      fontFamily={display}
+                      fontWeight={layout.weight}
+                      fontSize={F}
+                      style={{ fontKerning: "none" }}
+                      {...props}
                     >
-                      {c.fill.map((col, j) => (
-                        <stop
-                          key={col}
-                          offset={j / (c.fill.length - 1)}
-                          stopColor={col}
-                        />
-                      ))}
-                    </linearGradient>
-                    <clipPath id={`${uid}-${i}`}>
-                      <rect
-                        x={-0.2 * F}
-                        y={edge}
-                        width={F * 1.6}
-                        height={Math.max(0, bottom - edge)}
-                      />
-                    </clipPath>
-                  </defs>
-                  {line > 0 ? (
-                    <>
-                      {/* Outline of the glyph's union: the variable font's
-                          overlapping contours would show inside a plain stroke. */}
-                      <mask
-                        id={`${uid}-m${i}`}
-                        maskUnits="userSpaceOnUse"
-                        x={-F}
-                        y={-2 * F}
-                        width={3 * F}
-                        height={3 * F}
+                      {l.ch}
+                    </text>
+                  );
+                return (
+                  <g key={`${i}-${l.ch}`} transform={`translate(${ox} ${oy})`}>
+                    <defs>
+                      <linearGradient
+                        id={`${uid}-f${i}`}
+                        gradientUnits="userSpaceOnUse"
+                        x1={-gx - ox}
+                        y1={-gy - oy}
+                        x2={gx - ox}
+                        y2={gy - oy}
                       >
-                        {shape({
-                          fill: "black",
-                          stroke: "white",
-                          strokeWidth: (3 * u) / s,
-                          strokeLinejoin: "miter",
-                          paintOrder: "stroke",
-                        })}
-                      </mask>
-                      <rect
-                        x={-F}
-                        y={-2 * F}
-                        width={3 * F}
-                        height={3 * F}
-                        fill={c.fg}
-                        opacity={line * 0.9}
-                        mask={`url(#${uid}-m${i})`}
-                      />
-                    </>
-                  ) : null}
-                  {flood > 0 ? (
-                    <g clipPath={`url(#${uid}-${i})`}>
-                      {shape({ fill: `url(#${uid}-f${i})` })}
-                    </g>
-                  ) : null}
-                </g>
-              );
-            })}
-            <rect
-              x={-ruleW / 2 - (1 - topIn) * travel}
-              y={-topH + baseline - ruleGap - ruleH / s}
-              width={ruleW}
-              height={ruleH / s}
-              fill={accent}
-            />
-            <rect
-              x={-ruleW / 2 + (1 - bottomIn) * travel}
-              y={baseline + ruleGap}
-              width={ruleW}
-              height={ruleH / s}
-              fill={accent}
-            />
+                        {c.fill.map((col, j) => (
+                          <stop
+                            key={col}
+                            offset={j / (c.fill.length - 1)}
+                            stopColor={col}
+                          />
+                        ))}
+                      </linearGradient>
+                      <clipPath id={`${uid}-${i}`}>
+                        <rect
+                          x={-0.2 * F}
+                          y={edge}
+                          width={F * 1.6}
+                          height={Math.max(0, bottom - edge)}
+                        />
+                      </clipPath>
+                    </defs>
+                    {line > 0 ? (
+                      <>
+                        {/* Outline of the glyph's union: the variable font's
+                          overlapping contours would show inside a plain stroke. */}
+                        <mask
+                          id={`${uid}-m${i}`}
+                          maskUnits="userSpaceOnUse"
+                          x={-F}
+                          y={-2 * F}
+                          width={3 * F}
+                          height={3 * F}
+                        >
+                          {shape({
+                            fill: "black",
+                            stroke: "white",
+                            strokeWidth: (3 * u) / s,
+                            strokeLinejoin: "miter",
+                            paintOrder: "stroke",
+                          })}
+                        </mask>
+                        <rect
+                          x={-F}
+                          y={-2 * F}
+                          width={3 * F}
+                          height={3 * F}
+                          fill={fg}
+                          opacity={line * 0.9}
+                          mask={`url(#${uid}-m${i})`}
+                        />
+                      </>
+                    ) : null}
+                    {flood > 0 ? (
+                      <g clipPath={`url(#${uid}-${i})`}>
+                        {shape({ fill: `url(#${uid}-f${i})` })}
+                      </g>
+                    ) : null}
+                  </g>
+                );
+              })}
+              <rect
+                x={-ruleW / 2 - (1 - topIn) * travel}
+                y={-topH + baseline - ruleGap - ruleH / s}
+                width={ruleW}
+                height={ruleH / s}
+                fill={accent}
+              />
+              <rect
+                x={-ruleW / 2 + (1 - bottomIn) * travel}
+                y={baseline + ruleGap}
+                width={ruleW}
+                height={ruleH / s}
+                fill={accent}
+              />
+            </g>
           </g>
-        </g>
-      </svg>
-      <Grain opacity={c.grain} />
+        </svg>
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const caretDollyConfig: ComponentConfig = {
   componentName: "CaretDolly",
@@ -33,6 +40,32 @@ export const caretDollyConfig: ComponentConfig = {
       type: "text-content",
       default: "Remocn 1",
       description: "Model label",
+    },
+    zoom: {
+      type: "number",
+      default: 1,
+      min: 0.5,
+      max: 1.5,
+      step: 0.05,
+      description: "Close-up zoom",
+      hiddenFromList: false,
+    },
+    motionBlur: {
+      type: "boolean",
+      default: true,
+      description: "Motion blur",
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ground: groundControl(),
+    ...sceneControls({ font: "Instrument Sans" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
+      hiddenFromList: false,
     },
   },
   durationInFrames: 150,

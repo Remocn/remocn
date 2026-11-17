@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont as loadBricolage } from "@remotion/google-fonts/BricolageGrotesque";
+import type React from "react";
 import { useEffect, useId, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -27,8 +28,21 @@ export interface LeanCountProps {
   label?: string;
   lean?: number;
   steps?: number;
+  /** Frames between one surge and the next. */
+  beat?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Weight of the figure. */
+  fontWeight?: number;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -73,7 +87,7 @@ interface Metrics {
   baseline: number;
 }
 
-function measure(chars: string[]): Metrics {
+function measure(chars: string[], fontFamily: string, weight: number): Metrics {
   const probe = document.createElement("span");
   Object.assign(probe.style, {
     position: "absolute",
@@ -81,8 +95,8 @@ function measure(chars: string[]): Metrics {
     top: "0",
     visibility: "hidden",
     whiteSpace: "pre",
-    fontFamily: `"${bricolage.fontFamily}"`,
-    fontWeight: "500",
+    fontFamily: `"${fontFamily}"`,
+    fontWeight: String(weight),
     fontSize: "100px",
     lineHeight: "1",
     fontFeatureSettings: '"tnum" 1',
@@ -98,7 +112,7 @@ function measure(chars: string[]): Metrics {
   let cap = 0.72;
   let baseline = 0.8;
   if (ctx) {
-    ctx.font = `500 100px "${bricolage.fontFamily}"`;
+    ctx.font = `${weight} 100px "${fontFamily}"`;
     const fm = ctx.measureText("0123456789");
     cap = fm.actualBoundingBoxAscent / 100;
     const asc = fm.fontBoundingBoxAscent / 100;
@@ -108,8 +122,8 @@ function measure(chars: string[]): Metrics {
   return { adv, cap, baseline };
 }
 
-function useMetrics(chars: string[]) {
-  const key = chars.join("");
+function useMetrics(chars: string[], fontFamily: string, fontWeight: number) {
+  const key = `${chars.join("")}\u0001${fontFamily}\u0001${fontWeight}`;
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("lean-count: measuring"));
   const released = useRef(false);
@@ -117,13 +131,20 @@ function useMetrics(chars: string[]) {
     let live = true;
     Promise.all([
       bricolage.waitUntilDone(),
-      document.fonts.load(`500 100px "${bricolage.fontFamily}"`),
-      document.fonts.load(`400 100px "${bricolage.fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measure(Array.from(key)) });
+        setState({
+          key,
+          m: measure(
+            Array.from(key.split("\u0001")[0]),
+            fontFamily,
+            fontWeight,
+          ),
+        });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -132,7 +153,7 @@ function useMetrics(chars: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily, fontWeight]);
   return state && state.key === key ? state.m : null;
 }
 
@@ -167,6 +188,22 @@ function format(v: number, decimals: number) {
   });
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function LeanCount({
   value = 3.2,
   from = 1,
@@ -176,15 +213,23 @@ export function LeanCount({
   label = "Faster renders on the laptop you already own.",
   lean = 14,
   steps = 3,
+  beat = SURGE_GAP,
   accent,
+  ink,
   background,
+  fontFamily = bricolage.fontFamily,
+  fontWeight = 500,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: LeanCountProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
   const spot = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const n = Math.max(1, Math.round(steps));
   const chars = Array.from(
     new Set(
@@ -193,7 +238,7 @@ export function LeanCount({
       ),
     ),
   ).sort();
-  const m = useMetrics(chars);
+  const m = useMetrics(chars, fontFamily, fontWeight);
 
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
@@ -204,7 +249,7 @@ export function LeanCount({
     );
   }
 
-  const surgeAt = (k: number) => FIRST_SURGE + k * SURGE_GAP;
+  const surgeAt = (k: number) => FIRST_SURGE + k * beat;
   let countK = 0;
   let slantK = 0;
   for (let k = 0; k < n; k++) {
@@ -257,108 +302,110 @@ export function LeanCount({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: baseY + Math.max(1.5, F * 0.012),
-          width: W,
-          height: Math.max(1.5, F * 0.008),
-          background: c.rule,
-          transformOrigin: "100% 50%",
-          transform: `scaleX(${ruleP.toFixed(4)})`,
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left,
-          top: baseY - m.baseline * F,
-          width: runW + F,
-          height: F * 1.3,
-          transformOrigin: `0px ${(m.baseline * F).toFixed(2)}px`,
-          transform: `skewX(${(-slant).toFixed(3)}deg)`,
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            clipPath: `inset(${(-F * 0.3).toFixed(1)}px ${-F}px ${((1.3 - m.baseline - 0.02) * F).toFixed(1)}px ${-F}px)`,
+            left: 0,
+            top: baseY + Math.max(1.5, F * 0.012),
+            width: W,
+            height: Math.max(1.5, F * 0.008),
+            background: c.rule,
+            transformOrigin: "100% 50%",
+            transform: `scaleX(${ruleP.toFixed(4)})`,
           }}
-        >
-          {slots.map(({ ch, i, gx }) => {
-            const p = interpolate(
-              t,
-              [RISE_AT + i * RISE_GAP, RISE_AT + i * RISE_GAP + RISE_LEN],
-              [0, 1],
-              { ...CLAMP, easing: EASE_OUT },
-            );
-            return (
-              <span
-                key={`g${i}`}
-                style={{
-                  position: "absolute",
-                  left: gx * F,
-                  top: 0,
-                  height: F * 1.3,
-                  lineHeight: `${F}px`,
-                  whiteSpace: "pre",
-                  fontFamily: bricolage.fontFamily,
-                  fontWeight: 500,
-                  fontSize: F,
-                  fontFeatureSettings: '"tnum" 1',
-                  color: i >= suffixFrom ? spot : c.ink,
-                  transform: `translateY(${((1 - p) * F * 0.95).toFixed(2)}px)`,
-                }}
-              >
-                {ch}
-              </span>
-            );
-          })}
-        </div>
-      </div>
-      {label ? (
+        />
         <div
           style={{
             position: "absolute",
-            left: M,
-            top: M,
-            width: labelW,
-            fontFamily: bricolage.fontFamily,
-            fontWeight: 400,
-            fontSize: labelSize,
-            letterSpacing: "-0.02em",
-            lineHeight: 1.1,
-            color: c.ink,
-            textWrap: "balance",
+            left,
+            top: baseY - m.baseline * F,
+            width: runW + F,
+            height: F * 1.3,
+            transformOrigin: `0px ${(m.baseline * F).toFixed(2)}px`,
+            transform: `skewX(${(-slant).toFixed(3)}deg)`,
           }}
         >
-          {labelWords.map((w, i) => {
-            const p = interpolate(
-              t,
-              [LABEL_AT + i * 3, LABEL_AT + i * 3 + 16],
-              [0, 1],
-              { ...CLAMP, easing: EASE_OUT },
-            );
-            return (
-              <span key={`${w}-${i}`}>
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              clipPath: `inset(${(-F * 0.3).toFixed(1)}px ${-F}px ${((1.3 - m.baseline - 0.02) * F).toFixed(1)}px ${-F}px)`,
+            }}
+          >
+            {slots.map(({ ch, i, gx }) => {
+              const p = interpolate(
+                t,
+                [RISE_AT + i * RISE_GAP, RISE_AT + i * RISE_GAP + RISE_LEN],
+                [0, 1],
+                { ...CLAMP, easing: EASE_OUT },
+              );
+              return (
                 <span
+                  key={`g${i}`}
                   style={{
-                    display: "inline-block",
-                    opacity: p,
-                    transform: `translateY(${((1 - p) * labelSize * 0.6).toFixed(2)}px)`,
+                    position: "absolute",
+                    left: gx * F,
+                    top: 0,
+                    height: F * 1.3,
+                    lineHeight: `${F}px`,
+                    whiteSpace: "pre",
+                    fontFamily,
+                    fontWeight,
+                    fontSize: F,
+                    fontFeatureSettings: '"tnum" 1',
+                    color: i >= suffixFrom ? spot : fg,
+                    transform: `translateY(${((1 - p) * F * 0.95).toFixed(2)}px)`,
                   }}
                 >
-                  {w}
+                  {ch}
                 </span>
-                {i < labelWords.length - 1 ? " " : ""}
-              </span>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      ) : null}
-      {transparent ? null : <Grain opacity={c.grain} />}
+        {label ? (
+          <div
+            style={{
+              position: "absolute",
+              left: M,
+              top: M,
+              width: labelW,
+              fontFamily,
+              fontWeight: 400,
+              fontSize: labelSize,
+              letterSpacing: "-0.02em",
+              lineHeight: 1.1,
+              color: fg,
+              textWrap: "balance",
+            }}
+          >
+            {labelWords.map((w, i) => {
+              const p = interpolate(
+                t,
+                [LABEL_AT + i * 3, LABEL_AT + i * 3 + 16],
+                [0, 1],
+                { ...CLAMP, easing: EASE_OUT },
+              );
+              return (
+                <span key={`${w}-${i}`}>
+                  <span
+                    style={{
+                      display: "inline-block",
+                      opacity: p,
+                      transform: `translateY(${((1 - p) * labelSize * 0.6).toFixed(2)}px)`,
+                    }}
+                  >
+                    {w}
+                  </span>
+                  {i < labelWords.length - 1 ? " " : ""}
+                </span>
+              );
+            })}
+          </div>
+        ) : null}
+      </ScaleLayer>
+      {transparent || !grain ? null : <Grain opacity={c.grain} />}
     </AbsoluteFill>
   );
 }

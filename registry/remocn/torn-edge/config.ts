@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const tornEdgeConfig: ComponentConfig = {
   componentName: "TornEdge",
@@ -13,16 +19,35 @@ export const tornEdgeConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     title: {
       type: "text-content",
       default: "Make it yours.",
       description: "Title",
     },
+    tear: {
+      type: "number",
+      default: 34,
+      min: 10,
+      max: 80,
+      step: 1,
+      description: "Tear (frames)",
+      hiddenFromList: false,
+    },
+    spread: {
+      type: "number",
+      default: 0.205,
+      min: 0.1,
+      max: 0.5,
+      step: 0.005,
+      description: "Spread",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Bricolage Grotesque", grain: true }),
     speed: {
       type: "number",
       default: 1,

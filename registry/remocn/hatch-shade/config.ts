@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const hatchShadeConfig: ComponentConfig = {
   componentName: "HatchShade",
@@ -13,11 +19,6 @@ export const hatchShadeConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     value: {
       type: "text-content",
       default: "24",
@@ -28,6 +29,30 @@ export const hatchShadeConfig: ComponentConfig = {
       default: "new components, drawn for launch week",
       description: "Caption",
     },
+    fontWeight: {
+      type: "number",
+      default: 500,
+      min: 300,
+      max: 900,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    density: {
+      type: "number",
+      default: 1,
+      min: 0.5,
+      max: 2,
+      step: 0.1,
+      description: "Hatch density",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Fraunces", grain: true }),
     speed: {
       type: "number",
       default: 1,

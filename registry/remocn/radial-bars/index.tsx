@@ -2,6 +2,7 @@
 
 import { loadFont as loadGeist } from "@remotion/google-fonts/Geist";
 import { loadFont as loadGeistMono } from "@remotion/google-fonts/GeistMono";
+import type React from "react";
 import { useId } from "react";
 import {
   AbsoluteFill,
@@ -31,6 +32,22 @@ export interface RadialBarsProps {
   label?: string;
   ticks?: string[];
   accent?: string;
+  /** Color of the center figure; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the figure and caption. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Frames for the bars to sweep in around the dial. */
+  sweep?: number;
+  /** Number of bars in the highlighted group. */
+  group?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the dial and copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -155,6 +172,22 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function RadialBars({
   values = DEFAULT_VALUES,
   highlight,
@@ -162,13 +195,24 @@ export function RadialBars({
   label = "renders in the peak hour",
   ticks = ["00:00", "06:00", "12:00", "18:00"],
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  sweep = 54,
+  group = GROUP,
+  grain = true,
+  scale: size = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: RadialBarsProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const fill =
+    background === "transparent" ? "transparent" : (background ?? p.bg);
   const list = values.length ? values : DEFAULT_VALUES;
   const n = list.length;
   const maxV = Math.max(...list, 0.0001);
@@ -187,7 +231,7 @@ export function RadialBars({
       }
     }
   }
-  const inGroup = (i: number) => circDist(i, center, n) <= (GROUP - 1) / 2;
+  const inGroup = (i: number) => circDist(i, center, n) <= (group - 1) / 2;
 
   const cx = width / 2;
   const cy = height / 2;
@@ -197,7 +241,7 @@ export function RadialBars({
   const Rmax = R0 + Lmax;
   const bw = Math.max(2, ((TAU * R0) / n) * 0.36);
 
-  const SWEEP = 54;
+  const SWEEP = sweep;
   const GROW = 22;
   const START = 6;
   const step = n > 1 ? SWEEP / (n - 1) : 0;
@@ -240,8 +284,8 @@ export function RadialBars({
   });
 
   const ang = (i: number) => (i / n) * TAU;
-  const groupA0 = ang(center - (GROUP - 1) / 2) - TAU / n / 2;
-  const groupA1 = ang(center + (GROUP - 1) / 2) + TAU / n / 2;
+  const groupA0 = ang(center - (group - 1) / 2) - TAU / n / 2;
+  const groupA1 = ang(center + (group - 1) / 2) + TAU / n / 2;
   let groupMax = 0;
   for (let i = 0; i < n; i++)
     if (inGroup(i)) groupMax = Math.max(groupMax, list[i]);
@@ -273,201 +317,211 @@ export function RadialBars({
   ].join(", ");
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{ transform: `scale(${scale})`, transformOrigin: "50% 50%" }}
-      >
-        <AbsoluteFill style={{ background: ground }} />
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0, opacity: stage }}
-          aria-hidden
+    <AbsoluteFill style={{ background: fill, overflow: "hidden" }}>
+      <ScaleLayer scale={size}>
+        <AbsoluteFill
+          style={{ transform: `scale(${scale})`, transformOrigin: "50% 50%" }}
         >
-          <defs>
-            <radialGradient
-              id={gid}
-              gradientUnits="userSpaceOnUse"
-              cx={cx}
-              cy={cy}
-              r={Rmax}
-            >
-              <stop offset={R0 / Rmax} stopColor={p.beam[0]} />
-              <stop offset={(R0 + Lmax * 0.55) / Rmax} stopColor={p.beam[1]} />
-              <stop offset={1} stopColor={p.beam[2]} />
-            </radialGradient>
-          </defs>
-          <g transform={`rotate(${spin} ${cx} ${cy})`}>
-            <circle
-              cx={cx}
-              cy={cy}
-              r={R0 - 10 * u}
-              fill="none"
-              stroke={p.hair}
-              strokeWidth={Math.max(1, u)}
-              strokeDasharray={`${circumference * base} ${circumference}`}
-              transform={`rotate(-90 ${cx} ${cy})`}
-            />
-            <circle
-              cx={cx}
-              cy={cy}
-              r={Rmax + 4 * u}
-              fill="none"
-              stroke={p.hair}
-              strokeWidth={Math.max(1, u)}
-              strokeDasharray={`${2 * u} ${7 * u}`}
-              opacity={0.7 * tickIn * (1 - 0.5 * focus)}
-            />
-            {list.map((v, i) => {
-              const s = START + i * step;
-              const k = interpolate(t, [s, s + GROW], [0, 1], {
-                ...CLAMP,
-                easing: EASE_GROW,
-              });
-              const vis = interpolate(t, [s - 2, s + 3], [0, 1], CLAMP);
-              if (vis <= 0) return null;
-              const hl = inGroup(i);
-              const len =
-                Lmin + (Lmax - Lmin) * (Math.max(0, v) / maxV) ** 1.5 * k;
-              const a = ang(i);
-              const p0 = pt(R0, a);
-              const p1 = pt(R0 + len, a);
-              const line = {
-                x1: p0.x,
-                y1: p0.y,
-                x2: p1.x,
-                y2: p1.y,
-                strokeWidth: bw,
-                strokeLinecap: "round" as const,
-              };
-              if (!hl) {
-                return (
-                  <line
-                    key={`b${i}`}
-                    {...line}
-                    stroke={interpolateColors(focus, [0, 1], [p.bar, p.dimBar])}
-                    opacity={vis}
-                  />
-                );
-              }
-              return (
-                <g key={`b${i}`} opacity={vis}>
-                  {focus < 1 ? (
-                    <line {...line} stroke={p.bar} opacity={1 - focus} />
-                  ) : null}
-                  {focus > 0 ? (
-                    <line {...line} stroke={`url(#${gid})`} opacity={focus} />
-                  ) : null}
-                </g>
-              );
-            })}
-            {bracket > 0 ? (
-              <path
-                d={`M ${bs.x} ${bs.y} A ${rBracket} ${rBracket} 0 0 1 ${be.x} ${be.y}`}
+          <AbsoluteFill style={{ background: ground }} />
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0, opacity: stage }}
+            aria-hidden
+          >
+            <defs>
+              <radialGradient
+                id={gid}
+                gradientUnits="userSpaceOnUse"
+                cx={cx}
+                cy={cy}
+                r={Rmax}
+              >
+                <stop offset={R0 / Rmax} stopColor={p.beam[0]} />
+                <stop
+                  offset={(R0 + Lmax * 0.55) / Rmax}
+                  stopColor={p.beam[1]}
+                />
+                <stop offset={1} stopColor={p.beam[2]} />
+              </radialGradient>
+            </defs>
+            <g transform={`rotate(${spin} ${cx} ${cy})`}>
+              <circle
+                cx={cx}
+                cy={cy}
+                r={R0 - 10 * u}
                 fill="none"
-                stroke={p.bracket}
-                strokeWidth={2 * u}
-                strokeLinecap="round"
+                stroke={p.hair}
+                strokeWidth={Math.max(1, u)}
+                strokeDasharray={`${circumference * base} ${circumference}`}
+                transform={`rotate(-90 ${cx} ${cy})`}
               />
-            ) : null}
-          </g>
-        </svg>
+              <circle
+                cx={cx}
+                cy={cy}
+                r={Rmax + 4 * u}
+                fill="none"
+                stroke={p.hair}
+                strokeWidth={Math.max(1, u)}
+                strokeDasharray={`${2 * u} ${7 * u}`}
+                opacity={0.7 * tickIn * (1 - 0.5 * focus)}
+              />
+              {list.map((v, i) => {
+                const s = START + i * step;
+                const k = interpolate(t, [s, s + GROW], [0, 1], {
+                  ...CLAMP,
+                  easing: EASE_GROW,
+                });
+                const vis = interpolate(t, [s - 2, s + 3], [0, 1], CLAMP);
+                if (vis <= 0) return null;
+                const hl = inGroup(i);
+                const len =
+                  Lmin + (Lmax - Lmin) * (Math.max(0, v) / maxV) ** 1.5 * k;
+                const a = ang(i);
+                const p0 = pt(R0, a);
+                const p1 = pt(R0 + len, a);
+                const line = {
+                  x1: p0.x,
+                  y1: p0.y,
+                  x2: p1.x,
+                  y2: p1.y,
+                  strokeWidth: bw,
+                  strokeLinecap: "round" as const,
+                };
+                if (!hl) {
+                  return (
+                    <line
+                      key={`b${i}`}
+                      {...line}
+                      stroke={interpolateColors(
+                        focus,
+                        [0, 1],
+                        [p.bar, p.dimBar],
+                      )}
+                      opacity={vis}
+                    />
+                  );
+                }
+                return (
+                  <g key={`b${i}`} opacity={vis}>
+                    {focus < 1 ? (
+                      <line {...line} stroke={p.bar} opacity={1 - focus} />
+                    ) : null}
+                    {focus > 0 ? (
+                      <line {...line} stroke={`url(#${gid})`} opacity={focus} />
+                    ) : null}
+                  </g>
+                );
+              })}
+              {bracket > 0 ? (
+                <path
+                  d={`M ${bs.x} ${bs.y} A ${rBracket} ${rBracket} 0 0 1 ${be.x} ${be.y}`}
+                  fill="none"
+                  stroke={p.bracket}
+                  strokeWidth={2 * u}
+                  strokeLinecap="round"
+                />
+              ) : null}
+            </g>
+          </svg>
 
-        {ticks.map((tk, i) => {
-          const a = (i / ticks.length) * TAU + (spin * Math.PI) / 180;
-          const q = pt(Rmax + 24 * u, a);
-          const sx = Math.sin(a);
-          const sy = -Math.cos(a);
-          return (
+          {ticks.map((tk, i) => {
+            const a = (i / ticks.length) * TAU + (spin * Math.PI) / 180;
+            const q = pt(Rmax + 24 * u, a);
+            const sx = Math.sin(a);
+            const sy = -Math.cos(a);
+            return (
+              <div
+                key={tk}
+                style={{
+                  position: "absolute",
+                  left: q.x,
+                  top: q.y,
+                  transform: `translate(${-50 + sx * 50}%, ${-50 + sy * 50}%)`,
+                  fontFamily: mono,
+                  fontWeight: 400,
+                  fontSize: 14 * u,
+                  letterSpacing: "0.02em",
+                  color: p.muted,
+                  fontVariantNumeric: "tabular-nums",
+                  whiteSpace: "nowrap",
+                  opacity: tickIn * stage * (1 - 0.35 * focus),
+                }}
+              >
+                {tk}
+              </div>
+            );
+          })}
+
+          <AbsoluteFill
+            style={{
+              alignItems: "center",
+              justifyContent: "center",
+              flexDirection: "column",
+            }}
+          >
             <div
-              key={tk}
               style={{
-                position: "absolute",
-                left: q.x,
-                top: q.y,
-                transform: `translate(${-50 + sx * 50}%, ${-50 + sy * 50}%)`,
-                fontFamily: mono,
+                fontFamily,
                 fontWeight: 400,
-                fontSize: 14 * u,
-                letterSpacing: "0.02em",
-                color: p.muted,
+                fontSize: valueSize,
+                lineHeight: 0.9,
+                letterSpacing: "-0.042em",
+                color: fg,
                 fontVariantNumeric: "tabular-nums",
                 whiteSpace: "nowrap",
-                opacity: tickIn * stage * (1 - 0.35 * focus),
+                opacity: land,
+                filter:
+                  land < 0.99 ? `blur(${(1 - land) * 8 * u}px)` : undefined,
+                transform: `translateY(${(1 - land) * 18 * u}px) scale(${1.04 - 0.04 * land})`,
+                marginTop: 12 * u,
               }}
             >
-              {tk}
+              {formatCount(value, count)}
             </div>
-          );
-        })}
-
-        <AbsoluteFill
-          style={{
-            alignItems: "center",
-            justifyContent: "center",
-            flexDirection: "column",
-          }}
-        >
-          <div
-            style={{
-              fontFamily: sans,
-              fontWeight: 400,
-              fontSize: valueSize,
-              lineHeight: 0.9,
-              letterSpacing: "-0.042em",
-              color: p.fg,
-              fontVariantNumeric: "tabular-nums",
-              whiteSpace: "nowrap",
-              opacity: land,
-              filter: land < 0.99 ? `blur(${(1 - land) * 8 * u}px)` : undefined,
-              transform: `translateY(${(1 - land) * 18 * u}px) scale(${1.04 - 0.04 * land})`,
-              marginTop: 12 * u,
-            }}
-          >
-            {formatCount(value, count)}
-          </div>
-          <div
-            style={{
-              marginTop: 16 * u,
-              display: "flex",
-              alignItems: "center",
-              gap: 9 * u,
-              opacity: labIn,
-              transform: `translateY(${(1 - labIn) * 8 * u}px)`,
-            }}
-          >
-            <span
+            <div
               style={{
-                width: 9 * u,
-                height: 9 * u,
-                borderRadius: "50%",
-                background: accent,
-                flexShrink: 0,
-              }}
-            />
-            <span
-              style={{
-                fontFamily: sans,
-                fontWeight: 400,
-                fontSize: 19 * u,
-                letterSpacing: "-0.01em",
-                color: p.muted,
-                whiteSpace: "nowrap",
+                marginTop: 16 * u,
+                display: "flex",
+                alignItems: "center",
+                gap: 9 * u,
+                opacity: labIn,
+                transform: `translateY(${(1 - labIn) * 8 * u}px)`,
               }}
             >
-              {label}
-            </span>
-          </div>
+              <span
+                style={{
+                  width: 9 * u,
+                  height: 9 * u,
+                  borderRadius: "50%",
+                  background: accent,
+                  flexShrink: 0,
+                }}
+              />
+              <span
+                style={{
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: 19 * u,
+                  letterSpacing: "-0.01em",
+                  color: p.muted,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {label}
+              </span>
+            </div>
+          </AbsoluteFill>
         </AbsoluteFill>
-      </AbsoluteFill>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${p.bg} 100%)`,
+          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${fill} 100%)`,
           opacity: 0.6,
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

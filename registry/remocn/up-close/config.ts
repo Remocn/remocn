@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const upCloseConfig: ComponentConfig = {
   componentName: "UpClose",
@@ -23,6 +30,11 @@ export const upCloseConfig: ComponentConfig = {
       default: "From here, it’s your launch.",
       description: "Wide",
     },
+    readoutLabel: {
+      type: "text-content",
+      default: "Zoom",
+      description: "Readout label",
+    },
     zoom: {
       type: "number",
       default: 3,
@@ -32,6 +44,18 @@ export const upCloseConfig: ComponentConfig = {
       description: "Zoom",
       hiddenFromList: false,
     },
+    pullAt: {
+      type: "number",
+      default: 44,
+      min: 10,
+      max: 90,
+      step: 1,
+      description: "Pull back at (frame)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ground: groundControl(),
+    ...sceneControls({ font: "Onest" }),
     speed: {
       type: "number",
       default: 1,

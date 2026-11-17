@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const twoHitConfig: ComponentConfig = {
   componentName: "TwoHit",
@@ -32,6 +38,26 @@ export const twoHitConfig: ComponentConfig = {
       description: "Hit at",
       hiddenFromList: false,
     },
+    hitGap: {
+      type: "number",
+      default: 24,
+      min: 6,
+      max: 60,
+      step: 1,
+      description: "Hit gap (frames)",
+      hiddenFromList: false,
+    },
+    fontWeight: {
+      type: "number",
+      default: 400,
+      min: 100,
+      max: 900,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Urbanist" }),
     speed: {
       type: "number",
       default: 1,

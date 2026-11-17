@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const inkBloomConfig: ComponentConfig = {
   componentName: "InkBloom",
@@ -12,11 +18,6 @@ export const inkBloomConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     name: {
       type: "text-content",
@@ -32,6 +33,30 @@ export const inkBloomConfig: ComponentConfig = {
       description: "Seed",
       hiddenFromList: false,
     },
+    resolveAt: {
+      type: "number",
+      default: 100,
+      min: 40,
+      max: 150,
+      step: 1,
+      description: "Resolve (frame)",
+      hiddenFromList: false,
+    },
+    sink: {
+      type: "number",
+      default: 0.33,
+      min: 0.1,
+      max: 0.6,
+      step: 0.01,
+      description: "Sink depth",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Fraunces", grain: true }),
     speed: {
       type: "number",
       default: 1,

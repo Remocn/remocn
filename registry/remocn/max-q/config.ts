@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const maxQConfig: ComponentConfig = {
   componentName: "MaxQ",
@@ -12,11 +18,6 @@ export const maxQConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     speedLabel: {
       type: "text-content",
@@ -62,6 +63,39 @@ export const maxQConfig: ComponentConfig = {
       description: "Velocity",
       hiddenFromList: false,
     },
+    altitude: {
+      type: "number",
+      default: 14.2,
+      min: 0,
+      max: 100,
+      step: 0.1,
+      description: "Altitude",
+      hiddenFromList: false,
+    },
+    clockStart: {
+      type: "number",
+      default: 38,
+      min: 0,
+      max: 3540,
+      step: 1,
+      description: "Clock start (s)",
+      hiddenFromList: false,
+    },
+    bandHold: {
+      type: "number",
+      default: 22,
+      min: 0,
+      max: 60,
+      step: 1,
+      description: "Banner hold (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Barlow Condensed" }),
   },
   durationInFrames: 150,
   fps: FPS,

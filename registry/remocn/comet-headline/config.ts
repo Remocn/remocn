@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const cometHeadlineConfig: ComponentConfig = {
   componentName: "CometHeadline",
@@ -38,6 +44,25 @@ export const cometHeadlineConfig: ComponentConfig = {
       default: "Reveals, feature heads and stats as drop-in Remotion scenes.",
       description: "Subhead",
     },
+    fontWeight: {
+      type: "number",
+      default: 500,
+      min: 200,
+      max: 800,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    flight: {
+      type: "number",
+      default: 26,
+      min: 8,
+      max: 60,
+      step: 1,
+      description: "Flight (frames)",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Sora", grain: true }),
     speed: {
       type: "number",
       default: 1,

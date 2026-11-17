@@ -63,10 +63,50 @@ A full-frame wall of up-chevrons races upward in staggered columns, then column 
       description: "Serif italic line under the figure.",
     },
     {
+      name: "columns",
+      type: "number",
+      default: "13",
+      description: "Columns of chevrons in the racing wall.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color of the chevron gradient.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Bricolage Grotesque\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "500",
+      description: "Weight of the figure.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

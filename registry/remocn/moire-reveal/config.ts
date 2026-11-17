@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const moireRevealConfig: ComponentConfig = {
   componentName: "MoireReveal",
@@ -12,11 +18,6 @@ export const moireRevealConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     value: {
       type: "text-content",
@@ -37,6 +38,30 @@ export const moireRevealConfig: ComponentConfig = {
       },
       description: "Shape",
     },
+    lineSpacing: {
+      type: "number",
+      default: 7,
+      min: 4,
+      max: 14,
+      step: 0.5,
+      description: "Line spacing",
+      hiddenFromList: false,
+    },
+    angle: {
+      type: "number",
+      default: 11,
+      min: 0,
+      max: 45,
+      step: 1,
+      description: "Start angle",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Geist", grain: true }),
     speed: {
       type: "number",
       default: 1,

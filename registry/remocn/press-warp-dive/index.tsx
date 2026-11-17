@@ -422,6 +422,49 @@ const SUGGESTIONS = [
   { icon: ICONS.phone, label: "Teaser for socials" },
 ];
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
+/** The shader ground, or a solid `background` fill in its place. */
+function Ground({
+  background,
+  children,
+}: {
+  background?: string;
+  children: React.ReactNode;
+}) {
+  if (background === undefined) return children;
+  return (
+    <AbsoluteFill
+      style={{
+        background: background === "transparent" ? undefined : background,
+      }}
+    />
+  );
+}
+
+type SceneLook = {
+  fontFamily: string;
+  background?: string;
+  scale: number;
+  speed: number;
+};
+
+const SUGGESTION_LABELS = SUGGESTIONS.map((sg) => sg.label);
+
 function Cursor({
   size,
   fill,
@@ -456,12 +499,14 @@ function Headline({
   fs,
   color,
   appear,
+  fontFamily,
 }: {
   text: string;
   y: number;
   fs: number;
   color: string;
   appear: number;
+  fontFamily: string;
 }) {
   return (
     <div
@@ -479,7 +524,7 @@ function Headline({
     >
       <div
         style={{
-          fontFamily: figtree.fontFamily,
+          fontFamily,
           fontWeight: 300,
           fontSize: fs,
           letterSpacing: "-0.03em",
@@ -502,16 +547,24 @@ function SceneA({
   palette,
   heading,
   prompt,
+  placeholder,
+  suggestions,
   ground,
   groundParams,
+  delay,
+  look: { fontFamily, background, scale, speed },
 }: {
   palette: Palette;
   heading: string;
   prompt: string;
+  placeholder: string;
+  suggestions: string[];
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  delay: number;
+  look: SceneLook;
 }) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const L = layout(W, H);
   const { u } = L;
@@ -559,211 +612,224 @@ function SceneA({
 
   return (
     <AbsoluteFill>
-      <GshGround
-        preset={ground}
-        params={ground ? groundParams : { ...palette.groundA, ...groundParams }}
-        timeOffset={6}
-        timeScale={0.6}
-      />
-      <AbsoluteFill
-        style={{
-          transformOrigin: `${btn.x}px ${btn.y}px`,
-          transform: `scale(${push.toFixed(4)})`,
-        }}
-      >
-        <Headline
-          text={heading}
-          y={L.headY}
-          fs={L.headFs}
-          color={palette.ink}
-          appear={head}
+      <Ground background={background}>
+        <GshGround
+          preset={ground}
+          params={
+            ground ? groundParams : { ...palette.groundA, ...groundParams }
+          }
+          timeOffset={6}
+          timeScale={0.6}
         />
-        <div
+      </Ground>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: cx,
-            top: cy,
-            width: cw,
-            height: ch,
-            borderRadius: 22 * u,
-            backgroundColor: palette.panel,
-            boxShadow: `inset 0 0 0 1px ${palette.hairline}, ${palette.highlight}, 0 2px 4px rgba(${palette.shadow},0.12), 0 16px 36px rgba(${palette.shadow},0.2), 0 40px 90px rgba(${palette.shadow},0.26)`,
-            fontFamily: figtree.fontFamily,
-            color: palette.ink,
-            opacity: interpolate(card, [0, 0.3], [0, 1], CLAMP),
-            transform: `translateY(${((1 - card) * 26 * u).toFixed(2)}px) scale(${(0.97 + 0.03 * card).toFixed(4)})`,
+            transformOrigin: `${btn.x}px ${btn.y}px`,
+            transform: `scale(${push.toFixed(4)})`,
           }}
         >
+          <Headline
+            text={heading}
+            y={L.headY}
+            fs={L.headFs}
+            color={palette.ink}
+            appear={head}
+            fontFamily={fontFamily}
+          />
           <div
             style={{
               position: "absolute",
-              left: L.pad + 4 * u,
-              right: L.pad + 4 * u,
-              top: L.pad + 2 * u,
-              fontSize: fs,
-              fontWeight: 300,
-              letterSpacing: "-0.01em",
-              lineHeight: 1.32,
-              color: typed > 0 ? palette.ink : palette.faint,
+              left: cx,
+              top: cy,
+              width: cw,
+              height: ch,
+              borderRadius: 22 * u,
+              backgroundColor: palette.panel,
+              boxShadow: `inset 0 0 0 1px ${palette.hairline}, ${palette.highlight}, 0 2px 4px rgba(${palette.shadow},0.12), 0 16px 36px rgba(${palette.shadow},0.2), 0 40px 90px rgba(${palette.shadow},0.26)`,
+              fontFamily,
+              color: palette.ink,
+              opacity: interpolate(card, [0, 0.3], [0, 1], CLAMP),
+              transform: `translateY(${((1 - card) * 26 * u).toFixed(2)}px) scale(${(0.97 + 0.03 * card).toFixed(4)})`,
             }}
           >
-            {typed > 0 ? prompt.slice(0, typed) : "Describe your launch film"}
-            <span
+            <div
               style={{
-                display: "inline-block",
-                width: Math.max(2, 2 * u),
-                height: fs * 1.05,
-                marginLeft: 2 * u,
-                verticalAlign: "-0.18em",
-                backgroundColor: palette.accent,
-                opacity: caret ? 1 : 0,
+                position: "absolute",
+                left: L.pad + 4 * u,
+                right: L.pad + 4 * u,
+                top: L.pad + 2 * u,
+                fontSize: fs,
+                fontWeight: 300,
+                letterSpacing: "-0.01em",
+                lineHeight: 1.32,
+                color: typed > 0 ? palette.ink : palette.faint,
               }}
+            >
+              {typed > 0 ? prompt.slice(0, typed) : placeholder}
+              <span
+                style={{
+                  display: "inline-block",
+                  width: Math.max(2, 2 * u),
+                  height: fs * 1.05,
+                  marginLeft: 2 * u,
+                  verticalAlign: "-0.18em",
+                  backgroundColor: palette.accent,
+                  opacity: caret ? 1 : 0,
+                }}
+              />
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                left: L.pad,
+                bottom: L.pad,
+                height: btn.r * 2,
+                display: "flex",
+                alignItems: "center",
+                gap: 8 * u,
+                fontSize: small,
+                color: palette.muted,
+              }}
+            >
+              <div
+                style={{
+                  width: 36 * u,
+                  height: 36 * u,
+                  borderRadius: 99,
+                  boxShadow: `inset 0 0 0 1px ${palette.hairline}`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Icon d={ICONS.plus} size={17 * u} color={palette.muted} />
+              </div>
+              {["Film", "16:9"].map((c) => (
+                <div
+                  key={c}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4 * u,
+                    padding: `${7 * u}px ${12 * u}px`,
+                    borderRadius: 99,
+                    backgroundColor: palette.row,
+                    boxShadow: `inset 0 0 0 1px ${palette.hairline}`,
+                  }}
+                >
+                  {c}
+                  <Icon d={ICONS.chevron} size={14 * u} color={palette.faint} />
+                </div>
+              ))}
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                right: L.pad + btn.r * 2 + 12 * u,
+                bottom: L.pad + btn.r - 10 * u,
+              }}
+            >
+              <Icon d={ICONS.wave} size={20 * u} color={palette.muted} />
+            </div>
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: L.tall ? cx : 0,
+              width: L.tall ? cw : W,
+              top: L.suggY,
+              display: "flex",
+              flexDirection: L.tall ? "column" : "row",
+              justifyContent: "center",
+              gap: (L.tall ? 12 : 10) * u,
+              fontFamily,
+              fontSize: small,
+              color: palette.muted,
+            }}
+          >
+            {suggestions.map((label, i) => {
+              const sg = {
+                icon: SUGGESTIONS[i % SUGGESTIONS.length].icon,
+                label,
+              };
+              const k = spring({
+                frame: frame - A_BEATS.suggest - i * 3,
+                fps,
+                config: CARD,
+              });
+              return (
+                <div
+                  key={sg.label}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10 * u,
+                    padding: L.tall
+                      ? `${16 * u}px ${18 * u}px`
+                      : `${9 * u}px ${15 * u}px`,
+                    borderRadius: L.tall ? 16 * u : 99,
+                    backgroundColor: palette.panel,
+                    boxShadow: `inset 0 0 0 1px ${palette.hairline}, ${palette.highlight}, 0 8px 22px rgba(${palette.shadow},0.16)`,
+                    opacity: interpolate(k, [0, 0.4], [0, 1], CLAMP),
+                    transform: `translateY(${((1 - k) * 14 * u).toFixed(2)}px)`,
+                  }}
+                >
+                  <Icon d={sg.icon} size={18 * u} color={palette.muted} />
+                  <span style={{ flex: L.tall ? 1 : undefined }}>
+                    {sg.label}
+                  </span>
+                  {L.tall ? (
+                    <Icon d={ICONS.arrow} size={16 * u} color={palette.faint} />
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: btn.x - btn.r,
+              top: btn.y - btn.r + (1 - card) * 26 * u,
+              width: btn.r * 2,
+              height: btn.r * 2,
+              borderRadius: 99,
+              backgroundColor: done ? palette.accent : palette.row,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: interpolate(card, [0, 0.3], [0, 1], CLAMP),
+              transform: `scale(${(1 - 0.12 * press).toFixed(4)})`,
+              boxShadow: done
+                ? `inset 0 1px 0 rgba(255,255,255,0.3), 0 4px 12px rgba(${palette.shadow},0.25)`
+                : `inset 0 0 0 1px ${palette.hairline}`,
+            }}
+          >
+            <Icon
+              d={ICONS.send}
+              size={19 * u}
+              color={done ? "#ffffff" : palette.faint}
             />
           </div>
           <div
             style={{
               position: "absolute",
-              left: L.pad,
-              bottom: L.pad,
-              height: btn.r * 2,
-              display: "flex",
-              alignItems: "center",
-              gap: 8 * u,
-              fontSize: small,
-              color: palette.muted,
+              left: curX - curSize * 0.16,
+              top: curY - curSize * 0.1,
+              transform: `scale(${(1 - 0.14 * press).toFixed(4)})`,
+              transformOrigin: "16% 10%",
+              filter: `drop-shadow(0 ${3 * u}px ${5 * u}px rgba(0,0,0,0.28))`,
+              opacity: interpolate(travel, [0, 0.15], [0, 1], CLAMP),
             }}
           >
-            <div
-              style={{
-                width: 36 * u,
-                height: 36 * u,
-                borderRadius: 99,
-                boxShadow: `inset 0 0 0 1px ${palette.hairline}`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Icon d={ICONS.plus} size={17 * u} color={palette.muted} />
-            </div>
-            {["Film", "16:9"].map((c) => (
-              <div
-                key={c}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 4 * u,
-                  padding: `${7 * u}px ${12 * u}px`,
-                  borderRadius: 99,
-                  backgroundColor: palette.row,
-                  boxShadow: `inset 0 0 0 1px ${palette.hairline}`,
-                }}
-              >
-                {c}
-                <Icon d={ICONS.chevron} size={14 * u} color={palette.faint} />
-              </div>
-            ))}
+            <Cursor
+              size={curSize}
+              fill={palette.cursor}
+              edge={palette.cursorEdge}
+            />
           </div>
-          <div
-            style={{
-              position: "absolute",
-              right: L.pad + btn.r * 2 + 12 * u,
-              bottom: L.pad + btn.r - 10 * u,
-            }}
-          >
-            <Icon d={ICONS.wave} size={20 * u} color={palette.muted} />
-          </div>
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: L.tall ? cx : 0,
-            width: L.tall ? cw : W,
-            top: L.suggY,
-            display: "flex",
-            flexDirection: L.tall ? "column" : "row",
-            justifyContent: "center",
-            gap: (L.tall ? 12 : 10) * u,
-            fontFamily: figtree.fontFamily,
-            fontSize: small,
-            color: palette.muted,
-          }}
-        >
-          {SUGGESTIONS.map((sg, i) => {
-            const k = spring({
-              frame: frame - A_BEATS.suggest - i * 3,
-              fps,
-              config: CARD,
-            });
-            return (
-              <div
-                key={sg.label}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10 * u,
-                  padding: L.tall
-                    ? `${16 * u}px ${18 * u}px`
-                    : `${9 * u}px ${15 * u}px`,
-                  borderRadius: L.tall ? 16 * u : 99,
-                  backgroundColor: palette.panel,
-                  boxShadow: `inset 0 0 0 1px ${palette.hairline}, ${palette.highlight}, 0 8px 22px rgba(${palette.shadow},0.16)`,
-                  opacity: interpolate(k, [0, 0.4], [0, 1], CLAMP),
-                  transform: `translateY(${((1 - k) * 14 * u).toFixed(2)}px)`,
-                }}
-              >
-                <Icon d={sg.icon} size={18 * u} color={palette.muted} />
-                <span style={{ flex: L.tall ? 1 : undefined }}>{sg.label}</span>
-                {L.tall ? (
-                  <Icon d={ICONS.arrow} size={16 * u} color={palette.faint} />
-                ) : null}
-              </div>
-            );
-          })}
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: btn.x - btn.r,
-            top: btn.y - btn.r + (1 - card) * 26 * u,
-            width: btn.r * 2,
-            height: btn.r * 2,
-            borderRadius: 99,
-            backgroundColor: done ? palette.accent : palette.row,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: interpolate(card, [0, 0.3], [0, 1], CLAMP),
-            transform: `scale(${(1 - 0.12 * press).toFixed(4)})`,
-            boxShadow: done
-              ? `inset 0 1px 0 rgba(255,255,255,0.3), 0 4px 12px rgba(${palette.shadow},0.25)`
-              : `inset 0 0 0 1px ${palette.hairline}`,
-          }}
-        >
-          <Icon
-            d={ICONS.send}
-            size={19 * u}
-            color={done ? "#ffffff" : palette.faint}
-          />
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: curX - curSize * 0.16,
-            top: curY - curSize * 0.1,
-            transform: `scale(${(1 - 0.14 * press).toFixed(4)})`,
-            transformOrigin: "16% 10%",
-            filter: `drop-shadow(0 ${3 * u}px ${5 * u}px rgba(0,0,0,0.28))`,
-            opacity: interpolate(travel, [0, 0.15], [0, 1], CLAMP),
-          }}
-        >
-          <Cursor
-            size={curSize}
-            fill={palette.cursor}
-            edge={palette.cursorEdge}
-          />
-        </div>
-      </AbsoluteFill>
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -775,6 +841,7 @@ function SceneB({
   image,
   ground,
   groundParams,
+  look: { fontFamily, background, scale, speed },
 }: {
   palette: Palette;
   heading: string;
@@ -782,8 +849,9 @@ function SceneB({
   image: string;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  look: SceneLook;
 }) {
-  const frame = useCurrentFrame();
+  const frame = useCurrentFrame() * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const tall = H > W * 1.1;
   const u = tall ? W / 600 : H / 720;
@@ -805,225 +873,232 @@ function SceneB({
 
   return (
     <AbsoluteFill>
-      <GshGround
-        preset={ground}
-        params={ground ? groundParams : { ...palette.groundB, ...groundParams }}
-        timeOffset={2}
-        timeScale={0.8}
-      />
-      <AbsoluteFill
-        style={{
-          transform: `scale(${(push * mix(1.45, 1, emerge)).toFixed(4)})`,
-          opacity: interpolate(emerge, [0, 0.25], [0, 1], CLAMP),
-          filter:
-            emerge < 0.98
-              ? `blur(${((1 - emerge) * 12).toFixed(2)}px)`
-              : undefined,
-        }}
-      >
-        <Headline
-          text={heading}
-          y={tall ? H * 0.28 : H * 0.17}
-          fs={tall ? W * 0.075 : W * 0.04}
-          color={palette.headB}
-          appear={head}
+      <Ground background={background}>
+        <GshGround
+          preset={ground}
+          params={
+            ground ? groundParams : { ...palette.groundB, ...groundParams }
+          }
+          timeOffset={2}
+          timeScale={0.8}
         />
-        <div
+      </Ground>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: (W - cardW) / 2,
-            top: cardTop,
-            width: cardW,
-            padding: 10 * u,
-            borderRadius: 24 * u,
-            backgroundColor: palette.panel,
-            boxShadow: `inset 0 0 0 1px ${palette.hairline}, ${palette.highlight}, 0 2px 4px rgba(${palette.shadow},0.14), 0 18px 40px rgba(${palette.shadow},0.24), 0 44px 100px rgba(${palette.shadow},0.3)`,
-            fontFamily: figtree.fontFamily,
-            color: palette.ink,
+            transform: `scale(${(push * mix(1.45, 1, emerge)).toFixed(4)})`,
+            opacity: interpolate(emerge, [0, 0.25], [0, 1], CLAMP),
+            filter:
+              emerge < 0.98
+                ? `blur(${((1 - emerge) * 12).toFixed(2)}px)`
+                : undefined,
           }}
         >
-          <div
-            style={{
-              position: "relative",
-              height: thumbH,
-              borderRadius: 15 * u,
-              overflow: "hidden",
-            }}
-          >
-            <Img
-              src={image}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                transform: `scale(${(1.06 - play * 0.08).toFixed(4)})`,
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                left: "50%",
-                top: "50%",
-                width: 58 * u,
-                height: 58 * u,
-                marginLeft: -29 * u,
-                marginTop: -29 * u,
-                borderRadius: 99,
-                backgroundColor: "rgba(255,255,255,0.9)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 6px 18px rgba(0,0,0,0.22)",
-                transform: `scale(${(0.6 + 0.4 * rowIn(0)).toFixed(4)})`,
-                opacity: rowIn(0),
-              }}
-            >
-              <svg
-                viewBox="0 0 24 24"
-                width={26 * u}
-                height={26 * u}
-                aria-hidden
-              >
-                <path d={ICONS.play} fill="#14161d" />
-              </svg>
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: 14 * u,
-                right: 14 * u,
-                bottom: 12 * u,
-                display: "flex",
-                alignItems: "center",
-                gap: 10 * u,
-                fontSize: small,
-                color: "#ffffff",
-                opacity: rowIn(1),
-              }}
-            >
-              <span style={{ fontVariantNumeric: "tabular-nums" }}>
-                0:{secs.toString().padStart(2, "0")}
-              </span>
-              <div
-                style={{
-                  flex: 1,
-                  height: 4 * u,
-                  borderRadius: 99,
-                  backgroundColor: "rgba(255,255,255,0.35)",
-                  overflow: "hidden",
-                }}
-              >
-                <div
-                  style={{
-                    width: `${(play * 100).toFixed(2)}%`,
-                    height: "100%",
-                    backgroundColor: "#ffffff",
-                  }}
-                />
-              </div>
-              <span>0:30</span>
-            </div>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12 * u,
-              padding: `${14 * u}px ${8 * u}px ${6 * u}px`,
-              opacity: interpolate(rowIn(2), [0, 0.4], [0, 1], CLAMP),
-              transform: `translateY(${((1 - rowIn(2)) * 10 * u).toFixed(2)}px)`,
-            }}
-          >
-            <div
-              style={{
-                width: 38 * u,
-                height: 38 * u,
-                borderRadius: 10 * u,
-                backgroundColor: palette.row,
-                boxShadow: `inset 0 0 0 1px ${palette.hairline}`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Icon d={ICONS.film} size={19 * u} color={palette.ink} />
-            </div>
-            <div
-              style={{
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                gap: 2 * u,
-              }}
-            >
-              <span
-                style={{
-                  fontSize: fs,
-                  fontWeight: 400,
-                  letterSpacing: "-0.01em",
-                }}
-              >
-                {title}
-              </span>
-              <span style={{ fontSize: small, color: palette.muted }}>
-                30 s · 1080p · 3 formats
-              </span>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6 * u,
-                padding: `${9 * u}px ${16 * u}px`,
-                borderRadius: 99,
-                backgroundColor: palette.accent,
-                color: "#ffffff",
-                fontSize: small,
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25)",
-              }}
-            >
-              <Icon d={ICONS.share} size={16 * u} color="#ffffff" />
-              Share
-            </div>
-          </div>
-        </div>
-        {tall ? (
+          <Headline
+            text={heading}
+            y={tall ? H * 0.28 : H * 0.17}
+            fs={tall ? W * 0.075 : W * 0.04}
+            color={palette.headB}
+            appear={head}
+            fontFamily={fontFamily}
+          />
           <div
             style={{
               position: "absolute",
-              left: 0,
-              right: 0,
-              top: H * 0.765,
-              display: "flex",
-              justifyContent: "center",
-              gap: 10 * u,
-              fontFamily: figtree.fontFamily,
-              fontSize: small,
-              color: palette.headB,
+              left: (W - cardW) / 2,
+              top: cardTop,
+              width: cardW,
+              padding: 10 * u,
+              borderRadius: 24 * u,
+              backgroundColor: palette.panel,
+              boxShadow: `inset 0 0 0 1px ${palette.hairline}, ${palette.highlight}, 0 2px 4px rgba(${palette.shadow},0.14), 0 18px 40px rgba(${palette.shadow},0.24), 0 44px 100px rgba(${palette.shadow},0.3)`,
+              fontFamily,
+              color: palette.ink,
             }}
           >
-            {["16:9", "9:16", "1:1"].map((f, i) => {
-              const k = rowIn(3 + i);
-              return (
+            <div
+              style={{
+                position: "relative",
+                height: thumbH,
+                borderRadius: 15 * u,
+                overflow: "hidden",
+              }}
+            >
+              <Img
+                src={image}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  transform: `scale(${(1.06 - play * 0.08).toFixed(4)})`,
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  left: "50%",
+                  top: "50%",
+                  width: 58 * u,
+                  height: 58 * u,
+                  marginLeft: -29 * u,
+                  marginTop: -29 * u,
+                  borderRadius: 99,
+                  backgroundColor: "rgba(255,255,255,0.9)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 6px 18px rgba(0,0,0,0.22)",
+                  transform: `scale(${(0.6 + 0.4 * rowIn(0)).toFixed(4)})`,
+                  opacity: rowIn(0),
+                }}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width={26 * u}
+                  height={26 * u}
+                  aria-hidden
+                >
+                  <path d={ICONS.play} fill="#14161d" />
+                </svg>
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: 14 * u,
+                  right: 14 * u,
+                  bottom: 12 * u,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10 * u,
+                  fontSize: small,
+                  color: "#ffffff",
+                  opacity: rowIn(1),
+                }}
+              >
+                <span style={{ fontVariantNumeric: "tabular-nums" }}>
+                  0:{secs.toString().padStart(2, "0")}
+                </span>
                 <div
-                  key={f}
                   style={{
-                    padding: `${10 * u}px ${20 * u}px`,
+                    flex: 1,
+                    height: 4 * u,
                     borderRadius: 99,
-                    backgroundColor: palette.panel,
-                    color: palette.ink,
-                    boxShadow: `inset 0 0 0 1px ${palette.hairline}, 0 8px 22px rgba(${palette.shadow},0.2)`,
-                    opacity: interpolate(k, [0, 0.4], [0, 1], CLAMP),
-                    transform: `translateY(${((1 - k) * 12 * u).toFixed(2)}px)`,
+                    backgroundColor: "rgba(255,255,255,0.35)",
+                    overflow: "hidden",
                   }}
                 >
-                  {f}
+                  <div
+                    style={{
+                      width: `${(play * 100).toFixed(2)}%`,
+                      height: "100%",
+                      backgroundColor: "#ffffff",
+                    }}
+                  />
                 </div>
-              );
-            })}
+                <span>0:30</span>
+              </div>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12 * u,
+                padding: `${14 * u}px ${8 * u}px ${6 * u}px`,
+                opacity: interpolate(rowIn(2), [0, 0.4], [0, 1], CLAMP),
+                transform: `translateY(${((1 - rowIn(2)) * 10 * u).toFixed(2)}px)`,
+              }}
+            >
+              <div
+                style={{
+                  width: 38 * u,
+                  height: 38 * u,
+                  borderRadius: 10 * u,
+                  backgroundColor: palette.row,
+                  boxShadow: `inset 0 0 0 1px ${palette.hairline}`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Icon d={ICONS.film} size={19 * u} color={palette.ink} />
+              </div>
+              <div
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2 * u,
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: fs,
+                    fontWeight: 400,
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  {title}
+                </span>
+                <span style={{ fontSize: small, color: palette.muted }}>
+                  30 s · 1080p · 3 formats
+                </span>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6 * u,
+                  padding: `${9 * u}px ${16 * u}px`,
+                  borderRadius: 99,
+                  backgroundColor: palette.accent,
+                  color: "#ffffff",
+                  fontSize: small,
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25)",
+                }}
+              >
+                <Icon d={ICONS.share} size={16 * u} color="#ffffff" />
+                Share
+              </div>
+            </div>
           </div>
-        ) : null}
-      </AbsoluteFill>
+          {tall ? (
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: H * 0.765,
+                display: "flex",
+                justifyContent: "center",
+                gap: 10 * u,
+                fontFamily,
+                fontSize: small,
+                color: palette.headB,
+              }}
+            >
+              {["16:9", "9:16", "1:1"].map((f, i) => {
+                const k = rowIn(3 + i);
+                return (
+                  <div
+                    key={f}
+                    style={{
+                      padding: `${10 * u}px ${20 * u}px`,
+                      borderRadius: 99,
+                      backgroundColor: palette.panel,
+                      color: palette.ink,
+                      boxShadow: `inset 0 0 0 1px ${palette.hairline}, 0 8px 22px rgba(${palette.shadow},0.2)`,
+                      opacity: interpolate(k, [0, 0.4], [0, 1], CLAMP),
+                      transform: `translateY(${((1 - k) * 12 * u).toFixed(2)}px)`,
+                    }}
+                  >
+                    {f}
+                  </div>
+                );
+              })}
+            </div>
+          ) : null}
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -1036,6 +1111,22 @@ export interface PressWarpDiveDemoProps {
   headingB?: string;
   title?: string;
   image?: string;
+  /** Prompt box text before typing starts. */
+  placeholder?: string;
+  /** Suggestion chips under the prompt box. */
+  suggestions?: string[];
+  /** Text color of both scenes; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of both gradient grounds; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Figtree by default. */
+  fontFamily?: string;
+  /** Size of both scenes' foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Playback multiplier for the whole series. */
+  speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
   groundB?: GshPresetId;
@@ -1051,6 +1142,14 @@ export function PressWarpDiveDemo({
   headingB = "Your film is ready",
   title = "Launch film, v2",
   image = staticFile("reel/reel-5.jpg"),
+  placeholder = "Describe your launch film",
+  suggestions = SUGGESTION_LABELS,
+  ink,
+  background,
+  fontFamily = figtree.fontFamily,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   ground,
   groundParams,
   groundB,
@@ -1059,31 +1158,46 @@ export function PressWarpDiveDemo({
 }: PressWarpDiveDemoProps) {
   const { width: W, height: H } = useVideoConfig();
   const base = THEMES[theme];
-  const palette = accent ? { ...base, accent } : base;
+  const themed = accent ? { ...base, accent } : base;
+  const palette = ink ? { ...themed, ink, headB: ink } : themed;
   const L = layout(W, H);
+  const look: SceneLook = { fontFamily, background, scale, speed };
+  // Speed scales the series itself so the transition keeps pace with the scenes.
+  const len = (f: number) => Math.max(1, Math.round(f / speed));
+  // The dive starts from the button where the scale layer draws it.
+  const at = (v: number) => (scale === 1 ? v : 0.5 + (v - 0.5) * scale);
   return (
-    <AbsoluteFill style={{ backgroundColor: palette.backdrop }}>
+    <AbsoluteFill
+      style={{
+        backgroundColor:
+          background === "transparent" ? undefined : palette.backdrop,
+      }}
+    >
       <TransitionSeries>
-        <TransitionSeries.Sequence durationInFrames={A_LEN}>
+        <TransitionSeries.Sequence durationInFrames={delay + len(A_LEN)}>
           <SceneA
             palette={palette}
             heading={heading}
             prompt={prompt}
+            placeholder={placeholder}
+            suggestions={suggestions}
             ground={ground}
             groundParams={groundParams}
+            delay={delay}
+            look={look}
           />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition
           presentation={pressWarpDive({
-            point: [L.button.x / W, L.button.y / H],
-            buttonRadius: L.button.r / Math.min(W, H),
+            point: [at(L.button.x / W), at(L.button.y / H)],
+            buttonRadius: (L.button.r / Math.min(W, H)) * scale,
             orb: palette.accent,
             rim: palette.rim,
             ...transition,
           })}
-          timing={linearTiming({ durationInFrames: T_LEN })}
+          timing={linearTiming({ durationInFrames: len(T_LEN) })}
         />
-        <TransitionSeries.Sequence durationInFrames={B_LEN}>
+        <TransitionSeries.Sequence durationInFrames={len(B_LEN)}>
           <SceneB
             palette={palette}
             heading={headingB}
@@ -1091,6 +1205,7 @@ export function PressWarpDiveDemo({
             image={image}
             ground={groundB}
             groundParams={groundParamsB}
+            look={look}
           />
         </TransitionSeries.Sequence>
       </TransitionSeries>

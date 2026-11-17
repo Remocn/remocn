@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const bentoBuildConfig: ComponentConfig = {
   componentName: "BentoBuild",
@@ -12,11 +19,6 @@ export const bentoBuildConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     eyebrow: {
       type: "text-content",
@@ -37,6 +39,40 @@ export const bentoBuildConfig: ComponentConfig = {
       description: "Columns",
       hiddenFromList: false,
     },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Tile stagger",
+      hiddenFromList: false,
+    },
+    hold: {
+      type: "number",
+      default: 30,
+      min: 12,
+      max: 60,
+      step: 1,
+      description: "Spotlight hold (frames)",
+      hiddenFromList: false,
+    },
+    radius: {
+      type: "number",
+      default: 18,
+      min: 0,
+      max: 40,
+      step: 1,
+      description: "Corner radius",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Geist" }),
     speed: {
       type: "number",
       default: 1,

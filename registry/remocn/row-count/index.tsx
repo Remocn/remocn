@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont as loadPlexSans } from "@remotion/google-fonts/IBMPlexSans";
+import type React from "react";
 import { useMemo } from "react";
 import {
   AbsoluteFill,
@@ -22,7 +23,17 @@ export interface RowCountProps {
   prefix?: string;
   label?: string;
   accent?: string;
+  /** Color of the digits and top rule; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the digits and label. Load it yourself; IBM Plex Sans by default. */
+  fontFamily?: string;
+  /** Frames the count takes to reach `value`. */
+  countLength?: number;
+  /** Size of the stack and label, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -70,19 +81,41 @@ function groups(n: number): string[] {
   return out;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function RowCount({
   value = 27300000,
   from = 1,
   prefix = "",
   label = "frames rendered in every region, every night",
   accent,
+  ink,
   background,
+  fontFamily = plex.fontFamily,
+  countLength = COUNT_LEN,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: RowCountProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
 
@@ -90,7 +123,7 @@ export function RowCount({
   const start = Math.min(target, Math.max(1, Math.floor(from)));
   const finalRows = groups(target).length;
 
-  const p = interpolate(t, [COUNT_AT, COUNT_AT + COUNT_LEN], [0, 1], {
+  const p = interpolate(t, [COUNT_AT, COUNT_AT + countLength], [0, 1], {
     ...CLAMP,
     easing: EASE_COUNT,
   });
@@ -110,13 +143,18 @@ export function RowCount({
         continue;
       }
       let lo = COUNT_AT;
-      let hi = COUNT_AT + COUNT_LEN;
+      let hi = COUNT_AT + countLength;
       for (let i = 0; i < 24; i++) {
         const mid = (lo + hi) / 2;
-        const pm = interpolate(mid, [COUNT_AT, COUNT_AT + COUNT_LEN], [0, 1], {
-          ...CLAMP,
-          easing: EASE_COUNT,
-        });
+        const pm = interpolate(
+          mid,
+          [COUNT_AT, COUNT_AT + countLength],
+          [0, 1],
+          {
+            ...CLAMP,
+            easing: EASE_COUNT,
+          },
+        );
         const v = start * (target / start) ** pm;
         if (v >= thresh) hi = mid;
         else lo = mid;
@@ -124,7 +162,7 @@ export function RowCount({
       born.push(hi);
     }
     return born;
-  }, [finalRows, start, target]);
+  }, [finalRows, start, target, countLength]);
 
   const shift = (k: number) => {
     let s = 0;
@@ -206,7 +244,7 @@ export function RowCount({
               height: rowH,
               display: "flex",
               alignItems: "baseline",
-              fontFamily: plex.fontFamily,
+              fontFamily,
               fontWeight: 500,
               fontSize: F,
               lineHeight: `${rowH}px`,
@@ -215,7 +253,7 @@ export function RowCount({
               whiteSpace: "pre",
             }}
           >
-            <span style={{ position: "relative", color: c.ink }}>
+            <span style={{ position: "relative", color: fg }}>
               {text}
               <span
                 aria-hidden
@@ -270,7 +308,7 @@ export function RowCount({
     >
       <div
         style={{
-          fontFamily: plex.fontFamily,
+          fontFamily,
           fontWeight: 400,
           fontSize: labelSize,
           lineHeight: 1.3,
@@ -287,18 +325,20 @@ export function RowCount({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: margin,
-          top: ruleY,
-          width: (W - margin * 2) * ruleP,
-          height: Math.max(2, H * 0.003),
-          background: c.ink,
-        }}
-      />
-      {rowEls}
-      {labelEl}
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            left: margin,
+            top: ruleY,
+            width: (W - margin * 2) * ruleP,
+            height: Math.max(2, H * 0.003),
+            background: fg,
+          }}
+        />
+        {rowEls}
+        {labelEl}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

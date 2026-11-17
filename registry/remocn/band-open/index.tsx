@@ -264,13 +264,29 @@ function StackScene({
   line,
   ground,
   groundParams,
+  fontFamily,
+  fontWeight,
+  fg,
+  background,
+  stagger,
+  scale,
+  delay,
+  speed,
 }: {
   c: Theme;
   line: string;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  fontFamily: string;
+  fontWeight: number;
+  fg: string;
+  background?: string;
+  stagger: number;
+  scale: number;
+  delay: number;
+  speed: number;
 }) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const F = lineSize(W, H, line);
   const rows = strips(H, F);
@@ -279,71 +295,88 @@ function StackScene({
     easing: Easing.bezier(0.45, 0, 0.55, 1),
   });
   return (
-    <AbsoluteFill style={{ background: c.base, overflow: "hidden" }}>
-      <AbsoluteFill style={{ transform: `scale(${push})` }}>
-        <GshGround
-          preset={ground}
-          params={groundParams}
-          timeOffset={c.groundOffset}
-        />
-      </AbsoluteFill>
-      <AbsoluteFill style={{ background: c.veil }} />
-      {rows.map((r) => {
-        const d = Math.abs(r.k);
-        const rise = TYPE_IN(
-          interpolate(frame, [-5 + 2 * d, 9 + 2 * d], [0, 1], CLAMP),
-        );
-        const stair = spring({ frame: frame - 2 - d, fps, config: STAIR });
-        const drift = (r.k % 2 === 0 ? 1 : -1) * frame * 0.0004 * W;
-        const x =
-          Math.sign(r.k) * Math.min(d, 5) * W * 0.05 * stair +
-          (r.k === 0 ? 0 : drift);
-        const fade = [1, 0.78, 0.58, 0.44, 0.34, 0.26, 0.2, 0.15][
-          Math.min(d, 7)
-        ];
-        return (
-          <div
-            key={r.k}
-            style={{
-              position: "absolute",
-              left: 0,
-              width: W,
-              top: r.top,
-              height: r.h,
-              overflow: "hidden",
-              borderTop: r.k <= 0 ? `1px solid ${c.hair}` : undefined,
-              borderBottom: r.k >= 0 ? `1px solid ${c.hair}` : undefined,
-              transform: `scale(${push})`,
-              transformOrigin: `50% ${H / 2 - r.top}px`,
-            }}
-          >
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? c.base),
+        overflow: "hidden",
+      }}
+    >
+      {background === undefined ? (
+        <>
+          <AbsoluteFill style={{ transform: `scale(${push})` }}>
+            <GshGround
+              preset={ground}
+              params={groundParams}
+              timeOffset={c.groundOffset}
+            />
+          </AbsoluteFill>
+          <AbsoluteFill style={{ background: c.veil }} />
+        </>
+      ) : null}
+      <ScaleLayer scale={scale}>
+        {rows.map((r) => {
+          const d = Math.abs(r.k);
+          const rise = TYPE_IN(
+            interpolate(
+              frame,
+              [-5 + stagger * d, 9 + stagger * d],
+              [0, 1],
+              CLAMP,
+            ),
+          );
+          const stair = spring({ frame: frame - 2 - d, fps, config: STAIR });
+          const drift = (r.k % 2 === 0 ? 1 : -1) * frame * 0.0004 * W;
+          const x =
+            Math.sign(r.k) * Math.min(d, 5) * W * 0.05 * stair +
+            (r.k === 0 ? 0 : drift);
+          const fade = [1, 0.78, 0.58, 0.44, 0.34, 0.26, 0.2, 0.15][
+            Math.min(d, 7)
+          ];
+          return (
             <div
+              key={r.k}
               style={{
                 position: "absolute",
                 left: 0,
                 width: W,
-                top: r.h / 2 - F * 0.62,
-                height: F * 1.24,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontFamily: sans.fontFamily,
-                fontWeight: 400,
-                fontSize: F,
-                letterSpacing: "-0.04em",
-                lineHeight: 1,
-                whiteSpace: "nowrap",
-                color: c.ink,
-                opacity: fade,
-                filter: d >= 2 ? `blur(${(d - 1) * 0.6}px)` : undefined,
-                transform: `translate(${x}px, ${(1 - rise) * (r.h / 2 + F * 0.95)}px)`,
+                top: r.top,
+                height: r.h,
+                overflow: "hidden",
+                borderTop: r.k <= 0 ? `1px solid ${c.hair}` : undefined,
+                borderBottom: r.k >= 0 ? `1px solid ${c.hair}` : undefined,
+                transform: `scale(${push})`,
+                transformOrigin: `50% ${H / 2 - r.top}px`,
               }}
             >
-              {line}
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  width: W,
+                  top: r.h / 2 - F * 0.62,
+                  height: F * 1.24,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontFamily,
+                  fontWeight,
+                  fontSize: F,
+                  letterSpacing: "-0.04em",
+                  lineHeight: 1,
+                  whiteSpace: "nowrap",
+                  color: fg,
+                  opacity: fade,
+                  filter: d >= 2 ? `blur(${(d - 1) * 0.6}px)` : undefined,
+                  transform: `translate(${x}px, ${(1 - rise) * (r.h / 2 + F * 0.95)}px)`,
+                }}
+              >
+                {line}
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -353,13 +386,26 @@ function PhotoScene({
   src,
   meta,
   start,
+  fontFamily,
+  fontWeight,
+  ink,
+  logo,
+  scale,
+  speed,
 }: {
   line: string;
   src: string;
   meta: string;
   start: number;
+  fontFamily: string;
+  fontWeight: number;
+  ink?: string;
+  logo?: React.ReactNode;
+  scale: number;
+  speed: number;
 }) {
-  const frame = useCurrentFrame();
+  const frame = useCurrentFrame() * speed;
+  const fg = ink ?? "#ffffff";
   const { width: W, height: H } = useVideoConfig();
   const u = Math.min(W, H) / 720;
   const F = lineSize(W, H, line);
@@ -385,66 +431,70 @@ function PhotoScene({
             "linear-gradient(180deg, rgba(6,10,14,0.10) 0%, rgba(6,10,14,0.34) 38%, rgba(6,10,14,0.38) 50%, rgba(6,10,14,0.30) 62%, rgba(6,10,14,0.42) 100%)",
         }}
       />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          width: W,
-          top: H / 2 - F * 0.62,
-          height: F * 1.24,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
-            position: "relative",
-            fontFamily: sans.fontFamily,
-            fontWeight: 400,
-            fontSize: F,
-            letterSpacing: "-0.04em",
-            lineHeight: 1,
-            whiteSpace: "nowrap",
-            color: "#ffffff",
-            textShadow: "0 2px 30px rgba(0,0,0,0.25)",
+            position: "absolute",
+            left: 0,
+            width: W,
+            top: H / 2 - F * 0.62,
+            height: F * 1.24,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          {line}
           <div
             style={{
-              position: "absolute",
-              left: "100%",
-              top: "50%",
-              marginLeft: 0.16 * F,
-              transform: `translate(${(1 - tagIn) * -10 * u}px, -40%)`,
-              opacity: tagIn,
+              position: "relative",
+              fontFamily,
+              fontWeight,
+              fontSize: F,
+              letterSpacing: "-0.04em",
+              lineHeight: 1,
+              whiteSpace: "nowrap",
+              color: fg,
+              textShadow: "0 2px 30px rgba(0,0,0,0.25)",
             }}
           >
-            <RemocnLogo fontSize={Math.max(14 * u, 0.2 * F)} color="#ffffff" />
+            {line}
+            <div
+              style={{
+                position: "absolute",
+                left: "100%",
+                top: "50%",
+                marginLeft: 0.16 * F,
+                transform: `translate(${(1 - tagIn) * -10 * u}px, -40%)`,
+                opacity: tagIn,
+              }}
+            >
+              {logo ?? (
+                <RemocnLogo fontSize={Math.max(14 * u, 0.2 * F)} color={fg} />
+              )}
+            </div>
           </div>
         </div>
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          width: W,
-          top: H / 2 + F * 0.95,
-          display: "flex",
-          justifyContent: "center",
-          fontFamily: mono.fontFamily,
-          fontWeight: 400,
-          fontSize: 17 * u,
-          letterSpacing: "0.06em",
-          textTransform: "uppercase",
-          color: "rgba(255,255,255,0.84)",
-          opacity: metaIn,
-          transform: `translateY(${(1 - metaIn) * 12 * u}px)`,
-        }}
-      >
-        {meta}
-      </div>
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            width: W,
+            top: H / 2 + F * 0.95,
+            display: "flex",
+            justifyContent: "center",
+            fontFamily: mono.fontFamily,
+            fontWeight: 400,
+            fontSize: 17 * u,
+            letterSpacing: "0.06em",
+            textTransform: "uppercase",
+            color: "rgba(255,255,255,0.84)",
+            opacity: metaIn,
+            transform: `translateY(${(1 - metaIn) * 12 * u}px)`,
+          }}
+        >
+          {meta}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -457,6 +507,39 @@ export interface BandOpenDemoProps extends BandOpenProps {
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
   transitionFrames?: number;
+  /** Typeface for the headline. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Weight of the headline. */
+  fontWeight?: number;
+  /** Headline color in both scenes; overrides the theme ink and the white over the photo. */
+  ink?: string;
+  /** Solid fill in place of the scene A gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Frames between strips as the stack rises from the center out. */
+  stagger?: number;
+  /** Replaces the remocn mark next to the headline in scene B. */
+  logo?: React.ReactNode;
+  /** Size of the text in both scenes, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function BandOpen({
@@ -467,6 +550,15 @@ export function BandOpen({
   ground,
   groundParams,
   transitionFrames = BAND_OPEN_TIMING.transition,
+  fontFamily = sans.fontFamily,
+  fontWeight = 400,
+  ink,
+  background,
+  stagger = 2,
+  logo,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   band,
   ...rest
 }: BandOpenDemoProps) {
@@ -474,27 +566,51 @@ export function BandOpen({
   const c = THEMES[theme];
   const preset = ground ?? (groundParams ? undefined : c.ground);
   const bandShare = band ?? (1.5 * lineSize(W, H, line)) / H;
+  // Speed scales the series itself so the transition keeps pace with the scenes.
+  const len = (f: number) => Math.max(1, Math.round(f / speed));
+  const tLen = len(transitionFrames);
   return (
-    <AbsoluteFill style={{ background: c.base }}>
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? c.base),
+      }}
+    >
       <TransitionSeries>
-        <TransitionSeries.Sequence durationInFrames={BAND_OPEN_TIMING.a}>
+        <TransitionSeries.Sequence
+          durationInFrames={delay + len(BAND_OPEN_TIMING.a)}
+        >
           <StackScene
             c={c}
             line={line}
             ground={preset}
             groundParams={groundParams ?? c.groundParams}
+            fontFamily={fontFamily}
+            fontWeight={fontWeight}
+            fg={ink ?? c.ink}
+            background={background}
+            stagger={stagger}
+            scale={scale}
+            delay={delay}
+            speed={speed}
           />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition
           presentation={bandOpen({ ...rest, band: bandShare })}
-          timing={linearTiming({ durationInFrames: transitionFrames })}
+          timing={linearTiming({ durationInFrames: tLen })}
         />
-        <TransitionSeries.Sequence durationInFrames={BAND_OPEN_TIMING.b}>
+        <TransitionSeries.Sequence durationInFrames={len(BAND_OPEN_TIMING.b)}>
           <PhotoScene
             line={line}
             src={src}
             meta={meta}
             start={transitionFrames - 4}
+            fontFamily={fontFamily}
+            fontWeight={fontWeight}
+            ink={ink}
+            logo={logo}
+            scale={scale}
+            speed={speed}
           />
         </TransitionSeries.Sequence>
       </TransitionSeries>

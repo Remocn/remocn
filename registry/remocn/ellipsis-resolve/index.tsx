@@ -21,6 +21,20 @@ export interface EllipsisResolveProps {
   /** The word the ellipsis resolves into. A period is always appended. */
   word?: string;
   accent?: string;
+  /** Solid color for the word and dots, in place of the silk sheen. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the word. Load it yourself; Instrument Serif by default. */
+  fontFamily?: string;
+  /** Frame the typing dots stop pulsing and stretch toward the word. */
+  resolveAt?: number;
+  /** Frames the bar takes to sweep across and reveal the word. */
+  sweepFrames?: number;
+  /** Size of the word, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -116,15 +130,43 @@ const lerp = (a: number, b: number, p: number) => a + (b - a) * p;
 
 export const ellipsisResolveDuration = SWEEP + SWEEP_LEN + RISE + 34;
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function EllipsisResolve({
   word = "Shipped",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = serif,
+  resolveAt = STRETCH,
+  sweepFrames = SWEEP_LEN,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: EllipsisResolveProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
+  const sweepAt = SWEEP + (resolveAt - STRETCH);
   const u = H / 720;
 
   const layout = useMemo(() => {
@@ -152,7 +194,7 @@ export function EllipsisResolve({
   // Camera: starts close on the typing indicator, eases out to the word.
   const zoom = interpolate(
     t,
-    [STRETCH - 6, STRETCH + STRETCH_LEN + 6],
+    [resolveAt - 6, resolveAt + STRETCH_LEN + 6],
     [0, 1],
     {
       ...CLAMP,
@@ -163,7 +205,7 @@ export function EllipsisResolve({
 
   // Dots begin centered in frame, then settle onto the word's baseline.
   const drop = EASE_IO(
-    interpolate(t, [STRETCH, STRETCH + STRETCH_LEN], [0, 1], CLAMP),
+    interpolate(t, [resolveAt, resolveAt + STRETCH_LEN], [0, 1], CLAMP),
   );
   const dotY = lerp(H / 2, restY, drop);
 
@@ -181,7 +223,7 @@ export function EllipsisResolve({
     EASE_IO(
       interpolate(
         t,
-        [STRETCH + (2 - k) * 2, STRETCH + (2 - k) * 2 + STRETCH_LEN - 4],
+        [resolveAt + (2 - k) * 2, resolveAt + (2 - k) * 2 + STRETCH_LEN - 4],
         [0, 1],
         CLAMP,
       ),
@@ -191,31 +233,38 @@ export function EllipsisResolve({
   const startCx = (k: number) => W / 2 + (k - 1) * pitch;
 
   // Sweep: the bar's left edge chases right and folds into the period.
-  const sweepRaw = interpolate(t, [SWEEP, SWEEP + SWEEP_LEN], [0, 1], CLAMP);
+  const sweepRaw = interpolate(
+    t,
+    [sweepAt, sweepAt + sweepFrames],
+    [0, 1],
+    CLAMP,
+  );
   const sweep = EASE_SWEEP(sweepRaw);
-  const closeGap = EASE_IO(interpolate(t, [SWEEP, SWEEP + 10], [0, 1], CLAMP));
+  const closeGap = EASE_IO(
+    interpolate(t, [sweepAt, sweepAt + 10], [0, 1], CLAMP),
+  );
   const barL = lerp(left, periodCx - d / 2, sweep);
   const barR = lerp(barRight, periodCx + d / 2, closeGap);
-  const sweeping = t >= SWEEP;
+  const sweeping = t >= sweepAt;
 
   // Each letter starts rising the frame the bar's edge clears its middle.
   const crossAt = useMemo(
     () =>
       letters.map((l) => {
         const target = l.x + l.w * 0.45;
-        for (let f = 0; f <= SWEEP_LEN; f += 0.25) {
-          const x = lerp(left, periodCx - d / 2, EASE_SWEEP(f / SWEEP_LEN));
-          if (x >= target) return SWEEP + f;
+        for (let f = 0; f <= sweepFrames; f += 0.25) {
+          const x = lerp(left, periodCx - d / 2, EASE_SWEEP(f / sweepFrames));
+          if (x >= target) return sweepAt + f;
         }
-        return SWEEP + SWEEP_LEN;
+        return sweepAt + sweepFrames;
       }),
-    [letters, left, periodCx, d],
+    [letters, left, periodCx, d, sweepAt, sweepFrames],
   );
 
   const accentIn = EASE_OUT(
-    interpolate(t, [STRETCH + 4, STRETCH + STRETCH_LEN], [0, 1], CLAMP),
+    interpolate(t, [resolveAt + 4, resolveAt + STRETCH_LEN], [0, 1], CLAMP),
   );
-  const landAt = SWEEP + SWEEP_LEN;
+  const landAt = sweepAt + sweepFrames;
   const settle = interpolate(t, [landAt - 2, landAt + SETTLE], [0, 1], CLAMP);
   const pop = 1 + 0.14 * Math.sin(Math.PI * EASE_OUT(settle));
   const push = interpolate(t, [landAt, landAt + 40], [0, 1], {
@@ -224,7 +273,10 @@ export function EllipsisResolve({
   });
 
   // The silk sheen drifts a few degrees while the word holds.
-  const sheen = `linear-gradient(${96 + 10 * push}deg, ${c.ink[0]} 0%, ${c.ink[1]} 34%, ${c.ink[2]} 72%, ${c.ink[3]} 100%)`;
+  const sheen =
+    ink === undefined
+      ? `linear-gradient(${96 + 10 * push}deg, ${c.ink[0]} 0%, ${c.ink[1]} 34%, ${c.ink[2]} 72%, ${c.ink[3]} 100%)`
+      : `linear-gradient(${ink}, ${ink})`;
 
   const dotStyle = (
     l: number,
@@ -245,100 +297,102 @@ export function EllipsisResolve({
   const dot3Color = interpolateColors(
     accentIn,
     [0, 1],
-    [interpolateColors(bump(2), [0, 1], [c.muted, c.fg]), accent],
+    [interpolateColors(bump(2), [0, 1], [c.muted, fg]), accent],
   );
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <AbsoluteFill
         style={{
           opacity: 0.4 + 0.6 * accentIn,
           background: `radial-gradient(60% 42% at ${46 + 4 * push}% 50%, ${c.haze} 0%, transparent 70%)`,
         }}
       />
-      <AbsoluteFill
-        style={{
-          transform: `scale(${cam * (1 + 0.02 * push)})`,
-          transformOrigin: `${W / 2}px ${lerp(H / 2, baseline - 0.3 * F, zoom)}px`,
-        }}
-      >
-        {letters.map((l, i) => {
-          const p = EASE_OUT(
-            interpolate(t, [crossAt[i], crossAt[i] + RISE], [0, 1], CLAMP),
-          );
-          if (p <= 0) return null;
-          return (
-            <div
-              key={`${i}-${l.ch}`}
-              style={{
-                position: "absolute",
-                left: l.x,
-                top: baseline - BASELINE * F,
-                fontFamily: serif,
-                fontWeight: 400,
-                fontSize: F,
-                lineHeight: 1.2,
-                whiteSpace: "pre",
-                color: "transparent",
-                backgroundImage: sheen,
-                backgroundSize: `${wordW}px ${1.2 * F}px`,
-                backgroundPosition: `${left - l.x}px 0`,
-                backgroundRepeat: "no-repeat",
-                WebkitBackgroundClip: "text",
-                backgroundClip: "text",
-                opacity: Math.min(1, p * 1.6),
-                transform: `translateY(${(1 - p) * 0.16 * F}px)`,
-              }}
-            >
-              {l.ch}
-            </div>
-          );
-        })}
-
-        {(() => {
-          if (sweeping) return <div style={dotStyle(barL, barR, dotY, c.fg)} />;
-          const segs = [0, 1].map((k) => {
-            const s = st(k);
-            const cx = startCx(k);
-            const l0 = cx - d / 2;
-            const r0 = cx + d / 2;
-            return {
-              l: k === 0 ? lerp(l0, left, s) : lerp(l0, mid - d / 2, s),
-              r: k === 0 ? lerp(r0, mid + d / 2, s) : lerp(r0, barRight, s),
-              lift: bump(k) * 0.05 * F * (1 - s),
-              color: interpolateColors(
-                Math.max(bump(k), Math.min(1, s * 3)),
-                [0, 1],
-                [c.muted, c.fg],
-              ),
-            };
-          });
-          // Once the two capsules overlap they are one bar: draw it once so
-          // the rounded ends never leave an antialiased seam.
-          if (segs[1].l < segs[0].r) {
-            return <div style={dotStyle(segs[0].l, segs[1].r, dotY, c.fg)} />;
-          }
-          return segs.map((g, k) => (
-            <div
-              key={k === 0 ? "a" : "b"}
-              style={dotStyle(g.l, g.r, dotY - g.lift, g.color)}
-            />
-          ));
-        })()}
-
-        <div
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            ...dotStyle(
-              dot3Cx - d / 2,
-              dot3Cx + d / 2,
-              dotY - bump(2) * 0.05 * F * (1 - st(2)),
-              dot3Color,
-            ),
-            transform: `scale(${pop})`,
+            transform: `scale(${cam * (1 + 0.02 * push)})`,
+            transformOrigin: `${W / 2}px ${lerp(H / 2, baseline - 0.3 * F, zoom)}px`,
           }}
-        />
-      </AbsoluteFill>
-      <Grain opacity={c.grain} />
+        >
+          {letters.map((l, i) => {
+            const p = EASE_OUT(
+              interpolate(t, [crossAt[i], crossAt[i] + RISE], [0, 1], CLAMP),
+            );
+            if (p <= 0) return null;
+            return (
+              <div
+                key={`${i}-${l.ch}`}
+                style={{
+                  position: "absolute",
+                  left: l.x,
+                  top: baseline - BASELINE * F,
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: F,
+                  lineHeight: 1.2,
+                  whiteSpace: "pre",
+                  color: "transparent",
+                  backgroundImage: sheen,
+                  backgroundSize: `${wordW}px ${1.2 * F}px`,
+                  backgroundPosition: `${left - l.x}px 0`,
+                  backgroundRepeat: "no-repeat",
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  opacity: Math.min(1, p * 1.6),
+                  transform: `translateY(${(1 - p) * 0.16 * F}px)`,
+                }}
+              >
+                {l.ch}
+              </div>
+            );
+          })}
+
+          {(() => {
+            if (sweeping) return <div style={dotStyle(barL, barR, dotY, fg)} />;
+            const segs = [0, 1].map((k) => {
+              const s = st(k);
+              const cx = startCx(k);
+              const l0 = cx - d / 2;
+              const r0 = cx + d / 2;
+              return {
+                l: k === 0 ? lerp(l0, left, s) : lerp(l0, mid - d / 2, s),
+                r: k === 0 ? lerp(r0, mid + d / 2, s) : lerp(r0, barRight, s),
+                lift: bump(k) * 0.05 * F * (1 - s),
+                color: interpolateColors(
+                  Math.max(bump(k), Math.min(1, s * 3)),
+                  [0, 1],
+                  [c.muted, fg],
+                ),
+              };
+            });
+            // Once the two capsules overlap they are one bar: draw it once so
+            // the rounded ends never leave an antialiased seam.
+            if (segs[1].l < segs[0].r) {
+              return <div style={dotStyle(segs[0].l, segs[1].r, dotY, fg)} />;
+            }
+            return segs.map((g, k) => (
+              <div
+                key={k === 0 ? "a" : "b"}
+                style={dotStyle(g.l, g.r, dotY - g.lift, g.color)}
+              />
+            ));
+          })()}
+
+          <div
+            style={{
+              ...dotStyle(
+                dot3Cx - d / 2,
+                dot3Cx + d / 2,
+                dotY - bump(2) * 0.05 * F * (1 - st(2)),
+                dot3Color,
+              ),
+              transform: `scale(${pop})`,
+            }}
+          />
+        </AbsoluteFill>
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

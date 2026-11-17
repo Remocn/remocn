@@ -8,6 +8,7 @@ import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadFont as loadOswald } from "@remotion/google-fonts/Oswald";
 import { loadFont as loadPlayfair } from "@remotion/google-fonts/PlayfairDisplay";
 import { loadFont as loadSyne } from "@remotion/google-fonts/Syne";
+import type React from "react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -54,7 +55,20 @@ export interface FontCycleProps {
   final?: FontCycleFace;
   passes?: number;
   showLabel?: boolean;
+  /** Frames each face shows at full pace; the start and end of the cycle stretch from it. */
+  beat?: number;
+  /** Baseline and cap-height guides behind the word. */
+  guides?: boolean;
   accent?: string;
+  /** Color of the word, guides and label; overrides the theme. */
+  ink?: string;
+  background?: string;
+  /** Size of the word and label, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -206,16 +220,32 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
-function schedule(count: number) {
+function schedule(count: number, beat: number) {
   const ends: number[] = [];
   let at = 0;
   for (let k = 0; k < count; k++) {
     const intro = 9 * Math.max(0, 1 - k / 2.4) ** 2;
     const tail = 9 * Math.max(0, (k - (count - 6)) / 5) ** 1.7;
-    at += Math.round(3 + intro + tail);
+    at += Math.round(beat + intro + tail);
     ends.push(at);
   }
   return ends;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function FontCycle({
@@ -224,13 +254,23 @@ export function FontCycle({
   final = FINAL_FACE,
   passes = 2,
   showLabel = true,
+  beat = 3,
+  guides = true,
   accent = "#3B5BFD",
+  ink,
+  background,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: FontCycleProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
   const u = W / 1280;
   const silkId = `fcs${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
@@ -244,11 +284,16 @@ export function FontCycle({
     }
     return list;
   }, [fonts.length, passes]);
-  const ends = useMemo(() => schedule(sequence.length), [sequence.length]);
+  const ends = useMemo(
+    () => schedule(sequence.length, beat),
+    [sequence.length, beat],
+  );
   const landAt = ends[ends.length - 1] ?? 0;
 
   if (!metrics) {
-    return <div style={{ position: "absolute", inset: 0, background: c.bg }} />;
+    return (
+      <div style={{ position: "absolute", inset: 0, background: stage }} />
+    );
   }
 
   const slot = ends.findIndex((e) => t < e);
@@ -285,7 +330,7 @@ export function FontCycle({
   const guideAlpha = guideIn * (0.12 + 0.06 * (1 - guideOut)) * guideOut;
   const guideHalf = W * 0.42 * guideIn;
   const lift = (1 - enter) * capPx * 0.08;
-  const scale = landed ? 1.035 - 0.035 * settle : 1;
+  const zoom = landed ? 1.035 - 0.035 * settle : 1;
   const hair = Math.max(1, u);
   const sheen = interpolate(t, [landAt, landAt + 60], [0.34, 0.48], {
     ...CLAMP,
@@ -296,96 +341,100 @@ export function FontCycle({
   const inkW = m.width * size * 1.04;
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <linearGradient
-            id={silkId}
-            gradientUnits="userSpaceOnUse"
-            x1={inkL}
-            y1={baseline - capPx * 1.3}
-            x2={inkL + inkW}
-            y2={baseline + capPx * 0.3}
-          >
-            <stop offset="0" stopColor={silk[0]} />
-            <stop offset={sheen - 0.16} stopColor={silk[2]} />
-            <stop offset={sheen} stopColor={silk[1]} />
-            <stop offset={sheen + 0.2} stopColor={silk[2]} />
-            <stop offset="1" stopColor={silk[3]} />
-          </linearGradient>
-        </defs>
-        {[baseline, baseline - capPx].map((y) => (
-          <rect
-            key={y}
-            x={cx - guideHalf}
-            y={y - hair / 2}
-            width={guideHalf * 2}
-            height={hair}
-            fill={c.fg}
-            opacity={guideAlpha}
-          />
-        ))}
-        <g
-          transform={`translate(${cx} ${baseline - capPx / 2 + lift}) scale(${scale}) translate(${-cx} ${-(baseline - capPx / 2)})`}
-          opacity={enter}
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
         >
-          <text
-            x={cx - m.inkCenter * size}
-            y={baseline}
-            fontFamily={face.family}
-            fontWeight={face.weight ?? 400}
-            fontStyle={face.style ?? "normal"}
-            fontSize={size}
-            letterSpacing={`${face.tracking ?? 0}em`}
-            fill={landed ? `url(#${silkId})` : c.fg}
+          <defs>
+            <linearGradient
+              id={silkId}
+              gradientUnits="userSpaceOnUse"
+              x1={inkL}
+              y1={baseline - capPx * 1.3}
+              x2={inkL + inkW}
+              y2={baseline + capPx * 0.3}
+            >
+              <stop offset="0" stopColor={silk[0]} />
+              <stop offset={sheen - 0.16} stopColor={silk[2]} />
+              <stop offset={sheen} stopColor={silk[1]} />
+              <stop offset={sheen + 0.2} stopColor={silk[2]} />
+              <stop offset="1" stopColor={silk[3]} />
+            </linearGradient>
+          </defs>
+          {guides
+            ? [baseline, baseline - capPx].map((y) => (
+                <rect
+                  key={y}
+                  x={cx - guideHalf}
+                  y={y - hair / 2}
+                  width={guideHalf * 2}
+                  height={hair}
+                  fill={fg}
+                  opacity={guideAlpha}
+                />
+              ))
+            : null}
+          <g
+            transform={`translate(${cx} ${baseline - capPx / 2 + lift}) scale(${zoom}) translate(${-cx} ${-(baseline - capPx / 2)})`}
+            opacity={enter}
           >
-            {word}
-          </text>
-        </g>
-      </svg>
-      {showLabel ? (
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: baseline + labelGap,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: labelSize * 0.6,
-            fontFamily: mono.fontFamily,
-            fontWeight: 400,
-            fontSize: labelSize,
-            lineHeight: 1,
-            letterSpacing: "0.02em",
-            textTransform: "uppercase",
-            color: c.fg,
-            opacity: enter * (landed ? 0.62 + 0.2 * settle : 0.46),
-          }}
-        >
-          <span
+            <text
+              x={cx - m.inkCenter * size}
+              y={baseline}
+              fontFamily={face.family}
+              fontWeight={face.weight ?? 400}
+              fontStyle={face.style ?? "normal"}
+              fontSize={size}
+              letterSpacing={`${face.tracking ?? 0}em`}
+              fill={landed ? `url(#${silkId})` : fg}
+            >
+              {word}
+            </text>
+          </g>
+        </svg>
+        {showLabel ? (
+          <div
             style={{
-              width: labelSize * 0.42,
-              height: labelSize * 0.42,
-              borderRadius: "50%",
-              background: landed ? accent : c.fg,
-              opacity: landed ? 1 : 0.5,
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: baseline + labelGap,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: labelSize * 0.6,
+              fontFamily: mono.fontFamily,
+              fontWeight: 400,
+              fontSize: labelSize,
+              lineHeight: 1,
+              letterSpacing: "0.02em",
+              textTransform: "uppercase",
+              color: fg,
+              opacity: enter * (landed ? 0.62 + 0.2 * settle : 0.46),
             }}
-          />
-          <span>
-            {face.label}
-            {face.weight ? ` ${face.weight}` : ""}
-          </span>
-        </div>
-      ) : null}
-      <Grain opacity={c.grain} />
+          >
+            <span
+              style={{
+                width: labelSize * 0.42,
+                height: labelSize * 0.42,
+                borderRadius: "50%",
+                background: landed ? accent : fg,
+                opacity: landed ? 1 : 0.5,
+              }}
+            />
+            <span>
+              {face.label}
+              {face.weight ? ` ${face.weight}` : ""}
+            </span>
+          </div>
+        ) : null}
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

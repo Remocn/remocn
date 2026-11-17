@@ -17,7 +17,7 @@ import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const { fontFamily: onest } = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -39,7 +39,23 @@ export interface AppStoreListingProps {
   chartRank?: number;
   award?: string | null;
   screenshots?: AppScreenshot[];
+  /** Label of the install button before the tap. */
+  getLabel?: string;
+  /** Label of the install button once the download finishes. */
+  openLabel?: string;
+  /** Label of the back link at the top of the listing. */
+  backLabel?: string;
   accent?: string;
+  /** Color of the lines beside the phone; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Onest by default. */
+  fontFamily?: string;
+  /** Size of the phone and lines, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "light" | "dark";
   lines?: string[];
@@ -672,6 +688,22 @@ function MockShot({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function AppStoreListing({
   appName = "remocn",
   subtitle = "Launch videos, written in React",
@@ -684,7 +716,15 @@ export function AppStoreListing({
   chartRank = 3,
   award = null,
   screenshots = DEFAULT_SHOTS,
+  getLabel = "Get",
+  openLabel = "Open",
+  backLabel = "Search",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = onest,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "light",
   lines = [
@@ -696,10 +736,11 @@ export function AppStoreListing({
   ground,
   groundParams,
 }: AppStoreListingProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay);
   const { fps, width, height } = useVideoConfig();
   const f = frame * speed;
   const c: Palette = theme === "dark" ? DARK : LIGHT;
+  const fg = ink ?? c.copy;
   const tall = height > width;
   const k = (height * (tall ? 0.66 : 0.92)) / BH;
   const phoneCx = tall ? width / 2 : width * 0.69;
@@ -883,416 +924,433 @@ export function AppStoreListing({
 
   return (
     <AbsoluteFill
-      style={{ fontFamily, overflow: "hidden", background: c.stage }}
+      style={{
+        fontFamily,
+        overflow: "hidden",
+        background:
+          background === undefined
+            ? c.stage
+            : background === "transparent"
+              ? undefined
+              : background,
+      }}
     >
-      <GshGround
-        preset={ground ?? (theme === "dark" ? "europa" : "paper-crease")}
-        params={groundParams}
-        timeOffset={theme === "dark" ? 4 : 5}
-        timeScale={0.3}
-      />
-      <AbsoluteFill style={{ background: c.scrim }} />
-      <div
-        style={{
-          position: "absolute",
-          left: tall ? width * 0.08 : width * 0.075,
-          top: tall ? height * 0.075 : height * 0.5 - height * 0.12,
-          width: tall ? width * 0.84 : width * 0.4,
-          height: tall ? height * 0.12 : height * 0.24,
-          overflow: "hidden",
-        }}
-      >
-        {lines.slice(0, LINE_AT.length).map((line, i) => {
-          const at = LINE_AT[i];
-          const next = LINE_AT[i + 1] ?? 100000;
-          const pin = i === 0 ? rise : tween(f, at, at + 12, enterE);
-          const pout = tween(f, next - 7, next, exitE);
-          if (f < at - 1 || f > next + 1) return null;
-          return (
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? (theme === "dark" ? "europa" : "paper-crease")}
+            params={groundParams}
+            timeOffset={theme === "dark" ? 4 : 5}
+            timeScale={0.3}
+          />
+          <AbsoluteFill style={{ background: c.scrim }} />
+        </>
+      ) : null}
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            left: tall ? width * 0.08 : width * 0.075,
+            top: tall ? height * 0.075 : height * 0.5 - height * 0.12,
+            width: tall ? width * 0.84 : width * 0.4,
+            height: tall ? height * 0.12 : height * 0.24,
+            overflow: "hidden",
+          }}
+        >
+          {lines.slice(0, LINE_AT.length).map((line, i) => {
+            const at = LINE_AT[i];
+            const next = LINE_AT[i + 1] ?? 100000;
+            const pin = i === 0 ? rise : tween(f, at, at + 12, enterE);
+            const pout = tween(f, next - 7, next, exitE);
+            if (f < at - 1 || f > next + 1) return null;
+            return (
+              <div
+                key={line}
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  display: "flex",
+                  alignItems: tall ? "flex-start" : "center",
+                  fontSize: tall ? height * 0.04 : height * 0.085,
+                  fontWeight: 300,
+                  lineHeight: 1.04,
+                  letterSpacing: "-0.035em",
+                  color: fg,
+                  textWrap: "balance",
+                  transform: `translateY(${(1 - pin) * 70 - pout * 50}%)`,
+                  opacity: pin * (1 - pout),
+                }}
+              >
+                {line}
+              </div>
+            );
+          })}
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: BW,
+            height: BH,
+            transformOrigin: "0 0",
+            transform: `translate(${phoneCx - (BW / 2) * S}px, ${height * camTy - camFy * S + (1 - rise) * height}px) scale(${S})`,
+            WebkitFontSmoothing: "antialiased",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: 67,
+              boxShadow: c.phoneShadow,
+            }}
+          />
+          <Phone screen={c.screen} home={c.text}>
+            <StatusBar color={c.text} />
             <div
-              key={line}
+              style={{
+                position: "absolute",
+                top: 54,
+                left: 8,
+                height: 44,
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                color: c.blue,
+                fontSize: 17,
+              }}
+            >
+              <Glyph d={PATH.back} size={28} color={c.blue} sw={2.4} />
+              {backLabel}
+            </div>
+            <div style={{ position: "absolute", left: 20, top: HEAD_Y }}>
+              <AppIcon
+                size={ICON}
+                accent={accent}
+                src={iconSrc}
+                ring={c.iconRing}
+              />
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                left: COL_X,
+                right: 20,
+                top: HEAD_Y + 2,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 22,
+                  fontWeight: 400,
+                  lineHeight: 1.2,
+                  letterSpacing: "-0.01em",
+                  color: c.text,
+                }}
+              >
+                {appName}
+              </div>
+              <div
+                style={{
+                  marginTop: 3,
+                  fontSize: 15,
+                  lineHeight: 1.3,
+                  color: c.muted,
+                  textWrap: "pretty",
+                }}
+              >
+                {subtitle}
+              </div>
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                left: COL_X + (GET_W - btnW) / 2,
+                top: GET_Y,
+                width: btnW,
+                height: 30,
+                borderRadius: 15,
+                background: interpolateColors(
+                  fillAmt,
+                  [0, 1],
+                  [`${c.blue}00`, c.blue],
+                ),
+                transform: `scale(${1 - press * 0.04})`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#ffffff",
+                fontSize: 15,
+                fontWeight: 400,
+              }}
+            >
+              <span style={{ position: "absolute", opacity: labelGet }}>
+                {getLabel}
+              </span>
+              <span style={{ position: "absolute", opacity: labelOpen }}>
+                {openLabel}
+              </span>
+              {ringOn > 0 ? (
+                <svg
+                  width={30}
+                  height={30}
+                  viewBox="0 0 30 30"
+                  style={{ position: "absolute", opacity: ringOn }}
+                >
+                  <circle
+                    cx={15}
+                    cy={15}
+                    r={13}
+                    fill="none"
+                    stroke={c.track}
+                    strokeWidth={2.5}
+                  />
+                  <circle
+                    cx={15}
+                    cy={15}
+                    r={13}
+                    fill="none"
+                    stroke={spinning ? c.muted : c.blue}
+                    strokeWidth={2.5}
+                    strokeLinecap={spinning ? "round" : "butt"}
+                    pathLength={1}
+                    strokeDasharray={`${spinning ? 0.22 : progress} 1`}
+                    transform={`rotate(${spinning ? spinAngle : -90} 15 15)`}
+                  />
+                  {!spinning ? (
+                    <rect
+                      x={11}
+                      y={11}
+                      width={8}
+                      height={8}
+                      rx={1.6}
+                      fill={c.blue}
+                    />
+                  ) : null}
+                </svg>
+              ) : null}
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                left: COL_X + GET_W + 10,
+                top: GET_Y + 3,
+                fontSize: 9,
+                lineHeight: 1.2,
+                color: c.muted,
+                opacity: iapOpacity,
+              }}
+            >
+              In-App
+              <br />
+              Purchases
+            </div>
+            <div style={{ position: "absolute", right: 20, top: GET_Y + 2 }}>
+              <Glyph d={PATH.share} size={24} color={c.blue} sw={1.8} />
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                left: 20,
+                right: 20,
+                top: STRIP_Y,
+                height: 1,
+                background: c.hair,
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                top: STRIP_Y,
+                height: STRIP_H,
+                display: "flex",
+                paddingLeft: 4,
+              }}
+            >
+              {cells.map((cell, i) => (
+                <div
+                  key={cell.label}
+                  style={{
+                    position: "relative",
+                    width: CELL_W,
+                    height: STRIP_H,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 4,
+                    color: c.muted,
+                  }}
+                >
+                  {i > 0 ? (
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: 0,
+                        top: 24,
+                        width: 1,
+                        height: 36,
+                        background: c.hair,
+                      }}
+                    />
+                  ) : null}
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 400,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.04em",
+                    }}
+                  >
+                    {cell.label}
+                  </span>
+                  <div
+                    style={{
+                      height: 32,
+                      display: "flex",
+                      alignItems: "center",
+                      fontSize: 21,
+                      fontWeight: 300,
+                      letterSpacing: "-0.01em",
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {cell.value}
+                  </div>
+                  <span
+                    style={{
+                      fontSize: 12,
+                      maxWidth: CELL_W - 16,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      height: 14,
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    {cell.foot}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                left: 20,
+                right: 20,
+                top: STRIP_Y + STRIP_H,
+                height: 1,
+                background: c.hair,
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                left: 20,
+                top: SHOT_Y,
+                display: "flex",
+                gap: SHOT_GAP,
+                transform: `translateX(${-scrollX}px)`,
+              }}
+            >
+              {screenshots.map((s, i) => (
+                <div
+                  key={i}
+                  style={{
+                    position: "relative",
+                    width: SHOT_W,
+                    height: SHOT_H,
+                    flexShrink: 0,
+                    borderRadius: 22,
+                    overflow: "hidden",
+                  }}
+                >
+                  {s.src ? (
+                    <Img
+                      src={s.src}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  ) : (
+                    <MockShot index={i} title={s.title} accent={accent} />
+                  )}
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      borderRadius: 22,
+                      boxShadow: `inset 0 0 0 1px ${c.iconRing}`,
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+            <div
               style={{
                 position: "absolute",
                 left: 0,
                 right: 0,
-                top: 0,
                 bottom: 0,
+                height: TAB_H,
+                background: c.tab,
+                borderTop: `1px solid ${c.hair}`,
                 display: "flex",
-                alignItems: tall ? "flex-start" : "center",
-                fontSize: tall ? height * 0.04 : height * 0.085,
-                fontWeight: 300,
-                lineHeight: 1.04,
-                letterSpacing: "-0.035em",
-                color: c.copy,
-                textWrap: "balance",
-                transform: `translateY(${(1 - pin) * 70 - pout * 50}%)`,
-                opacity: pin * (1 - pout),
+                justifyContent: "space-around",
+                padding: "7px 8px 0",
+                zIndex: 20,
               }}
             >
-              {line}
-            </div>
-          );
-        })}
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: BW,
-          height: BH,
-          transformOrigin: "0 0",
-          transform: `translate(${phoneCx - (BW / 2) * S}px, ${height * camTy - camFy * S + (1 - rise) * height}px) scale(${S})`,
-          WebkitFontSmoothing: "antialiased",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            borderRadius: 67,
-            boxShadow: c.phoneShadow,
-          }}
-        />
-        <Phone screen={c.screen} home={c.text}>
-          <StatusBar color={c.text} />
-          <div
-            style={{
-              position: "absolute",
-              top: 54,
-              left: 8,
-              height: 44,
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-              color: c.blue,
-              fontSize: 17,
-            }}
-          >
-            <Glyph d={PATH.back} size={28} color={c.blue} sw={2.4} />
-            Search
-          </div>
-          <div style={{ position: "absolute", left: 20, top: HEAD_Y }}>
-            <AppIcon
-              size={ICON}
-              accent={accent}
-              src={iconSrc}
-              ring={c.iconRing}
-            />
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              left: COL_X,
-              right: 20,
-              top: HEAD_Y + 2,
-            }}
-          >
-            <div
-              style={{
-                fontSize: 22,
-                fontWeight: 400,
-                lineHeight: 1.2,
-                letterSpacing: "-0.01em",
-                color: c.text,
-              }}
-            >
-              {appName}
-            </div>
-            <div
-              style={{
-                marginTop: 3,
-                fontSize: 15,
-                lineHeight: 1.3,
-                color: c.muted,
-                textWrap: "pretty",
-              }}
-            >
-              {subtitle}
-            </div>
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              left: COL_X + (GET_W - btnW) / 2,
-              top: GET_Y,
-              width: btnW,
-              height: 30,
-              borderRadius: 15,
-              background: interpolateColors(
-                fillAmt,
-                [0, 1],
-                [`${c.blue}00`, c.blue],
-              ),
-              transform: `scale(${1 - press * 0.04})`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#ffffff",
-              fontSize: 15,
-              fontWeight: 400,
-            }}
-          >
-            <span style={{ position: "absolute", opacity: labelGet }}>Get</span>
-            <span style={{ position: "absolute", opacity: labelOpen }}>
-              Open
-            </span>
-            {ringOn > 0 ? (
-              <svg
-                width={30}
-                height={30}
-                viewBox="0 0 30 30"
-                style={{ position: "absolute", opacity: ringOn }}
-              >
-                <circle
-                  cx={15}
-                  cy={15}
-                  r={13}
-                  fill="none"
-                  stroke={c.track}
-                  strokeWidth={2.5}
-                />
-                <circle
-                  cx={15}
-                  cy={15}
-                  r={13}
-                  fill="none"
-                  stroke={spinning ? c.muted : c.blue}
-                  strokeWidth={2.5}
-                  strokeLinecap={spinning ? "round" : "butt"}
-                  pathLength={1}
-                  strokeDasharray={`${spinning ? 0.22 : progress} 1`}
-                  transform={`rotate(${spinning ? spinAngle : -90} 15 15)`}
-                />
-                {!spinning ? (
-                  <rect
-                    x={11}
-                    y={11}
-                    width={8}
-                    height={8}
-                    rx={1.6}
-                    fill={c.blue}
-                  />
-                ) : null}
-              </svg>
-            ) : null}
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              left: COL_X + GET_W + 10,
-              top: GET_Y + 3,
-              fontSize: 9,
-              lineHeight: 1.2,
-              color: c.muted,
-              opacity: iapOpacity,
-            }}
-          >
-            In-App
-            <br />
-            Purchases
-          </div>
-          <div style={{ position: "absolute", right: 20, top: GET_Y + 2 }}>
-            <Glyph d={PATH.share} size={24} color={c.blue} sw={1.8} />
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              left: 20,
-              right: 20,
-              top: STRIP_Y,
-              height: 1,
-              background: c.hair,
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              top: STRIP_Y,
-              height: STRIP_H,
-              display: "flex",
-              paddingLeft: 4,
-            }}
-          >
-            {cells.map((cell, i) => (
-              <div
-                key={cell.label}
-                style={{
-                  position: "relative",
-                  width: CELL_W,
-                  height: STRIP_H,
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 4,
-                  color: c.muted,
-                }}
-              >
-                {i > 0 ? (
+              {tabs.map(([label, d]) => {
+                const on = label === "Search";
+                const col = on ? c.blue : c.tabIdle;
+                return (
                   <div
+                    key={label}
                     style={{
-                      position: "absolute",
-                      left: 0,
-                      top: 24,
-                      width: 1,
-                      height: 36,
-                      background: c.hair,
+                      width: 62,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: 3,
+                      color: col,
+                      fontSize: 10,
+                      fontWeight: 400,
                     }}
-                  />
-                ) : null}
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 400,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.04em",
-                  }}
-                >
-                  {cell.label}
-                </span>
-                <div
-                  style={{
-                    height: 32,
-                    display: "flex",
-                    alignItems: "center",
-                    fontSize: 21,
-                    fontWeight: 300,
-                    letterSpacing: "-0.01em",
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  {cell.value}
-                </div>
-                <span
-                  style={{
-                    fontSize: 12,
-                    maxWidth: CELL_W - 16,
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    height: 14,
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  {cell.foot}
-                </span>
-              </div>
-            ))}
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              left: 20,
-              right: 20,
-              top: STRIP_Y + STRIP_H,
-              height: 1,
-              background: c.hair,
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              left: 20,
-              top: SHOT_Y,
-              display: "flex",
-              gap: SHOT_GAP,
-              transform: `translateX(${-scrollX}px)`,
-            }}
-          >
-            {screenshots.map((s, i) => (
-              <div
-                key={i}
-                style={{
-                  position: "relative",
-                  width: SHOT_W,
-                  height: SHOT_H,
-                  flexShrink: 0,
-                  borderRadius: 22,
-                  overflow: "hidden",
-                }}
-              >
-                {s.src ? (
-                  <Img
-                    src={s.src}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
-                  />
-                ) : (
-                  <MockShot index={i} title={s.title} accent={accent} />
-                )}
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    borderRadius: 22,
-                    boxShadow: `inset 0 0 0 1px ${c.iconRing}`,
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: TAB_H,
-              background: c.tab,
-              borderTop: `1px solid ${c.hair}`,
-              display: "flex",
-              justifyContent: "space-around",
-              padding: "7px 8px 0",
-              zIndex: 20,
-            }}
-          >
-            {tabs.map(([label, d]) => {
-              const on = label === "Search";
-              const col = on ? c.blue : c.tabIdle;
-              return (
-                <div
-                  key={label}
-                  style={{
-                    width: 62,
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: 3,
-                    color: col,
-                    fontSize: 10,
-                    fontWeight: 400,
-                  }}
-                >
-                  <Glyph d={d} size={26} color={col} sw={1.7} />
-                  {label}
-                </div>
-              );
-            })}
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              left: touch.x - 22,
-              top: touch.y - 22,
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              background: c.touch,
-              border: "1.5px solid rgba(255,255,255,0.75)",
-              boxShadow: "0 2px 10px rgba(0,0,0,0.25)",
-              opacity: touchOpacity,
-              transform: `scale(${1 - Math.min(1, down) * 0.14})`,
-              zIndex: 35,
-            }}
-          />
-        </Phone>
-      </div>
+                  >
+                    <Glyph d={d} size={26} color={col} sw={1.7} />
+                    {label}
+                  </div>
+                );
+              })}
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                left: touch.x - 22,
+                top: touch.y - 22,
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                background: c.touch,
+                border: "1.5px solid rgba(255,255,255,0.75)",
+                boxShadow: "0 2px 10px rgba(0,0,0,0.25)",
+                opacity: touchOpacity,
+                transform: `scale(${1 - Math.min(1, down) * 0.14})`,
+                zIndex: 35,
+              }}
+            />
+          </Phone>
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const stripeCountConfig: ComponentConfig = {
   componentName: "StripeCount",
@@ -55,6 +61,26 @@ export const stripeCountConfig: ComponentConfig = {
       description: "Stripes",
       hiddenFromList: false,
     },
+    paintDuration: {
+      type: "number",
+      default: 60,
+      min: 10,
+      max: 120,
+      step: 1,
+      description: "Paint (frames)",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 2,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: "#FF4F00", description: "Accent" },
+    ...sceneControls({ font: "Familjen Grotesk" }),
     speed: {
       type: "number",
       default: 1,

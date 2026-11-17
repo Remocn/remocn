@@ -83,6 +83,52 @@ Dots fall through a field of pegs into bins and stack into a bell curve, then th
       description: "Accent color for the hero element.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Geist\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "400",
+      description: "Weight of the big figure in the label.",
+    },
+    {
+      name: "pourLength",
+      type: "number",
+      default: "50",
+      description: "Frames over which the balls are released; the marker lands after the last one settles.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
+    },
+    {
       name: "theme",
       type: "\"dark\" | \"light\"",
       default: "\"dark\"",

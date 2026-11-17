@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const singleStrokeConfig: ComponentConfig = {
   componentName: "SingleStroke",
@@ -28,6 +34,26 @@ export const singleStrokeConfig: ComponentConfig = {
       default: "Demo day. Every team shows a film.",
       description: "Label",
     },
+    drawDuration: {
+      type: "number",
+      default: 46,
+      min: 10,
+      max: 120,
+      step: 1,
+      description: "Draw (frames)",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Archivo" }),
     speed: {
       type: "number",
       default: 1,

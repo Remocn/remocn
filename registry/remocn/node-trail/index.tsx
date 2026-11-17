@@ -60,6 +60,23 @@ export type NodeTrailProps = {
   steps?: NodeTrailStep[];
   headline?: string;
   boardName?: string;
+  /** Frames to draw the first edge; each later edge is a little quicker. */
+  draw?: number;
+  /** Frames the camera rests on a node before the next edge; shrinks along the trail. */
+  pause?: number;
+  /** Blur along the camera's motion as it travels between nodes. */
+  motionBlur?: boolean;
+  /** Text color of the headline and prompt; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the headline. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the board, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
 };
@@ -402,11 +419,16 @@ function partialPath(e: Edge, frac: number) {
   return { d, tip };
 }
 
-export function nodeTrailTimeline(stepCount: number, promptLength: number) {
+export function nodeTrailTimeline(
+  stepCount: number,
+  promptLength: number,
+  draw = 22,
+  pause = 10,
+) {
   const edges: { start: number; dur: number; arrive: number }[] = [];
   let start = Math.max(30, promptLength + 9);
-  let dur = 22;
-  let hold = 10;
+  let dur = draw;
+  let hold = pause;
   for (let i = 0; i < stepCount; i++) {
     edges.push({ start, dur, arrive: start + dur - 3 });
     start = start + dur + hold;
@@ -607,6 +629,22 @@ function TypedLabel({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function NodeTrail({
   theme = "dark",
   accent,
@@ -616,17 +654,27 @@ export function NodeTrail({
   steps = DEFAULT_STEPS,
   headline = "From one prompt to every screen.",
   boardName = "launch-film.flow",
+  draw = 22,
+  pause = 10,
+  motionBlur = true,
+  ink,
+  background,
+  fontFamily = geist.fontFamily,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   ground,
   groundParams,
 }: NodeTrailProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const uid = useId().replace(/:/g, "");
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const tints = TINTS[theme];
   const acc = accent ?? (theme === "dark" ? tints.blue : c.accent);
   const btn = accent ?? c.accent;
-  const T = nodeTrailTimeline(steps.length, prompt.length);
+  const T = nodeTrailTimeline(steps.length, prompt.length, draw, pause);
 
   const chars = Math.max(prompt.length, placeholder.length);
   const promptW = 14 + chars * 0.6 * FIELD_TEXT + 12 + 32 + 10;
@@ -712,7 +760,7 @@ export function NodeTrail({
   const vy = (cNow.y - cPrev.y) * cNow.z;
   const bx = Math.min(10, Math.abs(vx) * 0.07);
   const by = Math.min(10, Math.abs(vy) * 0.07);
-  const blurOn = bx > 0.35 || by > 0.35;
+  const blurOn = motionBlur && (bx > 0.35 || by > 0.35);
 
   const nodeArrive = (i: number) => (i === 0 ? -100 : T.edges[i - 1].arrive);
   const selectedUntil = (i: number) => {
@@ -742,15 +790,27 @@ export function NodeTrail({
       : 1;
 
   return (
-    <AbsoluteFill style={{ background: c.ground.background }}>
-      <GshGround
-        preset={ground}
-        params={
-          ground && !groundParams ? undefined : (groundParams ?? c.ground)
-        }
-        timeOffset={4}
-        timeScale={0.6}
-      />
+    <AbsoluteFill
+      style={{
+        background: background === undefined ? c.ground.background : undefined,
+      }}
+    >
+      {background === undefined ? (
+        <GshGround
+          preset={ground}
+          params={
+            ground && !groundParams ? undefined : (groundParams ?? c.ground)
+          }
+          timeOffset={4}
+          timeScale={0.6}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
       <svg width={0} height={0} style={{ position: "absolute" }} aria-hidden>
         <filter id={`${uid}-mb`} x="-20%" y="-20%" width="140%" height="140%">
           <feGaussianBlur
@@ -758,397 +818,406 @@ export function NodeTrail({
           />
         </filter>
       </svg>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: W,
-          height: H,
-          transformOrigin: "0 0",
-          transform: `translate(${W / 2}px, ${H / 2}px) scale(${cNow.z}) translate(${-cNow.x}px, ${-cNow.y}px)`,
-          filter: blurOn ? `url(#${uid}-mb)` : undefined,
-        }}
-      >
-        <svg
-          width={W}
-          height={H}
-          style={{ position: "absolute", left: 0, top: 0, overflow: "visible" }}
-          aria-hidden
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: W,
+            height: H,
+            transformOrigin: "0 0",
+            transform: `translate(${W / 2}px, ${H / 2}px) scale(${cNow.z}) translate(${-cNow.x}px, ${-cNow.y}px)`,
+            filter: blurOn ? `url(#${uid}-mb)` : undefined,
+          }}
         >
-          <defs>
-            <pattern
-              id={`${uid}-dots`}
-              width={24 * k}
-              height={24 * k}
-              patternUnits="userSpaceOnUse"
-            >
-              <circle cx={12 * k} cy={12 * k} r={1.1 * k} fill={c.dot} />
-            </pattern>
-            {edges.map((e, i) => (
-              <linearGradient
-                key={`g${e.from.x}-${e.from.y}`}
-                id={`${uid}-eg${i}`}
-                gradientUnits="userSpaceOnUse"
-                x1={e.from.x}
-                y1={e.from.y}
-                x2={e.to.x}
-                y2={e.to.y}
+          <svg
+            width={W}
+            height={H}
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              overflow: "visible",
+            }}
+            aria-hidden
+          >
+            <defs>
+              <pattern
+                id={`${uid}-dots`}
+                width={24 * k}
+                height={24 * k}
+                patternUnits="userSpaceOnUse"
               >
-                <stop offset="0" stopColor={nodes[i].tint} />
-                <stop offset="1" stopColor={nodes[i + 1].tint} />
-              </linearGradient>
-            ))}
-          </defs>
-          <rect
-            x={worldExt.x}
-            y={worldExt.y}
-            width={worldExt.w}
-            height={worldExt.h}
-            fill={`url(#${uid}-dots)`}
-          />
-          {boardE > 0 ? (
+                <circle cx={12 * k} cy={12 * k} r={1.1 * k} fill={c.dot} />
+              </pattern>
+              {edges.map((e, i) => (
+                <linearGradient
+                  key={`g${e.from.x}-${e.from.y}`}
+                  id={`${uid}-eg${i}`}
+                  gradientUnits="userSpaceOnUse"
+                  x1={e.from.x}
+                  y1={e.from.y}
+                  x2={e.to.x}
+                  y2={e.to.y}
+                >
+                  <stop offset="0" stopColor={nodes[i].tint} />
+                  <stop offset="1" stopColor={nodes[i + 1].tint} />
+                </linearGradient>
+              ))}
+            </defs>
             <rect
-              x={board.x}
-              y={board.y}
-              width={board.w}
-              height={board.h}
-              fill={c.boardFill}
-              stroke={c.boardStroke}
-              strokeWidth={1.25 * u}
-              opacity={boardE}
-              strokeDasharray={`${(board.w + board.h) * 2 * boardE} ${(board.w + board.h) * 2}`}
+              x={worldExt.x}
+              y={worldExt.y}
+              width={worldExt.w}
+              height={worldExt.h}
+              fill={`url(#${uid}-dots)`}
             />
-          ) : null}
-          {edges.map((e, i) => {
-            const ed = T.edges[i];
-            const p = MOVE(clamp01((frame - ed.start) / ed.dur));
-            const { d, tip } = partialPath(e, p);
-            if (!d) return null;
-            const drawing = p > 0 && p < 1;
+            {boardE > 0 ? (
+              <rect
+                x={board.x}
+                y={board.y}
+                width={board.w}
+                height={board.h}
+                fill={c.boardFill}
+                stroke={c.boardStroke}
+                strokeWidth={1.25 * u}
+                opacity={boardE}
+                strokeDasharray={`${(board.w + board.h) * 2 * boardE} ${(board.w + board.h) * 2}`}
+              />
+            ) : null}
+            {edges.map((e, i) => {
+              const ed = T.edges[i];
+              const p = MOVE(clamp01((frame - ed.start) / ed.dur));
+              const { d, tip } = partialPath(e, p);
+              if (!d) return null;
+              const drawing = p > 0 && p < 1;
+              return (
+                <g key={`e${e.from.x}-${e.from.y}`}>
+                  <path
+                    d={d}
+                    fill="none"
+                    stroke={`url(#${uid}-eg${i})`}
+                    strokeWidth={1.6 * k}
+                    strokeDasharray={`${dash} ${dash}`}
+                    strokeDashoffset={march}
+                    strokeLinecap="round"
+                  />
+                  {drawing ? (
+                    <circle
+                      cx={tip.x}
+                      cy={tip.y}
+                      r={3.6 * k}
+                      fill={nodes[i + 1].tint}
+                    />
+                  ) : null}
+                </g>
+              );
+            })}
+          </svg>
+
+          {nodes.map((n, i) => {
+            const arrive = nodeArrive(i);
+            const local = frame - arrive;
+            if (i > 0 && local < 0) return null;
+            const pop =
+              i === 0 ? 1 : spring({ frame: local, fps, config: CARD });
+            const appear = i === 0 ? 1 : clamp01(local / 4);
+            const scale = i === 0 ? 1 : lerp(1.14, 1, pop);
+            const selOn =
+              i === 0 ? 1 : spring({ frame: local, fps, config: CHIP });
+            const selOff = 1 - EXIT(clamp01((frame - selectedUntil(i)) / 6));
+            const sel = Math.max(0, Math.min(selOn, selOff));
+            const pw = n.w * k;
+            const ph = n.h * k;
+            const labelShown = i === 0 ? n.label.length : (local - 2) * 1;
+            const typing =
+              i > 0 && labelShown >= 0 && labelShown < n.label.length + 3;
+            const labelSize = labelU * k;
+            const outPort = i < nodes.length - 1 && frame >= T.edges[i].start;
+            const inPort = i > 0;
+            const portR = 3.4 * k;
+            const portStyle = (x: number, y: number): React.CSSProperties => ({
+              position: "absolute",
+              left: x - portR,
+              top: y - portR,
+              width: portR * 2,
+              height: portR * 2,
+              borderRadius: portR,
+              background: c.handle,
+              border: `${1.4 * k}px solid ${n.tint}`,
+              boxSizing: "border-box",
+            });
+            const labelBox: React.CSSProperties =
+              n.labelSide === "top"
+                ? {
+                    left: 0,
+                    width: pw,
+                    bottom: ph + 9 * k,
+                    justifyContent: "center",
+                  }
+                : n.labelSide === "left"
+                  ? {
+                      right: pw + 14 * k,
+                      top: ph / 2 - labelSize / 2,
+                      justifyContent: "flex-end",
+                    }
+                  : {
+                      left: pw + 14 * k,
+                      top: ph / 2 - labelSize / 2,
+                      justifyContent: "flex-start",
+                    };
             return (
-              <g key={`e${e.from.x}-${e.from.y}`}>
-                <path
-                  d={d}
-                  fill="none"
-                  stroke={`url(#${uid}-eg${i})`}
-                  strokeWidth={1.6 * k}
-                  strokeDasharray={`${dash} ${dash}`}
-                  strokeDashoffset={march}
-                  strokeLinecap="round"
-                />
-                {drawing ? (
-                  <circle
-                    cx={tip.x}
-                    cy={tip.y}
-                    r={3.6 * k}
-                    fill={nodes[i + 1].tint}
+              <div
+                key={`n${n.label}-${i}`}
+                style={{
+                  position: "absolute",
+                  left: n.x - pw / 2,
+                  top: n.y - ph / 2,
+                  width: pw,
+                  height: ph,
+                  opacity: appear,
+                  transform: `scale(${scale})`,
+                }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    display: "flex",
+                    whiteSpace: "nowrap",
+                    ...labelBox,
+                  }}
+                >
+                  <TypedLabel
+                    text={n.label}
+                    shown={labelShown}
+                    color={n.tint}
+                    size={labelSize}
+                    typing={typing && Math.floor(frame / 4) % 2 === 0}
+                  />
+                </div>
+                {n.kind === "input" ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      borderRadius: 10 * k,
+                      background: c.field,
+                      border: `${1.5 * k}px solid ${n.tint}`,
+                      boxShadow: c.shadow,
+                      display: "flex",
+                      alignItems: "center",
+                      paddingLeft: 14 * k,
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: mono.fontFamily,
+                        fontWeight: 400,
+                        fontSize: FIELD_TEXT * k,
+                        color: typed > 0 ? fg : c.muted,
+                        whiteSpace: "pre",
+                        display: "inline-flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      {typed > 0 ? prompt.slice(0, typed) : placeholder}
+                      {frame < T.press + 2 &&
+                      Math.floor(frame / 5) % 2 === 0 ? (
+                        <span
+                          style={{
+                            display: "inline-block",
+                            width: 1.5 * k,
+                            height: FIELD_TEXT * 1.15 * k,
+                            marginLeft: 2 * k,
+                            background: n.tint,
+                          }}
+                        />
+                      ) : null}
+                    </span>
+                    <div
+                      style={{
+                        position: "absolute",
+                        right: 9 * k,
+                        top: ph / 2 - 16 * k,
+                        width: 32 * k,
+                        height: 32 * k,
+                        borderRadius: 16 * k,
+                        background: btn,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        transform: `scale(${pressS})`,
+                        boxShadow: `0 ${2 * k}px ${8 * k}px ${alpha(btn, 0.35)}`,
+                      }}
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        width={17 * k}
+                        height={17 * k}
+                        aria-hidden
+                      >
+                        <path
+                          d="M5 12h14M13 6l6 6-6 6"
+                          fill="none"
+                          stroke={c.onAccent}
+                          strokeWidth={2}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      borderRadius: 6 * k,
+                      background: `linear-gradient(${alpha(n.tint, theme === "dark" ? 0.12 : 0.09)}, ${alpha(n.tint, theme === "dark" ? 0.12 : 0.09)}), ${c.nodeBase}`,
+                      border: `${1.5 * k}px solid ${n.tint}`,
+                      boxShadow: c.shadow,
+                      boxSizing: "border-box",
+                      padding: (PAD - 1.5) * k,
+                      display: "grid",
+                      gridTemplateColumns: `repeat(${n.cols}, ${TILE * k}px)`,
+                      gridAutoRows: TILE * k,
+                      gap: TILE_GAP * k,
+                    }}
+                  >
+                    {n.icons.map((ic, j) => {
+                      const tp = spring({
+                        frame: local - 4 - j * 2,
+                        fps,
+                        config: CHIP,
+                      });
+                      return (
+                        <div
+                          key={`t${ic}-${j}`}
+                          style={{
+                            width: TILE * k,
+                            height: TILE * k,
+                            borderRadius: 7 * k,
+                            border: `${1.2 * k}px dashed ${alpha(n.tint, 0.6)}`,
+                            background: alpha(
+                              n.tint,
+                              theme === "dark" ? 0.08 : 0.07,
+                            ),
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            boxSizing: "border-box",
+                            transform: `scale(${Math.max(0, tp)})`,
+                          }}
+                        >
+                          <NodeGlyph
+                            icon={ic}
+                            size={21 * k}
+                            color={n.tint}
+                            frame={frame}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {inPort ? (
+                  <div
+                    style={tall ? portStyle(pw / 2, 0) : portStyle(0, ph / 2)}
                   />
                 ) : null}
-              </g>
+                {outPort ? (
+                  <div
+                    style={tall ? portStyle(pw / 2, ph) : portStyle(pw, ph / 2)}
+                  />
+                ) : null}
+                <Handles
+                  w={pw}
+                  h={ph}
+                  k={k}
+                  color={n.tint}
+                  fill={c.handle}
+                  t={sel}
+                />
+              </div>
             );
           })}
-        </svg>
 
-        {nodes.map((n, i) => {
-          const arrive = nodeArrive(i);
-          const local = frame - arrive;
-          if (i > 0 && local < 0) return null;
-          const pop = i === 0 ? 1 : spring({ frame: local, fps, config: CARD });
-          const appear = i === 0 ? 1 : clamp01(local / 4);
-          const scale = i === 0 ? 1 : lerp(1.14, 1, pop);
-          const selOn =
-            i === 0 ? 1 : spring({ frame: local, fps, config: CHIP });
-          const selOff = 1 - EXIT(clamp01((frame - selectedUntil(i)) / 6));
-          const sel = Math.max(0, Math.min(selOn, selOff));
-          const pw = n.w * k;
-          const ph = n.h * k;
-          const labelShown = i === 0 ? n.label.length : (local - 2) * 1;
-          const typing =
-            i > 0 && labelShown >= 0 && labelShown < n.label.length + 3;
-          const labelSize = labelU * k;
-          const outPort = i < nodes.length - 1 && frame >= T.edges[i].start;
-          const inPort = i > 0;
-          const portR = 3.4 * k;
-          const portStyle = (x: number, y: number): React.CSSProperties => ({
-            position: "absolute",
-            left: x - portR,
-            top: y - portR,
-            width: portR * 2,
-            height: portR * 2,
-            borderRadius: portR,
-            background: c.handle,
-            border: `${1.4 * k}px solid ${n.tint}`,
-            boxSizing: "border-box",
-          });
-          const labelBox: React.CSSProperties =
-            n.labelSide === "top"
-              ? {
-                  left: 0,
-                  width: pw,
-                  bottom: ph + 9 * k,
-                  justifyContent: "center",
-                }
-              : n.labelSide === "left"
-                ? {
-                    right: pw + 14 * k,
-                    top: ph / 2 - labelSize / 2,
-                    justifyContent: "flex-end",
-                  }
-                : {
-                    left: pw + 14 * k,
-                    top: ph / 2 - labelSize / 2,
-                    justifyContent: "flex-start",
-                  };
-          return (
+          {boardE > 0 ? (
+            <>
+              <div
+                style={{
+                  position: "absolute",
+                  left: board.x,
+                  top: board.y,
+                  width: board.w,
+                  height: board.h,
+                }}
+              >
+                <Handles
+                  w={board.w}
+                  h={board.h}
+                  k={u * 1.1}
+                  color={c.boardStroke.replace(/[\d.]+\)$/, "0.55)")}
+                  fill={c.handle}
+                  t={spring({ frame: frame - T.board - 4, fps, config: CHIP })}
+                />
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: board.x,
+                  top: board.y - (tall ? 34 : 30) * u,
+                  width: board.w,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  fontFamily: mono.fontFamily,
+                  fontWeight: 400,
+                  fontSize: (tall ? 18 : 16) * u,
+                  lineHeight: 1,
+                  color: c.muted,
+                  opacity: boardE,
+                  transform: `translateY(${(1 - boardE) * 8 * u}px)`,
+                }}
+              >
+                <span>{boardName}</span>
+                <span>{`${nodes.length} nodes`}</span>
+              </div>
+            </>
+          ) : null}
+
+          {headT > -1 ? (
             <div
-              key={`n${n.label}-${i}`}
               style={{
                 position: "absolute",
-                left: n.x - pw / 2,
-                top: n.y - ph / 2,
-                width: pw,
-                height: ph,
-                opacity: appear,
-                transform: `scale(${scale})`,
+                left: board.x,
+                top: headTop,
+                width: board.w,
+                overflow: "hidden",
+                paddingBottom: headSize * 0.18,
               }}
             >
               <div
                 style={{
-                  position: "absolute",
-                  display: "flex",
-                  whiteSpace: "nowrap",
-                  ...labelBox,
+                  fontFamily,
+                  fontWeight: 300,
+                  fontSize: headSize,
+                  letterSpacing: "-0.035em",
+                  lineHeight: 1.08,
+                  textWrap: "balance",
+                  color: fg,
+                  transform: `translateY(${(1 - headE) * headSize * 1.2}px)`,
+                  filter: `blur(${(1 - headE) * 5}px)`,
+                  opacity: 0.2 + 0.8 * headE,
                 }}
               >
-                <TypedLabel
-                  text={n.label}
-                  shown={labelShown}
-                  color={n.tint}
-                  size={labelSize}
-                  typing={typing && Math.floor(frame / 4) % 2 === 0}
-                />
+                {headline}
               </div>
-              {n.kind === "input" ? (
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    borderRadius: 10 * k,
-                    background: c.field,
-                    border: `${1.5 * k}px solid ${n.tint}`,
-                    boxShadow: c.shadow,
-                    display: "flex",
-                    alignItems: "center",
-                    paddingLeft: 14 * k,
-                    boxSizing: "border-box",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontFamily: mono.fontFamily,
-                      fontWeight: 400,
-                      fontSize: FIELD_TEXT * k,
-                      color: typed > 0 ? c.ink : c.muted,
-                      whiteSpace: "pre",
-                      display: "inline-flex",
-                      alignItems: "center",
-                    }}
-                  >
-                    {typed > 0 ? prompt.slice(0, typed) : placeholder}
-                    {frame < T.press + 2 && Math.floor(frame / 5) % 2 === 0 ? (
-                      <span
-                        style={{
-                          display: "inline-block",
-                          width: 1.5 * k,
-                          height: FIELD_TEXT * 1.15 * k,
-                          marginLeft: 2 * k,
-                          background: n.tint,
-                        }}
-                      />
-                    ) : null}
-                  </span>
-                  <div
-                    style={{
-                      position: "absolute",
-                      right: 9 * k,
-                      top: ph / 2 - 16 * k,
-                      width: 32 * k,
-                      height: 32 * k,
-                      borderRadius: 16 * k,
-                      background: btn,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      transform: `scale(${pressS})`,
-                      boxShadow: `0 ${2 * k}px ${8 * k}px ${alpha(btn, 0.35)}`,
-                    }}
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      width={17 * k}
-                      height={17 * k}
-                      aria-hidden
-                    >
-                      <path
-                        d="M5 12h14M13 6l6 6-6 6"
-                        fill="none"
-                        stroke={c.onAccent}
-                        strokeWidth={2}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              ) : (
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    borderRadius: 6 * k,
-                    background: `linear-gradient(${alpha(n.tint, theme === "dark" ? 0.12 : 0.09)}, ${alpha(n.tint, theme === "dark" ? 0.12 : 0.09)}), ${c.nodeBase}`,
-                    border: `${1.5 * k}px solid ${n.tint}`,
-                    boxShadow: c.shadow,
-                    boxSizing: "border-box",
-                    padding: (PAD - 1.5) * k,
-                    display: "grid",
-                    gridTemplateColumns: `repeat(${n.cols}, ${TILE * k}px)`,
-                    gridAutoRows: TILE * k,
-                    gap: TILE_GAP * k,
-                  }}
-                >
-                  {n.icons.map((ic, j) => {
-                    const tp = spring({
-                      frame: local - 4 - j * 2,
-                      fps,
-                      config: CHIP,
-                    });
-                    return (
-                      <div
-                        key={`t${ic}-${j}`}
-                        style={{
-                          width: TILE * k,
-                          height: TILE * k,
-                          borderRadius: 7 * k,
-                          border: `${1.2 * k}px dashed ${alpha(n.tint, 0.6)}`,
-                          background: alpha(
-                            n.tint,
-                            theme === "dark" ? 0.08 : 0.07,
-                          ),
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          boxSizing: "border-box",
-                          transform: `scale(${Math.max(0, tp)})`,
-                        }}
-                      >
-                        <NodeGlyph
-                          icon={ic}
-                          size={21 * k}
-                          color={n.tint}
-                          frame={frame}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-              {inPort ? (
-                <div
-                  style={tall ? portStyle(pw / 2, 0) : portStyle(0, ph / 2)}
-                />
-              ) : null}
-              {outPort ? (
-                <div
-                  style={tall ? portStyle(pw / 2, ph) : portStyle(pw, ph / 2)}
-                />
-              ) : null}
-              <Handles
-                w={pw}
-                h={ph}
-                k={k}
-                color={n.tint}
-                fill={c.handle}
-                t={sel}
-              />
             </div>
-          );
-        })}
-
-        {boardE > 0 ? (
-          <>
-            <div
-              style={{
-                position: "absolute",
-                left: board.x,
-                top: board.y,
-                width: board.w,
-                height: board.h,
-              }}
-            >
-              <Handles
-                w={board.w}
-                h={board.h}
-                k={u * 1.1}
-                color={c.boardStroke.replace(/[\d.]+\)$/, "0.55)")}
-                fill={c.handle}
-                t={spring({ frame: frame - T.board - 4, fps, config: CHIP })}
-              />
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: board.x,
-                top: board.y - (tall ? 34 : 30) * u,
-                width: board.w,
-                display: "flex",
-                justifyContent: "space-between",
-                fontFamily: mono.fontFamily,
-                fontWeight: 400,
-                fontSize: (tall ? 18 : 16) * u,
-                lineHeight: 1,
-                color: c.muted,
-                opacity: boardE,
-                transform: `translateY(${(1 - boardE) * 8 * u}px)`,
-              }}
-            >
-              <span>{boardName}</span>
-              <span>{`${nodes.length} nodes`}</span>
-            </div>
-          </>
-        ) : null}
-
-        {headT > -1 ? (
-          <div
-            style={{
-              position: "absolute",
-              left: board.x,
-              top: headTop,
-              width: board.w,
-              overflow: "hidden",
-              paddingBottom: headSize * 0.18,
-            }}
-          >
-            <div
-              style={{
-                fontFamily: geist.fontFamily,
-                fontWeight: 300,
-                fontSize: headSize,
-                letterSpacing: "-0.035em",
-                lineHeight: 1.08,
-                textWrap: "balance",
-                color: c.ink,
-                transform: `translateY(${(1 - headE) * headSize * 1.2}px)`,
-                filter: `blur(${(1 - headE) * 5}px)`,
-                opacity: 0.2 + 0.8 * headE,
-              }}
-            >
-              {headline}
-            </div>
-          </div>
-        ) : null}
-      </div>
+          ) : null}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

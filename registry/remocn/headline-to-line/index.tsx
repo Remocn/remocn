@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Geist";
+import type React from "react";
 import {
   type CSSProperties,
   useEffect,
@@ -33,7 +34,19 @@ export interface HeadlineToLineProps {
   continuation?: string;
   accent?: string;
   ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
   background?: string;
+  /** Typeface for the headline and line. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Frames between headline words as they enter. */
+  stagger?: number;
+  /** Characters typed per frame in the continuation. */
+  charsPerFrame?: number;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -88,7 +101,7 @@ const CLAMP = {
 
 type Measure = (s: string, track: number) => number;
 
-function buildMeasure(_version: number): Measure {
+function buildMeasure(_version: number, fontFamily: string): Measure {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   const cache: Record<string, number> = {};
@@ -96,7 +109,7 @@ function buildMeasure(_version: number): Measure {
     const key = `${track}|${s}`;
     if (cache[key] === undefined) {
       if (!ctx) return s.length * 0.55;
-      ctx.font = `300 ${FONT_PX}px "${geist.fontFamily}"`;
+      ctx.font = `300 ${FONT_PX}px "${fontFamily}"`;
       cache[key] =
         ctx.measureText(s).width / FONT_PX + track * Array.from(s).length;
     }
@@ -104,7 +117,7 @@ function buildMeasure(_version: number): Measure {
   };
 }
 
-function useMeasure() {
+function useMeasure(fontFamily: string) {
   const [version, setVersion] = useState(0);
   const [handle] = useState(() => delayRender("headline-to-line: measuring"));
   const released = useRef(false);
@@ -116,7 +129,7 @@ function useMeasure() {
     document.fonts.addEventListener("loadingdone", bump);
     Promise.all([
       geist.waitUntilDone(),
-      document.fonts.load(`300 100px "${geist.fontFamily}"`),
+      document.fonts.load(`300 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -130,8 +143,11 @@ function useMeasure() {
       live = false;
       document.fonts.removeEventListener("loadingdone", bump);
     };
-  }, [handle]);
-  return useMemo(() => buildMeasure(version), [version]);
+  }, [handle, fontFamily]);
+  return useMemo(
+    () => buildMeasure(version, fontFamily),
+    [version, fontFamily],
+  );
 }
 
 interface Slot {
@@ -164,6 +180,22 @@ function wrapWords(
   return lines;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function HeadlineToLine({
   words = ["Your", "launch", "video"],
   accentIndex = 1,
@@ -171,18 +203,24 @@ export function HeadlineToLine({
   accent,
   ink,
   background,
+  fontFamily = geist.fontFamily,
+  stagger = BEAT.wordStep,
+  charsPerFrame = BEAT.charsPerFrame,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   theme = "dark",
   ground,
   groundParams,
 }: HeadlineToLineProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;
   const preset = ground ?? c.ground;
   const bg = background ?? gshParams(preset, groundParams).background;
-  const m = useMeasure();
+  const m = useMeasure(fontFamily);
   const t = frame;
 
   const rise = interpolate(t, [BEAT.rise, BEAT.rise + BEAT.riseLen], [0, 1], {
@@ -308,7 +346,7 @@ export function HeadlineToLine({
       return i < accentIndex ? -extra : extra;
     };
     const wordNodes = words.map((word, i) => {
-      const enterAt = i * BEAT.wordStep - 4;
+      const enterAt = i * stagger - 4;
       const e = interpolate(t, [enterAt, enterAt + BEAT.enter], [0, 1], {
         ...CLAMP,
         easing: ENTER,
@@ -353,7 +391,7 @@ export function HeadlineToLine({
         fontSize: B,
         lineHeight: 1,
         whiteSpace: "pre",
-        fontFamily: geist.fontFamily,
+        fontFamily,
         fontWeight: 300,
         letterSpacing: `${TRACK_BIG + (TRACK_SMALL - TRACK_BIG) * p}em`,
         color,
@@ -386,13 +424,9 @@ export function HeadlineToLine({
     const typeAt = Math.max(BEAT.type, landed);
     const typed = Math.max(
       0,
-      Math.min(
-        continuation.length,
-        Math.floor((t - typeAt) * BEAT.charsPerFrame),
-      ),
+      Math.min(continuation.length, Math.floor((t - typeAt) * charsPerFrame)),
     );
-    const typeEnd =
-      typeAt + Math.ceil(continuation.length / BEAT.charsPerFrame);
+    const typeEnd = typeAt + Math.ceil(continuation.length / charsPerFrame);
     const headLen = head.length;
     const caretCh = headLen + typed;
     const textNodes = lines.map((ln, li) => {
@@ -409,7 +443,7 @@ export function HeadlineToLine({
             fontSize: s,
             lineHeight: 1,
             whiteSpace: "pre",
-            fontFamily: geist.fontFamily,
+            fontFamily,
             fontWeight: 300,
             letterSpacing: `${TRACK_SMALL}em`,
             color: inkC,
@@ -457,24 +491,28 @@ export function HeadlineToLine({
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          transform: `translateY(${(groundShift * 100).toFixed(3)}%) scale(${(1.08 - 0.04 * rise).toFixed(4)})`,
-        }}
-      >
-        <GshGround
-          preset={preset}
-          params={groundParams}
-          timeOffset={c.groundOffset}
-          timeScale={0.25}
-        />
-      </AbsoluteFill>
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(70% 46% at 50% ${portrait ? 46 : 47}%, rgba(${c.scrim},${scrimA.toFixed(3)}) 0%, rgba(${c.scrim},0) 100%)`,
-        }}
-      />
-      {content}
+      {background === undefined ? (
+        <>
+          <AbsoluteFill
+            style={{
+              transform: `translateY(${(groundShift * 100).toFixed(3)}%) scale(${(1.08 - 0.04 * rise).toFixed(4)})`,
+            }}
+          >
+            <GshGround
+              preset={preset}
+              params={groundParams}
+              timeOffset={c.groundOffset}
+              timeScale={0.25}
+            />
+          </AbsoluteFill>
+          <AbsoluteFill
+            style={{
+              background: `radial-gradient(70% 46% at 50% ${portrait ? 46 : 47}%, rgba(${c.scrim},${scrimA.toFixed(3)}) 0%, rgba(${c.scrim},0) 100%)`,
+            }}
+          />
+        </>
+      ) : null}
+      <ScaleLayer scale={scale}>{content}</ScaleLayer>
     </AbsoluteFill>
   );
 }

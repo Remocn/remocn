@@ -84,10 +84,38 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Caption describing the value.",
     },
     {
+      name: "turn",
+      type: "number",
+      default: "48",
+      description: "Frames the knob takes to turn from `from` to `to`.",
+    },
+    {
+      name: "minorTicks",
+      type: "number",
+      default: "5",
+      description: "Minor ticks between labelled steps on the scale.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Space Grotesk\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Color of the heated arc.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
     },
     {
       name: "theme",
@@ -104,6 +132,18 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "groundParams",
       type: "Partial<GradientParams>",
       description: "Partial shader parameters that override the ground preset.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

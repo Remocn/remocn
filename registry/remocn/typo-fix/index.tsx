@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Onest";
+import type React from "react";
 import { useId, useMemo } from "react";
 import {
   AbsoluteFill,
@@ -22,7 +23,23 @@ export interface TypoFixProps {
   correct?: string;
   before?: string;
   after?: string;
+  /** Frame the letters start hopping into their right places. */
+  fixAt?: number;
+  /** Color of the spell-check squiggle; overrides the theme. */
+  errorColor?: string;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Background fill in place of the lit ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the line. Load it yourself; Onest by default. */
+  fontFamily?: string;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the line, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -225,18 +242,45 @@ export function typoFixDuration(wrong = "Lanuch") {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function TypoFix({
   wrong = "Lanuch",
   correct = "Launch",
   before = "",
   after = "day",
+  fixAt = SWAP_AT,
+  errorColor,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  grain = true,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: TypoFixProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
   const clipId = `tf${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   const a = useMemo(() => Array.from(wrong), [wrong]);
@@ -258,7 +302,7 @@ export function TypoFix({
           ch,
           x0: x1,
           x1,
-          start: SWAP_AT,
+          start: fixAt,
           lift: 0,
           over: true,
           fadeIn: true,
@@ -272,7 +316,7 @@ export function TypoFix({
         ch,
         x0,
         x1,
-        start: SWAP_AT + (moving ? order++ * SWAP_STAGGER : 0),
+        start: fixAt + (moving ? order++ * SWAP_STAGGER : 0),
         lift: moving ? Math.min(0.62, Math.max(0.44, Math.abs(dx) * 0.85)) : 0,
         over: dx > 0,
         fadeIn: false,
@@ -285,17 +329,17 @@ export function TypoFix({
         ch: a[i],
         x0: la.xs[i],
         x1: la.xs[i],
-        start: SWAP_AT,
+        start: fixAt,
         lift: 0,
         over: false,
         fadeIn: false,
         fadeOut: true,
       });
     return list.sort((m, n) => Number(m.over) - Number(n.over));
-  }, [a, b, la, lb]);
+  }, [a, b, la, lb, fixAt]);
 
   const swapEnd = Math.max(...glyphs.map((g) => g.start)) + TRAVEL;
-  const fix = EASE_IO(interpolate(t, [SWAP_AT, swapEnd], [0, 1], CLAMP));
+  const fix = EASE_IO(interpolate(t, [fixAt, swapEnd], [0, 1], CLAMP));
   const wordW = la.total + (lb.total - la.total) * fix;
   const maxTotal = beforeW + Math.max(la.total, lb.total) - TRACK + afterW;
   const F = Math.min(H * 0.27, (W * 0.8) / Math.max(maxTotal, 0.1));
@@ -354,7 +398,7 @@ export function TypoFix({
     top: `${-ASC}em`,
     letterSpacing: `${TRACK}em`,
     whiteSpace: "pre" as const,
-    color: c.fg,
+    color: fg,
   };
 
   // The light drifts a few percent across the shot.
@@ -370,134 +414,138 @@ export function TypoFix({
   ].join(", ");
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <div style={{ position: "absolute", inset: 0, background: ground }} />
-      <svg
-        width={W}
-        height={H}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <clipPath id={clipId}>
-            <rect
-              x={clipL}
-              y={ulY - amp * 3}
-              width={Math.max(0, clipR - clipL)}
-              height={amp * 6}
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      {background === undefined ? (
+        <div style={{ position: "absolute", inset: 0, background: ground }} />
+      ) : null}
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            <clipPath id={clipId}>
+              <rect
+                x={clipL}
+                y={ulY - amp * 3}
+                width={Math.max(0, clipR - clipL)}
+                height={amp * 6}
+              />
+            </clipPath>
+          </defs>
+          {draw > 0 && retract < 1 ? (
+            <polyline
+              points={pts.join(" ")}
+              fill="none"
+              stroke={errorColor ?? c.error}
+              strokeWidth={Math.max(2, 0.03 * F)}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              clipPath={`url(#${clipId})`}
             />
-          </clipPath>
-        </defs>
-        {draw > 0 && retract < 1 ? (
-          <polyline
-            points={pts.join(" ")}
-            fill="none"
-            stroke={c.error}
-            strokeWidth={Math.max(2, 0.03 * F)}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            clipPath={`url(#${clipId})`}
+          ) : null}
+        </svg>
+        {rule > 0 ? (
+          <div
+            style={{
+              position: "absolute",
+              left: ruleX0,
+              top: ulY - ruleT / 2,
+              width: ruleW * rule,
+              height: ruleT,
+              borderRadius: ruleT / 2,
+              background: accent,
+            }}
           />
         ) : null}
-      </svg>
-      {rule > 0 ? (
         <div
           style={{
             position: "absolute",
-            left: ruleX0,
-            top: ulY - ruleT / 2,
-            width: ruleW * rule,
-            height: ruleT,
-            borderRadius: ruleT / 2,
-            background: accent,
-          }}
-        />
-      ) : null}
-      <div
-        style={{
-          position: "absolute",
-          left: W / 2,
-          top: baseline,
-          fontFamily: sans,
-          fontWeight: 500,
-          fontSize: F,
-          lineHeight: LINE,
-          fontKerning: "none",
-        }}
-      >
-        {before ? (
-          <div
-            style={{
-              ...textStyle,
-              left: `${left}em`,
-              fontKerning: "normal",
-              opacity: enter(0),
-              transform: `translateY(${(1 - enter(0)) * 0.2}em)`,
-            }}
-          >
-            {before}
-          </div>
-        ) : null}
-        <div
-          style={{
-            position: "absolute",
-            left: `${wordLeft}em`,
-            top: 0,
-            opacity: wordEnter,
-            transform: `translateY(${(1 - wordEnter) * 0.2 - tick * 0.035}em)`,
+            left: W / 2,
+            top: baseline,
+            fontFamily,
+            fontWeight: 500,
+            fontSize: F,
+            lineHeight: LINE,
+            fontKerning: "none",
           }}
         >
-          {glyphs.map((g) => {
-            const p = EASE_IO(
-              interpolate(t, [g.start, g.start + TRAVEL], [0, 1], CLAMP),
-            );
-            const arc = Math.sin(Math.PI * p);
-            const x = g.x0 + (g.x1 - g.x0) * p;
-            const y = g.over ? -g.lift * arc : g.lift * 0.85 * arc;
-            const scale = g.lift
-              ? g.over
-                ? 1 + 0.08 * arc
-                : 1 - 0.08 * arc
-              : 1;
-            let opacity = 1;
-            if (g.fadeIn) opacity = interpolate(p, [0.4, 1], [0, 1], CLAMP);
-            if (g.fadeOut) opacity = interpolate(p, [0, 0.6], [1, 0], CLAMP);
-            const color =
-              g.lift && !g.over
-                ? interpolateColors(arc, [0, 1], [c.fg, c.dim])
-                : c.fg;
-            return (
-              <div
-                key={g.key}
-                style={{
-                  ...textStyle,
-                  left: 0,
-                  color,
-                  opacity,
-                  transform: `translate(${x}em, ${y}em) scale(${scale})`,
-                  transformOrigin: `${advance(g.ch) / 2}em ${ASC}em`,
-                }}
-              >
-                {g.ch}
-              </div>
-            );
-          })}
-        </div>
-        {after ? (
+          {before ? (
+            <div
+              style={{
+                ...textStyle,
+                left: `${left}em`,
+                fontKerning: "normal",
+                opacity: enter(0),
+                transform: `translateY(${(1 - enter(0)) * 0.2}em)`,
+              }}
+            >
+              {before}
+            </div>
+          ) : null}
           <div
             style={{
-              ...textStyle,
-              left: `${wordLeft + wordW + SPACE}em`,
-              fontKerning: "normal",
-              opacity: enter(before ? 2 : 1),
-              transform: `translateY(${(1 - enter(before ? 2 : 1)) * 0.2}em)`,
+              position: "absolute",
+              left: `${wordLeft}em`,
+              top: 0,
+              opacity: wordEnter,
+              transform: `translateY(${(1 - wordEnter) * 0.2 - tick * 0.035}em)`,
             }}
           >
-            {after}
+            {glyphs.map((g) => {
+              const p = EASE_IO(
+                interpolate(t, [g.start, g.start + TRAVEL], [0, 1], CLAMP),
+              );
+              const arc = Math.sin(Math.PI * p);
+              const x = g.x0 + (g.x1 - g.x0) * p;
+              const y = g.over ? -g.lift * arc : g.lift * 0.85 * arc;
+              const scale = g.lift
+                ? g.over
+                  ? 1 + 0.08 * arc
+                  : 1 - 0.08 * arc
+                : 1;
+              let opacity = 1;
+              if (g.fadeIn) opacity = interpolate(p, [0.4, 1], [0, 1], CLAMP);
+              if (g.fadeOut) opacity = interpolate(p, [0, 0.6], [1, 0], CLAMP);
+              const color =
+                g.lift && !g.over
+                  ? interpolateColors(arc, [0, 1], [fg, c.dim])
+                  : fg;
+              return (
+                <div
+                  key={g.key}
+                  style={{
+                    ...textStyle,
+                    left: 0,
+                    color,
+                    opacity,
+                    transform: `translate(${x}em, ${y}em) scale(${scale})`,
+                    transformOrigin: `${advance(g.ch) / 2}em ${ASC}em`,
+                  }}
+                >
+                  {g.ch}
+                </div>
+              );
+            })}
           </div>
-        ) : null}
-      </div>
-      <Grain opacity={c.grain} />
+          {after ? (
+            <div
+              style={{
+                ...textStyle,
+                left: `${wordLeft + wordW + SPACE}em`,
+                fontKerning: "normal",
+                opacity: enter(before ? 2 : 1),
+                transform: `translateY(${(1 - enter(before ? 2 : 1)) * 0.2}em)`,
+              }}
+            >
+              {after}
+            </div>
+          ) : null}
+        </div>
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

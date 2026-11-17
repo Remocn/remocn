@@ -21,8 +21,18 @@ export interface SaidWhoProps {
   highlight?: string;
   name?: string;
   details?: string[];
+  /** Frames between quote words as they rise in. */
+  stagger?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Young Serif by default. */
+  fontFamily?: string;
+  /** Size of the quote block, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -178,7 +188,7 @@ function wrap(
   return { pos, lines: L, widths };
 }
 
-function useWidths(strings: string[]) {
+function useWidths(strings: string[], fontFamily: string) {
   const key = strings.join("\u0001");
   const [state, setState] = useState<{
     key: string;
@@ -192,14 +202,14 @@ function useWidths(strings: string[]) {
     let live = true;
     Promise.all([
       serif.waitUntilDone(),
-      document.fonts.load(`400 100px "${serif.fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
         const ctx = document.createElement("canvas").getContext("2d");
         const w: Record<string, number> = {};
-        if (ctx) ctx.font = `400 100px "${serif.fontFamily}"`;
+        if (ctx) ctx.font = `400 100px "${fontFamily}"`;
         for (const s of ref.current) {
           w[s] = ctx ? ctx.measureText(s).width / 100 : s.length * 0.5;
         }
@@ -212,8 +222,24 @@ function useWidths(strings: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily]);
   return state && state.key === key ? state.w : null;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function SaidWho({
@@ -221,15 +247,21 @@ export function SaidWho({
   highlight = "one evening",
   name = "Tobias Lind",
   details = ["backend engineer", "never edited a video before"],
+  stagger = 3,
   accent,
+  ink,
   background,
+  fontFamily = serif.fontFamily,
+  scale: layerScale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: SaidWhoProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames: T } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
@@ -272,7 +304,7 @@ export function SaidWho({
       ...attrToks.map((tk) => tk.text),
     ]),
   );
-  const w = useWidths(strings);
+  const w = useWidths(strings, fontFamily);
 
   if (!w) {
     return (
@@ -348,7 +380,7 @@ export function SaidWho({
     const lineW = qLay.widths[p.line];
     const x = W / 2 + (p.x - lineW / 2) * Fq;
     const y = qTop + p.line * qLineH;
-    const e = interpolate(t, [2 + i * 3, 20 + i * 3], [0, 1], {
+    const e = interpolate(t, [2 + i * stagger, 20 + i * stagger], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -364,7 +396,7 @@ export function SaidWho({
           fontSize: Fq,
           whiteSpace: "pre",
           letterSpacing: `${TRACK}em`,
-          color: tk.hot ? interpolateColors(hot, [0, 1], [c.ink, hi]) : c.ink,
+          color: tk.hot ? interpolateColors(hot, [0, 1], [fg, hi]) : fg,
           opacity: e,
           transform: `translateY(${((1 - e) * Fq * 0.3).toFixed(2)}px)`,
         }}
@@ -434,7 +466,7 @@ export function SaidWho({
           fontSize: Fa,
           whiteSpace: "pre",
           letterSpacing: "-0.005em",
-          color: c.ink,
+          color: fg,
           opacity: opacity * (strong ? 1 : 0.7),
           transform: `translateY(${dy.toFixed(2)}px)`,
         }}
@@ -449,23 +481,25 @@ export function SaidWho({
       style={{
         background: stage,
         overflow: "hidden",
-        fontFamily: serif.fontFamily,
+        fontFamily,
         fontWeight: 400,
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          transform: `scale(${scale.toFixed(4)})`,
-          transformOrigin: `${W / 2}px ${(qTop + qH / 2).toFixed(2)}px`,
-        }}
-      >
-        {quoteNodes}
-      </div>
-      <div style={{ position: "absolute", left: 0, right: 0, top: aTop }}>
-        {attrNodes}
-      </div>
+      <ScaleLayer scale={layerScale}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: `scale(${scale.toFixed(4)})`,
+            transformOrigin: `${W / 2}px ${(qTop + qH / 2).toFixed(2)}px`,
+          }}
+        >
+          {quoteNodes}
+        </div>
+        <div style={{ position: "absolute", left: 0, right: 0, top: aTop }}>
+          {attrNodes}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

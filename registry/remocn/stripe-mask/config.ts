@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const stripeMaskConfig: ComponentConfig = {
   componentName: "StripeMask",
@@ -12,11 +18,6 @@ export const stripeMaskConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     title: {
       type: "text-content",
@@ -32,6 +33,30 @@ export const stripeMaskConfig: ComponentConfig = {
       description: "Slant",
       hiddenFromList: false,
     },
+    stagger: {
+      type: "number",
+      default: 5,
+      min: 0,
+      max: 15,
+      step: 1,
+      description: "Bar stagger",
+      hiddenFromList: false,
+    },
+    hold: {
+      type: "number",
+      default: 10,
+      min: 0,
+      max: 60,
+      step: 1,
+      description: "Slab hold (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Oswald" }),
     speed: {
       type: "number",
       default: 1,

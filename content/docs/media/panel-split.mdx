@@ -105,6 +105,18 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Short header labels for the four panels.",
     },
     {
+      name: "location",
+      type: "string",
+      default: "\"Lisbon\"",
+      description: "City in the first panel's header.",
+    },
+    {
+      name: "ctaLabel",
+      type: "string",
+      default: "\"Play reel\"",
+      description: "Label of the play button in the last panel.",
+    },
+    {
       name: "theme",
       type: "\"dark\" | \"light\"",
       default: "\"dark\"",
@@ -122,6 +134,22 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Panel background color. Defaults depend on theme.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color of the name, first headline line and question; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Instrument Sans\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
       name: "ground",
       type: "GshPresetId",
       description: "Shader preset id for the animated background.",
@@ -130,6 +158,24 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "groundParams",
       type: "Partial<GradientParams>",
       description: "Partial shader parameters that override the ground preset.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
     },
   ]}
 />

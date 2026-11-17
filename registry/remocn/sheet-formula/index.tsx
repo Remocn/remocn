@@ -15,7 +15,7 @@ import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const instrumentSans = loadFont("normal", {
   weights: ["400"],
   subsets: ["latin"],
 });
@@ -38,8 +38,22 @@ export interface SheetFormulaProps {
   valueFormat?: "currency" | "percent" | "number";
   title?: string;
   chartTitle?: string;
+  /** Name of the active sheet tab. */
+  sheetName?: string;
+  /** Frames per typed character of the formula. */
+  charFrames?: number;
   theme?: "light" | "dark";
   accent?: string;
+  /** Color of the lines beside the sheet; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Size of the sheet and copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   /** Three lines beside the sheet: type, fill, chart. */
   lines?: [string, string, string];
@@ -724,6 +738,22 @@ function ChartCard({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function SheetFormula({
   rows = DEFAULT_ROWS,
   formula = "=D2/C2",
@@ -731,20 +761,28 @@ export function SheetFormula({
   valueFormat = "currency",
   title = "Signups 2026",
   chartTitle = "ARPU by month",
+  sheetName = "Signups",
+  charFrames = 3,
   theme = "light",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = instrumentSans.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   lines = ["Type it once.", "Fill it down.", "Chart it in one click."],
   ground,
   groundParams,
 }: SheetFormulaProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width;
   const W = tall ? 720 : 1280;
   const H = tall ? 1280 : 720;
   const u = Math.min(width / W, height / H);
-  const pal = palette(theme);
+  const themePal = palette(theme);
+  const pal = ink ? { ...themePal, copy: ink } : themePal;
   const sp = (f: number, config: Partial<typeof CARD> = CARD) =>
     spring({ frame: f, fps, config });
 
@@ -759,12 +797,16 @@ export function SheetFormula({
     string,
     number
   >;
-  T.enter = T.type + formula.length * 3 + 8;
+  T.enter = T.type + formula.length * charFrames + 8;
   T.grab = T.enter + 22;
   T.release = T.grab + 28;
   T.cf = T.release + 14;
   T.chart = T.cf + n * 3 + 14;
-  const typed = clamp(Math.floor((frame - T.type) / 3) + 1, 0, formula.length);
+  const typed = clamp(
+    Math.floor((frame - T.type) / charFrames) + 1,
+    0,
+    formula.length,
+  );
   const editing = frame >= T.click + 4 && frame < T.enter;
   const abs = (x: number, y: number) => ({ x: WIN.x + x, y: WIN.y + y });
   const e2 = abs(colX(4) + colW(4) / 2, rowY(2) + RH / 2);
@@ -983,536 +1025,552 @@ export function SheetFormula({
 
   return (
     <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={ground ?? (pal.dark ? "europa" : "glasswork")}
-        params={groundParams}
-        timeOffset={pal.dark ? 5 : 9}
-        timeScale={0.35}
-      />
-      <AbsoluteFill style={{ background: pal.scrim }} />
-      <div
-        style={{
-          position: "absolute",
-          left: (width - W * u) / 2,
-          top: (height - H * u) / 2,
-          width: W,
-          height: H,
-          transformOrigin: "0 0",
-          transform: `scale(${u})`,
-        }}
-      >
-        <div
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? (pal.dark ? "europa" : "glasswork")}
+            params={groundParams}
+            timeOffset={pal.dark ? 5 : 9}
+            timeScale={0.35}
+          />
+          <AbsoluteFill style={{ background: pal.scrim }} />
+        </>
+      ) : (
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: copyX,
-            top: copyY,
-            width: copyW,
-            height: tall ? 132 : 116,
-            fontSize: tall ? 62 : 54,
-            fontWeight: 400,
-            lineHeight: 1.04,
-            letterSpacing: "-0.035em",
-            color: pal.copy,
-            overflow: "hidden",
-            textWrap: "balance",
+            background: background === "transparent" ? undefined : background,
           }}
-        >
-          {swap(
-            lines.map((l) => l),
-            [8, T.grab - 6, T.chart - 8],
-          )}
-        </div>
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: copyX,
-            top: readY,
-            width: copyW,
-            height: 48,
-            overflow: "hidden",
-            fontSize: tall ? 34 : 30,
-            color: pal.copyMuted,
-            fontVariantNumeric: "tabular-nums",
-          }}
-        >
-          {swap(
-            [
-              <span key="f" style={{ fontFamily: mono.fontFamily }}>
-                <ColoredFormula
-                  text={formula.slice(0, typed)}
-                  refs={refs}
-                  base={pal.copy}
-                />
-              </span>,
-              <span key="r" style={{ fontFamily: mono.fontFamily }}>
-                E2:E{lastRow}
-              </span>,
-              <span key="a">
-                Average <span style={{ color: pal.copy }}>{fmt(avg)}</span>
-              </span>,
-            ],
-            [T.type, T.grab - 6, T.chart + 14],
-          )}
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            top: 0,
-            width: 1280,
-            height: 720,
+            left: (width - W * u) / 2,
+            top: (height - H * u) / 2,
+            width: W,
+            height: H,
             transformOrigin: "0 0",
-            transform: `translate(${gx}px, ${gy + (1 - enter) * 40}px) scale(${ws})`,
-            opacity: clamp(enter * 1.6, 0, 1),
+            transform: `scale(${u})`,
           }}
         >
           <div
             style={{
               position: "absolute",
-              inset: 0,
-              transformOrigin: `${WIN.x + WIN.w / 2}px ${WIN.y + WIN.h / 2}px`,
-              transform: `scale(${s})`,
+              left: copyX,
+              top: copyY,
+              width: copyW,
+              height: tall ? 132 : 116,
+              fontSize: tall ? 62 : 54,
+              fontWeight: 400,
+              lineHeight: 1.04,
+              letterSpacing: "-0.035em",
+              color: pal.copy,
+              overflow: "hidden",
+              textWrap: "balance",
+            }}
+          >
+            {swap(
+              lines.map((l) => l),
+              [8, T.grab - 6, T.chart - 8],
+            )}
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: copyX,
+              top: readY,
+              width: copyW,
+              height: 48,
+              overflow: "hidden",
+              fontSize: tall ? 34 : 30,
+              color: pal.copyMuted,
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            {swap(
+              [
+                <span key="f" style={{ fontFamily: mono.fontFamily }}>
+                  <ColoredFormula
+                    text={formula.slice(0, typed)}
+                    refs={refs}
+                    base={pal.copy}
+                  />
+                </span>,
+                <span key="r" style={{ fontFamily: mono.fontFamily }}>
+                  E2:E{lastRow}
+                </span>,
+                <span key="a">
+                  Average <span style={{ color: pal.copy }}>{fmt(avg)}</span>
+                </span>,
+              ],
+              [T.type, T.grab - 6, T.chart + 14],
+            )}
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              width: 1280,
+              height: 720,
+              transformOrigin: "0 0",
+              transform: `translate(${gx}px, ${gy + (1 - enter) * 40}px) scale(${ws})`,
+              opacity: clamp(enter * 1.6, 0, 1),
             }}
           >
             <div
               style={{
                 position: "absolute",
-                left: WIN.x,
-                top: WIN.y,
-                width: WIN.w,
-                height: WIN.h,
-                borderRadius: 12,
-                overflow: "hidden",
-                background: pal.win,
-                fontVariantNumeric: "tabular-nums",
-                boxShadow: pal.dark
-                  ? "0 0 0 1px rgba(255,255,255,0.08), 0 40px 100px rgba(0,0,0,0.6)"
-                  : "0 0 0 1px rgba(17,19,24,0.08), 0 40px 90px rgba(17,19,24,0.18), 0 10px 26px rgba(17,19,24,0.07)",
+                inset: 0,
+                transformOrigin: `${WIN.x + WIN.w / 2}px ${WIN.y + WIN.h / 2}px`,
+                transform: `scale(${s})`,
               }}
             >
-              <Chrome
-                pal={pal}
-                accent={accent}
-                title={title}
-                chartHover={chartHover}
-              />
               <div
                 style={{
                   position: "absolute",
-                  left: 0,
-                  top: TITLE_H + TOOL_H,
+                  left: WIN.x,
+                  top: WIN.y,
                   width: WIN.w,
-                  height: FX_H,
-                  borderTop: `1px solid ${pal.line}`,
-                  borderBottom: `1px solid ${pal.line}`,
-                  boxSizing: "border-box",
-                  display: "flex",
-                  alignItems: "center",
+                  height: WIN.h,
+                  borderRadius: 12,
+                  overflow: "hidden",
                   background: pal.win,
+                  fontVariantNumeric: "tabular-nums",
+                  boxShadow: pal.dark
+                    ? "0 0 0 1px rgba(255,255,255,0.08), 0 40px 100px rgba(0,0,0,0.6)"
+                    : "0 0 0 1px rgba(17,19,24,0.08), 0 40px 90px rgba(17,19,24,0.18), 0 10px 26px rgba(17,19,24,0.07)",
                 }}
               >
-                <div
-                  style={{
-                    width: 96,
-                    height: "100%",
-                    padding: "0 10px 0 12px",
-                    boxSizing: "border-box",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    fontSize: 12.5,
-                    color: pal.text,
-                    borderRight: `1px solid ${pal.line}`,
-                  }}
-                >
-                  {nameBox}
-                  <Caret color={pal.muted} />
-                </div>
-                <div
-                  style={{
-                    width: 40,
-                    display: "flex",
-                    justifyContent: "center",
-                  }}
-                >
-                  <svg width={18} height={14} viewBox="0 0 18 14">
-                    <text
-                      x={2}
-                      y={11}
-                      fontSize={13}
-                      fontStyle="italic"
-                      fontFamily="Georgia, 'Times New Roman', serif"
-                      fill={pal.muted}
-                    >
-                      fx
-                    </text>
-                  </svg>
-                </div>
-                <div
-                  style={{
-                    width: 1,
-                    height: 18,
-                    background: pal.line,
-                    marginRight: 10,
-                  }}
+                <Chrome
+                  pal={pal}
+                  accent={accent}
+                  title={title}
+                  chartHover={chartHover}
                 />
                 <div
                   style={{
-                    fontSize: 13,
-                    color: pal.text,
+                    position: "absolute",
+                    left: 0,
+                    top: TITLE_H + TOOL_H,
+                    width: WIN.w,
+                    height: FX_H,
+                    borderTop: `1px solid ${pal.line}`,
+                    borderBottom: `1px solid ${pal.line}`,
+                    boxSizing: "border-box",
                     display: "flex",
                     alignItems: "center",
+                    background: pal.win,
                   }}
                 >
-                  {formulaBar}
-                  {caret && (
-                    <div
-                      style={{
-                        width: 1.5,
-                        height: 16,
-                        background: pal.text,
-                        marginLeft: 1,
-                      }}
-                    />
-                  )}
+                  <div
+                    style={{
+                      width: 96,
+                      height: "100%",
+                      padding: "0 10px 0 12px",
+                      boxSizing: "border-box",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      fontSize: 12.5,
+                      color: pal.text,
+                      borderRight: `1px solid ${pal.line}`,
+                    }}
+                  >
+                    {nameBox}
+                    <Caret color={pal.muted} />
+                  </div>
+                  <div
+                    style={{
+                      width: 40,
+                      display: "flex",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <svg width={18} height={14} viewBox="0 0 18 14">
+                      <text
+                        x={2}
+                        y={11}
+                        fontSize={13}
+                        fontStyle="italic"
+                        fontFamily="Georgia, 'Times New Roman', serif"
+                        fill={pal.muted}
+                      >
+                        fx
+                      </text>
+                    </svg>
+                  </div>
+                  <div
+                    style={{
+                      width: 1,
+                      height: 18,
+                      background: pal.line,
+                      marginRight: 10,
+                    }}
+                  />
+                  <div
+                    style={{
+                      fontSize: 13,
+                      color: pal.text,
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    {formulaBar}
+                    {caret && (
+                      <div
+                        style={{
+                          width: 1.5,
+                          height: 16,
+                          background: pal.text,
+                          marginLeft: 1,
+                        }}
+                      />
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  top: GRID_TOP,
-                  width: WIN.w,
-                  height: HEAD_H,
-                  background: pal.head,
-                  borderBottom: `1px solid ${pal.line}`,
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  top: GRID_TOP,
-                  width: GUTTER,
-                  bottom: TABS_H,
-                  background: pal.head,
-                  borderRight: `1px solid ${pal.line}`,
-                }}
-              />
-              {Array.from({ length: NCOLS }, (_, c) => (
                 <div
-                  key={`col${String.fromCharCode(65 + c)}`}
                   style={{
                     position: "absolute",
-                    left: colX(c),
+                    left: 0,
                     top: GRID_TOP,
-                    width: colW(c),
+                    width: WIN.w,
                     height: HEAD_H,
-                    borderRight: `1px solid ${pal.line}`,
-                    boxSizing: "border-box",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 11,
-                    color:
-                      c === activeCol
-                        ? pal.dark
-                          ? "#fff"
-                          : "#1F1F1F"
-                        : pal.headText,
-                    fontWeight: 400,
-                    background:
-                      c === activeCol
-                        ? withAlpha(accent, pal.dark ? 0.22 : 0.12)
-                        : "transparent",
-                  }}
-                >
-                  {String.fromCharCode(65 + c)}
-                </div>
-              ))}
-              {Array.from({ length: NCOLS }, (_, c) => (
-                <div
-                  key={`vl${c}`}
-                  style={{
-                    position: "absolute",
-                    left: colX(c + 1) - 1,
-                    top: GRID_TOP + HEAD_H,
-                    width: 1,
-                    bottom: TABS_H,
-                    background: pal.line,
+                    background: pal.head,
+                    borderBottom: `1px solid ${pal.line}`,
                   }}
                 />
-              ))}
-              {Array.from({ length: NROWS }, (_, i) => {
-                const r = i + 1;
-                const act = isActiveRow(r);
-                return (
-                  <div key={`r${r}`}>
-                    <div
-                      style={{
-                        position: "absolute",
-                        left: 0,
-                        top: rowY(r),
-                        width: GUTTER,
-                        height: RH,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: 11,
-                        color: act
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: GRID_TOP,
+                    width: GUTTER,
+                    bottom: TABS_H,
+                    background: pal.head,
+                    borderRight: `1px solid ${pal.line}`,
+                  }}
+                />
+                {Array.from({ length: NCOLS }, (_, c) => (
+                  <div
+                    key={`col${String.fromCharCode(65 + c)}`}
+                    style={{
+                      position: "absolute",
+                      left: colX(c),
+                      top: GRID_TOP,
+                      width: colW(c),
+                      height: HEAD_H,
+                      borderRight: `1px solid ${pal.line}`,
+                      boxSizing: "border-box",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 11,
+                      color:
+                        c === activeCol
                           ? pal.dark
                             ? "#fff"
                             : "#1F1F1F"
                           : pal.headText,
-                        fontWeight: 400,
-                        background: act
+                      fontWeight: 400,
+                      background:
+                        c === activeCol
                           ? withAlpha(accent, pal.dark ? 0.22 : 0.12)
                           : "transparent",
-                      }}
-                    >
-                      {r}
-                    </div>
-                    <div
-                      style={{
-                        position: "absolute",
-                        left: r === 1 ? 0 : GUTTER,
-                        top: rowY(r + 1) - (r === 1 ? 2 : 1),
-                        right: 0,
-                        height: r === 1 ? 3 : 1,
-                        background:
-                          r === 1
-                            ? pal.dark
-                              ? "#3A3C42"
-                              : "#C4C7C5"
-                            : pal.line,
-                      }}
-                    />
+                    }}
+                  >
+                    {String.fromCharCode(65 + c)}
                   </div>
-                );
-              })}
-              {dataCells}
-              {refs.map((ref) => {
-                const p = editing
-                  ? clamp(sp(frame - (T.type + (ref.end - 1) * 3), CHIP), 0, 1)
-                  : 0;
-                if (p <= 0) return null;
-                return (
+                ))}
+                {Array.from({ length: NCOLS }, (_, c) => (
                   <div
-                    key={`ref${ref.start}`}
+                    key={`vl${c}`}
                     style={{
                       position: "absolute",
-                      left: colX(ref.col) - 1,
-                      top: rowY(ref.row) - 1,
-                      width: colW(ref.col) + 1,
-                      height: RH + 1,
-                      border: `2px solid ${ref.color}`,
-                      background: withAlpha(ref.color, 0.1),
-                      boxSizing: "border-box",
-                      opacity: p,
-                      transform: `scale(${1.12 - 0.12 * p})`,
+                      left: colX(c + 1) - 1,
+                      top: GRID_TOP + HEAD_H,
+                      width: 1,
+                      bottom: TABS_H,
+                      background: pal.line,
                     }}
                   />
-                );
-              })}
-              {dragging && dragRows > 2 && (
-                <div
-                  style={{
-                    position: "absolute",
-                    left: colX(4) - 1,
-                    top: rowY(2) - 1,
-                    width: colW(4) + 1,
-                    height: (dragRows - 1) * RH + 1,
-                    border: `1.5px dashed ${pal.dark ? "#B5B8BF" : "#5F6368"}`,
-                    boxSizing: "border-box",
-                  }}
-                />
-              )}
-              <div
-                style={{
-                  position: "absolute",
-                  left: sel.x - 1,
-                  top: sel.y - 1,
-                  width: sel.w + 1,
-                  height: sel.h + 1,
-                  border: `2px solid ${accent}`,
-                  background:
-                    selGrow > 0.02
-                      ? withAlpha(accent, 0.07 * (1 - clamp(cfIn(0), 0, 1)))
-                      : "transparent",
-                  boxSizing: "border-box",
-                  opacity: clamp(enter * 2 - 0.6, 0, 1),
-                }}
-              >
-                {!editing && (
+                ))}
+                {Array.from({ length: NROWS }, (_, i) => {
+                  const r = i + 1;
+                  const act = isActiveRow(r);
+                  return (
+                    <div key={`r${r}`}>
+                      <div
+                        style={{
+                          position: "absolute",
+                          left: 0,
+                          top: rowY(r),
+                          width: GUTTER,
+                          height: RH,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 11,
+                          color: act
+                            ? pal.dark
+                              ? "#fff"
+                              : "#1F1F1F"
+                            : pal.headText,
+                          fontWeight: 400,
+                          background: act
+                            ? withAlpha(accent, pal.dark ? 0.22 : 0.12)
+                            : "transparent",
+                        }}
+                      >
+                        {r}
+                      </div>
+                      <div
+                        style={{
+                          position: "absolute",
+                          left: r === 1 ? 0 : GUTTER,
+                          top: rowY(r + 1) - (r === 1 ? 2 : 1),
+                          right: 0,
+                          height: r === 1 ? 3 : 1,
+                          background:
+                            r === 1
+                              ? pal.dark
+                                ? "#3A3C42"
+                                : "#C4C7C5"
+                              : pal.line,
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+                {dataCells}
+                {refs.map((ref) => {
+                  const p = editing
+                    ? clamp(
+                        sp(frame - (T.type + (ref.end - 1) * charFrames), CHIP),
+                        0,
+                        1,
+                      )
+                    : 0;
+                  if (p <= 0) return null;
+                  return (
+                    <div
+                      key={`ref${ref.start}`}
+                      style={{
+                        position: "absolute",
+                        left: colX(ref.col) - 1,
+                        top: rowY(ref.row) - 1,
+                        width: colW(ref.col) + 1,
+                        height: RH + 1,
+                        border: `2px solid ${ref.color}`,
+                        background: withAlpha(ref.color, 0.1),
+                        boxSizing: "border-box",
+                        opacity: p,
+                        transform: `scale(${1.12 - 0.12 * p})`,
+                      }}
+                    />
+                  );
+                })}
+                {dragging && dragRows > 2 && (
                   <div
                     style={{
                       position: "absolute",
-                      right: -5,
-                      bottom: -5,
-                      width: 8,
-                      height: 8,
-                      borderRadius: 2,
-                      background: accent,
-                      boxShadow: `0 0 0 1.5px ${pal.win}`,
-                      transform: `scale(${1 + 0.5 * (cross ? 1 : 0)})`,
+                      left: colX(4) - 1,
+                      top: rowY(2) - 1,
+                      width: colW(4) + 1,
+                      height: (dragRows - 1) * RH + 1,
+                      border: `1.5px dashed ${pal.dark ? "#B5B8BF" : "#5F6368"}`,
+                      boxSizing: "border-box",
                     }}
                   />
                 )}
-              </div>
-              {editing && (
                 <div
                   style={{
                     position: "absolute",
-                    left: colX(4) - 2,
-                    top: rowY(2) - 2,
-                    minWidth: colW(4) + 3,
-                    height: RH + 3,
-                    padding: "0 8px",
-                    boxSizing: "border-box",
+                    left: sel.x - 1,
+                    top: sel.y - 1,
+                    width: sel.w + 1,
+                    height: sel.h + 1,
                     border: `2px solid ${accent}`,
-                    background: pal.win,
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
-                    display: "flex",
-                    alignItems: "center",
-                    fontSize: 12.5,
+                    background:
+                      selGrow > 0.02
+                        ? withAlpha(accent, 0.07 * (1 - clamp(cfIn(0), 0, 1)))
+                        : "transparent",
+                    boxSizing: "border-box",
+                    opacity: clamp(enter * 2 - 0.6, 0, 1),
                   }}
                 >
-                  <ColoredFormula
-                    text={formula.slice(0, typed)}
-                    refs={refs}
-                    base={pal.text}
-                  />
-                  {caret && (
+                  {!editing && (
                     <div
                       style={{
-                        width: 1.5,
-                        height: 15,
-                        background: pal.text,
-                        marginLeft: 1,
+                        position: "absolute",
+                        right: -5,
+                        bottom: -5,
+                        width: 8,
+                        height: 8,
+                        borderRadius: 2,
+                        background: accent,
+                        boxShadow: `0 0 0 1.5px ${pal.win}`,
+                        transform: `scale(${1 + 0.5 * (cross ? 1 : 0)})`,
                       }}
                     />
                   )}
                 </div>
-              )}
-              {chartIn > 0.01 && (
+                {editing && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: colX(4) - 2,
+                      top: rowY(2) - 2,
+                      minWidth: colW(4) + 3,
+                      height: RH + 3,
+                      padding: "0 8px",
+                      boxSizing: "border-box",
+                      border: `2px solid ${accent}`,
+                      background: pal.win,
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
+                      display: "flex",
+                      alignItems: "center",
+                      fontSize: 12.5,
+                    }}
+                  >
+                    <ColoredFormula
+                      text={formula.slice(0, typed)}
+                      refs={refs}
+                      base={pal.text}
+                    />
+                    {caret && (
+                      <div
+                        style={{
+                          width: 1.5,
+                          height: 15,
+                          background: pal.text,
+                          marginLeft: 1,
+                        }}
+                      />
+                    )}
+                  </div>
+                )}
+                {chartIn > 0.01 && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: CHART.x,
+                      top: CHART.y,
+                      width: CHART.w,
+                      height: CHART.h,
+                      borderRadius: 8,
+                      background: pal.card,
+                      boxShadow: pal.dark
+                        ? `0 0 0 1px ${chartSel > 0.01 ? withAlpha(accent, chartSel) : "rgba(255,255,255,0.09)"}, 0 16px 40px rgba(0,0,0,0.45)`
+                        : `0 0 0 1px ${chartSel > 0.01 ? withAlpha(accent, chartSel) : "rgba(17,19,24,0.08)"}, 0 2px 4px rgba(17,19,24,0.04), 0 16px 36px -8px rgba(17,19,24,0.16)`,
+                      opacity: clamp(chartIn * 1.5, 0, 1),
+                      transformOrigin: "0% 0%",
+                      transform: `scale(${0.96 + 0.04 * chartIn}) translateY(${(1 - chartIn) * 8}px)`,
+                    }}
+                  >
+                    {[
+                      [0, 0],
+                      [1, 0],
+                      [0, 1],
+                      [1, 1],
+                    ].map(([hx, hy]) => (
+                      <div
+                        key={`${hx}${hy}`}
+                        style={{
+                          position: "absolute",
+                          left: hx * CHART.w - 4,
+                          top: hy * CHART.h - 4,
+                          width: 7,
+                          height: 7,
+                          background: pal.card,
+                          boxShadow: `inset 0 0 0 1.5px ${accent}`,
+                          opacity: chartSel,
+                          zIndex: 1,
+                        }}
+                      />
+                    ))}
+                    <ChartCard
+                      values={values}
+                      labels={rows.map((r) => r.month.slice(0, 3))}
+                      grow={grow}
+                      pal={pal}
+                      accent={accent}
+                      title={chartTitle}
+                      fmt={fmt}
+                    />
+                  </div>
+                )}
                 <div
                   style={{
                     position: "absolute",
-                    left: CHART.x,
-                    top: CHART.y,
-                    width: CHART.w,
-                    height: CHART.h,
-                    borderRadius: 8,
-                    background: pal.card,
-                    boxShadow: pal.dark
-                      ? `0 0 0 1px ${chartSel > 0.01 ? withAlpha(accent, chartSel) : "rgba(255,255,255,0.09)"}, 0 16px 40px rgba(0,0,0,0.45)`
-                      : `0 0 0 1px ${chartSel > 0.01 ? withAlpha(accent, chartSel) : "rgba(17,19,24,0.08)"}, 0 2px 4px rgba(17,19,24,0.04), 0 16px 36px -8px rgba(17,19,24,0.16)`,
-                    opacity: clamp(chartIn * 1.5, 0, 1),
-                    transformOrigin: "0% 0%",
-                    transform: `scale(${0.96 + 0.04 * chartIn}) translateY(${(1 - chartIn) * 8}px)`,
-                  }}
-                >
-                  {[
-                    [0, 0],
-                    [1, 0],
-                    [0, 1],
-                    [1, 1],
-                  ].map(([hx, hy]) => (
-                    <div
-                      key={`${hx}${hy}`}
-                      style={{
-                        position: "absolute",
-                        left: hx * CHART.w - 4,
-                        top: hy * CHART.h - 4,
-                        width: 7,
-                        height: 7,
-                        background: pal.card,
-                        boxShadow: `inset 0 0 0 1.5px ${accent}`,
-                        opacity: chartSel,
-                        zIndex: 1,
-                      }}
-                    />
-                  ))}
-                  <ChartCard
-                    values={values}
-                    labels={rows.map((r) => r.month.slice(0, 3))}
-                    grow={grow}
-                    pal={pal}
-                    accent={accent}
-                    title={chartTitle}
-                    fmt={fmt}
-                  />
-                </div>
-              )}
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  bottom: 0,
-                  width: WIN.w,
-                  height: TABS_H,
-                  background: pal.chrome,
-                  borderTop: `1px solid ${pal.line}`,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 4,
-                  padding: "0 12px",
-                  boxSizing: "border-box",
-                  fontSize: 12.5,
-                  color: pal.muted,
-                }}
-              >
-                {(["plus", "list"] as const).map((ic) => (
-                  <div
-                    key={ic}
-                    style={{
-                      width: 28,
-                      height: 28,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Icon d={ICONS[ic]} color={pal.muted} />
-                  </div>
-                ))}
-                <div
-                  style={{
-                    padding: "6px 12px 6px 14px",
-                    borderRadius: 6,
-                    background: withAlpha(accent, pal.dark ? 0.2 : 0.1),
-                    color: pal.dark ? "#fff" : accent,
-                    fontWeight: 400,
+                    left: 0,
+                    bottom: 0,
+                    width: WIN.w,
+                    height: TABS_H,
+                    background: pal.chrome,
+                    borderTop: `1px solid ${pal.line}`,
                     display: "flex",
                     alignItems: "center",
-                    gap: 6,
+                    gap: 4,
+                    padding: "0 12px",
+                    boxSizing: "border-box",
+                    fontSize: 12.5,
+                    color: pal.muted,
                   }}
                 >
-                  Signups
-                  <Caret color={pal.dark ? "#fff" : accent} />
-                </div>
-                <div style={{ padding: "6px 14px" }}>Q3 cohort</div>
-                <div style={{ flex: 1 }} />
-                <div
-                  style={{
-                    padding: "5px 12px",
-                    borderRadius: 6,
-                    border: `1px solid ${pal.border}`,
-                    color: pal.text,
-                    opacity: clamp(selGrow * 1.4, 0, 1),
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  Average: {fmt(avg)}
+                  {(["plus", "list"] as const).map((ic) => (
+                    <div
+                      key={ic}
+                      style={{
+                        width: 28,
+                        height: 28,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Icon d={ICONS[ic]} color={pal.muted} />
+                    </div>
+                  ))}
+                  <div
+                    style={{
+                      padding: "6px 12px 6px 14px",
+                      borderRadius: 6,
+                      background: withAlpha(accent, pal.dark ? 0.2 : 0.1),
+                      color: pal.dark ? "#fff" : accent,
+                      fontWeight: 400,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    {sheetName}
+                    <Caret color={pal.dark ? "#fff" : accent} />
+                  </div>
+                  <div style={{ padding: "6px 14px" }}>Q3 cohort</div>
+                  <div style={{ flex: 1 }} />
+                  <div
+                    style={{
+                      padding: "5px 12px",
+                      borderRadius: 6,
+                      border: `1px solid ${pal.border}`,
+                      color: pal.text,
+                      opacity: clamp(selGrow * 1.4, 0, 1),
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    Average: {fmt(avg)}
+                  </div>
                 </div>
               </div>
-            </div>
-            <div style={{ opacity: cursorIn }}>
-              <Cursor {...cur} press={press} cross={cross} />
+              <div style={{ opacity: cursorIn }}>
+                <Cursor {...cur} press={press} cross={cross} />
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

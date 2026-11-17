@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Sora";
+import type React from "react";
 import { useId } from "react";
 import {
   AbsoluteFill,
@@ -22,6 +23,21 @@ export interface LiquidWordProps {
   to?: string;
   /** Kept for the shared draft API; the molten liquid takes the "swirl" palette. */
   accent?: string;
+  /** Frame the first word starts to melt; the rest of the beat sheet follows. */
+  meltAt?: number;
+  /** Frames between letters of the new word rising out of the pool. */
+  stagger?: number;
+  /** Text color of the crisp words; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the words. Spacing is measured for Sora 500; load it yourself. */
+  fontFamily?: string;
+  /** Size of the words, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -234,15 +250,41 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function LiquidWord({
   from = "draft",
   to = "shipped",
+  meltAt = MELT_AT,
+  stagger = 3,
+  ink,
+  background,
+  fontFamily = display,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: LiquidWordProps) {
-  const t = useCurrentFrame() * speed;
+  // The beat sheet is written for a melt at frame 12; another shifts all of it.
+  const t = Math.max(0, useCurrentFrame() - delay) * speed - (meltAt - MELT_AT);
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const A = layout(from);
@@ -316,7 +358,7 @@ export function LiquidWord({
   const shapesB = B.letters.map((l, i) => {
     const mid = leftB + (l.x + l.adv / 2) * fsB;
     const order = Math.abs(i - (nB - 1) / 2);
-    const at = RISE_AT + order * 3;
+    const at = RISE_AT + order * stagger;
     const k = interpolate(t, [at, at + 20], [0, 1], CLAMP);
     const e = RISE(k);
     const fromCentre = (W / 2 - mid) * 0.38 * (1 - e);
@@ -343,174 +385,187 @@ export function LiquidWord({
     W * (0.32 + 0.36 * interpolate(t, [MELT_AT, CRISP_AT], [0, 1], CLAMP));
 
   const textProps = {
-    fontFamily: display,
+    fontFamily,
     fontWeight: 500,
     style: { fontKerning: "none" as const },
   };
 
   return (
-    <AbsoluteFill style={{ background: c.stage, overflow: "hidden" }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        role="img"
-        aria-label={t < POOL_END ? from : to}
-      >
-        {liquid ? (
-          <>
-            <defs>
-              <filter
-                id={`${uid}-goo`}
-                x={0}
-                y={0}
-                width={W}
-                height={H}
-                filterUnits="userSpaceOnUse"
-                colorInterpolationFilters="sRGB"
-              >
-                <feTurbulence
-                  type="fractalNoise"
-                  baseFrequency={`${freqX} ${freqY}`}
-                  numOctaves={2}
-                  seed={7}
-                  result="noise"
-                />
-                <feDisplacementMap
-                  in="SourceGraphic"
-                  in2="noise"
-                  scale={disp}
-                  xChannelSelector="R"
-                  yChannelSelector="G"
-                  result="wobble"
-                />
-                <feGaussianBlur in="wobble" stdDeviation={blur} result="soft" />
-                <feColorMatrix
-                  in="soft"
-                  mode="matrix"
-                  values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -10"
-                />
-              </filter>
-              <mask
-                id={`${uid}-m`}
-                maskUnits="userSpaceOnUse"
-                x={0}
-                y={0}
-                width={W}
-                height={H}
-              >
-                <g filter={`url(#${uid}-goo)`}>
-                  {shapesA.map((s) =>
-                    s.visible ? (
-                      <text
-                        key={s.key}
-                        transform={s.transform}
-                        fill="#fff"
-                        fontSize={s.fs}
-                        {...textProps}
-                      >
-                        {s.ch}
-                      </text>
-                    ) : null,
-                  )}
-                  {drips.map((d) =>
-                    d.len > 0.5 ? (
-                      <g key={d.key}>
-                        <rect
-                          x={d.x - d.w / 2}
-                          y={baseline - 0.12 * fs}
-                          width={d.w}
-                          height={0.12 * fs + d.len}
-                          rx={d.w / 2}
-                          fill="#fff"
-                        />
-                        <circle
-                          cx={d.x}
-                          cy={baseline + d.len - d.w * 0.2}
-                          r={d.w * 0.78}
-                          fill="#fff"
-                        />
-                      </g>
-                    ) : null,
-                  )}
-                  {poolOpen > 0.01 ? (
-                    <ellipse
-                      cx={W / 2}
-                      cy={baseline - poolH * 0.4}
-                      rx={poolW}
-                      ry={poolH}
-                      fill="#fff"
-                    />
-                  ) : null}
-                  {shapesB.map((s) =>
-                    s.visible ? (
-                      <text
-                        key={s.key}
-                        transform={s.transform}
-                        fill="#fff"
-                        fontSize={s.fs}
-                        {...textProps}
-                      >
-                        {s.ch}
-                      </text>
-                    ) : null,
-                  )}
-                </g>
-              </mask>
-              <linearGradient
-                id={`${uid}-liquid`}
-                gradientUnits="userSpaceOnUse"
-                x1={0}
-                y1={fieldTop}
-                x2={0}
-                y2={fieldBottom}
-              >
-                {c.liquid.map((col, i) => (
-                  <stop
-                    key={col}
-                    offset={[0, 0.4, 0.68, 1][i]}
-                    stopColor={col}
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? c.stage),
+        overflow: "hidden",
+      }}
+    >
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          role="img"
+          aria-label={t < POOL_END ? from : to}
+        >
+          {liquid ? (
+            <>
+              <defs>
+                <filter
+                  id={`${uid}-goo`}
+                  x={0}
+                  y={0}
+                  width={W}
+                  height={H}
+                  filterUnits="userSpaceOnUse"
+                  colorInterpolationFilters="sRGB"
+                >
+                  <feTurbulence
+                    type="fractalNoise"
+                    baseFrequency={`${freqX} ${freqY}`}
+                    numOctaves={2}
+                    seed={7}
+                    result="noise"
                   />
-                ))}
-              </linearGradient>
-              <radialGradient
-                id={`${uid}-hot`}
-                gradientUnits="userSpaceOnUse"
-                cx={hotX}
-                cy={baseline - 0.5 * fs}
-                r={0.9 * fs}
-              >
-                <stop offset="0" stopColor={c.hot} stopOpacity={0.85} />
-                <stop offset="1" stopColor={c.hot} stopOpacity={0} />
-              </radialGradient>
-            </defs>
-            <g mask={`url(#${uid}-m)`}>
-              <rect width={W} height={H} fill={c.ink} />
-              <g opacity={heat}>
-                <rect width={W} height={H} fill={`url(#${uid}-liquid)`} />
-                <rect width={W} height={H} fill={`url(#${uid}-hot)`} />
+                  <feDisplacementMap
+                    in="SourceGraphic"
+                    in2="noise"
+                    scale={disp}
+                    xChannelSelector="R"
+                    yChannelSelector="G"
+                    result="wobble"
+                  />
+                  <feGaussianBlur
+                    in="wobble"
+                    stdDeviation={blur}
+                    result="soft"
+                  />
+                  <feColorMatrix
+                    in="soft"
+                    mode="matrix"
+                    values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -10"
+                  />
+                </filter>
+                <mask
+                  id={`${uid}-m`}
+                  maskUnits="userSpaceOnUse"
+                  x={0}
+                  y={0}
+                  width={W}
+                  height={H}
+                >
+                  <g filter={`url(#${uid}-goo)`}>
+                    {shapesA.map((s) =>
+                      s.visible ? (
+                        <text
+                          key={s.key}
+                          transform={s.transform}
+                          fill="#fff"
+                          fontSize={s.fs}
+                          {...textProps}
+                        >
+                          {s.ch}
+                        </text>
+                      ) : null,
+                    )}
+                    {drips.map((d) =>
+                      d.len > 0.5 ? (
+                        <g key={d.key}>
+                          <rect
+                            x={d.x - d.w / 2}
+                            y={baseline - 0.12 * fs}
+                            width={d.w}
+                            height={0.12 * fs + d.len}
+                            rx={d.w / 2}
+                            fill="#fff"
+                          />
+                          <circle
+                            cx={d.x}
+                            cy={baseline + d.len - d.w * 0.2}
+                            r={d.w * 0.78}
+                            fill="#fff"
+                          />
+                        </g>
+                      ) : null,
+                    )}
+                    {poolOpen > 0.01 ? (
+                      <ellipse
+                        cx={W / 2}
+                        cy={baseline - poolH * 0.4}
+                        rx={poolW}
+                        ry={poolH}
+                        fill="#fff"
+                      />
+                    ) : null}
+                    {shapesB.map((s) =>
+                      s.visible ? (
+                        <text
+                          key={s.key}
+                          transform={s.transform}
+                          fill="#fff"
+                          fontSize={s.fs}
+                          {...textProps}
+                        >
+                          {s.ch}
+                        </text>
+                      ) : null,
+                    )}
+                  </g>
+                </mask>
+                <linearGradient
+                  id={`${uid}-liquid`}
+                  gradientUnits="userSpaceOnUse"
+                  x1={0}
+                  y1={fieldTop}
+                  x2={0}
+                  y2={fieldBottom}
+                >
+                  {c.liquid.map((col, i) => (
+                    <stop
+                      key={col}
+                      offset={[0, 0.4, 0.68, 1][i]}
+                      stopColor={col}
+                    />
+                  ))}
+                </linearGradient>
+                <radialGradient
+                  id={`${uid}-hot`}
+                  gradientUnits="userSpaceOnUse"
+                  cx={hotX}
+                  cy={baseline - 0.5 * fs}
+                  r={0.9 * fs}
+                >
+                  <stop offset="0" stopColor={c.hot} stopOpacity={0.85} />
+                  <stop offset="1" stopColor={c.hot} stopOpacity={0} />
+                </radialGradient>
+              </defs>
+              <g mask={`url(#${uid}-m)`}>
+                <rect width={W} height={H} fill={fg} />
+                <g opacity={heat}>
+                  <rect width={W} height={H} fill={`url(#${uid}-liquid)`} />
+                  <rect width={W} height={H} fill={`url(#${uid}-hot)`} />
+                </g>
               </g>
-            </g>
-          </>
-        ) : (
-          (t < MELT_AT ? A : B).letters.map((l, i) => (
-            <text
-              key={`${i}-${l.ch}`}
-              x={
-                (t < MELT_AT ? leftA : leftB) + l.x * (t < MELT_AT ? fsA : fsB)
-              }
-              y={baseline}
-              fill={c.ink}
-              fontSize={t < MELT_AT ? fsA : fsB}
-              {...textProps}
-            >
-              {l.ch}
-            </text>
-          ))
-        )}
-      </svg>
-      <Grain opacity={c.grain} />
+            </>
+          ) : (
+            (t < MELT_AT ? A : B).letters.map((l, i) => (
+              <text
+                key={`${i}-${l.ch}`}
+                x={
+                  (t < MELT_AT ? leftA : leftB) +
+                  l.x * (t < MELT_AT ? fsA : fsB)
+                }
+                y={baseline}
+                fill={fg}
+                fontSize={t < MELT_AT ? fsA : fsB}
+                {...textProps}
+              >
+                {l.ch}
+              </text>
+            ))
+          )}
+        </svg>
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

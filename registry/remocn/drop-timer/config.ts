@@ -1,8 +1,22 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const dropTimerConfig: ComponentConfig = {
   componentName: "DropTimer",
   importPath: "@/components/remocn/drop-timer",
+  lists: {
+    units: {
+      default: ["HRS", "MIN", "SEC"],
+      description: "Units",
+      min: 3,
+      max: 3,
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -56,6 +70,16 @@ export const dropTimerConfig: ComponentConfig = {
       description: "Tick",
       hiddenFromList: false,
     },
+    hold: {
+      type: "number",
+      default: 8,
+      min: 0,
+      max: 40,
+      step: 1,
+      description: "Zero hold (frames)",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Big Shoulders" }),
     speed: {
       type: "number",
       default: 1,

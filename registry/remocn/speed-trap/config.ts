@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const speedTrapConfig: ComponentConfig = {
   componentName: "SpeedTrap",
@@ -12,11 +18,6 @@ export const speedTrapConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     unit: {
       type: "text-content",
@@ -68,6 +69,39 @@ export const speedTrapConfig: ComponentConfig = {
       max: 1080,
       step: 1,
       description: "Max",
+      hiddenFromList: false,
+    },
+    lockAt: {
+      type: "number",
+      default: 42,
+      min: 10,
+      max: 90,
+      step: 1,
+      description: "Lock frame",
+      hiddenFromList: false,
+    },
+    sectors: {
+      type: "number",
+      default: 3,
+      min: 1,
+      max: 6,
+      step: 1,
+      description: "Sectors",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Sora" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
       hiddenFromList: false,
     },
   },

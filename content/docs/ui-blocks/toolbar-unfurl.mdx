@@ -71,6 +71,16 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Color of the selection disc.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
       name: "lines",
       type: "string[]",
       description: "Captions shown for each tool, up to four.",
@@ -82,6 +92,24 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Closing line shown after the toolbar retracts.",
     },
     {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Figtree\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "300",
+      description: "Weight of the captions.",
+    },
+    {
+      name: "cursor",
+      type: "boolean",
+      default: "true",
+      description: "Show the cursor that clicks through the tools.",
+    },
+    {
       name: "ground",
       type: "GshPresetId",
       description: "Shader preset id for the animated background.",
@@ -90,6 +118,24 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "groundParams",
       type: "Partial<GradientParams>",
       description: "Partial shader parameters that override the ground preset.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
     },
   ]}
 />

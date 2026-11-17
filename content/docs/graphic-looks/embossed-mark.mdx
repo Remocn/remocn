@@ -62,10 +62,56 @@ A mark is pressed into a grey surface; a raking light sweeps around it, deepenin
       description: "Letters printed after the mark; with the default R this reads Remocn.",
     },
     {
+      name: "stagger",
+      type: "number",
+      default: "3",
+      description: "Frames between letters of the name as they print.",
+    },
+    {
+      name: "relief",
+      type: "number",
+      default: "1",
+      description: "Depth of the deboss and press; 0 flattens the mark.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Color stop in the foil fill.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Manrope\"",
+      description: "Typeface for the name. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "theme",

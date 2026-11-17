@@ -82,6 +82,12 @@ Headline lines rise in on the left and a glass drop slides in, settling on the `
       description: "Label inside the pill the lens becomes",
     },
     {
+      name: "previewTitle",
+      type: "string",
+      default: "\"Launch day.\"",
+      description: "Title inside the placeholder product pane's preview.",
+    },
+    {
       name: "logo",
       type: "React.ReactNode",
       description: "Replaces the Remocn logo above the headline",
@@ -101,6 +107,46 @@ Headline lines rise in on the left and a glass drop slides in, settling on the `
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color of the pill and highlights",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Newsreader\"",
+      description: "Typeface for the headline. Load the font in your project first.",
+    },
+    {
+      name: "magnify",
+      type: "number",
+      default: "1",
+      description: "How strongly the glass magnifies what's under it; 0 for flat glass.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "speed",

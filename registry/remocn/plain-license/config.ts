@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const plainLicenseConfig: ComponentConfig = {
   componentName: "PlainLicense",
@@ -31,6 +37,26 @@ export const plainLicenseConfig: ComponentConfig = {
       description: "Step",
       hiddenFromList: false,
     },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    fontWeight: {
+      type: "number",
+      default: 500,
+      min: 100,
+      max: 900,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Big Shoulders" }),
     speed: {
       type: "number",
       default: 1,

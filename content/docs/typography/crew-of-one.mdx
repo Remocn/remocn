@@ -67,9 +67,44 @@ Credit-style role lines roll upward in turn, then gather into place under a larg
       description: "Color of the name; defaults to the theme accent.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Stage fill color; pass \"transparent\" to overlay your own footage.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Gabarito\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "400",
+      description: "Weight of the roles.",
+    },
+    {
+      name: "nameScale",
+      type: "number",
+      default: "2.3",
+      description: "Size of the name relative to the roles.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

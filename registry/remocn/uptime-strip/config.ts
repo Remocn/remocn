@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const uptimeStripConfig: ComponentConfig = {
   componentName: "UptimeStrip",
@@ -37,6 +43,26 @@ export const uptimeStripConfig: ComponentConfig = {
       description: "Days",
       hiddenFromList: false,
     },
+    agoLabel: {
+      type: "text-content",
+      default: "days ago",
+      description: "Ago label",
+    },
+    todayLabel: {
+      type: "text-content",
+      default: "Today",
+      description: "Today label",
+    },
+    stagger: {
+      type: "number",
+      default: 2,
+      min: 0,
+      max: 8,
+      step: 1,
+      description: "Digit stagger",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Instrument Sans", grain: true }),
     speed: {
       type: "number",
       default: 1,

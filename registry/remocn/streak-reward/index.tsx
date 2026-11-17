@@ -15,7 +15,7 @@ import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const onest = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -40,7 +40,23 @@ export interface StreakRewardProps {
   cta?: string;
   /** Two lines beside the phone: the streak beat, then the reward beat. */
   lines?: [string, string];
+  /** Label under the streak number. */
+  streakLabel?: string;
+  /** Note under the week before today fills in. */
+  note?: string;
+  /** Note that replaces it once today is done. */
+  doneNote?: string;
   accent?: string;
+  /** Color of the lines beside the phone; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Onest by default. */
+  fontFamily?: string;
+  /** Size of the scene, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "light" | "dark";
   ground?: GshPresetId;
@@ -425,6 +441,22 @@ function fmt(kind: StreakStatKind, v: number) {
   return `+${Math.round(v)}`;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function StreakReward({
   streak = 7,
   stats = DEFAULT_STATS,
@@ -433,18 +465,27 @@ export function StreakReward({
   days = ["M", "T", "W", "T", "F", "S", "S"],
   cta = "Continue",
   lines = ["Day seven. Still shipping.", "Small wins, every day."],
+  streakLabel = "day streak",
+  note = "One more lesson keeps the week alive.",
+  doneNote = "Seven for seven. Come back tomorrow for eight.",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = onest.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "light",
   ground,
   groundParams,
 }: StreakRewardProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay);
   const { fps, width, height } = useVideoConfig();
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const f = frame * speed;
   const dark = theme === "dark";
-  const c = dark ? DARK : LIGHT;
+  const pal = dark ? DARK : LIGHT;
+  const c = { ...pal, copy: ink ?? pal.copy };
   const tall = height > width;
   const W = tall ? 720 : 1280;
   const H = tall ? 1280 : 720;
@@ -528,240 +569,79 @@ export function StreakReward({
 
   return (
     <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={ground ?? "hearth"}
-        params={
-          groundParams ??
-          (dark
-            ? undefined
-            : {
-                background: "#f5eee6",
-                colors: ["#fffaf3", "#ffbf8a", "#f3d9c4", "#f5eee6"],
-                grain: 0.06,
-              })
-        }
-        timeOffset={3}
-        timeScale={0.35}
-      />
-      <AbsoluteFill style={{ background: c.scrim }} />
-      <div
-        style={{
-          position: "absolute",
-          left: (width - W * u) / 2,
-          top: (height - H * u) / 2,
-          width: W,
-          height: H,
-          transformOrigin: "0 0",
-          transform: `scale(${u})`,
-        }}
-      >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? "hearth"}
+            params={
+              groundParams ??
+              (dark
+                ? undefined
+                : {
+                    background: "#f5eee6",
+                    colors: ["#fffaf3", "#ffbf8a", "#f3d9c4", "#f5eee6"],
+                    grain: 0.06,
+                  })
+            }
+            timeOffset={3}
+            timeScale={0.35}
+          />
+          <AbsoluteFill style={{ background: c.scrim }} />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: tall ? 64 : 96,
-            top: tall ? 96 : H / 2 - 84,
-            width: tall ? W - 128 : 500,
-            height: tall ? 170 : 170,
-            fontSize: tall ? 68 : 76,
-            fontWeight: 300,
-            lineHeight: 1.04,
-            letterSpacing: "-0.04em",
-            color: c.copy,
-            overflow: "hidden",
-            textWrap: "balance",
+            left: (width - W * u) / 2,
+            top: (height - H * u) / 2,
+            width: W,
+            height: H,
+            transformOrigin: "0 0",
+            transform: `scale(${u})`,
           }}
         >
-          {copyLine(0)}
-          {copyLine(1)}
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: phoneCx - BW / 2,
-            top: phoneCy - BH / 2,
-            width: BW,
-            height: BH,
-            transform: `translateY(${(1 - rise) * H * 0.9}px) scale(${k * cam})`,
-          }}
-        >
-          <Phone c={c}>
-            <StatusBar color={c.text} />
-            <AbsoluteFill
-              style={{
-                transform: `translateX(${-swap * SW * 0.3}px)`,
-                opacity: 1 - swap,
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  top: 118,
-                  display: "flex",
-                  justifyContent: "center",
-                  transform: `translateY(${(1 - flameIn) * 30}px) scale(${0.7 + 0.3 * flameIn})`,
-                  transformOrigin: "50% 100%",
-                  opacity: Math.min(1, flameIn * 2),
-                }}
-              >
-                <Flame uid={uid} flare={Math.max(0, flare)} t={f} />
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  top: 270,
-                  height: 128,
-                  overflow: "hidden",
-                  textAlign: "center",
-                  fontSize: 120,
-                  fontWeight: 300,
-                  letterSpacing: "-0.05em",
-                  lineHeight: "128px",
-                  color: c.text,
-                  fontVariantNumeric: "tabular-nums",
-                  opacity: numIn,
-                  WebkitMaskImage:
-                    "linear-gradient(transparent, #000 18%, #000 82%, transparent)",
-                }}
-              >
-                <div
-                  style={{
-                    transform: `translateY(${-roll * 128 + (1 - numIn) * 30}px)`,
-                  }}
-                >
-                  <div>{streak - 1}</div>
-                  <div>{streak}</div>
-                </div>
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  top: 400,
-                  textAlign: "center",
-                  fontSize: 20,
-                  fontWeight: 400,
-                  color: c.muted,
-                  opacity: numIn,
-                }}
-              >
-                day streak
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  left: 28,
-                  right: 28,
-                  top: 474,
-                  opacity: Math.min(1, weekIn * 1.6),
-                  transform: `translateY(${(1 - weekIn) * 24}px)`,
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  {days.slice(0, 7).map((d, i) => {
-                    const isToday = i === todayIdx;
-                    const at = isToday ? BEAT.today : BEAT.week + 4 + i * 3;
-                    const p =
-                      i <= todayIdx
-                        ? isToday
-                          ? spring({
-                              frame: f - at,
-                              fps,
-                              config: { damping: 200, stiffness: 120 },
-                            })
-                          : ease(at, at + 14, MOVE)
-                        : 0;
-                    const pop = isToday ? sp(at + 6, CHIP) : 1;
-                    return (
-                      <div
-                        key={`${d}-${i}`}
-                        style={{
-                          width: 40,
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          gap: 10,
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontSize: 15,
-                            fontWeight: 400,
-                            color: isToday && f >= BEAT.today ? FLAME : c.faint,
-                          }}
-                        >
-                          {d}
-                        </span>
-                        <div
-                          style={{
-                            transform: `scale(${isToday ? 0.86 + 0.14 * pop : 1})`,
-                          }}
-                        >
-                          <DayRing
-                            p={p}
-                            solid={isToday ? Math.max(0, Math.min(1, pop)) : 0}
-                            color={FLAME}
-                            track={c.ring}
-                            size={38}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div
-                  style={{ height: 1, background: c.hair, margin: "22px 0" }}
-                />
-                <div
-                  style={{
-                    position: "relative",
-                    height: 48,
-                    textAlign: "center",
-                    fontSize: 17,
-                    fontWeight: 400,
-                    color: c.muted,
-                    lineHeight: "24px",
-                    textWrap: "balance",
-                  }}
-                >
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      opacity: 1 - noteSwap,
-                      transform: `translateY(${-noteSwap * 10}px)`,
-                    }}
-                  >
-                    One more lesson keeps the week alive.
-                  </div>
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      opacity: noteSwap,
-                      transform: `translateY(${(1 - noteSwap) * 10}px)`,
-                    }}
-                  >
-                    Seven for seven. Come back tomorrow for eight.
-                  </div>
-                </div>
-              </div>
-            </AbsoluteFill>
-
-            {f >= BEAT.swap && (
+          <div
+            style={{
+              position: "absolute",
+              left: tall ? 64 : 96,
+              top: tall ? 96 : H / 2 - 84,
+              width: tall ? W - 128 : 500,
+              height: tall ? 170 : 170,
+              fontSize: tall ? 68 : 76,
+              fontWeight: 300,
+              lineHeight: 1.04,
+              letterSpacing: "-0.04em",
+              color: c.copy,
+              overflow: "hidden",
+              textWrap: "balance",
+            }}
+          >
+            {copyLine(0)}
+            {copyLine(1)}
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: phoneCx - BW / 2,
+              top: phoneCy - BH / 2,
+              width: BW,
+              height: BH,
+              transform: `translateY(${(1 - rise) * H * 0.9}px) scale(${k * cam})`,
+            }}
+          >
+            <Phone c={c}>
+              <StatusBar color={c.text} />
               <AbsoluteFill
                 style={{
-                  transform: `translateX(${(1 - swap) * SW * 0.4}px)`,
-                  opacity: swap,
+                  transform: `translateX(${-swap * SW * 0.3}px)`,
+                  opacity: 1 - swap,
                 }}
               >
                 <div
@@ -769,181 +649,358 @@ export function StreakReward({
                     position: "absolute",
                     left: 0,
                     right: 0,
-                    top: 150,
+                    top: 118,
                     display: "flex",
                     justifyContent: "center",
-                    transform: `translateY(${(1 - medalIn) * 50}px) scale(${0.7 + 0.3 * medalIn})`,
-                    opacity: Math.min(1, medalIn * 2),
+                    transform: `translateY(${(1 - flameIn) * 30}px) scale(${0.7 + 0.3 * flameIn})`,
+                    transformOrigin: "50% 100%",
+                    opacity: Math.min(1, flameIn * 2),
                   }}
                 >
-                  <Medal accent={accent} uid={uid} sheen={sheen} />
+                  <Flame uid={uid} flare={Math.max(0, flare)} t={f} />
                 </div>
                 <div
                   style={{
                     position: "absolute",
                     left: 0,
                     right: 0,
-                    top: 336,
+                    top: 270,
+                    height: 128,
+                    overflow: "hidden",
                     textAlign: "center",
-                    fontSize: 32,
-                    fontWeight: 400,
+                    fontSize: 120,
+                    fontWeight: 300,
+                    letterSpacing: "-0.05em",
+                    lineHeight: "128px",
                     color: c.text,
-                    letterSpacing: "-0.025em",
-                    transform: `translateY(${(1 - titleIn) * 14}px)`,
-                    opacity: titleIn,
+                    fontVariantNumeric: "tabular-nums",
+                    opacity: numIn,
+                    WebkitMaskImage:
+                      "linear-gradient(transparent, #000 18%, #000 82%, transparent)",
                   }}
                 >
-                  {title}
+                  <div
+                    style={{
+                      transform: `translateY(${-roll * 128 + (1 - numIn) * 30}px)`,
+                    }}
+                  >
+                    <div>{streak - 1}</div>
+                    <div>{streak}</div>
+                  </div>
                 </div>
                 <div
                   style={{
                     position: "absolute",
-                    left: 30,
-                    right: 30,
-                    top: 384,
+                    left: 0,
+                    right: 0,
+                    top: 400,
                     textAlign: "center",
-                    fontSize: 17,
+                    fontSize: 20,
                     fontWeight: 400,
                     color: c.muted,
-                    lineHeight: "24px",
-                    opacity: subIn,
-                    transform: `translateY(${(1 - subIn) * 10}px)`,
+                    opacity: numIn,
                   }}
                 >
-                  {subtitle}
+                  {streakLabel}
                 </div>
                 <div
                   style={{
                     position: "absolute",
                     left: 28,
                     right: 28,
-                    top: 488,
-                    display: "flex",
-                    borderTop: `1px solid ${c.hair}`,
-                    borderBottom: `1px solid ${c.hair}`,
+                    top: 474,
+                    opacity: Math.min(1, weekIn * 1.6),
+                    transform: `translateY(${(1 - weekIn) * 24}px)`,
                   }}
                 >
-                  {stats.slice(0, 3).map((s, i) => {
-                    const pop = sp(BEAT.stats + i * 3, CARD);
-                    return (
-                      <div
-                        key={s.label}
-                        style={{
-                          flex: 1,
-                          padding: "18px 0 20px",
-                          paddingLeft: i === 0 ? 0 : 16,
-                          borderLeft: i === 0 ? "none" : `1px solid ${c.hair}`,
-                          opacity: Math.min(1, pop * 1.6),
-                          transform: `translateY(${(1 - pop) * 16}px)`,
-                        }}
-                      >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    {days.slice(0, 7).map((d, i) => {
+                      const isToday = i === todayIdx;
+                      const at = isToday ? BEAT.today : BEAT.week + 4 + i * 3;
+                      const p =
+                        i <= todayIdx
+                          ? isToday
+                            ? spring({
+                                frame: f - at,
+                                fps,
+                                config: { damping: 200, stiffness: 120 },
+                              })
+                            : ease(at, at + 14, MOVE)
+                          : 0;
+                      const pop = isToday ? sp(at + 6, CHIP) : 1;
+                      return (
                         <div
+                          key={`${d}-${i}`}
                           style={{
-                            fontSize: 14,
-                            fontWeight: 400,
-                            color: c.muted,
+                            width: 40,
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: 10,
                           }}
                         >
-                          {s.label}
+                          <span
+                            style={{
+                              fontSize: 15,
+                              fontWeight: 400,
+                              color:
+                                isToday && f >= BEAT.today ? FLAME : c.faint,
+                            }}
+                          >
+                            {d}
+                          </span>
+                          <div
+                            style={{
+                              transform: `scale(${isToday ? 0.86 + 0.14 * pop : 1})`,
+                            }}
+                          >
+                            <DayRing
+                              p={p}
+                              solid={
+                                isToday ? Math.max(0, Math.min(1, pop)) : 0
+                              }
+                              color={FLAME}
+                              track={c.ring}
+                              size={38}
+                            />
+                          </div>
                         </div>
-                        <div
-                          style={{
-                            marginTop: 6,
-                            fontSize: 34,
-                            fontWeight: 300,
-                            letterSpacing: "-0.03em",
-                            color: s.color ?? (i === 0 ? FLAME : c.text),
-                            fontVariantNumeric: "tabular-nums",
-                          }}
-                        >
-                          {fmt(s.kind, count(i, s.value))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    left: 28,
-                    right: 28,
-                    top: 630,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    opacity: ease(BEAT.stats + 20, BEAT.stats + 34),
-                  }}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden>
-                    <path
-                      d="M12 22c4 0 7-2.8 7-7 0-4.5-4-7.5-5-12-2.5 2-3.5 4.5-3 7-1-.5-2-1.6-2.3-3C6.3 9 5 11.6 5 15c0 4.2 3 7 7 7z"
-                      fill="none"
-                      stroke={FLAME}
-                      strokeWidth={1.6}
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <span style={{ fontSize: 16, color: c.muted }}>
-                    {streak}-day streak · best this year
-                  </span>
+                      );
+                    })}
+                  </div>
+                  <div
+                    style={{ height: 1, background: c.hair, margin: "22px 0" }}
+                  />
+                  <div
+                    style={{
+                      position: "relative",
+                      height: 48,
+                      textAlign: "center",
+                      fontSize: 17,
+                      fontWeight: 400,
+                      color: c.muted,
+                      lineHeight: "24px",
+                      textWrap: "balance",
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        opacity: 1 - noteSwap,
+                        transform: `translateY(${-noteSwap * 10}px)`,
+                      }}
+                    >
+                      {note}
+                    </div>
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        opacity: noteSwap,
+                        transform: `translateY(${(1 - noteSwap) * 10}px)`,
+                      }}
+                    >
+                      {doneNote}
+                    </div>
+                  </div>
                 </div>
               </AbsoluteFill>
-            )}
 
-            <div
-              style={{
-                position: "absolute",
-                left: 24,
-                right: 24,
-                top: 752,
-                height: 54,
-                borderRadius: 27,
-                background: accent,
-                color: "#fff",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 18,
-                fontWeight: 400,
-                zIndex: 10,
-                opacity: Math.min(1, ctaIn * 1.6),
-                transform: `translateY(${(1 - ctaIn) * 30}px) scale(${1 - 0.04 * Math.max(0, pressK)})`,
-                boxShadow: `0 10px 24px -10px color-mix(in oklab, ${accent} 70%, transparent)`,
-              }}
-            >
-              {cta}
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: tx - 22,
-                top: ty - 22,
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                background: "rgba(255,255,255,0.28)",
-                boxShadow:
-                  "0 0 0 1.5px rgba(255,255,255,0.85), 0 4px 14px rgba(0,0,0,0.22)",
-                opacity: touchO,
-                transform: `scale(${1 - 0.18 * Math.max(0, pressK)})`,
-                zIndex: 35,
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                bottom: 8,
-                left: (SW - 136) / 2,
-                width: 136,
-                height: 5,
-                borderRadius: 3,
-                background: c.text,
-                zIndex: 36,
-              }}
-            />
-          </Phone>
+              {f >= BEAT.swap && (
+                <AbsoluteFill
+                  style={{
+                    transform: `translateX(${(1 - swap) * SW * 0.4}px)`,
+                    opacity: swap,
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      top: 150,
+                      display: "flex",
+                      justifyContent: "center",
+                      transform: `translateY(${(1 - medalIn) * 50}px) scale(${0.7 + 0.3 * medalIn})`,
+                      opacity: Math.min(1, medalIn * 2),
+                    }}
+                  >
+                    <Medal accent={accent} uid={uid} sheen={sheen} />
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      top: 336,
+                      textAlign: "center",
+                      fontSize: 32,
+                      fontWeight: 400,
+                      color: c.text,
+                      letterSpacing: "-0.025em",
+                      transform: `translateY(${(1 - titleIn) * 14}px)`,
+                      opacity: titleIn,
+                    }}
+                  >
+                    {title}
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 30,
+                      right: 30,
+                      top: 384,
+                      textAlign: "center",
+                      fontSize: 17,
+                      fontWeight: 400,
+                      color: c.muted,
+                      lineHeight: "24px",
+                      opacity: subIn,
+                      transform: `translateY(${(1 - subIn) * 10}px)`,
+                    }}
+                  >
+                    {subtitle}
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 28,
+                      right: 28,
+                      top: 488,
+                      display: "flex",
+                      borderTop: `1px solid ${c.hair}`,
+                      borderBottom: `1px solid ${c.hair}`,
+                    }}
+                  >
+                    {stats.slice(0, 3).map((s, i) => {
+                      const pop = sp(BEAT.stats + i * 3, CARD);
+                      return (
+                        <div
+                          key={s.label}
+                          style={{
+                            flex: 1,
+                            padding: "18px 0 20px",
+                            paddingLeft: i === 0 ? 0 : 16,
+                            borderLeft:
+                              i === 0 ? "none" : `1px solid ${c.hair}`,
+                            opacity: Math.min(1, pop * 1.6),
+                            transform: `translateY(${(1 - pop) * 16}px)`,
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 14,
+                              fontWeight: 400,
+                              color: c.muted,
+                            }}
+                          >
+                            {s.label}
+                          </div>
+                          <div
+                            style={{
+                              marginTop: 6,
+                              fontSize: 34,
+                              fontWeight: 300,
+                              letterSpacing: "-0.03em",
+                              color: s.color ?? (i === 0 ? FLAME : c.text),
+                              fontVariantNumeric: "tabular-nums",
+                            }}
+                          >
+                            {fmt(s.kind, count(i, s.value))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 28,
+                      right: 28,
+                      top: 630,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      opacity: ease(BEAT.stats + 20, BEAT.stats + 34),
+                    }}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden>
+                      <path
+                        d="M12 22c4 0 7-2.8 7-7 0-4.5-4-7.5-5-12-2.5 2-3.5 4.5-3 7-1-.5-2-1.6-2.3-3C6.3 9 5 11.6 5 15c0 4.2 3 7 7 7z"
+                        fill="none"
+                        stroke={FLAME}
+                        strokeWidth={1.6}
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <span style={{ fontSize: 16, color: c.muted }}>
+                      {streak}-day streak · best this year
+                    </span>
+                  </div>
+                </AbsoluteFill>
+              )}
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: 24,
+                  right: 24,
+                  top: 752,
+                  height: 54,
+                  borderRadius: 27,
+                  background: accent,
+                  color: "#fff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 18,
+                  fontWeight: 400,
+                  zIndex: 10,
+                  opacity: Math.min(1, ctaIn * 1.6),
+                  transform: `translateY(${(1 - ctaIn) * 30}px) scale(${1 - 0.04 * Math.max(0, pressK)})`,
+                  boxShadow: `0 10px 24px -10px color-mix(in oklab, ${accent} 70%, transparent)`,
+                }}
+              >
+                {cta}
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: tx - 22,
+                  top: ty - 22,
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  background: "rgba(255,255,255,0.28)",
+                  boxShadow:
+                    "0 0 0 1.5px rgba(255,255,255,0.85), 0 4px 14px rgba(0,0,0,0.22)",
+                  opacity: touchO,
+                  transform: `scale(${1 - 0.18 * Math.max(0, pressK)})`,
+                  zIndex: 35,
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: 8,
+                  left: (SW - 136) / 2,
+                  width: 136,
+                  height: 5,
+                  borderRadius: 3,
+                  background: c.text,
+                  zIndex: 36,
+                }}
+              />
+            </Phone>
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

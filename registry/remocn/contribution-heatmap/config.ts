@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const contributionHeatmapConfig: ComponentConfig = {
   componentName: "ContributionHeatmap",
@@ -12,11 +18,6 @@ export const contributionHeatmapConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     label: {
       type: "text-content",
@@ -41,6 +42,30 @@ export const contributionHeatmapConfig: ComponentConfig = {
       description: "Weeks",
       hiddenFromList: false,
     },
+    fontWeight: {
+      type: "number",
+      default: 400,
+      min: 300,
+      max: 500,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    radius: {
+      type: "number",
+      default: 0.26,
+      min: 0,
+      max: 0.5,
+      step: 0.01,
+      description: "Cell radius",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Geist", grain: true }),
     speed: {
       type: "number",
       default: 1,

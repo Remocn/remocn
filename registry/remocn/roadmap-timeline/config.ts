@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const roadmapTimelineConfig: ComponentConfig = {
   componentName: "RoadmapTimeline",
@@ -12,11 +19,6 @@ export const roadmapTimelineConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     today: {
       type: "text-content",
@@ -37,6 +39,11 @@ export const roadmapTimelineConfig: ComponentConfig = {
       type: "text-content",
       default: "remocn",
       description: "Workspace",
+    },
+    listTitle: {
+      type: "text-content",
+      default: "Projects",
+      description: "List title",
     },
     dragDays: {
       type: "number",
@@ -72,6 +79,31 @@ export const roadmapTimelineConfig: ComponentConfig = {
       max: 6078,
       step: 1,
       description: "Year",
+      hiddenFromList: false,
+    },
+    dragFrames: {
+      type: "number",
+      default: 26,
+      min: 8,
+      max: 60,
+      step: 1,
+      description: "Drag (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Inter Tight" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
       hiddenFromList: false,
     },
   },

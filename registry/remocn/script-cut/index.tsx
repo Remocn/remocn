@@ -21,8 +21,21 @@ const epilogue = loadFont("normal", {
 
 export interface ScriptCutProps {
   shots?: string[];
+  /** Frames the last shot holds at the end. */
+  hold?: number;
+  /** Frames between words as a shot flies up from the script. */
+  stagger?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Epilogue by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Size of the script and shots, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -66,11 +79,11 @@ const HOLD = 32;
 
 type Metrics = Record<string, number>;
 
-function measureAll(texts: string[]): Metrics {
+function measureAll(texts: string[], font: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("script-cut: no 2d context");
-  ctx.font = `${WGHT} ${FONT_PX}px "${epilogue.fontFamily}"`;
+  ctx.font = font;
   const w: Metrics = {};
   for (const s of texts) {
     w[s] = ctx.measureText(s).width / FONT_PX + TRACK * Array.from(s).length;
@@ -78,7 +91,7 @@ function measureAll(texts: string[]): Metrics {
   return w;
 }
 
-function useMetrics(texts: string[]) {
+function useMetrics(texts: string[], fontFamily: string, fontWeight: number) {
   const key = texts.join("\u0001");
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("script-cut: measuring"));
@@ -87,12 +100,18 @@ function useMetrics(texts: string[]) {
     let live = true;
     Promise.all([
       epilogue.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${epilogue.fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measureAll(key.split("\u0001")) });
+        setState({
+          key,
+          m: measureAll(
+            key.split("\u0001"),
+            `${fontWeight} ${FONT_PX}px "${fontFamily}"`,
+          ),
+        });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -101,7 +120,7 @@ function useMetrics(texts: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily, fontWeight]);
   return state && state.key === key ? state.m : null;
 }
 
@@ -141,23 +160,47 @@ interface Token {
   index: number;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ScriptCut({
   shots = DEFAULT_SHOTS,
+  hold = HOLD,
+  stagger = FLY_STAGGER,
   accent,
+  ink,
   background,
+  fontFamily = epilogue.fontFamily,
+  fontWeight = WGHT,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: ScriptCutProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const list = shots.length > 0 ? shots : DEFAULT_SHOTS;
   const shotWords = list.map(splitWords);
-  const m = useMetrics([" ", ...shotWords.flat()]);
+  const m = useMetrics([" ", ...shotWords.flat()], fontFamily, fontWeight);
 
   if (!m) {
     return (
@@ -200,12 +243,12 @@ export function ScriptCut({
 
   const span = durationInFrames * speed;
   const lastLen = (k: number) =>
-    FLY + FLY_STAGGER * Math.max(0, shotWords[k].length - 1);
+    FLY + stagger * Math.max(0, shotWords[k].length - 1);
   const period =
     n > 1
       ? Math.min(
           84,
-          Math.max(34, (span - FIRST_SHOT - lastLen(n - 1) - HOLD) / (n - 1)),
+          Math.max(34, (span - FIRST_SHOT - lastLen(n - 1) - hold) / (n - 1)),
         )
       : 0;
   const shotAt = (k: number) => FIRST_SHOT + k * period;
@@ -293,8 +336,8 @@ export function ScriptCut({
     height: rowF,
     lineHeight: `${rowF}px`,
     whiteSpace: "pre",
-    fontFamily: epilogue.fontFamily,
-    fontWeight: WGHT,
+    fontFamily,
+    fontWeight,
     fontSize: rowF,
     letterSpacing: `${TRACK}em`,
   };
@@ -346,8 +389,8 @@ export function ScriptCut({
     const spent = interpolate(t, [live + 22, live + 40], [0, 1], CLAMP);
     const color =
       lit < 1
-        ? interpolateColors(lit, [0, 1], [c.ink, hi])
-        : interpolateColors(spent, [0, 1], [hi, c.ink]);
+        ? interpolateColors(lit, [0, 1], [fg, hi])
+        : interpolateColors(spent, [0, 1], [hi, fg]);
     const opacity = inP * (0.88 - 0.56 * spent);
     nodes.push(
       <div
@@ -375,7 +418,7 @@ export function ScriptCut({
     ws.forEach((w, i) => {
       const from = rowPos[first + i];
       const to = pos[i];
-      const d = start + (k > 0 ? HANDOFF : 0) + i * FLY_STAGGER;
+      const d = start + (k > 0 ? HANDOFF : 0) + i * stagger;
       const p = interpolate(t, [d, d + FLY], [0, 1], {
         ...CLAMP,
         easing: EASE_MOVE,
@@ -391,7 +434,7 @@ export function ScriptCut({
       const s = s0 + (1 - s0) * p;
       const x = from.x + (to.x - from.x) * p;
       const y = from.y + (to.y - from.y) * p - out * F * 0.5;
-      const color = interpolateColors(p, [0, 0.7], [hi, c.ink]);
+      const color = interpolateColors(p, [0, 0.7], [hi, fg]);
       nodes.push(
         <div
           key={`h${k}-${i}`}
@@ -402,8 +445,8 @@ export function ScriptCut({
             height: F,
             lineHeight: `${F}px`,
             whiteSpace: "pre",
-            fontFamily: epilogue.fontFamily,
-            fontWeight: WGHT,
+            fontFamily,
+            fontWeight,
             fontSize: F,
             letterSpacing: `${TRACK}em`,
             color,
@@ -420,7 +463,7 @@ export function ScriptCut({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -49,6 +49,20 @@ export interface IntroducingProps {
   accent?: string;
   /** Stage fill. "transparent" drops the stage and its glow. */
   background?: string;
+  /** Color of the lit name; overrides the theme ink. */
+  ink?: string;
+  /** Typeface for the tagline. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Frames the beam takes to cross the name. */
+  pass?: number;
+  /** Frames between tagline words as they rise in. */
+  stagger?: number;
+  /** Size of the lockup, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the stage. */
+  grain?: boolean;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -178,6 +192,22 @@ function sweepStops(
   ] as const;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function Introducing({
   eyebrow = "Introducing",
   name = "remocn",
@@ -185,12 +215,20 @@ export function Introducing({
   tagline = "Launch-video scenes for Remotion. Copy, paste, render.",
   accent = "#3B5BFD",
   background,
+  ink,
+  fontFamily = geist.fontFamily,
+  pass = 44,
+  stagger = 2,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: IntroducingProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const p = PALETTES[theme];
+  const fg = ink ?? p.fg;
   const gid = `b${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   const portrait = height > width * 1.1;
@@ -231,7 +269,7 @@ export function Introducing({
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const sweep = interpolate(frame, [34, 78], [0, 1], {
+  const sweep = interpolate(frame, [34, 34 + pass], [0, 1], {
     ...CLAMP,
     easing: EASE_SWEEP,
   });
@@ -281,7 +319,7 @@ export function Introducing({
     const stops = sweepStops(
       ((P - from) / w) * 100,
       (half / w) * 100,
-      p.fg,
+      fg,
       p.beamEdge,
       accent,
       p.dim,
@@ -291,14 +329,14 @@ export function Introducing({
   const textStops = sweepStops(
     toPct(P),
     (half / textEmW) * 100,
-    p.fg,
+    fg,
     p.beamEdge,
     accent,
     p.dim,
   );
   const textFill =
     sweep >= 1
-      ? p.fg
+      ? fg
       : `linear-gradient(90deg, ${textStops.map(([c, o]) => `${c} ${o.toFixed(2)}%`).join(", ")})`;
   const rStops = fillFor(0, R_W);
 
@@ -347,173 +385,186 @@ export function Introducing({
               background: `radial-gradient(50% 30% at 50% ${(nameY / height) * 100}%, ${p.column} 0%, transparent 100%)`,
             }}
           />
-          <Grain opacity={p.grain} />
+          {grain ? <Grain opacity={p.grain} /> : null}
         </>
       ) : null}
 
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          transform: `scale(${settle})`,
-        }}
-      >
-        {/* eyebrow */}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: 0,
-            right: 0,
-            top: eyeY,
-            transform: "translateY(-50%)",
-            display: "flex",
-            justifyContent: "center",
+            inset: 0,
+            transform: `scale(${settle})`,
           }}
         >
-          <span
-            style={{
-              fontFamily: serif.fontFamily,
-              fontStyle: "italic",
-              fontWeight: 400,
-              fontSize: eyeFs,
-              lineHeight: 1,
-              color: interpolateColors(lift, [0, 1], [p.fg, p.muted]),
-              opacity: eyeIn,
-              letterSpacing: `${interpolate(eyeIn, [0, 1], [0.14, -0.005])}em`,
-              filter: `blur(${(1 - eyeIn) * 8 * s}px)`,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {eyebrow}
-          </span>
-        </div>
-
-        {/* name, rising out of a mask */}
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            // the mask's lower edge sits just under the baseline, so the
-            // letters climb out of a line rather than fade up
-            top: nameY - nameFs * 0.8,
-            height: nameFs * 1.44,
-            paddingTop: nameFs * 0.3,
-            overflow: "hidden",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "flex-start",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "baseline",
-              height: nameFs,
-              transform: `translateY(${(1 - rise) * nameFs * 1.02}px)`,
-              fontFamily: manrope.fontFamily,
-              fontWeight: wordmark ? 600 : 500,
-              fontSize: nameFs,
-              lineHeight: 1,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {wordmark ? (
-              <svg
-                viewBox="0 0 124.06 134.26"
-                style={{ height: "0.76em", width: `${R_W}em`, flexShrink: 0 }}
-                aria-hidden
-              >
-                <defs>
-                  <linearGradient id={gid} x1="0" x2="1" y1="0" y2="0">
-                    {sweep >= 1 ? (
-                      <stop offset="0" stopColor={p.fg} />
-                    ) : (
-                      rStops.map(([c, o]) => (
-                        <stop key={`${c}${o}`} offset={o / 100} stopColor={c} />
-                      ))
-                    )}
-                  </linearGradient>
-                </defs>
-                <path fill={`url(#${gid})`} d={REMOCN_R_PATH} />
-              </svg>
-            ) : logo ? (
-              <div
-                style={{
-                  height: "0.84em",
-                  width: "0.84em",
-                  marginRight: "0.2em",
-                  alignSelf: "center",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  opacity: interpolate(sweep, [0, 0.25], [0.35, 1], CLAMP),
-                }}
-              >
-                {logo}
-              </div>
-            ) : null}
-            <span
-              style={{
-                marginLeft: wordmark ? `${R_GAP}em` : 0,
-                letterSpacing: `${ls}em`,
-                marginRight: `${-ls}em`,
-                backgroundImage: textFill.startsWith("linear")
-                  ? textFill
-                  : undefined,
-                WebkitBackgroundClip: "text",
-                backgroundClip: "text",
-                color: textFill.startsWith("linear") ? "transparent" : textFill,
-                paddingBottom: "0.08em",
-              }}
-            >
-              {wordmark ? "emocn" : name}
-            </span>
-          </div>
-        </div>
-
-        {/* tagline */}
-        {tagline ? (
+          {/* eyebrow */}
           <div
             style={{
               position: "absolute",
-              left: (width - tagMax) / 2,
-              width: tagMax,
-              top: tagTop,
-              textAlign: "center",
-              textWrap: "balance",
-              fontFamily: geist.fontFamily,
-              fontWeight: 400,
-              fontSize: tagFs,
-              lineHeight: 1.3,
-              letterSpacing: "-0.012em",
-              color: p.muted,
+              left: 0,
+              right: 0,
+              top: eyeY,
+              transform: "translateY(-50%)",
+              display: "flex",
+              justifyContent: "center",
             }}
           >
-            {words.map((w, i) => {
-              const t = interpolate(frame, [56 + i * 2, 74 + i * 2], [0, 1], {
-                ...CLAMP,
-                easing: EASE_OUT,
-              });
-              return (
-                <Fragment key={i}>
-                  {i > 0 ? " " : null}
-                  <span
-                    style={{
-                      display: "inline-block",
-                      opacity: t,
-                      transform: `translateY(${(1 - t) * 0.45}em)`,
-                      filter: `blur(${(1 - t) * 6 * s}px)`,
-                    }}
-                  >
-                    {w}
-                  </span>
-                </Fragment>
-              );
-            })}
+            <span
+              style={{
+                fontFamily: serif.fontFamily,
+                fontStyle: "italic",
+                fontWeight: 400,
+                fontSize: eyeFs,
+                lineHeight: 1,
+                color: interpolateColors(lift, [0, 1], [fg, p.muted]),
+                opacity: eyeIn,
+                letterSpacing: `${interpolate(eyeIn, [0, 1], [0.14, -0.005])}em`,
+                filter: `blur(${(1 - eyeIn) * 8 * s}px)`,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {eyebrow}
+            </span>
           </div>
-        ) : null}
-      </div>
+
+          {/* name, rising out of a mask */}
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              // the mask's lower edge sits just under the baseline, so the
+              // letters climb out of a line rather than fade up
+              top: nameY - nameFs * 0.8,
+              height: nameFs * 1.44,
+              paddingTop: nameFs * 0.3,
+              overflow: "hidden",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "flex-start",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "baseline",
+                height: nameFs,
+                transform: `translateY(${(1 - rise) * nameFs * 1.02}px)`,
+                fontFamily: manrope.fontFamily,
+                fontWeight: wordmark ? 600 : 500,
+                fontSize: nameFs,
+                lineHeight: 1,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {wordmark ? (
+                <svg
+                  viewBox="0 0 124.06 134.26"
+                  style={{ height: "0.76em", width: `${R_W}em`, flexShrink: 0 }}
+                  aria-hidden
+                >
+                  <defs>
+                    <linearGradient id={gid} x1="0" x2="1" y1="0" y2="0">
+                      {sweep >= 1 ? (
+                        <stop offset="0" stopColor={fg} />
+                      ) : (
+                        rStops.map(([c, o]) => (
+                          <stop
+                            key={`${c}${o}`}
+                            offset={o / 100}
+                            stopColor={c}
+                          />
+                        ))
+                      )}
+                    </linearGradient>
+                  </defs>
+                  <path fill={`url(#${gid})`} d={REMOCN_R_PATH} />
+                </svg>
+              ) : logo ? (
+                <div
+                  style={{
+                    height: "0.84em",
+                    width: "0.84em",
+                    marginRight: "0.2em",
+                    alignSelf: "center",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    opacity: interpolate(sweep, [0, 0.25], [0.35, 1], CLAMP),
+                  }}
+                >
+                  {logo}
+                </div>
+              ) : null}
+              <span
+                style={{
+                  marginLeft: wordmark ? `${R_GAP}em` : 0,
+                  letterSpacing: `${ls}em`,
+                  marginRight: `${-ls}em`,
+                  backgroundImage: textFill.startsWith("linear")
+                    ? textFill
+                    : undefined,
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  color: textFill.startsWith("linear")
+                    ? "transparent"
+                    : textFill,
+                  paddingBottom: "0.08em",
+                }}
+              >
+                {wordmark ? "emocn" : name}
+              </span>
+            </div>
+          </div>
+
+          {/* tagline */}
+          {tagline ? (
+            <div
+              style={{
+                position: "absolute",
+                left: (width - tagMax) / 2,
+                width: tagMax,
+                top: tagTop,
+                textAlign: "center",
+                textWrap: "balance",
+                fontFamily,
+                fontWeight: 400,
+                fontSize: tagFs,
+                lineHeight: 1.3,
+                letterSpacing: "-0.012em",
+                color: p.muted,
+              }}
+            >
+              {words.map((w, i) => {
+                const t = interpolate(
+                  frame,
+                  [56 + i * stagger, 74 + i * stagger],
+                  [0, 1],
+                  {
+                    ...CLAMP,
+                    easing: EASE_OUT,
+                  },
+                );
+                return (
+                  <Fragment key={i}>
+                    {i > 0 ? " " : null}
+                    <span
+                      style={{
+                        display: "inline-block",
+                        opacity: t,
+                        transform: `translateY(${(1 - t) * 0.45}em)`,
+                        filter: `blur(${(1 - t) * 6 * s}px)`,
+                      }}
+                    >
+                      {w}
+                    </span>
+                  </Fragment>
+                );
+              })}
+            </div>
+          ) : null}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

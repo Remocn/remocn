@@ -67,6 +67,24 @@ A huge LIVE frame with a ticking clock holds, then a stinger carrying the Remocn
       description: "Shot after the first wipe; defaults to a slow-motion Replay frame",
     },
     {
+      name: "liveLabel",
+      type: "string",
+      default: "\"LIVE\"",
+      description: "Big word in the default Live shot",
+    },
+    {
+      name: "replayLabel",
+      type: "string",
+      default: "\"REPLAY\"",
+      description: "Big word in the default Replay shot",
+    },
+    {
+      name: "slowMoLabel",
+      type: "string",
+      default: "\"Super slow-mo\"",
+      description: "Tag next to the Replay bug in the default Replay shot",
+    },
+    {
       name: "wipeAt",
       type: "number[]",
       default: "[26, 84]",
@@ -85,6 +103,33 @@ A huge LIVE frame with a ticking clock holds, then a stinger carrying the Remocn
       description: "Color of the live marker in the default shot",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Color of the big word in the default Live shot; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Fill of the stage and the default Live shot; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Barlow Condensed\"",
+      description: "Typeface for the default shots. Load the font in your project first.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn R that spins across on the streak.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the default shots' type and bugs around the frame's center; the grounds and streak stay put.",
+    },
+    {
       name: "theme",
       type: "\"dark\" | \"light\"",
       default: "\"dark\"",
@@ -95,6 +140,12 @@ A huge LIVE frame with a ticking clock holds, then a stinger carrying the Remocn
       type: "number",
       default: "1",
       description: "Playback multiplier for the whole timeline",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
   ]}
 />

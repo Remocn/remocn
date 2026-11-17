@@ -79,10 +79,56 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Glowing colour of the wordmark while it forges.",
     },
     {
+      name: "name",
+      type: "string",
+      default: "\"emocn\"",
+      description: "Letters forged after the mark.",
+    },
+    {
       name: "tagline",
       type: "string",
       default: "\"Launch videos, built from parts.\"",
       description: "Line that fades in word by word under the logo.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Geist\"",
+      description: "Typeface for the tagline. Load the font in your project first.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "6",
+      description: "Frames between each ring of letters forging outward from the center.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
     },
     {
       name: "ground",

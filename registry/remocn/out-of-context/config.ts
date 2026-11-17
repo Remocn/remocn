@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const outOfContextConfig: ComponentConfig = {
   componentName: "OutOfContext",
@@ -23,6 +29,26 @@ export const outOfContextConfig: ComponentConfig = {
       default: "by hand.",
       description: "Rest",
     },
+    dropAt: {
+      type: "number",
+      default: 40,
+      min: 0,
+      max: 90,
+      step: 1,
+      description: "Drop at (frame)",
+      hiddenFromList: false,
+    },
+    pullLen: {
+      type: "number",
+      default: 40,
+      min: 10,
+      max: 90,
+      step: 1,
+      description: "Pull-back (frames)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Outfit" }),
     speed: {
       type: "number",
       default: 1,

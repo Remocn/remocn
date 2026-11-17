@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const gridMontageConfig: ComponentConfig = {
   componentName: "GridMontage",
@@ -13,11 +20,6 @@ export const gridMontageConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     beat: {
       type: "number",
       default: 14,
@@ -27,6 +29,22 @@ export const gridMontageConfig: ComponentConfig = {
       description: "Beat",
       hiddenFromList: false,
     },
+    radius: {
+      type: "number",
+      default: 14,
+      min: 0,
+      max: 40,
+      step: 1,
+      description: "Corner radius",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Instrument Sans", ink: false, grain: true }),
     speed: {
       type: "number",
       default: 1,

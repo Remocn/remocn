@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const cutOffConfig: ComponentConfig = {
   componentName: "CutOff",
@@ -29,6 +35,22 @@ export const cutOffConfig: ComponentConfig = {
       default: "the code",
       description: "Highlight",
     },
+    charFrames: {
+      type: "number",
+      default: 2,
+      min: 1,
+      max: 8,
+      step: 1,
+      description: "Letter frames",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    replyBackground: {
+      type: "color",
+      default: undefined,
+      description: "Reply background",
+    },
+    ...sceneControls({ font: "Syne" }),
     speed: {
       type: "number",
       default: 1,

@@ -25,7 +25,22 @@ export interface FillerCutProps {
   keep?: string;
   highlight?: string;
   showTime?: boolean;
+  /** Frames between one run of filler words collapsing and the next. */
+  stagger?: number;
+  /** Weight of the clean headline. */
+  fontWeight?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Schibsted Grotesk by default. */
+  fontFamily?: string;
+  /** Size of the text block, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -110,10 +125,15 @@ interface Metrics {
   space500: number;
 }
 
-function measure(said: string[], kept: string[]): Metrics {
+function measure(
+  said: string[],
+  kept: string[],
+  fontFamily: string,
+  fontWeight: number,
+): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
-  const fam = `"${grotesk.fontFamily}"`;
+  const fam = `"${fontFamily}"`;
   if (!ctx)
     return {
       said: said.map((s) => s.length * 0.5),
@@ -126,13 +146,18 @@ function measure(said: string[], kept: string[]): Metrics {
   ctx.font = `400 1000px ${fam}`;
   const s400 = said.map((s) => width(s, SPEAK_TRACK));
   const space400 = ctx.measureText(" ").width / 1000;
-  ctx.font = `500 1000px ${fam}`;
+  ctx.font = `${fontWeight} 1000px ${fam}`;
   const h500 = kept.map((s) => width(s, HEAD_TRACK));
   const space500 = ctx.measureText(" ").width / 1000;
   return { said: s400, head: h500, space400, space500 };
 }
 
-function useMetrics(said: string[], kept: string[]) {
+function useMetrics(
+  said: string[],
+  kept: string[],
+  fontFamily: string,
+  fontWeight: number,
+) {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("filler-cut: measuring"));
   const released = useRef(false);
@@ -142,15 +167,20 @@ function useMetrics(said: string[], kept: string[]) {
     Promise.all([
       grotesk.waitUntilDone(),
       mono.waitUntilDone(),
-      document.fonts.load(`400 100px "${grotesk.fontFamily}"`),
-      document.fonts.load(`500 100px "${grotesk.fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
         const [a, b] = key.split("\n");
         setMetrics(
-          measure(a.split(" ").filter(Boolean), b.split(" ").filter(Boolean)),
+          measure(
+            a.split(" ").filter(Boolean),
+            b.split(" ").filter(Boolean),
+            fontFamily,
+            fontWeight,
+          ),
         );
         if (!released.current) {
           released.current = true;
@@ -160,7 +190,7 @@ function useMetrics(said: string[], kept: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily, fontWeight]);
   return metrics;
 }
 
@@ -262,26 +292,57 @@ const clock = (sec: number) => {
   return `0:${String(whole).padStart(2, "0")}.${tenth}`;
 };
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function FillerCut({
   transcript = "So, um, ship your, like, launch video, uh, today. You know?",
   keep = "Ship your launch video today.",
   highlight = "today.",
   showTime = true,
+  stagger = CUT_GAP,
+  fontWeight = 500,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = grotesk.fontFamily,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: FillerCutProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
   const P = useMemo(() => plan(transcript, keep), [transcript, keep]);
   const m = useMetrics(
     P.tokens.map((tk) => tk.said),
     P.kept,
+    fontFamily,
+    fontWeight,
   );
 
   if (!m) {
-    return <div style={{ position: "absolute", inset: 0, background: c.bg }} />;
+    return (
+      <div style={{ position: "absolute", inset: 0, background: stage }} />
+    );
   }
 
   const portrait = H > W;
@@ -299,7 +360,7 @@ export function FillerCut({
   const cutP = (k: number) =>
     interpolate(
       t,
-      [cutAt + k * CUT_GAP, cutAt + k * CUT_GAP + CUT_LEN],
+      [cutAt + k * stagger, cutAt + k * stagger + CUT_LEN],
       [0, 1],
       { ...CLAMP, easing: EASE_CUT },
     );
@@ -355,7 +416,7 @@ export function FillerCut({
     });
   }
 
-  const cutEnd = cutAt + Math.max(0, P.cuts - 1) * CUT_GAP + CUT_LEN;
+  const cutEnd = cutAt + Math.max(0, P.cuts - 1) * stagger + CUT_LEN;
   const reflowAt = cutEnd + REFLOW_GAP;
   const reflowEarly = interpolate(
     t,
@@ -447,7 +508,7 @@ export function FillerCut({
             position: "absolute",
             left: live.xs[i],
             top: live.ys[i] - sA * 0.5,
-            fontFamily: grotesk.fontFamily,
+            fontFamily,
             fontWeight: 400,
             fontSize: sA,
             lineHeight: `${sA}px`,
@@ -484,8 +545,8 @@ export function FillerCut({
       position: "absolute",
       left: x,
       top: yMid - size * 0.5,
-      fontFamily: grotesk.fontFamily,
-      fontWeight: head ? 500 : 400,
+      fontFamily,
+      fontWeight: head ? fontWeight : 400,
       fontSize: size,
       lineHeight: `${size}px`,
       letterSpacing: `${lerp(SPEAK_TRACK, HEAD_TRACK, p)}em`,
@@ -493,10 +554,10 @@ export function FillerCut({
       transform: `translateY(${((1 - spoken) * sA * 0.4).toFixed(2)}px)`,
       opacity: spoken,
     };
-    const ink = shade(c.ink, c.muted, markP);
+    const wordInk = shade(fg, c.muted, markP);
     const word = head ? P.kept[q] : tk.said;
     els.push(
-      <div key={`k${i}`} style={{ ...textStyle, color: ink }}>
+      <div key={`k${i}`} style={{ ...textStyle, color: wordInk }}>
         {word}
       </div>,
     );
@@ -529,13 +590,13 @@ export function FillerCut({
           position: "absolute",
           left: headX[q],
           top: headY[q] - sC * 0.5 + (1 - a) * sC * 0.3,
-          fontFamily: grotesk.fontFamily,
-          fontWeight: 500,
+          fontFamily,
+          fontWeight,
           fontSize: sC,
           lineHeight: `${sC}px`,
           letterSpacing: `${HEAD_TRACK}em`,
           whiteSpace: "pre",
-          color: c.ink,
+          color: fg,
           opacity: a,
         }}
       >
@@ -561,33 +622,35 @@ export function FillerCut({
   const glow = `radial-gradient(60% 50% at 30% 55%, color-mix(in oklab, ${c.stops[1]} ${(c.glow * 100 * hiP).toFixed(1)}%, transparent) 0%, transparent 70%)`;
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <div style={{ position: "absolute", inset: 0, backgroundImage: glow }} />
-      {els}
-      {showTime ? (
-        <div
-          style={{
-            position: "absolute",
-            left,
-            top: blockTop - timeSize * 2.6,
-            display: "flex",
-            gap: timeSize * 1.2,
-            fontFamily: mono.fontFamily,
-            fontWeight: 400,
-            fontSize: timeSize,
-            lineHeight: 1,
-            letterSpacing: "0.04em",
-            color: c.muted,
-            fontVariantNumeric: "tabular-nums",
-            opacity: timeOn,
-            whiteSpace: "pre",
-          }}
-        >
-          <span style={{ color: c.ink }}>{clock(secs)}</span>
-          <span>{gone > 0.05 ? `−${clock(gone * SEC_PER_WORD)}` : ""}</span>
-        </div>
-      ) : null}
-      <Grain opacity={c.grain} />
+      <ScaleLayer scale={scale}>
+        {els}
+        {showTime ? (
+          <div
+            style={{
+              position: "absolute",
+              left,
+              top: blockTop - timeSize * 2.6,
+              display: "flex",
+              gap: timeSize * 1.2,
+              fontFamily: mono.fontFamily,
+              fontWeight: 400,
+              fontSize: timeSize,
+              lineHeight: 1,
+              letterSpacing: "0.04em",
+              color: c.muted,
+              fontVariantNumeric: "tabular-nums",
+              opacity: timeOn,
+              whiteSpace: "pre",
+            }}
+          >
+            <span style={{ color: fg }}>{clock(secs)}</span>
+            <span>{gone > 0.05 ? `−${clock(gone * SEC_PER_WORD)}` : ""}</span>
+          </div>
+        ) : null}
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

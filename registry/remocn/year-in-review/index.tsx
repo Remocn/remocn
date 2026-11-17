@@ -15,7 +15,7 @@ import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const { fontFamily: hanken } = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -47,6 +47,18 @@ export interface YearInReviewProps {
   speed?: number;
   device?: "phone" | "card";
   chapters?: string[];
+  /** Chapter list beside the device; false leaves the device alone. */
+  rail?: boolean;
+  /** Color of the chapter titles and progress; overrides the default cream. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the body copy. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Size of the device and chapter list, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
 }
@@ -1217,16 +1229,39 @@ function StatusBar({ color }: { color: string }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function YearInReview({
   stats,
   accent = "#3B5BFD",
   speed = 1,
   device = "phone",
   chapters = ["Your year", "Shipped", "Top component", "Your rank", "Share"],
+  rail: showRail = true,
+  ink,
+  background,
+  fontFamily = hanken,
+  scale = 1,
+  delay = 0,
   ground,
   groundParams,
 }: YearInReviewProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
+  const fg = ink ?? "#F4F1EA";
   const { width, height, fps } = useVideoConfig();
   const tall = height > width;
   const s = { ...DEFAULT_STATS, ...stats };
@@ -1289,7 +1324,7 @@ export function YearInReview({
               style={{
                 width: `${clamp((frame - STARTS[i]) / ((STARTS[i + 1] ?? STARTS[i] + 120) - STARTS[i])) * 100}%`,
                 height: "100%",
-                background: "#F4F1EA",
+                background: fg,
               }}
             />
           </div>
@@ -1322,7 +1357,7 @@ export function YearInReview({
                   fontWeight: 300,
                   lineHeight: 1,
                   letterSpacing: "-0.045em",
-                  color: "#F4F1EA",
+                  color: fg,
                   transform: `translateY(${(1 - a) * 105}%)`,
                 }}
               >
@@ -1387,7 +1422,7 @@ export function YearInReview({
                 fontSize: 44 * u,
                 fontWeight: 300,
                 letterSpacing: "-0.04em",
-                color: "#F4F1EA",
+                color: fg,
               }}
             >
               {ch}
@@ -1399,95 +1434,107 @@ export function YearInReview({
   );
   return (
     <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={ground ?? "charcoal-satin"}
-        params={groundParams}
-        timeOffset={3}
-        timeScale={0.3}
-      />
-      <AbsoluteFill
-        style={{
-          background: tall
-            ? "linear-gradient(180deg, rgba(6,6,8,0.15) 40%, rgba(6,6,8,0.7) 100%)"
-            : "linear-gradient(90deg, rgba(6,6,8,0.72) 0%, rgba(6,6,8,0.25) 50%, rgba(6,6,8,0.1) 100%)",
-        }}
-      />
-      {rail}
-      <div
-        style={{
-          position: "absolute",
-          left: center.x - fw / 2,
-          top: center.y - fh / 2,
-          width: fw,
-          height: fh,
-          transform: `translateY(${(1 - enter) * height * 0.7}px) scale(${k * push})`,
-        }}
-      >
-        {phone ? (
-          <div
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? "charcoal-satin"}
+            params={groundParams}
+            timeOffset={3}
+            timeScale={0.3}
+          />
+          <AbsoluteFill
             style={{
-              position: "absolute",
-              inset: 0,
-              borderRadius: 66,
-              background: "#0B0B0C",
-              boxShadow:
-                "inset 0 0 0 1.5px #6E6E73, inset 0 0 0 3px #1C1C1E, 0 50px 100px -20px rgba(0,0,0,0.75)",
+              background: tall
+                ? "linear-gradient(180deg, rgba(6,6,8,0.15) 40%, rgba(6,6,8,0.7) 100%)"
+                : "linear-gradient(90deg, rgba(6,6,8,0.72) 0%, rgba(6,6,8,0.25) 50%, rgba(6,6,8,0.1) 100%)",
             }}
           />
-        ) : null}
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
+        {showRail ? rail : null}
         <div
           style={{
             position: "absolute",
-            left: phone ? BEZEL : 0,
-            top: phone ? BEZEL : 0,
-            width: SW,
-            height: SH,
-            borderRadius: phone ? 55 : 30,
-            overflow: "hidden",
-            boxShadow: phone
-              ? "none"
-              : "0 0 0 1px rgba(255,255,255,0.08), 0 50px 100px -20px rgba(0,0,0,0.75)",
+            left: center.x - fw / 2,
+            top: center.y - fh / 2,
+            width: fw,
+            height: fh,
+            transform: `translateY(${(1 - enter) * height * 0.7}px) scale(${k * push})`,
           }}
         >
-          <Screen
-            frame={frame}
-            fps={fps}
-            s={s}
-            accent={accent}
-            top={phone ? 104 : 64}
-          />
           {phone ? (
-            <>
-              <StatusBar color={ui} />
-              <div
-                style={{
-                  position: "absolute",
-                  top: 11,
-                  left: (SW - 126) / 2,
-                  width: 126,
-                  height: 37,
-                  borderRadius: 19,
-                  background: "#000",
-                  zIndex: 20,
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 8,
-                  left: (SW - 140) / 2,
-                  width: 140,
-                  height: 5,
-                  borderRadius: 3,
-                  background: ui,
-                  opacity: 0.85,
-                  zIndex: 20,
-                }}
-              />
-            </>
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                borderRadius: 66,
+                background: "#0B0B0C",
+                boxShadow:
+                  "inset 0 0 0 1.5px #6E6E73, inset 0 0 0 3px #1C1C1E, 0 50px 100px -20px rgba(0,0,0,0.75)",
+              }}
+            />
           ) : null}
+          <div
+            style={{
+              position: "absolute",
+              left: phone ? BEZEL : 0,
+              top: phone ? BEZEL : 0,
+              width: SW,
+              height: SH,
+              borderRadius: phone ? 55 : 30,
+              overflow: "hidden",
+              boxShadow: phone
+                ? "none"
+                : "0 0 0 1px rgba(255,255,255,0.08), 0 50px 100px -20px rgba(0,0,0,0.75)",
+            }}
+          >
+            <Screen
+              frame={frame}
+              fps={fps}
+              s={s}
+              accent={accent}
+              top={phone ? 104 : 64}
+            />
+            {phone ? (
+              <>
+                <StatusBar color={ui} />
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 11,
+                    left: (SW - 126) / 2,
+                    width: 126,
+                    height: 37,
+                    borderRadius: 19,
+                    background: "#000",
+                    zIndex: 20,
+                  }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: 8,
+                    left: (SW - 140) / 2,
+                    width: 140,
+                    height: 5,
+                    borderRadius: 3,
+                    background: ui,
+                    opacity: 0.85,
+                    zIndex: 20,
+                  }}
+                />
+              </>
+            ) : null}
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

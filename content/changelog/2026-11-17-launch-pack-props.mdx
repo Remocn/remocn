@@ -1,0 +1,20 @@
+---
+title: Launch Pack, your way
+date: 2026-11-17
+---
+
+The 491 Launch Pack pieces now take your brand and your timing as props. Pieces that set copy take your font and text color (a few whose letters are drawn as shapes keep theirs), every piece takes your background, and every piece can be scaled and delayed. The **Customize** panel on each page shows all of it, including copy that sits in lists and colors that follow the theme.
+
+<ChangelogPreview name="not-yet" />
+
+### Improvements
+
+- **Brand props on every piece.** `fontFamily` sets the face of the copy, `ink` its color and `background` the fill; on a scene with a gradient ground, `background` replaces the ground with a solid color or `"transparent"`. Pieces that draw the remocn mark take a `logo`, and pieces with film grain take `grain` to turn it off. The [Your brand](/docs/guides/your-brand) guide maps a brand brief to these props.
+- **Size and timing.** `scale` sizes a scene's content without touching its background, and `delay` holds the first frame before anything moves. `speed` now works on every piece; 57 of them ignored it before.
+- **Props of their own.** Each piece gained one to three props from values that were fixed before: word and item stagger, hold lengths, weights, corner radii and, in Product Scenes, the button labels and UI headings that read on screen.
+- **A fuller Customize panel.** Lists of lines and words are edited one per line, accent and text colors start on **Auto** and follow the theme, gradient grounds can be picked from the preset list, and **Font** previews eight faces next to the piece's own.
+
+### Fixes
+
+- The panel's default accent for [Ride Tracking](/docs/product-scenes/ride-tracking) and [AI Answer Sources](/docs/product-scenes/ai-answer-sources) now matches the component's own default.
+- Five Accent fields that changed nothing are gone from the panel.

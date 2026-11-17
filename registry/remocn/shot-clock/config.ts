@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const shotClockConfig: ComponentConfig = {
   componentName: "ShotClock",
@@ -12,16 +18,6 @@ export const shotClockConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    alarm: {
-      type: "color",
-      default: "#FF4433",
-      description: "Alarm",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     title: {
       type: "text-content",
@@ -61,6 +57,35 @@ export const shotClockConfig: ComponentConfig = {
       description: "Tenths below",
       hiddenFromList: false,
     },
+    tick: {
+      type: "number",
+      default: 2.6,
+      min: 0.6,
+      max: 8,
+      step: 0.2,
+      description: "Tick (frames)",
+      hiddenFromList: false,
+    },
+    hold: {
+      type: "number",
+      default: 6,
+      min: 0,
+      max: 40,
+      step: 1,
+      description: "Buzzer hold (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    alarm: {
+      type: "color",
+      default: "#FF4433",
+      description: "Alarm",
+    },
+    ...sceneControls({ font: "Azeret Mono" }),
     speed: {
       type: "number",
       default: 1,

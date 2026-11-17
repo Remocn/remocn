@@ -21,6 +21,19 @@ export interface DiagonalSplitProps {
   to?: React.ReactNode;
   angle?: number;
   accent?: string;
+  /** Headline color in both scenes; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the incoming scene's gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for string scenes. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Frames the halves take to slide apart. */
+  move?: number;
+  /** Size of the headlines, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -124,18 +137,40 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 function Scene({
   content,
   tone,
   max,
   bare = false,
   ground,
+  fontFamily,
+  ink,
+  scale,
 }: {
   content: React.ReactNode;
   tone: { bg: string; fg: string; light: string };
   max: number;
   bare?: boolean;
   ground?: string;
+  fontFamily: string;
+  ink?: string;
+  scale: number;
 }) {
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -150,28 +185,30 @@ function Scene({
           }}
         />
       )}
-      {typeof content === "string" ? (
-        <AbsoluteFill
-          style={{ alignItems: "center", justifyContent: "center" }}
-        >
-          <div
-            style={{
-              fontFamily: display,
-              fontWeight: 500,
-              fontSize: Math.min(max * u, (0.82 * W) / widthEm(content)),
-              letterSpacing: `${TRACK}em`,
-              lineHeight: 1,
-              whiteSpace: "nowrap",
-              color: tone.fg,
-              paddingBottom: 0.06 * Math.min(max * u, W / widthEm(content)),
-            }}
+      <ScaleLayer scale={scale}>
+        {typeof content === "string" ? (
+          <AbsoluteFill
+            style={{ alignItems: "center", justifyContent: "center" }}
           >
-            {content}
-          </div>
-        </AbsoluteFill>
-      ) : (
-        <AbsoluteFill>{content}</AbsoluteFill>
-      )}
+            <div
+              style={{
+                fontFamily,
+                fontWeight: 500,
+                fontSize: Math.min(max * u, (0.82 * W) / widthEm(content)),
+                letterSpacing: `${TRACK}em`,
+                lineHeight: 1,
+                whiteSpace: "nowrap",
+                color: ink ?? tone.fg,
+                paddingBottom: 0.06 * Math.min(max * u, W / widthEm(content)),
+              }}
+            >
+              {content}
+            </div>
+          </AbsoluteFill>
+        ) : (
+          <AbsoluteFill>{content}</AbsoluteFill>
+        )}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -181,10 +218,17 @@ export function DiagonalSplit({
   to = "Launched on Monday",
   angle = 28,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = display,
+  move = SLIDE_END - SLIDE_AT,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: DiagonalSplitProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
   const stage = STAGES[theme];
@@ -199,14 +243,15 @@ export function DiagonalSplit({
   const L = 2 * (W + H);
 
   const seam = SEAM(interpolate(t, [SEAM_AT, SEAM_END], [0, 1], CLAMP));
-  const slide = SLIDE(interpolate(t, [SLIDE_AT, SLIDE_END], [0, 1], CLAMP));
+  const slideEnd = SLIDE_AT + move;
+  const slide = SLIDE(interpolate(t, [SLIDE_AT, slideEnd], [0, 1], CLAMP));
   const reachN = (W * Math.abs(nx) + H * Math.abs(ny)) / 2;
   const travel = 0.32 * W * slide;
   const gap = 18 * u * seam + 2.3 * reachN * slide;
   const bandOut = BAND_OUT(interpolate(t, [24, 42], [0, 1], CLAMP));
   const band = 18 * u * seam * (1 - bandOut);
   const settle = SETTLE(
-    interpolate(t, [SLIDE_AT, SLIDE_END + 18], [0, 1], CLAMP),
+    interpolate(t, [SLIDE_AT, slideEnd + 18], [0, 1], CLAMP),
   );
   const bScale = 1.05 - 0.05 * settle;
   const gone = slide >= 0.999;
@@ -254,7 +299,15 @@ export function DiagonalSplit({
               background: `radial-gradient(ellipse ${0.8 * W}px ${0.9 * H}px at ${1.24 * W}px ${H}px, ${stage.a.light}, transparent 70%), ${stage.a.bg}`,
             }}
           />
-          <Scene content={from} tone={stage.a} max={134} bare />
+          <Scene
+            content={from}
+            tone={stage.a}
+            max={134}
+            bare
+            fontFamily={fontFamily}
+            ink={ink}
+            scale={scale}
+          />
           <div
             style={{
               position: "absolute",
@@ -274,18 +327,30 @@ export function DiagonalSplit({
   };
 
   return (
-    <AbsoluteFill style={{ background: stage.b.bg, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? stage.b.bg),
+        overflow: "hidden",
+      }}
+    >
       <AbsoluteFill style={{ transform: `scale(${bScale})` }}>
         <Scene
           content={to}
           tone={stage.b}
           max={134}
-          ground={flutedGround(
-            angle,
-            accent,
-            interpolate(t, [SLIDE_AT, SLIDE_END + 30], [0, 1], CLAMP),
-            u,
-          )}
+          ground={
+            background ??
+            flutedGround(
+              angle,
+              accent,
+              interpolate(t, [SLIDE_AT, slideEnd + 30], [0, 1], CLAMP),
+              u,
+            )
+          }
+          fontFamily={fontFamily}
+          ink={ink}
+          scale={scale}
         />
       </AbsoluteFill>
       {band > 0.2 ? (
@@ -302,14 +367,23 @@ export function DiagonalSplit({
           }}
         />
       ) : null}
-      {seam <= 0 ? <Scene content={from} tone={stage.a} max={134} /> : null}
+      {seam <= 0 ? (
+        <Scene
+          content={from}
+          tone={stage.a}
+          max={134}
+          fontFamily={fontFamily}
+          ink={ink}
+          scale={scale}
+        />
+      ) : null}
       {gone || seam <= 0 ? null : (
         <>
           {half(1)}
           {half(-1)}
         </>
       )}
-      <Grain opacity={theme === "light" ? 0.04 : 0.055} />
+      {grain ? <Grain opacity={theme === "light" ? 0.04 : 0.055} /> : null}
     </AbsoluteFill>
   );
 }

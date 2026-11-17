@@ -2,6 +2,7 @@
 
 import { loadFont as loadGeist } from "@remotion/google-fonts/Geist";
 import { loadFont as loadGeistMono } from "@remotion/google-fonts/GeistMono";
+import type React from "react";
 import { type CSSProperties, useEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -29,6 +30,20 @@ export interface SpotlightTextProps {
   eyebrow?: string;
   /** Faint tint at the rim of the spotlight, and the eyebrow marker. */
   accent?: string;
+  /** Frames for the light's pass across the headline. */
+  sweep?: number;
+  /** Radius of the travelling spotlight, in em of the headline. */
+  spotSize?: number;
+  /** Color of the lit headline, as hex; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the headline. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the headline, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -98,14 +113,14 @@ function mix(a: string, b: string, t: number, alpha = 1) {
 }
 
 /** Headline advance width in em at the display weight. */
-function useTitleWidth(title: string) {
+function useTitleWidth(title: string, fontFamily: string) {
   const [width, setWidth] = useState<number | null>(null);
   const [handle] = useState(() => delayRender("spotlight-text: measuring"));
   const released = useRef(false);
 
   useEffect(() => {
     let live = true;
-    const font = `500 100px "${geist.fontFamily}"`;
+    const font = `500 100px "${fontFamily}"`;
     Promise.all([geist.waitUntilDone(), document.fonts.load(font)])
       .catch(() => undefined)
       .then(() => {
@@ -125,24 +140,52 @@ function useTitleWidth(title: string) {
     return () => {
       live = false;
     };
-  }, [title, handle]);
+  }, [title, fontFamily, handle]);
 
   return width ?? [...title].length * 0.5;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function SpotlightText({
   title = "Launch videos, in code.",
   eyebrow = "remocn 2.0",
   accent = "#3B5BFD",
+  sweep = T.glideEnd - T.glideStart,
+  spotSize = 1.25,
+  ink,
+  background,
+  fontFamily = geist.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: SpotlightTextProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
+  const lit = ink ?? c.lit;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
+  const glideEnd = T.glideStart + sweep;
+  const widenEnd = glideEnd + (T.widenEnd - T.glideEnd);
   const s = Math.min(W / 1280, H / 720);
 
-  const em = useTitleWidth(title);
+  const em = useTitleWidth(title, fontFamily);
   const fontSize = Math.min(MAX_SIZE * s, (W * FILL) / em);
   // Clip box of the lit layer, in px. Tracking adds trailing space after the
   // last glyph; trim it so the box hugs the ink.
@@ -158,12 +201,12 @@ export function SpotlightText({
   });
 
   // Spotlight: glide left → right, then ease back to centre while widening.
-  const r0 = 1.25 * fontSize;
-  const glide = interpolate(frame, [T.glideStart, T.glideEnd], [0, 1], {
+  const r0 = spotSize * fontSize;
+  const glide = interpolate(frame, [T.glideStart, glideEnd], [0, 1], {
     ...CLAMP,
     easing: EASE_GLIDE,
   });
-  const widen = interpolate(frame, [T.glideEnd - 6, T.widenEnd], [0, 1], {
+  const widen = interpolate(frame, [glideEnd - 6, widenEnd], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -182,8 +225,8 @@ export function SpotlightText({
     CLAMP,
   );
 
-  const tintRim = mix(c.lit, accent, c.tint, 0.85);
-  const gradient = `radial-gradient(circle ${radius}px at ${x}px ${y}px, ${c.lit} 0%, ${c.lit} ${core * 100}%, ${tintRim} ${rim * 100}%, ${mix(c.lit, accent, c.tint, 0)} 100%)`;
+  const tintRim = mix(lit, accent, c.tint, 0.85);
+  const gradient = `radial-gradient(circle ${radius}px at ${x}px ${y}px, ${lit} 0%, ${lit} ${core * 100}%, ${tintRim} ${rim * 100}%, ${mix(lit, accent, c.tint, 0)} 100%)`;
 
   // A barely-there wash on the stage under the light.
   const washR = radius * 2.2;
@@ -196,7 +239,7 @@ export function SpotlightText({
   });
 
   const textStyle: CSSProperties = {
-    fontFamily: geist.fontFamily,
+    fontFamily,
     fontWeight: 500,
     fontSize,
     letterSpacing: `${TRACK}em`,
@@ -210,74 +253,81 @@ export function SpotlightText({
   };
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <div style={{ position: "absolute", inset: 0, background: wash }} />
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <div style={{ position: "absolute", inset: 0, background: wash }} />
 
-      {eyebrow ? (
-        <div
-          style={{
-            position: "absolute",
-            left: left + 0.04 * fontSize,
-            top: top - 30 * s,
-            display: "flex",
-            alignItems: "center",
-            gap: 8 * s,
-            fontFamily: geistMono.fontFamily,
-            fontWeight: 400,
-            fontSize: 13 * s,
-            letterSpacing: "0.02em",
-            lineHeight: 1,
-            color: c.muted,
-            opacity: eyebrowIn,
-            filter: `blur(${(1 - eyebrowIn) * 8 * s}px)`,
-            transform: `translateY(${(1 - eyebrowIn) * 10 * s}px)`,
-          }}
-        >
-          <span
+        {eyebrow ? (
+          <div
             style={{
-              width: 5 * s,
-              height: 5 * s,
-              background: accent,
-              display: "block",
+              position: "absolute",
+              left: left + 0.04 * fontSize,
+              top: top - 30 * s,
+              display: "flex",
+              alignItems: "center",
+              gap: 8 * s,
+              fontFamily: geistMono.fontFamily,
+              fontWeight: 400,
+              fontSize: 13 * s,
+              letterSpacing: "0.02em",
+              lineHeight: 1,
+              color: c.muted,
+              opacity: eyebrowIn,
+              filter: `blur(${(1 - eyebrowIn) * 8 * s}px)`,
+              transform: `translateY(${(1 - eyebrowIn) * 10 * s}px)`,
             }}
-          />
-          {eyebrow}
-        </div>
-      ) : null}
+          >
+            <span
+              style={{
+                width: 5 * s,
+                height: 5 * s,
+                background: accent,
+                display: "block",
+              }}
+            />
+            {eyebrow}
+          </div>
+        ) : null}
 
-      <div
-        style={{
-          position: "absolute",
-          left,
-          top,
-          width: boxW,
-          height: boxH,
-          opacity: enter,
-          filter: `blur(${(1 - enter) * 10 * s}px)`,
-          transform: `translateY(${(1 - enter) * 18 * s}px)`,
-        }}
-      >
-        <div
-          style={{ ...textStyle, position: "absolute", inset: 0, color: c.dim }}
-        >
-          {title}
-        </div>
         <div
           style={{
-            ...textStyle,
             position: "absolute",
-            inset: 0,
-            color: "transparent",
-            backgroundImage: gradient,
-            backgroundRepeat: "no-repeat",
-            WebkitBackgroundClip: "text",
-            backgroundClip: "text",
-            opacity: lightIn,
+            left,
+            top,
+            width: boxW,
+            height: boxH,
+            opacity: enter,
+            filter: `blur(${(1 - enter) * 10 * s}px)`,
+            transform: `translateY(${(1 - enter) * 18 * s}px)`,
           }}
         >
-          {title}
+          <div
+            style={{
+              ...textStyle,
+              position: "absolute",
+              inset: 0,
+              color: c.dim,
+            }}
+          >
+            {title}
+          </div>
+          <div
+            style={{
+              ...textStyle,
+              position: "absolute",
+              inset: 0,
+              color: "transparent",
+              backgroundImage: gradient,
+              backgroundRepeat: "no-repeat",
+              WebkitBackgroundClip: "text",
+              backgroundClip: "text",
+              opacity: lightIn,
+            }}
+          >
+            {title}
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

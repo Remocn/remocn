@@ -23,8 +23,18 @@ export interface KeepBelief {
 
 export interface KeepWordsProps {
   beliefs?: KeepBelief[];
+  /** Frames the finished motto holds at the end. */
+  hold?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Gloock by default. */
+  fontFamily?: string;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -64,23 +74,23 @@ const CLAMP = {
 
 let measureCtx: CanvasRenderingContext2D | null = null;
 
-function em(s: string): number {
+function em(s: string, fontFamily: string): number {
   if (!measureCtx) {
     measureCtx = document.createElement("canvas").getContext("2d");
   }
   if (!measureCtx) return s.length * 0.5;
-  measureCtx.font = `400 100px "${gloock.fontFamily}"`;
+  measureCtx.font = `400 100px "${fontFamily}"`;
   return measureCtx.measureText(s).width / 100 + TRACK * Array.from(s).length;
 }
 
-function useFontReady() {
+function useFontReady(fontFamily: string) {
   const [ready, setReady] = useState(false);
   const [handle] = useState(() => delayRender("keep-words: font"));
   useEffect(() => {
     let live = true;
     gloock
       .waitUntilDone()
-      .then(() => document.fonts.load(`400 100px "${gloock.fontFamily}"`))
+      .then(() => document.fonts.load(`400 100px "${fontFamily}"`))
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
@@ -90,7 +100,7 @@ function useFontReady() {
     return () => {
       live = false;
     };
-  }, [handle]);
+  }, [handle, fontFamily]);
   return ready;
 }
 
@@ -110,8 +120,8 @@ interface Laid {
   lines: number;
 }
 
-function wrapAt(words: Word[], maxEm: number): Laid {
-  const space = em(" ");
+function wrapAt(words: Word[], maxEm: number, fontFamily: string): Laid {
+  const space = em(" ", fontFamily);
   const out: { x: number; line: number }[] = [];
   let line = 0;
   let x = 0;
@@ -126,24 +136,30 @@ function wrapAt(words: Word[], maxEm: number): Laid {
   return { words: out, lines: line + 1 };
 }
 
-function balanced(words: Word[], maxEm: number): Laid {
-  const base = wrapAt(words, maxEm);
+function balanced(words: Word[], maxEm: number, fontFamily: string): Laid {
+  const base = wrapAt(words, maxEm, fontFamily);
   let lo = Math.max(...words.map((w) => w.w), 0.1);
   let hi = maxEm;
   for (let i = 0; i < 14; i++) {
     const mid = (lo + hi) / 2;
-    if (wrapAt(words, mid).lines <= base.lines) hi = mid;
+    if (wrapAt(words, mid, fontFamily).lines <= base.lines) hi = mid;
     else lo = mid;
   }
-  return wrapAt(words, hi);
+  return wrapAt(words, hi, fontFamily);
 }
 
-function fitSize(words: Word[], boxW: number, boxH: number, maxF: number) {
+function fitSize(
+  words: Word[],
+  boxW: number,
+  boxH: number,
+  maxF: number,
+  fontFamily: string,
+) {
   let lo = 8;
   let hi = maxF;
   for (let i = 0; i < 18; i++) {
     const mid = (lo + hi) / 2;
-    const lay = wrapAt(words, boxW / mid);
+    const lay = wrapAt(words, boxW / mid, fontFamily);
     const widest = Math.max(...words.map((w) => w.w)) * mid;
     if (lay.lines * LH * mid <= boxH && widest <= boxW) lo = mid;
     else hi = mid;
@@ -151,7 +167,7 @@ function fitSize(words: Word[], boxW: number, boxH: number, maxF: number) {
   return lo;
 }
 
-function splitBelief(b: KeepBelief): Word[] {
+function splitBelief(b: KeepBelief, fontFamily: string): Word[] {
   const tokens = b.text.split(/\s+/).filter(Boolean);
   const keepTokens = b.keep.toLowerCase().split(/\s+/).filter(Boolean);
   const core = (s: string) =>
@@ -166,16 +182,17 @@ function splitBelief(b: KeepBelief): Word[] {
   }
   return tokens.map((tk, i) => {
     const k = at >= 0 && i >= at && i < at + keepTokens.length ? i - at : -1;
-    if (k < 0) return { segs: [{ text: tk, dx: 0, key: -1 }], w: em(tk) };
+    if (k < 0)
+      return { segs: [{ text: tk, dx: 0, key: -1 }], w: em(tk, fontFamily) };
     const c = core(tk);
     const start = tk.indexOf(c);
     const lead = tk.slice(0, start);
     const tail = tk.slice(start + c.length);
     const segs: Seg[] = [];
     if (lead) segs.push({ text: lead, dx: 0, key: -1 });
-    segs.push({ text: c, dx: em(lead), key: k });
-    if (tail) segs.push({ text: tail, dx: em(lead + c), key: -1 });
-    return { segs, w: em(tk) };
+    segs.push({ text: c, dx: em(lead, fontFamily), key: k });
+    if (tail) segs.push({ text: tail, dx: em(lead + c, fontFamily), key: -1 });
+    return { segs, w: em(tk, fontFamily) };
   });
 }
 
@@ -184,21 +201,44 @@ function mottoOf(keep: string) {
   return `${t.charAt(0).toUpperCase()}${t.slice(1)}`;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function KeepWords({
   beliefs = DEFAULT_BELIEFS,
+  hold = FINAL_HOLD,
   accent,
+  ink,
   background,
+  fontFamily = gloock.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: KeepWordsProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay);
   const t = frame * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const ready = useFontReady();
+  const ready = useFontReady(fontFamily);
+  const emF = (s: string) => em(s, fontFamily);
 
   if (!ready || beliefs.length === 0) {
     return (
@@ -211,7 +251,7 @@ export function KeepWords({
   const D = durationInFrames * speed;
   const seg = Math.max(
     48,
-    (D - START - STACK_MOVE - FINAL_HOLD - 30) / Math.max(1, n),
+    (D - START - STACK_MOVE - hold - 30) / Math.max(1, n),
   );
   const lastTravel =
     START + (n - 1) * seg + seg * 0.66 + Math.min(24, seg * 0.3);
@@ -223,16 +263,16 @@ export function KeepWords({
   const boxH = H * (portrait ? 0.46 : 0.56);
 
   const mottoItems = beliefs.map((b) => mottoOf(b.keep));
-  const space = em(" ");
+  const space = emF(" ");
   const mottoWidthEm =
-    mottoItems.reduce((s, m) => s + em(`${m}.`), 0) + space * (n - 1);
+    mottoItems.reduce((s, m) => s + emF(`${m}.`), 0) + space * (n - 1);
   const Fm = Math.min(
     H * (portrait ? 0.05 : 0.085),
     (W - mx * 2) / mottoWidthEm,
   );
   const mottoTop = H * (portrait ? 0.66 : 0.76);
 
-  const stackWidest = Math.max(...mottoItems.map((m) => em(`${m}.`)));
+  const stackWidest = Math.max(...mottoItems.map((m) => emF(`${m}.`)));
   const Ff = Math.min(
     (H * (portrait ? 0.62 : 0.8)) / (n * LH),
     (W - mx * 2) / stackWidest,
@@ -251,13 +291,13 @@ export function KeepWords({
     for (const p of parts) {
       rowSlots.push({ x: mx + (mxEm + local) * Fm, y: mottoTop });
       colSlots.push({ x: mx + local * Ff, y: stackTop + i * LH * Ff });
-      local += em(p) + space;
+      local += emF(p) + space;
     }
-    rowSlots.push({ x: mx + (mxEm + em(m)) * Fm, y: mottoTop });
-    colSlots.push({ x: mx + em(m) * Ff, y: stackTop + i * LH * Ff });
+    rowSlots.push({ x: mx + (mxEm + emF(m)) * Fm, y: mottoTop });
+    colSlots.push({ x: mx + emF(m) * Ff, y: stackTop + i * LH * Ff });
     mottoSlots.push(rowSlots);
     stackSlots.push(colSlots);
-    mxEm += em(`${m}.`) + space;
+    mxEm += emF(`${m}.`) + space;
   });
 
   const stackOf = (i: number) =>
@@ -284,7 +324,7 @@ export function KeepWords({
         position: "absolute",
         left: 0,
         top: 0,
-        fontFamily: gloock.fontFamily,
+        fontFamily,
         fontWeight: 400,
         fontSize: renderSize,
         lineHeight: `${LH * renderSize}px`,
@@ -304,15 +344,21 @@ export function KeepWords({
     const stackP = stackOf(bi);
     const s0 = START + bi * seg;
     const u = t - s0;
-    const words = splitBelief(b);
-    const F = fitSize(words, boxW, boxH, H * (portrait ? 0.1 : 0.17));
-    const lay = balanced(words, boxW / F);
+    const words = splitBelief(b, fontFamily);
+    const F = fitSize(
+      words,
+      boxW,
+      boxH,
+      H * (portrait ? 0.1 : 0.17),
+      fontFamily,
+    );
+    const lay = balanced(words, boxW / F, fontFamily);
     const markAt = seg * 0.42;
     const fallAt = seg * 0.6;
     const travelAt = seg * 0.66;
     const travelLen = Math.min(24, seg * 0.3);
     const mark = interpolate(u, [markAt, markAt + 8], [0, 1], CLAMP);
-    const keyColor = interpolateColors(mark, [0, 1], [c.ink, hi]);
+    const keyColor = interpolateColors(mark, [0, 1], [fg, hi]);
 
     if (u > -1) {
       const stagger = Math.min(2, 22 / Math.max(1, words.length));
@@ -350,7 +396,7 @@ export function KeepWords({
                 wy + (1 - enter) * F * 0.32 + fall * F * 0.22,
                 F,
                 F,
-                c.ink,
+                fg,
                 op,
               ),
             );
@@ -374,7 +420,7 @@ export function KeepWords({
           const size = F + (rs - F) * travel;
           const render = Math.max(F, Ff);
           const landed = interpolate(travel, [0.85, 1], [0, 1], CLAMP);
-          const color = interpolateColors(landed, [0, 1], [keyColor, c.ink]);
+          const color = interpolateColors(landed, [0, 1], [keyColor, fg]);
           const finalText =
             sg.key === 0 ? mottoItems[bi].split(/\s+/)[0] : sg.text;
           const swap = finalText !== sg.text ? landed : 0;
@@ -415,7 +461,7 @@ export function KeepWords({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

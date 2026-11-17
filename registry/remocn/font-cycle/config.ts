@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const fontCycleConfig: ComponentConfig = {
   componentName: "FontCycle",
@@ -12,11 +18,6 @@ export const fontCycleConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     word: {
       type: "text-content",
@@ -37,6 +38,26 @@ export const fontCycleConfig: ComponentConfig = {
       description: "Passes",
       hiddenFromList: false,
     },
+    beat: {
+      type: "number",
+      default: 3,
+      min: 1,
+      max: 12,
+      step: 1,
+      description: "Beat (frames)",
+      hiddenFromList: false,
+    },
+    guides: {
+      type: "boolean",
+      default: true,
+      description: "Guides",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ grain: true }),
     speed: {
       type: "number",
       default: 1,

@@ -80,16 +80,61 @@ A point of light draws out into a hairline with the `title` riding on it. The li
       description: "Letterbox opens top and bottom; sideways rolls the line upright",
     },
     {
+      name: "glow",
+      type: "number",
+      default: "1",
+      description: "Spread of the soft light around the hairline",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Color of the light and the default product mock",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color of the title; overrides the default off-white.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Newsreader\"",
+      description: "Typeface for the title. Load the font in your project first.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark in a title that ends in remocn.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the title around the frame's center; the slit and scene stay put.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
+    },
+    {
       name: "speed",
       type: "number",
       default: "1",
       description: "Playback multiplier for the whole timeline",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
   ]}
 />

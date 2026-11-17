@@ -87,14 +87,49 @@ A tall condensed numeral counts from `from` down to `value` while a wavy fill dr
       description: "Caption that rises in word by word.",
     },
     {
+      name: "countDuration",
+      type: "number",
+      default: "60",
+      description: "Frames the count takes to run from `from` to `value`.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "3",
+      description: "Frames between label words.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Color of the fill; defaults to the theme ink.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Stage background color; overrides the theme ground.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Anton\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

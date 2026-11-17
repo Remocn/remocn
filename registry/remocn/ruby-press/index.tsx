@@ -23,8 +23,20 @@ export interface RubyPressProps {
   words?: string[];
   after?: string;
   hold?: number;
+  /** Frames between words as the lead line rises in. */
+  stagger?: number;
+  /** Frames the gloss takes to press down into the line. */
+  press?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Zen Kaku Gothic New by default. */
+  fontFamily?: string;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -64,11 +76,15 @@ interface Metrics {
   base: number;
 }
 
-function measure(tokens: string[], slots: string[]): Metrics {
+function measure(
+  tokens: string[],
+  slots: string[],
+  fontFamily: string,
+): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("ruby-press: no 2d context");
-  ctx.font = `500 100px "${kaku.fontFamily}"`;
+  ctx.font = `500 100px "${fontFamily}"`;
   const w = (s: string) =>
     ctx.measureText(s).width / 100 + TRACK * Math.max(0, s.length - 1);
   const h = ctx.measureText("H");
@@ -86,7 +102,7 @@ function measure(tokens: string[], slots: string[]): Metrics {
   };
 }
 
-function useMetrics(tokens: string[], slots: string[]) {
+function useMetrics(tokens: string[], slots: string[], fontFamily: string) {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("ruby-press: measuring"));
   const released = useRef(false);
@@ -95,13 +111,13 @@ function useMetrics(tokens: string[], slots: string[]) {
     let live = true;
     Promise.all([
       kaku.waitUntilDone(),
-      document.fonts.load(`500 100px "${kaku.fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
         const [tk, sl] = JSON.parse(key) as [string[], string[]];
-        setMetrics(measure(tk, sl));
+        setMetrics(measure(tk, sl, fontFamily));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -110,7 +126,7 @@ function useMetrics(tokens: string[], slots: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily]);
   return metrics;
 }
 
@@ -121,21 +137,44 @@ interface Item {
   hug: boolean;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function RubyPress({
   before = "Subtitles for every market in",
   words = ["a fortnight", "a morning", "one render"],
   after = ".",
   hold = 14,
+  stagger = RISE_GAP,
+  press = PRESS,
   accent,
+  ink,
   background,
+  fontFamily = kaku.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: RubyPressProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
   const bg = background ?? c.bg;
   const red = accent ?? VERMILION;
+  const fg = ink ?? c.ink;
 
   const slots = words.length ? words : [""];
   const beforeTokens = useMemo(
@@ -150,7 +189,7 @@ export function RubyPress({
     () => [...beforeTokens, ...afterTokens],
     [beforeTokens, afterTokens],
   );
-  const m = useMetrics(tokens, slots);
+  const m = useMetrics(tokens, slots, fontFamily);
 
   if (!m) {
     return <div style={{ position: "absolute", inset: 0, background: bg }} />;
@@ -158,10 +197,10 @@ export function RubyPress({
 
   const swaps = slots.length - 1;
   const swapAt = (i: number) =>
-    FIRST_GLOSS + i * (GLOSS_IN + GLOSS_WAIT + PRESS + hold);
+    FIRST_GLOSS + i * (GLOSS_IN + GLOSS_WAIT + press + hold);
   const pressAt = (i: number) => swapAt(i) + GLOSS_IN + GLOSS_WAIT;
   const pressP = (i: number) =>
-    interpolate(t, [pressAt(i), pressAt(i) + PRESS], [0, 1], {
+    interpolate(t, [pressAt(i), pressAt(i) + press], [0, 1], {
       ...CLAMP,
       easing: EASE_PRESS,
     });
@@ -262,14 +301,14 @@ export function RubyPress({
   const riseOf = (i: number) =>
     interpolate(
       t,
-      [RISE_AT + i * RISE_GAP, RISE_AT + i * RISE_GAP + RISE_LEN],
+      [RISE_AT + i * stagger, RISE_AT + i * stagger + RISE_LEN],
       [0, 1],
       { ...CLAMP, easing: EASE_OUT },
     );
 
   const textStyle = (size: number): React.CSSProperties => ({
     position: "absolute",
-    fontFamily: kaku.fontFamily,
+    fontFamily,
     fontWeight: 500,
     fontSize: size,
     lineHeight: `${size}px`,
@@ -305,7 +344,7 @@ export function RubyPress({
               ...textStyle(sz),
               left: pl.x,
               top: pl.base - lineTop - m.base * sz + dy,
-              color: c.ink,
+              color: fg,
             }}
           >
             {pl.it.text}
@@ -370,7 +409,7 @@ export function RubyPress({
               transform: `scaleY(${flat.toFixed(4)})`,
               transformOrigin: `50% ${(m.base * F).toFixed(2)}px`,
               opacity: interpolate(flat, [0, 0.12], [0, 1], CLAMP),
-              color: oldIdx === 0 ? c.ink : red,
+              color: oldIdx === 0 ? fg : red,
             }}
           >
             {slots[oldIdx]}
@@ -382,8 +421,10 @@ export function RubyPress({
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      {nodes}
-      {overlay}
+      <ScaleLayer scale={scale}>
+        {nodes}
+        {overlay}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

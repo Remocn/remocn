@@ -22,7 +22,19 @@ export interface CrewOfOneProps {
   roles?: string[];
   name?: string;
   accent?: string;
+  /** Text color of the roles; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the roles and name. Load it yourself; Gabarito by default. */
+  fontFamily?: string;
+  /** Weight of the roles. */
+  fontWeight?: number;
+  /** Size of the name relative to the roles. */
+  nameScale?: number;
+  /** Size of the credits, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -55,11 +67,16 @@ interface Metrics {
   desc: number;
 }
 
-function measure(roles: string[], name: string): Metrics {
+function measure(
+  roles: string[],
+  name: string,
+  family: string,
+  roleWeight: number,
+): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("crew-of-one: no 2d context");
-  ctx.font = `${ROLE_W} ${FONT_PX}px "${gabarito.fontFamily}"`;
+  ctx.font = `${roleWeight} ${FONT_PX}px "${family}"`;
   let widest = 0.1;
   for (const r of roles) {
     widest = Math.max(
@@ -68,7 +85,7 @@ function measure(roles: string[], name: string): Metrics {
     );
   }
   const fm = ctx.measureText("Hxg");
-  ctx.font = `${NAME_W} ${FONT_PX}px "${gabarito.fontFamily}"`;
+  ctx.font = `${NAME_W} ${FONT_PX}px "${family}"`;
   const nameW =
     ctx.measureText(name).width / FONT_PX +
     NAME_TRACK * Array.from(name).length;
@@ -80,7 +97,12 @@ function measure(roles: string[], name: string): Metrics {
   };
 }
 
-function useMetrics(roles: string[], name: string) {
+function useMetrics(
+  roles: string[],
+  name: string,
+  family: string,
+  roleWeight: number,
+) {
   const key = [name, ...roles].join("\u0001");
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("crew-of-one: measuring"));
@@ -89,14 +111,14 @@ function useMetrics(roles: string[], name: string) {
     let live = true;
     Promise.all([
       gabarito.waitUntilDone(),
-      document.fonts.load(`${ROLE_W} 100px "${gabarito.fontFamily}"`),
-      document.fonts.load(`${NAME_W} 100px "${gabarito.fontFamily}"`),
+      document.fonts.load(`${roleWeight} 100px "${family}"`),
+      document.fonts.load(`${NAME_W} 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
         const [n, ...rs] = key.split("\u0001");
-        setState({ key, m: measure(rs, n) });
+        setState({ key, m: measure(rs, n, family, roleWeight) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -105,8 +127,24 @@ function useMetrics(roles: string[], name: string) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, family, roleWeight]);
   return state && state.key === key ? state.m : null;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function CrewOfOne({
@@ -120,20 +158,27 @@ export function CrewOfOne({
   ],
   name = "you",
   accent,
+  ink,
   background,
+  fontFamily = gabarito.fontFamily,
+  fontWeight = ROLE_W,
+  nameScale = NAME_SCALE,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: CrewOfOneProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const t = frame * speed;
   const D = Math.max(90, durationInFrames);
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
   const list = roles.length > 0 ? roles : ["Made by"];
-  const m = useMetrics(list, name);
+  const m = useMetrics(list, name, fontFamily, fontWeight);
 
   if (!m) {
     return (
@@ -152,10 +197,10 @@ export function CrewOfOne({
   const F = Math.min(
     H * (portrait ? 0.055 : 0.13),
     leftRoom / m.roles,
-    rightRoom / (m.name * NAME_SCALE),
+    rightRoom / (m.name * nameScale),
     stackFit,
   );
-  const NF = F * NAME_SCALE;
+  const NF = F * nameScale;
   const mid = H / 2;
   const baseline = mid + F * 0.36;
   const top = (base: number, size: number) =>
@@ -196,11 +241,11 @@ export function CrewOfOne({
     height: F,
     lineHeight: `${F}px`,
     whiteSpace: "pre",
-    fontFamily: gabarito.fontFamily,
-    fontWeight: ROLE_W,
+    fontFamily,
+    fontWeight,
     fontSize: F,
     letterSpacing: `${TRACK}em`,
-    color: c.ink,
+    color: fg,
     textAlign: "right",
   };
 
@@ -230,34 +275,36 @@ export function CrewOfOne({
   const nameTop = top(baseline, NF);
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
-      <div
-        style={{
-          position: "absolute",
-          left: gutter + gap / 2,
-          top: nameTop - NF * 0.15,
-          height: NF * 1.35,
-          overflow: "hidden",
-        }}
-      >
+      <ScaleLayer scale={scale}>
+        {nodes}
         <div
           style={{
-            position: "relative",
-            top: NF * 0.15,
-            height: NF,
-            lineHeight: `${NF}px`,
-            whiteSpace: "pre",
-            fontFamily: gabarito.fontFamily,
-            fontWeight: NAME_W,
-            fontSize: NF,
-            letterSpacing: `${NAME_TRACK}em`,
-            color: hi,
-            transform: `translateY(${((1 - nameIn) * NF * 1.3).toFixed(2)}px)`,
+            position: "absolute",
+            left: gutter + gap / 2,
+            top: nameTop - NF * 0.15,
+            height: NF * 1.35,
+            overflow: "hidden",
           }}
         >
-          {name}
+          <div
+            style={{
+              position: "relative",
+              top: NF * 0.15,
+              height: NF,
+              lineHeight: `${NF}px`,
+              whiteSpace: "pre",
+              fontFamily,
+              fontWeight: NAME_W,
+              fontSize: NF,
+              letterSpacing: `${NAME_TRACK}em`,
+              color: hi,
+              transform: `translateY(${((1 - nameIn) * NF * 1.3).toFixed(2)}px)`,
+            }}
+          >
+            {name}
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

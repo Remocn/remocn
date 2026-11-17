@@ -57,6 +57,21 @@ export interface RoundSlamProps {
   call?: string;
   /** One of the thin speed slashes. */
   accent?: string;
+  /** Text color of the round call; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the round call and the call word. Load it yourself; Unbounded by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Strength of the camera shake on each hit; 0 turns it off. */
+  shake?: number;
+  /** Replaces the remocn mark under the band. */
+  logo?: React.ReactNode;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -152,16 +167,43 @@ function slashPoly(
   return `polygon(${cx - r - tip}px ${cy}px, ${cx - r}px ${top}px, ${cx + r}px ${top}px, ${cx + r + tip}px ${cy}px, ${cx + r}px ${bot}px, ${cx - r}px ${bot}px)`;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function RoundSlam({
   round = "ROUND 1",
   call = "SHIP!",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = display,
+  fontWeight = 500,
+  shake: shakeAmp = 1,
+  logo,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: RoundSlamProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.stage);
   const u = Math.min(W / 1280, H / 720);
 
   const words = round.trim().split(/\s+/);
@@ -174,9 +216,9 @@ export function RoundSlam({
   const inverted =
     (t >= numHit && t < numHit + speed) ||
     (t >= callHit && t < callHit + speed);
-  const s1 = shake(t, ROUND_AT + ROUND_LEN, 5, 5 * u);
-  const s2 = shake(t, numHit, 10, 13 * u);
-  const s3 = shake(t, callHit, 14, 20 * u);
+  const s1 = shake(t, ROUND_AT + ROUND_LEN, 5, 5 * u * shakeAmp);
+  const s2 = shake(t, numHit, 10, 13 * u * shakeAmp);
+  const s3 = shake(t, callHit, 14, 20 * u * shakeAmp);
   const camX = s1.x + s2.x + s3.x;
   const camY = s1.y + s2.y + s3.y;
   const push = interpolate(t, [numHit, DUCK_AT], [1, 1.035], CLAMP);
@@ -228,8 +270,8 @@ export function RoundSlam({
   ) => (
     <div
       style={{
-        fontFamily: display,
-        fontWeight: 500,
+        fontFamily,
+        fontWeight,
         fontSize: fs,
         lineHeight: 1,
         letterSpacing: "-0.02em",
@@ -274,7 +316,7 @@ export function RoundSlam({
           {word(
             call,
             callFs,
-            theme === "dark" ? "#FFFFFF" : bandOpen > 0.5 ? "#FFFFFF" : c.ink,
+            theme === "dark" ? "#FFFFFF" : bandOpen > 0.5 ? "#FFFFFF" : fg,
             {
               paddingTop: callFs * 0.06,
             },
@@ -285,158 +327,160 @@ export function RoundSlam({
   );
 
   return (
-    <AbsoluteFill style={{ background: c.stage, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <div
         style={{
           position: "absolute",
           inset: 0,
-          background: c.stage,
+          background: stage,
           filter: inverted ? "invert(1)" : undefined,
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            transform: `translate(${camX}px, ${camY}px) rotate(-6deg) scale(${settle})`,
-            transformOrigin: "50% 50%",
-          }}
-        >
-          {/* The chrome band and slashes crack open behind the call word. */}
-          {t >= callHit ? (
-            <>
-              <div
-                style={{
-                  position: "absolute",
-                  inset: `${-0.2 * H}px ${-0.2 * W}px`,
-                  clipPath: slashPoly(
-                    W / 2 + 0.2 * W,
-                    callY + 0.2 * H,
-                    bandThick,
-                    half,
-                    bandReach,
-                    bandThick * 0.9,
-                  ),
-                  background: bandGround,
-                }}
-              />
-              {CUTS.map((k) => {
-                const x = W / 2 + k.x * W;
-                const top = callY - bandThick / 2 - 2;
-                const bot = callY + bandThick / 2 + 2;
-                const lean = 0.32 * bandThick;
-                const w = k.w * u;
-                const p = OUT(ramp(t, callHit + 2 + k.delay, 5));
-                const yEnd = top + (bot - top) * p;
-                const xAt = (y: number) =>
-                  x + lean - ((y - top) / (bot - top)) * 2 * lean;
-                return (
-                  <div
-                    key={k.x}
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      clipPath: `polygon(${xAt(top)}px ${top}px, ${xAt(top) + w}px ${top}px, ${xAt(yEnd) + w}px ${yEnd}px, ${xAt(yEnd)}px ${yEnd}px)`,
-                      background: c.stage,
-                    }}
-                  />
-                );
-              })}
-              {slashes.map((s) => {
-                const reach = OUT(ramp(t, callHit + s.delay, 6));
-                return (
-                  <div
-                    key={s.dy}
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      clipPath: slashPoly(
-                        W / 2,
-                        callY + s.dy,
-                        s.thick,
-                        half,
-                        reach,
-                        60 * u,
-                      ),
-                      background: s.fill,
-                    }}
-                  />
-                );
-              })}
-            </>
-          ) : null}
-
-          {/* Round call: echoes trail the slam, then it ducks to a label. */}
-          {[4, 2, 0].map((lag) => {
-            const tt = t - lag;
-            const ghost = lag > 0;
-            const headK = roundScale(tt);
-            const numK = numScale(tt);
-            const headOp = ramp(tt, ROUND_AT, 2) * (ghost ? 0.18 / lag : 1);
-            const numOp = ramp(tt, NUM_AT, 2) * (ghost ? 0.18 / lag : 1);
-            if (ghost && t > numHit + lag) return null;
-            return (
-              <div
-                key={lag}
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  width: W,
-                  top: roundY - roundFs * 0.6,
-                  height: roundFs * 1.2,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 0.32 * roundFs,
-                  transform: `scale(${ghost ? 1 : roundK})`,
-                }}
-              >
-                {word(head, roundFs, c.ink, {
-                  transform: `scale(${headK})`,
-                  opacity: headOp,
-                  paddingTop: roundFs * 0.06,
+        <ScaleLayer scale={scale}>
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              transform: `translate(${camX}px, ${camY}px) rotate(-6deg) scale(${settle})`,
+              transformOrigin: "50% 50%",
+            }}
+          >
+            {/* The chrome band and slashes crack open behind the call word. */}
+            {t >= callHit ? (
+              <>
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: `${-0.2 * H}px ${-0.2 * W}px`,
+                    clipPath: slashPoly(
+                      W / 2 + 0.2 * W,
+                      callY + 0.2 * H,
+                      bandThick,
+                      half,
+                      bandReach,
+                      bandThick * 0.9,
+                    ),
+                    background: bandGround,
+                  }}
+                />
+                {CUTS.map((k) => {
+                  const x = W / 2 + k.x * W;
+                  const top = callY - bandThick / 2 - 2;
+                  const bot = callY + bandThick / 2 + 2;
+                  const lean = 0.32 * bandThick;
+                  const w = k.w * u;
+                  const p = OUT(ramp(t, callHit + 2 + k.delay, 5));
+                  const yEnd = top + (bot - top) * p;
+                  const xAt = (y: number) =>
+                    x + lean - ((y - top) / (bot - top)) * 2 * lean;
+                  return (
+                    <div
+                      key={k.x}
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        clipPath: `polygon(${xAt(top)}px ${top}px, ${xAt(top) + w}px ${top}px, ${xAt(yEnd) + w}px ${yEnd}px, ${xAt(yEnd)}px ${yEnd}px)`,
+                        background: stage,
+                      }}
+                    />
+                  );
                 })}
-                {tail
-                  ? word(tail, roundFs, c.ink, {
-                      transform: `scale(${numK})`,
-                      opacity: numOp,
-                      paddingTop: roundFs * 0.06,
-                    })
-                  : null}
-              </div>
-            );
-          })}
+                {slashes.map((s) => {
+                  const reach = OUT(ramp(t, callHit + s.delay, 6));
+                  return (
+                    <div
+                      key={s.dy}
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        clipPath: slashPoly(
+                          W / 2,
+                          callY + s.dy,
+                          s.thick,
+                          half,
+                          reach,
+                          60 * u,
+                        ),
+                        background: s.fill,
+                      }}
+                    />
+                  );
+                })}
+              </>
+            ) : null}
 
-          {/* Call word with echoes. */}
-          {t >= CALL_AT
-            ? [4, 2].map((lag) =>
-                t < callHit + lag
-                  ? callBox(
-                      callScale(t - lag),
-                      ramp(t - lag, CALL_AT, 3) * (0.2 / lag),
-                      `g${lag}`,
-                    )
-                  : null,
-              )
-            : null}
-          {t >= CALL_AT ? callBox(callScale(t), callOp, "call") : null}
-        </div>
+            {/* Round call: echoes trail the slam, then it ducks to a label. */}
+            {[4, 2, 0].map((lag) => {
+              const tt = t - lag;
+              const ghost = lag > 0;
+              const headK = roundScale(tt);
+              const numK = numScale(tt);
+              const headOp = ramp(tt, ROUND_AT, 2) * (ghost ? 0.18 / lag : 1);
+              const numOp = ramp(tt, NUM_AT, 2) * (ghost ? 0.18 / lag : 1);
+              if (ghost && t > numHit + lag) return null;
+              return (
+                <div
+                  key={lag}
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    width: W,
+                    top: roundY - roundFs * 0.6,
+                    height: roundFs * 1.2,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 0.32 * roundFs,
+                    transform: `scale(${ghost ? 1 : roundK})`,
+                  }}
+                >
+                  {word(head, roundFs, fg, {
+                    transform: `scale(${headK})`,
+                    opacity: headOp,
+                    paddingTop: roundFs * 0.06,
+                  })}
+                  {tail
+                    ? word(tail, roundFs, fg, {
+                        transform: `scale(${numK})`,
+                        opacity: numOp,
+                        paddingTop: roundFs * 0.06,
+                      })
+                    : null}
+                </div>
+              );
+            })}
 
-        {/* Logo under the band. */}
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            width: W,
-            top: 0.885 * H,
-            display: "flex",
-            justifyContent: "center",
-            opacity: logoP,
-            transform: `translateY(${(1 - logoP) * 18 * u}px)`,
-          }}
-        >
-          <RemocnLogo fontSize={34 * u} color={c.logo} />
-        </div>
+            {/* Call word with echoes. */}
+            {t >= CALL_AT
+              ? [4, 2].map((lag) =>
+                  t < callHit + lag
+                    ? callBox(
+                        callScale(t - lag),
+                        ramp(t - lag, CALL_AT, 3) * (0.2 / lag),
+                        `g${lag}`,
+                      )
+                    : null,
+                )
+              : null}
+            {t >= CALL_AT ? callBox(callScale(t), callOp, "call") : null}
+          </div>
+
+          {/* Logo under the band. */}
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              width: W,
+              top: 0.885 * H,
+              display: "flex",
+              justifyContent: "center",
+              opacity: logoP,
+              transform: `translateY(${(1 - logoP) * 18 * u}px)`,
+            }}
+          >
+            {logo ?? <RemocnLogo fontSize={34 * u} color={c.logo} />}
+          </div>
+        </ScaleLayer>
       </div>
     </AbsoluteFill>
   );

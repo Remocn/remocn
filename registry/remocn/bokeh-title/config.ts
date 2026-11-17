@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const bokehTitleConfig: ComponentConfig = {
   componentName: "BokehTitle",
@@ -12,11 +18,6 @@ export const bokehTitleConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     title: {
       type: "text-content",
@@ -46,6 +47,30 @@ export const bokehTitleConfig: ComponentConfig = {
       },
       description: "Shape",
     },
+    hold: {
+      type: "number",
+      default: 24,
+      min: 0,
+      max: 60,
+      step: 1,
+      description: "Hold (frames)",
+      hiddenFromList: false,
+    },
+    ambient: {
+      type: "number",
+      default: 24,
+      min: 0,
+      max: 60,
+      step: 1,
+      description: "Ambient lights",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Instrument Serif", grain: true }),
     speed: {
       type: "number",
       default: 1,

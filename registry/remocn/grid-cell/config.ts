@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const gridCellConfig: ComponentConfig = {
   componentName: "GridCell",
@@ -13,11 +19,6 @@ export const gridCellConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     title: {
       type: "text-content",
       default: "Introducing remocn 2.0",
@@ -28,6 +29,30 @@ export const gridCellConfig: ComponentConfig = {
       default: "v2.0",
       description: "Label",
     },
+    stagger: {
+      type: "number",
+      default: 1.5,
+      min: 0.5,
+      max: 6,
+      step: 0.5,
+      description: "Typing stagger",
+      hiddenFromList: false,
+    },
+    cellSize: {
+      type: "number",
+      default: 80,
+      min: 40,
+      max: 160,
+      step: 4,
+      description: "Cell size",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Geist" }),
     speed: {
       type: "number",
       default: 1,

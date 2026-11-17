@@ -43,6 +43,18 @@ export interface LaunchDaysProps {
   logo?: React.ReactNode;
   accent?: string;
   background?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Typeface for the titles and copy. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Frames between title words as the active day writes in. */
+  stagger?: number;
+  /** Corner radius of the day cards, in px at 720p. */
+  radius?: number;
+  /** Size of the header and strip, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
   ground?: GshPresetId;
@@ -168,6 +180,22 @@ function estimateEm(text: string) {
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function LaunchDays({
   week = "Launch Week 01",
   label = "New today",
@@ -178,15 +206,23 @@ export function LaunchDays({
   logo,
   accent = "#3B5BFD",
   background,
+  ink,
+  fontFamily = hanken.fontFamily,
+  stagger = 3,
+  radius: corner = 16,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
   ground,
   groundParams,
 }: LaunchDaysProps) {
-  const raw = useCurrentFrame();
+  const raw = Math.max(0, useCurrentFrame() - delay);
   const frame = raw * speed;
   const { width, height, fps } = useVideoConfig();
   const p = PALETTES[theme];
+  const fg = ink ?? p.fg;
+  const activeFg = ink ?? p.activeFg;
 
   const list = days.length >= 2 ? days.slice(0, 7) : DEFAULT_DAYS;
   const n = list.length;
@@ -202,7 +238,7 @@ export function LaunchDays({
   const marginX = portrait ? width * 0.07 : width * 0.1;
   const headerH = week || logo !== null ? 64 * u : 0;
   const gap = 8 * u;
-  const radius = 16 * u;
+  const radius = corner * u;
 
   const stripW = width - marginX * 2;
   const stripH = height - margin - headerH - margin * (headerH ? 0 : 1);
@@ -240,7 +276,7 @@ export function LaunchDays({
     easing: EASE_OUT,
   });
   const wordT = (i: number) =>
-    interpolate(frame, [30 + i * 3, 48 + i * 3], [0, 1], {
+    interpolate(frame, [30 + i * stagger, 48 + i * stagger], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -291,7 +327,11 @@ export function LaunchDays({
     .filter((i) => litO(i) > 0.001)
     .map((i) => {
       const q = rectOf(i);
-      return rr(q.x, q.y, q.w, q.h, radius);
+      if (scale === 1) return rr(q.x, q.y, q.w, q.h, radius);
+      // The cards sit in the ScaleLayer; the scrim doesn't, so map its holes.
+      const sx = width / 2 + (q.x - width / 2) * scale;
+      const sy = height / 2 + (q.y - height / 2) * scale;
+      return rr(sx, sy, q.w * scale, q.h * scale, radius * scale);
     });
   const scrimD = `M0 0H${width}V${height}H0Z${holes.join("")}`;
 
@@ -364,7 +404,7 @@ export function LaunchDays({
               fontSize: labelFs * 1.1,
               letterSpacing: "0.08em",
               textTransform: "uppercase",
-              color: p.activeFg,
+              color: activeFg,
               opacity: eb,
               transform: `translateX(${(1 - eb) * -16 * u}px)`,
             }}
@@ -396,13 +436,13 @@ export function LaunchDays({
             <span
               style={{
                 display: "inline-block",
-                fontFamily: hanken.fontFamily,
+                fontFamily,
                 fontWeight: 400,
                 fontSize: numFs,
                 lineHeight: 1,
                 letterSpacing: "-0.05em",
                 fontVariantNumeric: "tabular-nums",
-                color: p.activeFg,
+                color: activeFg,
                 transform: `translateY(${(1 - numT) * 100}%)`,
               }}
             >
@@ -413,12 +453,12 @@ export function LaunchDays({
         <div>
           <div
             style={{
-              fontFamily: hanken.fontFamily,
+              fontFamily,
               fontWeight: 400,
               fontSize: fs,
               lineHeight: 0.98,
               letterSpacing: "-0.045em",
-              color: p.activeFg,
+              color: activeFg,
               textWrap: "balance",
               marginLeft: -fs * 0.04,
             }}
@@ -458,7 +498,7 @@ export function LaunchDays({
               style={{
                 marginTop: fs * 0.26,
                 maxWidth: Math.min(avail, 620 * u),
-                fontFamily: hanken.fontFamily,
+                fontFamily,
                 fontWeight: 400,
                 fontSize: (portrait ? 30 : 24) * u,
                 lineHeight: 1.35,
@@ -504,192 +544,194 @@ export function LaunchDays({
           </svg>
         </>
       )}
-      {showHeader ? (
+      <ScaleLayer scale={scale}>
+        {showHeader ? (
+          <div
+            style={{
+              position: "absolute",
+              left: marginX,
+              right: marginX,
+              top: 0,
+              height: headerH + margin * 0.15,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              opacity: headerT,
+              transform: `translateY(${(1 - headerT) * -8 * u}px)`,
+            }}
+          >
+            <span
+              style={{
+                fontFamily: mono.fontFamily,
+                fontWeight: 400,
+                fontSize: labelFs * 1.1,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                color: fg,
+              }}
+            >
+              {week}
+            </span>
+            {logo === null ? null : (
+              <div style={{ display: "flex", alignItems: "center" }}>
+                {logo ?? <RemocnLogo fontSize={24 * u} color={fg} />}
+              </div>
+            )}
+          </div>
+        ) : null}
+
         <div
           style={{
             position: "absolute",
-            left: marginX,
-            right: marginX,
-            top: 0,
-            height: headerH + margin * 0.15,
+            left: stripX,
+            top: stripY,
+            width: stripW,
+            height: stripH - margin * 0.15,
             display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            opacity: headerT,
-            transform: `translateY(${(1 - headerT) * -8 * u}px)`,
+            flexDirection: portrait ? "column" : "row",
+            gap,
           }}
         >
-          <span
-            style={{
-              fontFamily: mono.fontFamily,
-              fontWeight: 400,
-              fontSize: labelFs * 1.1,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              color: p.fg,
-            }}
-          >
-            {week}
-          </span>
-          {logo === null ? null : (
-            <div style={{ display: "flex", alignItems: "center" }}>
-              {logo ?? <RemocnLogo fontSize={24 * u} color={p.fg} />}
-            </div>
-          )}
-        </div>
-      ) : null}
-
-      <div
-        style={{
-          position: "absolute",
-          left: stripX,
-          top: stripY,
-          width: stripW,
-          height: stripH - margin * 0.15,
-          display: "flex",
-          flexDirection: portrait ? "column" : "row",
-          gap,
-        }}
-      >
-        {list.map((d, i) => {
-          const size = sizeOf(i);
-          const r = rise(i);
-          const isAct = i === act;
-          const isFrom = i === swap;
-          const groundO = litO(i);
-          const past = i < act;
-          const upcoming = i > act;
-          const sliverTitle = upcoming && !revealUpcoming ? "" : d.title;
-          const labelO = interpolate(
-            size,
-            [equal * 1.05, equal * 1.6],
-            [1, 0],
-            CLAMP,
-          );
-          const numColor = isAct ? p.activeFg : past ? p.fg : p.muted;
-          return (
-            <div
-              key={`${d.day}-${i}`}
-              style={{
-                position: "relative",
-                flex: "none",
-                [portrait ? "height" : "width"]: size,
-                [portrait ? "width" : "height"]: "100%",
-                borderRadius: radius,
-                overflow: "hidden",
-                background: groundO > 0.001 ? undefined : p.panel,
-                boxShadow: `inset 0 0 0 1px ${groundO > 0.5 ? p.litLine : p.line}`,
-                clipPath: `inset(${Math.max(0, 1 - r) * 100}% 0 0 0 round ${radius}px)`,
-                transform: `translateY(${(1 - r) * 30 * u}px)`,
-              }}
-            >
-              {groundO > 0 ? (
-                <>
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      background: p.scrim,
-                      opacity: 1 - groundO,
-                    }}
-                  />
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      background: p.shade,
-                      opacity: groundO,
-                    }}
-                  />
-                </>
-              ) : null}
-
+          {list.map((d, i) => {
+            const size = sizeOf(i);
+            const r = rise(i);
+            const isAct = i === act;
+            const isFrom = i === swap;
+            const groundO = litO(i);
+            const past = i < act;
+            const upcoming = i > act;
+            const sliverTitle = upcoming && !revealUpcoming ? "" : d.title;
+            const labelO = interpolate(
+              size,
+              [equal * 1.05, equal * 1.6],
+              [1, 0],
+              CLAMP,
+            );
+            const numColor = isAct ? activeFg : past ? fg : p.muted;
+            return (
               <div
+                key={`${d.day}-${i}`}
                 style={{
-                  position: "absolute",
-                  inset: 0,
-                  padding: `${18 * u}px ${portrait ? 24 * u : 0}px`,
-                  display: "flex",
-                  flexDirection: portrait ? "row" : "column",
-                  alignItems: portrait ? "center" : "center",
-                  justifyContent: "space-between",
-                  opacity: labelO * interpolate(r, [0.4, 1], [0, 1], CLAMP),
+                  position: "relative",
+                  flex: "none",
+                  [portrait ? "height" : "width"]: size,
+                  [portrait ? "width" : "height"]: "100%",
+                  borderRadius: radius,
+                  overflow: "hidden",
+                  background: groundO > 0.001 ? undefined : p.panel,
+                  boxShadow: `inset 0 0 0 1px ${groundO > 0.5 ? p.litLine : p.line}`,
+                  clipPath: `inset(${Math.max(0, 1 - r) * 100}% 0 0 0 round ${radius}px)`,
+                  transform: `translateY(${(1 - r) * 30 * u}px)`,
                 }}
               >
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: portrait ? "row" : "column",
-                    alignItems: "center",
-                    gap: 10 * u,
-                  }}
-                >
-                  <span
-                    style={{
-                      fontFamily: mono.fontFamily,
-                      fontWeight: 400,
-                      fontSize: labelFs * 1.15,
-                      letterSpacing: "0.04em",
-                      color: numColor,
-                    }}
-                  >
-                    {pad2(i + 1)}
-                  </span>
-                  {past ? (
-                    <span
+                {groundO > 0 ? (
+                  <>
+                    <div
                       style={{
-                        width: 6 * u,
-                        height: 6 * u,
-                        borderRadius: 99,
-                        background: accent,
+                        position: "absolute",
+                        inset: 0,
+                        background: p.scrim,
+                        opacity: 1 - groundO,
                       }}
                     />
-                  ) : null}
-                </div>
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        background: p.shade,
+                        opacity: groundO,
+                      }}
+                    />
+                  </>
+                ) : null}
+
                 <div
                   style={{
+                    position: "absolute",
+                    inset: 0,
+                    padding: `${18 * u}px ${portrait ? 24 * u : 0}px`,
                     display: "flex",
-                    alignItems: "center",
-                    gap: 12 * u,
-                    writingMode: portrait ? undefined : "vertical-rl",
-                    transform: portrait ? undefined : "rotate(180deg)",
-                    whiteSpace: "nowrap",
+                    flexDirection: portrait ? "row" : "column",
+                    alignItems: portrait ? "center" : "center",
+                    justifyContent: "space-between",
+                    opacity: labelO * interpolate(r, [0.4, 1], [0, 1], CLAMP),
                   }}
                 >
-                  <span
+                  <div
                     style={{
-                      fontFamily: mono.fontFamily,
-                      fontWeight: 400,
-                      fontSize: labelFs,
-                      letterSpacing: "0.1em",
-                      textTransform: "uppercase",
-                      color: past ? p.muted : p.faint,
+                      display: "flex",
+                      flexDirection: portrait ? "row" : "column",
+                      alignItems: "center",
+                      gap: 10 * u,
                     }}
                   >
-                    {d.day}
-                  </span>
-                  {sliverTitle ? (
                     <span
                       style={{
-                        fontFamily: hanken.fontFamily,
+                        fontFamily: mono.fontFamily,
                         fontWeight: 400,
-                        fontSize: labelFs * 1.6,
-                        letterSpacing: "-0.02em",
-                        color: past ? p.fg : p.muted,
+                        fontSize: labelFs * 1.15,
+                        letterSpacing: "0.04em",
+                        color: numColor,
                       }}
                     >
-                      {sliverTitle}
+                      {pad2(i + 1)}
                     </span>
-                  ) : null}
+                    {past ? (
+                      <span
+                        style={{
+                          width: 6 * u,
+                          height: 6 * u,
+                          borderRadius: 99,
+                          background: accent,
+                        }}
+                      />
+                    ) : null}
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12 * u,
+                      writingMode: portrait ? undefined : "vertical-rl",
+                      transform: portrait ? undefined : "rotate(180deg)",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: mono.fontFamily,
+                        fontWeight: 400,
+                        fontSize: labelFs,
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                        color: past ? p.muted : p.faint,
+                      }}
+                    >
+                      {d.day}
+                    </span>
+                    {sliverTitle ? (
+                      <span
+                        style={{
+                          fontFamily,
+                          fontWeight: 400,
+                          fontSize: labelFs * 1.6,
+                          letterSpacing: "-0.02em",
+                          color: past ? fg : p.muted,
+                        }}
+                      >
+                        {sliverTitle}
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
-              </div>
 
-              {isAct ? renderOpen(d, i, "in", size) : null}
-              {isFrom ? renderOpen(d, i, "out", size) : null}
-            </div>
-          );
-        })}
-      </div>
+                {isAct ? renderOpen(d, i, "in", size) : null}
+                {isFrom ? renderOpen(d, i, "out", size) : null}
+              </div>
+            );
+          })}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

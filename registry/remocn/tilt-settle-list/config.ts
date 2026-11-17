@@ -1,8 +1,30 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const tiltSettleListConfig: ComponentConfig = {
   componentName: "TiltSettleList",
   importPath: "@/components/remocn/tilt-settle-list",
+  lists: {
+    lines: {
+      default: [
+        "Open on the product",
+        "Type the headline",
+        "Zoom blur to the demo",
+        "Show the editor",
+        "Cut to pricing",
+        "Fan the formats",
+        "Land the logo",
+        "Fade to the URL",
+      ],
+      description: "Lines",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -35,6 +57,36 @@ export const tiltSettleListConfig: ComponentConfig = {
       max: 10,
       step: 1,
       description: "Accent word",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    step: {
+      type: "number",
+      default: 14,
+      min: 6,
+      max: 30,
+      step: 1,
+      description: "Line step (frames)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ground: groundControl(),
+    ...sceneControls({ font: "Figtree" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
       hiddenFromList: false,
     },
   },

@@ -125,8 +125,41 @@ export interface ButtonToCardProps {
   images?: string[];
   others?: { name: string; price: string }[];
   storeName?: string;
+  /** Heading of the new-product form. */
+  formTitle?: string;
+  /** Label of the primary button that saves the product. */
+  saveLabel?: string;
+  /** Prompt in the empty image slot. */
+  dropLabel?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Size of the card and grid, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function ButtonToCard({
@@ -147,10 +180,19 @@ export function ButtonToCard({
     { name: "Material kit", price: "$32.00" },
   ],
   storeName = "Studio Goods",
+  formTitle = "New product",
+  saveLabel = "Add to store",
+  dropLabel = "Drop an image here",
+  ink: inkColor,
+  background,
+  fontFamily = hanken.fontFamily,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   ground,
   groundParams,
 }: ButtonToCardProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
@@ -158,7 +200,7 @@ export function ButtonToCard({
   const stageH = portrait ? 1280 : 720;
   const k = width / stageW;
 
-  const ink = dark ? "#f7f0ea" : "#1c1612";
+  const ink = inkColor ?? (dark ? "#f7f0ea" : "#1c1612");
   const muted = dark ? "rgba(247,240,234,0.52)" : "rgba(28,22,18,0.5)";
   const faint = dark ? "rgba(247,240,234,0.3)" : "rgba(28,22,18,0.3)";
   const hair = dark ? "rgba(255,236,220,0.1)" : "rgba(70,40,20,0.1)";
@@ -452,565 +494,573 @@ export function ButtonToCard({
   );
 
   return (
-    <AbsoluteFill style={{ fontFamily: hanken.fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={resolvedPreset}
-        params={resolvedParams}
-        timeOffset={3}
-        timeScale={0.45}
-      />
+    <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
+      {background === undefined ? (
+        <GshGround
+          preset={resolvedPreset}
+          params={resolvedParams}
+          timeOffset={3}
+          timeScale={0.45}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
       <DirBlur id="btc-shrink" x={shrinkBlurX} y={shrinkBlurY} />
       <DirBlur
         id="btc-carry"
         x={Math.min(6, vx * 0.12) * (1 - Math.min(1, drop))}
         y={Math.min(6, vy * 0.12) * (1 - Math.min(1, drop))}
       />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: stageW,
-          height: stageH,
-          transform: `scale(${k})`,
-          transformOrigin: "0 0",
-          perspective: 2000,
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: stageW / 2,
-            top: stageH / 2,
-            width: 0,
-            height: 0,
-            transformStyle: "preserve-3d",
-            transform: `scale(${push}) rotateX(${rotX}deg) rotateY(${rotY}deg)`,
+            left: 0,
+            top: 0,
+            width: stageW,
+            height: stageH,
+            transform: `scale(${k})`,
+            transformOrigin: "0 0",
+            perspective: 2000,
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: -gridW / 2,
-              width: gridW,
-              top: gridTop - headH - 6,
-              height: headH,
-              display: "flex",
-              alignItems: "center",
-              gap: 14,
-              opacity: headerIn,
-              transform: `translateY(${mix(18, 0, headerIn)}px)`,
-              filter: `blur(${mix(6, 0, headerIn)}px)`,
+              left: stageW / 2,
+              top: stageH / 2,
+              width: 0,
+              height: 0,
+              transformStyle: "preserve-3d",
+              transform: `scale(${push}) rotateX(${rotX}deg) rotateY(${rotY}deg)`,
             }}
           >
-            <span
+            <div
               style={{
-                fontSize: portrait ? 36 : 38,
-                fontWeight: 300,
-                color: ink,
-                letterSpacing: "-0.035em",
-              }}
-            >
-              {storeName}
-            </span>
-            <span
-              style={{
+                position: "absolute",
+                left: -gridW / 2,
+                width: gridW,
+                top: gridTop - headH - 6,
+                height: headH,
                 display: "flex",
                 alignItems: "center",
-                gap: 8,
-                height: 30,
-                padding: "0 13px",
-                borderRadius: 15,
-                background: accent,
-                color: "#fff",
-                fontSize: 16,
-                transform: `scale(${liveIn})`,
-                opacity: Math.min(1, liveIn * 2),
-                boxShadow: `inset 0 1px 0 rgba(255,255,255,0.3), 0 6px 18px color-mix(in oklab, ${accent} 40%, transparent)`,
+                gap: 14,
+                opacity: headerIn,
+                transform: `translateY(${mix(18, 0, headerIn)}px)`,
+                filter: `blur(${mix(6, 0, headerIn)}px)`,
               }}
             >
               <span
                 style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: 4,
-                  background: "#fff",
+                  fontSize: portrait ? 36 : 38,
+                  fontWeight: 300,
+                  color: ink,
+                  letterSpacing: "-0.035em",
                 }}
-              />
-              Live
-            </span>
-            <span style={{ flex: 1 }} />
-            {portrait ? null : (
-              <span style={{ fontSize: 17, color: muted }}>
-                {count} products
+              >
+                {storeName}
               </span>
-            )}
-            <span
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  height: 30,
+                  padding: "0 13px",
+                  borderRadius: 15,
+                  background: accent,
+                  color: "#fff",
+                  fontSize: 16,
+                  transform: `scale(${liveIn})`,
+                  opacity: Math.min(1, liveIn * 2),
+                  boxShadow: `inset 0 1px 0 rgba(255,255,255,0.3), 0 6px 18px color-mix(in oklab, ${accent} 40%, transparent)`,
+                }}
+              >
+                <span
+                  style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: 4,
+                    background: "#fff",
+                  }}
+                />
+                Live
+              </span>
+              <span style={{ flex: 1 }} />
+              {portrait ? null : (
+                <span style={{ fontSize: 17, color: muted }}>
+                  {count} products
+                </span>
+              )}
+              <span
+                style={{
+                  height: 38,
+                  padding: "0 16px",
+                  borderRadius: 12,
+                  border: `1px solid ${hair}`,
+                  background: dark ? "rgba(255,236,220,0.05)" : "#ffffff",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  fontSize: 16,
+                  color: ink,
+                }}
+              >
+                View store
+                <svg viewBox="0 0 24 24" width={15} height={15} aria-hidden>
+                  <path d="M8 16 16 8M9 8h7v7" {...line(ink, 1.6)} />
+                </svg>
+              </span>
+            </div>
+
+            {all.slice(1).map((n, j) => {
+              const i = j + 1;
+              const r = tileRect(i);
+              const at = B.pops[j] ?? B.pops[B.pops.length - 1] + j * 4;
+              const pop = spring({ frame: frame - at, fps, config: CARD });
+              return (
+                <div
+                  key={n.name}
+                  style={{
+                    position: "absolute",
+                    left: r.x,
+                    top: r.y,
+                    width: r.w,
+                    height: r.h,
+                    borderRadius: r.r,
+                    background: surface,
+                    border: `1px solid ${hair}`,
+                    boxShadow: shadow,
+                    overflow: "hidden",
+                    opacity: frame >= at ? Math.min(1, pop * 1.8) : 0,
+                    transform: `translateY(${mix(48, 0, pop)}px) scale(${mix(0.82, 1, pop)})`,
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: mediaTile.x,
+                      top: mediaTile.y,
+                      width: mediaTile.w,
+                      height: mediaTile.h,
+                      borderRadius: mediaTile.r,
+                      overflow: "hidden",
+                      background: slotFill,
+                    }}
+                  >
+                    <Img
+                      src={images[i % images.length]}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  </div>
+                  {tileInfo(n, 1)}
+                </div>
+              );
+            })}
+
+            <div
               style={{
-                height: 38,
-                padding: "0 16px",
-                borderRadius: 12,
+                position: "absolute",
+                left: box.x,
+                top: box.y,
+                width: box.w,
+                height: box.h,
+                borderRadius: box.r,
+                background: surface,
                 border: `1px solid ${hair}`,
-                background: dark ? "rgba(255,236,220,0.05)" : "#ffffff",
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                fontSize: 16,
-                color: ink,
+                boxShadow: shadow,
+                overflow: "hidden",
+                opacity: Math.min(1, pillIn * 1.6),
+                transform: `translateY(${mix(40, 0, pillIn)}px) scale(${press})`,
+                filter:
+                  shrinkBlurX + shrinkBlurY > 0.4
+                    ? "url(#btc-shrink)"
+                    : undefined,
               }}
             >
-              View store
-              <svg viewBox="0 0 24 24" width={15} height={15} aria-hidden>
-                <path d="M8 16 16 8M9 8h7v7" {...line(ink, 1.6)} />
-              </svg>
-            </span>
-          </div>
-
-          {all.slice(1).map((n, j) => {
-            const i = j + 1;
-            const r = tileRect(i);
-            const at = B.pops[j] ?? B.pops[B.pops.length - 1] + j * 4;
-            const pop = spring({ frame: frame - at, fps, config: CARD });
-            return (
               <div
-                key={n.name}
                 style={{
                   position: "absolute",
-                  left: r.x,
-                  top: r.y,
-                  width: r.w,
-                  height: r.h,
-                  borderRadius: r.r,
-                  background: surface,
-                  border: `1px solid ${hair}`,
-                  boxShadow: shadow,
+                  left: (box.w - pillRect.w) / 2,
+                  top: (box.h - pillRect.h) / 2,
+                  width: pillRect.w,
+                  height: pillRect.h,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 10,
+                  color: ink,
+                  fontSize: 22,
+                  letterSpacing: "-0.01em",
+                  opacity: pillLabel,
+                  transform: `scale(${mix(1, 1.25, 1 - pillLabel)})`,
+                }}
+              >
+                <span
+                  style={{
+                    width: 26,
+                    height: 26,
+                    borderRadius: 13,
+                    background: accent,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <svg viewBox="0 0 24 24" width={16} height={16} aria-hidden>
+                    <path d="M12 6v12M6 12h12" {...line("#fff", 2)} />
+                  </svg>
+                </span>
+                {buttonLabel}
+              </div>
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: media.x,
+                  top: media.y,
+                  width: media.w,
+                  height: media.h,
+                  borderRadius: media.r,
+                  background: slotFill,
                   overflow: "hidden",
-                  opacity: frame >= at ? Math.min(1, pop * 1.8) : 0,
-                  transform: `translateY(${mix(48, 0, pop)}px) scale(${mix(0.82, 1, pop)})`,
+                  opacity: fieldIn(0),
+                  transform: `scale(${breathe})`,
+                  outline: placed
+                    ? undefined
+                    : `1.5px dashed ${slotHot > 0.3 ? accent : faint}`,
+                  outlineOffset: -10,
                 }}
               >
                 <div
                   style={{
                     position: "absolute",
-                    left: mediaTile.x,
-                    top: mediaTile.y,
-                    width: mediaTile.w,
-                    height: mediaTile.h,
-                    borderRadius: mediaTile.r,
-                    overflow: "hidden",
-                    background: slotFill,
+                    inset: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 14,
+                    color: muted,
+                    fontSize: 17,
+                    opacity: placed ? 0 : 1,
+                    transform: `translateY(${-8 * slotHot}px)`,
                   }}
                 >
-                  <Img
-                    src={images[i % images.length]}
+                  <div
                     style={{
+                      width: 52,
+                      height: 52,
+                      borderRadius: 14,
+                      border: `1px solid ${hair}`,
+                      background: dark ? "rgba(255,236,220,0.05)" : "#ffffff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxShadow: dark
+                        ? undefined
+                        : "0 2px 6px rgba(70,40,20,0.06)",
+                    }}
+                  >
+                    <svg viewBox="0 0 24 24" width={24} height={24} aria-hidden>
+                      <path
+                        d="M12 15V5M8 9l4-4 4 4M5 15v3a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 18v-3"
+                        {...line(slotHot > 0.5 ? accent : ink)}
+                      />
+                    </svg>
+                  </div>
+                  <span style={{ color: ink, fontSize: 18 }}>{dropLabel}</span>
+                  <span style={{ marginTop: -8 }}>or click to browse</span>
+                </div>
+                {placed ? (
+                  <Img
+                    src={images[0]}
+                    style={{
+                      position: "absolute",
+                      inset: 0,
                       width: "100%",
                       height: "100%",
                       objectFit: "cover",
                     }}
                   />
-                </div>
-                {tileInfo(n, 1)}
+                ) : null}
               </div>
-            );
-          })}
 
-          <div
-            style={{
-              position: "absolute",
-              left: box.x,
-              top: box.y,
-              width: box.w,
-              height: box.h,
-              borderRadius: box.r,
-              background: surface,
-              border: `1px solid ${hair}`,
-              boxShadow: shadow,
-              overflow: "hidden",
-              opacity: Math.min(1, pillIn * 1.6),
-              transform: `translateY(${mix(40, 0, pillIn)}px) scale(${press})`,
-              filter:
-                shrinkBlurX + shrinkBlurY > 0.4
-                  ? "url(#btc-shrink)"
-                  : undefined,
-            }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                left: (box.w - pillRect.w) / 2,
-                top: (box.h - pillRect.h) / 2,
-                width: pillRect.w,
-                height: pillRect.h,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 10,
-                color: ink,
-                fontSize: 22,
-                letterSpacing: "-0.01em",
-                opacity: pillLabel,
-                transform: `scale(${mix(1, 1.25, 1 - pillLabel)})`,
-              }}
-            >
-              <span
-                style={{
-                  width: 26,
-                  height: 26,
-                  borderRadius: 13,
-                  background: accent,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <svg viewBox="0 0 24 24" width={16} height={16} aria-hidden>
-                  <path d="M12 6v12M6 12h12" {...line("#fff", 2)} />
-                </svg>
-              </span>
-              {buttonLabel}
-            </div>
-
-            <div
-              style={{
-                position: "absolute",
-                left: media.x,
-                top: media.y,
-                width: media.w,
-                height: media.h,
-                borderRadius: media.r,
-                background: slotFill,
-                overflow: "hidden",
-                opacity: fieldIn(0),
-                transform: `scale(${breathe})`,
-                outline: placed
-                  ? undefined
-                  : `1.5px dashed ${slotHot > 0.3 ? accent : faint}`,
-                outlineOffset: -10,
-              }}
-            >
               <div
                 style={{
                   position: "absolute",
-                  inset: 0,
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 14,
-                  color: muted,
-                  fontSize: 17,
-                  opacity: placed ? 0 : 1,
-                  transform: `translateY(${-8 * slotHot}px)`,
+                  left: col.x,
+                  top: col.y,
+                  width: col.w,
+                  height: cardH - col.y,
+                  opacity: cardContent,
                 }}
               >
                 <div
                   style={{
-                    width: 52,
-                    height: 52,
-                    borderRadius: 14,
-                    border: `1px solid ${hair}`,
-                    background: dark ? "rgba(255,236,220,0.05)" : "#ffffff",
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
-                    boxShadow: dark
-                      ? undefined
-                      : "0 2px 6px rgba(70,40,20,0.06)",
+                    opacity: fieldIn(1),
+                    transform: `translateY(${mix(14, 0, fieldIn(1))}px)`,
                   }}
                 >
-                  <svg viewBox="0 0 24 24" width={24} height={24} aria-hidden>
-                    <path
-                      d="M12 15V5M8 9l4-4 4 4M5 15v3a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 18v-3"
-                      {...line(slotHot > 0.5 ? accent : ink)}
-                    />
-                  </svg>
-                </div>
-                <span style={{ color: ink, fontSize: 18 }}>
-                  Drop an image here
-                </span>
-                <span style={{ marginTop: -8 }}>or click to browse</span>
-              </div>
-              {placed ? (
-                <Img
-                  src={images[0]}
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                  }}
-                />
-              ) : null}
-            </div>
-
-            <div
-              style={{
-                position: "absolute",
-                left: col.x,
-                top: col.y,
-                width: col.w,
-                height: cardH - col.y,
-                opacity: cardContent,
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  opacity: fieldIn(1),
-                  transform: `translateY(${mix(14, 0, fieldIn(1))}px)`,
-                }}
-              >
-                <div style={{ flex: 1 }}>
+                  <div style={{ flex: 1 }}>
+                    <div
+                      style={{
+                        fontSize: 30,
+                        fontWeight: 300,
+                        color: ink,
+                        letterSpacing: "-0.03em",
+                      }}
+                    >
+                      {formTitle}
+                    </div>
+                    <div style={{ fontSize: 16, color: muted, marginTop: 4 }}>
+                      {storeName} · Catalog
+                    </div>
+                  </div>
                   <div
                     style={{
-                      fontSize: 30,
-                      fontWeight: 300,
-                      color: ink,
-                      letterSpacing: "-0.03em",
+                      position: "relative",
+                      height: 30,
+                      padding: "0 12px",
+                      borderRadius: 15,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 7,
+                      fontSize: 15,
+                      color: statusOn > 0.5 ? "#2f9b6a" : muted,
+                      background:
+                        statusOn > 0.5
+                          ? "rgba(63,179,127,0.14)"
+                          : dark
+                            ? "rgba(255,236,220,0.06)"
+                            : "rgba(70,40,20,0.05)",
+                      transform: `scale(${frame >= B.status ? mix(0.8, 1, statusOn) : 1})`,
                     }}
                   >
-                    New product
-                  </div>
-                  <div style={{ fontSize: 16, color: muted, marginTop: 4 }}>
-                    {storeName} · Catalog
+                    <span
+                      style={{
+                        width: 7,
+                        height: 7,
+                        borderRadius: 4,
+                        background: statusOn > 0.5 ? "#3fb37f" : faint,
+                      }}
+                    />
+                    {statusOn > 0.5 ? "Active" : "Draft"}
                   </div>
                 </div>
-                <div
-                  style={{
-                    position: "relative",
-                    height: 30,
-                    padding: "0 12px",
-                    borderRadius: 15,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 7,
-                    fontSize: 15,
-                    color: statusOn > 0.5 ? "#2f9b6a" : muted,
-                    background:
-                      statusOn > 0.5
-                        ? "rgba(63,179,127,0.14)"
-                        : dark
-                          ? "rgba(255,236,220,0.06)"
-                          : "rgba(70,40,20,0.05)",
-                    transform: `scale(${frame >= B.status ? mix(0.8, 1, statusOn) : 1})`,
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 7,
-                      height: 7,
-                      borderRadius: 4,
-                      background: statusOn > 0.5 ? "#3fb37f" : faint,
-                    }}
-                  />
-                  {statusOn > 0.5 ? "Active" : "Draft"}
-                </div>
-              </div>
 
-              {[
-                {
-                  label: "Title",
-                  body: (
-                    <div style={inputStyle(nameCaret)}>
-                      {typedName ? (
-                        <span style={{ whiteSpace: "pre" }}>{typedName}</span>
-                      ) : (
-                        <span style={{ color: faint }}>
-                          {nameCaret ? "" : "Short sleeve t-shirt"}
+                {[
+                  {
+                    label: "Title",
+                    body: (
+                      <div style={inputStyle(nameCaret)}>
+                        {typedName ? (
+                          <span style={{ whiteSpace: "pre" }}>{typedName}</span>
+                        ) : (
+                          <span style={{ color: faint }}>
+                            {nameCaret ? "" : "Short sleeve t-shirt"}
+                          </span>
+                        )}
+                        {caret(nameCaret)}
+                      </div>
+                    ),
+                  },
+                  {
+                    label: "Price",
+                    body: (
+                      <div style={inputStyle(priceCaret)}>
+                        <span
+                          style={{
+                            fontFamily: mono.fontFamily,
+                            fontSize: 19,
+                            whiteSpace: "pre",
+                            color: typedPrice ? ink : faint,
+                          }}
+                        >
+                          {typedPrice || "$0.00"}
                         </span>
-                      )}
-                      {caret(nameCaret)}
-                    </div>
-                  ),
-                },
-                {
-                  label: "Price",
-                  body: (
-                    <div style={inputStyle(priceCaret)}>
-                      <span
-                        style={{
-                          fontFamily: mono.fontFamily,
-                          fontSize: 19,
-                          whiteSpace: "pre",
-                          color: typedPrice ? ink : faint,
-                        }}
-                      >
-                        {typedPrice || "$0.00"}
-                      </span>
-                      {caret(priceCaret)}
-                      <span style={{ flex: 1 }} />
-                      <span
-                        style={{
-                          fontFamily: mono.fontFamily,
-                          fontSize: 15,
-                          color: muted,
-                        }}
-                      >
-                        USD
-                      </span>
-                    </div>
-                  ),
-                },
-                {
-                  label: "Category",
-                  body: (
-                    <div style={inputStyle(false)}>
-                      <span
-                        style={{
-                          height: 30,
-                          padding: "0 12px",
-                          borderRadius: 8,
-                          background: dark
-                            ? "rgba(255,236,220,0.08)"
-                            : "rgba(70,40,20,0.06)",
-                          display: "flex",
-                          alignItems: "center",
-                          fontSize: 16,
-                        }}
-                      >
-                        Ceramics
-                      </span>
-                      <span
-                        style={{
-                          height: 30,
-                          padding: "0 12px",
-                          borderRadius: 8,
-                          background: dark
-                            ? "rgba(255,236,220,0.08)"
-                            : "rgba(70,40,20,0.06)",
-                          display: "flex",
-                          alignItems: "center",
-                          fontSize: 16,
-                        }}
-                      >
-                        Tableware
-                      </span>
-                      <span style={{ flex: 1 }} />
-                      <svg
-                        viewBox="0 0 24 24"
-                        width={18}
-                        height={18}
-                        aria-hidden
-                      >
-                        <path d="m7 10 5 5 5-5" {...line(muted)} />
-                      </svg>
-                    </div>
-                  ),
-                },
-              ].map((f, i) => (
+                        {caret(priceCaret)}
+                        <span style={{ flex: 1 }} />
+                        <span
+                          style={{
+                            fontFamily: mono.fontFamily,
+                            fontSize: 15,
+                            color: muted,
+                          }}
+                        >
+                          USD
+                        </span>
+                      </div>
+                    ),
+                  },
+                  {
+                    label: "Category",
+                    body: (
+                      <div style={inputStyle(false)}>
+                        <span
+                          style={{
+                            height: 30,
+                            padding: "0 12px",
+                            borderRadius: 8,
+                            background: dark
+                              ? "rgba(255,236,220,0.08)"
+                              : "rgba(70,40,20,0.06)",
+                            display: "flex",
+                            alignItems: "center",
+                            fontSize: 16,
+                          }}
+                        >
+                          Ceramics
+                        </span>
+                        <span
+                          style={{
+                            height: 30,
+                            padding: "0 12px",
+                            borderRadius: 8,
+                            background: dark
+                              ? "rgba(255,236,220,0.08)"
+                              : "rgba(70,40,20,0.06)",
+                            display: "flex",
+                            alignItems: "center",
+                            fontSize: 16,
+                          }}
+                        >
+                          Tableware
+                        </span>
+                        <span style={{ flex: 1 }} />
+                        <svg
+                          viewBox="0 0 24 24"
+                          width={18}
+                          height={18}
+                          aria-hidden
+                        >
+                          <path d="m7 10 5 5 5-5" {...line(muted)} />
+                        </svg>
+                      </div>
+                    ),
+                  },
+                ].map((f, i) => (
+                  <div
+                    key={f.label}
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      top: fieldsTop + i * fieldGap,
+                      opacity: fieldIn(i + 2),
+                      transform: `translateY(${mix(16, 0, fieldIn(i + 2))}px)`,
+                    }}
+                  >
+                    <div style={labelStyle}>{f.label}</div>
+                    {f.body}
+                  </div>
+                ))}
+
                 <div
-                  key={f.label}
                   style={{
                     position: "absolute",
                     left: 0,
                     right: 0,
-                    top: fieldsTop + i * fieldGap,
-                    opacity: fieldIn(i + 2),
-                    transform: `translateY(${mix(16, 0, fieldIn(i + 2))}px)`,
+                    bottom: portrait ? 36 : 38,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                    gap: 10,
+                    opacity: fieldIn(5),
+                    transform: `translateY(${mix(14, 0, fieldIn(5))}px)`,
                   }}
                 >
-                  <div style={labelStyle}>{f.label}</div>
-                  {f.body}
+                  <span style={{ fontSize: 16, color: muted, flex: 1 }}>
+                    Unsaved changes
+                  </span>
+                  <div
+                    style={{
+                      height: 48,
+                      padding: "0 20px",
+                      borderRadius: 14,
+                      border: `1px solid ${hair}`,
+                      display: "flex",
+                      alignItems: "center",
+                      fontSize: 18,
+                      color: ink,
+                    }}
+                  >
+                    Discard
+                  </div>
+                  <div
+                    style={{
+                      height: 48,
+                      padding: "0 22px",
+                      borderRadius: 14,
+                      background: ink,
+                      color: btnInk,
+                      display: "flex",
+                      alignItems: "center",
+                      fontSize: 18,
+                      transform: `scale(${saveDip})`,
+                      boxShadow: dark
+                        ? "inset 0 1px 0 rgba(255,255,255,0.5), 0 8px 20px rgba(0,0,0,0.3)"
+                        : "inset 0 1px 0 rgba(255,255,255,0.15), 0 8px 20px rgba(28,22,18,0.2)",
+                    }}
+                  >
+                    {saveLabel}
+                  </div>
                 </div>
-              ))}
+              </div>
 
+              {tileInfo({ name, price }, tileContent)}
+            </div>
+
+            {frame >= B.carry - 2 && !placed ? (
               <div
                 style={{
                   position: "absolute",
-                  left: 0,
-                  right: 0,
-                  bottom: portrait ? 36 : 38,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "flex-end",
-                  gap: 10,
-                  opacity: fieldIn(5),
-                  transform: `translateY(${mix(14, 0, fieldIn(5))}px)`,
+                  left: ix - carriedW / 2,
+                  top: iy - carriedH / 2,
+                  width: carriedW,
+                  height: carriedH,
+                  borderRadius: mix(14, mediaCard.r, Math.min(1, drop)),
+                  overflow: "hidden",
+                  transform: `rotate(${carriedRot}deg)`,
+                  opacity: ramp(frame, B.carry - 2, 6),
+                  boxShadow: `0 ${mix(30, 4, Math.min(1, drop))}px ${mix(50, 10, Math.min(1, drop))}px rgba(30,10,0,${dark ? 0.55 : 0.3})`,
+                  border: `${mix(4, 0, Math.min(1, drop))}px solid #ffffff`,
+                  filter: "url(#btc-carry)",
                 }}
               >
-                <span style={{ fontSize: 16, color: muted, flex: 1 }}>
-                  Unsaved changes
-                </span>
-                <div
-                  style={{
-                    height: 48,
-                    padding: "0 20px",
-                    borderRadius: 14,
-                    border: `1px solid ${hair}`,
-                    display: "flex",
-                    alignItems: "center",
-                    fontSize: 18,
-                    color: ink,
-                  }}
-                >
-                  Discard
-                </div>
-                <div
-                  style={{
-                    height: 48,
-                    padding: "0 22px",
-                    borderRadius: 14,
-                    background: ink,
-                    color: btnInk,
-                    display: "flex",
-                    alignItems: "center",
-                    fontSize: 18,
-                    transform: `scale(${saveDip})`,
-                    boxShadow: dark
-                      ? "inset 0 1px 0 rgba(255,255,255,0.5), 0 8px 20px rgba(0,0,0,0.3)"
-                      : "inset 0 1px 0 rgba(255,255,255,0.15), 0 8px 20px rgba(28,22,18,0.2)",
-                  }}
-                >
-                  Add to store
-                </div>
+                <Img
+                  src={images[0]}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
               </div>
-            </div>
+            ) : null}
 
-            {tileInfo({ name, price }, tileContent)}
-          </div>
-
-          {frame >= B.carry - 2 && !placed ? (
             <div
               style={{
                 position: "absolute",
-                left: ix - carriedW / 2,
-                top: iy - carriedH / 2,
-                width: carriedW,
-                height: carriedH,
-                borderRadius: mix(14, mediaCard.r, Math.min(1, drop)),
-                overflow: "hidden",
-                transform: `rotate(${carriedRot}deg)`,
-                opacity: ramp(frame, B.carry - 2, 6),
-                boxShadow: `0 ${mix(30, 4, Math.min(1, drop))}px ${mix(50, 10, Math.min(1, drop))}px rgba(30,10,0,${dark ? 0.55 : 0.3})`,
-                border: `${mix(4, 0, Math.min(1, drop))}px solid #ffffff`,
-                filter: "url(#btc-carry)",
+                left: pointerX,
+                top: pointerY,
+                opacity: cursorOpacity,
+                transformOrigin: "5px 4px",
+                transform: `scale(${cursorScale})`,
+                filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.3))",
               }}
             >
-              <Img
-                src={images[0]}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
+              <Cursor size={32} />
             </div>
-          ) : null}
-
-          <div
-            style={{
-              position: "absolute",
-              left: pointerX,
-              top: pointerY,
-              opacity: cursorOpacity,
-              transformOrigin: "5px 4px",
-              transform: `scale(${cursorScale})`,
-              filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.3))",
-            }}
-          >
-            <Cursor size={32} />
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

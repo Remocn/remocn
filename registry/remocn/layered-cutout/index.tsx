@@ -72,6 +72,22 @@ export interface LayeredCutoutProps {
   accentLayer?: number;
   /** Accepted for parity with the other drafts; the gradient paper is the accent here. */
   accent?: string;
+  /** Color of the logo; overrides the theme ink. */
+  ink?: string;
+  /** Fill behind the sheets; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the tagline. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Frames the camera takes to dolly through the cuts. */
+  push?: number;
+  /** Strength of the blur on sheets near the camera; 0 keeps them sharp. */
+  depthBlur?: number;
+  /** Size of the logo and tagline, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   /** Playback multiplier. */
   speed?: number;
   /** Light = warm card stock; dark = charcoal stock. */
@@ -311,18 +327,43 @@ function Sheet({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function LayeredCutout({
   tagline = "Launch films, cut from components.",
   logo,
   layers = 5,
   accentLayer,
+  ink,
+  background,
+  fontFamily = sans,
+  push: pushDur = 132,
+  depthBlur = 1,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "light",
 }: LayeredCutoutProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = height / 720;
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
   const paperId = `paper${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const n = Math.max(3, Math.min(6, Math.round(layers)));
   const gradientLayer = accentLayer ?? n - 1;
@@ -330,7 +371,10 @@ export function LayeredCutout({
   // sheets part in depth, then the camera dollies through the cuts
   const part = interpolate(t, [0, 72], [0, 1], { ...CLAMP, easing: EASE_IO });
   const gap = 18 + 182 * part;
-  const push = interpolate(t, [8, 140], [0, 1], { ...CLAMP, easing: EASE_IO });
+  const push = interpolate(t, [8, 8 + pushDur], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
   // land with the core at ~1.25x and the last two cuts framing it
   const coreDepth = n * 200;
   const camZ = push * (D0 + coreDepth - D0 / 1.25);
@@ -353,7 +397,8 @@ export function LayeredCutout({
     const cxo = width / 2 + camX * s + Math.abs(cut.ox * u * s);
     const cyo = height / 2 + Math.abs(camY * s) + Math.abs(cut.oy * u * s);
     if ((cxo / hx) ** SQUIRCLE + (cyo / hy) ** SQUIRCLE < 1) continue;
-    const blur = Math.max(0, Math.min(7, (s - coreScale) * 1.4)) * u;
+    const blur =
+      Math.max(0, Math.min(7, (s - coreScale) * 1.4)) * u * depthBlur;
     sheets.push(
       <Sheet
         key={i}
@@ -384,7 +429,13 @@ export function LayeredCutout({
   });
 
   return (
-    <AbsoluteFill style={{ background: p.core, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? p.core),
+        overflow: "hidden",
+      }}
+    >
       <svg width={0} height={0} style={{ position: "absolute" }} aria-hidden>
         <defs>
           <filter
@@ -429,44 +480,46 @@ export function LayeredCutout({
           background: `radial-gradient(ellipse ${46 * coreScale}% ${52 * coreScale}% at ${50 - (camX / width) * 100 * coreScale}% ${44 - (camY / height) * 100 * coreScale}%, ${p.light}, transparent 100%)`,
         }}
       />
-      <div
-        style={{
-          position: "absolute",
-          left: width / 2 - camX * coreScale,
-          top: height / 2 - camY * coreScale,
-          transform: `translate(-50%, -50%) scale(${coreScale})`,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 16 * u,
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
-            opacity: reveal,
-            filter: `blur(${(1 - reveal) * 6 * u}px)`,
-            transform: `scale(${0.96 + 0.04 * reveal})`,
+            position: "absolute",
+            left: width / 2 - camX * coreScale,
+            top: height / 2 - camY * coreScale,
+            transform: `translate(-50%, -50%) scale(${coreScale})`,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 16 * u,
           }}
         >
-          {logo ?? <RemocnLogo fontSize={76 * u} color={p.fg} />}
-        </div>
-        {tagline ? (
           <div
             style={{
-              fontFamily: sans,
-              fontWeight: 400,
-              fontSize: 20 * u,
-              letterSpacing: "-0.005em",
-              color: p.muted,
-              opacity: tag,
-              transform: `translateY(${(1 - tag) * 8 * u}px)`,
-              whiteSpace: "nowrap",
+              opacity: reveal,
+              filter: `blur(${(1 - reveal) * 6 * u}px)`,
+              transform: `scale(${0.96 + 0.04 * reveal})`,
             }}
           >
-            {tagline}
+            {logo ?? <RemocnLogo fontSize={76 * u} color={fg} />}
           </div>
-        ) : null}
-      </div>
+          {tagline ? (
+            <div
+              style={{
+                fontFamily,
+                fontWeight: 400,
+                fontSize: 20 * u,
+                letterSpacing: "-0.005em",
+                color: p.muted,
+                opacity: tag,
+                transform: `translateY(${(1 - tag) * 8 * u}px)`,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {tagline}
+            </div>
+          ) : null}
+        </div>
+      </ScaleLayer>
 
       {sheets}
 
@@ -477,7 +530,7 @@ export function LayeredCutout({
           pointerEvents: "none",
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

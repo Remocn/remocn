@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const shapePackConfig: ComponentConfig = {
   componentName: "ShapePack",
@@ -12,11 +18,6 @@ export const shapePackConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     suffix: {
       type: "text-content",
@@ -46,6 +47,30 @@ export const shapePackConfig: ComponentConfig = {
       description: "Decimals",
       hiddenFromList: false,
     },
+    fall: {
+      type: "number",
+      default: 14,
+      min: 4,
+      max: 40,
+      step: 1,
+      description: "Fall (frames)",
+      hiddenFromList: false,
+    },
+    radius: {
+      type: "number",
+      default: 2,
+      min: 0,
+      max: 24,
+      step: 1,
+      description: "Corner radius",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Bricolage Grotesque", grain: true }),
     speed: {
       type: "number",
       default: 1,

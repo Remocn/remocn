@@ -15,7 +15,7 @@ import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const onest = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -44,8 +44,24 @@ export interface SocialSchedulerProps {
   queue?: QueuePost[];
   weekLabel?: string;
   days?: string[];
+  /** Title of the composer window. */
+  composerTitle?: string;
+  /** Heading of the queue board. */
+  queueTitle?: string;
+  /** Label of the button that schedules the post. */
+  ctaLabel?: string;
   theme?: "light" | "dark";
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Onest by default. */
+  fontFamily?: string;
+  /** Size of the scene, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -432,6 +448,22 @@ function Media({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 const T = {
   comp: 0,
   type: 10,
@@ -456,15 +488,28 @@ export function SocialScheduler({
   queue = DEFAULT_QUEUE,
   weekLabel = "Oct 26 – 30, 2026",
   days = DEFAULT_DAYS,
+  composerTitle = "New post",
+  queueTitle = "Queue",
+  ctaLabel = "Schedule",
   theme = "light",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = onest.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   ground,
   groundParams,
 }: SocialSchedulerProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
-  const pal = palette(theme);
+  const base = palette(theme);
+  const pal = {
+    ...base,
+    text: ink ?? base.text,
+    stageText: ink ?? base.stageText,
+  };
   const tall = H > W * 1.2;
   const D = tall ? { w: 800, h: 1422 } : { w: 1280, h: 720 };
   const s = Math.min(W / D.w, H / D.h);
@@ -697,607 +742,626 @@ export function SocialScheduler({
         fontWeight: 400,
         overflow: "hidden",
         WebkitFontSmoothing: "antialiased",
-        background: pal.dark ? "#04050C" : "#EEF0F6",
+        background:
+          background === undefined
+            ? pal.dark
+              ? "#04050C"
+              : "#EEF0F6"
+            : undefined,
       }}
     >
-      <GshGround
-        preset={ground ?? (pal.dark ? "velvet-hour" : "glasswork")}
-        params={groundParams}
-        timeOffset={pal.dark ? 6 : 9}
-        timeScale={0.3}
-      />
-      <AbsoluteFill style={{ background: pal.scrim }} />
-      <div
-        style={{
-          position: "absolute",
-          left: (W - D.w * s) / 2,
-          top: (H - D.h * s) / 2,
-          width: D.w,
-          height: D.h,
-          transformOrigin: "0 0",
-          transform: `scale(${s})`,
-        }}
-      >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? (pal.dark ? "velvet-hour" : "glasswork")}
+            params={groundParams}
+            timeOffset={pal.dark ? 6 : 9}
+            timeScale={0.3}
+          />
+          <AbsoluteFill style={{ background: pal.scrim }} />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transformOrigin: `${target.x + COL_W / 2}px ${target.y + CARD_H / 2}px`,
-            transform: `scale(${1 + 0.035 * cam})`,
+            left: (W - D.w * s) / 2,
+            top: (H - D.h * s) / 2,
+            width: D.w,
+            height: D.h,
+            transformOrigin: "0 0",
+            transform: `scale(${s})`,
           }}
         >
-          {tall ? (
-            <div style={{ position: "absolute", left: 48, top: 64 }}>
-              <div style={{ fontSize: 26, color: pal.stageMuted }}>
-                {picked ? "Scheduled for" : "New post"}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              transformOrigin: `${target.x + COL_W / 2}px ${target.y + CARD_H / 2}px`,
+              transform: `scale(${1 + 0.035 * cam})`,
+            }}
+          >
+            {tall ? (
+              <div style={{ position: "absolute", left: 48, top: 64 }}>
+                <div style={{ fontSize: 26, color: pal.stageMuted }}>
+                  {picked ? "Scheduled for" : composerTitle}
+                </div>
+                <div
+                  style={{
+                    marginTop: 6,
+                    fontSize: 104,
+                    fontWeight: 300,
+                    letterSpacing: "-0.045em",
+                    lineHeight: 1.05,
+                    color: pal.stageText,
+                    height: 112,
+                    overflow: "hidden",
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  <div
+                    style={{
+                      transform: `translateY(${(picked ? 1 - pickLabel : 1 - tween(frame, 4, 18)) * 100}%)`,
+                    }}
+                  >
+                    {picked ? slot.label : "Draft"}
+                  </div>
+                </div>
               </div>
+            ) : null}
+
+            <div
+              style={{
+                position: "absolute",
+                left: BOARD.x,
+                top: BOARD.y,
+                width: BOARD.w,
+                height: BOARD.h,
+                borderRadius: 16,
+                background: pal.board,
+                boxShadow: pal.winShadow,
+                overflow: "hidden",
+                opacity: tween(frame, 0, 8),
+                transform: `scale(${0.95 + 0.05 * boardFocus})`,
+                filter: `blur(${(1 - clamp(boardFocus, 0, 1)) * 5}px)`,
+              }}
+            >
               <div
                 style={{
-                  marginTop: 6,
-                  fontSize: 104,
-                  fontWeight: 300,
-                  letterSpacing: "-0.045em",
-                  lineHeight: 1.05,
-                  color: pal.stageText,
-                  height: 112,
-                  overflow: "hidden",
-                  fontVariantNumeric: "tabular-nums",
+                  height: 64,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
+                  padding: `0 ${BPAD + 4}px`,
+                  borderBottom: `1px solid ${pal.line}`,
+                }}
+              >
+                <span style={{ fontSize: 20, color: pal.text }}>
+                  {queueTitle}
+                </span>
+                <span style={{ fontSize: 16, color: pal.muted }}>
+                  {weekLabel}
+                </span>
+              </div>
+              {visible.map((d, i) => {
+                const posts = columns[i];
+                const count = posts.length + (i === col && landed ? 1 : 0);
+                return (
+                  <div key={d}>
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: colX(i),
+                        top: 72,
+                        width: COL_W,
+                        height: BOARD.h - 72 - BPAD,
+                        borderRadius: 12,
+                        background: pal.col,
+                      }}
+                    />
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: colX(i) + 4,
+                        top: 64 + 18,
+                        fontSize: 16,
+                        color: pal.text,
+                        display: "flex",
+                        gap: 8,
+                      }}
+                    >
+                      {d}
+                      <span
+                        style={{
+                          color: pal.faint,
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {count}
+                      </span>
+                    </div>
+                    {posts.map((p, k) => {
+                      const down = i === col && k >= insertAt ? shift : 0;
+                      return (
+                        <div
+                          key={`${p.day}-${p.time}`}
+                          style={{
+                            position: "absolute",
+                            left: colX(i),
+                            top: COL_Y + (k + down) * (CARD_H + CARD_GAP),
+                          }}
+                        >
+                          {qCard(p)}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+              <AbsoluteFill
+                style={{
+                  background: pal.dim,
+                  opacity: 1 - clamp(boardFocus, 0, 1),
+                }}
+              />
+            </div>
+
+            {frame >= T.land - 4 ? (
+              <div
+                style={{
+                  position: "absolute",
+                  left: flyPos.x,
+                  top: flyPos.y,
+                  transform: `scale(${1 + 0.18 * (1 - clamp(fly, 0, 1))})`,
+                  transformOrigin: "0 0",
+                  opacity: tween(frame, T.land - 4, T.land + 2),
+                  zIndex: 3,
+                }}
+              >
+                {qCard(
+                  { day: slotDay, time: slotTime, text, media: true },
+                  ringA,
+                  true,
+                )}
+              </div>
+            ) : null}
+
+            {compOut < 1 ? (
+              <div
+                style={{
+                  position: "absolute",
+                  left: COMP.x,
+                  top: COMP.y,
+                  width: COMP.w,
+                  height: COMP.h,
+                  opacity: compInA * (1 - compOut),
+                  transform: `translateY(${(1 - compIn) * 56 + compOut * 28}px) scale(${(0.96 + 0.04 * compIn) * (1 - 0.08 * compOut)})`,
+                  transformOrigin: "50% 60%",
+                  zIndex: 4,
                 }}
               >
                 <div
                   style={{
-                    transform: `translateY(${(picked ? 1 - pickLabel : 1 - tween(frame, 4, 18)) * 100}%)`,
+                    position: "absolute",
+                    inset: 0,
+                    borderRadius: 18,
+                    background: pal.comp,
+                    boxShadow: pal.winShadow,
+                    overflow: "hidden",
                   }}
                 >
-                  {picked ? slot.label : "Draft"}
-                </div>
-              </div>
-            </div>
-          ) : null}
-
-          <div
-            style={{
-              position: "absolute",
-              left: BOARD.x,
-              top: BOARD.y,
-              width: BOARD.w,
-              height: BOARD.h,
-              borderRadius: 16,
-              background: pal.board,
-              boxShadow: pal.winShadow,
-              overflow: "hidden",
-              opacity: tween(frame, 0, 8),
-              transform: `scale(${0.95 + 0.05 * boardFocus})`,
-              filter: `blur(${(1 - clamp(boardFocus, 0, 1)) * 5}px)`,
-            }}
-          >
-            <div
-              style={{
-                height: 64,
-                display: "flex",
-                alignItems: "center",
-                gap: 14,
-                padding: `0 ${BPAD + 4}px`,
-                borderBottom: `1px solid ${pal.line}`,
-              }}
-            >
-              <span style={{ fontSize: 20, color: pal.text }}>Queue</span>
-              <span style={{ fontSize: 16, color: pal.muted }}>
-                {weekLabel}
-              </span>
-            </div>
-            {visible.map((d, i) => {
-              const posts = columns[i];
-              const count = posts.length + (i === col && landed ? 1 : 0);
-              return (
-                <div key={d}>
                   <div
                     style={{
                       position: "absolute",
-                      left: colX(i),
-                      top: 72,
-                      width: COL_W,
-                      height: BOARD.h - 72 - BPAD,
-                      borderRadius: 12,
-                      background: pal.col,
+                      left: PV.x,
+                      top: PV.y,
+                      width: PV.w,
+                      height: PV.h,
+                      background: pal.panel,
+                      borderLeft: tall ? "none" : `1px solid ${pal.line}`,
+                      borderTop: tall ? `1px solid ${pal.line}` : "none",
+                    }}
+                  />
+                  <div
+                    style={{
+                      height: HEAD_H,
+                      display: "flex",
+                      alignItems: "center",
+                      padding: `0 ${PAD}px`,
+                      borderBottom: `1px solid ${pal.line}`,
+                      fontSize: 18,
+                      color: pal.text,
+                    }}
+                  >
+                    {composerTitle}
+                    <div style={{ flex: 1 }} />
+                    <Icon name="x" color={pal.faint} size={18} />
+                  </div>
+
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: ED.x,
+                      top: ED.y + 22,
+                      display: "flex",
+                      gap: 10,
+                    }}
+                  >
+                    {networks.map((nw, i) => (
+                      <div
+                        key={nw}
+                        style={{
+                          height: 36,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          padding: "0 14px 0 8px",
+                          borderRadius: 18,
+                          boxShadow: `inset 0 0 0 1px ${pal.ring}`,
+                          fontSize: 16,
+                          color: pal.text,
+                          opacity: tween(frame, 6 + i * 3, 16 + i * 3),
+                        }}
+                      >
+                        <NetworkMark kind={i as 0 | 1} size={22} pal={pal} />
+                        {nw}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: ED.x,
+                      top: TEXT_Y,
+                      width: ED.w,
+                      height: TEXT_H,
+                      fontSize: tall ? 24 : 21,
+                      fontWeight: 300,
+                      lineHeight: 1.45,
+                      letterSpacing: "-0.01em",
+                      color: pal.text,
+                      textWrap: "pretty",
+                    }}
+                  >
+                    {body}
+                    {caretOn ? (
+                      <span
+                        style={{
+                          display: "inline-block",
+                          width: 2,
+                          height: "1.05em",
+                          background: accent,
+                          marginLeft: 2,
+                          verticalAlign: "-0.15em",
+                        }}
+                      />
+                    ) : null}
+                  </div>
+
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: ED.x,
+                      top: MEDIA_Y,
+                      display: "flex",
+                      gap: 12,
+                    }}
+                  >
+                    {frame >= T.media + 2 ? (
+                      <div
+                        style={{
+                          width: TILE * clamp(mediaGrow, 0, 1),
+                          height: TILE,
+                          transform: `scale(${0.7 + 0.3 * mediaIn})`,
+                          transformOrigin: "0 50%",
+                          opacity: clamp(mediaIn * 2, 0, 1),
+                        }}
+                      >
+                        <Media
+                          w={TILE}
+                          h={TILE}
+                          accent={accent}
+                          src={mediaSrc}
+                          radius={12}
+                        />
+                      </div>
+                    ) : null}
+                    <div
+                      style={{
+                        width: TILE,
+                        height: TILE,
+                        boxSizing: "border-box",
+                        borderRadius: 12,
+                        border: `1.5px dashed ${pal.ring}`,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 8,
+                        fontSize: 16,
+                        color: pal.muted,
+                        transform: `scale(${1 - 0.04 * pressOf(T.media)})`,
+                      }}
+                    >
+                      <Icon name="image" color={pal.muted} size={20} />
+                      Media
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: PV.x + PAD,
+                      top: PV.y + 24,
+                      fontSize: 16,
+                      color: pal.muted,
+                    }}
+                  >
+                    Preview
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: PV_CARD.x,
+                      top: PV_CARD.y,
+                      width: PV_CARD.w,
+                      boxSizing: "border-box",
+                      borderRadius: 14,
+                      background: pal.card,
+                      boxShadow: pal.cardShadow,
+                      padding: 16,
+                    }}
+                  >
+                    <div style={{ display: "flex", gap: 12 }}>
+                      <div
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 12,
+                          background: accent,
+                          color: "#fff",
+                          fontSize: 19,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {brand.slice(0, 1)}
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 16, color: pal.text }}>
+                          {brand}
+                        </div>
+                        <div style={{ fontSize: 16, color: pal.faint }}>
+                          @{handle} · {picked ? slot.label : "now"}
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 12,
+                        fontSize: 16,
+                        lineHeight: 1.45,
+                        color: pal.text,
+                        minHeight: 23,
+                        textWrap: "pretty",
+                      }}
+                    >
+                      {body}
+                    </div>
+                    <div
+                      style={{
+                        height: (thumbH + 14) * clamp(mediaGrow, 0, 1),
+                        overflow: "hidden",
+                      }}
+                    >
+                      <div
+                        style={{
+                          paddingTop: 14,
+                          opacity: clamp(mediaIn, 0, 1),
+                        }}
+                      >
+                        <Media
+                          w={thumbW - 32}
+                          h={thumbH}
+                          accent={accent}
+                          src={mediaSrc}
+                          radius={10}
+                        />
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        marginTop: 14,
+                        padding: "0 4px",
+                      }}
+                    >
+                      {(
+                        ["reply", "repost", "heart", "chart"] as IconName[]
+                      ).map((ic) => (
+                        <Icon key={ic} name={ic} color={pal.faint} size={18} />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      top: FOOT_Y,
+                      height: 1,
+                      background: pal.line,
                     }}
                   />
                   <div
                     style={{
                       position: "absolute",
-                      left: colX(i) + 4,
-                      top: 64 + 18,
+                      left: PAD,
+                      top: BTN_Y + 12,
                       fontSize: 16,
-                      color: pal.text,
-                      display: "flex",
-                      gap: 8,
+                      color: pal.faint,
+                      fontVariantNumeric: "tabular-nums",
                     }}
                   >
-                    {d}
-                    <span
-                      style={{
-                        color: pal.faint,
-                        fontVariantNumeric: "tabular-nums",
-                      }}
-                    >
-                      {count}
-                    </span>
+                    {typed} / 280
                   </div>
-                  {posts.map((p, k) => {
-                    const down = i === col && k >= insertAt ? shift : 0;
-                    return (
-                      <div
-                        key={`${p.day}-${p.time}`}
+                  {btn(
+                    TIME.x,
+                    TIME.w,
+                    <>
+                      <Icon
+                        name={picked ? "check" : "cal"}
+                        color={picked ? accent : pal.muted}
+                      />
+                      <span
                         style={{
-                          position: "absolute",
-                          left: colX(i),
-                          top: COL_Y + (k + down) * (CARD_H + CARD_GAP),
+                          display: "inline-block",
+                          transform: picked
+                            ? `translateY(${(1 - pickLabel) * 8}px)`
+                            : undefined,
                         }}
                       >
-                        {qCard(p)}
-                      </div>
-                    );
-                  })}
+                        {picked ? slot.label : "Pick a time"}
+                      </span>
+                      <div style={{ flex: 1 }} />
+                      <Icon name="chev" color={pal.faint} />
+                    </>,
+                    false,
+                    T.time,
+                  )}
+                  {btn(SCHED.x, SCHED.w, ctaLabel, true, T.sched, picked)}
                 </div>
-              );
-            })}
-            <AbsoluteFill
-              style={{
-                background: pal.dim,
-                opacity: 1 - clamp(boardFocus, 0, 1),
-              }}
-            />
-          </div>
 
-          {frame >= T.land - 4 ? (
-            <div
-              style={{
-                position: "absolute",
-                left: flyPos.x,
-                top: flyPos.y,
-                transform: `scale(${1 + 0.18 * (1 - clamp(fly, 0, 1))})`,
-                transformOrigin: "0 0",
-                opacity: tween(frame, T.land - 4, T.land + 2),
-                zIndex: 3,
-              }}
-            >
-              {qCard(
-                { day: slotDay, time: slotTime, text, media: true },
-                ringA,
-                true,
-              )}
-            </div>
-          ) : null}
+                {popA > 0 ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: TIME.x,
+                      top: POP_Y,
+                      width: 290,
+                      height: POP_H,
+                      boxSizing: "border-box",
+                      borderRadius: 14,
+                      background: pal.pop,
+                      boxShadow: pal.popShadow,
+                      padding: "12px 6px 6px",
+                      opacity: popA,
+                      transform: `translateY(${(1 - popIn) * 10}px) scale(${0.94 + 0.06 * popIn})`,
+                      transformOrigin: "20% 100%",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 16,
+                        color: pal.faint,
+                        padding: "2px 12px 10px",
+                      }}
+                    >
+                      Suggested times
+                    </div>
+                    {slots.map((sl, i) => {
+                      const hot = i === pick && frame >= T.slot - 8;
+                      return (
+                        <div
+                          key={sl.label}
+                          style={{
+                            height: ROW_H,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10,
+                            padding: "0 12px",
+                            borderRadius: 9,
+                            background: hot
+                              ? withAlpha(accent, pal.dark ? 0.16 : 0.08)
+                              : "transparent",
+                            fontSize: 16,
+                            color: pal.text,
+                            fontVariantNumeric: "tabular-nums",
+                          }}
+                        >
+                          <Icon name="clock" color={hot ? accent : pal.faint} />
+                          {sl.label}
+                          <div style={{ flex: 1 }} />
+                          {sl.hint ? (
+                            <span
+                              style={{
+                                color: i === pick ? accent : pal.faint,
+                              }}
+                            >
+                              {sl.hint}
+                            </span>
+                          ) : null}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
 
-          {compOut < 1 ? (
-            <div
-              style={{
-                position: "absolute",
-                left: COMP.x,
-                top: COMP.y,
-                width: COMP.w,
-                height: COMP.h,
-                opacity: compInA * (1 - compOut),
-                transform: `translateY(${(1 - compIn) * 56 + compOut * 28}px) scale(${(0.96 + 0.04 * compIn) * (1 - 0.08 * compOut)})`,
-                transformOrigin: "50% 60%",
-                zIndex: 4,
-              }}
-            >
+            {frame >= T.toast ? (
               <div
                 style={{
                   position: "absolute",
-                  inset: 0,
-                  borderRadius: 18,
-                  background: pal.comp,
-                  boxShadow: pal.winShadow,
-                  overflow: "hidden",
+                  left: BOARD.x + BOARD.w / 2,
+                  top: BOARD.y + BOARD.h - 26,
+                  transform: `translateX(-50%) translateY(${(1 - toast) * 24}px)`,
+                  opacity: toastA,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  height: 52,
+                  padding: "0 10px 0 18px",
+                  borderRadius: 14,
+                  background: pal.dark ? "#1E1F24" : "#16171A",
+                  boxShadow:
+                    "0 0 0 1px rgba(255,255,255,0.08), 0 18px 40px -12px rgba(0,0,0,0.55)",
+                  color: "#F2F2F4",
+                  fontSize: 16,
+                  whiteSpace: "nowrap",
+                  zIndex: 5,
                 }}
               >
-                <div
+                <Icon name="check" color={pal.dark ? pal.green : "#7EE2A8"} />
+                Scheduled for {slot.label}
+                <span
                   style={{
-                    position: "absolute",
-                    left: PV.x,
-                    top: PV.y,
-                    width: PV.w,
-                    height: PV.h,
-                    background: pal.panel,
-                    borderLeft: tall ? "none" : `1px solid ${pal.line}`,
-                    borderTop: tall ? `1px solid ${pal.line}` : "none",
-                  }}
-                />
-                <div
-                  style={{
-                    height: HEAD_H,
-                    display: "flex",
-                    alignItems: "center",
-                    padding: `0 ${PAD}px`,
-                    borderBottom: `1px solid ${pal.line}`,
-                    fontSize: 18,
-                    color: pal.text,
+                    marginLeft: 6,
+                    padding: "6px 12px",
+                    borderRadius: 9,
+                    background: "rgba(255,255,255,0.08)",
+                    color: "rgba(242,242,244,0.75)",
                   }}
                 >
-                  New post
-                  <div style={{ flex: 1 }} />
-                  <Icon name="x" color={pal.faint} size={18} />
-                </div>
-
-                <div
-                  style={{
-                    position: "absolute",
-                    left: ED.x,
-                    top: ED.y + 22,
-                    display: "flex",
-                    gap: 10,
-                  }}
-                >
-                  {networks.map((nw, i) => (
-                    <div
-                      key={nw}
-                      style={{
-                        height: 36,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        padding: "0 14px 0 8px",
-                        borderRadius: 18,
-                        boxShadow: `inset 0 0 0 1px ${pal.ring}`,
-                        fontSize: 16,
-                        color: pal.text,
-                        opacity: tween(frame, 6 + i * 3, 16 + i * 3),
-                      }}
-                    >
-                      <NetworkMark kind={i as 0 | 1} size={22} pal={pal} />
-                      {nw}
-                    </div>
-                  ))}
-                </div>
-
-                <div
-                  style={{
-                    position: "absolute",
-                    left: ED.x,
-                    top: TEXT_Y,
-                    width: ED.w,
-                    height: TEXT_H,
-                    fontSize: tall ? 24 : 21,
-                    fontWeight: 300,
-                    lineHeight: 1.45,
-                    letterSpacing: "-0.01em",
-                    color: pal.text,
-                    textWrap: "pretty",
-                  }}
-                >
-                  {body}
-                  {caretOn ? (
-                    <span
-                      style={{
-                        display: "inline-block",
-                        width: 2,
-                        height: "1.05em",
-                        background: accent,
-                        marginLeft: 2,
-                        verticalAlign: "-0.15em",
-                      }}
-                    />
-                  ) : null}
-                </div>
-
-                <div
-                  style={{
-                    position: "absolute",
-                    left: ED.x,
-                    top: MEDIA_Y,
-                    display: "flex",
-                    gap: 12,
-                  }}
-                >
-                  {frame >= T.media + 2 ? (
-                    <div
-                      style={{
-                        width: TILE * clamp(mediaGrow, 0, 1),
-                        height: TILE,
-                        transform: `scale(${0.7 + 0.3 * mediaIn})`,
-                        transformOrigin: "0 50%",
-                        opacity: clamp(mediaIn * 2, 0, 1),
-                      }}
-                    >
-                      <Media
-                        w={TILE}
-                        h={TILE}
-                        accent={accent}
-                        src={mediaSrc}
-                        radius={12}
-                      />
-                    </div>
-                  ) : null}
-                  <div
-                    style={{
-                      width: TILE,
-                      height: TILE,
-                      boxSizing: "border-box",
-                      borderRadius: 12,
-                      border: `1.5px dashed ${pal.ring}`,
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 8,
-                      fontSize: 16,
-                      color: pal.muted,
-                      transform: `scale(${1 - 0.04 * pressOf(T.media)})`,
-                    }}
-                  >
-                    <Icon name="image" color={pal.muted} size={20} />
-                    Media
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    position: "absolute",
-                    left: PV.x + PAD,
-                    top: PV.y + 24,
-                    fontSize: 16,
-                    color: pal.muted,
-                  }}
-                >
-                  Preview
-                </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    left: PV_CARD.x,
-                    top: PV_CARD.y,
-                    width: PV_CARD.w,
-                    boxSizing: "border-box",
-                    borderRadius: 14,
-                    background: pal.card,
-                    boxShadow: pal.cardShadow,
-                    padding: 16,
-                  }}
-                >
-                  <div style={{ display: "flex", gap: 12 }}>
-                    <div
-                      style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 12,
-                        background: accent,
-                        color: "#fff",
-                        fontSize: 19,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
-                      }}
-                    >
-                      {brand.slice(0, 1)}
-                    </div>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 16, color: pal.text }}>
-                        {brand}
-                      </div>
-                      <div style={{ fontSize: 16, color: pal.faint }}>
-                        @{handle} · {picked ? slot.label : "now"}
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 12,
-                      fontSize: 16,
-                      lineHeight: 1.45,
-                      color: pal.text,
-                      minHeight: 23,
-                      textWrap: "pretty",
-                    }}
-                  >
-                    {body}
-                  </div>
-                  <div
-                    style={{
-                      height: (thumbH + 14) * clamp(mediaGrow, 0, 1),
-                      overflow: "hidden",
-                    }}
-                  >
-                    <div
-                      style={{
-                        paddingTop: 14,
-                        opacity: clamp(mediaIn, 0, 1),
-                      }}
-                    >
-                      <Media
-                        w={thumbW - 32}
-                        h={thumbH}
-                        accent={accent}
-                        src={mediaSrc}
-                        radius={10}
-                      />
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginTop: 14,
-                      padding: "0 4px",
-                    }}
-                  >
-                    {(["reply", "repost", "heart", "chart"] as IconName[]).map(
-                      (ic) => (
-                        <Icon key={ic} name={ic} color={pal.faint} size={18} />
-                      ),
-                    )}
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    right: 0,
-                    top: FOOT_Y,
-                    height: 1,
-                    background: pal.line,
-                  }}
-                />
-                <div
-                  style={{
-                    position: "absolute",
-                    left: PAD,
-                    top: BTN_Y + 12,
-                    fontSize: 16,
-                    color: pal.faint,
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  {typed} / 280
-                </div>
-                {btn(
-                  TIME.x,
-                  TIME.w,
-                  <>
-                    <Icon
-                      name={picked ? "check" : "cal"}
-                      color={picked ? accent : pal.muted}
-                    />
-                    <span
-                      style={{
-                        display: "inline-block",
-                        transform: picked
-                          ? `translateY(${(1 - pickLabel) * 8}px)`
-                          : undefined,
-                      }}
-                    >
-                      {picked ? slot.label : "Pick a time"}
-                    </span>
-                    <div style={{ flex: 1 }} />
-                    <Icon name="chev" color={pal.faint} />
-                  </>,
-                  false,
-                  T.time,
-                )}
-                {btn(SCHED.x, SCHED.w, "Schedule", true, T.sched, picked)}
+                  Undo
+                </span>
               </div>
+            ) : null}
 
-              {popA > 0 ? (
-                <div
-                  style={{
-                    position: "absolute",
-                    left: TIME.x,
-                    top: POP_Y,
-                    width: 290,
-                    height: POP_H,
-                    boxSizing: "border-box",
-                    borderRadius: 14,
-                    background: pal.pop,
-                    boxShadow: pal.popShadow,
-                    padding: "12px 6px 6px",
-                    opacity: popA,
-                    transform: `translateY(${(1 - popIn) * 10}px) scale(${0.94 + 0.06 * popIn})`,
-                    transformOrigin: "20% 100%",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 16,
-                      color: pal.faint,
-                      padding: "2px 12px 10px",
-                    }}
-                  >
-                    Suggested times
-                  </div>
-                  {slots.map((sl, i) => {
-                    const hot = i === pick && frame >= T.slot - 8;
-                    return (
-                      <div
-                        key={sl.label}
-                        style={{
-                          height: ROW_H,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 10,
-                          padding: "0 12px",
-                          borderRadius: 9,
-                          background: hot
-                            ? withAlpha(accent, pal.dark ? 0.16 : 0.08)
-                            : "transparent",
-                          fontSize: 16,
-                          color: pal.text,
-                          fontVariantNumeric: "tabular-nums",
-                        }}
-                      >
-                        <Icon name="clock" color={hot ? accent : pal.faint} />
-                        {sl.label}
-                        <div style={{ flex: 1 }} />
-                        {sl.hint ? (
-                          <span
-                            style={{
-                              color: i === pick ? accent : pal.faint,
-                            }}
-                          >
-                            {sl.hint}
-                          </span>
-                        ) : null}
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-
-          {frame >= T.toast ? (
             <div
               style={{
+                opacity: cursorA,
+                zIndex: 6,
                 position: "absolute",
-                left: BOARD.x + BOARD.w / 2,
-                top: BOARD.y + BOARD.h - 26,
-                transform: `translateX(-50%) translateY(${(1 - toast) * 24}px)`,
-                opacity: toastA,
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-                height: 52,
-                padding: "0 10px 0 18px",
-                borderRadius: 14,
-                background: pal.dark ? "#1E1F24" : "#16171A",
-                boxShadow:
-                  "0 0 0 1px rgba(255,255,255,0.08), 0 18px 40px -12px rgba(0,0,0,0.55)",
-                color: "#F2F2F4",
-                fontSize: 16,
-                whiteSpace: "nowrap",
-                zIndex: 5,
+                inset: 0,
               }}
             >
-              <Icon name="check" color={pal.dark ? pal.green : "#7EE2A8"} />
-              Scheduled for {slot.label}
-              <span
-                style={{
-                  marginLeft: 6,
-                  padding: "6px 12px",
-                  borderRadius: 9,
-                  background: "rgba(255,255,255,0.08)",
-                  color: "rgba(242,242,244,0.75)",
-                }}
-              >
-                Undo
-              </span>
+              <Cursor x={cur.x} y={cur.y} scale={1 - 0.04 * press} />
             </div>
-          ) : null}
-
-          <div
-            style={{
-              opacity: cursorA,
-              zIndex: 6,
-              position: "absolute",
-              inset: 0,
-            }}
-          >
-            <Cursor x={cur.x} y={cur.y} scale={1 - 0.04 * press} />
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

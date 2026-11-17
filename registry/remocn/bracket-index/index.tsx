@@ -41,6 +41,22 @@ export interface BracketIndexProps {
   /** Final word the brackets close on. */
   product?: string;
   accent?: string;
+  /** Text color of the words and prefix; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the indexed words. Load it yourself; Manrope by default. */
+  fontFamily?: string;
+  /** Weight of the indexed words. */
+  fontWeight?: number;
+  /** Frames each word holds in the brackets before the next rolls in. */
+  hold?: number;
+  /** Replaces the remocn mark when `product` is "remocn". */
+  logo?: React.ReactNode;
+  /** Size of the brackets and words, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -90,7 +106,7 @@ function isLogo(word: string) {
 }
 
 /** Widths in em: [prefix (serif italic), ...items (Manrope, or the logo)]. */
-function useWidths(strings: string[]) {
+function useWidths(strings: string[], family: string, weight: number) {
   const [widths, setWidths] = useState<number[] | null>(null);
   const [handle] = useState(() => delayRender("bracket-index: measuring"));
   const released = useRef(false);
@@ -98,7 +114,7 @@ function useWidths(strings: string[]) {
 
   useEffect(() => {
     let live = true;
-    const sans = `${WEIGHT} 100px "${manrope.fontFamily}"`;
+    const sans = `${weight} 100px "${family}"`;
     const logo = `600 100px "${manrope.fontFamily}"`;
     const italic = `italic 400 100px "${serif.fontFamily}"`;
     Promise.all([
@@ -136,7 +152,7 @@ function useWidths(strings: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, family, weight]);
 
   return widths;
 }
@@ -145,34 +161,65 @@ function pad2(n: number) {
   return String(n).padStart(2, "0");
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function BracketIndex({
   prefix = "Motion for",
   words = ["launches", "changelogs", "demos"],
   product = "remocn",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = manrope.fontFamily,
+  fontWeight = WEIGHT,
+  hold = HOLD,
+  logo,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: BracketIndexProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const t = THEMES[theme];
+  const fg = ink ?? t.fg;
+  const stage = background ?? t.bg;
+  const fill = stage === "transparent" ? undefined : stage;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const beam = t.beam.map((c) => c || accent);
 
   const items = useMemo(() => [...words, product], [words, product]);
-  const widths = useWidths(useMemo(() => [prefix, ...items], [prefix, items]));
+  const widths = useWidths(
+    useMemo(() => [prefix, ...items], [prefix, items]),
+    fontFamily,
+    fontWeight,
+  );
 
   // Swap i brings items[i] in. Swap 0 is the bracket opening.
   const starts = useMemo(() => {
     const s = [OPEN_AT];
     for (let i = 1; i < items.length; i++) {
-      s.push(s[i - 1] + (i === 1 ? OPEN_LEN : SWAP) + HOLD);
+      s.push(s[i - 1] + (i === 1 ? OPEN_LEN : SWAP) + hold);
     }
     return s;
-  }, [items.length]);
+  }, [items.length, hold]);
 
   if (!widths)
-    return <div style={{ position: "absolute", inset: 0, background: t.bg }} />;
+    return <div style={{ position: "absolute", inset: 0, background: fill }} />;
 
   const prefixW = widths[0];
   const itemW = widths.slice(1);
@@ -259,13 +306,13 @@ export function BracketIndex({
   const textStyle: React.CSSProperties = {
     position: "absolute",
     top: 0,
-    fontFamily: manrope.fontFamily,
-    fontWeight: WEIGHT,
+    fontFamily,
+    fontWeight,
     fontSize: size,
     lineHeight: 1,
     letterSpacing: `${TRACK}em`,
     whiteSpace: "nowrap",
-    color: t.fg,
+    color: fg,
     fontKerning: "normal",
   };
 
@@ -296,6 +343,25 @@ export function BracketIndex({
     const opacity =
       (i === 0 ? 0.35 + 0.65 * enter : 0.25 + 0.75 * enter) *
       (1 - Math.min(1, exit / 0.6));
+    if (isLogo(word) && logo) {
+      return (
+        <div
+          key={word + String(i)}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: slotCenter,
+            height: em(1.14),
+            display: "flex",
+            alignItems: "center",
+            transform: `translate(-50%, ${y}px)`,
+            opacity,
+          }}
+        >
+          {logo}
+        </div>
+      );
+    }
     if (isLogo(word)) {
       const lw = em(itemW[i]);
       const rh = em(LOGO_R);
@@ -409,7 +475,7 @@ export function BracketIndex({
   );
 
   return (
-    <AbsoluteFill style={{ background: t.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: fill, overflow: "hidden" }}>
       <div
         style={{
           position: "absolute",
@@ -421,113 +487,115 @@ export function BracketIndex({
               : `radial-gradient(64% 62% at ${46 + 8 * drift}% 122%, color-mix(in oklab, #8FB4FF 58%, transparent) 0%, color-mix(in oklab, #8FB4FF 22%, transparent) 50%, transparent 84%)`,
         }}
       />
-      <div
-        style={{
-          ...textStyle,
-          fontFamily: serif.fontFamily,
-          fontStyle: "italic",
-          fontWeight: 400,
-          letterSpacing: `${SERIF_TRACK}em`,
-          left: bracketL - em(GAP + prefixW),
-          top: lineTop,
-          transform: `translateY(${prefixRise}px)`,
-          opacity: prefixOpacity,
-        }}
-      >
-        {prefix}
-      </div>
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            ...textStyle,
+            fontFamily: serif.fontFamily,
+            fontStyle: "italic",
+            fontWeight: 400,
+            letterSpacing: `${SERIF_TRACK}em`,
+            left: bracketL - em(GAP + prefixW),
+            top: lineTop,
+            transform: `translateY(${prefixRise}px)`,
+            opacity: prefixOpacity,
+          }}
+        >
+          {prefix}
+        </div>
 
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          width,
-          top: lineTop - em(0.02),
-          height: em(1.14),
-          overflow: "hidden",
-          clipPath: `inset(0 ${width - innerR}px 0 ${innerL}px)`,
-        }}
-      >
         <div
           style={{
             position: "absolute",
             left: 0,
-            top: em(0.02),
             width,
-          }}
-        >
-          {wordLayers}
-        </div>
-      </div>
-
-      <svg
-        width={width}
-        height={height}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <linearGradient
-            id={`${uid}-bracket`}
-            gradientUnits="userSpaceOnUse"
-            x1={0}
-            y1={top}
-            x2={0}
-            y2={bottom}
-          >
-            <stop offset="0" stopColor={beam[0]} />
-            <stop offset="0.55" stopColor={beam[1]} />
-            <stop offset="1" stopColor={beam[2]} />
-          </linearGradient>
-        </defs>
-        <g
-          fill="none"
-          stroke={`url(#${uid}-bracket)`}
-          strokeWidth={sw}
-          strokeLinecap="butt"
-          strokeLinejoin="miter"
-          opacity={interpolate(intro, [0, 1], [0.2, 1])}
-        >
-          <path d={bracketPath(bracketL, 1)} />
-          <path d={bracketPath(bracketR, -1)} />
-        </g>
-      </svg>
-
-      <div
-        style={{
-          position: "absolute",
-          left: bracketL,
-          top: top - counterSize * 1.75,
-          height: counterSize * 1.2,
-          display: "flex",
-          alignItems: "center",
-          fontFamily: mono.fontFamily,
-          fontWeight: 400,
-          fontSize: counterSize,
-          lineHeight: 1,
-          letterSpacing: "0.02em",
-          fontVariantNumeric: "tabular-nums",
-          color: t.rest,
-          opacity: counterIn,
-          transform: `translateY(${(1 - counterIn) * counterSize * 0.5}px)`,
-          whiteSpace: "nowrap",
-        }}
-      >
-        <span>[</span>
-        <span
-          style={{
-            position: "relative",
-            display: "inline-block",
-            width: "1.2em",
-            height: counterSize * 1.2,
+            top: lineTop - em(0.02),
+            height: em(1.14),
             overflow: "hidden",
-            top: counterSize * 0.1,
+            clipPath: `inset(0 ${width - innerR}px 0 ${innerL}px)`,
           }}
         >
-          {counterRows}
-        </span>
-        <span>]</span>
-      </div>
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              top: em(0.02),
+              width,
+            }}
+          >
+            {wordLayers}
+          </div>
+        </div>
+
+        <svg
+          width={width}
+          height={height}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            <linearGradient
+              id={`${uid}-bracket`}
+              gradientUnits="userSpaceOnUse"
+              x1={0}
+              y1={top}
+              x2={0}
+              y2={bottom}
+            >
+              <stop offset="0" stopColor={beam[0]} />
+              <stop offset="0.55" stopColor={beam[1]} />
+              <stop offset="1" stopColor={beam[2]} />
+            </linearGradient>
+          </defs>
+          <g
+            fill="none"
+            stroke={`url(#${uid}-bracket)`}
+            strokeWidth={sw}
+            strokeLinecap="butt"
+            strokeLinejoin="miter"
+            opacity={interpolate(intro, [0, 1], [0.2, 1])}
+          >
+            <path d={bracketPath(bracketL, 1)} />
+            <path d={bracketPath(bracketR, -1)} />
+          </g>
+        </svg>
+
+        <div
+          style={{
+            position: "absolute",
+            left: bracketL,
+            top: top - counterSize * 1.75,
+            height: counterSize * 1.2,
+            display: "flex",
+            alignItems: "center",
+            fontFamily: mono.fontFamily,
+            fontWeight: 400,
+            fontSize: counterSize,
+            lineHeight: 1,
+            letterSpacing: "0.02em",
+            fontVariantNumeric: "tabular-nums",
+            color: t.rest,
+            opacity: counterIn,
+            transform: `translateY(${(1 - counterIn) * counterSize * 0.5}px)`,
+            whiteSpace: "nowrap",
+          }}
+        >
+          <span>[</span>
+          <span
+            style={{
+              position: "relative",
+              display: "inline-block",
+              width: "1.2em",
+              height: counterSize * 1.2,
+              overflow: "hidden",
+              top: counterSize * 0.1,
+            }}
+          >
+            {counterRows}
+          </span>
+          <span>]</span>
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

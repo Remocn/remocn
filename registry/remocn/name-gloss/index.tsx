@@ -26,8 +26,20 @@ export interface NameGlossPart {
 export interface NameGlossProps {
   parts?: NameGlossPart[];
   why?: string;
+  /** Frames between words as a gloss writes in. */
+  stagger?: number;
+  /** Frames held on the finished card; the glosses space out to fit the rest. */
+  hold?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the name and glosses. Load it yourself; Geologica by default. */
+  fontFamily?: string;
+  /** Size of the card, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -69,13 +81,13 @@ const DIM = 0.38;
 type Metrics = Record<string, number>;
 const key = (w: number, s: string) => `${w}\u0002${s}`;
 
-function measureAll(texts: string[]): Metrics {
+function measureAll(texts: string[], family: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("name-gloss: no 2d context");
   const out: Metrics = {};
   for (const weight of [NAME_W, BODY_W]) {
-    ctx.font = `${weight} ${FONT_PX}px "${geologica.fontFamily}"`;
+    ctx.font = `${weight} ${FONT_PX}px "${family}"`;
     for (const s of texts) {
       out[key(weight, s)] = ctx.measureText(s).width / FONT_PX;
     }
@@ -83,8 +95,8 @@ function measureAll(texts: string[]): Metrics {
   return out;
 }
 
-function useMetrics(texts: string[]) {
-  const id = texts.join("\u0001");
+function useMetrics(texts: string[], family: string) {
+  const id = `${family}\u0003${texts.join("\u0001")}`;
   const [state, setState] = useState<{ id: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("name-gloss: measuring"));
   const released = useRef(false);
@@ -92,13 +104,16 @@ function useMetrics(texts: string[]) {
     let live = true;
     Promise.all([
       geologica.waitUntilDone(),
-      document.fonts.load(`${NAME_W} 100px "${geologica.fontFamily}"`),
-      document.fonts.load(`${BODY_W} 100px "${geologica.fontFamily}"`),
+      document.fonts.load(`${NAME_W} 100px "${family}"`),
+      document.fonts.load(`${BODY_W} 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ id, m: measureAll(id.split("\u0001")) });
+        setState({
+          id,
+          m: measureAll(id.split("\u0003")[1].split("\u0001"), family),
+        });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -107,7 +122,7 @@ function useMetrics(texts: string[]) {
     return () => {
       live = false;
     };
-  }, [id, handle]);
+  }, [id, family, handle]);
   return state && state.id === id ? state.m : null;
 }
 
@@ -158,28 +173,54 @@ interface Placed {
   glossTop: number;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function NameGloss({
   parts = DEFAULT_PARTS,
   why = DEFAULT_WHY,
+  stagger = WORD_STAGGER,
+  hold = HOLD,
   accent,
+  ink,
   background,
+  fontFamily = geologica.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: NameGlossProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const list = parts.length > 0 ? parts : DEFAULT_PARTS;
-  const m = useMetrics([
-    " ",
-    ...list.map((p) => p.word),
-    ...list.flatMap((p) => splitWords(p.gloss)),
-    ...splitWords(why),
-  ]);
+  const m = useMetrics(
+    [
+      " ",
+      ...list.map((p) => p.word),
+      ...list.flatMap((p) => splitWords(p.gloss)),
+      ...splitWords(why),
+    ],
+    fontFamily,
+  );
 
   if (!m) {
     return (
@@ -203,7 +244,7 @@ export function NameGloss({
 
   const span = durationInFrames * speed;
   const glossStart = NAME_IN + NAME_HOLD + MOVE - 6;
-  const fixed = glossStart + WHY_AFTER + 24 + HOLD;
+  const fixed = glossStart + WHY_AFTER + 24 + hold;
   const glossGap =
     n > 1 ? Math.min(44, Math.max(18, (span - fixed) / (n - 1))) : 0;
   const glossAt = (i: number) => glossStart + i * glossGap;
@@ -334,12 +375,12 @@ export function NameGloss({
           paddingLeft: F * 0.05,
           paddingRight: F * 0.12,
           overflow: "hidden",
-          fontFamily: geologica.fontFamily,
+          fontFamily,
           fontWeight: NAME_W,
           fontSize: F,
           letterSpacing: `${NAME_TRACK}em`,
           lineHeight: `${F * 1.3}px`,
-          color: c.ink,
+          color: fg,
           opacity,
           whiteSpace: "pre",
         }}
@@ -366,19 +407,19 @@ export function NameGloss({
           left: pl.x1 + F * 0.03,
           top: pl.glossTop,
           width: pl.colW + gutter * 0.5,
-          fontFamily: geologica.fontFamily,
+          fontFamily,
           fontWeight: BODY_W,
           fontSize: G,
           letterSpacing: `${BODY_TRACK}em`,
           lineHeight: `${BODY_LH * G}px`,
-          color: c.ink,
+          color: fg,
           whiteSpace: "pre",
         }}
       >
         {pl.gloss.map((line) => (
           <div key={line.join(" ")}>
             {line.map((w, k) => {
-              const e = ease(at + wi++ * WORD_STAGGER, WORD_IN);
+              const e = ease(at + wi++ * stagger, WORD_IN);
               return (
                 <span
                   key={`${w}-${k}`}
@@ -408,7 +449,7 @@ export function NameGloss({
           left: margin + F * 0.03,
           top: whyTop,
           width: avail + whyF,
-          fontFamily: geologica.fontFamily,
+          fontFamily,
           fontWeight: NAME_W,
           fontSize: whyF,
           letterSpacing: `${BODY_TRACK}em`,
@@ -420,7 +461,7 @@ export function NameGloss({
         {whyLines.map((line) => (
           <div key={line.join(" ")}>
             {line.map((w, k) => {
-              const e = ease(whyAt + wi++ * WORD_STAGGER, WORD_IN);
+              const e = ease(whyAt + wi++ * stagger, WORD_IN);
               return (
                 <span
                   key={`${w}-${k}`}
@@ -442,7 +483,7 @@ export function NameGloss({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

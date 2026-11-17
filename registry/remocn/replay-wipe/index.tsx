@@ -45,8 +45,26 @@ export interface ReplayWipeProps {
   wipeAt?: number[];
   /** Frames the R takes to cross the frame. 15–20 reads as a stinger. */
   wipeLength?: number;
+  /** Big word in the default "Live" shot. */
+  liveLabel?: string;
+  /** Big word in the default "Replay" shot. */
+  replayLabel?: string;
+  /** Tag next to the Replay bug in the default "Replay" shot. */
+  slowMoLabel?: string;
   /** The live marker in the default "Live" shot. */
   accent?: string;
+  /** Color of the big word in the default "Live" shot; overrides the theme. */
+  ink?: string;
+  /** Stage and "Live" shot fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the default shots. Load it yourself; Barlow Condensed by default. */
+  fontFamily?: string;
+  /** Replaces the remocn R that spins across on the streak. */
+  logo?: React.ReactNode;
+  /** Size of the default shots' type and bugs, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -85,6 +103,29 @@ const THEMES = {
   },
 } as const;
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
+type ShotLook = {
+  fontFamily: string;
+  scale: number;
+  delay: number;
+  speed: number;
+};
+
 /** A short hit: up in 2 frames, eases back over 9. */
 function kick(d: number) {
   if (d < 0) return 0;
@@ -96,13 +137,19 @@ function kick(d: number) {
 function LiveShot({
   theme,
   accent,
-  speed,
+  label,
+  ink,
+  stage,
+  look: { fontFamily, scale, delay, speed },
 }: {
   theme: "dark" | "light";
   accent: string;
-  speed: number;
+  label: string;
+  ink?: string;
+  stage?: string;
+  look: ShotLook;
 }) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
   const u = Math.min(W / 1280, H / 720);
@@ -110,80 +157,90 @@ function LiveShot({
   const secs = 12 + Math.floor(t / 30);
   const clock = `89:${String(secs % 60).padStart(2, "0")}`;
   return (
-    <AbsoluteFill style={{ background: c.stage }}>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          transform: `translateX(${pan}px)`,
-          fontFamily: condensed,
-          fontWeight: 500,
-          fontSize: 640 * u,
-          lineHeight: 1,
-          letterSpacing: "-0.01em",
-          color: c.ink,
-          paddingTop: 70 * u,
-        }}
-      >
-        LIVE
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          left: 48 * u,
-          top: 44 * u,
-          display: "flex",
-          height: 46 * u,
-          fontFamily: condensed,
-          fontWeight: 500,
-          fontSize: 26 * u,
-          letterSpacing: "0.1em",
-          textTransform: "uppercase",
-          lineHeight: 1,
-        }}
-      >
+    <AbsoluteFill style={{ background: stage ?? c.stage }}>
+      <ScaleLayer scale={scale}>
         <div
           style={{
+            position: "absolute",
+            inset: 0,
             display: "flex",
             alignItems: "center",
-            gap: 10 * u,
-            padding: `0 ${16 * u}px`,
-            background: accent,
-            color: "#FFFFFF",
+            justifyContent: "center",
+            transform: `translateX(${pan}px)`,
+            fontFamily,
+            fontWeight: 500,
+            fontSize: 640 * u,
+            lineHeight: 1,
+            letterSpacing: "-0.01em",
+            color: ink ?? c.ink,
+            paddingTop: 70 * u,
+          }}
+        >
+          {label}
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            left: 48 * u,
+            top: 44 * u,
+            display: "flex",
+            height: 46 * u,
+            fontFamily,
+            fontWeight: 500,
+            fontSize: 26 * u,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            lineHeight: 1,
           }}
         >
           <div
             style={{
-              width: 10 * u,
-              height: 10 * u,
-              background: "#FFFFFF",
-              opacity: Math.floor(t / 15) % 2 === 0 ? 1 : 0.35,
+              display: "flex",
+              alignItems: "center",
+              gap: 10 * u,
+              padding: `0 ${16 * u}px`,
+              background: accent,
+              color: "#FFFFFF",
             }}
-          />
-          <span style={{ paddingTop: 2 * u }}>Live</span>
+          >
+            <div
+              style={{
+                width: 10 * u,
+                height: 10 * u,
+                background: "#FFFFFF",
+                opacity: Math.floor(t / 15) % 2 === 0 ? 1 : 0.35,
+              }}
+            />
+            <span style={{ paddingTop: 2 * u }}>Live</span>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              padding: `0 ${16 * u}px`,
+              background: c.tab,
+              color: c.tabInk,
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            <span style={{ paddingTop: 2 * u }}>{clock}</span>
+          </div>
         </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            padding: `0 ${16 * u}px`,
-            background: c.tab,
-            color: c.tabInk,
-            fontVariantNumeric: "tabular-nums",
-          }}
-        >
-          <span style={{ paddingTop: 2 * u }}>{clock}</span>
-        </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
 
-function ReplayShot({ speed }: { speed: number }) {
-  const t = useCurrentFrame() * speed;
+function ReplayShot({
+  label,
+  tag,
+  look: { fontFamily, scale, delay, speed },
+}: {
+  label: string;
+  tag: string;
+  look: ShotLook;
+}) {
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = Math.min(W / 1280, H / 720);
   // Slow motion: the type creeps and the ground barely drifts.
@@ -198,65 +255,67 @@ function ReplayShot({ speed }: { speed: number }) {
   ].join(", ");
   return (
     <AbsoluteFill style={{ background: ground }}>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          transform: `translateX(${creep}px) scale(${grow})`,
-          fontFamily: condensed,
-          fontWeight: 500,
-          fontSize: 420 * u,
-          lineHeight: 1,
-          letterSpacing: "0.005em",
-          color: "#FFFFFF",
-          paddingTop: 44 * u,
-        }}
-      >
-        REPLAY
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          left: 48 * u,
-          top: 44 * u,
-          display: "flex",
-          height: 46 * u,
-          fontFamily: condensed,
-          fontWeight: 500,
-          fontSize: 26 * u,
-          letterSpacing: "0.1em",
-          textTransform: "uppercase",
-          lineHeight: 1,
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
+            position: "absolute",
+            inset: 0,
             display: "flex",
             alignItems: "center",
-            gap: 10 * u,
-            padding: `0 ${16 * u}px`,
-            background: "#FFFFFF",
-            color: "#0A0A0B",
-          }}
-        >
-          <RemocnR height={20 * u} color="#0A0A0B" />
-          <span style={{ paddingTop: 2 * u }}>Replay</span>
-        </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            padding: `0 ${16 * u}px`,
-            background: "rgba(5,5,7,0.55)",
+            justifyContent: "center",
+            transform: `translateX(${creep}px) scale(${grow})`,
+            fontFamily,
+            fontWeight: 500,
+            fontSize: 420 * u,
+            lineHeight: 1,
+            letterSpacing: "0.005em",
             color: "#FFFFFF",
+            paddingTop: 44 * u,
           }}
         >
-          <span style={{ paddingTop: 2 * u }}>Super slow-mo</span>
+          {label}
         </div>
-      </div>
+        <div
+          style={{
+            position: "absolute",
+            left: 48 * u,
+            top: 44 * u,
+            display: "flex",
+            height: 46 * u,
+            fontFamily,
+            fontWeight: 500,
+            fontSize: 26 * u,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            lineHeight: 1,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10 * u,
+              padding: `0 ${16 * u}px`,
+              background: "#FFFFFF",
+              color: "#0A0A0B",
+            }}
+          >
+            <RemocnR height={20 * u} color="#0A0A0B" />
+            <span style={{ paddingTop: 2 * u }}>Replay</span>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              padding: `0 ${16 * u}px`,
+              background: "rgba(5,5,7,0.55)",
+              color: "#FFFFFF",
+            }}
+          >
+            <span style={{ paddingTop: 2 * u }}>{tag}</span>
+          </div>
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -266,18 +325,41 @@ export function ReplayWipe({
   to,
   wipeAt = [26, 84],
   wipeLength = 18,
+  liveLabel = "LIVE",
+  replayLabel = "REPLAY",
+  slowMoLabel = "Super slow-mo",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = condensed,
+  logo,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: ReplayWipeProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = Math.min(W / 1280, H / 720);
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
+  const stage =
+    background === "transparent"
+      ? "transparent"
+      : (background ?? THEMES[theme].stage);
+  const look: ShotLook = { fontFamily, scale, delay, speed };
 
   const shots = [
-    from ?? <LiveShot theme={theme} accent={accent} speed={speed} />,
-    to ?? <ReplayShot speed={speed} />,
+    from ?? (
+      <LiveShot
+        theme={theme}
+        accent={accent}
+        label={liveLabel}
+        ink={ink}
+        stage={background === undefined ? undefined : stage}
+        look={look}
+      />
+    ),
+    to ?? <ReplayShot label={replayLabel} tag={slowMoLabel} look={look} />,
   ];
 
   const len = Math.max(1, wipeLength);
@@ -340,9 +422,7 @@ export function ReplayWipe({
   ];
 
   return (
-    <AbsoluteFill
-      style={{ background: THEMES[theme].stage, overflow: "hidden" }}
-    >
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <div
         style={{
           position: "absolute",
@@ -421,7 +501,7 @@ export function ReplayWipe({
               transform: `rotate(${spin}deg) scale(${rScale})`,
             }}
           >
-            <RemocnR height={rH} color="#FFFFFF" />
+            {logo ?? <RemocnR height={rH} color="#FFFFFF" />}
           </div>
         </>
       ) : null}

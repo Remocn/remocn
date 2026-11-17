@@ -37,7 +37,17 @@ export interface WordGapMediaProps {
   captions?: string[];
   accent?: string;
   ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
   background?: string;
+  /** Typeface for the copy. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Frames between words as each side builds. */
+  stagger?: number;
+  /** Size of the line and tile, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -113,13 +123,13 @@ const CLAMP = {
 
 type Measure = (s: string) => number;
 
-function buildMeasure(_version: number): Measure {
+function buildMeasure(_version: number, fontFamily: string): Measure {
   const ctx = document.createElement("canvas").getContext("2d");
   const cache: Record<string, number> = {};
   return (s: string) => {
     if (cache[s] === undefined) {
       if (!ctx) return s.length * 0.55;
-      ctx.font = `400 ${FONT_PX}px "${sans.fontFamily}"`;
+      ctx.font = `400 ${FONT_PX}px "${fontFamily}"`;
       cache[s] =
         ctx.measureText(s).width / FONT_PX + TRACK * Array.from(s).length;
     }
@@ -127,7 +137,7 @@ function buildMeasure(_version: number): Measure {
   };
 }
 
-function useMeasure() {
+function useMeasure(fontFamily: string) {
   const [version, setVersion] = useState(0);
   const [handle] = useState(() => delayRender("word-gap-media: measuring"));
   const released = useRef(false);
@@ -139,7 +149,7 @@ function useMeasure() {
     document.fonts.addEventListener("loadingdone", bump);
     Promise.all([
       sans.waitUntilDone(),
-      document.fonts.load(`400 100px "${sans.fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -153,8 +163,11 @@ function useMeasure() {
       live = false;
       document.fonts.removeEventListener("loadingdone", bump);
     };
-  }, [handle]);
-  return useMemo(() => buildMeasure(version), [version]);
+  }, [handle, fontFamily]);
+  return useMemo(
+    () => buildMeasure(version, fontFamily),
+    [version, fontFamily],
+  );
 }
 
 function resolveSrc(src: string) {
@@ -166,17 +179,19 @@ function Words({
   startAt,
   t,
   style,
+  stagger,
 }: {
   text: string;
   startAt: number;
   t: number;
   style: CSSProperties;
+  stagger: number;
 }) {
   const parts = text.split(" ").filter(Boolean);
   return (
     <div style={{ display: "flex", whiteSpace: "pre", ...style }}>
       {parts.map((w, i) => {
-        const at = startAt + i * BEAT.wordStep - 4;
+        const at = startAt + i * stagger - 4;
         const e = interpolate(t, [at, at + BEAT.enter], [0, 1], {
           ...CLAMP,
           easing: ENTER,
@@ -208,6 +223,22 @@ function Words({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function WordGapMedia({
   before = "Launch all",
   after = "of this",
@@ -217,11 +248,16 @@ export function WordGapMedia({
   accent,
   ink,
   background,
+  fontFamily = sans.fontFamily,
+  stagger = BEAT.wordStep,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   theme = "dark",
   ground,
   groundParams,
 }: WordGapMediaProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
@@ -229,7 +265,7 @@ export function WordGapMedia({
   const preset = ground ?? (groundParams ? undefined : c.ground);
   const gParams = groundParams ?? (ground ? undefined : c.groundParams);
   const bg = background ?? gshParams(preset, gParams).background;
-  const m = useMeasure();
+  const m = useMeasure(fontFamily);
   const t = frame;
   const portrait = H > W * 1.1;
 
@@ -423,7 +459,7 @@ export function WordGapMedia({
             position: "absolute",
             left: pad * 1.1,
             bottom: pad * 1.15,
-            fontFamily: sans.fontFamily,
+            fontFamily,
             fontWeight: 400,
             fontSize: capFont,
             lineHeight: 1,
@@ -528,7 +564,7 @@ export function WordGapMedia({
     );
 
     const textStyle: CSSProperties = {
-      fontFamily: sans.fontFamily,
+      fontFamily,
       fontWeight: 400,
       fontSize: F,
       lineHeight: 1,
@@ -536,7 +572,7 @@ export function WordGapMedia({
       color: inkC,
       filter: wordBlur > 0.1 ? `blur(${wordBlur.toFixed(2)}px)` : undefined,
     };
-    const afterStart = before.split(" ").filter(Boolean).length * BEAT.wordStep;
+    const afterStart = before.split(" ").filter(Boolean).length * stagger;
     const push = interpolate(frame, [0, durationInFrames], [1, 1.035], CLAMP);
 
     content = (
@@ -549,27 +585,49 @@ export function WordGapMedia({
           transform: `scale(${push.toFixed(5)})`,
         }}
       >
-        <Words text={before} startAt={0} t={t} style={textStyle} />
+        <Words
+          text={before}
+          startAt={0}
+          t={t}
+          style={textStyle}
+          stagger={stagger}
+        />
         {card}
-        <Words text={after} startAt={afterStart} t={t} style={textStyle} />
+        <Words
+          text={after}
+          startAt={afterStart}
+          t={t}
+          style={textStyle}
+          stagger={stagger}
+        />
       </AbsoluteFill>
     );
   }
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      <GshGround
-        preset={preset}
-        params={gParams}
-        timeOffset={c.groundOffset}
-        timeScale={0.6}
-      />
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(${portrait ? "80% 50%" : "62% 56%"} at 50% 50%, rgba(${c.scrim},${c.scrimAlpha}) 0%, rgba(${c.scrim},0) 100%)`,
-        }}
-      />
-      {content}
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={preset}
+            params={gParams}
+            timeOffset={c.groundOffset}
+            timeScale={0.6}
+          />
+          <AbsoluteFill
+            style={{
+              background: `radial-gradient(${portrait ? "80% 50%" : "62% 56%"} at 50% 50%, rgba(${c.scrim},${c.scrimAlpha}) 0%, rgba(${c.scrim},0) 100%)`,
+            }}
+          />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>{content}</ScaleLayer>
     </AbsoluteFill>
   );
 }

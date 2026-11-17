@@ -71,15 +71,56 @@ The figure rises in and a plus sign spins into place beside it, arms extending. 
       description: "Statement revealed word by word once the plus opens.",
     },
     {
+      name: "hold",
+      type: "number",
+      default: "56",
+      description: "Frames before the plus starts to open; the statement follows it.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "3",
+      description: "Frames between words of the statement.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color for highlights and small marks.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Background color override. Pass \"transparent\" to composite over other layers.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Sora\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

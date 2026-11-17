@@ -1,6 +1,7 @@
 "use client";
 
 import { loadVariableFont } from "@remotion/google-fonts/BricolageGrotesque";
+import type React from "react";
 import { useEffect, useId, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -18,8 +19,21 @@ export interface ShedWeightProps {
   text?: string;
   sizes?: number;
   showSizes?: boolean;
+  /** Weight of every cut, on the font's weight axis. */
+  fontWeight?: number;
+  /** Size step from one cut to the next. */
+  ratio?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the cuts; the optical-size axis needs a face that has one. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  grain?: boolean;
+  /** Size of the stack, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -63,8 +77,8 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
-const fvs = (opsz: number) =>
-  `"opsz" ${opsz.toFixed(1)}, "wght" ${WGHT}, "wdth" 100`;
+const fvs = (opsz: number, wght = WGHT) =>
+  `"opsz" ${opsz.toFixed(1)}, "wght" ${wght}, "wdth" 100`;
 
 interface Metrics {
   widths: number[];
@@ -83,7 +97,12 @@ function cuts(n: number) {
   });
 }
 
-function measure(text: string, n: number): Metrics {
+function measure(
+  text: string,
+  n: number,
+  fontFamily: string,
+  fontWeight: number,
+): Metrics {
   const probe = document.createElement("span");
   Object.assign(probe.style, {
     position: "absolute",
@@ -91,13 +110,13 @@ function measure(text: string, n: number): Metrics {
     top: "0",
     visibility: "hidden",
     whiteSpace: "pre",
-    fontFamily: `"${bricolage.fontFamily}"`,
+    fontFamily: `"${fontFamily}"`,
     fontSize: "100px",
     lineHeight: "1",
   });
   document.body.appendChild(probe);
   const widths = cuts(n).map(({ opsz, track }) => {
-    probe.style.fontVariationSettings = fvs(opsz);
+    probe.style.fontVariationSettings = fvs(opsz, fontWeight);
     probe.style.letterSpacing = `${track}em`;
     probe.textContent = text;
     return probe.getBoundingClientRect().width / 100 - track;
@@ -108,7 +127,7 @@ function measure(text: string, n: number): Metrics {
   let baseline = 0.8;
   const ctx = document.createElement("canvas").getContext("2d");
   if (ctx) {
-    ctx.font = `${WGHT} 100px "${bricolage.fontFamily}"`;
+    ctx.font = `${fontWeight} 100px "${fontFamily}"`;
     const fm = ctx.measureText("Hgy");
     cap = ctx.measureText("H").actualBoundingBoxAscent / 100;
     desc = fm.actualBoundingBoxDescent / 100;
@@ -119,7 +138,12 @@ function measure(text: string, n: number): Metrics {
   return { widths, cap, desc, baseline };
 }
 
-function useMetrics(text: string, n: number) {
+function useMetrics(
+  text: string,
+  n: number,
+  fontFamily: string,
+  fontWeight: number,
+) {
   const key = `${n}\u0000${text}`;
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("shed-weight: measuring"));
@@ -129,12 +153,15 @@ function useMetrics(text: string, n: number) {
     const [count, tx] = key.split("\u0000");
     Promise.all([
       bricolage.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${bricolage.fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measure(tx, Number(count)) });
+        setState({
+          key,
+          m: measure(tx, Number(count), fontFamily, fontWeight),
+        });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -143,7 +170,7 @@ function useMetrics(text: string, n: number) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily, fontWeight]);
   return state && state.key === key ? state.m : null;
 }
 
@@ -171,21 +198,44 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ShedWeight({
   text = "Sharp at any size.",
   sizes = 6,
   showSizes = true,
+  fontWeight = WGHT,
+  ratio = RATIO,
   accent,
+  ink,
   background,
+  fontFamily = bricolage.fontFamily,
+  grain = true,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: ShedWeightProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
   const spot = accent ?? c.accent;
   const n = Math.max(2, Math.min(9, Math.round(sizes)));
-  const m = useMetrics(text, n);
+  const m = useMetrics(text, n, fontFamily, fontWeight);
 
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
@@ -200,7 +250,7 @@ export function ShedWeight({
   const M = Math.min(W, H) * (portrait ? 0.08 : 0.075);
   const tagSize = portrait ? W * 0.024 : H * 0.024;
   const tagW = showSizes ? tagSize * 3.6 : 0;
-  const scaleOf = (k: number) => RATIO ** (k - (n - 1));
+  const scaleOf = (k: number) => ratio ** (k - (n - 1));
   const lead = (k: number) =>
     m.cap * scaleOf(k) + m.desc * scaleOf(k - 1) * 1.35;
   let stackEm = m.cap * scaleOf(0);
@@ -231,93 +281,95 @@ export function ShedWeight({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {list.map(({ opsz, track }, k) => {
-        const size = F * scaleOf(k);
-        const base = bases[k];
-        const last = k === n - 1;
-        const ruleP = interpolate(
-          t,
-          [startAt[k] - 4, startAt[k] - 4 + RULE_LEN],
-          [0, 1],
-          { ...CLAMP, easing: EASE_IN_OUT },
-        );
-        const rise = interpolate(
-          t,
-          [startAt[k], startAt[k] + RISE_LEN],
-          [0, 1],
-          { ...CLAMP, easing: EASE_OUT },
-        );
-        const ruleH = last
-          ? Math.max(2, size * 0.014)
-          : Math.max(1, Math.min(2, size * 0.02));
-        const maskTop = base - size * (m.cap + 0.3);
-        return (
-          <div key={`cut-${k}`}>
-            <div
-              style={{
-                position: "absolute",
-                left: last ? 0 : M,
-                top: base + Math.max(2, size * 0.04),
-                width: last ? W : W - M * 2,
-                height: ruleH,
-                background: last ? spot : c.rule,
-                transformOrigin: "0% 50%",
-                transform: `scaleX(${ruleP.toFixed(4)})`,
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                top: maskTop,
-                width: W,
-                height: base - maskTop + size * (m.desc + 0.06),
-                overflow: "hidden",
-              }}
-            >
+      <ScaleLayer scale={scale}>
+        {list.map(({ opsz, track }, k) => {
+          const size = F * scaleOf(k);
+          const base = bases[k];
+          const last = k === n - 1;
+          const ruleP = interpolate(
+            t,
+            [startAt[k] - 4, startAt[k] - 4 + RULE_LEN],
+            [0, 1],
+            { ...CLAMP, easing: EASE_IN_OUT },
+          );
+          const rise = interpolate(
+            t,
+            [startAt[k], startAt[k] + RISE_LEN],
+            [0, 1],
+            { ...CLAMP, easing: EASE_OUT },
+          );
+          const ruleH = last
+            ? Math.max(2, size * 0.014)
+            : Math.max(1, Math.min(2, size * 0.02));
+          const maskTop = base - size * (m.cap + 0.3);
+          return (
+            <div key={`cut-${k}`}>
               <div
                 style={{
                   position: "absolute",
-                  left: M,
-                  top: base - maskTop - m.baseline * size,
-                  height: size,
-                  lineHeight: `${size}px`,
-                  whiteSpace: "pre",
-                  fontFamily: bricolage.fontFamily,
-                  fontSize: size,
-                  fontVariationSettings: fvs(opsz),
-                  letterSpacing: `${track}em`,
-                  color: c.ink,
-                  transform: `translateY(${((1 - rise) * size * 1.05).toFixed(2)}px)`,
+                  left: last ? 0 : M,
+                  top: base + Math.max(2, size * 0.04),
+                  width: last ? W : W - M * 2,
+                  height: ruleH,
+                  background: last ? spot : c.rule,
+                  transformOrigin: "0% 50%",
+                  transform: `scaleX(${ruleP.toFixed(4)})`,
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: maskTop,
+                  width: W,
+                  height: base - maskTop + size * (m.desc + 0.06),
+                  overflow: "hidden",
                 }}
               >
-                {text}
+                <div
+                  style={{
+                    position: "absolute",
+                    left: M,
+                    top: base - maskTop - m.baseline * size,
+                    height: size,
+                    lineHeight: `${size}px`,
+                    whiteSpace: "pre",
+                    fontFamily,
+                    fontSize: size,
+                    fontVariationSettings: fvs(opsz, fontWeight),
+                    letterSpacing: `${track}em`,
+                    color: ink ?? c.ink,
+                    transform: `translateY(${((1 - rise) * size * 1.05).toFixed(2)}px)`,
+                  }}
+                >
+                  {text}
+                </div>
               </div>
+              {showSizes ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    right: M,
+                    top: base - tagSize * 0.78,
+                    fontFamily,
+                    fontVariationSettings: fvs(12, fontWeight),
+                    fontSize: tagSize,
+                    lineHeight: 1,
+                    letterSpacing: "0.01em",
+                    fontFeatureSettings: '"tnum" 1',
+                    whiteSpace: "pre",
+                    color: last ? spot : c.muted,
+                    opacity: rise,
+                  }}
+                >
+                  {`${Math.round(opsz)} pt`}
+                </div>
+              ) : null}
             </div>
-            {showSizes ? (
-              <div
-                style={{
-                  position: "absolute",
-                  right: M,
-                  top: base - tagSize * 0.78,
-                  fontFamily: bricolage.fontFamily,
-                  fontVariationSettings: fvs(12),
-                  fontSize: tagSize,
-                  lineHeight: 1,
-                  letterSpacing: "0.01em",
-                  fontFeatureSettings: '"tnum" 1',
-                  whiteSpace: "pre",
-                  color: last ? spot : c.muted,
-                  opacity: rise,
-                }}
-              >
-                {`${Math.round(opsz)} pt`}
-              </div>
-            ) : null}
-          </div>
-        );
-      })}
-      {transparent ? null : <Grain opacity={c.grain} />}
+          );
+        })}
+      </ScaleLayer>
+      {transparent || !grain ? null : <Grain opacity={c.grain} />}
     </AbsoluteFill>
   );
 }

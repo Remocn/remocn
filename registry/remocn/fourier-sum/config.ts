@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const fourierSumConfig: ComponentConfig = {
   componentName: "FourierSum",
@@ -12,11 +18,6 @@ export const fourierSumConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     title: {
       type: "text-content",
@@ -32,6 +33,26 @@ export const fourierSumConfig: ComponentConfig = {
       description: "Periods",
       hiddenFromList: false,
     },
+    stagger: {
+      type: "number",
+      default: 11,
+      min: 0,
+      max: 30,
+      step: 1,
+      description: "Merge stagger",
+      hiddenFromList: false,
+    },
+    waveFill: {
+      type: "boolean",
+      default: true,
+      description: "Wave fill",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Newsreader", grain: true }),
     speed: {
       type: "number",
       default: 1,

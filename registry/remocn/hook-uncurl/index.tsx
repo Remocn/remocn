@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/BarlowCondensed";
+import type React from "react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -19,7 +20,19 @@ export interface HookUncurlProps {
   question?: string;
   answer?: string;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the words. Load it yourself; Barlow Condensed by default. */
+  fontFamily?: string;
+  /** Frames between question words as they rise in. */
+  stagger?: number;
+  /** Frame where the question mark uncurls and the answer rolls in. */
+  answerAt?: number;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -143,7 +156,7 @@ interface Metrics {
   bang: Glyph;
 }
 
-function useMetrics(strings: string[]) {
+function useMetrics(strings: string[], fontFamily: string) {
   const key = strings.join("\u0001");
   const [state, setState] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("hook-uncurl: measuring"));
@@ -152,7 +165,7 @@ function useMetrics(strings: string[]) {
     let live = true;
     Promise.all([
       barlow.waitUntilDone(),
-      document.fonts.load(`500 100px "${barlow.fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -164,7 +177,7 @@ function useMetrics(strings: string[]) {
           top: "0",
           visibility: "hidden",
           whiteSpace: "pre",
-          fontFamily: `"${barlow.fontFamily}"`,
+          fontFamily: `"${fontFamily}"`,
           fontWeight: "500",
           fontSize: "100px",
           lineHeight: "1",
@@ -203,7 +216,7 @@ function useMetrics(strings: string[]) {
         const ctx = document.createElement("canvas").getContext("2d");
         if (ctx) {
           const S = 400;
-          ctx.font = `500 ${S}px "${barlow.fontFamily}"`;
+          ctx.font = `500 ${S}px "${fontFamily}"`;
           const fm = ctx.measureText("H");
           const a = fm.fontBoundingBoxAscent / S;
           const d = fm.fontBoundingBoxDescent / S;
@@ -235,7 +248,7 @@ function useMetrics(strings: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily]);
   return state && state.key === key ? state : null;
 }
 
@@ -267,24 +280,53 @@ function place(
   return { out, anchor, count: lines.length };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function HookUncurl({
   question = "Why make the video?",
   answer = "Just make the video.",
   accent,
+  ink,
   background,
+  fontFamily = barlow.fontFamily,
+  stagger = ENTER_STAGGER,
+  answerAt = UNCURL_AT,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: HookUncurlProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
   const spot = accent ?? c.accent;
+  const fg = ink ?? c.ink;
+  const uncurlAt = answerAt;
+  const swapAt = SWAP_AT + answerAt - UNCURL_AT;
+  const retractAt = RETRACT_AT + answerAt - UNCURL_AT;
   const clipId = `huc${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   const A = useMemo(() => words(question), [question]);
   const B = useMemo(() => words(answer), [answer]);
   const term = terminalOf(answer);
-  const m = useMetrics(useMemo(() => [...new Set([...A, ...B])], [A, B]));
+  const m = useMetrics(
+    useMemo(() => [...new Set([...A, ...B])], [A, B]),
+    fontFamily,
+  );
 
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
@@ -332,17 +374,17 @@ export function HookUncurl({
     suf++;
 
   const glide = spring({
-    frame: t - SWAP_AT - 2,
+    frame: t - swapAt - 2,
     fps,
     config: { damping: 17, stiffness: 120, mass: 0.9 },
   });
-  const es = Math.min(ENTER_STAGGER, ENTER_SPREAD / Math.max(1, A.length));
+  const es = Math.min(stagger, ENTER_SPREAD / Math.max(1, A.length));
   const enterAt = (i: number) => i * es - 2;
   const nOut = Math.max(1, A.length - pre - suf);
   const nIn = Math.max(1, B.length - pre - suf);
   const xs = Math.min(SWAP_STAGGER, SWAP_SPREAD / nOut);
   const ns = Math.min(SWAP_STAGGER, SWAP_SPREAD / nIn);
-  const inAt = SWAP_AT + SINK_LEN - 1;
+  const inAt = swapAt + SINK_LEN - 1;
   const floor = 0.03 * F;
   const enterK = (i: number) =>
     interpolate(t, [enterAt(i), enterAt(i) + ENTER_LEN], [0, 1], {
@@ -387,14 +429,14 @@ export function HookUncurl({
       const k = i - pre;
       const out = interpolate(
         t,
-        [SWAP_AT + k * xs, SWAP_AT + k * xs + SINK_LEN],
+        [swapAt + k * xs, swapAt + k * xs + SINK_LEN],
         [0, 1],
         { ...CLAMP, easing: EASE_SINK },
       );
       if (out >= 1) return;
       const cut = interpolate(
         t,
-        [SWAP_AT + k * xs, SWAP_AT + k * xs + 2],
+        [swapAt + k * xs, swapAt + k * xs + 2],
         [0, 1],
         CLAMP,
       );
@@ -449,11 +491,11 @@ export function HookUncurl({
   const footX = dotX;
   const baseP = lerp(baseA(pa.anchor.line), baseB(pb.anchor.line), glide);
 
-  const u = interpolate(t, [UNCURL_AT, UNCURL_AT + UNCURL_LEN], [0, 1], {
+  const u = interpolate(t, [uncurlAt, uncurlAt + UNCURL_LEN], [0, 1], {
     ...CLAMP,
     easing: EASE_UNCURL,
   });
-  const r = interpolate(t, [RETRACT_AT, RETRACT_AT + RETRACT_LEN], [0, 1], {
+  const r = interpolate(t, [retractAt, retractAt + RETRACT_LEN], [0, 1], {
     ...CLAMP,
     easing: EASE_SNAP,
   });
@@ -485,7 +527,7 @@ export function HookUncurl({
   const landed = r >= 1;
   const pop = landed
     ? spring({
-        frame: t - RETRACT_AT - RETRACT_LEN,
+        frame: t - retractAt - RETRACT_LEN,
         fps,
         config: { damping: 11, stiffness: 220, mass: 0.6 },
       })
@@ -494,7 +536,7 @@ export function HookUncurl({
   const dotFade = term === "" ? 1 - r : 1;
   const dotColor = interpolate(
     t,
-    [RETRACT_AT + RETRACT_LEN - 2, RETRACT_AT + RETRACT_LEN + 6],
+    [retractAt + RETRACT_LEN - 2, retractAt + RETRACT_LEN + 6],
     [0, 1],
     CLAMP,
   );
@@ -504,73 +546,75 @@ export function HookUncurl({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {items.map((it) => (
-        <div
-          key={it.key}
-          style={{
-            position: "absolute",
-            left: it.x - pad,
-            top: it.base - clipTopOff,
-            width: wOf(it.text) * F + pad * 2,
-            height: clipTopOff + it.bot,
-            overflow: "hidden",
-          }}
-        >
-          <span
+      <ScaleLayer scale={scale}>
+        {items.map((it) => (
+          <div
+            key={it.key}
             style={{
               position: "absolute",
-              left: pad,
-              top: clipTopOff - m.baseline * F,
-              height: F,
-              lineHeight: `${F}px`,
-              whiteSpace: "pre",
-              fontFamily: barlow.fontFamily,
-              fontWeight: 500,
-              fontSize: F,
-              letterSpacing: `${TRACK}em`,
-              color: it.lit ? spot : c.ink,
-              transform: `translateY(${it.shift.toFixed(2)}px)`,
+              left: it.x - pad,
+              top: it.base - clipTopOff,
+              width: wOf(it.text) * F + pad * 2,
+              height: clipTopOff + it.bot,
+              overflow: "hidden",
             }}
           >
-            {it.text}
-          </span>
-        </div>
-      ))}
+            <span
+              style={{
+                position: "absolute",
+                left: pad,
+                top: clipTopOff - m.baseline * F,
+                height: F,
+                lineHeight: `${F}px`,
+                whiteSpace: "pre",
+                fontFamily,
+                fontWeight: 500,
+                fontSize: F,
+                letterSpacing: `${TRACK}em`,
+                color: it.lit ? spot : fg,
+                transform: `translateY(${it.shift.toFixed(2)}px)`,
+              }}
+            >
+              {it.text}
+            </span>
+          </div>
+        ))}
 
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <clipPath id={clipId}>
-            <rect x={0} y={0} width={W} height={pClip} />
-          </clipPath>
-        </defs>
-        <g clipPath={lastE < 1 ? `url(#${clipId})` : undefined}>
-          <g transform={`translate(0 ${pShift.toFixed(2)})`}>
-            {d ? (
-              <path
-                d={d}
-                fill="none"
-                stroke={c.ink}
-                strokeWidth={m.stem * F}
-                strokeLinecap="round"
-                strokeLinejoin="round"
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            <clipPath id={clipId}>
+              <rect x={0} y={0} width={W} height={pClip} />
+            </clipPath>
+          </defs>
+          <g clipPath={lastE < 1 ? `url(#${clipId})` : undefined}>
+            <g transform={`translate(0 ${pShift.toFixed(2)})`}>
+              {d ? (
+                <path
+                  d={d}
+                  fill="none"
+                  stroke={fg}
+                  strokeWidth={m.stem * F}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              ) : null}
+              <circle
+                cx={dotX}
+                cy={baseP - dotR}
+                r={dotR * popScale}
+                fill={interpolateHex(fg, spot, dotColor)}
+                opacity={dotFade}
               />
-            ) : null}
-            <circle
-              cx={dotX}
-              cy={baseP - dotR}
-              r={dotR * popScale}
-              fill={interpolateHex(c.ink, spot, dotColor)}
-              opacity={dotFade}
-            />
+            </g>
           </g>
-        </g>
-      </svg>
+        </svg>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

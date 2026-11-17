@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const mvpCardConfig: ComponentConfig = {
   componentName: "MvpCard",
@@ -12,11 +18,6 @@ export const mvpCardConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     title: {
       type: "text-content",
@@ -43,6 +44,30 @@ export const mvpCardConfig: ComponentConfig = {
       default: "01",
       description: "Number",
     },
+    stagger: {
+      type: "number",
+      default: 8,
+      min: 0,
+      max: 20,
+      step: 1,
+      description: "Stat stagger",
+      hiddenFromList: false,
+    },
+    countDuration: {
+      type: "number",
+      default: 22,
+      min: 6,
+      max: 60,
+      step: 1,
+      description: "Count length (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Antonio" }),
     speed: {
       type: "number",
       default: 1,

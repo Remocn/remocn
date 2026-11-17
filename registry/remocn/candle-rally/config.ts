@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const candleRallyConfig: ComponentConfig = {
   componentName: "CandleRally",
@@ -12,11 +18,6 @@ export const candleRallyConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     symbol: {
       type: "text-content",
@@ -32,6 +33,11 @@ export const candleRallyConfig: ComponentConfig = {
       type: "text-content",
       default: "high",
       description: "Headline2",
+    },
+    levelLabel: {
+      type: "text-content",
+      default: "PREV HIGH",
+      description: "Level label",
     },
     price: {
       type: "number",
@@ -51,6 +57,21 @@ export const candleRallyConfig: ComponentConfig = {
       description: "Prev high",
       hiddenFromList: false,
     },
+    fontWeight: {
+      type: "number",
+      default: 500,
+      min: 100,
+      max: 900,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Barlow Condensed" }),
     speed: {
       type: "number",
       default: 1,

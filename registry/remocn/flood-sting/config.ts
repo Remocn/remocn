@@ -1,8 +1,21 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const floodStingConfig: ComponentConfig = {
   componentName: "FloodSting",
   importPath: "@/components/remocn/flood-sting",
+  lists: {
+    icons: {
+      default: ["cluster", "download", "globe", "gear", "brackets"],
+      description: "Icons",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -20,6 +33,39 @@ export const floodStingConfig: ComponentConfig = {
       max: 10,
       step: 1,
       description: "Pick",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 2,
+      min: 0,
+      max: 8,
+      step: 1,
+      description: "Tile stagger",
+      hiddenFromList: false,
+    },
+    radius: {
+      type: "number",
+      default: 0.24,
+      min: 0,
+      max: 0.5,
+      step: 0.02,
+      description: "Highlight radius",
+      hiddenFromList: false,
+    },
+    ink: { type: "color", default: undefined, description: "Glyph color" },
+    flood: { type: "color", default: undefined, description: "Flood color" },
+    logoColor: { type: "color", default: undefined, description: "Logo color" },
+    paper: { type: "color", default: undefined, description: "Paper" },
+    ground: groundControl(),
+    ...sceneControls({ ink: false, background: false }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
       hiddenFromList: false,
     },
   },

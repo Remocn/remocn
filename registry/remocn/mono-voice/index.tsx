@@ -1,6 +1,7 @@
 "use client";
 
 import { loadVariableFont } from "@remotion/google-fonts/InterTight";
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -18,8 +19,20 @@ const inter = loadVariableFont("normal", { subsets: ["latin"] });
 export interface MonoVoiceProps {
   text?: string;
   highlight?: string;
+  /** Frame the mono letters start finding their voice. */
+  voiceAt?: number;
+  /** Frames between lines rising in. */
+  stagger?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the text; a variable font with a wght axis. Inter Tight by default. */
+  fontFamily?: string;
+  /** Size of the text block, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -71,7 +84,7 @@ interface Metrics {
   capTop: number;
 }
 
-function measure(lines: string[]): Metrics {
+function measure(lines: string[], family: string): Metrics {
   const size = 200;
   const ctx = document.createElement("canvas").getContext("2d");
   const out: LineMetrics[] = [];
@@ -88,7 +101,7 @@ function measure(lines: string[]): Metrics {
     }
     return { lines: out, baseline, capTop };
   }
-  ctx.font = `${VOICE_WGHT} ${size}px "${inter.fontFamily}"`;
+  ctx.font = `${VOICE_WGHT} ${size}px "${family}"`;
   ctx.letterSpacing = `${TRACK * size}px`;
   for (const l of lines) {
     const chars = Array.from(l);
@@ -128,7 +141,7 @@ function wrap(text: string, maxChars: number) {
   return out;
 }
 
-function useMetrics(lines: string[]) {
+function useMetrics(lines: string[], family: string) {
   const key = lines.join("\n");
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("mono-voice: measuring"));
@@ -137,12 +150,12 @@ function useMetrics(lines: string[]) {
     let live = true;
     Promise.all([
       inter.waitUntilDone(),
-      document.fonts.load(`${VOICE_WGHT} 100px "${inter.fontFamily}"`),
+      document.fonts.load(`${VOICE_WGHT} 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measure(key.split("\n")) });
+        setState({ key: key + family, m: measure(key.split("\n"), family) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -151,25 +164,48 @@ function useMetrics(lines: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
-  return state && state.key === key ? state.m : null;
+  }, [key, family, handle]);
+  return state && state.key === key + family ? state.m : null;
 }
 
 const mix = (a: string, b: string, u: number) =>
   `color-mix(in oklab, ${a} ${((1 - u) * 100).toFixed(1)}%, ${b})`;
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function MonoVoice({
   text = "Same script.\nA whole new\ndelivery.",
   highlight = "delivery.",
+  voiceAt = VOICE_AT,
+  stagger = RISE_GAP,
   accent,
+  ink,
   background,
+  fontFamily = inter.fontFamily,
+  scale: zoom = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: MonoVoiceProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
   const spot = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const portrait = H > W * 1.1;
   const measureW = W * (portrait ? 0.84 : 0.8);
 
@@ -182,7 +218,7 @@ export function MonoVoice({
     const maxChars = portrait ? 14 : 24;
     return longest > maxChars ? wrap(text, maxChars) : paras;
   }, [text, portrait]);
-  const m = useMetrics(lines);
+  const m = useMetrics(lines, fontFamily);
 
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
@@ -224,7 +260,7 @@ export function MonoVoice({
   );
   const refit = interpolate(
     t,
-    [VOICE_AT + VOICE_SPAN * 0.45, VOICE_AT + VOICE_SPAN + 16],
+    [voiceAt + VOICE_SPAN * 0.45, voiceAt + VOICE_SPAN + 16],
     [0, 1],
     { ...CLAMP, easing: Easing.bezier(0.45, 0, 0.2, 1) },
   );
@@ -252,7 +288,7 @@ export function MonoVoice({
   const nodes = m.lines.flatMap((line, li) => {
     const rise = interpolate(
       t,
-      [RISE_AT + li * RISE_GAP, RISE_AT + li * RISE_GAP + RISE_LEN],
+      [RISE_AT + li * stagger, RISE_AT + li * stagger + RISE_LEN],
       [0, 1],
       { ...CLAMP, easing: EASE_OUT },
     );
@@ -274,7 +310,7 @@ export function MonoVoice({
     return line.chars.map((ch, i) => {
       const idx = gi++;
       const u = spring({
-        frame: t - VOICE_AT - idx * gap,
+        frame: t - voiceAt - idx * gap,
         fps,
         config: { damping: 14, stiffness: 160, mass: 0.7 },
       });
@@ -289,7 +325,7 @@ export function MonoVoice({
       const lift = Math.sin(Math.PI * uc) * -0.05 * Fl;
       const squeeze = Math.min(1, (CELL * 0.9) / Math.max(0.01, adv));
       const sx = squeeze + (1 - squeeze) * uc;
-      const color = hi ? mix(c.flat, spot, uc) : mix(c.flat, c.ink, uc);
+      const color = hi ? mix(c.flat, spot, uc) : mix(c.flat, fg, uc);
       return (
         <div
           key={`${li}-${i}`}
@@ -302,7 +338,7 @@ export function MonoVoice({
             lineHeight: `${Fl}px`,
             textAlign: "center",
             whiteSpace: "pre",
-            fontFamily: inter.fontFamily,
+            fontFamily,
             fontSize: Fl,
             fontVariationSettings: `"wght" ${wght.toFixed(1)}`,
             color,
@@ -318,7 +354,7 @@ export function MonoVoice({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={zoom}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

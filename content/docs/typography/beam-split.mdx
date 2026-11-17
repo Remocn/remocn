@@ -70,6 +70,52 @@ A bold title rises, a thin beam draws across its middle and pushes the halves ap
       description: "Accent color (any valid CSS color)",
     },
     {
+      name: "innerColor",
+      type: "string",
+      default: "\"#f4f7ff\"",
+      description: "Color of the italic line inside the gap.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Bricolage Grotesque\"",
+      description: "Typeface for the title. Load the font in your project first.",
+    },
+    {
+      name: "hold",
+      type: "number",
+      default: "32",
+      description: "Frames the gap stays wide open before it narrows.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
       name: "theme",
       type: "\"dark\" | \"light\"",
       default: "\"dark\"",

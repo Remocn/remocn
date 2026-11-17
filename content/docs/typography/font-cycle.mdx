@@ -83,10 +83,50 @@ The word swaps through the `fonts` list for `passes` rounds, starting fast and s
       description: "Show each font's name under the word.",
     },
     {
+      name: "beat",
+      type: "number",
+      default: "3",
+      description: "Frames each face shows at full pace; the start and end of the cycle stretch from it.",
+    },
+    {
+      name: "guides",
+      type: "boolean",
+      default: "true",
+      description: "Show the baseline and cap-height guides behind the word.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Color of the label dot once the word lands.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "theme",

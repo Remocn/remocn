@@ -87,6 +87,17 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Text colour; overrides the theme default.",
     },
     {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Hanken Grotesk\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
       name: "theme",
       type: "\"dark\" | \"light\"",
       default: "\"dark\"",
@@ -115,16 +126,45 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Frame at which the burst starts; the logo and caption shift with it.",
     },
     {
+      name: "stagger",
+      type: "number",
+      default: "4",
+      description: "Frames between one word bursting and the next.",
+    },
+    {
       name: "showLogo",
       type: "boolean",
       default: "true",
       description: "Show the Remocn logo and caption after the burst.",
     },
     {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
+    },
+    {
       name: "seed",
       type: "number",
       default: "3",
       description: "Number that changes the random card layout.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
     },
   ]}
 />

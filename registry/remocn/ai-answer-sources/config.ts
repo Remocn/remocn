@@ -1,8 +1,25 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const aiAnswerSourcesConfig: ComponentConfig = {
   componentName: "AiAnswerSources",
   importPath: "@/components/remocn/ai-answer-sources",
+  lists: {
+    related: {
+      default: [
+        "How long should a launch video be?",
+        "Which scenes work best for a SaaS demo?",
+        "Can I render launch videos in CI?",
+      ],
+      description: "Related questions",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -12,11 +29,6 @@ export const aiAnswerSourcesConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     query: {
       type: "text-content",
@@ -28,6 +40,28 @@ export const aiAnswerSourcesConfig: ComponentConfig = {
       default: "sift",
       description: "Brand",
     },
+    placeholder: {
+      type: "text-content",
+      default: "Ask anything",
+      description: "Search placeholder",
+    },
+    searchLabel: {
+      type: "text-content",
+      default: "Searching the web",
+      description: "Search step label",
+    },
+    followUpPlaceholder: {
+      type: "text-content",
+      default: "Ask a follow-up",
+      description: "Follow-up placeholder",
+    },
+    accent: {
+      type: "color",
+      default: "#20808D",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Geist" }),
     speed: {
       type: "number",
       default: 1,

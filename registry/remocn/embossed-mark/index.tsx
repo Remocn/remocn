@@ -33,6 +33,22 @@ export interface EmbossedMarkProps {
   /** Letters printed after the mark. With the default R this completes "Remocn". */
   name?: string;
   accent?: string;
+  /** Frames between letters of `name` as they print. */
+  stagger?: number;
+  /** Depth of the deboss and press; 1 is the default relief. */
+  relief?: number;
+  /** Color of the name; overrides the theme ink. */
+  ink?: string;
+  /** Paper fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the name. Load it yourself; Manrope (the logo face) by default. */
+  fontFamily?: string;
+  /** Size of the lockup, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -162,16 +178,43 @@ function ReliefFilter({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function EmbossedMark({
   logo,
   name = "emocn",
   accent = "#3B5BFD",
+  stagger = 3,
+  relief = 1,
+  ink,
+  background,
+  fontFamily = manrope.fontFamily,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: EmbossedMarkProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const p = THEMES[theme];
+  const fg = ink ?? p.ink;
+  const paper =
+    background === "transparent" ? "transparent" : (background ?? p.paper);
   const u = height / 720;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const debId = `deb${uid}`;
@@ -190,7 +233,7 @@ export function EmbossedMark({
   const lx = Math.cos(az);
   const ly = Math.sin(az);
   const elev = interpolate(sweep, [0, 1], [10, 34]);
-  const depth = interpolate(elev, [10, 34], [7.5, 3.6]) * u;
+  const depth = interpolate(elev, [10, 34], [7.5, 3.6]) * u * relief;
   const blur = interpolate(elev, [10, 34], [2.6, 1.8]) * u;
 
   // Camera: starts centred on the mark, eases out to centre the lockup.
@@ -204,7 +247,7 @@ export function EmbossedMark({
   const sheen = 0.18 + 0.5 * sweep;
   const letters = [...name];
   const letterIn = (i: number) =>
-    interpolate(t, [80 + i * 3, 90 + i * 3], [0, 1], {
+    interpolate(t, [80 + i * stagger, 90 + i * stagger], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -220,7 +263,7 @@ export function EmbossedMark({
   } as const;
 
   return (
-    <AbsoluteFill style={{ background: p.paper, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: paper, overflow: "hidden" }}>
       <svg width={0} height={0} style={{ position: "absolute" }} aria-hidden>
         <defs>
           <ReliefFilter
@@ -274,104 +317,106 @@ export function EmbossedMark({
           </linearGradient>
         </defs>
       </svg>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
-            position: "relative",
+            position: "absolute",
+            inset: 0,
             display: "flex",
-            alignItems: "baseline",
-            fontFamily: manrope.fontFamily,
-            fontWeight: 600,
-            fontSize,
-            lineHeight: 1,
-            letterSpacing: "-0.025em",
-            color: p.ink,
-            transformOrigin: `${markW / 2}px 50%`,
-            transform: `translateX(${camX}) scale(${zoom})`,
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          <div style={{ ...huge, background: p.paper }} />
           <div
             style={{
               position: "relative",
-              flex: "none",
-              width: markW,
-              height: markH,
+              display: "flex",
+              alignItems: "baseline",
+              fontFamily,
+              fontWeight: 600,
+              fontSize,
+              lineHeight: 1,
+              letterSpacing: "-0.025em",
+              color: fg,
+              transformOrigin: `${markW / 2}px 50%`,
+              transform: `translateX(${camX}) scale(${zoom})`,
             }}
           >
+            <div style={{ ...huge, background: paper }} />
             <div
               style={{
-                position: "absolute",
-                inset: 0,
-                filter: `url(#${debId})`,
+                position: "relative",
+                flex: "none",
+                width: markW,
+                height: markH,
               }}
             >
-              {logo ?? (
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  filter: `url(#${debId})`,
+                }}
+              >
+                {logo ?? (
+                  <svg
+                    width={markW}
+                    height={markH}
+                    viewBox={`0 0 ${R_W} ${R_H}`}
+                    style={{ display: "block" }}
+                    aria-hidden
+                  >
+                    <path d={REMOCN_R_PATH} fill="#000" />
+                  </svg>
+                )}
+              </div>
+              {logo ? null : (
                 <svg
                   width={markW}
                   height={markH}
                   viewBox={`0 0 ${R_W} ${R_H}`}
-                  style={{ display: "block" }}
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    display: "block",
+                    overflow: "visible",
+                    filter: `url(#${pressId})`,
+                    opacity: foil * p.foil,
+                  }}
                   aria-hidden
                 >
-                  <path d={REMOCN_R_PATH} fill="#000" />
+                  <path d={REMOCN_R_PATH} fill={`url(#${foilId})`} />
                 </svg>
               )}
             </div>
-            {logo ? null : (
-              <svg
-                width={markW}
-                height={markH}
-                viewBox={`0 0 ${R_W} ${R_H}`}
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  display: "block",
-                  overflow: "visible",
-                  filter: `url(#${pressId})`,
-                  opacity: foil * p.foil,
-                }}
-                aria-hidden
-              >
-                <path d={REMOCN_R_PATH} fill={`url(#${foilId})`} />
-              </svg>
-            )}
+            <div
+              style={{
+                position: "relative",
+                marginLeft: "0.04em",
+                whiteSpace: "pre",
+                filter: `url(#${pressId})`,
+              }}
+            >
+              {letters.map((ch, i) => (
+                <span key={`${ch}${i}`} style={{ opacity: letterIn(i) }}>
+                  {ch}
+                </span>
+              ))}
+            </div>
+            <svg
+              style={{
+                ...huge,
+                opacity: p.tooth,
+                mixBlendMode: "soft-light",
+                pointerEvents: "none",
+              }}
+              aria-hidden
+            >
+              <rect width="100%" height="100%" filter={`url(#${toothId})`} />
+            </svg>
           </div>
-          <div
-            style={{
-              position: "relative",
-              marginLeft: "0.04em",
-              whiteSpace: "pre",
-              filter: `url(#${pressId})`,
-            }}
-          >
-            {letters.map((ch, i) => (
-              <span key={`${ch}${i}`} style={{ opacity: letterIn(i) }}>
-                {ch}
-              </span>
-            ))}
-          </div>
-          <svg
-            style={{
-              ...huge,
-              opacity: p.tooth,
-              mixBlendMode: "soft-light",
-              pointerEvents: "none",
-            }}
-            aria-hidden
-          >
-            <rect width="100%" height="100%" filter={`url(#${toothId})`} />
-          </svg>
         </div>
-      </div>
+      </ScaleLayer>
       <div
         style={{
           position: "absolute",
@@ -386,7 +431,7 @@ export function EmbossedMark({
           background: `radial-gradient(ellipse 90% 120% at ${poolX}% ${poolY}%, rgba(0,0,0,0) 45%, ${p.falloff} 100%)`,
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

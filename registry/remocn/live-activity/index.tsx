@@ -15,7 +15,7 @@ import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const hanken = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -36,7 +36,21 @@ export interface LiveActivityStatus {
 export interface LiveActivityProps {
   status?: LiveActivityStatus;
   date?: string;
+  /** Clock in the status bar and on the Lock Screen. */
+  time?: string;
+  /** Word under the countdown on the activity card. */
+  remainingLabel?: string;
   accent?: string;
+  /** Color of the headline lines; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Size of the phone and lines, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "light" | "dark";
   ground?: GshPresetId;
@@ -643,6 +657,7 @@ function ActivityBody({
   track,
   glyph,
   compactTop,
+  remainingLabel,
 }: {
   s: ActivityState;
   status: LiveActivityStatus;
@@ -652,6 +667,7 @@ function ActivityBody({
   track: string;
   glyph: string;
   compactTop: boolean;
+  remainingLabel: string;
 }) {
   const title = s.done > 0.5 ? status.doneTitle : status.title;
   const detail = s.done > 0.5 ? status.doneDetail : s.detail;
@@ -702,7 +718,7 @@ function ActivityBody({
               }}
             />
             <div style={{ fontSize: 12, color: muted, marginTop: 3 }}>
-              remaining
+              {remainingLabel}
             </div>
           </div>
           {s.done > 0 ? (
@@ -808,19 +824,43 @@ function ActivityBody({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function LiveActivity({
   status = LIVE_ACTIVITY_RENDER,
   date = "Tuesday, October 24",
+  time = "9:41",
+  remainingLabel = "remaining",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = hanken.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
   ground,
   groundParams,
 }: LiveActivityProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay);
   const { fps, width, height } = useVideoConfig();
   const f = frame * speed;
   const c: Palette = theme === "light" ? LIGHT : DARK;
+  const fg = ink ?? c.copy;
   const tall = height > width;
   const k = (height * (tall ? 0.66 : 0.92)) / BH;
   const phoneCx = tall ? width / 2 : width * 0.7;
@@ -974,320 +1014,338 @@ export function LiveActivity({
 
   return (
     <AbsoluteFill
-      style={{ fontFamily, overflow: "hidden", background: c.stage }}
+      style={{
+        fontFamily,
+        overflow: "hidden",
+        background: background === undefined ? c.stage : undefined,
+      }}
     >
-      <GshGround
-        preset={ground ?? (theme === "light" ? "glasswork" : "earthshine")}
-        params={groundParams}
-        timeOffset={theme === "light" ? 3 : 6}
-        timeScale={0.3}
-      />
-      <AbsoluteFill style={{ background: c.scrim }} />
-      <div
-        style={{
-          position: "absolute",
-          left: tall ? width * 0.08 : width * 0.075,
-          top: tall ? height * 0.075 : height * 0.5 - height * 0.12,
-          width: tall ? width * 0.84 : width * 0.38,
-          height: tall ? height * 0.12 : height * 0.24,
-          overflow: "hidden",
-        }}
-      >
-        {lines.slice(0, LINE_AT.length).map((line, i) => {
-          const at = LINE_AT[i];
-          const next = LINE_AT[i + 1] ?? 100000;
-          const pin = i === 0 ? rise : tween(f, at, at + 12);
-          const pout = tween(f, next - 7, next, exitE);
-          if (f < at - 1 || f > next + 1) return null;
-          return (
-            <div
-              key={line}
-              style={{
-                position: "absolute",
-                inset: 0,
-                display: "flex",
-                alignItems: tall ? "flex-start" : "center",
-                fontSize: tall ? height * 0.04 : height * 0.085,
-                fontWeight: 300,
-                lineHeight: 1.04,
-                letterSpacing: "-0.035em",
-                color: c.copy,
-                textWrap: "balance",
-                transform: `translateY(${(1 - pin) * 70 - pout * 50}%)`,
-                opacity: pin * (1 - pout),
-              }}
-            >
-              {line}
-            </div>
-          );
-        })}
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: BW,
-          height: BH,
-          transformOrigin: "0 0",
-          transform: `translate(${phoneCx - (BW / 2) * S}px, ${height * camTy - camFy * S + (1 - rise) * height}px) scale(${S})`,
-          WebkitFontSmoothing: "antialiased",
-        }}
-      >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? (theme === "light" ? "glasswork" : "earthshine")}
+            params={groundParams}
+            timeOffset={theme === "light" ? 3 : 6}
+            timeScale={0.3}
+          />
+          <AbsoluteFill style={{ background: c.scrim }} />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            borderRadius: 67,
-            boxShadow: c.phoneShadow,
+            left: tall ? width * 0.08 : width * 0.075,
+            top: tall ? height * 0.075 : height * 0.5 - height * 0.12,
+            width: tall ? width * 0.84 : width * 0.38,
+            height: tall ? height * 0.12 : height * 0.24,
+            overflow: "hidden",
           }}
-        />
-        <Frame>
-          <HomeScreen c={c} accent={accent} />
+        >
+          {lines.slice(0, LINE_AT.length).map((line, i) => {
+            const at = LINE_AT[i];
+            const next = LINE_AT[i + 1] ?? 100000;
+            const pin = i === 0 ? rise : tween(f, at, at + 12);
+            const pout = tween(f, next - 7, next, exitE);
+            if (f < at - 1 || f > next + 1) return null;
+            return (
+              <div
+                key={line}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  display: "flex",
+                  alignItems: tall ? "flex-start" : "center",
+                  fontSize: tall ? height * 0.04 : height * 0.085,
+                  fontWeight: 300,
+                  lineHeight: 1.04,
+                  letterSpacing: "-0.035em",
+                  color: fg,
+                  textWrap: "balance",
+                  transform: `translateY(${(1 - pin) * 70 - pout * 50}%)`,
+                  opacity: pin * (1 - pout),
+                }}
+              >
+                {line}
+              </div>
+            );
+          })}
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: BW,
+            height: BH,
+            transformOrigin: "0 0",
+            transform: `translate(${phoneCx - (BW / 2) * S}px, ${height * camTy - camFy * S + (1 - rise) * height}px) scale(${S})`,
+            WebkitFontSmoothing: "antialiased",
+          }}
+        >
           <div
             style={{
               position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 54,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "4px 24px 0 44px",
-              color: "#ffffff",
-              zIndex: 5,
+              inset: 0,
+              borderRadius: 67,
+              boxShadow: c.phoneShadow,
             }}
-          >
-            <span style={{ fontSize: 17, fontWeight: 400 }}>9:41</span>
-            <StatusIcons color="#ffffff" />
-          </div>
-          {cover > 0 ? (
+          />
+          <Frame>
+            <HomeScreen c={c} accent={accent} />
             <div
               style={{
                 position: "absolute",
-                inset: 0,
-                transform: `translateY(${-(1 - cover) * SH}px)`,
-                zIndex: 10,
-                overflow: "hidden",
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 54,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "4px 24px 0 44px",
+                color: "#ffffff",
+                zIndex: 5,
               }}
             >
-              <Wallpaper c={c} />
+              <span style={{ fontSize: 17, fontWeight: 400 }}>{time}</span>
+              <StatusIcons color="#ffffff" />
+            </div>
+            {cover > 0 ? (
               <div
                 style={{
                   position: "absolute",
-                  top: 0,
-                  right: 30,
-                  height: 54,
-                  paddingTop: 4,
-                  display: "flex",
-                  alignItems: "center",
+                  inset: 0,
+                  transform: `translateY(${-(1 - cover) * SH}px)`,
+                  zIndex: 10,
+                  overflow: "hidden",
                 }}
               >
-                <StatusIcons color="#ffffff" />
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  top: 92,
-                  left: 0,
-                  right: 0,
-                  textAlign: "center",
-                  color: "rgba(255,255,255,0.92)",
-                }}
-              >
-                <div style={{ fontSize: 20, fontWeight: 400 }}>{date}</div>
+                <Wallpaper c={c} />
                 <div
-                  style={{
-                    fontSize: 104,
-                    fontWeight: 300,
-                    letterSpacing: "-0.03em",
-                    lineHeight: 1,
-                    marginTop: 4,
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  9:41
-                </div>
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  left: 12,
-                  right: 12,
-                  top: CARD_Y,
-                  padding: "16px 18px 14px",
-                  borderRadius: 26,
-                  background: c.card,
-                  backdropFilter: "blur(24px) saturate(1.4)",
-                  opacity: cardIn,
-                  transform: `translateY(${(1 - cardIn) * 14}px) scale(${0.97 + cardIn * 0.03})`,
-                }}
-              >
-                <ActivityBody
-                  s={act}
-                  status={status}
-                  accent={accent}
-                  text={c.cardText}
-                  muted={c.cardMuted}
-                  track={c.cardTrack}
-                  glyph={glyph}
-                  compactTop={false}
-                />
-              </div>
-              {[PATH.torch, PATH.camera].map((d, i) => (
-                <div
-                  key={d}
                   style={{
                     position: "absolute",
-                    bottom: 50,
-                    left: i ? SW - 46 - 50 : 46,
-                    width: 50,
-                    height: 50,
-                    borderRadius: 25,
-                    background: c.button,
-                    backdropFilter: "blur(16px)",
+                    top: 0,
+                    right: 30,
+                    height: 54,
+                    paddingTop: 4,
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
                   }}
                 >
-                  <Glyph d={d} size={22} color="#ffffff" sw={1.7} />
+                  <StatusIcons color="#ffffff" />
                 </div>
-              ))}
-            </div>
-          ) : null}
-          <div
-            style={{
-              position: "absolute",
-              top: ISL_TOP,
-              left: (SW - islW) / 2,
-              width: islW,
-              height: islH,
-              borderRadius: islR,
-              background: "#000",
-              zIndex: 40,
-              overflow: "hidden",
-              transform: `scale(${pressScale})`,
-              transformOrigin: "50% 0",
-              boxShadow: m > 0.02 ? "0 10px 30px rgba(0,0,0,0.28)" : "none",
-            }}
-          >
-            {compactOp > 0 ? (
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  top: 0,
-                  height: ISL_H,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "0 10px 0 8px",
-                  opacity: compactOp,
-                  filter: `blur(${(1 - compactOp) * 4}px)`,
-                }}
-              >
-                <div style={{ paddingLeft: 4 }}>
-                  <Glyph d={glyph} size={18} color={accent} sw={1.75} />
-                </div>
-                {done > 0 ? (
-                  <Glyph d={PATH.check} size={20} color={accent} sw={2} />
-                ) : (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 92,
+                    left: 0,
+                    right: 0,
+                    textAlign: "center",
+                    color: "rgba(255,255,255,0.92)",
+                  }}
+                >
+                  <div style={{ fontSize: 20, fontWeight: 400 }}>{date}</div>
                   <div
-                    style={{ display: "flex", alignItems: "center", gap: 7 }}
+                    style={{
+                      fontSize: 104,
+                      fontWeight: 300,
+                      letterSpacing: "-0.03em",
+                      lineHeight: 1,
+                      marginTop: 4,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
                   >
-                    <Ticker
-                      value={timeText}
-                      prev={prevText}
-                      since={act.sinceTick}
-                      style={{ fontSize: 15, color: accent }}
-                    />
-                    <svg width={18} height={18} viewBox="0 0 18 18">
-                      <circle
-                        cx={9}
-                        cy={9}
-                        r={7}
-                        fill="none"
-                        stroke="rgba(255,255,255,0.18)"
-                        strokeWidth={2.2}
-                      />
-                      <circle
-                        cx={9}
-                        cy={9}
-                        r={7}
-                        fill="none"
-                        stroke={accent}
-                        strokeWidth={2.2}
-                        strokeLinecap="round"
-                        pathLength={1}
-                        strokeDasharray={`${progress} 1`}
-                        transform="rotate(-90 9 9)"
-                      />
-                    </svg>
+                    {time}
                   </div>
-                )}
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 12,
+                    right: 12,
+                    top: CARD_Y,
+                    padding: "16px 18px 14px",
+                    borderRadius: 26,
+                    background: c.card,
+                    backdropFilter: "blur(24px) saturate(1.4)",
+                    opacity: cardIn,
+                    transform: `translateY(${(1 - cardIn) * 14}px) scale(${0.97 + cardIn * 0.03})`,
+                  }}
+                >
+                  <ActivityBody
+                    s={act}
+                    status={status}
+                    accent={accent}
+                    text={c.cardText}
+                    muted={c.cardMuted}
+                    track={c.cardTrack}
+                    glyph={glyph}
+                    compactTop={false}
+                    remainingLabel={remainingLabel}
+                  />
+                </div>
+                {[PATH.torch, PATH.camera].map((d, i) => (
+                  <div
+                    key={d}
+                    style={{
+                      position: "absolute",
+                      bottom: 50,
+                      left: i ? SW - 46 - 50 : 46,
+                      width: 50,
+                      height: 50,
+                      borderRadius: 25,
+                      background: c.button,
+                      backdropFilter: "blur(16px)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Glyph d={d} size={22} color="#ffffff" sw={1.7} />
+                  </div>
+                ))}
               </div>
             ) : null}
-            {expandOp > 0 ? (
-              <div
-                style={{
-                  position: "absolute",
-                  left: (islW - EXP_W) / 2,
-                  top: 0,
-                  width: EXP_W,
-                  height: EXP_H,
-                  padding: "18px 22px 0",
-                  opacity: expandOp,
-                  filter: `blur(${(1 - expandOp) * 3}px)`,
-                  transform: `scale(${(islW / EXP_W) * (0.96 + expandOp * 0.04)})`,
-                  transformOrigin: "50% 0",
-                }}
-              >
-                <ActivityBody
-                  s={act}
-                  status={status}
-                  accent={accent}
-                  text="#f5f5f7"
-                  muted="rgba(235,235,245,0.6)"
-                  track="rgba(255,255,255,0.16)"
-                  glyph={glyph}
-                  compactTop
-                />
-              </div>
-            ) : null}
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              bottom: 8,
-              left: (SW - 136) / 2,
-              width: 136,
-              height: 5,
-              borderRadius: 3,
-              background: "#ffffff",
-              zIndex: 40,
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              left: touch.x - 22,
-              top: touch.y - 22,
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              background: "rgba(255,255,255,0.22)",
-              border: "1.5px solid rgba(255,255,255,0.8)",
-              boxShadow: "0 2px 10px rgba(0,0,0,0.25)",
-              opacity: touchOpacity,
-              transform: `scale(${1 - down * 0.14})`,
-              zIndex: 45,
-            }}
-          />
-        </Frame>
-      </div>
+            <div
+              style={{
+                position: "absolute",
+                top: ISL_TOP,
+                left: (SW - islW) / 2,
+                width: islW,
+                height: islH,
+                borderRadius: islR,
+                background: "#000",
+                zIndex: 40,
+                overflow: "hidden",
+                transform: `scale(${pressScale})`,
+                transformOrigin: "50% 0",
+                boxShadow: m > 0.02 ? "0 10px 30px rgba(0,0,0,0.28)" : "none",
+              }}
+            >
+              {compactOp > 0 ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    height: ISL_H,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "0 10px 0 8px",
+                    opacity: compactOp,
+                    filter: `blur(${(1 - compactOp) * 4}px)`,
+                  }}
+                >
+                  <div style={{ paddingLeft: 4 }}>
+                    <Glyph d={glyph} size={18} color={accent} sw={1.75} />
+                  </div>
+                  {done > 0 ? (
+                    <Glyph d={PATH.check} size={20} color={accent} sw={2} />
+                  ) : (
+                    <div
+                      style={{ display: "flex", alignItems: "center", gap: 7 }}
+                    >
+                      <Ticker
+                        value={timeText}
+                        prev={prevText}
+                        since={act.sinceTick}
+                        style={{ fontSize: 15, color: accent }}
+                      />
+                      <svg width={18} height={18} viewBox="0 0 18 18">
+                        <circle
+                          cx={9}
+                          cy={9}
+                          r={7}
+                          fill="none"
+                          stroke="rgba(255,255,255,0.18)"
+                          strokeWidth={2.2}
+                        />
+                        <circle
+                          cx={9}
+                          cy={9}
+                          r={7}
+                          fill="none"
+                          stroke={accent}
+                          strokeWidth={2.2}
+                          strokeLinecap="round"
+                          pathLength={1}
+                          strokeDasharray={`${progress} 1`}
+                          transform="rotate(-90 9 9)"
+                        />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              ) : null}
+              {expandOp > 0 ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: (islW - EXP_W) / 2,
+                    top: 0,
+                    width: EXP_W,
+                    height: EXP_H,
+                    padding: "18px 22px 0",
+                    opacity: expandOp,
+                    filter: `blur(${(1 - expandOp) * 3}px)`,
+                    transform: `scale(${(islW / EXP_W) * (0.96 + expandOp * 0.04)})`,
+                    transformOrigin: "50% 0",
+                  }}
+                >
+                  <ActivityBody
+                    s={act}
+                    status={status}
+                    accent={accent}
+                    text="#f5f5f7"
+                    muted="rgba(235,235,245,0.6)"
+                    track="rgba(255,255,255,0.16)"
+                    glyph={glyph}
+                    compactTop
+                    remainingLabel={remainingLabel}
+                  />
+                </div>
+              ) : null}
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                bottom: 8,
+                left: (SW - 136) / 2,
+                width: 136,
+                height: 5,
+                borderRadius: 3,
+                background: "#ffffff",
+                zIndex: 40,
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                left: touch.x - 22,
+                top: touch.y - 22,
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                background: "rgba(255,255,255,0.22)",
+                border: "1.5px solid rgba(255,255,255,0.8)",
+                boxShadow: "0 2px 10px rgba(0,0,0,0.25)",
+                opacity: touchOpacity,
+                transform: `scale(${1 - down * 0.14})`,
+                zIndex: 45,
+              }}
+            />
+          </Frame>
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

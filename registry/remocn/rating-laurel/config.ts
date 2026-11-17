@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const ratingLaurelConfig: ComponentConfig = {
   componentName: "RatingLaurel",
@@ -13,11 +20,6 @@ export const ratingLaurelConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     title: {
       type: "text-content",
       default: "Loved by builders",
@@ -28,6 +30,16 @@ export const ratingLaurelConfig: ComponentConfig = {
       default:
         "remocn is in the **top 5%** of launch tools, based on ratings, reviews, and reliability",
       description: "Subtitle",
+    },
+    ctaLabel: {
+      type: "text-content",
+      default: "Install",
+      description: "Button label",
+    },
+    priceLabel: {
+      type: "text-content",
+      default: "Free",
+      description: "Price",
     },
     device: {
       type: "enum",
@@ -56,6 +68,13 @@ export const ratingLaurelConfig: ComponentConfig = {
       description: "Review count",
       hiddenFromList: false,
     },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Hanken Grotesk" }),
     speed: {
       type: "number",
       default: 1,

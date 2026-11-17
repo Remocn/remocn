@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const flowArrowConfig: ComponentConfig = {
   componentName: "FlowArrow",
@@ -13,11 +19,6 @@ export const flowArrowConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     metric: {
       type: "text-content",
       default: "3×",
@@ -28,6 +29,30 @@ export const flowArrowConfig: ComponentConfig = {
       default: "faster growth",
       description: "Label",
     },
+    fontWeight: {
+      type: "number",
+      default: 400,
+      min: 300,
+      max: 700,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    flight: {
+      type: "number",
+      default: 32,
+      min: 12,
+      max: 60,
+      step: 1,
+      description: "Flight (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Space Grotesk", grain: true }),
     speed: {
       type: "number",
       default: 1,

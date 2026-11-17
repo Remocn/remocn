@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const tallyMarksConfig: ComponentConfig = {
   componentName: "TallyMarks",
@@ -12,11 +18,6 @@ export const tallyMarksConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     label: {
       type: "text-content",
@@ -50,6 +51,30 @@ export const tallyMarksConfig: ComponentConfig = {
       description: "Groups per row",
       hiddenFromList: false,
     },
+    strokeWidth: {
+      type: "number",
+      default: 9,
+      min: 2,
+      max: 20,
+      step: 1,
+      description: "Stroke width",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 2,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Digit stagger",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Fraunces", grain: true }),
     speed: {
       type: "number",
       default: 1,

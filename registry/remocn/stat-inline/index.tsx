@@ -2,6 +2,7 @@
 
 import { loadFont as loadGeist } from "@remotion/google-fonts/Geist";
 import { loadFont as loadGeistMono } from "@remotion/google-fonts/GeistMono";
+import type React from "react";
 import { useEffect, useId, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -24,8 +25,20 @@ export interface StatInlineProps {
   text?: string;
   label?: string;
   align?: "left" | "center";
+  /** Frames the number holds alone before it flies into the sentence. */
+  hold?: number;
+  /** Frames the number takes to fly into its slot. */
+  moveDuration?: number;
   accent?: string;
+  /** Text color of the sentence; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the number and the sentence. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the number and sentence, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -94,7 +107,11 @@ interface Metrics {
   valueTextW: number;
 }
 
-function useMetrics(units: Seg[][], value: string): Metrics {
+function useMetrics(
+  units: Seg[][],
+  value: string,
+  fontFamily: string,
+): Metrics {
   const key = `${value}\u0002${units
     .map((u) => u.map((s) => `${s.value ? 1 : 0}${s.text}`).join("\u0003"))
     .join("\u0001")}`;
@@ -115,8 +132,8 @@ function useMetrics(units: Seg[][], value: string): Metrics {
 
   useEffect(() => {
     let live = true;
-    const f400 = `400 100px "${geist.fontFamily}"`;
-    const f500 = `500 100px "${geist.fontFamily}"`;
+    const f400 = `400 100px "${fontFamily}"`;
+    const f500 = `500 100px "${fontFamily}"`;
     Promise.all([
       geist.waitUntilDone(),
       document.fonts.load(f400),
@@ -164,7 +181,7 @@ function useMetrics(units: Seg[][], value: string): Metrics {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily]);
 
   return m && m.key === key ? m : estimate();
 }
@@ -204,23 +221,45 @@ function balance(w: number[], space: number, lines: number) {
   return { rows, widest: best[lines][n], rowW };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function StatInline({
   value = "12,480",
   text = "Builders shipped {value} launch videos with remocn this year.",
   label = "Launch videos shipped",
   align = "left",
+  hold = 52,
+  moveDuration = 28,
   accent = "#3B5BFD",
+  ink,
   background,
+  fontFamily = geist.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: StatInlineProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const t = THEMES[theme];
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const units = parse(text, value);
-  const m = useMetrics(units, value);
+  const m = useMetrics(units, value, fontFamily);
   const unitW = m.seg.map((s) => s.reduce((a, b) => a + b, 0));
   const valueUnit = units.findIndex((u) => u.some((s) => s.value));
 
@@ -272,8 +311,8 @@ export function StatInline({
   const heroBase = H / 2 + (0.72 * heroFs) / 2 - (label ? labelGap : 0) / 2;
   const heroX = (W - m.valueW * heroFs) / 2;
 
-  const MOVE = 52;
-  const MOVE_LEN = 28;
+  const MOVE = hold;
+  const MOVE_LEN = moveDuration;
   const mv = interpolate(frame, [MOVE, MOVE + MOVE_LEN], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
@@ -342,119 +381,121 @@ export function StatInline({
           }}
         />
       )}
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <linearGradient
-            id={`${id}-fill`}
-            gradientUnits="userSpaceOnUse"
-            x1={0}
-            y1={-0.78 * B}
-            x2={vw * B}
-            y2={0.1 * B}
-          >
-            <stop offset="0" stopColor={stops[0]} />
-            <stop offset={0.32 + 0.06 * drift} stopColor={stops[1]} />
-            <stop offset={0.7 + 0.04 * drift} stopColor={stops[2]} />
-            <stop offset="1" stopColor={stops[3]} />
-          </linearGradient>
-          {chars.map((c, i) => (
-            <clipPath
-              key={`${c}-${i}`}
-              id={`${id}-g${i}`}
-              clipPathUnits="userSpaceOnUse"
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            <linearGradient
+              id={`${id}-fill`}
+              gradientUnits="userSpaceOnUse"
+              x1={0}
+              y1={-0.78 * B}
+              x2={vw * B}
+              y2={0.1 * B}
             >
-              <rect
-                x={(m.glyphX[i] * spread - 0.1) * B}
-                y={-0.86 * B}
-                width={((m.glyphX[i + 1] ?? vw) - m.glyphX[i] + 0.2) * B}
-                height={1.12 * B}
-              />
-            </clipPath>
-          ))}
-        </defs>
-
-        <g transform={`translate(${ox} ${oy}) scale(${k})`}>
-          {chars.map((c, i) => (
-            <g key={`${c}-${i}`} clipPath={`url(#${id}-g${i})`}>
-              <text
-                x={m.glyphX[i] * spread * B}
-                y={glyphRise(i) * 1.05 * B}
-                fontSize={B}
-                fill={`url(#${id}-fill)`}
-                style={{ fontFamily: geist.fontFamily, fontWeight: 500 }}
+              <stop offset="0" stopColor={stops[0]} />
+              <stop offset={0.32 + 0.06 * drift} stopColor={stops[1]} />
+              <stop offset={0.7 + 0.04 * drift} stopColor={stops[2]} />
+              <stop offset="1" stopColor={stops[3]} />
+            </linearGradient>
+            {chars.map((c, i) => (
+              <clipPath
+                key={`${c}-${i}`}
+                id={`${id}-g${i}`}
+                clipPathUnits="userSpaceOnUse"
               >
-                {c}
-              </text>
-            </g>
-          ))}
-        </g>
-
-        {label ? (
-          <text
-            x={W / 2}
-            y={heroBase + labelGap + (1 - labelIn) * labelFs * 0.6}
-            fontSize={labelFs}
-            fill={t.label}
-            opacity={labelIn * labelOut}
-            textAnchor="middle"
-            style={{
-              fontFamily: mono.fontFamily,
-              fontWeight: 400,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-            }}
-          >
-            {label}
-          </text>
-        ) : null}
-
-        {units.map((u, i) => {
-          const p = placed[i];
-          const r = wordRise(i);
-          let x = p.x;
-          return (
-            <g key={i}>
-              <clipPath id={`${id}-w${i}`} clipPathUnits="userSpaceOnUse">
                 <rect
-                  x={p.x - fs * 0.1}
-                  y={p.y - fs * 0.98}
-                  width={(unitW[i] + 0.2) * fs}
-                  height={fs * 1.3}
+                  x={(m.glyphX[i] * spread - 0.1) * B}
+                  y={-0.86 * B}
+                  width={((m.glyphX[i + 1] ?? vw) - m.glyphX[i] + 0.2) * B}
+                  height={1.12 * B}
                 />
               </clipPath>
-              <g clipPath={`url(#${id}-w${i})`}>
-                {u.map((s, j) => {
-                  const sx = x;
-                  x += m.seg[i][j] * fs;
-                  if (s.value) return null;
-                  return (
-                    <text
-                      key={j}
-                      x={sx}
-                      y={p.y + r * fs * 1.05}
-                      fontSize={fs}
-                      fill={t.fg}
-                      style={{
-                        fontFamily: geist.fontFamily,
-                        fontWeight: 400,
-                        letterSpacing: `${TRACK_TEXT}em`,
-                      }}
-                    >
-                      {s.text}
-                    </text>
-                  );
-                })}
+            ))}
+          </defs>
+
+          <g transform={`translate(${ox} ${oy}) scale(${k})`}>
+            {chars.map((c, i) => (
+              <g key={`${c}-${i}`} clipPath={`url(#${id}-g${i})`}>
+                <text
+                  x={m.glyphX[i] * spread * B}
+                  y={glyphRise(i) * 1.05 * B}
+                  fontSize={B}
+                  fill={`url(#${id}-fill)`}
+                  style={{ fontFamily, fontWeight: 500 }}
+                >
+                  {c}
+                </text>
               </g>
-            </g>
-          );
-        })}
-      </svg>
+            ))}
+          </g>
+
+          {label ? (
+            <text
+              x={W / 2}
+              y={heroBase + labelGap + (1 - labelIn) * labelFs * 0.6}
+              fontSize={labelFs}
+              fill={t.label}
+              opacity={labelIn * labelOut}
+              textAnchor="middle"
+              style={{
+                fontFamily: mono.fontFamily,
+                fontWeight: 400,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}
+            >
+              {label}
+            </text>
+          ) : null}
+
+          {units.map((u, i) => {
+            const p = placed[i];
+            const r = wordRise(i);
+            let x = p.x;
+            return (
+              <g key={i}>
+                <clipPath id={`${id}-w${i}`} clipPathUnits="userSpaceOnUse">
+                  <rect
+                    x={p.x - fs * 0.1}
+                    y={p.y - fs * 0.98}
+                    width={(unitW[i] + 0.2) * fs}
+                    height={fs * 1.3}
+                  />
+                </clipPath>
+                <g clipPath={`url(#${id}-w${i})`}>
+                  {u.map((s, j) => {
+                    const sx = x;
+                    x += m.seg[i][j] * fs;
+                    if (s.value) return null;
+                    return (
+                      <text
+                        key={j}
+                        x={sx}
+                        y={p.y + r * fs * 1.05}
+                        fontSize={fs}
+                        fill={ink ?? t.fg}
+                        style={{
+                          fontFamily,
+                          fontWeight: 400,
+                          letterSpacing: `${TRACK_TEXT}em`,
+                        }}
+                      >
+                        {s.text}
+                      </text>
+                    );
+                  })}
+                </g>
+              </g>
+            );
+          })}
+        </svg>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

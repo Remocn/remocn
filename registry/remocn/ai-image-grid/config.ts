@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const aiImageGridConfig: ComponentConfig = {
   componentName: "AiImageGrid",
@@ -13,11 +20,6 @@ export const aiImageGridConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     prompt: {
       type: "text-content",
       default: "isometric glass city at sunrise, soft light",
@@ -27,6 +29,16 @@ export const aiImageGridConfig: ComponentConfig = {
       type: "text-content",
       default: "remocn Image 2",
       description: "Model",
+    },
+    placeholder: {
+      type: "text-content",
+      default: "Describe an image",
+      description: "Prompt placeholder",
+    },
+    downloadLabel: {
+      type: "text-content",
+      default: "Download",
+      description: "Download label",
     },
     layout: {
       type: "enum",
@@ -46,6 +58,22 @@ export const aiImageGridConfig: ComponentConfig = {
       description: "Pick",
       hiddenFromList: false,
     },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Tile stagger",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Figtree" }),
     speed: {
       type: "number",
       default: 1,

@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont as loadFigtree } from "@remotion/google-fonts/Figtree";
+import type React from "react";
 import type { CSSProperties } from "react";
 import {
   AbsoluteFill,
@@ -98,8 +99,39 @@ export interface ToolbarUnfurlProps {
   accent?: string;
   lines?: string[];
   finalLine?: string;
+  /** Weight of the captions. */
+  fontWeight?: number;
+  /** Show the cursor that clicks through the tools. */
+  cursor?: boolean;
+  /** Text color of the captions; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the captions. Load it yourself; Figtree by default. */
+  fontFamily?: string;
+  /** Size of the foreground around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function ToolbarUnfurl({
@@ -112,10 +144,18 @@ export function ToolbarUnfurl({
     "Select any layer.",
   ],
   finalLine = "Every tool, one tap away.",
+  fontWeight = 300,
+  cursor = true,
+  ink,
+  background,
+  fontFamily = figtree.fontFamily,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   ground,
   groundParams,
 }: ToolbarUnfurlProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
@@ -123,7 +163,7 @@ export function ToolbarUnfurl({
   const stageH = portrait ? 1920 : 720;
   const sc = width / stageW;
 
-  const ink = dark ? "#f2f3f7" : "#13151b";
+  const fg = ink ?? (dark ? "#f2f3f7" : "#13151b");
   const iconIdle = dark ? "rgba(236,238,245,0.82)" : "rgba(20,22,30,0.78)";
   const pillBg = dark ? "rgba(22,23,28,0.84)" : "rgba(255,255,255,0.9)";
   const pillShadow = dark
@@ -287,177 +327,217 @@ export function ToolbarUnfurl({
   const discColor = accent;
 
   return (
-    <AbsoluteFill
-      style={{ fontFamily: figtree.fontFamily, overflow: "hidden" }}
-    >
-      <GshGround
-        preset={resolvedGround}
-        params={groundParams}
-        timeOffset={dark ? 9 : 5}
-        timeScale={0.45}
-        style={
-          portrait
-            ? { transform: "scaleY(1.55)", transformOrigin: "50% 0%" }
-            : undefined
-        }
-      />
-      <AbsoluteFill
-        style={{
-          background: dark
-            ? "linear-gradient(180deg, rgba(8,9,12,0.62) 0%, rgba(8,9,12,0.42) 55%, rgba(8,9,12,0.3) 100%)"
-            : "linear-gradient(180deg, rgba(248,248,250,0.5) 0%, rgba(248,248,250,0.15) 70%, rgba(248,248,250,0) 100%)",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: stageW,
-          height: stageH,
-          transform: `scale(${sc})`,
-          transformOrigin: "0 0",
-        }}
-      >
+    <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={resolvedGround}
+            params={groundParams}
+            timeOffset={dark ? 9 : 5}
+            timeScale={0.45}
+            style={
+              portrait
+                ? { transform: "scaleY(1.55)", transformOrigin: "50% 0%" }
+                : undefined
+            }
+          />
+          <AbsoluteFill
+            style={{
+              background: dark
+                ? "linear-gradient(180deg, rgba(8,9,12,0.62) 0%, rgba(8,9,12,0.42) 55%, rgba(8,9,12,0.3) 100%)"
+                : "linear-gradient(180deg, rgba(248,248,250,0.5) 0%, rgba(248,248,250,0.15) 70%, rgba(248,248,250,0) 100%)",
+            }}
+          />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transform: `scale(${push}) translateY(${groupY}px)`,
-            transformOrigin: `50% ${(centerY / stageH) * 100}%`,
+            left: 0,
+            top: 0,
+            width: stageW,
+            height: stageH,
+            transform: `scale(${sc})`,
+            transformOrigin: "0 0",
           }}
         >
           <div
             style={{
               position: "absolute",
               inset: 0,
-              transform: `translateX(${-extra / 2}px) scale(${fold})`,
-              transformOrigin: `${centerX}px ${centerY}px`,
+              transform: `scale(${push}) translateY(${groupY}px)`,
+              transformOrigin: `50% ${(centerY / stageH) * 100}%`,
             }}
           >
             <div
               style={{
                 position: "absolute",
-                ...pillStyle,
-                borderRadius: outerR,
-                background: pillBg,
-                boxShadow: pillShadow,
-                backdropFilter: "blur(24px)",
-                transform: `scale(${mix(0.55, 1, pop) * punchS})`,
-                opacity: ramp(frame, B.pop, 6, LIGHT),
+                inset: 0,
+                transform: `translateX(${-extra / 2}px) scale(${fold})`,
+                transformOrigin: `${centerX}px ${centerY}px`,
               }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                left: centerX - disc / 2,
-                top: centerY - disc / 2,
-                width: disc,
-                height: disc,
-                borderRadius: discR,
-                background: discColor,
-                boxShadow: `inset 0 1px 0 rgba(255,255,255,0.22), 0 1px 2px rgba(0,0,0,${dark ? 0.35 : 0.14})`,
-                transform: `${along(discPos)} scale(${stretch * discIn * punchS}, ${squash * discIn * punchS})`,
-                opacity: Math.min(1, discIn * 1.4),
-              }}
-            />
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  ...pillStyle,
+                  borderRadius: outerR,
+                  background: pillBg,
+                  boxShadow: pillShadow,
+                  backdropFilter: "blur(24px)",
+                  transform: `scale(${mix(0.55, 1, pop) * punchS})`,
+                  opacity: ramp(frame, B.pop, 6, LIGHT),
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  left: centerX - disc / 2,
+                  top: centerY - disc / 2,
+                  width: disc,
+                  height: disc,
+                  borderRadius: discR,
+                  background: discColor,
+                  boxShadow: `inset 0 1px 0 rgba(255,255,255,0.22), 0 1px 2px rgba(0,0,0,${dark ? 0.35 : 0.14})`,
+                  transform: `${along(discPos)} scale(${stretch * discIn * punchS}, ${squash * discIn * punchS})`,
+                  opacity: Math.min(1, discIn * 1.4),
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  width: stageW,
+                  height: stageH,
+                  clipPath: `inset(0 ${stageW - centerX - pillLen / 2 + 2}px 0 ${centerX - pillLen / 2 + 2}px round ${outerR}px)`,
+                }}
+              >
+                {ORDER.map((id, i) => {
+                  const near = Math.max(
+                    0,
+                    1 -
+                      Math.abs((retract > 0 ? 0 : discSlot) - i) *
+                        (retract > 0 ? 99 : 1.6),
+                  );
+                  const lit = (retract > 0 ? (i === 0 ? 1 : 0) : near) * discIn;
+                  const c = interpolateColors(
+                    lit,
+                    [0, 1],
+                    [iconIdle, "#ffffff"],
+                  );
+                  const hit =
+                    last - i < clicks.length ? pressAt(clicks[last - i]) : 0;
+                  return (
+                    <div
+                      key={id}
+                      style={{
+                        position: "absolute",
+                        left: centerX - slot / 2,
+                        top: centerY - slot / 2,
+                        width: slot,
+                        height: slot,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        transform: `${along(pos(i))} scale(${mix(0.55, 1, pop) * (1 - 0.04 * hit)})`,
+                        opacity: toolPresence(i),
+                        zIndex: i === last ? 2 : 1,
+                      }}
+                    >
+                      <ToolIcon id={id} size={iconSize} color={c} />
+                    </div>
+                  );
+                })}
+              </div>
+              {caretIn > 0 ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: centerX + pillLen / 2 - pad,
+                    top: centerY - slot / 2,
+                    width: caretW,
+                    height: slot,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    opacity: caretIn,
+                    transform: `translateY(${mix(-6, 0, caretIn)}px) scale(${punchS})`,
+                  }}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    width={iconSize * 0.72}
+                    height={iconSize * 0.72}
+                    style={{ display: "block" }}
+                    aria-hidden
+                  >
+                    <path
+                      d="M7 10l5 5 5-5"
+                      fill="none"
+                      stroke={iconIdle}
+                      strokeWidth={1.8}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+              ) : null}
+            </div>
             <div
               style={{
                 position: "absolute",
                 left: 0,
-                top: 0,
-                width: stageW,
-                height: stageH,
-                clipPath: `inset(0 ${stageW - centerX - pillLen / 2 + 2}px 0 ${centerX - pillLen / 2 + 2}px round ${outerR}px)`,
+                right: 0,
+                top: captionTop,
+                height: capSize * (portrait ? 2.5 : 1.3),
+                textAlign: "center",
+                fontSize: capSize,
+                fontWeight,
+                letterSpacing: "-0.035em",
+                lineHeight: 1.15,
+                textWrap: "balance",
+                color: fg,
               }}
             >
-              {ORDER.map((id, i) => {
-                const near = Math.max(
-                  0,
-                  1 -
-                    Math.abs((retract > 0 ? 0 : discSlot) - i) *
-                      (retract > 0 ? 99 : 1.6),
-                );
-                const lit = (retract > 0 ? (i === 0 ? 1 : 0) : near) * discIn;
-                const c = interpolateColors(lit, [0, 1], [iconIdle, "#ffffff"]);
-                const hit =
-                  last - i < clicks.length ? pressAt(clicks[last - i]) : 0;
-                return (
+              {capItems.map((c) =>
+                c.enter > 0 && c.exit < 1 ? (
                   <div
-                    key={id}
+                    key={c.key}
                     style={{
                       position: "absolute",
-                      left: centerX - slot / 2,
-                      top: centerY - slot / 2,
-                      width: slot,
-                      height: slot,
+                      inset: 0,
+                      overflow: "hidden",
+                      padding: portrait ? "0 80px 0.12em" : "0 0 0.12em",
                       display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      transform: `${along(pos(i))} scale(${mix(0.55, 1, pop) * (1 - 0.04 * hit)})`,
-                      opacity: toolPresence(i),
-                      zIndex: i === last ? 2 : 1,
+                      flexDirection: "column",
+                      justifyContent: portrait ? "flex-end" : "flex-start",
                     }}
                   >
-                    <ToolIcon id={id} size={iconSize} color={c} />
+                    <div
+                      style={{
+                        transform: `translateY(${mix(105, 0, c.enter) - 110 * c.exit}%)`,
+                        filter:
+                          c.enter < 1 || c.exit > 0
+                            ? `blur(${(1 - c.enter) * 6 + c.exit * 6}px)`
+                            : undefined,
+                        opacity: 1 - c.exit,
+                      }}
+                    >
+                      {c.text}
+                    </div>
                   </div>
-                );
-              })}
-            </div>
-            {caretIn > 0 ? (
-              <div
-                style={{
-                  position: "absolute",
-                  left: centerX + pillLen / 2 - pad,
-                  top: centerY - slot / 2,
-                  width: caretW,
-                  height: slot,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  opacity: caretIn,
-                  transform: `translateY(${mix(-6, 0, caretIn)}px) scale(${punchS})`,
-                }}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  width={iconSize * 0.72}
-                  height={iconSize * 0.72}
-                  style={{ display: "block" }}
-                  aria-hidden
-                >
-                  <path
-                    d="M7 10l5 5 5-5"
-                    fill="none"
-                    stroke={iconIdle}
-                    strokeWidth={1.8}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-            ) : null}
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              top: captionTop,
-              height: capSize * (portrait ? 2.5 : 1.3),
-              textAlign: "center",
-              fontSize: capSize,
-              fontWeight: 300,
-              letterSpacing: "-0.035em",
-              lineHeight: 1.15,
-              textWrap: "balance",
-              color: ink,
-            }}
-          >
-            {capItems.map((c) =>
-              c.enter > 0 && c.exit < 1 ? (
+                ) : null,
+              )}
+              {finalEnter > 0 ? (
                 <div
-                  key={c.key}
                   style={{
                     position: "absolute",
                     inset: 0,
@@ -470,76 +550,52 @@ export function ToolbarUnfurl({
                 >
                   <div
                     style={{
-                      transform: `translateY(${mix(105, 0, c.enter) - 110 * c.exit}%)`,
+                      transform: `translateY(${mix(100, 0, finalEnter)}%)`,
                       filter:
-                        c.enter < 1 || c.exit > 0
-                          ? `blur(${(1 - c.enter) * 6 + c.exit * 6}px)`
+                        finalEnter < 1
+                          ? `blur(${(1 - finalEnter) * 6}px)`
                           : undefined,
-                      opacity: 1 - c.exit,
                     }}
                   >
-                    {c.text}
+                    {finalLine}
                   </div>
                 </div>
-              ) : null,
-            )}
-            {finalEnter > 0 ? (
+              ) : null}
+            </div>
+            {cursor ? (
               <div
                 style={{
                   position: "absolute",
-                  inset: 0,
-                  overflow: "hidden",
-                  padding: portrait ? "0 80px 0.12em" : "0 0 0.12em",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: portrait ? "flex-end" : "flex-start",
+                  left: cx - 6,
+                  top: cy - 4,
+                  opacity: cursorFade * ramp(frame, -4, 6, LIGHT),
+                  transform: `scale(${1 - 0.04 * press})`,
+                  transformOrigin: "20% 15%",
                 }}
               >
-                <div
+                <svg
+                  viewBox="0 0 24 24"
+                  width={portrait ? 56 : 30}
+                  height={portrait ? 56 : 30}
                   style={{
-                    transform: `translateY(${mix(100, 0, finalEnter)}%)`,
-                    filter:
-                      finalEnter < 1
-                        ? `blur(${(1 - finalEnter) * 6}px)`
-                        : undefined,
+                    display: "block",
+                    filter: "drop-shadow(0 3px 5px rgba(0,0,0,0.35))",
                   }}
+                  aria-hidden
                 >
-                  {finalLine}
-                </div>
+                  <path
+                    d="M5 3.2v15.6l4.3-4.1 2.7 6.1 2.6-1.1-2.7-6h6z"
+                    fill="#0d0f10"
+                    stroke="#fff"
+                    strokeWidth={1.4}
+                    strokeLinejoin="round"
+                  />
+                </svg>
               </div>
             ) : null}
           </div>
-          <div
-            style={{
-              position: "absolute",
-              left: cx - 6,
-              top: cy - 4,
-              opacity: cursorFade * ramp(frame, -4, 6, LIGHT),
-              transform: `scale(${1 - 0.04 * press})`,
-              transformOrigin: "20% 15%",
-            }}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              width={portrait ? 56 : 30}
-              height={portrait ? 56 : 30}
-              style={{
-                display: "block",
-                filter: "drop-shadow(0 3px 5px rgba(0,0,0,0.35))",
-              }}
-              aria-hidden
-            >
-              <path
-                d="M5 3.2v15.6l4.3-4.1 2.7 6.1 2.6-1.1-2.7-6h6z"
-                fill="#0d0f10"
-                stroke="#fff"
-                strokeWidth={1.4}
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

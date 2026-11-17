@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const snapClickConfig: ComponentConfig = {
   componentName: "SnapClick",
@@ -13,11 +19,6 @@ export const snapClickConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     text: {
       type: "text-content",
       default: "emocn",
@@ -28,6 +29,21 @@ export const snapClickConfig: ComponentConfig = {
       default: "Animations for Remotion",
       description: "Label",
     },
+    click: {
+      type: "number",
+      default: 13,
+      min: 4,
+      max: 40,
+      step: 1,
+      description: "Snap (frame)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ grain: true }),
     speed: {
       type: "number",
       default: 1,

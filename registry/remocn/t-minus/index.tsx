@@ -31,6 +31,20 @@ export interface TMinusProps {
   status?: string;
   /** Live pip and the small accent marks. */
   accent?: string;
+  /** Text color of the count, title and readouts; overrides the theme. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the count, title and subtitle. Load it yourself; IBM Plex Mono by default. The telemetry stays mono. */
+  fontFamily?: string;
+  /** Strength of the ignition bloom; 0 hides it. */
+  bloom?: number;
+  /** White hit at T–0. */
+  flash?: boolean;
+  /** Size of the count, title and telemetry, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -182,6 +196,22 @@ function RollChar({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function TMinus({
   from = 10,
   beat = 8,
@@ -190,12 +220,21 @@ export function TMinus({
   stage = "Stage 1",
   status = "Go",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = mono,
+  bloom: bloomK = 1,
+  flash = true,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: TMinusProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const u = Math.min(W / 1280, H / 720);
 
   const start = Math.max(1, Math.floor(from));
@@ -279,7 +318,7 @@ export function TMinus({
     fontVariantNumeric: "tabular-nums",
   };
   const value: React.CSSProperties = {
-    color: c.ink,
+    color: fg,
     fontWeight: 500,
   };
 
@@ -289,6 +328,7 @@ export function TMinus({
     ].join(", ");
   const bloomSize = interpolate(fire, [0, 1], [26, 100]) + breathe * 4;
   const bloomOp =
+    bloomK *
     c.bloomOp *
     (lifted || t >= zeroAt
       ? interpolate(fire, [0, 0.4, 1], [0.6, 1, 0.92])
@@ -297,7 +337,9 @@ export function TMinus({
   const blink = Math.floor(t / 12) % 2 === 0 ? 1 : 0.3;
 
   return (
-    <AbsoluteFill style={{ background: c.stage, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{ background: background ?? c.stage, overflow: "hidden" }}
+    >
       {/* Pre-ignition warmth. */}
       <div
         style={{
@@ -316,204 +358,206 @@ export function TMinus({
           opacity: bloomOp,
         }}
       />
-      <Grain opacity={c.grain} />
+      {grain ? <Grain opacity={c.grain} /> : null}
 
-      {/* Corner telemetry. */}
-      <div
-        style={{
-          ...label,
-          position: "absolute",
-          left: margin,
-          top: margin - 8 * u,
-          opacity: boot(t, 2),
-        }}
-      >
-        <div>{stage}</div>
-        <div>
-          Vehicle <span style={value}>{lifted ? "Ascent" : "Pad 39"}</span>
-        </div>
-      </div>
-      <div
-        style={{
-          ...label,
-          position: "absolute",
-          right: margin,
-          top: margin - 8 * u,
-          textAlign: "right",
-          opacity: boot(t, 4),
-        }}
-      >
+      <ScaleLayer scale={scale}>
+        {/* Corner telemetry. */}
         <div
           style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-end",
-            gap: 10 * u,
+            ...label,
+            position: "absolute",
+            left: margin,
+            top: margin - 8 * u,
+            opacity: boot(t, 2),
+          }}
+        >
+          <div>{stage}</div>
+          <div>
+            Vehicle <span style={value}>{lifted ? "Ascent" : "Pad 39"}</span>
+          </div>
+        </div>
+        <div
+          style={{
+            ...label,
+            position: "absolute",
+            right: margin,
+            top: margin - 8 * u,
+            textAlign: "right",
+            opacity: boot(t, 4),
           }}
         >
           <div
             style={{
-              width: 8 * u,
-              height: 8 * u,
-              background: accent,
-              opacity: lifted ? 1 : blink,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-end",
+              gap: 10 * u,
             }}
-          />
-          Status <span style={value}>{status}</span>
+          >
+            <div
+              style={{
+                width: 8 * u,
+                height: 8 * u,
+                background: accent,
+                opacity: lifted ? 1 : blink,
+              }}
+            />
+            Status <span style={value}>{status}</span>
+          </div>
+          <div>
+            Range <span style={value}>{lifted ? "Clear" : "Green"}</span>
+          </div>
         </div>
-        <div>
-          Range <span style={value}>{lifted ? "Clear" : "Green"}</span>
-        </div>
-      </div>
-      <div
-        style={{
-          ...label,
-          position: "absolute",
-          left: margin,
-          bottom: margin - 8 * u,
-          opacity: boot(t, 6),
-        }}
-      >
-        {lifted ? (
-          <>
-            <div>
-              Speed <span style={value}>{kmh}</span> km/h
-            </div>
-            <div>
-              Alt <span style={value}>{alt}</span> km
-            </div>
-          </>
-        ) : (
-          <>
-            <div>
-              LOX <span style={value}>{lox}</span>%
-            </div>
-            <div>
-              RP-1 <span style={value}>{rp1}</span>%
-            </div>
-          </>
-        )}
-      </div>
-      <div
-        style={{
-          ...label,
-          position: "absolute",
-          right: margin,
-          bottom: margin - 8 * u,
-          textAlign: "right",
-          opacity: boot(t, 8),
-        }}
-      >
-        <div>
-          Tank press <span style={value}>{press}</span> bar
-        </div>
-        <div>
-          Engines <span style={value}>{t >= zeroAt ? "9 / 9" : "Chill"}</span>
-        </div>
-      </div>
-
-      {/* Small clock. */}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: clockY,
-          display: "flex",
-          justifyContent: "center",
-          fontFamily: mono,
-          fontWeight: 400,
-          fontSize: clockFs,
-          lineHeight: 1.1,
-          letterSpacing: "0.06em",
-          color: lifted ? c.ink : c.dim,
-          fontVariantNumeric: "tabular-nums",
-          opacity: intro,
-        }}
-      >
-        {clock.split("").map((ch, i) => (
-          <RollChar key={i} prev={prevClock[i] ?? ch} next={ch} p={rollP} />
-        ))}
-      </div>
-
-      {/* The big number, hard cut per second. */}
-      {!lifted ? (
         <div
           style={{
+            ...label,
             position: "absolute",
-            left: 0,
-            right: 0,
-            top: numCY - numFs / 2,
-            height: numFs,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            fontFamily: mono,
-            fontWeight: 500,
-            fontSize: numFs,
-            lineHeight: 1,
-            letterSpacing: "-0.05em",
-            fontVariantNumeric: "tabular-nums",
-            whiteSpace: "nowrap",
-            transform: `translateY(${(1 - intro) * 40 * u}px) scale(${numScale})`,
-            opacity: intro,
+            left: margin,
+            bottom: margin - 8 * u,
+            opacity: boot(t, 6),
           }}
         >
-          <span style={{ color: c.faint }}>T–</span>
-          <span style={{ color: c.ink }}>{n}</span>
+          {lifted ? (
+            <>
+              <div>
+                Speed <span style={value}>{kmh}</span> km/h
+              </div>
+              <div>
+                Alt <span style={value}>{alt}</span> km
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                LOX <span style={value}>{lox}</span>%
+              </div>
+              <div>
+                RP-1 <span style={value}>{rp1}</span>%
+              </div>
+            </>
+          )}
         </div>
-      ) : null}
+        <div
+          style={{
+            ...label,
+            position: "absolute",
+            right: margin,
+            bottom: margin - 8 * u,
+            textAlign: "right",
+            opacity: boot(t, 8),
+          }}
+        >
+          <div>
+            Tank press <span style={value}>{press}</span> bar
+          </div>
+          <div>
+            Engines <span style={value}>{t >= zeroAt ? "9 / 9" : "Chill"}</span>
+          </div>
+        </div>
 
-      {/* LIFTOFF. */}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: titleCY - titleFs / 2,
-          height: titleFs,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          fontFamily: mono,
-          fontWeight: 500,
-          fontSize: titleFs,
-          lineHeight: 1,
-          letterSpacing: "-0.04em",
-          textTransform: "uppercase",
-          whiteSpace: "nowrap",
-          color: c.title,
-          opacity: lifted ? ramp(titleIn, 0, 0.2) : 0,
-          transform: `scale(${(1.24 - 0.24 * titleIn) * (1 + 0.02 * titleHit)})`,
-        }}
-      >
-        {title}
-      </div>
-      {subtitle ? (
+        {/* Small clock. */}
         <div
           style={{
             position: "absolute",
             left: 0,
             right: 0,
-            top: titleCY + titleFs * 0.5 + 18 * u,
+            top: clockY,
             display: "flex",
             justifyContent: "center",
             fontFamily: mono,
             fontWeight: 400,
-            fontSize: 30 * u,
-            letterSpacing: "0.02em",
-            color: c.ink,
-            whiteSpace: "nowrap",
-            opacity: subIn,
-            transform: `translateY(${(1 - subIn) * 24 * u}px)`,
+            fontSize: clockFs,
+            lineHeight: 1.1,
+            letterSpacing: "0.06em",
+            color: lifted ? fg : c.dim,
+            fontVariantNumeric: "tabular-nums",
+            opacity: intro,
           }}
         >
-          {subtitle}
+          {clock.split("").map((ch, i) => (
+            <RollChar key={i} prev={prevClock[i] ?? ch} next={ch} p={rollP} />
+          ))}
         </div>
-      ) : null}
+
+        {/* The big number, hard cut per second. */}
+        {!lifted ? (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: numCY - numFs / 2,
+              height: numFs,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              fontFamily,
+              fontWeight: 500,
+              fontSize: numFs,
+              lineHeight: 1,
+              letterSpacing: "-0.05em",
+              fontVariantNumeric: "tabular-nums",
+              whiteSpace: "nowrap",
+              transform: `translateY(${(1 - intro) * 40 * u}px) scale(${numScale})`,
+              opacity: intro,
+            }}
+          >
+            <span style={{ color: c.faint }}>T–</span>
+            <span style={{ color: fg }}>{n}</span>
+          </div>
+        ) : null}
+
+        {/* LIFTOFF. */}
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: titleCY - titleFs / 2,
+            height: titleFs,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            fontFamily,
+            fontWeight: 500,
+            fontSize: titleFs,
+            lineHeight: 1,
+            letterSpacing: "-0.04em",
+            textTransform: "uppercase",
+            whiteSpace: "nowrap",
+            color: ink ?? c.title,
+            opacity: lifted ? ramp(titleIn, 0, 0.2) : 0,
+            transform: `scale(${(1.24 - 0.24 * titleIn) * (1 + 0.02 * titleHit)})`,
+          }}
+        >
+          {title}
+        </div>
+        {subtitle ? (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: titleCY + titleFs * 0.5 + 18 * u,
+              display: "flex",
+              justifyContent: "center",
+              fontFamily,
+              fontWeight: 400,
+              fontSize: 30 * u,
+              letterSpacing: "0.02em",
+              color: fg,
+              whiteSpace: "nowrap",
+              opacity: subIn,
+              transform: `translateY(${(1 - subIn) * 24 * u}px)`,
+            }}
+          >
+            {subtitle}
+          </div>
+        ) : null}
+      </ScaleLayer>
 
       {/* Ignition hit. */}
-      {hit > 0 ? (
+      {flash && hit > 0 ? (
         <div
           style={{
             position: "absolute",

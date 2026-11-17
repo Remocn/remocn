@@ -73,10 +73,50 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Line under the reveal. Empty string hides it.",
     },
     {
+      name: "windup",
+      type: "number",
+      default: "36",
+      description: "Frames of the tease before the crash zoom hits.",
+    },
+    {
+      name: "streaks",
+      type: "number",
+      default: "72",
+      description: "Number of speed lines in the crash.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Schibsted Grotesk\"",
+      description: "Typeface for the reveal. Load the font in your project first.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
       name: "theme",
       type: "\"dark\" | \"light\"",
       default: "\"dark\"",
       description: "Color scheme. Ships dark and light.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

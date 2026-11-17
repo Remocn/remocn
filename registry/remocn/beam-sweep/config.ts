@@ -1,8 +1,23 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const beamSweepConfig: ComponentConfig = {
   componentName: "BeamSweepDemo",
   importPath: "@/components/remocn/beam-sweep",
+  lists: {
+    pageTitle: {
+      default: ["Your next launch,", "already in motion."],
+      description: "Page title",
+      min: 2,
+      max: 2,
+    },
+  },
   controls: {
     theme: {
       type: "text-content",
@@ -18,6 +33,59 @@ export const beamSweepConfig: ComponentConfig = {
       type: "text-content",
       default: "Every scene is cut to your product.",
       description: "Sub",
+    },
+    brand: {
+      type: "text-content",
+      default: "Lumen",
+      description: "Brand",
+    },
+    prompt: {
+      type: "text-content",
+      default: "Make the hero calmer and add the product shots.",
+      description: "Chat prompt",
+    },
+    publishLabel: {
+      type: "text-content",
+      default: "Publish",
+      description: "Button label",
+    },
+    sceneA: {
+      type: "number",
+      default: 66,
+      min: 30,
+      max: 150,
+      step: 1,
+      description: "Scene A (frames)",
+      hiddenFromList: false,
+    },
+    sceneB: {
+      type: "number",
+      default: 72,
+      min: 30,
+      max: 150,
+      step: 1,
+      description: "Scene B (frames)",
+      hiddenFromList: false,
+    },
+    transition: {
+      type: "number",
+      default: 30,
+      min: 10,
+      max: 60,
+      step: 1,
+      description: "Transition (frames)",
+      hiddenFromList: false,
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Hanken Grotesk" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
+      hiddenFromList: false,
     },
   },
   durationInFrames: 108,

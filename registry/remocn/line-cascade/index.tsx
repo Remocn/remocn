@@ -2,7 +2,7 @@
 
 import { loadFont } from "@remotion/google-fonts/HankenGrotesk";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
-import { useId, useMemo } from "react";
+import { Fragment, useId, useMemo } from "react";
 import {
   AbsoluteFill,
   Easing,
@@ -53,6 +53,22 @@ export interface LineCascadeProps {
   value?: string;
   caption?: string;
   accent?: string;
+  /** Text color of the caption, the remocn mark and the rain; overrides the theme. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the caption. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Weight of the caption. */
+  fontWeight?: number;
+  /** Distance between falling lines, in px at 720p. */
+  lineSpacing?: number;
+  /** Replaces the remocn mark in the caption. */
+  logo?: React.ReactNode;
+  grain?: boolean;
+  /** Size of the figure and caption, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -344,17 +360,45 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function LineCascade({
   value = "240",
   caption = "launch films rendered with remocn today",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  fontWeight = 400,
+  lineSpacing = 6.5,
+  logo,
+  grain = true,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: LineCascadeProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
   const stage = THEMES[theme];
+  const fg = ink ?? stage.fg;
+  const bg =
+    background === "transparent" ? "transparent" : (background ?? stage.bg);
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const maskId = `m${uid}`;
   const fluteId = `f${uid}`;
@@ -383,7 +427,7 @@ export function LineCascade({
   const gy = (H - blockH) / 2 + 4 * u;
   const floorY = gy + glyphH;
 
-  const pitch = 6.5 * u;
+  const pitch = lineSpacing * u;
   const slotH = 13 * u;
   const hair = Math.max(1.5, 1.6 * u);
   const gapY = 3 * u;
@@ -501,125 +545,134 @@ export function LineCascade({
   });
 
   return (
-    <AbsoluteFill style={{ background: stage.bg, overflow: "hidden" }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <linearGradient
-            id={fluteId}
-            gradientUnits="userSpaceOnUse"
-            x1={0}
-            x2={0}
-            y1={gy - R * glyphH}
-            y2={floorY + R * glyphH}
-          >
-            {flute.map(([o, c]) => (
-              <stop key={o} offset={o} stopColor={c} />
-            ))}
-          </linearGradient>
-          <linearGradient
-            id={fluteGlyphId}
-            gradientUnits="userSpaceOnUse"
-            x1={0}
-            x2={0}
-            y1={-R}
-            y2={1 + R}
-          >
-            {flute.map(([o, c]) => (
-              <stop key={o} offset={o} stopColor={c} />
-            ))}
-          </linearGradient>
-          <mask
-            id={maskId}
-            maskUnits="userSpaceOnUse"
-            x={0}
-            y={0}
-            width={W}
-            height={H}
-          >
-            <g
-              transform={`translate(${gx} ${gy}) scale(${glyphH})`}
-              fill="none"
-              stroke="#fff"
-              strokeWidth={STROKE}
-              strokeLinecap="round"
-              strokeLinejoin="round"
+    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            <linearGradient
+              id={fluteId}
+              gradientUnits="userSpaceOnUse"
+              x1={0}
+              x2={0}
+              y1={gy - R * glyphH}
+              y2={floorY + R * glyphH}
             >
-              {layout.strokes.map((s, i) => (
-                <path
-                  key={i}
-                  d={`M${s.map((p) => `${p[0]} ${p[1]}`).join("L")}`}
-                />
+              {flute.map(([o, c]) => (
+                <stop key={o} offset={o} stopColor={c} />
               ))}
-            </g>
-          </mask>
-        </defs>
-        <rect
-          x={gx - 0.04 * W}
-          y={floorY + 8 * u}
-          width={(glyphW + 0.08 * W) * floorDraw}
-          height={Math.max(1, u)}
-          fill={stage.floor}
-          opacity={floorFade}
-        />
-        <g fill={stage.fg} opacity={stage.rain * (1 - snap)}>
-          {falling}
-        </g>
-        <g
-          transform={`translate(${gx} ${gy}) scale(${glyphH})`}
-          fill="none"
-          stroke={`url(#${fluteGlyphId})`}
-          strokeWidth={STROKE}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          opacity={solid}
-        >
-          {layout.strokes.map((s, i) => (
-            <path key={i} d={`M${s.map((p) => `${p[0]} ${p[1]}`).join("L")}`} />
-          ))}
-        </g>
-        <g
-          mask={`url(#${maskId})`}
-          fill={`url(#${fluteId})`}
-          opacity={pileOpacity * pileOut}
-        >
-          {landed}
-        </g>
-      </svg>
-      {caption ? (
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: floorY + gapBelow + (1 - capIn) * 10 * u,
-            textAlign: "center",
-            fontFamily: sans,
-            fontWeight: 400,
-            fontSize: capSize,
-            letterSpacing: "-0.005em",
-            lineHeight: 1.3,
-            color: stage.muted,
-            opacity: capIn,
-          }}
-        >
-          {caption
-            .split(/(remocn)/i)
-            .map((part, i) =>
-              /^remocn$/i.test(part) ? (
-                <RemocnLogo key={i} color={stage.fg} />
-              ) : (
-                part
-              ),
-            )}
-        </div>
-      ) : null}
-      <Grain opacity={stage.grain} />
+            </linearGradient>
+            <linearGradient
+              id={fluteGlyphId}
+              gradientUnits="userSpaceOnUse"
+              x1={0}
+              x2={0}
+              y1={-R}
+              y2={1 + R}
+            >
+              {flute.map(([o, c]) => (
+                <stop key={o} offset={o} stopColor={c} />
+              ))}
+            </linearGradient>
+            <mask
+              id={maskId}
+              maskUnits="userSpaceOnUse"
+              x={0}
+              y={0}
+              width={W}
+              height={H}
+            >
+              <g
+                transform={`translate(${gx} ${gy}) scale(${glyphH})`}
+                fill="none"
+                stroke="#fff"
+                strokeWidth={STROKE}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                {layout.strokes.map((s, i) => (
+                  <path
+                    key={i}
+                    d={`M${s.map((p) => `${p[0]} ${p[1]}`).join("L")}`}
+                  />
+                ))}
+              </g>
+            </mask>
+          </defs>
+          <rect
+            x={gx - 0.04 * W}
+            y={floorY + 8 * u}
+            width={(glyphW + 0.08 * W) * floorDraw}
+            height={Math.max(1, u)}
+            fill={stage.floor}
+            opacity={floorFade}
+          />
+          <g fill={fg} opacity={stage.rain * (1 - snap)}>
+            {falling}
+          </g>
+          <g
+            transform={`translate(${gx} ${gy}) scale(${glyphH})`}
+            fill="none"
+            stroke={`url(#${fluteGlyphId})`}
+            strokeWidth={STROKE}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            opacity={solid}
+          >
+            {layout.strokes.map((s, i) => (
+              <path
+                key={i}
+                d={`M${s.map((p) => `${p[0]} ${p[1]}`).join("L")}`}
+              />
+            ))}
+          </g>
+          <g
+            mask={`url(#${maskId})`}
+            fill={`url(#${fluteId})`}
+            opacity={pileOpacity * pileOut}
+          >
+            {landed}
+          </g>
+        </svg>
+        {caption ? (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: floorY + gapBelow + (1 - capIn) * 10 * u,
+              textAlign: "center",
+              fontFamily,
+              fontWeight,
+              fontSize: capSize,
+              letterSpacing: "-0.005em",
+              lineHeight: 1.3,
+              color: ink ?? stage.muted,
+              opacity: capIn,
+            }}
+          >
+            {caption
+              .split(/(remocn)/i)
+              .map((part, i) =>
+                /^remocn$/i.test(part) ? (
+                  logo !== undefined ? (
+                    <Fragment key={i}>{logo}</Fragment>
+                  ) : (
+                    <RemocnLogo key={i} color={fg} />
+                  )
+                ) : (
+                  part
+                ),
+              )}
+          </div>
+        ) : null}
+      </ScaleLayer>
+      {grain ? <Grain opacity={stage.grain} /> : null}
     </AbsoluteFill>
   );
 }

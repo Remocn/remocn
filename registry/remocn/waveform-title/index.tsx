@@ -2,6 +2,7 @@
 
 import { loadFont as loadSans } from "@remotion/google-fonts/InstrumentSans";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
+import type React from "react";
 import { useId } from "react";
 import {
   AbsoluteFill,
@@ -25,6 +26,18 @@ export interface WaveformTitleProps {
   /** How many trailing words are set in the italic serif accent. */
   accentWords?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the title. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Frames between words as the title rises. */
+  stagger?: number;
+  /** Size of the waveform and title, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -129,17 +142,43 @@ function Grain({ opacity }: { opacity: number }) {
 
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function WaveformTitle({
   title = "Your voice, captioned",
   accentWords = 1,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = display,
+  stagger = STAGGER,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: WaveformTitleProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const u = height / 720;
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? p.bg);
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const x0 = width * 0.1;
@@ -193,7 +232,7 @@ export function WaveformTitle({
   const hazeIn = interpolate(t, [0, 30], [0.35, 1], CLAMP);
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <AbsoluteFill
         style={{
           background: `radial-gradient(ellipse ${width * 0.5}px ${height * 0.42}px at ${handoff ? width / 2 : headX}px ${centreY}px, ${p.wash}, transparent 100%)`,
@@ -215,157 +254,159 @@ export function WaveformTitle({
         }}
       />
 
-      {!handoff && (
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
-        >
-          <defs>
-            <linearGradient
-              id={`${id}s`}
-              gradientUnits="userSpaceOnUse"
-              x1={x0}
-              y1={0}
-              x2={x1}
-              y2={0}
-            >
-              {p.line.map((c, i) => (
-                <stop
-                  key={c + i}
-                  offset={i / (p.line.length - 1)}
-                  stopColor={c}
-                />
-              ))}
-            </linearGradient>
-          </defs>
-          <path
-            d={shape(6)}
-            fill="none"
-            stroke={p.fg}
-            strokeWidth={1.2 * u}
-            opacity={p.ghost[1] * (1 - sweep)}
-          />
-          <path
-            d={shape(3)}
-            fill="none"
-            stroke={p.fg}
-            strokeWidth={1.3 * u}
-            opacity={p.ghost[0] * (1 - sweep)}
-          />
-          <path
-            d={shape(0)}
-            fill="none"
-            stroke={`url(#${id}s)`}
-            strokeWidth={lerp(2 * u, stroke, sweep)}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <circle
-            cx={headX}
-            cy={centreY}
-            r={4.5 * u}
-            fill={accent}
-            opacity={headO}
-          />
-        </svg>
-      )}
-
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: 0,
-          height: lineY,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "flex-end",
-        }}
-      >
-        <div style={{ position: "relative", display: "inline-block" }}>
-          <div
-            style={{
-              overflow: "hidden",
-              paddingBottom: 30 * u,
-              paddingTop: 10 * u,
-              maxWidth: span,
-            }}
+      <ScaleLayer scale={scale}>
+        {!handoff && (
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
           >
+            <defs>
+              <linearGradient
+                id={`${id}s`}
+                gradientUnits="userSpaceOnUse"
+                x1={x0}
+                y1={0}
+                x2={x1}
+                y2={0}
+              >
+                {p.line.map((c, i) => (
+                  <stop
+                    key={c + i}
+                    offset={i / (p.line.length - 1)}
+                    stopColor={c}
+                  />
+                ))}
+              </linearGradient>
+            </defs>
+            <path
+              d={shape(6)}
+              fill="none"
+              stroke={fg}
+              strokeWidth={1.2 * u}
+              opacity={p.ghost[1] * (1 - sweep)}
+            />
+            <path
+              d={shape(3)}
+              fill="none"
+              stroke={fg}
+              strokeWidth={1.3 * u}
+              opacity={p.ghost[0] * (1 - sweep)}
+            />
+            <path
+              d={shape(0)}
+              fill="none"
+              stroke={`url(#${id}s)`}
+              strokeWidth={lerp(2 * u, stroke, sweep)}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <circle
+              cx={headX}
+              cy={centreY}
+              r={4.5 * u}
+              fill={accent}
+              opacity={headO}
+            />
+          </svg>
+        )}
+
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: 0,
+            height: lineY,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "flex-end",
+          }}
+        >
+          <div style={{ position: "relative", display: "inline-block" }}>
             <div
               style={{
-                fontFamily: display,
-                fontWeight: 500,
-                fontSize,
-                lineHeight: 1,
-                letterSpacing: "-0.035em",
-                color: p.fg,
-                whiteSpace: "nowrap",
-                textAlign: "center",
+                overflow: "hidden",
+                paddingBottom: 30 * u,
+                paddingTop: 10 * u,
+                maxWidth: span,
               }}
             >
-              {words.map((w, i) => {
-                const k = interpolate(
-                  t,
-                  [RISE + i * STAGGER, RISE + i * STAGGER + 22],
-                  [0, 1],
-                  {
-                    ...CLAMP,
-                    easing: EASE_OUT,
-                  },
-                );
-                const isSerif = i >= serifFrom;
-                return (
-                  <span
-                    key={`${w}-${i}`}
-                    style={{
-                      display: "inline-block",
-                      marginRight: i < words.length - 1 ? "0.22em" : 0,
-                      transform: `translateY(${(1 - k) * fontSize * 1.6}px)`,
-                      ...(isSerif
-                        ? {
-                            fontFamily: serif,
-                            fontStyle: "italic",
-                            fontWeight: 400,
-                            fontSize: "1.12em",
-                            letterSpacing: "-0.02em",
-                            lineHeight: 0.9,
-                          }
-                        : null),
-                    }}
-                  >
-                    {w}
-                  </span>
-                );
-              })}
+              <div
+                style={{
+                  fontFamily,
+                  fontWeight: 500,
+                  fontSize,
+                  lineHeight: 1,
+                  letterSpacing: "-0.035em",
+                  color: fg,
+                  whiteSpace: "nowrap",
+                  textAlign: "center",
+                }}
+              >
+                {words.map((w, i) => {
+                  const k = interpolate(
+                    t,
+                    [RISE + i * stagger, RISE + i * stagger + 22],
+                    [0, 1],
+                    {
+                      ...CLAMP,
+                      easing: EASE_OUT,
+                    },
+                  );
+                  const isSerif = i >= serifFrom;
+                  return (
+                    <span
+                      key={`${w}-${i}`}
+                      style={{
+                        display: "inline-block",
+                        marginRight: i < words.length - 1 ? "0.22em" : 0,
+                        transform: `translateY(${(1 - k) * fontSize * 1.6}px)`,
+                        ...(isSerif
+                          ? {
+                              fontFamily: serif,
+                              fontStyle: "italic",
+                              fontWeight: 400,
+                              fontSize: "1.12em",
+                              letterSpacing: "-0.02em",
+                              lineHeight: 0.9,
+                            }
+                          : null),
+                      }}
+                    >
+                      {w}
+                    </span>
+                  );
+                })}
+              </div>
             </div>
+            {handoff && (
+              <div
+                style={{
+                  position: "absolute",
+                  left: "50%",
+                  bottom: -stroke / 2,
+                  height: stroke,
+                  borderRadius: stroke,
+                  backgroundImage: lineGrad,
+                  width: `calc(${settle * 100}% + ${(1 - settle) * span}px)`,
+                  transform: "translateX(-50%)",
+                }}
+              />
+            )}
           </div>
-          {handoff && (
-            <div
-              style={{
-                position: "absolute",
-                left: "50%",
-                bottom: -stroke / 2,
-                height: stroke,
-                borderRadius: stroke,
-                backgroundImage: lineGrad,
-                width: `calc(${settle * 100}% + ${(1 - settle) * span}px)`,
-                transform: "translateX(-50%)",
-              }}
-            />
-          )}
         </div>
-      </div>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 60%, ${p.bg} 100%)`,
+          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 60%, ${stage} 100%)`,
           opacity: 0.7,
           pointerEvents: "none",
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

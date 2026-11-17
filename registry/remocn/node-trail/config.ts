@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const nodeTrailConfig: ComponentConfig = {
   componentName: "NodeTrail",
@@ -12,6 +19,11 @@ export const nodeTrailConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
+    },
+    prompt: {
+      type: "text-content",
+      default: "A launch film for v2",
+      description: "Prompt",
     },
     placeholder: {
       type: "text-content",
@@ -32,6 +44,41 @@ export const nodeTrailConfig: ComponentConfig = {
       type: "text-content",
       default: "launch-film.flow",
       description: "Board name",
+    },
+    draw: {
+      type: "number",
+      default: 22,
+      min: 10,
+      max: 60,
+      step: 1,
+      description: "Edge draw (frames)",
+      hiddenFromList: false,
+    },
+    pause: {
+      type: "number",
+      default: 10,
+      min: 0,
+      max: 40,
+      step: 1,
+      description: "Node hold (frames)",
+      hiddenFromList: false,
+    },
+    motionBlur: {
+      type: "boolean",
+      default: true,
+      description: "Motion blur",
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ground: groundControl(),
+    ...sceneControls({ font: "Geist" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
+      hiddenFromList: false,
     },
   },
   durationInFrames: 193,

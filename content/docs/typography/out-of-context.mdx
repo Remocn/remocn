@@ -64,14 +64,49 @@ The claim lines fly in, one drops out of alignment and is pulled across the fram
       description: "Closing phrase shown in the accent color",
     },
     {
+      name: "dropAt",
+      type: "number",
+      default: "40",
+      description: "Frame the claim's full stop drops away.",
+    },
+    {
+      name: "pullLen",
+      type: "number",
+      default: "40",
+      description: "Frames of the pull-back that reveals the rest of the line.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Accent color (any valid CSS color)",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Overrides the theme's stage color",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Outfit\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

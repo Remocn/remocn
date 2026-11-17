@@ -66,6 +66,11 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Accent color for edges and highlights.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "catalog",
       type: "Record<string, GraphNodeSpec>",
       default: "DEFAULT_CATALOG",
@@ -90,6 +95,24 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Name tag on the dragging cursor.",
     },
     {
+      name: "hold",
+      type: "number",
+      default: "36",
+      description: "Frames the first layout holds before the first relayout.",
+    },
+    {
+      name: "dots",
+      type: "boolean",
+      default: "true",
+      description: "Dot grid behind the graph.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Geist\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
       name: "ground",
       type: "GshPresetId",
       description: "Gradient shader preset for the background.",
@@ -98,6 +121,29 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "groundParams",
       type: "Partial<GradientParams>",
       description: "Overrides for the shader preset parameters.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
     },
   ]}
 />

@@ -74,6 +74,52 @@ A drop of ink falls onto the page, blooms outward in an organic shape, then thin
       description: "Accent colour for the mark and highlights; any CSS colour.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Fraunces\"",
+      description: "Typeface for the name beside a custom logo. Load the font in your project first.",
+    },
+    {
+      name: "resolveAt",
+      type: "number",
+      default: "100",
+      description: "Frame the lockup starts to condense out of the ink.",
+    },
+    {
+      name: "sink",
+      type: "number",
+      default: "0.33",
+      description: "How far the ink ring sinks, as a share of the frame height.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
+    },
+    {
       name: "speed",
       type: "number",
       default: "1",

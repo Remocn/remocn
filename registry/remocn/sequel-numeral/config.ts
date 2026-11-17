@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const sequelNumeralConfig: ComponentConfig = {
   componentName: "SequelNumeral",
@@ -28,6 +34,21 @@ export const sequelNumeralConfig: ComponentConfig = {
       default: "Part two. Out now.",
       description: "Tagline",
     },
+    hold: {
+      type: "number",
+      default: 32,
+      min: 8,
+      max: 80,
+      step: 2,
+      description: "Superscript hold (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#E60012",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Rubik" }),
     speed: {
       type: "number",
       default: 1,

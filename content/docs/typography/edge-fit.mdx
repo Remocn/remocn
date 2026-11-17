@@ -80,14 +80,43 @@ Each word is fitted to the full frame width and its letters rise in, one word af
       description: "Frames the text holds before the next beat.",
     },
     {
+      name: "fit",
+      type: "number",
+      default: "0.9",
+      description: "Share of the frame width each word fills, edge to edge.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Accent colour (any CSS colour).",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Overrides the theme background colour.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Anton\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

@@ -24,7 +24,7 @@ export const orbitLockConfig: ComponentConfig = {
       hiddenFromList: false,
     },
     coreColor: { type: "color", default: "#E5322D", description: "Core" },
-    moonColor: { type: "color", default: "#FFFFFF", description: "Moons" },
+    moonColor: { type: "color", default: "#FFFFFF", description: "Moon color" },
     flashColor: { type: "color", default: "#FFFFFF", description: "Flash" },
     backgroundColor: {
       type: "color",

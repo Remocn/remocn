@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const lessMoreConfig: ComponentConfig = {
   componentName: "LessMore",
@@ -23,6 +29,26 @@ export const lessMoreConfig: ComponentConfig = {
       default: "More showing.",
       description: "More",
     },
+    swapAt: {
+      type: "number",
+      default: 34,
+      min: 0,
+      max: 90,
+      step: 1,
+      description: "Swap at (frame)",
+      hiddenFromList: false,
+    },
+    fillAt: {
+      type: "number",
+      default: 80,
+      min: 0,
+      max: 120,
+      step: 1,
+      description: "Fill at (frame)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: "#1185FE", description: "Accent" },
+    ...sceneControls({ font: "Figtree" }),
     speed: {
       type: "number",
       default: 1,

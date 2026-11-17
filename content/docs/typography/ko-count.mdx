@@ -69,10 +69,55 @@ Numerals one to ten hard-cut in with tightening gaps, each as a different crop a
       description: "Small label next to the count, bottom left.",
     },
     {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
+    },
+    {
+      name: "hold",
+      type: "number",
+      default: "8",
+      description: "Frames the count holds on ten before the word slams in.",
+    },
+    {
+      name: "shake",
+      type: "number",
+      default: "1",
+      description: "Strength of the camera kick on each hit; 0 holds the frame still.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Color of the count ticks.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Big Shoulders\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "theme",

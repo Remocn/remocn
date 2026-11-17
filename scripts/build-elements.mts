@@ -245,6 +245,8 @@ const IDENT = /^[A-Za-z_$][\w$]*$/;
 
 function serializeSchema(value: unknown, indent: string): string {
   if (value === null) return "null";
+  // A colour with no default is auto: the component takes it from its theme.
+  if (value === undefined) return "undefined";
   if (typeof value === "string") return JSON.stringify(value);
   if (typeof value === "number" || typeof value === "boolean") {
     return String(value);

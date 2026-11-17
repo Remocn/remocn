@@ -79,10 +79,43 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Paired values, one row each: the old way and the new way.",
     },
     {
+      name: "stagger",
+      type: "number",
+      default: "16",
+      description: "Frames between rows.",
+    },
+    {
+      name: "hold",
+      type: "number",
+      default: "24",
+      description: "Frames the last row holds before the after side takes over.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Color of the dot beside the after label.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Bricolage Grotesque\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
     },
     {
       name: "theme",
@@ -99,6 +132,18 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "groundParams",
       type: "Partial<GradientParams>",
       description: "Overrides for the ground shader parameters.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

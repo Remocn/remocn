@@ -55,7 +55,23 @@ export interface LiveDashboardProps {
   payments?: DashboardTick[];
   visitors?: number;
   currency?: string;
+  /** Label over the headline number. */
+  volumeLabel?: string;
+  /** Heading of the payments feed. */
+  feedTitle?: string;
+  /** Words after the live visitor count. */
+  visitorsLabel?: string;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the dashboard, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "light" | "dark";
   ground?: GshPresetId;
@@ -322,6 +338,22 @@ function Sparkline({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function LiveDashboard({
   title = "Today",
   workspace = "Kitebase",
@@ -332,13 +364,21 @@ export function LiveDashboard({
   payments = DEFAULT_PAYMENTS,
   visitors = 128,
   currency = "USD",
+  volumeLabel = "Gross volume",
+  feedTitle = "Payments",
+  visitorsLabel = "on site",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = geist.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "light",
   ground,
   groundParams,
 }: LiveDashboardProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width;
   const W = tall ? 720 : 1280;
@@ -346,6 +386,7 @@ export function LiveDashboard({
   const u = Math.min(width / W, height / H);
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const c = theme === "dark" ? DARK_PAL : LIGHT_PAL;
+  const fg = ink ?? c.text;
 
   const WIN = tall
     ? { x: 32, y: 48, w: 656, h: 1184 }
@@ -484,636 +525,665 @@ export function LiveDashboard({
     <AbsoluteFill
       style={{
         WebkitFontSmoothing: "antialiased",
-        fontFamily: geist.fontFamily,
+        fontFamily,
         overflow: "hidden",
       }}
     >
-      <GshGround
-        preset={ground ?? (c.dark ? "europa" : "glasswork")}
-        params={
-          groundParams ??
-          (c.dark || ground
-            ? undefined
-            : { colors: ["#a9bbff", "#3552ff", "#1a2a9e", "#7f9bff"] })
-        }
-        timeOffset={c.dark ? 5 : 2}
-        timeScale={0.35}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: (width - W * u) / 2,
-          top: (height - H * u) / 2,
-          width: W,
-          height: H,
-          transform: `scale(${u})`,
-          transformOrigin: "0 0",
-        }}
-      >
+      {background === undefined ? (
+        <GshGround
+          preset={ground ?? (c.dark ? "europa" : "glasswork")}
+          params={
+            groundParams ??
+            (c.dark || ground
+              ? undefined
+              : { colors: ["#a9bbff", "#3552ff", "#1a2a9e", "#7f9bff"] })
+          }
+          timeOffset={c.dark ? 5 : 2}
+          timeScale={0.35}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: WIN.x,
-            top: WIN.y,
-            width: WIN.w,
-            height: WIN.h,
-            borderRadius: 16,
-            background: c.window,
-            backdropFilter: c.dark ? "blur(30px)" : undefined,
-            boxShadow: c.depth,
-            overflow: "hidden",
-            display: "flex",
-            opacity: winFade,
-            transformOrigin: "50% 40%",
-            transform: `translateY(${(1 - win) * 70}px) scale(${(0.95 + 0.05 * win) * camera})`,
+            left: (width - W * u) / 2,
+            top: (height - H * u) / 2,
+            width: W,
+            height: H,
+            transform: `scale(${u})`,
+            transformOrigin: "0 0",
           }}
         >
-          {RAIL ? (
-            <div
-              style={{
-                width: RAIL,
-                flexShrink: 0,
-                boxShadow: `inset -1px 0 0 ${c.rule}`,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                paddingTop: 22,
-                gap: 10,
-              }}
-            >
+          <div
+            style={{
+              position: "absolute",
+              left: WIN.x,
+              top: WIN.y,
+              width: WIN.w,
+              height: WIN.h,
+              borderRadius: 16,
+              background: c.window,
+              backdropFilter: c.dark ? "blur(30px)" : undefined,
+              boxShadow: c.depth,
+              overflow: "hidden",
+              display: "flex",
+              opacity: winFade,
+              transformOrigin: "50% 40%",
+              transform: `translateY(${(1 - win) * 70}px) scale(${(0.95 + 0.05 * win) * camera})`,
+            }}
+          >
+            {RAIL ? (
               <div
                 style={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: 8,
-                  background: c.text,
-                  color: c.dark ? "#0b0c10" : "#fff",
-                  fontSize: 16,
+                  width: RAIL,
+                  flexShrink: 0,
+                  boxShadow: `inset -1px 0 0 ${c.rule}`,
                   display: "flex",
+                  flexDirection: "column",
                   alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 14,
+                  paddingTop: 22,
+                  gap: 10,
                 }}
               >
-                {workspace[0]}
-              </div>
-              {(Object.keys(ICONS) as (keyof typeof ICONS)[]).map((k) => (
                 <div
-                  key={k}
                   style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 9,
-                    background: k === "home" ? c.chip : "transparent",
+                    width: 30,
+                    height: 30,
+                    borderRadius: 8,
+                    background: fg,
+                    color: c.dark ? "#0b0c10" : "#fff",
+                    fontSize: 16,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    marginTop: k === "gear" ? "auto" : 0,
-                    marginBottom: k === "gear" ? 20 : 0,
+                    marginBottom: 14,
                   }}
                 >
-                  <Icon d={ICONS[k]} color={k === "home" ? c.text : c.faint} />
+                  {workspace[0]}
                 </div>
-              ))}
-            </div>
-          ) : null}
-          <div
-            style={{
-              position: "relative",
-              flex: 1,
-              padding: `22px ${PADX}px`,
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
+                {(Object.keys(ICONS) as (keyof typeof ICONS)[]).map((k) => (
+                  <div
+                    key={k}
+                    style={{
+                      width: 38,
+                      height: 38,
+                      borderRadius: 9,
+                      background: k === "home" ? c.chip : "transparent",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginTop: k === "gear" ? "auto" : 0,
+                      marginBottom: k === "gear" ? 20 : 0,
+                    }}
+                  >
+                    <Icon d={ICONS[k]} color={k === "home" ? fg : c.faint} />
+                  </div>
+                ))}
+              </div>
+            ) : null}
             <div
               style={{
-                ...rise(B.head),
+                position: "relative",
+                flex: 1,
+                padding: `22px ${PADX}px`,
                 display: "flex",
-                alignItems: "center",
-                height: 44,
-                gap: 14,
+                flexDirection: "column",
               }}
             >
-              <span
-                style={{
-                  fontSize: 30,
-                  fontWeight: 300,
-                  color: c.text,
-                  letterSpacing: "-0.03em",
-                }}
-              >
-                {title}
-              </span>
-              <span
-                style={{
-                  fontFamily: mono.fontFamily,
-                  fontSize: 16,
-                  color: c.faint,
-                  marginTop: 4,
-                }}
-              >
-                {workspace} · {clock(ticksDone)}
-              </span>
               <div
                 style={{
-                  marginLeft: "auto",
+                  ...rise(B.head),
                   display: "flex",
                   alignItems: "center",
-                  gap: 10,
-                  fontFamily: mono.fontFamily,
-                  fontSize: 16,
-                  color: c.muted,
+                  height: 44,
+                  gap: 14,
                 }}
               >
-                <span style={{ position: "relative", width: 8, height: 8 }}>
-                  <span
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      borderRadius: 4,
-                      background: c.live,
-                      opacity: (1 - pulse) * 0.45,
-                      transform: `scale(${1 + pulse * 1.8})`,
-                    }}
-                  />
-                  <span
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      borderRadius: 4,
-                      background: c.live,
-                    }}
-                  />
+                <span
+                  style={{
+                    fontSize: 30,
+                    fontWeight: 300,
+                    color: fg,
+                    letterSpacing: "-0.03em",
+                  }}
+                >
+                  {title}
                 </span>
                 <span
-                  style={{ color: c.text, fontVariantNumeric: "tabular-nums" }}
-                >
-                  {ticksDone === 0 ? (
-                    visitors
-                  ) : (
-                    <Rolling
-                      from={visitorsAt(ticksDone - 1)}
-                      to={visitorsAt(ticksDone)}
-                      t={lastTickT}
-                      fmt={(n) => String(n)}
-                      lineHeight={20}
-                    />
-                  )}
-                </span>
-                on site
-              </div>
-            </div>
-            <div
-              style={{ height: 1, background: c.rule, margin: "16px 0 22px" }}
-            />
-
-            <div
-              style={{
-                display: "flex",
-                flexDirection: tall ? "column" : "row",
-                gap: tall ? 30 : 40,
-              }}
-            >
-              <div style={{ width: CHART.w }}>
-                <div
-                  style={{ ...rise(B.head + 3), fontSize: 16, color: c.muted }}
-                >
-                  Gross volume
-                </div>
-                <div
                   style={{
-                    fontSize: 56,
-                    fontWeight: 300,
-                    color: c.text,
-                    letterSpacing: "-0.04em",
-                    height: 62,
-                    lineHeight: "62px",
-                    marginTop: 4,
-                    fontVariantNumeric: "tabular-nums",
-                    opacity: interpolate(
-                      frame,
-                      [B.count, B.count + 8],
-                      [0, 1],
-                      {
-                        ...clamp,
-                        easing: ENTER,
-                      },
-                    ),
-                  }}
-                >
-                  {headline}
-                </div>
-                <div
-                  style={{
-                    ...rise(B.count + 30),
-                    display: "flex",
-                    alignItems: "baseline",
-                    gap: 12,
-                    marginTop: 6,
+                    fontFamily: mono.fontFamily,
                     fontSize: 16,
-                    fontVariantNumeric: "tabular-nums",
+                    color: c.faint,
+                    marginTop: 4,
                   }}
                 >
-                  <span style={{ color: change >= 0 ? c.good : c.bad }}>
-                    {change >= 0 ? "+" : ""}
-                    {change.toFixed(1)}%
-                  </span>
-                  <span style={{ color: c.muted }}>
-                    vs {money((base / (1 + change / 100)) * countUp)} yesterday
-                  </span>
-                </div>
-                <svg
-                  width={CHART.w}
-                  height={CHART.h + 30}
+                  {workspace} · {clock(ticksDone)}
+                </span>
+                <div
                   style={{
-                    marginTop: 20,
-                    overflow: "visible",
-                    display: "block",
+                    marginLeft: "auto",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    fontFamily: mono.fontFamily,
+                    fontSize: 16,
+                    color: c.muted,
                   }}
                 >
-                  <defs>
-                    <clipPath id={`${id}-clip`}>
-                      <rect
-                        x={-2}
-                        y={-40}
-                        width={dot.x + 2}
-                        height={CHART.h + 60}
+                  <span style={{ position: "relative", width: 8, height: 8 }}>
+                    <span
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        borderRadius: 4,
+                        background: c.live,
+                        opacity: (1 - pulse) * 0.45,
+                        transform: `scale(${1 + pulse * 1.8})`,
+                      }}
+                    />
+                    <span
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        borderRadius: 4,
+                        background: c.live,
+                      }}
+                    />
+                  </span>
+                  <span
+                    style={{ color: fg, fontVariantNumeric: "tabular-nums" }}
+                  >
+                    {ticksDone === 0 ? (
+                      visitors
+                    ) : (
+                      <Rolling
+                        from={visitorsAt(ticksDone - 1)}
+                        to={visitorsAt(ticksDone)}
+                        t={lastTickT}
+                        fmt={(n) => String(n)}
+                        lineHeight={20}
                       />
-                    </clipPath>
-                    <linearGradient
-                      id={`${id}-fill`}
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="0%" stopColor={accent} stopOpacity={0.16} />
-                      <stop offset="100%" stopColor={accent} stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  {[0.25, 0.5, 0.75].map((g) => (
+                    )}
+                  </span>
+                  {visitorsLabel}
+                </div>
+              </div>
+              <div
+                style={{ height: 1, background: c.rule, margin: "16px 0 22px" }}
+              />
+
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: tall ? "column" : "row",
+                  gap: tall ? 30 : 40,
+                }}
+              >
+                <div style={{ width: CHART.w }}>
+                  <div
+                    style={{
+                      ...rise(B.head + 3),
+                      fontSize: 16,
+                      color: c.muted,
+                    }}
+                  >
+                    {volumeLabel}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 56,
+                      fontWeight: 300,
+                      color: fg,
+                      letterSpacing: "-0.04em",
+                      height: 62,
+                      lineHeight: "62px",
+                      marginTop: 4,
+                      fontVariantNumeric: "tabular-nums",
+                      opacity: interpolate(
+                        frame,
+                        [B.count, B.count + 8],
+                        [0, 1],
+                        {
+                          ...clamp,
+                          easing: ENTER,
+                        },
+                      ),
+                    }}
+                  >
+                    {headline}
+                  </div>
+                  <div
+                    style={{
+                      ...rise(B.count + 30),
+                      display: "flex",
+                      alignItems: "baseline",
+                      gap: 12,
+                      marginTop: 6,
+                      fontSize: 16,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    <span style={{ color: change >= 0 ? c.good : c.bad }}>
+                      {change >= 0 ? "+" : ""}
+                      {change.toFixed(1)}%
+                    </span>
+                    <span style={{ color: c.muted }}>
+                      vs {money((base / (1 + change / 100)) * countUp)}{" "}
+                      yesterday
+                    </span>
+                  </div>
+                  <svg
+                    width={CHART.w}
+                    height={CHART.h + 30}
+                    style={{
+                      marginTop: 20,
+                      overflow: "visible",
+                      display: "block",
+                    }}
+                  >
+                    <defs>
+                      <clipPath id={`${id}-clip`}>
+                        <rect
+                          x={-2}
+                          y={-40}
+                          width={dot.x + 2}
+                          height={CHART.h + 60}
+                        />
+                      </clipPath>
+                      <linearGradient
+                        id={`${id}-fill`}
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="0%"
+                          stopColor={accent}
+                          stopOpacity={0.16}
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor={accent}
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
+                    </defs>
+                    {[0.25, 0.5, 0.75].map((g) => (
+                      <line
+                        key={g}
+                        x1={0}
+                        x2={CHART.w}
+                        y1={CHART.h * g}
+                        y2={CHART.h * g}
+                        stroke={c.grid}
+                      />
+                    ))}
                     <line
-                      key={g}
                       x1={0}
                       x2={CHART.w}
-                      y1={CHART.h * g}
-                      y2={CHART.h * g}
-                      stroke={c.grid}
-                    />
-                  ))}
-                  <line
-                    x1={0}
-                    x2={CHART.w}
-                    y1={CHART.h}
-                    y2={CHART.h}
-                    stroke={c.rule}
-                  />
-                  <path
-                    d={linePath(yPts)}
-                    fill="none"
-                    stroke={c.faint}
-                    strokeWidth={1.5}
-                    strokeDasharray="2 5"
-                    strokeLinecap="round"
-                    opacity={interpolate(
-                      frame,
-                      [B.draw + 4, B.draw + 28],
-                      [0, 0.8],
-                      {
-                        ...clamp,
-                        easing: LIGHT,
-                      },
-                    )}
-                  />
-                  <g clipPath={`url(#${id}-clip)`}>
-                    <path
-                      d={`${line} L${pts[pts.length - 1].x} ${CHART.h} L0 ${CHART.h} Z`}
-                      fill={`url(#${id}-fill)`}
+                      y1={CHART.h}
+                      y2={CHART.h}
+                      stroke={c.rule}
                     />
                     <path
-                      d={line}
+                      d={linePath(yPts)}
                       fill="none"
-                      stroke={accent}
-                      strokeWidth={2}
-                      strokeLinejoin="round"
+                      stroke={c.faint}
+                      strokeWidth={1.5}
+                      strokeDasharray="2 5"
                       strokeLinecap="round"
+                      opacity={interpolate(
+                        frame,
+                        [B.draw + 4, B.draw + 28],
+                        [0, 0.8],
+                        {
+                          ...clamp,
+                          easing: LIGHT,
+                        },
+                      )}
                     />
-                  </g>
-                  {draw > 0 ? (
-                    <g transform={`translate(${dot.x} ${dot.y})`}>
-                      <line
-                        x1={0}
-                        x2={0}
-                        y1={6}
-                        y2={CHART.h - dot.y}
-                        stroke={withAlpha(accent, 0.3)}
-                        strokeDasharray="2 4"
-                        opacity={clamp01((frame - B.draw - 40) / 8)}
+                    <g clipPath={`url(#${id}-clip)`}>
+                      <path
+                        d={`${line} L${pts[pts.length - 1].x} ${CHART.h} L0 ${CHART.h} Z`}
+                        fill={`url(#${id}-fill)`}
                       />
-                      <circle
-                        r={4 + pulse * 10}
-                        fill={accent}
-                        opacity={frame > B.draw + 46 ? (1 - pulse) * 0.2 : 0}
-                      />
-                      <circle
-                        r={4.5}
-                        fill={accent}
-                        stroke={c.dark ? "#0b0c10" : "#fff"}
+                      <path
+                        d={line}
+                        fill="none"
+                        stroke={accent}
                         strokeWidth={2}
+                        strokeLinejoin="round"
+                        strokeLinecap="round"
                       />
                     </g>
-                  ) : null}
-                  {ticksDone > 0 && (lastLive || lastTickT < 22)
-                    ? (() => {
-                        const label = `+${money(live[ticksDone - 1].amount)}`;
-                        const w = label.length * 9.6 + 22;
-                        const pop = spring({
-                          frame: lastTickT,
-                          fps,
-                          config: CHIP,
-                        });
-                        const out = lastLive
-                          ? 0
-                          : interpolate(lastTickT, [14, 22], [0, 1], {
-                              ...clamp,
-                              easing: EXIT,
-                            });
-                        return (
-                          <g
-                            transform={`translate(${Math.min(dot.x, CHART.w - w / 2)} ${dot.y - 34 + (1 - pop) * 10 - out * 6}) scale(${0.85 + 0.15 * pop})`}
-                            opacity={clamp01(pop * 2) * (1 - out)}
-                          >
-                            <rect
-                              x={-w / 2}
-                              y={-15}
-                              width={w}
-                              height={30}
-                              rx={8}
-                              fill={c.dark ? "#16181f" : "#fff"}
-                              stroke={c.rule}
-                            />
-                            <text
-                              y={5.5}
-                              textAnchor="middle"
-                              fontSize={16}
-                              fontFamily={mono.fontFamily}
-                              fill={c.good}
-                              style={{ fontVariantNumeric: "tabular-nums" }}
+                    {draw > 0 ? (
+                      <g transform={`translate(${dot.x} ${dot.y})`}>
+                        <line
+                          x1={0}
+                          x2={0}
+                          y1={6}
+                          y2={CHART.h - dot.y}
+                          stroke={withAlpha(accent, 0.3)}
+                          strokeDasharray="2 4"
+                          opacity={clamp01((frame - B.draw - 40) / 8)}
+                        />
+                        <circle
+                          r={4 + pulse * 10}
+                          fill={accent}
+                          opacity={frame > B.draw + 46 ? (1 - pulse) * 0.2 : 0}
+                        />
+                        <circle
+                          r={4.5}
+                          fill={accent}
+                          stroke={c.dark ? "#0b0c10" : "#fff"}
+                          strokeWidth={2}
+                        />
+                      </g>
+                    ) : null}
+                    {ticksDone > 0 && (lastLive || lastTickT < 22)
+                      ? (() => {
+                          const label = `+${money(live[ticksDone - 1].amount)}`;
+                          const w = label.length * 9.6 + 22;
+                          const pop = spring({
+                            frame: lastTickT,
+                            fps,
+                            config: CHIP,
+                          });
+                          const out = lastLive
+                            ? 0
+                            : interpolate(lastTickT, [14, 22], [0, 1], {
+                                ...clamp,
+                                easing: EXIT,
+                              });
+                          return (
+                            <g
+                              transform={`translate(${Math.min(dot.x, CHART.w - w / 2)} ${dot.y - 34 + (1 - pop) * 10 - out * 6}) scale(${0.85 + 0.15 * pop})`}
+                              opacity={clamp01(pop * 2) * (1 - out)}
                             >
-                              {label}
-                            </text>
-                          </g>
-                        );
-                      })()
-                    : null}
-                  {["00:00", "23:59"].map((l, i) => (
-                    <text
-                      key={l}
-                      x={i ? CHART.w : 0}
-                      y={CHART.h + 24}
-                      fontSize={16}
-                      fontFamily={mono.fontFamily}
-                      fill={c.faint}
-                      textAnchor={i ? "end" : "start"}
+                              <rect
+                                x={-w / 2}
+                                y={-15}
+                                width={w}
+                                height={30}
+                                rx={8}
+                                fill={c.dark ? "#16181f" : "#fff"}
+                                stroke={c.rule}
+                              />
+                              <text
+                                y={5.5}
+                                textAnchor="middle"
+                                fontSize={16}
+                                fontFamily={mono.fontFamily}
+                                fill={c.good}
+                                style={{ fontVariantNumeric: "tabular-nums" }}
+                              >
+                                {label}
+                              </text>
+                            </g>
+                          );
+                        })()
+                      : null}
+                    {["00:00", "23:59"].map((l, i) => (
+                      <text
+                        key={l}
+                        x={i ? CHART.w : 0}
+                        y={CHART.h + 24}
+                        fontSize={16}
+                        fontFamily={mono.fontFamily}
+                        fill={c.faint}
+                        textAnchor={i ? "end" : "start"}
+                      >
+                        {l}
+                      </text>
+                    ))}
+                  </svg>
+                </div>
+
+                <div
+                  style={{
+                    width: FEED_W,
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
+                  <div
+                    style={{
+                      ...rise(B.head + 6),
+                      display: "flex",
+                      fontSize: 16,
+                      color: c.muted,
+                      marginBottom: 8,
+                    }}
+                  >
+                    {feedTitle}
+                    <span
+                      style={{
+                        marginLeft: "auto",
+                        fontFamily: mono.fontFamily,
+                        color: c.faint,
+                      }}
                     >
-                      {l}
-                    </text>
-                  ))}
-                </svg>
+                      {currency}
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      position: "relative",
+                      height: feedVisible * ROW,
+                      overflow: "hidden",
+                    }}
+                  >
+                    {feedRows.map(({ p, k, y, s }) => {
+                      if (s <= 0.001) return null;
+                      const fresh =
+                        k >= 0 ? clamp01(1 - (frame - tickAt[k]) / 36) : 0;
+                      return (
+                        <div
+                          key={`${k}-${p.customer}`}
+                          style={{
+                            position: "absolute",
+                            left: 0,
+                            right: 0,
+                            top: 0,
+                            height: ROW,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
+                            padding: "0 10px",
+                            margin: "0 -10px",
+                            borderRadius: 10,
+                            background: withAlpha(
+                              accent,
+                              fresh * (c.dark ? 0.16 : 0.08),
+                            ),
+                            boxShadow:
+                              y > 0.5 ? `inset 0 1px 0 ${c.rule}` : "none",
+                            opacity: clamp01(s * 1.6),
+                            transform: `translateY(${y * ROW - (1 - s) * 18}px)`,
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: 32,
+                              height: 32,
+                              flexShrink: 0,
+                              borderRadius: 16,
+                              background: c.chip,
+                              color: c.muted,
+                              fontSize: 16,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            {p.customer[0]}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div
+                              style={{
+                                fontSize: 16,
+                                color: fg,
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}
+                            >
+                              {p.customer}
+                            </div>
+                          </div>
+                          <span
+                            style={{
+                              fontSize: 16,
+                              color: fg,
+                              fontVariantNumeric: "tabular-nums",
+                              minWidth: 86,
+                              textAlign: "right",
+                            }}
+                          >
+                            {money(p.amount, 0)}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
 
               <div
                 style={{
-                  width: FEED_W,
+                  marginTop: "auto",
                   display: "flex",
-                  flexDirection: "column",
+                  flexWrap: "wrap",
+                  boxShadow: `inset 0 1px 0 ${c.rule}`,
                 }}
               >
-                <div
-                  style={{
-                    ...rise(B.head + 6),
-                    display: "flex",
-                    fontSize: 16,
-                    color: c.muted,
-                    marginBottom: 8,
-                  }}
-                >
-                  Payments
-                  <span
-                    style={{
-                      marginLeft: "auto",
-                      fontFamily: mono.fontFamily,
-                      color: c.faint,
-                    }}
-                  >
-                    {currency}
-                  </span>
-                </div>
-                <div
-                  style={{
-                    position: "relative",
-                    height: feedVisible * ROW,
-                    overflow: "hidden",
-                  }}
-                >
-                  {feedRows.map(({ p, k, y, s }) => {
-                    if (s <= 0.001) return null;
-                    const fresh =
-                      k >= 0 ? clamp01(1 - (frame - tickAt[k]) / 36) : 0;
-                    return (
-                      <div
-                        key={`${k}-${p.customer}`}
-                        style={{
-                          position: "absolute",
-                          left: 0,
-                          right: 0,
-                          top: 0,
-                          height: ROW,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 12,
-                          padding: "0 10px",
-                          margin: "0 -10px",
-                          borderRadius: 10,
-                          background: withAlpha(
-                            accent,
-                            fresh * (c.dark ? 0.16 : 0.08),
-                          ),
-                          boxShadow:
-                            y > 0.5 ? `inset 0 1px 0 ${c.rule}` : "none",
-                          opacity: clamp01(s * 1.6),
-                          transform: `translateY(${y * ROW - (1 - s) * 18}px)`,
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: 32,
-                            height: 32,
-                            flexShrink: 0,
-                            borderRadius: 16,
-                            background: c.chip,
-                            color: c.muted,
-                            fontSize: 16,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          {p.customer[0]}
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div
-                            style={{
-                              fontSize: 16,
-                              color: c.text,
-                              whiteSpace: "nowrap",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                            }}
-                          >
-                            {p.customer}
-                          </div>
-                        </div>
-                        <span
-                          style={{
-                            fontSize: 16,
-                            color: c.text,
-                            fontVariantNumeric: "tabular-nums",
-                            minWidth: 86,
-                            textAlign: "right",
-                          }}
-                        >
-                          {money(p.amount, 0)}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            <div
-              style={{
-                marginTop: "auto",
-                display: "flex",
-                flexWrap: "wrap",
-                boxShadow: `inset 0 1px 0 ${c.rule}`,
-              }}
-            >
-              {kpis.map((m, i) => {
-                const fmt = fmtMetric(m);
-                const enter = spring({
-                  frame: frame - (B.kpi + i * 3),
-                  fps,
-                  config: CARD,
-                });
-                const roll = interpolate(
-                  frame,
-                  [B.kpi + 2 + i * 3, B.kpi + 38 + i * 3],
-                  [0, 1],
-                  {
-                    ...clamp,
-                    easing: LIGHT,
-                  },
-                );
-                const step = m.liveStep ?? 0;
-                const good =
-                  (m.goodWhen ?? "up") === "up" ? m.change >= 0 : m.change <= 0;
-                const spark = m.spark ?? makeSpark(i, m.goodWhen === "down");
-                const sparkP = interpolate(
-                  frame,
-                  [B.kpi + 6 + i * 3, B.kpi + 44 + i * 3],
-                  [0, 1],
-                  {
-                    ...clamp,
-                    easing: MOVE,
-                  },
-                );
-                const col = i % kpiCols;
-                const row = Math.floor(i / kpiCols);
-                return (
-                  <div
-                    key={m.label}
-                    style={{
-                      width: kpiW,
-                      boxSizing: "border-box",
-                      padding: `20px ${col === kpiCols - 1 ? 0 : 22}px 4px ${col === 0 ? 0 : 22}px`,
-                      boxShadow:
-                        [
-                          col > 0 ? `inset 1px 0 0 ${c.rule}` : null,
-                          row > 0 ? `inset 0 1px 0 ${c.rule}` : null,
-                        ]
-                          .filter(Boolean)
-                          .join(", ") || "none",
-                      opacity: clamp01(enter * 1.5),
-                      transform: `translateY(${(1 - enter) * 22}px)`,
-                    }}
-                  >
+                {kpis.map((m, i) => {
+                  const fmt = fmtMetric(m);
+                  const enter = spring({
+                    frame: frame - (B.kpi + i * 3),
+                    fps,
+                    config: CARD,
+                  });
+                  const roll = interpolate(
+                    frame,
+                    [B.kpi + 2 + i * 3, B.kpi + 38 + i * 3],
+                    [0, 1],
+                    {
+                      ...clamp,
+                      easing: LIGHT,
+                    },
+                  );
+                  const step = m.liveStep ?? 0;
+                  const good =
+                    (m.goodWhen ?? "up") === "up"
+                      ? m.change >= 0
+                      : m.change <= 0;
+                  const spark = m.spark ?? makeSpark(i, m.goodWhen === "down");
+                  const sparkP = interpolate(
+                    frame,
+                    [B.kpi + 6 + i * 3, B.kpi + 44 + i * 3],
+                    [0, 1],
+                    {
+                      ...clamp,
+                      easing: MOVE,
+                    },
+                  );
+                  const col = i % kpiCols;
+                  const row = Math.floor(i / kpiCols);
+                  return (
                     <div
-                      style={{ display: "flex", fontSize: 16, color: c.muted }}
-                    >
-                      {m.label}
-                      <span
-                        style={{
-                          marginLeft: "auto",
-                          color: good ? c.good : c.bad,
-                          fontVariantNumeric: "tabular-nums",
-                          opacity: interpolate(
-                            frame,
-                            [B.kpi + 30 + i * 3, B.kpi + 40 + i * 3],
-                            [0, 1],
-                            {
-                              ...clamp,
-                              easing: ENTER,
-                            },
-                          ),
-                        }}
-                      >
-                        {m.change >= 0 ? "+" : ""}
-                        {m.change.toFixed(1)}%
-                      </span>
-                    </div>
-                    <div
+                      key={m.label}
                       style={{
-                        fontSize: 30,
-                        fontWeight: 300,
-                        color: c.text,
-                        marginTop: 6,
-                        height: 36,
-                        lineHeight: "36px",
-                        fontVariantNumeric: "tabular-nums",
-                        letterSpacing: "-0.03em",
+                        width: kpiW,
+                        boxSizing: "border-box",
+                        padding: `20px ${col === kpiCols - 1 ? 0 : 22}px 4px ${col === 0 ? 0 : 22}px`,
+                        boxShadow:
+                          [
+                            col > 0 ? `inset 1px 0 0 ${c.rule}` : null,
+                            row > 0 ? `inset 0 1px 0 ${c.rule}` : null,
+                          ]
+                            .filter(Boolean)
+                            .join(", ") || "none",
+                        opacity: clamp01(enter * 1.5),
+                        transform: `translateY(${(1 - enter) * 22}px)`,
                       }}
                     >
-                      {step && ticksDone > 0 ? (
-                        <Rolling
-                          from={m.value + step * (ticksDone - 1)}
-                          to={m.value + step * ticksDone}
-                          t={lastTickT - 2}
-                          fmt={fmt}
-                          lineHeight={36}
+                      <div
+                        style={{
+                          display: "flex",
+                          fontSize: 16,
+                          color: c.muted,
+                        }}
+                      >
+                        {m.label}
+                        <span
+                          style={{
+                            marginLeft: "auto",
+                            color: good ? c.good : c.bad,
+                            fontVariantNumeric: "tabular-nums",
+                            opacity: interpolate(
+                              frame,
+                              [B.kpi + 30 + i * 3, B.kpi + 40 + i * 3],
+                              [0, 1],
+                              {
+                                ...clamp,
+                                easing: ENTER,
+                              },
+                            ),
+                          }}
+                        >
+                          {m.change >= 0 ? "+" : ""}
+                          {m.change.toFixed(1)}%
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 30,
+                          fontWeight: 300,
+                          color: fg,
+                          marginTop: 6,
+                          height: 36,
+                          lineHeight: "36px",
+                          fontVariantNumeric: "tabular-nums",
+                          letterSpacing: "-0.03em",
+                        }}
+                      >
+                        {step && ticksDone > 0 ? (
+                          <Rolling
+                            from={m.value + step * (ticksDone - 1)}
+                            to={m.value + step * ticksDone}
+                            t={lastTickT - 2}
+                            fmt={fmt}
+                            lineHeight={36}
+                          />
+                        ) : (
+                          fmt(m.value * roll)
+                        )}
+                      </div>
+                      <div style={{ marginTop: 10, marginBottom: 14 }}>
+                        <Sparkline
+                          values={spark}
+                          w={kpiW - 44}
+                          h={tall ? 48 : 34}
+                          p={sparkP}
+                          color={good ? accent : c.faint}
                         />
-                      ) : (
-                        fmt(m.value * roll)
-                      )}
+                      </div>
                     </div>
-                    <div style={{ marginTop: 10, marginBottom: 14 }}>
-                      <Sparkline
-                        values={spark}
-                        w={kpiW - 44}
-                        h={tall ? 48 : 34}
-                        p={sparkP}
-                        color={good ? accent : c.faint}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

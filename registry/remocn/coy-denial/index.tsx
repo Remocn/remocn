@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/FunnelDisplay";
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -25,7 +26,19 @@ export interface CoyDenialRound {
 export interface CoyDenialProps {
   rounds?: CoyDenialRound[];
   accent?: string;
+  /** Text color of the denials; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Funnel Display by default. */
+  fontFamily?: string;
+  /** Frames between words as a denial rises in. */
+  stagger?: number;
+  /** Frames the aside stays readable before the round leaves. */
+  hold?: number;
+  /** Size of the copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -67,18 +80,18 @@ const MIN_HOLD = 36;
 
 let measureCtx: CanvasRenderingContext2D | null = null;
 
-function em(s: string, weight: number, track: number) {
+function em(s: string, weight: number, track: number, family: string) {
   if (!measureCtx) {
     measureCtx = document.createElement("canvas").getContext("2d");
   }
   if (!measureCtx) throw new Error("coy-denial: no 2d context");
-  measureCtx.font = `${weight} ${MEASURE_PX}px "${funnel.fontFamily}"`;
+  measureCtx.font = `${weight} ${MEASURE_PX}px "${family}"`;
   return (
     measureCtx.measureText(s).width / MEASURE_PX + track * Array.from(s).length
   );
 }
 
-function useFontsReady() {
+function useFontsReady(family: string) {
   const [ready, setReady] = useState(false);
   const [handle] = useState(() => delayRender("coy-denial: fonts"));
   const released = useRef(false);
@@ -86,8 +99,8 @@ function useFontsReady() {
     let live = true;
     Promise.all([
       funnel.waitUntilDone(),
-      document.fonts.load(`${SAY_W} 100px "${funnel.fontFamily}"`),
-      document.fonts.load(`${ASIDE_W} 100px "${funnel.fontFamily}"`),
+      document.fonts.load(`${SAY_W} 100px "${family}"`),
+      document.fonts.load(`${ASIDE_W} 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -100,7 +113,7 @@ function useFontsReady() {
     return () => {
       live = false;
     };
-  }, [handle]);
+  }, [handle, family]);
   return ready;
 }
 
@@ -113,22 +126,27 @@ function split(s: string) {
   return s.split(/\s+/).filter(Boolean);
 }
 
-function sayW(words: string[]) {
-  return em(words.join(" "), SAY_W, TRACK);
+function sayW(words: string[], family: string) {
+  return em(words.join(" "), SAY_W, TRACK, family);
 }
 
-function toRow(words: string[], weight: number, track: number): Row {
-  const space = em(" ", weight, track);
+function toRow(
+  words: string[],
+  weight: number,
+  track: number,
+  family: string,
+): Row {
+  const space = em(" ", weight, track, family);
   let x = 0;
   const out = words.map((text) => {
     const at = x;
-    x += em(text, weight, track) + space;
+    x += em(text, weight, track, family) + space;
     return { text, x: at };
   });
-  return { words: out, w: em(words.join(" "), weight, track) };
+  return { words: out, w: em(words.join(" "), weight, track, family) };
 }
 
-function balanced(words: string[], n: number): string[][] {
+function balanced(words: string[], n: number, family: string): string[][] {
   if (n <= 1) return [words];
   let best: string[][] = [words];
   let bestW = Number.POSITIVE_INFINITY;
@@ -136,7 +154,7 @@ function balanced(words: string[], n: number): string[][] {
   const walk = (start: number, left: number, acc: string[][]) => {
     if (left === 1) {
       const rows = [...acc, words.slice(start)];
-      const widths = rows.map(sayW);
+      const widths = rows.map((r) => sayW(r, family));
       const w = Math.max(...widths);
       const slack = widths.reduce((a, x) => a + (w - x) ** 2, 0);
       if (w < bestW - 0.01 || (w < bestW + 0.01 && slack < bestSlack)) {
@@ -154,12 +172,15 @@ function balanced(words: string[], n: number): string[][] {
   return best;
 }
 
-function wrapAside(s: string, maxEm: number): Row[] {
+function wrapAside(s: string, maxEm: number, family: string): Row[] {
   const rows: string[][] = [];
   let cur: string[] = [];
   for (const w of split(s)) {
     const next = [...cur, w];
-    if (cur.length > 0 && em(next.join(" "), ASIDE_W, ASIDE_TRACK) > maxEm) {
+    if (
+      cur.length > 0 &&
+      em(next.join(" "), ASIDE_W, ASIDE_TRACK, family) > maxEm
+    ) {
       rows.push(cur);
       cur = [w];
     } else {
@@ -167,17 +188,23 @@ function wrapAside(s: string, maxEm: number): Row[] {
     }
   }
   if (cur.length) rows.push(cur);
-  return rows.map((r) => toRow(r, ASIDE_W, ASIDE_TRACK));
+  return rows.map((r) => toRow(r, ASIDE_W, ASIDE_TRACK, family));
 }
 
-function fitSay(say: string, W: number, H: number, portrait: boolean) {
+function fitSay(
+  say: string,
+  W: number,
+  H: number,
+  portrait: boolean,
+  family: string,
+) {
   const words = split(say);
   const maxN = Math.min(words.length, portrait ? 6 : 3);
   let rows: string[][] = [words];
   let F = 0;
   for (let n = 1; n <= maxN; n++) {
-    const cand = balanced(words, n);
-    const w = Math.max(...cand.map(sayW));
+    const cand = balanced(words, n, family);
+    const w = Math.max(...cand.map((r) => sayW(r, family)));
     const f = Math.min(
       (W * (portrait ? 0.84 : 0.86)) / w,
       (H * (portrait ? 0.46 : 0.6)) / ((n - 1) * PITCH + 1),
@@ -190,36 +217,66 @@ function fitSay(say: string, W: number, H: number, portrait: boolean) {
   return { rows, F };
 }
 
-function buildLayout(rounds: CoyDenialRound[], W: number, H: number) {
+function buildLayout(
+  rounds: CoyDenialRound[],
+  W: number,
+  H: number,
+  family: string,
+) {
   const portrait = H > W * 1.1;
-  const fits = rounds.map((r) => fitSay(r.say, W, H, portrait));
+  const fits = rounds.map((r) => fitSay(r.say, W, H, portrait, family));
   const F = Math.min(...fits.map((f) => f.F));
-  const says = fits.map((f) => f.rows.map((r) => toRow(r, SAY_W, TRACK)));
+  const says = fits.map((f) =>
+    f.rows.map((r) => toRow(r, SAY_W, TRACK, family)),
+  );
   const FA = Math.min(W, H) * (portrait ? 0.05 : 0.046);
   const asides = rounds.map((r) =>
-    wrapAside(r.aside, (W * (portrait ? 0.6 : 0.36)) / FA),
+    wrapAside(r.aside, (W * (portrait ? 0.6 : 0.36)) / FA, family),
   );
   return { says, asides, F, FA, portrait };
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function CoyDenial({
   rounds = DEFAULT_ROUNDS,
   accent,
+  ink,
   background,
+  fontFamily = funnel.fontFamily,
+  stagger = SAY_STAGGER,
+  hold = READ_HOLD,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: CoyDenialProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const ready = useFontsReady();
+  const ready = useFontsReady(fontFamily);
 
   const layout = useMemo(
-    () => (ready ? buildLayout(rounds, W, H) : null),
-    [ready, rounds, W, H],
+    () => (ready ? buildLayout(rounds, W, H, fontFamily) : null),
+    [ready, rounds, W, H, fontFamily],
   );
 
   if (!layout) {
@@ -234,7 +291,7 @@ export function CoyDenial({
     const words = rows.reduce((acc, r) => acc + r.words.length, 0);
     const gap = Math.max(3, Math.min(ASIDE_GAP, 36 / Math.max(1, words)));
     const end = ASIDE_AT + (words - 1) * gap + ASIDE_LEN;
-    return { gap, end, out: Math.max(OUT_MIN, end + READ_HOLD) };
+    return { gap, end, out: Math.max(OUT_MIN, end + hold) };
   });
   const starts: number[] = [];
   plan.reduce((acc, p) => {
@@ -283,7 +340,7 @@ export function CoyDenial({
           const i = wi++;
           const q = interpolate(
             local,
-            [i * SAY_STAGGER, i * SAY_STAGGER + SAY_LEN],
+            [i * stagger, i * stagger + SAY_LEN],
             [0, 1],
             { ...CLAMP, easing: EASE_OUT },
           );
@@ -296,13 +353,13 @@ export function CoyDenial({
                 left: w.x * F + F * 0.1,
                 top: -clipTop,
                 height: F,
-                fontFamily: funnel.fontFamily,
+                fontFamily,
                 fontWeight: SAY_W,
                 fontSize: F,
                 lineHeight: `${F}px`,
                 letterSpacing: `${TRACK}em`,
                 whiteSpace: "pre",
-                color: c.ink,
+                color: fg,
                 transform: `translateY(${dy.toFixed(2)}px)`,
               }}
             >
@@ -336,7 +393,7 @@ export function CoyDenial({
               left: ax + w.x * FA,
               top: ay,
               height: FA,
-              fontFamily: funnel.fontFamily,
+              fontFamily,
               fontWeight: ASIDE_W,
               fontSize: FA,
               lineHeight: `${FA}px`,
@@ -363,7 +420,7 @@ export function CoyDenial({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

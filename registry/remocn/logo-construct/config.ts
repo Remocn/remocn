@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const logoConstructConfig: ComponentConfig = {
   componentName: "LogoConstruct",
@@ -13,16 +19,31 @@ export const logoConstructConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     name: {
       type: "text-content",
       default: "emocn",
       description: "Name",
     },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 10,
+      step: 1,
+      description: "Letter stagger",
+      hiddenFromList: false,
+    },
+    grid: {
+      type: "boolean",
+      default: true,
+      description: "Grid",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Manrope", grain: true }),
     speed: {
       type: "number",
       default: 1,

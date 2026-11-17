@@ -10,7 +10,7 @@ import {
   useVideoConfig,
 } from "remotion";
 
-const { fontFamily } = loadFont("normal", {
+const oswald = loadFont("normal", {
   weights: ["300", "400", "500"],
   subsets: ["latin"],
 });
@@ -24,7 +24,21 @@ export interface EscalateCardsProps {
   firstBeat?: number;
   /** Each card lasts this share of the one before: below 1 the cuts accelerate. */
   accel?: number;
+  /** Frames after the last cut before the date cuts in. */
+  dateDelay?: number;
+  /** How far the last card pushes in over its hold (0.045 = 4.5%). */
+  push?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Background fill in place of the theme stage and the climax mesh; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the cards. Load it yourself; Oswald by default. Card widths are fitted to Oswald. */
+  fontFamily?: string;
+  /** Size of the cards, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -123,6 +137,7 @@ function textWidth(text: string, track: number) {
  */
 function Line({
   y,
+  fontFamily,
   size,
   tracking,
   weight,
@@ -132,6 +147,7 @@ function Line({
   children,
 }: {
   y: number;
+  fontFamily: string;
   size: number;
   tracking: number;
   weight: number;
@@ -181,16 +197,39 @@ function Line({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function EscalateCards({
   words = ["ONE", "CODEBASE", "EVERY", "LAUNCH"],
   date = "OCTOBER 30",
   firstBeat = 26,
   accel = 0.6,
+  dateDelay = DATE_DELAY,
+  push = 0.045,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = oswald.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: EscalateCardsProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
   const n = Math.max(1, words.length);
@@ -238,43 +277,50 @@ export function EscalateCards({
     ? interpolate(local, [0, 80], [0, 1], { ...CLAMP, easing: SETTLE })
     : 0;
   const mesh = card.climax ? meshGround(settle, accent, c.pale) : "";
-  const ground = card.climax && !c.clip ? mesh : c.bg;
-  const ink = card.climax && !c.clip ? "#FFFFFF" : c.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
+  const onMesh = card.climax && !c.clip && background === undefined;
+  const ground = onMesh ? mesh : stage;
+  const fg = ink ?? (onMesh ? "#FFFFFF" : c.fg);
 
   // A hair of drift keeps each card alive without softening the cut; the
   // climax gets a slow settling push instead.
-  const scale = card.climax
-    ? 1 + 0.045 * settle
+  const zoom = card.climax
+    ? 1 + push * settle
     : 1 + 0.025 * Math.min(1, local / card.length);
-  const showDate = card.climax && date !== "" && local >= DATE_DELAY;
+  const showDate = card.climax && date !== "" && local >= dateDelay;
   const titleY = card.climax && date !== "" ? H * 0.45 : H * 0.5;
   const dateSize = H * 0.032;
 
   return (
     <AbsoluteFill style={{ background: ground, overflow: "hidden" }}>
-      <Line
-        y={titleY}
-        size={card.size}
-        tracking={card.track}
-        weight={card.weight}
-        color={ink}
-        scale={scale}
-        fill={card.climax && c.clip ? { image: mesh, W, H } : undefined}
-      >
-        {card.text}
-      </Line>
-      {showDate ? (
+      <ScaleLayer scale={scale}>
         <Line
-          y={titleY + (lastSize * CAP * scale) / 2 + H * 0.1}
-          size={dateSize}
-          tracking={0.36}
-          weight={400}
-          color={ink}
-          scale={1}
+          y={titleY}
+          fontFamily={fontFamily}
+          size={card.size}
+          tracking={card.track}
+          weight={card.weight}
+          color={fg}
+          scale={zoom}
+          fill={card.climax && c.clip ? { image: mesh, W, H } : undefined}
         >
-          {date}
+          {card.text}
         </Line>
-      ) : null}
+        {showDate ? (
+          <Line
+            y={titleY + (lastSize * CAP * zoom) / 2 + H * 0.1}
+            fontFamily={fontFamily}
+            size={dateSize}
+            tracking={0.36}
+            weight={400}
+            color={fg}
+            scale={1}
+          >
+            {date}
+          </Line>
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

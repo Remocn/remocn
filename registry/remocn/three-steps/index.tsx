@@ -30,7 +30,23 @@ export interface ThreeStepsProps {
   steps?: Step[];
   eyebrow?: string;
   outcome?: string;
+  /** Frames the dot takes to travel from one step to the next. */
+  travel?: number;
+  /** Frames the dot rests on each step. */
+  pause?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy (the outcome stays serif). Load it yourself; Manrope by default. */
+  fontFamily?: string;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the steps, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -183,6 +199,7 @@ function StepText({
   u,
   numSize,
   sheen,
+  fontFamily,
 }: {
   index: number;
   step: Step;
@@ -197,6 +214,7 @@ function StepText({
   numSize: number;
   /** Gradient band for the numeral: total width and this numeral's offset in it. */
   sheen: { total: number; offset: number; width: number };
+  fontFamily: string;
 }) {
   const outIn = rise(t, start + 16, 18);
   const lit = interpolate(t, [start - 2, start + 8], [0, 1], {
@@ -221,7 +239,7 @@ function StepText({
         start={ghostAt}
         pad={numSize * 0.04}
         style={{
-          fontFamily: sans,
+          fontFamily,
           fontWeight: 400,
           fontSize: numSize,
           lineHeight: 1,
@@ -255,7 +273,7 @@ function StepText({
         start={start + 3}
         pad={8 * u}
         style={{
-          fontFamily: sans,
+          fontFamily,
           fontWeight: 500,
           fontSize: 44 * u,
           lineHeight: 1.05,
@@ -272,7 +290,7 @@ function StepText({
           start={start + 6}
           pad={4 * u}
           style={{
-            fontFamily: sans,
+            fontFamily,
             fontWeight: 400,
             fontSize: 20 * u,
             lineHeight: 1.35,
@@ -329,18 +347,54 @@ function StepText({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ThreeSteps({
   steps = DEFAULT_STEPS,
   eyebrow = "How it works",
   outcome = "Your launch video, shipped",
+  travel = TRAVEL,
+  pause = PAUSE,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  grain = true,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: ThreeStepsProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = Math.min(W / 1280, H / 720);
-  const c = THEMES[theme];
+  const base = THEMES[theme];
+  const solid =
+    background === undefined || background === "transparent"
+      ? undefined
+      : background;
+  // Node fills and the ghost numerals mix against the stage colour, so a
+  // solid background stands in for the theme's there too.
+  const c: Theme =
+    ink === undefined && solid === undefined
+      ? base
+      : ({ ...base, fg: ink ?? base.fg, bg: solid ?? base.bg } as Theme);
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? base.bg);
   const n = Math.max(1, steps.length);
 
   const L = W * 0.08;
@@ -352,7 +406,7 @@ export function ThreeSteps({
   const lastX = nodeX(n - 1);
   const firstX = nodeX(0);
 
-  const fillAt = (i: number) => FIRST_FILL + i * (TRAVEL + PAUSE);
+  const fillAt = (i: number) => FIRST_FILL + i * (travel + pause);
   const done = fillAt(n - 1);
 
   const lineP = interpolate(t, [LINE_START, LINE_START + LINE_DUR], [0, 1], {
@@ -363,7 +417,7 @@ export function ThreeSteps({
 
   let dotX = firstX;
   for (let i = 1; i < n; i++) {
-    const p = interpolate(t, [fillAt(i) - TRAVEL, fillAt(i)], [0, 1], {
+    const p = interpolate(t, [fillAt(i) - travel, fillAt(i)], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
@@ -387,182 +441,187 @@ export function ThreeSteps({
   const railId = `rail${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(ellipse 60% 65% at 42% 40%, ${c.key}, transparent 72%)`,
-        }}
-      />
-      <AbsoluteFill
-        style={{ transform: `scale(${cam})`, transformOrigin: "45% 45%" }}
-      >
-        <div
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      {background === undefined ? (
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            textAlign: "center",
-            top: lineY - 70 * u,
-            fontFamily: sans,
-            fontWeight: 500,
-            fontSize: 15 * u,
-            lineHeight: 1,
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            color: c.muted,
-            opacity: eyeIn,
-            transform: `translateY(${(1 - eyeIn) * 8 * u}px)`,
+            background: `radial-gradient(ellipse 60% 65% at 42% 40%, ${c.key}, transparent 72%)`,
           }}
+        />
+      ) : null}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{ transform: `scale(${cam})`, transformOrigin: "45% 45%" }}
         >
-          {eyebrow}
-        </div>
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              textAlign: "center",
+              top: lineY - 70 * u,
+              fontFamily,
+              fontWeight: 500,
+              fontSize: 15 * u,
+              lineHeight: 1,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              color: c.muted,
+              opacity: eyeIn,
+              transform: `translateY(${(1 - eyeIn) * 8 * u}px)`,
+            }}
+          >
+            {eyebrow}
+          </div>
 
-        <svg
-          width={W}
-          height={H}
-          viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0, overflow: "visible" }}
-          aria-hidden
-        >
-          <line
-            x1={firstX}
-            y1={lineY}
-            x2={lineEnd}
-            y2={lineY}
-            stroke={c.hair}
-            strokeWidth={stroke}
-          />
-          <defs>
-            <linearGradient
-              id={railId}
-              gradientUnits="userSpaceOnUse"
+          <svg
+            width={W}
+            height={H}
+            viewBox={`0 0 ${W} ${H}`}
+            style={{ position: "absolute", inset: 0, overflow: "visible" }}
+            aria-hidden
+          >
+            <line
               x1={firstX}
-              y1={0}
-              x2={lastX}
-              y2={0}
-            >
-              {c.ramp.map((col, i) => (
-                <stop
-                  key={col}
-                  offset={i / (c.ramp.length - 1)}
-                  stopColor={col}
-                />
-              ))}
-            </linearGradient>
-          </defs>
-          <line
-            x1={firstX}
-            y1={lineY}
-            x2={Math.max(firstX + 0.01, dotX)}
-            y2={lineY}
-            stroke={`url(#${railId})`}
-            strokeOpacity={dotIn}
-            strokeWidth={stroke * 2.5}
-            strokeLinecap="round"
-          />
-          {steps.map((_, i) => {
-            const x = nodeX(i);
-            const reach = interpolate(
-              lineEnd,
-              [x - 30 * u, x + 4 * u],
-              [0, 1],
-              { ...CLAMP, easing: EASE_OUT },
-            );
-            const f = interpolate(t, [fillAt(i), fillAt(i) + 8], [0, 1], {
-              ...CLAMP,
-              easing: EASE_OUT,
-            });
-            const pop = Math.sin(Math.PI * f);
-            const fillColor = sampleRamp(
-              c.ramp,
-              (x - firstX) / Math.max(1, lastX - firstX),
-            );
-            const r = nodeR * (0.7 + 0.3 * reach) * (1 + 0.18 * pop);
-            return (
-              <g key={i} opacity={reach}>
-                <circle
-                  cx={x}
-                  cy={lineY}
-                  r={r}
-                  fill={c.bg}
-                  stroke={f > 0 ? fillColor : c.muted}
-                  strokeOpacity={f > 0 ? 1 : 0.7}
-                  strokeWidth={stroke * 1.5}
-                />
-                <circle
-                  cx={x}
-                  cy={lineY}
-                  r={r * f}
-                  fill={fillColor}
-                  opacity={f}
-                />
-              </g>
-            );
-          })}
-          {n > 0 ? (
-            <circle
-              cx={lastX}
-              cy={lineY}
-              r={nodeR * (1 + ringP * 2.6)}
-              fill="none"
-              stroke={c.ramp[c.ramp.length - 1]}
-              strokeWidth={stroke * 1.5}
-              opacity={(1 - ringP) * (ringP > 0 ? 0.8 : 0)}
+              y1={lineY}
+              x2={lineEnd}
+              y2={lineY}
+              stroke={c.hair}
+              strokeWidth={stroke}
             />
-          ) : null}
-          {[3, 2, 1].map((g) => (
+            <defs>
+              <linearGradient
+                id={railId}
+                gradientUnits="userSpaceOnUse"
+                x1={firstX}
+                y1={0}
+                x2={lastX}
+                y2={0}
+              >
+                {c.ramp.map((col, i) => (
+                  <stop
+                    key={col}
+                    offset={i / (c.ramp.length - 1)}
+                    stopColor={col}
+                  />
+                ))}
+              </linearGradient>
+            </defs>
+            <line
+              x1={firstX}
+              y1={lineY}
+              x2={Math.max(firstX + 0.01, dotX)}
+              y2={lineY}
+              stroke={`url(#${railId})`}
+              strokeOpacity={dotIn}
+              strokeWidth={stroke * 2.5}
+              strokeLinecap="round"
+            />
+            {steps.map((_, i) => {
+              const x = nodeX(i);
+              const reach = interpolate(
+                lineEnd,
+                [x - 30 * u, x + 4 * u],
+                [0, 1],
+                { ...CLAMP, easing: EASE_OUT },
+              );
+              const f = interpolate(t, [fillAt(i), fillAt(i) + 8], [0, 1], {
+                ...CLAMP,
+                easing: EASE_OUT,
+              });
+              const pop = Math.sin(Math.PI * f);
+              const fillColor = sampleRamp(
+                c.ramp,
+                (x - firstX) / Math.max(1, lastX - firstX),
+              );
+              const r = nodeR * (0.7 + 0.3 * reach) * (1 + 0.18 * pop);
+              return (
+                <g key={i} opacity={reach}>
+                  <circle
+                    cx={x}
+                    cy={lineY}
+                    r={r}
+                    fill={c.bg}
+                    stroke={f > 0 ? fillColor : c.muted}
+                    strokeOpacity={f > 0 ? 1 : 0.7}
+                    strokeWidth={stroke * 1.5}
+                  />
+                  <circle
+                    cx={x}
+                    cy={lineY}
+                    r={r * f}
+                    fill={fillColor}
+                    opacity={f}
+                  />
+                </g>
+              );
+            })}
+            {n > 0 ? (
+              <circle
+                cx={lastX}
+                cy={lineY}
+                r={nodeR * (1 + ringP * 2.6)}
+                fill="none"
+                stroke={c.ramp[c.ramp.length - 1]}
+                strokeWidth={stroke * 1.5}
+                opacity={(1 - ringP) * (ringP > 0 ? 0.8 : 0)}
+              />
+            ) : null}
+            {[3, 2, 1].map((g) => (
+              <circle
+                key={g}
+                cx={dotX - g * 7 * u * trail}
+                cy={lineY}
+                r={nodeR * 0.55}
+                fill={c.fg}
+                opacity={dotIn * dotOut * trail * (0.22 / g)}
+              />
+            ))}
             <circle
-              key={g}
-              cx={dotX - g * 7 * u * trail}
+              cx={dotX}
               cy={lineY}
               r={nodeR * 0.55}
               fill={c.fg}
-              opacity={dotIn * dotOut * trail * (0.22 / g)}
+              opacity={dotIn * dotOut}
             />
-          ))}
-          <circle
-            cx={dotX}
-            cy={lineY}
-            r={nodeR * 0.55}
-            fill={c.fg}
-            opacity={dotIn * dotOut}
-          />
-        </svg>
+          </svg>
 
-        {steps.map((step, i) => (
-          <div
-            key={i}
-            style={{
-              position: "absolute",
-              left: nodeX(i) - colW / 2 + 12 * u,
-              top: lineY + 48 * u,
-              width: colW - 24 * u,
-            }}
-          >
-            <StepText
-              index={i}
-              step={step}
-              t={t}
-              start={fillAt(i) + 2}
-              ghostAt={
-                LINE_START + 4 + (i / Math.max(1, n - 1)) * LINE_DUR * 0.85
-              }
-              last={i === n - 1}
-              outcome={outcome}
-              accent={accent}
-              c={c}
-              u={u}
-              numSize={numSize}
-              sheen={{
-                total: lastX - firstX + numSize * 1.12,
-                offset: nodeX(i) - firstX,
-                width: numSize * 1.12,
+          {steps.map((step, i) => (
+            <div
+              key={i}
+              style={{
+                position: "absolute",
+                left: nodeX(i) - colW / 2 + 12 * u,
+                top: lineY + 48 * u,
+                width: colW - 24 * u,
               }}
-            />
-          </div>
-        ))}
-      </AbsoluteFill>
-      <Grain opacity={c.grain} />
+            >
+              <StepText
+                index={i}
+                step={step}
+                t={t}
+                start={fillAt(i) + 2}
+                ghostAt={
+                  LINE_START + 4 + (i / Math.max(1, n - 1)) * LINE_DUR * 0.85
+                }
+                last={i === n - 1}
+                outcome={outcome}
+                accent={accent}
+                c={c}
+                u={u}
+                numSize={numSize}
+                fontFamily={fontFamily}
+                sheen={{
+                  total: lastX - firstX + numSize * 1.12,
+                  offset: nodeX(i) - firstX,
+                  width: numSize * 1.12,
+                }}
+              />
+            </div>
+          ))}
+        </AbsoluteFill>
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

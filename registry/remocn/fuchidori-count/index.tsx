@@ -28,7 +28,19 @@ export interface FuchidoriCountProps {
   maxBorders?: number;
   colors?: string[];
   accent?: string;
+  /** Color of the figure and its ink rings; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Zen Kaku Gothic New by default. */
+  fontFamily?: string;
+  /** Weight of the figure. */
+  fontWeight?: number;
+  /** Frames the count takes to reach the value. */
+  countLength?: number;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -76,11 +88,16 @@ interface Metrics {
   label: number;
 }
 
-function measure(chars: string[], label: string): Metrics {
+function measure(
+  chars: string[],
+  label: string,
+  fontFamily: string,
+  weight: number,
+): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("fuchidori-count: no 2d context");
-  ctx.font = `500 100px "${kaku.fontFamily}"`;
+  ctx.font = `${weight} 100px "${fontFamily}"`;
   let digit = 0;
   for (const d of "0123456789") {
     digit = Math.max(digit, ctx.measureText(d).width / 100);
@@ -88,7 +105,7 @@ function measure(chars: string[], label: string): Metrics {
   const adv: Record<string, number> = {};
   for (const ch of chars) adv[ch] = ctx.measureText(ch).width / 100;
   const cap = ctx.measureText("0").actualBoundingBoxAscent / 100;
-  ctx.font = `400 100px "${kaku.fontFamily}"`;
+  ctx.font = `400 100px "${fontFamily}"`;
   return {
     adv,
     digit,
@@ -97,7 +114,12 @@ function measure(chars: string[], label: string): Metrics {
   };
 }
 
-function useMetrics(chars: string[], label: string) {
+function useMetrics(
+  chars: string[],
+  label: string,
+  fontFamily: string,
+  fontWeight: number,
+) {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("fuchidori-count: measuring"));
   const released = useRef(false);
@@ -106,13 +128,13 @@ function useMetrics(chars: string[], label: string) {
     let live = true;
     Promise.all([
       kaku.waitUntilDone(),
-      document.fonts.load(`500 100px "${kaku.fontFamily}"`),
-      document.fonts.load(`400 100px "${kaku.fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setMetrics(measure(Array.from(key), label));
+        setMetrics(measure(Array.from(key), label, fontFamily, fontWeight));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -121,8 +143,24 @@ function useMetrics(chars: string[], label: string) {
     return () => {
       live = false;
     };
-  }, [key, label, handle]);
+  }, [key, label, handle, fontFamily, fontWeight]);
   return metrics;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function FuchidoriCount({
@@ -134,13 +172,20 @@ export function FuchidoriCount({
   maxBorders = 4,
   colors,
   accent,
+  ink,
   background,
+  fontFamily = kaku.fontFamily,
+  fontWeight = 500,
+  countLength = COUNT_LEN,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: FuchidoriCountProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const bg = background ?? c.bg;
   const stage = bg === "transparent" ? c.bg : bg;
   const red = accent ?? VERMILION;
@@ -152,7 +197,7 @@ export function FuchidoriCount({
     () => Array.from(new Set(Array.from(`${finalText}0123456789,`))),
     [finalText],
   );
-  const m = useMetrics(chars, label);
+  const m = useMetrics(chars, label, fontFamily, fontWeight);
 
   const lo = Math.log10(start);
   const hi = Math.log10(end);
@@ -165,7 +210,7 @@ export function FuchidoriCount({
     return <div style={{ position: "absolute", inset: 0, background: bg }} />;
   }
 
-  const countP = interpolate(t, [COUNT_AT, COUNT_AT + COUNT_LEN], [0, 1], {
+  const countP = interpolate(t, [COUNT_AT, COUNT_AT + countLength], [0, 1], {
     ...CLAMP,
     easing: EASE_COUNT,
   });
@@ -182,7 +227,7 @@ export function FuchidoriCount({
       if (EASE_COUNT(mid) < target) a = mid;
       else b = mid;
     }
-    return COUNT_AT + b * COUNT_LEN;
+    return COUNT_AT + b * countLength;
   };
   const grows = shown.map((k) =>
     spring({
@@ -258,8 +303,8 @@ export function FuchidoriCount({
           style={{
             fill,
             stroke: stroke ?? "none",
-            fontFamily: kaku.fontFamily,
-            fontWeight: 500,
+            fontFamily,
+            fontWeight,
             fontSize: F,
           }}
         >
@@ -269,7 +314,7 @@ export function FuchidoriCount({
     </g>
   );
 
-  const rings = colors?.length ? colors : [red, c.ink];
+  const rings = colors?.length ? colors : [red, fg];
   const layers: React.ReactNode[] = [];
   for (let i = N - 1; i >= 0; i--) {
     const g = grows[i];
@@ -280,7 +325,7 @@ export function FuchidoriCount({
     layers.push(layer(`r${i}`, col, 2 * outer * F, col));
     layers.push(layer(`g${i}`, stage, 2 * inner * F, stage));
   }
-  layers.push(layer("fill", null, 0, c.ink));
+  layers.push(layer("fill", null, 0, fg));
 
   const clipTop = top - F * 0.1;
   const clipH = (m.cap + 2 * R) * F + F * 0.4;
@@ -292,61 +337,63 @@ export function FuchidoriCount({
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      {label ? (
+      <ScaleLayer scale={scale}>
+        {label ? (
+          <div
+            style={{
+              position: "absolute",
+              left: marginX,
+              top: marginY,
+              width: labelSize * 1.4,
+              height: H - marginY * 2,
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                writingMode: "vertical-rl",
+                fontFamily,
+                fontWeight: 400,
+                fontSize: labelSize,
+                lineHeight: `${labelSize * 1.4}px`,
+                color: red,
+                whiteSpace: "pre",
+                transform: `translateY(${(-(1 - labelP) * (H - marginY * 2) * 0.25).toFixed(2)}px)`,
+                opacity: labelP,
+              }}
+            >
+              {label}
+            </div>
+          </div>
+        ) : null}
         <div
           style={{
             position: "absolute",
-            left: marginX,
-            top: marginY,
-            width: labelSize * 1.4,
-            height: H - marginY * 2,
+            left: 0,
+            top: clipTop,
+            width: W,
+            height: clipH,
             overflow: "hidden",
           }}
         >
-          <div
+          <svg
+            width={W}
+            height={H}
+            viewBox={`0 0 ${W} ${H}`}
             style={{
-              writingMode: "vertical-rl",
-              fontFamily: kaku.fontFamily,
-              fontWeight: 400,
-              fontSize: labelSize,
-              lineHeight: `${labelSize * 1.4}px`,
-              color: red,
-              whiteSpace: "pre",
-              transform: `translateY(${(-(1 - labelP) * (H - marginY * 2) * 0.25).toFixed(2)}px)`,
-              opacity: labelP,
+              position: "absolute",
+              left: 0,
+              top: -clipTop,
+              transform: `translateY(${riseY.toFixed(2)}px) scale(${(1 + press).toFixed(4)})`,
+              transformOrigin: `${pressX.toFixed(1)}px ${baseY - (m.cap * F) / 2}px`,
+              overflow: "visible",
             }}
+            aria-hidden
           >
-            {label}
-          </div>
+            {layers}
+          </svg>
         </div>
-      ) : null}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: clipTop,
-          width: W,
-          height: clipH,
-          overflow: "hidden",
-        }}
-      >
-        <svg
-          width={W}
-          height={H}
-          viewBox={`0 0 ${W} ${H}`}
-          style={{
-            position: "absolute",
-            left: 0,
-            top: -clipTop,
-            transform: `translateY(${riseY.toFixed(2)}px) scale(${(1 + press).toFixed(4)})`,
-            transformOrigin: `${pressX.toFixed(1)}px ${baseY - (m.cap * F) / 2}px`,
-            overflow: "visible",
-          }}
-          aria-hidden
-        >
-          {layers}
-        </svg>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

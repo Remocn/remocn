@@ -11,6 +11,7 @@ import type { ControlConfig, ControlType } from "@/lib/customizer-config";
 import { cn } from "@/lib/utils";
 import { BooleanControl } from "./blocks/controls/boolean-control";
 import { ColorControl } from "./blocks/controls/color-control";
+import { ListControl } from "./blocks/controls/list-control";
 import { NumberControl } from "./blocks/controls/number-control";
 import { SelectControl } from "./blocks/controls/select-control";
 import { SliderControl } from "./blocks/controls/slider-control";
@@ -29,13 +30,14 @@ const TIMING =
   /speed|frame|duration|delay|interval|accelerat|stagger|hold|loop|timing|tempo|\(ms\)|seconds|fps|pause/i;
 
 function groupOf(key: string, ctrl: ControlType): Group["id"] {
-  if (ctrl.type === "text") return "content";
+  if (ctrl.type === "text" || ctrl.type === "list") return "content";
   if (TIMING.test(key) || TIMING.test(ctrl.label)) return "timing";
   return "style";
 }
 
 const isLong = (ctrl: ControlType) =>
-  ctrl.type === "text" && ctrl.default.length > LONG_TEXT;
+  (ctrl.type === "text" && ctrl.default.length > LONG_TEXT) ||
+  (ctrl.type === "list" && ctrl.default.join("").length > LONG_TEXT);
 
 /**
  * Flex slot per control. Short copy is sized to its label and value so it
@@ -46,6 +48,7 @@ function slot(ctrl: ControlType): {
   style?: CSSProperties;
 } {
   if (isLong(ctrl)) return { className: "basis-full" };
+  if (ctrl.type === "list") return { className: "flex-[3_1_260px]" };
   if (ctrl.type === "text" && ctrl.default.length > 40) {
     return { className: "flex-[3_1_260px]" };
   }
@@ -53,7 +56,7 @@ function slot(ctrl: ControlType): {
     const width = (ctrl.label.length + ctrl.default.length) * 7 + 40;
     return { style: { flex: `1 1 ${width}px` } };
   }
-  if (ctrl.type === "select") {
+  if (ctrl.type === "select" || ctrl.type === "font") {
     const longest = Math.max(...ctrl.options.map((option) => option.length));
     const width = (ctrl.label.length + longest) * 7.5 + 64;
     return { style: { flex: `1 1 ${Math.max(width, 160)}px` } };
@@ -111,6 +114,7 @@ function Control({
         />
       );
     case "select":
+    case "font":
       return (
         <SelectControl
           id={id}
@@ -135,6 +139,19 @@ function Control({
           id={id}
           label={ctrl.label}
           value={value as string}
+          auto={ctrl.default === ""}
+          onChange={onChange}
+        />
+      );
+    case "list":
+      return (
+        <ListControl
+          id={id}
+          label={ctrl.label}
+          value={value as string[]}
+          fallback={ctrl.default}
+          min={ctrl.min}
+          max={ctrl.max}
           onChange={onChange}
         />
       );

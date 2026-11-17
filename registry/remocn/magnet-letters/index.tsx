@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Figtree";
+import type React from "react";
 import { useLayoutEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -25,6 +26,18 @@ export interface MagnetLettersProps {
   wrongWord?: string;
   /** Magnet body, landing ticks and the right word. */
   accent?: string;
+  /** Frames between letters of the right word dropping in. */
+  stagger?: number;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the line. Load it yourself; Figtree by default. */
+  fontFamily?: string;
+  /** Size of the line and magnet, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -155,22 +168,45 @@ function Magnet({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function MagnetLetters({
   before = "Launch ",
   word = "videos",
   after = ", in code.",
   wrongWord = "slides",
   accent = "#3B5BFD",
+  stagger = DROP_STAGGER,
+  ink,
+  background,
+  fontFamily = face.fontFamily,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: MagnetLettersProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const t = THEMES[theme];
+  const fg = ink ?? t.fg;
 
   const em = Math.round(width * 0.07);
   const textStyle = {
-    fontFamily: face.fontFamily,
+    fontFamily,
     fontSize: em,
     fontWeight: 400,
     letterSpacing: "-0.03em",
@@ -197,6 +233,8 @@ export function MagnetLetters({
     let live = true;
     face
       .waitUntilDone()
+      .catch(() => undefined)
+      .then(() => document.fonts.load(`400 100px "${fontFamily}"`))
       .catch(() => undefined)
       .then(() => document.fonts.ready)
       .then(() => {
@@ -233,7 +271,7 @@ export function MagnetLetters({
     return () => {
       live = false;
     };
-  }, [before, word, after, wrongWord, em, handle]);
+  }, [before, word, after, wrongWord, em, fontFamily, handle]);
 
   const L = layout;
   const wA = L?.a.w ?? 0;
@@ -359,7 +397,7 @@ export function MagnetLetters({
     let blur = 0;
 
     if (it.kind === "right") {
-      const start = DROP + it.k * DROP_STAGGER;
+      const start = DROP + it.k * stagger;
       const land = start + FALL;
       const p = interpolate(frame, [start, land], [0, 1], clamp);
       x = bx(it.ib);
@@ -436,7 +474,7 @@ export function MagnetLetters({
           position: "absolute",
           left: x,
           top: rowTop,
-          color: it.kind === "right" ? accent : t.fg,
+          color: it.kind === "right" ? accent : fg,
           opacity,
           filter: blur > 0.05 ? `blur(${blur}px)` : undefined,
           transformOrigin: `${wGlyph / 2}px ${L?.baseline ?? em}px`,
@@ -452,7 +490,13 @@ export function MagnetLetters({
   const mx = magnetX(frame);
 
   return (
-    <AbsoluteFill style={{ background: t.bg, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? t.bg),
+        overflow: "hidden",
+      }}
+    >
       {/* measuring rows: never shown */}
       <div style={{ position: "absolute", visibility: "hidden", top: 0 }}>
         <div ref={aRef} style={{ ...textStyle, display: "inline-block" }}>
@@ -476,44 +520,46 @@ export function MagnetLetters({
         </div>
       </div>
 
-      <div style={{ position: "absolute", inset: 0, opacity: L ? 1 : 0 }}>
-        {ticks.map((tk) => {
-          const d = frame - tk.land;
-          if (d < 0 || d > 24) return null;
-          const grow = interpolate(d, [0, 3], [0, 1], {
-            ...clamp,
-            easing: EASE_OUT,
-          });
-          const fade = interpolate(d, [6, 24], [1, 0], clamp);
-          return (
-            <div
-              key={tk.key}
-              style={{
-                position: "absolute",
-                left: tk.x - hair / 2,
-                top: baseY + em * 0.1,
-                width: hair,
-                height: em * 0.13 * grow,
-                background: accent,
-                opacity: fade,
-              }}
-            />
-          );
-        })}
+      <ScaleLayer scale={scale}>
+        <div style={{ position: "absolute", inset: 0, opacity: L ? 1 : 0 }}>
+          {ticks.map((tk) => {
+            const d = frame - tk.land;
+            if (d < 0 || d > 24) return null;
+            const grow = interpolate(d, [0, 3], [0, 1], {
+              ...clamp,
+              easing: EASE_OUT,
+            });
+            const fade = interpolate(d, [6, 24], [1, 0], clamp);
+            return (
+              <div
+                key={tk.key}
+                style={{
+                  position: "absolute",
+                  left: tk.x - hair / 2,
+                  top: baseY + em * 0.1,
+                  width: hair,
+                  height: em * 0.13 * grow,
+                  background: accent,
+                  opacity: fade,
+                }}
+              />
+            );
+          })}
 
-        {glyphs}
+          {glyphs}
 
-        <div
-          style={{
-            position: "absolute",
-            left: mx,
-            top: baseY + em * 0.36,
-            transform: `translateX(-50%) scaleX(${magnetScaleX})`,
-          }}
-        >
-          <Magnet size={em} body={accent} tipA={t.tipA} tipB={t.tipB} />
+          <div
+            style={{
+              position: "absolute",
+              left: mx,
+              top: baseY + em * 0.36,
+              transform: `translateX(-50%) scaleX(${magnetScaleX})`,
+            }}
+          >
+            <Magnet size={em} body={accent} tipA={t.tipA} tipB={t.tipB} />
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

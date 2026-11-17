@@ -1,6 +1,7 @@
 "use client";
 
 import { loadVariableFont } from "@remotion/google-fonts/InterTight";
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -19,7 +20,21 @@ export interface EnhanceCountProps {
   text?: string;
   highlight?: string;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy; a variable font keeps the weight sweep smooth. Inter Tight by default. */
+  fontFamily?: string;
+  /** Weight the glyphs settle on. */
+  fontWeight?: number;
+  /** Weight the glyphs start from, before they sharpen. */
+  draftWeight?: number;
+  /** Frames the sharpening sweeps across the whole text. */
+  span?: number;
+  /** Size of the text block, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -64,7 +79,7 @@ interface Metrics {
   baseline: number;
 }
 
-function measure(lines: string[]): Metrics {
+function measure(lines: string[], font: string): Metrics {
   const canvas = document.createElement("canvas");
   canvas.width = 10;
   canvas.height = 10;
@@ -84,7 +99,7 @@ function measure(lines: string[]): Metrics {
     }
     return { lines: out, capTop, baseline };
   }
-  ctx.font = `${DONE_WGHT} ${size}px "${inter.fontFamily}"`;
+  ctx.font = font;
   ctx.letterSpacing = `${TRACK * size}px`;
   for (const l of lines) {
     const chars = Array.from(l);
@@ -104,8 +119,14 @@ function measure(lines: string[]): Metrics {
   return { lines: out, capTop, baseline };
 }
 
-function useMetrics(lines: string[]) {
-  const key = lines.join("\n");
+function useMetrics(
+  lines: string[],
+  fontFamily: string,
+  fontWeight: number,
+  draftWeight: number,
+) {
+  const font = `${fontWeight} 200px "${fontFamily}"`;
+  const key = `${font}\u0002${draftWeight}\u0002${lines.join("\n")}`;
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("enhance-count: measuring"));
   const released = useRef(false);
@@ -113,13 +134,13 @@ function useMetrics(lines: string[]) {
     let live = true;
     Promise.all([
       inter.waitUntilDone(),
-      document.fonts.load(`${DONE_WGHT} 100px "${inter.fontFamily}"`),
-      document.fonts.load(`${DRAFT_WGHT} 100px "${inter.fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
+      document.fonts.load(`${draftWeight} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measure(key.split("\n")) });
+        setState({ key, m: measure(key.split("\u0002")[2].split("\n"), font) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -128,25 +149,49 @@ function useMetrics(lines: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, font, fontFamily, fontWeight, draftWeight]);
   return state && state.key === key ? state.m : null;
 }
 
 const mix = (a: string, b: string, u: number) =>
   `color-mix(in oklab, ${a} ${((1 - u) * 100).toFixed(1)}%, ${b})`;
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function EnhanceCount({
   text = "Draft it fast.\nFinish it sharp.",
   highlight = "sharp.",
   accent,
+  ink,
   background,
+  fontFamily = inter.fontFamily,
+  fontWeight = DONE_WGHT,
+  draftWeight = DRAFT_WGHT,
+  span = ENHANCE_SPAN,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: EnhanceCountProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
   const spot = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const lines = useMemo(() => {
     const l = text
       .split("\n")
@@ -154,7 +199,7 @@ export function EnhanceCount({
       .filter(Boolean);
     return l.length ? l : ["Finish it sharp."];
   }, [text]);
-  const m = useMetrics(lines);
+  const m = useMetrics(lines, fontFamily, fontWeight, draftWeight);
 
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
@@ -183,7 +228,7 @@ export function EnhanceCount({
       .map((w) => w.toLowerCase()),
   );
   const nGlyphs = m.lines.reduce((a, l) => a + l.chars.length, 0);
-  const gap = Math.min(ENHANCE_MAX_GAP, ENHANCE_SPAN / Math.max(1, nGlyphs));
+  const gap = Math.min(ENHANCE_MAX_GAP, span / Math.max(1, nGlyphs));
   const enter = interpolate(t, [0, ENTER_LEN], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
@@ -213,10 +258,10 @@ export function EnhanceCount({
       const uc = Math.min(1, Math.max(0, u));
       const next = i + 1 < line.chars.length ? line.x[i + 1] : line.width;
       const slot = (next - line.x[i]) * F;
-      const wght = DRAFT_WGHT + (DONE_WGHT - DRAFT_WGHT) * u;
+      const wght = draftWeight + (fontWeight - draftWeight) * u;
       const blur = (1 - uc) * F * 0.045;
       const hi = words[i] && ch !== " ";
-      const color = hi ? mix(c.ink, spot, uc) : c.ink;
+      const color = hi ? mix(fg, spot, uc) : fg;
       return (
         <div
           key={`${li}-${i}`}
@@ -229,7 +274,7 @@ export function EnhanceCount({
             lineHeight: `${F}px`,
             textAlign: "center",
             whiteSpace: "pre",
-            fontFamily: inter.fontFamily,
+            fontFamily,
             fontSize: F,
             fontVariationSettings: `"wght" ${wght.toFixed(1)}`,
             color,
@@ -245,7 +290,7 @@ export function EnhanceCount({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {glyphs}
+      <ScaleLayer scale={scale}>{glyphs}</ScaleLayer>
     </AbsoluteFill>
   );
 }

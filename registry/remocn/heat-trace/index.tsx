@@ -27,7 +27,21 @@ export interface HeatTraceProps {
   tagline?: string;
   eyebrow?: string;
   accent?: string;
+  /** Color of the tagline and eyebrow; overrides the theme tones. */
+  ink?: string;
   background?: string;
+  /** Typeface for the tagline and eyebrow. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Frames the heat takes to cross the name. */
+  pass?: number;
+  /** Frames between tagline words as they rise in. */
+  stagger?: number;
+  /** Size of the name and copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -155,17 +169,40 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function HeatTrace({
   name = "remocn",
   logo,
   tagline = "Launch-video scenes for Remotion. Copy, paste, render.",
   eyebrow = "",
   accent = "#3B5BFD",
+  ink,
   background,
+  fontFamily = geist.fontFamily,
+  pass = 56,
+  stagger = 2,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: HeatTraceProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const t = THEMES[theme];
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
@@ -211,7 +248,7 @@ export function HeatTrace({
   const x1 = x0 + nameW;
   const tagTop = inkTop + inkH + fs * 0.3;
 
-  const PASS_END = 56;
+  const PASS_END = pass;
   const headAt = (f: number) => {
     const u = interpolate(f, [0, PASS_END], [0, 1], {
       ...CLAMP,
@@ -345,177 +382,184 @@ export function HeatTrace({
         overflow: "hidden",
       }}
     >
-      <svg
-        width={width}
-        height={height}
-        viewBox={`0 0 ${width} ${height}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <radialGradient id={ids.blob}>
-            <stop offset="0" stopColor="#fff" stopOpacity={1} />
-            <stop offset="0.3" stopColor="#fff" stopOpacity={0.8} />
-            <stop offset="1" stopColor="#fff" stopOpacity={0} />
-          </radialGradient>
-          <linearGradient
-            id={ids.field}
-            gradientUnits="userSpaceOnUse"
-            x1="0"
-            x2="0"
-            y1={baseline - fs * 0.8}
-            y2={baseline}
-          >
-            <stop offset="0" stopColor="#fff" stopOpacity={0.44} />
-            <stop offset="1" stopColor="#fff" stopOpacity={0.3} />
-          </linearGradient>
-          <filter
-            id={ids.heat}
-            filterUnits="userSpaceOnUse"
-            x={region.x}
-            y={region.y}
-            width={region.w}
-            height={region.h}
-            colorInterpolationFilters="sRGB"
-          >
-            <feGaussianBlur stdDeviation={blur} />
-            <feComponentTransfer>
-              <feFuncR type="table" tableValues={tr} />
-              <feFuncG type="table" tableValues={tg} />
-              <feFuncB type="table" tableValues={tb} />
-            </feComponentTransfer>
-          </filter>
-          <filter
-            id={ids.bloom}
-            filterUnits="userSpaceOnUse"
-            x={0}
-            y={0}
-            width={width}
-            height={height}
-            colorInterpolationFilters="sRGB"
-          >
-            <feGaussianBlur stdDeviation={fs * 0.42} />
-            <feComponentTransfer>
-              <feFuncR type="table" tableValues={tr} />
-              <feFuncG type="table" tableValues={tg} />
-              <feFuncB type="table" tableValues={tb} />
-            </feComponentTransfer>
-          </filter>
-          <mask id={ids.mask} maskUnits="userSpaceOnUse">
-            {wordmark ? (
-              <path
-                d={REMOCN_R_PATH}
-                fill="#fff"
-                transform={`translate(${markX} ${baseline - R_H * fs}) scale(${(R_H * fs) / 134.26})`}
-              />
-            ) : null}
-            <text
-              x={textX}
-              y={baseline}
-              fill="#fff"
-              fontFamily={manrope.fontFamily}
-              fontWeight={wordmark ? 600 : 500}
-              fontSize={fs}
-              letterSpacing={LS * fs}
+      <ScaleLayer scale={scale}>
+        <svg
+          width={width}
+          height={height}
+          viewBox={`0 0 ${width} ${height}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            <radialGradient id={ids.blob}>
+              <stop offset="0" stopColor="#fff" stopOpacity={1} />
+              <stop offset="0.3" stopColor="#fff" stopOpacity={0.8} />
+              <stop offset="1" stopColor="#fff" stopOpacity={0} />
+            </radialGradient>
+            <linearGradient
+              id={ids.field}
+              gradientUnits="userSpaceOnUse"
+              x1="0"
+              x2="0"
+              y1={baseline - fs * 0.8}
+              y2={baseline}
             >
-              {wordmark ? "emocn" : name}
-            </text>
-          </mask>
-        </defs>
+              <stop offset="0" stopColor="#fff" stopOpacity={0.44} />
+              <stop offset="1" stopColor="#fff" stopOpacity={0.3} />
+            </linearGradient>
+            <filter
+              id={ids.heat}
+              filterUnits="userSpaceOnUse"
+              x={region.x}
+              y={region.y}
+              width={region.w}
+              height={region.h}
+              colorInterpolationFilters="sRGB"
+            >
+              <feGaussianBlur stdDeviation={blur} />
+              <feComponentTransfer>
+                <feFuncR type="table" tableValues={tr} />
+                <feFuncG type="table" tableValues={tg} />
+                <feFuncB type="table" tableValues={tb} />
+              </feComponentTransfer>
+            </filter>
+            <filter
+              id={ids.bloom}
+              filterUnits="userSpaceOnUse"
+              x={0}
+              y={0}
+              width={width}
+              height={height}
+              colorInterpolationFilters="sRGB"
+            >
+              <feGaussianBlur stdDeviation={fs * 0.42} />
+              <feComponentTransfer>
+                <feFuncR type="table" tableValues={tr} />
+                <feFuncG type="table" tableValues={tg} />
+                <feFuncB type="table" tableValues={tb} />
+              </feComponentTransfer>
+            </filter>
+            <mask id={ids.mask} maskUnits="userSpaceOnUse">
+              {wordmark ? (
+                <path
+                  d={REMOCN_R_PATH}
+                  fill="#fff"
+                  transform={`translate(${markX} ${baseline - R_H * fs}) scale(${(R_H * fs) / 134.26})`}
+                />
+              ) : null}
+              <text
+                x={textX}
+                y={baseline}
+                fill="#fff"
+                fontFamily={manrope.fontFamily}
+                fontWeight={wordmark ? 600 : 500}
+                fontSize={fs}
+                letterSpacing={LS * fs}
+              >
+                {wordmark ? "emocn" : name}
+              </text>
+            </mask>
+          </defs>
 
-        {showStage ? (
-          <g filter={`url(#${ids.bloom})`} opacity={t.bloom * bloomO}>
-            {heatContent(false)}
+          {showStage ? (
+            <g filter={`url(#${ids.bloom})`} opacity={t.bloom * bloomO}>
+              {heatContent(false)}
+            </g>
+          ) : null}
+
+          <g mask={`url(#${ids.mask})`}>
+            <g filter={`url(#${ids.heat})`}>{heatContent(true)}</g>
           </g>
+        </svg>
+
+        {logo && !wordmark ? (
+          <div
+            style={{
+              position: "absolute",
+              left: markX,
+              top: baseline - fs * 0.8,
+              width: fs * 0.84,
+              height: fs * 0.84,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: logoLit,
+              filter: `blur(${(1 - logoLit) * 6 * s}px)`,
+            }}
+          >
+            {logo}
+          </div>
         ) : null}
 
-        <g mask={`url(#${ids.mask})`}>
-          <g filter={`url(#${ids.heat})`}>{heatContent(true)}</g>
-        </g>
-      </svg>
+        {eyebrow ? (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top,
+              textAlign: "center",
+              fontFamily,
+              fontWeight: 500,
+              fontSize: eyeFs,
+              lineHeight: 1,
+              letterSpacing: "0.02em",
+              color: ink ?? t.eyebrow,
+              opacity: interpolate(frame, [4, 20], [0, 1], CLAMP),
+            }}
+          >
+            {eyebrow}
+          </div>
+        ) : null}
 
-      {logo && !wordmark ? (
-        <div
-          style={{
-            position: "absolute",
-            left: markX,
-            top: baseline - fs * 0.8,
-            width: fs * 0.84,
-            height: fs * 0.84,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: logoLit,
-            filter: `blur(${(1 - logoLit) * 6 * s}px)`,
-          }}
-        >
-          {logo}
-        </div>
-      ) : null}
+        {tagline ? (
+          <div
+            style={{
+              position: "absolute",
+              left: (width - tagMax) / 2,
+              width: tagMax,
+              top: tagTop,
+              textAlign: "center",
+              textWrap: "balance",
+              fontFamily,
+              fontWeight: 400,
+              fontSize: tagFs,
+              lineHeight: 1.3,
+              letterSpacing: "-0.012em",
+              color: ink ?? t.muted,
+            }}
+          >
+            {words.map((w, i) => {
+              const k = interpolate(
+                frame,
+                [58 + i * stagger, 76 + i * stagger],
+                [0, 1],
+                {
+                  ...CLAMP,
+                  easing: EASE_OUT,
+                },
+              );
+              return (
+                <Fragment key={i}>
+                  {i > 0 ? " " : null}
+                  <span
+                    style={{
+                      display: "inline-block",
+                      opacity: k,
+                      transform: `translateY(${(1 - k) * 0.45}em)`,
+                      filter: `blur(${(1 - k) * 6 * s}px)`,
+                    }}
+                  >
+                    {w}
+                  </span>
+                </Fragment>
+              );
+            })}
+          </div>
+        ) : null}
+      </ScaleLayer>
 
-      {eyebrow ? (
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top,
-            textAlign: "center",
-            fontFamily: geist.fontFamily,
-            fontWeight: 500,
-            fontSize: eyeFs,
-            lineHeight: 1,
-            letterSpacing: "0.02em",
-            color: t.eyebrow,
-            opacity: interpolate(frame, [4, 20], [0, 1], CLAMP),
-          }}
-        >
-          {eyebrow}
-        </div>
-      ) : null}
-
-      {tagline ? (
-        <div
-          style={{
-            position: "absolute",
-            left: (width - tagMax) / 2,
-            width: tagMax,
-            top: tagTop,
-            textAlign: "center",
-            textWrap: "balance",
-            fontFamily: geist.fontFamily,
-            fontWeight: 400,
-            fontSize: tagFs,
-            lineHeight: 1.3,
-            letterSpacing: "-0.012em",
-            color: t.muted,
-          }}
-        >
-          {words.map((w, i) => {
-            const k = interpolate(frame, [58 + i * 2, 76 + i * 2], [0, 1], {
-              ...CLAMP,
-              easing: EASE_OUT,
-            });
-            return (
-              <Fragment key={i}>
-                {i > 0 ? " " : null}
-                <span
-                  style={{
-                    display: "inline-block",
-                    opacity: k,
-                    transform: `translateY(${(1 - k) * 0.45}em)`,
-                    filter: `blur(${(1 - k) * 6 * s}px)`,
-                  }}
-                >
-                  {w}
-                </span>
-              </Fragment>
-            );
-          })}
-        </div>
-      ) : null}
-
-      {showStage ? <Grain opacity={t.grain} /> : null}
+      {showStage && grain ? <Grain opacity={t.grain} /> : null}
     </AbsoluteFill>
   );
 }

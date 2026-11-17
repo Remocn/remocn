@@ -3,6 +3,7 @@
 import { loadFont as loadGeist } from "@remotion/google-fonts/Geist";
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
+import type React from "react";
 import { useId } from "react";
 import {
   AbsoluteFill,
@@ -70,6 +71,24 @@ export interface SankeyFlowProps {
   total?: number;
   label?: string;
   accent?: string;
+  /** Color of the source names, total and target; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the names and total. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Frames between flows starting. */
+  stagger?: number;
+  /** Frames for one flow to reach the target. */
+  flowLength?: number;
+  /** Replaces the remocn mark when the target is "remocn". */
+  logo?: React.ReactNode;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the chart and copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -149,19 +168,47 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function SankeyFlow({
   sources = DEFAULT_SOURCES,
   target = "remocn",
   total,
   label = "videos rendered",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  stagger = FLOW_STAGGER,
+  flowLength = FLOW_LEN,
+  logo,
+  grain = true,
+  scale: size = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: SankeyFlowProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const fill =
+    background === "transparent" ? "transparent" : (background ?? p.bg);
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const list = sources.slice(0, 6);
   const sum = list.reduce((s, x) => s + Math.max(0, x.value), 0) || 1;
@@ -189,7 +236,7 @@ export function SankeyFlow({
       t0: ty,
       t1: ty + h,
       inAt: NODE_START + i * NODE_STAGGER,
-      flowAt: FLOW_START + i * FLOW_STAGGER,
+      flowAt: FLOW_START + i * stagger,
     };
     sy += h + gap;
     ty += h;
@@ -200,7 +247,7 @@ export function SankeyFlow({
   const xt = tgtX;
   const mx = (xs + xt) / 2;
   const L = xt - xs;
-  const lastFlow = FLOW_START + (list.length - 1) * FLOW_STAGGER + FLOW_LEN;
+  const lastFlow = FLOW_START + (list.length - 1) * stagger + flowLength;
   const HIT = lastFlow - 4;
 
   const land = spring({
@@ -235,303 +282,305 @@ export function SankeyFlow({
   const blockLeft = tgtX + tgtW + 40 * u;
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          transform: `scale(${push})`,
-          transformOrigin: "50% 50%",
-          opacity: stage,
-        }}
-      >
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
+    <AbsoluteFill style={{ background: fill, overflow: "hidden" }}>
+      <ScaleLayer scale={size}>
+        <AbsoluteFill
+          style={{
+            transform: `scale(${push})`,
+            transformOrigin: "50% 50%",
+            opacity: stage,
+          }}
         >
-          <defs>
-            <linearGradient
-              id={`${id}f`}
-              gradientUnits="userSpaceOnUse"
-              x1={xs}
-              y1={0}
-              x2={xt}
-              y2={0}
-            >
-              <stop
-                offset={0}
-                stopColor={p.band}
-                stopOpacity={p.bandA * (1 - 0.2 * settle)}
-              />
-              <stop
-                offset={0.34}
-                stopColor={p.band}
-                stopOpacity={p.bandA * (1 - 0.2 * settle)}
-              />
-              <stop
-                offset={0.62}
-                stopColor={theme === "dark" ? BEAM[2] : BEAM[1]}
-                stopOpacity={theme === "dark" ? 0.38 + 0.12 * settle : 0.6}
-              />
-              <stop
-                offset={0.86}
-                stopColor={accent}
-                stopOpacity={0.78 + 0.12 * settle}
-              />
-              <stop
-                offset={1}
-                stopColor={theme === "dark" ? BEAM[1] : BEAM[2]}
-                stopOpacity={0.9 + 0.1 * settle}
-              />
-            </linearGradient>
-            <linearGradient
-              id={`${id}t`}
-              gradientUnits="userSpaceOnUse"
-              x1={0}
-              y1={nodes[0]?.t0 ?? 0}
-              x2={0}
-              y2={nodes[nodes.length - 1]?.t1 ?? height}
-            >
-              <stop
-                offset={0}
-                stopColor={theme === "dark" ? BEAM[0] : BEAM[1]}
-              />
-              <stop
-                offset={0.4}
-                stopColor={theme === "dark" ? BEAM[1] : accent}
-              />
-              <stop
-                offset={1}
-                stopColor={theme === "dark" ? accent : BEAM[3]}
-              />
-            </linearGradient>
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            <defs>
+              <linearGradient
+                id={`${id}f`}
+                gradientUnits="userSpaceOnUse"
+                x1={xs}
+                y1={0}
+                x2={xt}
+                y2={0}
+              >
+                <stop
+                  offset={0}
+                  stopColor={p.band}
+                  stopOpacity={p.bandA * (1 - 0.2 * settle)}
+                />
+                <stop
+                  offset={0.34}
+                  stopColor={p.band}
+                  stopOpacity={p.bandA * (1 - 0.2 * settle)}
+                />
+                <stop
+                  offset={0.62}
+                  stopColor={theme === "dark" ? BEAM[2] : BEAM[1]}
+                  stopOpacity={theme === "dark" ? 0.38 + 0.12 * settle : 0.6}
+                />
+                <stop
+                  offset={0.86}
+                  stopColor={accent}
+                  stopOpacity={0.78 + 0.12 * settle}
+                />
+                <stop
+                  offset={1}
+                  stopColor={theme === "dark" ? BEAM[1] : BEAM[2]}
+                  stopOpacity={0.9 + 0.1 * settle}
+                />
+              </linearGradient>
+              <linearGradient
+                id={`${id}t`}
+                gradientUnits="userSpaceOnUse"
+                x1={0}
+                y1={nodes[0]?.t0 ?? 0}
+                x2={0}
+                y2={nodes[nodes.length - 1]?.t1 ?? height}
+              >
+                <stop
+                  offset={0}
+                  stopColor={theme === "dark" ? BEAM[0] : BEAM[1]}
+                />
+                <stop
+                  offset={0.4}
+                  stopColor={theme === "dark" ? BEAM[1] : accent}
+                />
+                <stop
+                  offset={1}
+                  stopColor={theme === "dark" ? accent : BEAM[3]}
+                />
+              </linearGradient>
+              {nodes.map((n) => {
+                const front = interpolate(
+                  t,
+                  [n.flowAt, n.flowAt + flowLength],
+                  [0, 1 + FEATHER],
+                  { ...CLAMP, easing: EASE_FLOW },
+                );
+                const fx = xs + L * Math.max(front, 0.001);
+                const soft = Math.max(0, 1 - (L * FEATHER) / (fx - xs));
+                return (
+                  <linearGradient
+                    key={n.label}
+                    id={`${id}m${n.i}`}
+                    gradientUnits="userSpaceOnUse"
+                    x1={xs}
+                    y1={0}
+                    x2={fx}
+                    y2={0}
+                  >
+                    <stop offset={0} stopColor="#fff" stopOpacity={1} />
+                    <stop offset={soft} stopColor="#fff" stopOpacity={1} />
+                    <stop offset={1} stopColor="#fff" stopOpacity={0} />
+                  </linearGradient>
+                );
+              })}
+              {nodes.map((n) => (
+                <mask key={n.label} id={`${id}k${n.i}`}>
+                  <rect
+                    x={0}
+                    y={0}
+                    width={width}
+                    height={height}
+                    fill={`url(#${id}m${n.i})`}
+                  />
+                </mask>
+              ))}
+            </defs>
+
+            {nodes.map((n) => {
+              if (t < n.flowAt) return null;
+              const d = [
+                `M${xs} ${n.y0}`,
+                `C${mx} ${n.y0} ${mx} ${n.t0} ${xt} ${n.t0}`,
+                `L${xt} ${n.t1}`,
+                `C${mx} ${n.t1} ${mx} ${n.y1} ${xs} ${n.y1}`,
+                "Z",
+              ].join(" ");
+              return (
+                <path
+                  key={n.label}
+                  d={d}
+                  fill={`url(#${id}f)`}
+                  stroke={fill}
+                  strokeWidth={1.5 * u}
+                  strokeLinejoin="round"
+                  mask={`url(#${id}k${n.i})`}
+                />
+              );
+            })}
+
+            {nodes.map((n) => {
+              const k = interpolate(t, [n.inAt, n.inAt + 16], [0, 1], {
+                ...CLAMP,
+                easing: EASE_OUT,
+              });
+              const h = (n.y1 - n.y0) * (0.4 + 0.6 * k);
+              const mid = (n.y0 + n.y1) / 2;
+              return (
+                <rect
+                  key={n.label}
+                  x={srcX}
+                  y={mid - h / 2}
+                  width={nodeW}
+                  height={h}
+                  rx={2 * u}
+                  fill={p.node}
+                  opacity={k}
+                />
+              );
+            })}
+
             {nodes.map((n) => {
               const front = interpolate(
                 t,
-                [n.flowAt, n.flowAt + FLOW_LEN],
+                [n.flowAt, n.flowAt + flowLength],
                 [0, 1 + FEATHER],
                 { ...CLAMP, easing: EASE_FLOW },
               );
-              const fx = xs + L * Math.max(front, 0.001);
-              const soft = Math.max(0, 1 - (L * FEATHER) / (fx - xs));
+              const a = interpolate(front, [0.9, 1.1], [0, 1], CLAMP);
+              if (a <= 0) return null;
+              const first = n.i === 0;
+              const last = n.i === nodes.length - 1;
               return (
-                <linearGradient
+                <rect
                   key={n.label}
-                  id={`${id}m${n.i}`}
-                  gradientUnits="userSpaceOnUse"
-                  x1={xs}
-                  y1={0}
-                  x2={fx}
-                  y2={0}
-                >
-                  <stop offset={0} stopColor="#fff" stopOpacity={1} />
-                  <stop offset={soft} stopColor="#fff" stopOpacity={1} />
-                  <stop offset={1} stopColor="#fff" stopOpacity={0} />
-                </linearGradient>
+                  x={tgtX - (1 - a) * 6 * u}
+                  y={n.t0}
+                  width={tgtW}
+                  height={n.t1 - n.t0}
+                  rx={first || last ? 2 * u : 0}
+                  fill={`url(#${id}t)`}
+                  opacity={a}
+                />
               );
             })}
-            {nodes.map((n) => (
-              <mask key={n.label} id={`${id}k${n.i}`}>
-                <rect
-                  x={0}
-                  y={0}
-                  width={width}
-                  height={height}
-                  fill={`url(#${id}m${n.i})`}
-                />
-              </mask>
-            ))}
-          </defs>
+          </svg>
 
           {nodes.map((n) => {
-            if (t < n.flowAt) return null;
-            const d = [
-              `M${xs} ${n.y0}`,
-              `C${mx} ${n.y0} ${mx} ${n.t0} ${xt} ${n.t0}`,
-              `L${xt} ${n.t1}`,
-              `C${mx} ${n.t1} ${mx} ${n.y1} ${xs} ${n.y1}`,
-              "Z",
-            ].join(" ");
-            return (
-              <path
-                key={n.label}
-                d={d}
-                fill={`url(#${id}f)`}
-                stroke={p.bg}
-                strokeWidth={1.5 * u}
-                strokeLinejoin="round"
-                mask={`url(#${id}k${n.i})`}
-              />
-            );
-          })}
-
-          {nodes.map((n) => {
-            const k = interpolate(t, [n.inAt, n.inAt + 16], [0, 1], {
+            const k = interpolate(t, [n.inAt + 2, n.inAt + 18], [0, 1], {
               ...CLAMP,
               easing: EASE_OUT,
             });
-            const h = (n.y1 - n.y0) * (0.4 + 0.6 * k);
-            const mid = (n.y0 + n.y1) / 2;
             return (
-              <rect
+              <div
                 key={n.label}
-                x={srcX}
-                y={mid - h / 2}
-                width={nodeW}
-                height={h}
-                rx={2 * u}
-                fill={p.node}
-                opacity={k}
-              />
+                style={{
+                  position: "absolute",
+                  right: width - srcX + 16 * u,
+                  top: (n.y0 + n.y1) / 2,
+                  transform: `translate(${(1 - k) * 10 * u}px, -50%)`,
+                  opacity: k * (1 - 0.35 * settle),
+                  display: "flex",
+                  alignItems: "baseline",
+                  gap: 10 * u,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily,
+                    fontWeight: 400,
+                    fontSize: 19 * u,
+                    letterSpacing: "-0.01em",
+                    color: fg,
+                  }}
+                >
+                  {n.label}
+                </span>
+                <span
+                  style={{
+                    fontFamily: mono,
+                    fontWeight: 400,
+                    fontSize: 14 * u,
+                    color: p.muted,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  {fmt(n.value)}
+                </span>
+              </div>
             );
           })}
 
-          {nodes.map((n) => {
-            const front = interpolate(
-              t,
-              [n.flowAt, n.flowAt + FLOW_LEN],
-              [0, 1 + FEATHER],
-              { ...CLAMP, easing: EASE_FLOW },
-            );
-            const a = interpolate(front, [0.9, 1.1], [0, 1], CLAMP);
-            if (a <= 0) return null;
-            const first = n.i === 0;
-            const last = n.i === nodes.length - 1;
-            return (
-              <rect
-                key={n.label}
-                x={tgtX - (1 - a) * 6 * u}
-                y={n.t0}
-                width={tgtW}
-                height={n.t1 - n.t0}
-                rx={first || last ? 2 * u : 0}
-                fill={`url(#${id}t)`}
-                opacity={a}
-              />
-            );
-          })}
-        </svg>
-
-        {nodes.map((n) => {
-          const k = interpolate(t, [n.inAt + 2, n.inAt + 18], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
-          return (
+          <div
+            style={{
+              position: "absolute",
+              left: blockLeft,
+              top: cy,
+              transform: `translateY(${-numSize * 0.62}px)`,
+            }}
+          >
             <div
-              key={n.label}
               style={{
-                position: "absolute",
-                right: width - srcX + 16 * u,
-                top: (n.y0 + n.y1) / 2,
-                transform: `translate(${(1 - k) * 10 * u}px, -50%)`,
-                opacity: k * (1 - 0.35 * settle),
+                fontFamily,
+                fontWeight: 500,
+                fontSize: numSize,
+                lineHeight: 0.9,
+                letterSpacing: "-0.05em",
+                color: fg,
+                fontVariantNumeric: "tabular-nums",
+                whiteSpace: "nowrap",
+                opacity: landO,
+                filter: blur > 0.01 ? `blur(${blur * 8 * u}px)` : undefined,
+                transform: `translateX(${(1 - land) * -24 * u}px)`,
+              }}
+            >
+              {fmt(shown * count)}
+            </div>
+            <div
+              style={{
+                marginTop: 22 * u,
+                opacity: cap,
+                transform: `translateY(${(1 - cap) * 8 * u}px)`,
                 display: "flex",
-                alignItems: "baseline",
+                flexDirection: "column",
                 gap: 10 * u,
                 whiteSpace: "nowrap",
               }}
             >
-              <span
-                style={{
-                  fontFamily: sans,
-                  fontWeight: 400,
-                  fontSize: 19 * u,
-                  letterSpacing: "-0.01em",
-                  color: p.fg,
-                }}
-              >
-                {n.label}
-              </span>
-              <span
+              {target.trim().toLowerCase() === "remocn" ? (
+                (logo ?? <RemocnLogo fontSize={26 * u} color={fg} />)
+              ) : (
+                <div
+                  style={{
+                    fontFamily,
+                    fontWeight: 500,
+                    fontSize: 24 * u,
+                    letterSpacing: "-0.02em",
+                    color: fg,
+                  }}
+                >
+                  {target}
+                </div>
+              )}
+              <div
                 style={{
                   fontFamily: mono,
                   fontWeight: 400,
                   fontSize: 14 * u,
+                  letterSpacing: "0.04em",
+                  textTransform: "uppercase",
                   color: p.muted,
-                  fontVariantNumeric: "tabular-nums",
                 }}
               >
-                {fmt(n.value)}
-              </span>
-            </div>
-          );
-        })}
-
-        <div
-          style={{
-            position: "absolute",
-            left: blockLeft,
-            top: cy,
-            transform: `translateY(${-numSize * 0.62}px)`,
-          }}
-        >
-          <div
-            style={{
-              fontFamily: sans,
-              fontWeight: 500,
-              fontSize: numSize,
-              lineHeight: 0.9,
-              letterSpacing: "-0.05em",
-              color: p.fg,
-              fontVariantNumeric: "tabular-nums",
-              whiteSpace: "nowrap",
-              opacity: landO,
-              filter: blur > 0.01 ? `blur(${blur * 8 * u}px)` : undefined,
-              transform: `translateX(${(1 - land) * -24 * u}px)`,
-            }}
-          >
-            {fmt(shown * count)}
-          </div>
-          <div
-            style={{
-              marginTop: 22 * u,
-              opacity: cap,
-              transform: `translateY(${(1 - cap) * 8 * u}px)`,
-              display: "flex",
-              flexDirection: "column",
-              gap: 10 * u,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {target.trim().toLowerCase() === "remocn" ? (
-              <RemocnLogo fontSize={26 * u} color={p.fg} />
-            ) : (
-              <div
-                style={{
-                  fontFamily: sans,
-                  fontWeight: 500,
-                  fontSize: 24 * u,
-                  letterSpacing: "-0.02em",
-                  color: p.fg,
-                }}
-              >
-                {target}
+                {label}
               </div>
-            )}
-            <div
-              style={{
-                fontFamily: mono,
-                fontWeight: 400,
-                fontSize: 14 * u,
-                letterSpacing: "0.04em",
-                textTransform: "uppercase",
-                color: p.muted,
-              }}
-            >
-              {label}
             </div>
           </div>
-        </div>
-      </AbsoluteFill>
+        </AbsoluteFill>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${p.bg} 100%)`,
+          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${fill} 100%)`,
           opacity: 0.6,
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

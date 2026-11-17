@@ -26,7 +26,20 @@ export interface LongVowelProps {
   repeat?: number;
   rest?: string;
   accent?: string;
+  /** Text color of the word; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the word and caption. Load it yourself; Fraunces by default. */
+  fontFamily?: string;
+  /** Frame the vowel starts to stretch. */
+  stretchAt?: number;
+  /** Frames between the extra copies of the vowel drawing out. */
+  stagger?: number;
+  /** Size of the word and caption, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -76,11 +89,11 @@ interface Metrics {
   restDesc: number;
 }
 
-function measure(drawn: string, rest: string): Metrics {
+function measure(drawn: string, rest: string, family: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("long-vowel: no 2d context");
-  const fam = `"${fraunces.fontFamily}"`;
+  const fam = `"${family}"`;
   ctx.font = `400 ${FONT_PX}px ${fam}`;
   const chars = Array.from(drawn);
   const x: number[] = [];
@@ -112,7 +125,7 @@ function measure(drawn: string, rest: string): Metrics {
   };
 }
 
-function useMetrics(drawn: string, rest: string) {
+function useMetrics(drawn: string, rest: string, family: string) {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("long-vowel: measuring"));
   const released = useRef(false);
@@ -120,13 +133,13 @@ function useMetrics(drawn: string, rest: string) {
     let live = true;
     Promise.all([
       fraunces.waitUntilDone(),
-      document.fonts.load(`400 100px "${fraunces.fontFamily}"`),
-      document.fonts.load(`italic 400 100px "${fraunces.fontFamily}"`),
+      document.fonts.load(`400 100px "${family}"`),
+      document.fonts.load(`italic 400 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setMetrics(measure(drawn, rest));
+        setMetrics(measure(drawn, rest, family));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -135,7 +148,7 @@ function useMetrics(drawn: string, rest: string) {
     return () => {
       live = false;
     };
-  }, [drawn, rest, handle]);
+  }, [drawn, rest, family, handle]);
   return metrics;
 }
 
@@ -175,17 +188,40 @@ function rampAt(ramp: readonly string[], u: number) {
   return `color-mix(in oklab, ${ramp[i]} ${((1 - f) * 100).toFixed(1)}%, ${ramp[i + 1]})`;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function LongVowel({
   word = "Way",
   letter,
   repeat = 5,
   rest = "less keyframing.",
   accent = "#3B5BFD",
+  ink,
   background,
+  fontFamily = fraunces.fontFamily,
+  stretchAt = DRAWL_AT,
+  stagger = DRAWL_GAP,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: LongVowelProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
   const bg = background ?? c.bg;
@@ -210,7 +246,7 @@ export function LongVowel({
       ].join(""),
     [chars, hold, copies],
   );
-  const m = useMetrics(drawn, rest);
+  const m = useMetrics(drawn, rest, fontFamily);
 
   if (!m) {
     return <div style={{ position: "absolute", inset: 0, background: bg }} />;
@@ -228,14 +264,14 @@ export function LongVowel({
 
   const prog = Array.from({ length: copies }, (_, k) =>
     spring({
-      frame: t - DRAWL_AT - k * DRAWL_GAP,
+      frame: t - stretchAt - k * stagger,
       fps,
       config: { damping: 15, stiffness: 140, mass: 0.8 },
     }),
   );
   const vel = prog.map((_, k) => {
     const a = spring({
-      frame: t - DRAWL_AT - k * DRAWL_GAP - 1,
+      frame: t - stretchAt - k * stagger - 1,
       fps,
       config: { damping: 15, stiffness: 140, mass: 0.8 },
     });
@@ -275,7 +311,7 @@ export function LongVowel({
       { ...CLAMP, easing: EASE_OUT },
     );
     const dy = (1 - rp) * maskH * 1.05;
-    let color: string = c.ink;
+    let color: string = ink ?? c.ink;
     let opacity = 1;
     let skew = 0;
     if (isCopy) {
@@ -291,7 +327,7 @@ export function LongVowel({
             position: "absolute",
             left: left + xs[i] * F,
             top: lineTop - maskTop + dy,
-            fontFamily: fraunces.fontFamily,
+            fontFamily,
             fontWeight: 400,
             fontSize: F,
             lineHeight: `${F}px`,
@@ -317,7 +353,7 @@ export function LongVowel({
           position: "absolute",
           left: left + xs[i] * F,
           top: lineTop - maskTop + dy,
-          fontFamily: fraunces.fontFamily,
+          fontFamily,
           fontWeight: 400,
           fontSize: F,
           lineHeight: `${F}px`,
@@ -330,67 +366,69 @@ export function LongVowel({
     );
   }
 
-  const restAt = DRAWL_AT + (copies - 1) * DRAWL_GAP + 14 + REST_GAP_AFTER;
+  const restAt = stretchAt + (copies - 1) * stagger + 14 + REST_GAP_AFTER;
   const restWords = rest ? rest.split(" ") : [];
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          width: W,
-          top: maskTop,
-          height: maskH,
-          overflow: "hidden",
-        }}
-      >
-        {glyphs}
-      </div>
-      {rest ? (
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
             left: 0,
             width: W,
-            top: restBase - R,
-            height: R * 1.3,
+            top: maskTop,
+            height: maskH,
             overflow: "hidden",
-            display: "flex",
-            justifyContent: "center",
-            fontFamily: fraunces.fontFamily,
-            fontStyle: "italic",
-            fontWeight: 400,
-            fontSize: R,
-            lineHeight: `${R}px`,
-            letterSpacing: `${REST_TRACK}em`,
-            color: c.muted,
-            whiteSpace: "pre",
           }}
         >
-          {restWords.map((w, k) => {
-            const p = interpolate(
-              t,
-              [restAt + k * 3, restAt + k * 3 + 16],
-              [0, 1],
-              { ...CLAMP, easing: EASE_OUT },
-            );
-            return (
-              <span
-                key={`${w}-${k}`}
-                style={{
-                  display: "inline-block",
-                  transform: `translateY(${((1 - p) * R * 1.2).toFixed(2)}px)`,
-                }}
-              >
-                {w}
-                {k < restWords.length - 1 ? " " : ""}
-              </span>
-            );
-          })}
+          {glyphs}
         </div>
-      ) : null}
-      {bg === "transparent" ? null : <Grain opacity={c.grain} />}
+        {rest ? (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              width: W,
+              top: restBase - R,
+              height: R * 1.3,
+              overflow: "hidden",
+              display: "flex",
+              justifyContent: "center",
+              fontFamily,
+              fontStyle: "italic",
+              fontWeight: 400,
+              fontSize: R,
+              lineHeight: `${R}px`,
+              letterSpacing: `${REST_TRACK}em`,
+              color: c.muted,
+              whiteSpace: "pre",
+            }}
+          >
+            {restWords.map((w, k) => {
+              const p = interpolate(
+                t,
+                [restAt + k * 3, restAt + k * 3 + 16],
+                [0, 1],
+                { ...CLAMP, easing: EASE_OUT },
+              );
+              return (
+                <span
+                  key={`${w}-${k}`}
+                  style={{
+                    display: "inline-block",
+                    transform: `translateY(${((1 - p) * R * 1.2).toFixed(2)}px)`,
+                  }}
+                >
+                  {w}
+                  {k < restWords.length - 1 ? " " : ""}
+                </span>
+              );
+            })}
+          </div>
+        ) : null}
+      </ScaleLayer>
+      {!grain || bg === "transparent" ? null : <Grain opacity={c.grain} />}
     </AbsoluteFill>
   );
 }

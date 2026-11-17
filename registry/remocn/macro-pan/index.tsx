@@ -2,6 +2,7 @@
 
 import { loadFont } from "@remotion/google-fonts/Fraunces";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
+import type React from "react";
 import { useId, useMemo } from "react";
 import {
   AbsoluteFill,
@@ -27,7 +28,24 @@ export interface MacroPanProps {
   label?: string;
   /** Number set before the label, like a reel or chapter. */
   index?: string;
+  /** Frames the camera pans across the last letters. */
+  panLen?: number;
+  /** Frames of the pull-back to the full headline. */
+  pullLen?: number;
   accent?: string;
+  /** Solid fill for the headline in place of the sunrise gradient. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the headline. Spacing is measured for Fraunces 400; load it yourself. */
+  fontFamily?: string;
+  /** Size of the headline and label, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
+  /** Replaces the remocn mark in the label. */
+  logo?: React.ReactNode;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -163,15 +181,40 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function MacroPan({
   title = "Built to move.",
   label = "remocn",
   index = "01",
+  panLen = PAN_END,
+  pullLen = PULL_LEN,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = display,
+  scale = 1,
+  delay = 0,
+  grain = true,
+  logo,
   theme = "dark",
   speed = 1,
 }: MacroPanProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
   const c = THEMES[theme];
@@ -207,16 +250,16 @@ export function MacroPan({
   const fy1 = baseline - (endsOnMark ? 0.08 * F : xh * 0.5);
 
   const s0 = (H * 1.55) / xh;
-  const pan = interpolate(t, [0, PAN_END], [0, 1], { ...CLAMP, easing: PAN });
+  const pan = interpolate(t, [0, panLen], [0, 1], { ...CLAMP, easing: PAN });
   const sPan = s0 * (1 - 0.12 * pan);
   const sEnd = s0 * 0.88;
-  const pull = interpolate(t, [PAN_END, PAN_END + PULL_LEN], [0, 1], {
+  const pull = interpolate(t, [panLen, panLen + pullLen], [0, 1], {
     ...CLAMP,
     easing: PULL,
   });
   const push = interpolate(
     t,
-    [PAN_END + PULL_LEN, PAN_END + PULL_LEN + 50],
+    [panLen + pullLen, panLen + pullLen + 50],
     [0, 1],
     { ...CLAMP, easing: Easing.bezier(0.33, 0, 0.67, 1) },
   );
@@ -245,83 +288,93 @@ export function MacroPan({
   const lean = (6 - t * 0.04) * F * 0.01;
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <linearGradient
-            id={uid}
-            gradientUnits="userSpaceOnUse"
-            x1={lineX + lean}
-            y1={baseline - CAP * F * 1.05}
-            x2={lineX - lean}
-            y2={baseline + 0.06 * F}
-          >
-            {c.fill.map((col, j) => (
-              <stop key={col} offset={[0, 0.3, 0.68, 1][j]} stopColor={col} />
-            ))}
-          </linearGradient>
-        </defs>
-        <g transform={transform}>
-          {layout.chars.map((ch, i) =>
-            ch === " " ? null : (
-              <text
-                key={i}
-                x={lineX + layout.lefts[i] * F}
-                y={baseline}
-                fontFamily={display}
-                fontWeight={400}
-                fontSize={F}
-                fill={
-                  /[.!?]/.test(ch) && i === lastIdx ? accent : `url(#${uid})`
-                }
-                style={{ fontKerning: "none" }}
-              >
-                {ch}
-              </text>
-            ),
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? c.bg),
+        overflow: "hidden",
+      }}
+    >
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            <linearGradient
+              id={uid}
+              gradientUnits="userSpaceOnUse"
+              x1={lineX + lean}
+              y1={baseline - CAP * F * 1.05}
+              x2={lineX - lean}
+              y2={baseline + 0.06 * F}
+            >
+              {c.fill.map((col, j) => (
+                <stop key={col} offset={[0, 0.3, 0.68, 1][j]} stopColor={col} />
+              ))}
+            </linearGradient>
+          </defs>
+          <g transform={transform}>
+            {layout.chars.map((ch, i) =>
+              ch === " " ? null : (
+                <text
+                  key={i}
+                  x={lineX + layout.lefts[i] * F}
+                  y={baseline}
+                  fontFamily={fontFamily}
+                  fontWeight={400}
+                  fontSize={F}
+                  fill={
+                    /[.!?]/.test(ch) && i === lastIdx
+                      ? accent
+                      : (ink ?? `url(#${uid})`)
+                  }
+                  style={{ fontKerning: "none" }}
+                >
+                  {ch}
+                </text>
+              ),
+            )}
+          </g>
+        </svg>
+
+        <div
+          style={{
+            position: "absolute",
+            left: margin - 12 * u,
+            bottom: margin - 7 * u,
+            display: "flex",
+            alignItems: "center",
+            gap: 10 * u,
+            fontFamily: brand,
+            fontWeight: 500,
+            fontSize,
+            lineHeight: 1,
+            letterSpacing: "-0.005em",
+            fontVariantNumeric: "tabular-nums",
+            // A stage-coloured pill keeps the label legible over the letterforms.
+            padding: `${7 * u}px ${12 * u}px`,
+            borderRadius: 999,
+            background: background ?? c.bg,
+            color: c.muted,
+            opacity: labelIn,
+            transform: `translateY(${(1 - labelIn) * 8 * u}px)`,
+          }}
+        >
+          <span style={{ color: ink ?? c.fg }}>{index}</span>
+          <span>/</span>
+          {label.trim().toLowerCase() === "remocn" ? (
+            (logo ?? <RemocnLogo fontSize={fontSize * 1.05} color={c.muted} />)
+          ) : (
+            <span>{label}</span>
           )}
-        </g>
-      </svg>
+        </div>
+      </ScaleLayer>
 
-      <div
-        style={{
-          position: "absolute",
-          left: margin - 12 * u,
-          bottom: margin - 7 * u,
-          display: "flex",
-          alignItems: "center",
-          gap: 10 * u,
-          fontFamily: brand,
-          fontWeight: 500,
-          fontSize,
-          lineHeight: 1,
-          letterSpacing: "-0.005em",
-          fontVariantNumeric: "tabular-nums",
-          // A stage-coloured pill keeps the label legible over the letterforms.
-          padding: `${7 * u}px ${12 * u}px`,
-          borderRadius: 999,
-          background: c.bg,
-          color: c.muted,
-          opacity: labelIn,
-          transform: `translateY(${(1 - labelIn) * 8 * u}px)`,
-        }}
-      >
-        <span style={{ color: c.fg }}>{index}</span>
-        <span>/</span>
-        {label.trim().toLowerCase() === "remocn" ? (
-          <RemocnLogo fontSize={fontSize * 1.05} color={c.muted} />
-        ) : (
-          <span>{label}</span>
-        )}
-      </div>
-
-      <Grain opacity={c.grain} />
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

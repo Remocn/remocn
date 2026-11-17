@@ -21,8 +21,17 @@ const plex = loadPlexSans("normal", {
 export interface SpineTurnProps {
   titles?: string[];
   hold?: number;
+  /** Frames for a title to turn onto its spine. */
+  turn?: number;
+  fontWeight?: number;
   accent?: string;
   background?: string;
+  /** Typeface for the titles. Load it yourself; IBM Plex Sans by default. */
+  fontFamily?: string;
+  /** Size of the titles, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -58,11 +67,11 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
-function measure(titles: string[]) {
+function measure(titles: string[], font: string) {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("spine-turn: no 2d context");
-  ctx.font = `500 100px "${plex.fontFamily}"`;
+  ctx.font = font;
   return titles.map((s) => {
     const n = Array.from(s).length;
     return {
@@ -72,7 +81,7 @@ function measure(titles: string[]) {
   });
 }
 
-function useWidths(titles: string[]) {
+function useWidths(titles: string[], font: string) {
   const key = titles.join("\u0001");
   const [state, setState] = useState<{
     key: string;
@@ -82,14 +91,11 @@ function useWidths(titles: string[]) {
   const released = useRef(false);
   useEffect(() => {
     let live = true;
-    Promise.all([
-      plex.waitUntilDone(),
-      document.fonts.load(`500 100px "${plex.fontFamily}"`),
-    ])
+    Promise.all([plex.waitUntilDone(), document.fonts.load(font)])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, w: measure(key.split("\u0001")) });
+        setState({ key, w: measure(key.split("\u0001"), font) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -98,26 +104,47 @@ function useWidths(titles: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, font, handle]);
   return state && state.key === key ? state.w : null;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function SpineTurn({
   titles = ["Kickoff", "Deep dive", "Wrap-up"],
   hold = 26,
+  turn: turnLen = TURN,
+  fontWeight = 500,
   accent,
   background,
+  fontFamily = plex.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: SpineTurnProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
   const list = useMemo(() => {
     const l = titles.filter((s) => s.trim().length > 0);
     return l.length > 0 ? l : ["remocn"];
   }, [titles]);
-  const widths = useWidths(list);
+  const widths = useWidths(list, `${fontWeight} 100px "${fontFamily}"`);
 
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
@@ -142,7 +169,7 @@ export function SpineTurn({
   const spineCol = S * BOX * 0.86;
   const spineGap = S * 0.3;
 
-  const turnAt = (k: number) => ENTER + hold + k * (TURN + NEXT_LAG + hold);
+  const turnAt = (k: number) => ENTER + hold + k * (turnLen + NEXT_LAG + hold);
 
   const heroOf = (k: number) => {
     const areaL = margin + k * (spineCol + spineGap) + (k > 0 ? S * 0.5 : 0);
@@ -174,7 +201,7 @@ export function SpineTurn({
     if (enter <= 0) return;
     const turn = isLast
       ? 0
-      : interpolate(t, [turnAt(k), turnAt(k) + TURN], [0, 1], {
+      : interpolate(t, [turnAt(k), turnAt(k) + turnLen], [0, 1], {
           ...CLAMP,
           easing: EASE_TURN,
         });
@@ -195,8 +222,8 @@ export function SpineTurn({
           height: BOX * size,
           lineHeight: `${BOX * size}px`,
           whiteSpace: "pre",
-          fontFamily: plex.fontFamily,
-          fontWeight: 500,
+          fontFamily,
+          fontWeight,
           fontSize: size,
           letterSpacing: `${track}em`,
           color:
@@ -258,17 +285,19 @@ export function SpineTurn({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: margin,
-          top: ruleY,
-          width: (W - margin * 2) * ruleP,
-          height: Math.max(1, H * 0.0016),
-          background: c.rule,
-        }}
-      />
-      {els}
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            left: margin,
+            top: ruleY,
+            width: (W - margin * 2) * ruleP,
+            height: Math.max(1, H * 0.0016),
+            background: c.rule,
+          }}
+        />
+        {els}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

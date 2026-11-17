@@ -65,14 +65,49 @@ The `less` line enters and fades back while the `more` line lands below it in th
       description: "Line that lands in the accent color.",
     },
     {
+      name: "swapAt",
+      type: "number",
+      default: "34",
+      description: "Frame where the first line starts to shrink and the second to grow.",
+    },
+    {
+      name: "fillAt",
+      type: "number",
+      default: "80",
+      description: "Frame where the second line fills with the accent.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Accent color override; falls back to the theme accent.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Background color override; falls back to the theme background.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Figtree\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

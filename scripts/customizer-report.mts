@@ -99,7 +99,8 @@ for (const file of new Glob("registry/*/*/config.ts").scanSync(".")) {
     (v) => v && typeof v === "object" && "controls" in (v as object),
   ) as ComponentConfig | undefined;
   const name = file.split("/").at(-2);
-  if (config && name) configs[name] = resolveControls(name, config.controls);
+  if (config && name)
+    configs[name] = resolveControls(name, config.controls, config.lists);
 }
 
 const markdown = renderReport(buildReport(events, configs, { minPeople }), {

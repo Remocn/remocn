@@ -1,6 +1,7 @@
 "use client";
 
 import { loadVariableFont } from "@remotion/google-fonts/MonaSans";
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -21,6 +22,18 @@ export interface AxisFlexProps {
   /** Second line, set in the narrow cut under the word. */
   line?: string;
   accent?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy, with `wdth` and `wght` axes. Load it yourself; Mona Sans by default. */
+  fontFamily?: string;
+  /** Frame the letters stop flexing and snap to their final cut. */
+  settleAt?: number;
+  /** Frames between letters as they snap. */
+  stagger?: number;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   /** Playback multiplier. */
   speed?: number;
@@ -111,7 +124,7 @@ interface Metrics {
   lineWidth: number;
 }
 
-function measure(chars: string[], line: string): Metrics {
+function measure(chars: string[], line: string, fontFamily: string): Metrics {
   const probe = document.createElement("span");
   Object.assign(probe.style, {
     position: "absolute",
@@ -119,7 +132,7 @@ function measure(chars: string[], line: string): Metrics {
     top: "0",
     visibility: "hidden",
     whiteSpace: "pre",
-    fontFamily: `"${flex.fontFamily}"`,
+    fontFamily: `"${fontFamily}"`,
     fontSize: "100px",
     lineHeight: "1",
   });
@@ -138,7 +151,7 @@ function measure(chars: string[], line: string): Metrics {
   return { adv, finalWidth, lineWidth };
 }
 
-function useMetrics(chars: string[], line: string) {
+function useMetrics(chars: string[], line: string, fontFamily: string) {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("axis-flex: measuring"));
   const released = useRef(false);
@@ -146,12 +159,12 @@ function useMetrics(chars: string[], line: string) {
     let live = true;
     Promise.all([
       flex.waitUntilDone(),
-      document.fonts.load(`400 100px "${flex.fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setMetrics(measure(chars, line));
+        setMetrics(measure(chars, line, fontFamily));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -160,7 +173,7 @@ function useMetrics(chars: string[], line: string) {
     return () => {
       live = false;
     };
-  }, [chars, line, handle]);
+  }, [chars, line, handle, fontFamily]);
   return metrics;
 }
 
@@ -170,43 +183,77 @@ function advAt(row: number[], l: number) {
   return row[k] + (row[k + 1] - row[k]) * (x - k);
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill
+      style={{
+        transform: `scale(${scale})`,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function AxisFlex({
   word = "elastic",
   line = "One family, every width",
   accent = "#3B5BFD",
+  background,
+  fontFamily = flex.fontFamily,
+  settleAt = SETTLE,
+  stagger = SETTLE_STAGGER,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: AxisFlexProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
+  const lineIn = settleAt + (LINE_IN - SETTLE);
+  const sampleEnd = settleAt + (SAMPLE_END - SETTLE);
   const chars = useMemo(() => Array.from(word), [word]);
-  const m = useMetrics(chars, line);
+  const m = useMetrics(chars, line, fontFamily);
 
   // Widest the row ever gets while flexing, so it never leaves the frame.
   const widest = useMemo(() => {
     if (!m) return 1;
     let max = m.finalWidth;
-    for (let f = 0; f <= SAMPLE_END; f++) {
+    for (let f = 0; f <= sampleEnd; f++) {
       let w = 0;
       for (let i = 0; i < chars.length; i++) w += advAt(m.adv[i], level(i, f));
       max = Math.max(max, w);
     }
     return max;
-  }, [m, chars]);
+  }, [m, chars, sampleEnd]);
 
   if (!m) {
-    return <div style={{ position: "absolute", inset: 0, background: c.bg }} />;
+    return (
+      <div style={{ position: "absolute", inset: 0, background: stage }} />
+    );
   }
 
   const F = Math.min((W * 0.84) / widest, H * 0.36);
   const F2 = Math.min(F * 0.26, (W * 0.8) / Math.max(0.1, m.lineWidth));
 
-  const lineP = interpolate(t, [LINE_IN, LINE_IN + 20], [0, 1], {
+  const lineP = interpolate(t, [lineIn, lineIn + 20], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const lineSqueeze = interpolate(t, [LINE_IN, LINE_IN + 24], [0, 1], {
+  const lineSqueeze = interpolate(t, [lineIn, lineIn + 24], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.3, 0, 0.1, 1),
   });
@@ -220,78 +267,80 @@ export function AxisFlex({
   return (
     <AbsoluteFill
       style={{
-        background: c.bg,
+        background: stage,
         alignItems: "center",
         justifyContent: "center",
         flexDirection: "column",
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "baseline",
-          justifyContent: "center",
-          whiteSpace: "pre",
-          fontFamily: flex.fontFamily,
-          fontSize: F,
-          lineHeight: 1,
-          // the fill box must cover the ink, descenders included; the extra
-          // bottom padding is pulled back with a negative margin
-          height: F * 1.08,
-          marginTop: F * 0.1,
-          marginBottom: -F * 0.22,
-          padding: `0 ${F * 0.04}px`,
-          backgroundImage: fill,
-          WebkitBackgroundClip: "text",
-          backgroundClip: "text",
-          color: "transparent",
-          opacity: 0.4 + 0.6 * enter,
-          transform: `translateY(${(1 - enter) * F * 0.08}px)`,
-        }}
-      >
-        {chars.map((ch, i) => {
-          const snap = spring({
-            frame: t - SETTLE - i * SETTLE_STAGGER,
-            fps,
-            config: SPRING_SNAP,
-          });
-          const l = level(i, t);
-          const axes = clampAxes(mix(mix(LOW, HIGH, l), FINAL, snap));
-          return (
-            <span
-              key={`${i}-${ch}`}
-              style={{
-                fontVariationSettings: fvs(axes),
-                letterSpacing: `${TRACK}em`,
-              }}
-            >
-              {ch}
-            </span>
-          );
-        })}
-      </div>
-      <div
-        style={{
-          overflow: "hidden",
-          marginTop: F * 0.2,
-          height: F2 * 1.2,
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
-            fontFamily: flex.fontFamily,
-            fontSize: F2,
-            lineHeight: 1.2,
+            display: "flex",
+            alignItems: "baseline",
+            justifyContent: "center",
             whiteSpace: "pre",
-            color: accent,
-            fontVariationSettings: fvs(lineAxes),
-            letterSpacing: "0.01em",
-            transform: `translateY(${(1 - lineP) * F2 * 1.25}px)`,
+            fontFamily,
+            fontSize: F,
+            lineHeight: 1,
+            // the fill box must cover the ink, descenders included; the extra
+            // bottom padding is pulled back with a negative margin
+            height: F * 1.08,
+            marginTop: F * 0.1,
+            marginBottom: -F * 0.22,
+            padding: `0 ${F * 0.04}px`,
+            backgroundImage: fill,
+            WebkitBackgroundClip: "text",
+            backgroundClip: "text",
+            color: "transparent",
+            opacity: 0.4 + 0.6 * enter,
+            transform: `translateY(${(1 - enter) * F * 0.08}px)`,
           }}
         >
-          {line}
+          {chars.map((ch, i) => {
+            const snap = spring({
+              frame: t - settleAt - i * stagger,
+              fps,
+              config: SPRING_SNAP,
+            });
+            const l = level(i, t);
+            const axes = clampAxes(mix(mix(LOW, HIGH, l), FINAL, snap));
+            return (
+              <span
+                key={`${i}-${ch}`}
+                style={{
+                  fontVariationSettings: fvs(axes),
+                  letterSpacing: `${TRACK}em`,
+                }}
+              >
+                {ch}
+              </span>
+            );
+          })}
         </div>
-      </div>
+        <div
+          style={{
+            overflow: "hidden",
+            marginTop: F * 0.2,
+            height: F2 * 1.2,
+          }}
+        >
+          <div
+            style={{
+              fontFamily,
+              fontSize: F2,
+              lineHeight: 1.2,
+              whiteSpace: "pre",
+              color: accent,
+              fontVariationSettings: fvs(lineAxes),
+              letterSpacing: "0.01em",
+              transform: `translateY(${(1 - lineP) * F2 * 1.25}px)`,
+            }}
+          >
+            {line}
+          </div>
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

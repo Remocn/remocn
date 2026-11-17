@@ -3,7 +3,7 @@
 import { loadFont } from "@remotion/google-fonts/Figtree";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
   continueRender,
@@ -75,6 +75,7 @@ function measure(
   features: string[],
   labelSize: number,
   featSize: number,
+  fontFamily: string,
 ) {
   return {
     version,
@@ -82,24 +83,32 @@ function measure(
       labelSize * 0.742 +
       textWidth("emocn", labelSize, manrope.fontFamily, 600) -
       labelSize * 0.025 * 5,
-    name: textWidth(name, labelSize, sans, 400),
-    feats: features.map((f) => textWidth(f, featSize, sans, 400)),
+    name: textWidth(name, labelSize, fontFamily, 400),
+    feats: features.map((f) => textWidth(f, featSize, fontFamily, 400)),
   };
 }
 
-function useFontVersion() {
+function useFontVersion(fontFamily: string) {
   const [handle] = useState(() => delayRender("pill-morph: fonts"));
   const [version, setVersion] = useState(0);
+  const released = useRef(false);
   useEffect(() => {
     const bump = () => setVersion((v) => v + 1);
-    Promise.all([figtree.waitUntilDone(), manrope.waitUntilDone()]).then(() => {
+    Promise.all([
+      figtree.waitUntilDone(),
+      manrope.waitUntilDone(),
+      document.fonts.load(`400 100px "${fontFamily}"`).catch(() => undefined),
+    ]).then(() => {
       bump();
-      continueRender(handle);
+      if (!released.current) {
+        released.current = true;
+        continueRender(handle);
+      }
     });
     if (typeof document === "undefined") return;
     document.fonts.addEventListener("loadingdone", bump);
     return () => document.fonts.removeEventListener("loadingdone", bump);
-  }, [handle]);
+  }, [handle, fontFamily]);
   return version;
 }
 
@@ -110,6 +119,20 @@ export interface PillMorphProps {
   src?: string;
   children?: React.ReactNode;
   accent?: string;
+  /** Caption over the preview in the built-in editor mock. */
+  caption?: string;
+  /** Corner radius of the open card, in px at 720p. */
+  radius?: number;
+  /** Text color of the name and features; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Figtree by default. */
+  fontFamily?: string;
+  /** Size of the pill and card, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
   ground?: GshPresetId;
@@ -189,6 +212,8 @@ function Editor({
   p,
   accent,
   t,
+  caption,
+  fontFamily,
 }: {
   w: number;
   h: number;
@@ -196,6 +221,8 @@ function Editor({
   p: Palette;
   accent: string;
   t: number;
+  caption: string;
+  fontFamily: string;
 }) {
   const side = w * 0.27;
   const fs = 16 * u;
@@ -214,7 +241,7 @@ function Editor({
   const trackY = barY + 34 * u;
   const trackH = h - trackY;
   return (
-    <div style={{ position: "absolute", inset: 0, fontFamily: sans }}>
+    <div style={{ position: "absolute", inset: 0, fontFamily }}>
       {SCENES.map((sc, i) => (
         <div
           key={sc.name}
@@ -305,7 +332,7 @@ function Editor({
             opacity: row(3),
           }}
         >
-          Launch day, in one take
+          {caption}
         </div>
       </div>
       <div
@@ -397,6 +424,22 @@ function Editor({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 interface Shape {
   x: number;
   y: number;
@@ -412,21 +455,29 @@ export function PillMorph({
   src,
   children,
   accent = "#3B5BFD",
+  caption = "Launch day, in one take",
+  radius = 28,
+  ink,
+  background,
+  fontFamily = sans,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
   ground,
   groundParams,
 }: PillMorphProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { fps, width, height } = useVideoConfig();
   const tall = height > width;
   const u = tall ? width / 760 : Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
   const dark = theme === "dark";
   const resolvedGround: GshPresetId | undefined =
     ground ?? (groundParams ? undefined : dark ? "velvet-hour" : "glasswork");
   const gid = `goo${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
-  const fontVersion = useFontVersion();
+  const fontVersion = useFontVersion(fontFamily);
   const cx = width / 2;
   const cy = height / 2;
 
@@ -447,15 +498,15 @@ export function PillMorph({
   const markSize = 24 * u;
   const pad = 20 * u;
   const widths = useMemo(
-    () => measure(fontVersion, name, features, labelSize, featSize),
-    [fontVersion, name, features, labelSize, featSize],
+    () => measure(fontVersion, name, features, labelSize, featSize, fontFamily),
+    [fontVersion, name, features, labelSize, featSize, fontFamily],
   );
   const labelW = logo ? markSize + 9 * u + widths.name : widths.logo;
   const w0 = labelW + pad * 2;
   const h0 = 52 * u;
   const cw = tall ? width * 0.86 : Math.min(width * 0.6, 760 * u);
   const ch = tall ? cw * 0.86 : Math.min(height * 0.64, 450 * u);
-  const cr = 28 * u;
+  const cr = radius * u;
   const barH = 66 * u;
   const pws = widths.feats.map((fw) => Math.max(170 * u, fw + 92 * u));
   const total = pws[0] + pws[1] + pws[2];
@@ -541,18 +592,32 @@ export function PillMorph({
   const blur = 12 * u;
 
   return (
-    <AbsoluteFill style={{ background: p.base, overflow: "hidden" }}>
-      <GshGround
-        preset={resolvedGround}
-        params={groundParams}
-        timeOffset={dark ? 4 : 5}
-        timeScale={0.45}
-      />
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(60% 60% at 50% 48%, rgba(${p.scrim},${dark ? 0.5 : 0.36}) 0%, rgba(${p.scrim},${dark ? 0.18 : 0.1}) 100%)`,
-        }}
-      />
+    <AbsoluteFill
+      style={{
+        background:
+          background === undefined
+            ? p.base
+            : background === "transparent"
+              ? undefined
+              : background,
+        overflow: "hidden",
+      }}
+    >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={resolvedGround}
+            params={groundParams}
+            timeOffset={dark ? 4 : 5}
+            timeScale={0.45}
+          />
+          <AbsoluteFill
+            style={{
+              background: `radial-gradient(60% 60% at 50% 48%, rgba(${p.scrim},${dark ? 0.5 : 0.36}) 0%, rgba(${p.scrim},${dark ? 0.18 : 0.1}) 100%)`,
+            }}
+          />
+        </>
+      ) : null}
       <svg width={0} height={0} style={{ position: "absolute" }} aria-hidden>
         <defs>
           <filter
@@ -601,239 +666,247 @@ export function PillMorph({
         </defs>
       </svg>
 
-      <AbsoluteFill
-        style={{
-          transform: `scale(${drift})`,
-          opacity: interpolate(appear, [0, 0.4], [0, 1], CLAMP),
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            filter: `drop-shadow(0 ${16 * u}px ${28 * u}px ${p.shadow})`,
+            transform: `scale(${drift})`,
+            opacity: interpolate(appear, [0, 0.4], [0, 1], CLAMP),
           }}
         >
-          <AbsoluteFill style={{ filter: `url(#${gid})` }}>
-            {shapes.map((s, i) => (
-              <div
-                key={i}
-                style={{
-                  position: "absolute",
-                  left: s.x,
-                  top: s.y,
-                  width: s.w,
-                  height: s.h,
-                  borderRadius: `${s.r[0]}px ${s.r[1]}px ${s.r[2]}px ${s.r[3]}px`,
-                  background: p.surface,
-                }}
-              />
-            ))}
-          </AbsoluteFill>
-        </AbsoluteFill>
-
-        {t < 116 ? (
-          <div
+          <AbsoluteFill
             style={{
-              position: "absolute",
-              left: labelX,
-              top: labelY,
-              display: "flex",
-              alignItems: "center",
-              gap: 9 * u * scale0,
-              opacity: labelOut * fade(-2, 9),
-              transform: `scale(${scale0})`,
-              transformOrigin: "0 0",
+              filter: `drop-shadow(0 ${16 * u}px ${28 * u}px ${p.shadow})`,
             }}
           >
-            {logo ? (
-              <>
-                {logo}
-                <span
-                  style={{
-                    fontFamily: sans,
-                    fontWeight: 400,
-                    fontSize: labelSize,
-                    letterSpacing: "-0.02em",
-                    color: p.fg,
-                    lineHeight: `${markSize}px`,
-                  }}
-                >
-                  {name}
-                </span>
-              </>
-            ) : (
-              <div
-                style={{
-                  height: labelSize,
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <RemocnLogo fontSize={labelSize} color={p.fg} />
-              </div>
-            )}
-          </div>
-        ) : null}
-
-        {t < 116 && content > 0 ? (
-          <div
-            style={{
-              position: "absolute",
-              left: s0.x + 22 * u,
-              top: s0.y + 64 * u,
-              width: cw - 44 * u,
-              height: ch - 86 * u,
-              opacity: content,
-              overflow: "hidden",
-              borderRadius: 12 * u,
-              clipPath: `inset(0 0 ${Math.max(0, ch - 86 * u - (s0.h - 86 * u))}px 0)`,
-            }}
-          >
-            {children ??
-              (src ? (
-                <Img
-                  src={src}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-              ) : (
-                <Editor
-                  w={cw - 44 * u}
-                  h={ch - 86 * u}
-                  u={u}
-                  p={p}
-                  accent={accent}
-                  t={t}
-                />
-              ))}
-          </div>
-        ) : null}
-
-        {t >= 116
-          ? shapes.map((s, i) => {
-              const k = featIn(i);
-              if (k <= 0) return null;
-              return (
+            <AbsoluteFill style={{ filter: `url(#${gid})` }}>
+              {shapes.map((s, i) => (
                 <div
-                  key={features[i]}
+                  key={i}
                   style={{
                     position: "absolute",
                     left: s.x,
                     top: s.y,
                     width: s.w,
                     height: s.h,
+                    borderRadius: `${s.r[0]}px ${s.r[1]}px ${s.r[2]}px ${s.r[3]}px`,
+                    background: p.surface,
+                  }}
+                />
+              ))}
+            </AbsoluteFill>
+          </AbsoluteFill>
+
+          {t < 116 ? (
+            <div
+              style={{
+                position: "absolute",
+                left: labelX,
+                top: labelY,
+                display: "flex",
+                alignItems: "center",
+                gap: 9 * u * scale0,
+                opacity: labelOut * fade(-2, 9),
+                transform: `scale(${scale0})`,
+                transformOrigin: "0 0",
+              }}
+            >
+              {logo ? (
+                <>
+                  {logo}
+                  <span
+                    style={{
+                      fontFamily,
+                      fontWeight: 400,
+                      fontSize: labelSize,
+                      letterSpacing: "-0.02em",
+                      color: fg,
+                      lineHeight: `${markSize}px`,
+                    }}
+                  >
+                    {name}
+                  </span>
+                </>
+              ) : (
+                <div
+                  style={{
+                    height: labelSize,
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
-                    gap: 10 * u,
-                    fontFamily: sans,
-                    fontWeight: 400,
-                    fontSize: featSize,
-                    letterSpacing: "-0.01em",
-                    color: p.fg,
-                    whiteSpace: "nowrap",
-                    opacity: k,
-                    transform: `translateY(${(1 - k) * 6 * u}px)`,
                   }}
                 >
-                  <svg
-                    width={featSize * 0.95}
-                    height={featSize * 0.95}
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    aria-hidden
-                  >
-                    <path
-                      d={FEATURE_ICONS[i % FEATURE_ICONS.length]}
-                      stroke={p.muted}
-                      strokeWidth={1.5}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  {features[i]}
+                  <RemocnLogo fontSize={labelSize} color={fg} />
                 </div>
-              );
-            })
-          : null}
+              )}
+            </div>
+          ) : null}
 
-        {tileFill > 0 && t >= 116 ? (
-          <div
-            style={{
-              position: "absolute",
-              left: shapes[1].x,
-              top: shapes[1].y,
-              width: shapes[1].w,
-              height: shapes[1].h,
-              borderRadius: `${shapes[1].r[0]}px`,
-              background: `linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 48%, rgba(0,0,0,0.14) 100%), ${accent}`,
-              opacity: tileFill,
-              boxShadow: `inset 0 ${1.5 * u}px 0 rgba(255,255,255,0.3), 0 ${18 * u}px ${48 * u}px -${10 * u}px ${accent}${Math.round(
-                tileGlow * 140,
-              )
-                .toString(16)
-                .padStart(2, "0")}`,
-            }}
-          />
-        ) : null}
+          {t < 116 && content > 0 ? (
+            <div
+              style={{
+                position: "absolute",
+                left: s0.x + 22 * u,
+                top: s0.y + 64 * u,
+                width: cw - 44 * u,
+                height: ch - 86 * u,
+                opacity: content,
+                overflow: "hidden",
+                borderRadius: 12 * u,
+                clipPath: `inset(0 0 ${Math.max(0, ch - 86 * u - (s0.h - 86 * u))}px 0)`,
+              }}
+            >
+              {children ??
+                (src ? (
+                  <Img
+                    src={src}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
+                ) : (
+                  <Editor
+                    w={cw - 44 * u}
+                    h={ch - 86 * u}
+                    u={u}
+                    p={p}
+                    accent={accent}
+                    t={t}
+                    caption={caption}
+                    fontFamily={fontFamily}
+                  />
+                ))}
+            </div>
+          ) : null}
 
-        {markIn > 0 ? (
-          <div
-            style={{
-              position: "absolute",
-              left: cx - tile / 2,
-              top: tileCy - tile / 2,
-              width: tile,
-              height: tile,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              opacity: markIn,
-              transform: `translateY(${(1 - markIn) * 6 * u}px) scale(${0.92 + 0.08 * markIn})`,
-            }}
-          >
-            {logo ?? (
-              <svg
-                viewBox="0 0 124.06 134.26"
-                height={tile * 0.46}
-                width={(tile * 0.46 * 124.06) / 134.26}
-                style={{ marginLeft: tile * 0.03 }}
-                aria-hidden
-              >
-                <path fill="#FFFFFF" d={REMOCN_R_PATH} />
-              </svg>
-            )}
-          </div>
-        ) : null}
-        {nameIn > 0 ? (
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              top: tileCy + tile / 2 + 30 * u,
-              display: "flex",
-              justifyContent: "center",
-              opacity: nameIn,
-              transform: `translateY(${(1 - nameIn) * 10 * u}px)`,
-            }}
-          >
-            {logo ? (
-              <span
-                style={{
-                  fontFamily: sans,
-                  fontWeight: 400,
-                  fontSize: 28 * u,
-                  letterSpacing: "-0.02em",
-                  color: p.fg,
-                }}
-              >
-                {name}
-              </span>
-            ) : (
-              <RemocnLogo fontSize={34 * u} color={p.fg} />
-            )}
-          </div>
-        ) : null}
-      </AbsoluteFill>
+          {t >= 116
+            ? shapes.map((s, i) => {
+                const k = featIn(i);
+                if (k <= 0) return null;
+                return (
+                  <div
+                    key={features[i]}
+                    style={{
+                      position: "absolute",
+                      left: s.x,
+                      top: s.y,
+                      width: s.w,
+                      height: s.h,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 10 * u,
+                      fontFamily,
+                      fontWeight: 400,
+                      fontSize: featSize,
+                      letterSpacing: "-0.01em",
+                      color: fg,
+                      whiteSpace: "nowrap",
+                      opacity: k,
+                      transform: `translateY(${(1 - k) * 6 * u}px)`,
+                    }}
+                  >
+                    <svg
+                      width={featSize * 0.95}
+                      height={featSize * 0.95}
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      aria-hidden
+                    >
+                      <path
+                        d={FEATURE_ICONS[i % FEATURE_ICONS.length]}
+                        stroke={p.muted}
+                        strokeWidth={1.5}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    {features[i]}
+                  </div>
+                );
+              })
+            : null}
+
+          {tileFill > 0 && t >= 116 ? (
+            <div
+              style={{
+                position: "absolute",
+                left: shapes[1].x,
+                top: shapes[1].y,
+                width: shapes[1].w,
+                height: shapes[1].h,
+                borderRadius: `${shapes[1].r[0]}px`,
+                background: `linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 48%, rgba(0,0,0,0.14) 100%), ${accent}`,
+                opacity: tileFill,
+                boxShadow: `inset 0 ${1.5 * u}px 0 rgba(255,255,255,0.3), 0 ${18 * u}px ${48 * u}px -${10 * u}px ${accent}${Math.round(
+                  tileGlow * 140,
+                )
+                  .toString(16)
+                  .padStart(2, "0")}`,
+              }}
+            />
+          ) : null}
+
+          {markIn > 0 ? (
+            <div
+              style={{
+                position: "absolute",
+                left: cx - tile / 2,
+                top: tileCy - tile / 2,
+                width: tile,
+                height: tile,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                opacity: markIn,
+                transform: `translateY(${(1 - markIn) * 6 * u}px) scale(${0.92 + 0.08 * markIn})`,
+              }}
+            >
+              {logo ?? (
+                <svg
+                  viewBox="0 0 124.06 134.26"
+                  height={tile * 0.46}
+                  width={(tile * 0.46 * 124.06) / 134.26}
+                  style={{ marginLeft: tile * 0.03 }}
+                  aria-hidden
+                >
+                  <path fill="#FFFFFF" d={REMOCN_R_PATH} />
+                </svg>
+              )}
+            </div>
+          ) : null}
+          {nameIn > 0 ? (
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: tileCy + tile / 2 + 30 * u,
+                display: "flex",
+                justifyContent: "center",
+                opacity: nameIn,
+                transform: `translateY(${(1 - nameIn) * 10 * u}px)`,
+              }}
+            >
+              {logo ? (
+                <span
+                  style={{
+                    fontFamily,
+                    fontWeight: 400,
+                    fontSize: 28 * u,
+                    letterSpacing: "-0.02em",
+                    color: fg,
+                  }}
+                >
+                  {name}
+                </span>
+              ) : (
+                <RemocnLogo fontSize={34 * u} color={fg} />
+              )}
+            </div>
+          ) : null}
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

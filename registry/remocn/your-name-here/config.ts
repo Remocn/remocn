@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const yourNameHereConfig: ComponentConfig = {
   componentName: "YourNameHere",
@@ -38,6 +44,17 @@ export const yourNameHereConfig: ComponentConfig = {
       default: "Swap one prop. The film is yours.",
       description: "Note",
     },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Lexend" }),
     speed: {
       type: "number",
       default: 1,

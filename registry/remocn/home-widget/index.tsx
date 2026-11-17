@@ -30,7 +30,23 @@ export interface HomeWidgetProps {
   stat?: { label: string; from: number; to: number; delta: string };
   /** Seven daily values for the bar chart; the last bar is today and grows live. */
   bars?: number[];
+  /** Search field at the top of the widget gallery. */
+  searchLabel?: string;
+  /** Button that drops the widget on the home screen. */
+  addLabel?: string;
+  /** Button that leaves edit mode. */
+  doneLabel?: string;
   accent?: string;
+  /** Color of the off-device lines; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Onest by default. */
+  fontFamily?: string;
+  /** Size of the phone and lines, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   /** `light` is a daytime wallpaper with light widgets; `dark` is dusk. */
   theme?: "light" | "dark";
@@ -802,6 +818,22 @@ function GalleryWidgets({ c, accent }: { c: Palette; accent: string }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function HomeWidget({
   appName = "remocn",
   widgetName = "Renders",
@@ -814,7 +846,15 @@ export function HomeWidget({
     delta: "+12% vs last week",
   },
   bars = [42, 58, 36, 70, 64, 88, 76],
+  searchLabel = "Search Widgets",
+  addLabel = "Add Widget",
+  doneLabel = "Done",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily: font = fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "light",
   lines = [
@@ -825,7 +865,7 @@ export function HomeWidget({
   ground,
   groundParams,
 }: HomeWidgetProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay);
   const { fps, width, height } = useVideoConfig();
   const f = frame * speed;
   const c: Palette = theme === "dark" ? DARK : LIGHT;
@@ -1060,550 +1100,568 @@ export function HomeWidget({
   );
 
   return (
-    <AbsoluteFill style={{ fontFamily, fontWeight: 400, overflow: "hidden" }}>
-      <GshGround
-        preset={ground ?? (theme === "dark" ? "ember" : "paper-crease")}
-        params={groundParams}
-        timeOffset={theme === "dark" ? 3 : 6}
-        timeScale={0.3}
-      />
-      <AbsoluteFill style={{ background: c.stage }} />
-      <div
-        style={{
-          position: "absolute",
-          left: tall ? width * 0.08 : width * 0.075,
-          top: tall ? height * 0.07 : height / 2 - height * 0.09,
-          width: tall ? width * 0.84 : width * 0.44,
-          height: (tall ? width * 0.085 : height * 0.09) * 2.3,
-          fontSize: tall ? width * 0.085 : height * 0.09,
-          fontWeight: 300,
-          lineHeight: 1.08,
-          letterSpacing: "-0.035em",
-          color: c.copy,
-        }}
-      >
-        {lines.map((line, i) => {
-          const starts = [6, T_PLUS, T_ADD + 4];
-          const ends = [T_PLUS, T_ADD + 4, 99999];
-          const inP = interpolate(f, [starts[i], starts[i] + 14], [0, 1], {
-            ...clamp,
-            easing: sheetEase,
-          });
-          const outP = interpolate(f, [ends[i] - 8, ends[i]], [0, 1], {
-            ...clamp,
-            easing: exitEase,
-          });
-          if (inP <= 0 || outP >= 1) return null;
-          return (
-            <div
-              key={line}
-              style={{
-                position: "absolute",
-                inset: 0,
-                overflow: "hidden",
-                paddingBottom: "0.12em",
-              }}
-            >
-              <div
-                style={{
-                  transform: `translateY(${(1 - inP) * 70 - outP * 40}%)`,
-                  opacity: Math.min(1, inP * 1.4) * (1 - outP),
-                  textWrap: "balance",
-                }}
-              >
-                {line}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: BW,
-          height: BH,
-          transformOrigin: "0 0",
-          transform: `translate(${phoneCx - camFx * S}px, ${phoneCy - camFy * S + (1 - rise) * height}px) scale(${S})`,
-          WebkitFontSmoothing: "antialiased",
-        }}
-      >
+    <AbsoluteFill
+      style={{ fontFamily: font, fontWeight: 400, overflow: "hidden" }}
+    >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? (theme === "dark" ? "ember" : "paper-crease")}
+            params={groundParams}
+            timeOffset={theme === "dark" ? 3 : 6}
+            timeScale={0.3}
+          />
+          <AbsoluteFill style={{ background: c.stage }} />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            borderRadius: 67,
-            boxShadow: c.phoneShadow,
+            left: tall ? width * 0.08 : width * 0.075,
+            top: tall ? height * 0.07 : height / 2 - height * 0.09,
+            width: tall ? width * 0.84 : width * 0.44,
+            height: (tall ? width * 0.085 : height * 0.09) * 2.3,
+            fontSize: tall ? width * 0.085 : height * 0.09,
+            fontWeight: 300,
+            lineHeight: 1.08,
+            letterSpacing: "-0.035em",
+            color: ink ?? c.copy,
           }}
-        />
-        <Frame>
+        >
+          {lines.map((line, i) => {
+            const starts = [6, T_PLUS, T_ADD + 4];
+            const ends = [T_PLUS, T_ADD + 4, 99999];
+            const inP = interpolate(f, [starts[i], starts[i] + 14], [0, 1], {
+              ...clamp,
+              easing: sheetEase,
+            });
+            const outP = interpolate(f, [ends[i] - 8, ends[i]], [0, 1], {
+              ...clamp,
+              easing: exitEase,
+            });
+            if (inP <= 0 || outP >= 1) return null;
+            return (
+              <div
+                key={line}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  overflow: "hidden",
+                  paddingBottom: "0.12em",
+                }}
+              >
+                <div
+                  style={{
+                    transform: `translateY(${(1 - inP) * 70 - outP * 40}%)`,
+                    opacity: Math.min(1, inP * 1.4) * (1 - outP),
+                    textWrap: "balance",
+                  }}
+                >
+                  {line}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: BW,
+            height: BH,
+            transformOrigin: "0 0",
+            transform: `translate(${phoneCx - camFx * S}px, ${phoneCy - camFy * S + (1 - rise) * height}px) scale(${S})`,
+            WebkitFontSmoothing: "antialiased",
+          }}
+        >
           <div
             style={{
               position: "absolute",
               inset: 0,
-              transform: `scale(${1 - homeDim * 0.06})`,
-              borderRadius: 40 * homeDim,
-              overflow: "hidden",
+              borderRadius: 67,
+              boxShadow: c.phoneShadow,
             }}
-          >
-            <Wallpaper c={c} />
-            {homeApps.map((app, i) => {
-              const a = cellXY(i);
-              const b = cellXY(freeCells[i]);
-              const t0 = T_ADD + (homeApps.length - 1 - i) * 0.25;
-              const mv = interpolate(f, [t0, t0 + 14], [0, 1], {
-                ...clamp,
-                easing: inOut,
-              });
-              const j = jiggle(i);
-              return (
-                <div
-                  key={app.name}
-                  style={{
-                    position: "absolute",
-                    left: a.x + (b.x - a.x) * mv,
-                    top: a.y + (b.y - a.y) * mv,
-                    width: ICON,
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: 5,
-                    transform: `translateY(${j.y}px) rotate(${j.r}deg)`,
-                  }}
-                >
-                  <AppTile app={app} size={ICON} />
-                  <span
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 400,
-                      color: "#ffffff",
-                      textShadow: "0 1px 2px rgba(0,0,0,0.3)",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {app.name}
-                  </span>
-                  {badge(editOp)}
-                </div>
-              );
-            })}
-            <div
-              style={{
-                position: "absolute",
-                left: (SW - 82) / 2,
-                bottom: 128,
-                height: 30,
-                width: 82,
-                borderRadius: 15,
-                background: c.chrome,
-                color: "#ffffff",
-                fontSize: 13,
-                fontWeight: 400,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 4,
-              }}
-            >
-              <Glyph d={PATH.search} size={13} color="#ffffff" sw={2.2} />
-              Search
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: 12,
-                right: 12,
-                bottom: 12,
-                height: 94,
-                borderRadius: 34,
-                background: c.chrome,
-                backdropFilter: "blur(20px)",
-              }}
-            />
-            {DOCK.map((app, i) => {
-              const j = jiggle(30 + i);
-              return (
-                <div
-                  key={app.name}
-                  style={{
-                    position: "absolute",
-                    left: COL0 + i * COL,
-                    top: SH - 12 - 94 + 16,
-                    transform: `translateY(${j.y}px) rotate(${j.r}deg)`,
-                  }}
-                >
-                  <AppTile app={app} size={ICON} />
-                  {badge(editOp)}
-                </div>
-              );
-            })}
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                height: 54,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "4px 30px 0 52px",
-                color: "#ffffff",
-                opacity: statusOp,
-              }}
-            >
-              <span style={{ fontSize: 17, fontWeight: 400 }}>9:41</span>
-              <StatusIcons color="#ffffff" />
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: 20,
-                top: 15,
-                width: 40,
-                height: 30,
-                borderRadius: 15,
-                background: c.chrome,
-                backdropFilter: "blur(16px)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                opacity: editOp,
-                transform: `scale(${(0.94 + editOp * 0.06) * (1 - plusPress * 0.06)})`,
-              }}
-            >
-              <Glyph d={PATH.plus} size={18} color="#ffffff" sw={2.4} />
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                right: 20,
-                top: 15,
-                height: 30,
-                padding: "0 14px",
-                borderRadius: 15,
-                background: c.chrome,
-                backdropFilter: "blur(16px)",
-                display: "flex",
-                alignItems: "center",
-                color: "#ffffff",
-                fontSize: 15,
-                fontWeight: 400,
-                opacity: editOp,
-                transform: `scale(${(0.94 + editOp * 0.06) * (1 - donePress * 0.06)})`,
-              }}
-            >
-              Done
-            </div>
+          />
+          <Frame>
             <div
               style={{
                 position: "absolute",
                 inset: 0,
-                background: "#000",
-                opacity: homeDim * 0.3,
-              }}
-            />
-          </div>
-          {sheetVis > 0 ? (
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                top: sheetY,
-                height: SH - SHEET_TOP,
-                borderRadius: "38px 38px 0 0",
-                background: c.sheet,
+                transform: `scale(${1 - homeDim * 0.06})`,
+                borderRadius: 40 * homeDim,
                 overflow: "hidden",
-                zIndex: 20,
               }}
             >
+              <Wallpaper c={c} />
+              {homeApps.map((app, i) => {
+                const a = cellXY(i);
+                const b = cellXY(freeCells[i]);
+                const t0 = T_ADD + (homeApps.length - 1 - i) * 0.25;
+                const mv = interpolate(f, [t0, t0 + 14], [0, 1], {
+                  ...clamp,
+                  easing: inOut,
+                });
+                const j = jiggle(i);
+                return (
+                  <div
+                    key={app.name}
+                    style={{
+                      position: "absolute",
+                      left: a.x + (b.x - a.x) * mv,
+                      top: a.y + (b.y - a.y) * mv,
+                      width: ICON,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: 5,
+                      transform: `translateY(${j.y}px) rotate(${j.r}deg)`,
+                    }}
+                  >
+                    <AppTile app={app} size={ICON} />
+                    <span
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 400,
+                        color: "#ffffff",
+                        textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {app.name}
+                    </span>
+                    {badge(editOp)}
+                  </div>
+                );
+              })}
+              <div
+                style={{
+                  position: "absolute",
+                  left: (SW - 82) / 2,
+                  bottom: 128,
+                  height: 30,
+                  width: 82,
+                  borderRadius: 15,
+                  background: c.chrome,
+                  color: "#ffffff",
+                  fontSize: 13,
+                  fontWeight: 400,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 4,
+                }}
+              >
+                <Glyph d={PATH.search} size={13} color="#ffffff" sw={2.2} />
+                Search
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: 12,
+                  right: 12,
+                  bottom: 12,
+                  height: 94,
+                  borderRadius: 34,
+                  background: c.chrome,
+                  backdropFilter: "blur(20px)",
+                }}
+              />
+              {DOCK.map((app, i) => {
+                const j = jiggle(30 + i);
+                return (
+                  <div
+                    key={app.name}
+                    style={{
+                      position: "absolute",
+                      left: COL0 + i * COL,
+                      top: SH - 12 - 94 + 16,
+                      transform: `translateY(${j.y}px) rotate(${j.r}deg)`,
+                    }}
+                  >
+                    <AppTile app={app} size={ICON} />
+                    {badge(editOp)}
+                  </div>
+                );
+              })}
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 54,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "4px 30px 0 52px",
+                  color: "#ffffff",
+                  opacity: statusOp,
+                }}
+              >
+                <span style={{ fontSize: 17, fontWeight: 400 }}>9:41</span>
+                <StatusIcons color="#ffffff" />
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: 20,
+                  top: 15,
+                  width: 40,
+                  height: 30,
+                  borderRadius: 15,
+                  background: c.chrome,
+                  backdropFilter: "blur(16px)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  opacity: editOp,
+                  transform: `scale(${(0.94 + editOp * 0.06) * (1 - plusPress * 0.06)})`,
+                }}
+              >
+                <Glyph d={PATH.plus} size={18} color="#ffffff" sw={2.4} />
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  right: 20,
+                  top: 15,
+                  height: 30,
+                  padding: "0 14px",
+                  borderRadius: 15,
+                  background: c.chrome,
+                  backdropFilter: "blur(16px)",
+                  display: "flex",
+                  alignItems: "center",
+                  color: "#ffffff",
+                  fontSize: 15,
+                  fontWeight: 400,
+                  opacity: editOp,
+                  transform: `scale(${(0.94 + editOp * 0.06) * (1 - donePress * 0.06)})`,
+                }}
+              >
+                {doneLabel}
+              </div>
               <div
                 style={{
                   position: "absolute",
                   inset: 0,
-                  transform: `translateX(${-push * SW * 0.3}px)`,
-                  opacity: 1 - push * 0.6,
+                  background: "#000",
+                  opacity: homeDim * 0.3,
+                }}
+              />
+            </div>
+            {sheetVis > 0 ? (
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  top: sheetY,
+                  height: SH - SHEET_TOP,
+                  borderRadius: "38px 38px 0 0",
+                  background: c.sheet,
+                  overflow: "hidden",
+                  zIndex: 20,
                 }}
               >
                 <div
                   style={{
                     position: "absolute",
-                    left: 20,
-                    right: 20,
-                    top: 18,
-                    height: 36,
-                    borderRadius: 10,
-                    background: c.field,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    padding: "0 10px",
-                    color: c.muted,
-                    fontSize: 17,
-                  }}
-                >
-                  <Glyph d={PATH.search} size={17} color={c.muted} sw={2.2} />
-                  Search Widgets
-                </div>
-                <div
-                  style={{ position: "absolute", left: 0, right: 0, top: 64 }}
-                >
-                  <GalleryWidgets c={c} accent={accent} />
-                </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    left: 20,
-                    right: 20,
-                    top: listTop - SHEET_TOP,
-                    borderRadius: 12,
-                    background: c.group,
-                    overflow: "hidden",
-                  }}
-                >
-                  {LIST.map((name, i) => {
-                    const app =
-                      name === "remocn"
-                        ? remocnApp
-                        : (APPS.find((a) => a.name === name) as AppDef);
-                    const pressed = name === "remocn" ? rowPress : 0;
-                    return (
-                      <div
-                        key={name}
-                        style={{
-                          height: 50,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 12,
-                          padding: "0 14px",
-                          position: "relative",
-                          background: pressed > 0 ? c.field : "transparent",
-                        }}
-                      >
-                        <AppTile
-                          app={
-                            name === "remocn" ? { ...app, name: appName } : app
-                          }
-                          size={30}
-                        />
-                        <span style={{ flex: 1, fontSize: 17, color: c.text }}>
-                          {name === "remocn" ? appName : name}
-                        </span>
-                        <Glyph
-                          d={PATH.chevron}
-                          size={16}
-                          color={c.muted}
-                          sw={2.2}
-                        />
-                        {i > 0 ? (
-                          <div
-                            style={{
-                              position: "absolute",
-                              left: 56,
-                              right: 0,
-                              top: 0,
-                              height: 1,
-                              background: c.hair,
-                            }}
-                          />
-                        ) : null}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-              {push > 0 ? (
-                <div
-                  style={{
-                    position: "absolute",
                     inset: 0,
-                    background: c.sheet,
-                    transform: `translateX(${(1 - push) * SW}px)`,
-                    boxShadow: "-8px 0 24px rgba(0,0,0,0.08)",
+                    transform: `translateX(${-push * SW * 0.3}px)`,
+                    opacity: 1 - push * 0.6,
                   }}
                 >
-                  <div style={{ position: "absolute", left: 14, top: 18 }}>
-                    <Glyph d={PATH.back} size={28} color={c.blue} sw={2.4} />
-                  </div>
                   <div
                     style={{
                       position: "absolute",
-                      left: 24,
-                      right: 24,
-                      top: 62,
-                      textAlign: "center",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: 24,
-                        fontWeight: 400,
-                        letterSpacing: "-0.02em",
-                        color: c.text,
-                      }}
-                    >
-                      {widgetName}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 15,
-                        color: c.muted,
-                        marginTop: 6,
-                        textWrap: "balance",
-                      }}
-                    >
-                      {widgetDescription}
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      top: PREVIEW_Y,
+                      left: 20,
+                      right: 20,
+                      top: 18,
+                      height: 36,
+                      borderRadius: 10,
+                      background: c.field,
                       display: "flex",
-                      transform: `translateX(${-pageDrag * SW}px)`,
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "0 10px",
+                      color: c.muted,
+                      fontSize: 17,
                     }}
                   >
-                    {(["small", "medium"] as const).map((sz) => (
-                      <div
-                        key={sz}
-                        style={{
-                          width: SW,
-                          display: "flex",
-                          justifyContent: "center",
-                          opacity: f >= T_ADD && sz === size ? 0 : 1,
-                        }}
-                      >
-                        <div
-                          style={{
-                            boxShadow:
-                              "0 1px 3px rgba(0,0,0,0.06), 0 10px 30px -8px rgba(0,0,0,0.18)",
-                            borderRadius: 22,
-                          }}
-                        >
-                          <StatsWidget
-                            c={c}
-                            accent={accent}
-                            size={sz}
-                            appName={appName}
-                            stat={stat}
-                            value={stat.from}
-                            bars={bars}
-                          />
-                        </div>
-                      </div>
-                    ))}
+                    <Glyph d={PATH.search} size={17} color={c.muted} sw={2.2} />
+                    {searchLabel}
                   </div>
                   <div
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      right: 0,
-                      top: PREVIEW_Y + WH + 32,
-                      display: "flex",
-                      justifyContent: "center",
-                      gap: 8,
-                    }}
+                    style={{ position: "absolute", left: 0, right: 0, top: 64 }}
                   >
-                    {[0, 1].map((i) => (
-                      <div
-                        key={i}
-                        style={{
-                          width: 7,
-                          height: 7,
-                          borderRadius: 4,
-                          background: c.text,
-                          opacity: (pageDrag > 0.5 ? i === 1 : i === 0)
-                            ? 0.85
-                            : 0.2,
-                        }}
-                      />
-                    ))}
+                    <GalleryWidgets c={c} accent={accent} />
                   </div>
                   <div
                     style={{
                       position: "absolute",
                       left: 20,
                       right: 20,
-                      bottom: 34,
-                      height: 50,
-                      borderRadius: 25,
-                      background: c.blue,
-                      color: "#ffffff",
-                      fontSize: 17,
-                      fontWeight: 400,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 6,
-                      transform: `scale(${1 - addPress * 0.03})`,
+                      top: listTop - SHEET_TOP,
+                      borderRadius: 12,
+                      background: c.group,
+                      overflow: "hidden",
                     }}
                   >
-                    <Glyph d={PATH.plus} size={18} color="#ffffff" sw={2.4} />
-                    Add Widget
+                    {LIST.map((name, i) => {
+                      const app =
+                        name === "remocn"
+                          ? remocnApp
+                          : (APPS.find((a) => a.name === name) as AppDef);
+                      const pressed = name === "remocn" ? rowPress : 0;
+                      return (
+                        <div
+                          key={name}
+                          style={{
+                            height: 50,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
+                            padding: "0 14px",
+                            position: "relative",
+                            background: pressed > 0 ? c.field : "transparent",
+                          }}
+                        >
+                          <AppTile
+                            app={
+                              name === "remocn"
+                                ? { ...app, name: appName }
+                                : app
+                            }
+                            size={30}
+                          />
+                          <span
+                            style={{ flex: 1, fontSize: 17, color: c.text }}
+                          >
+                            {name === "remocn" ? appName : name}
+                          </span>
+                          <Glyph
+                            d={PATH.chevron}
+                            size={16}
+                            color={c.muted}
+                            sw={2.2}
+                          />
+                          {i > 0 ? (
+                            <div
+                              style={{
+                                position: "absolute",
+                                left: 56,
+                                right: 0,
+                                top: 0,
+                                height: 1,
+                                background: c.hair,
+                              }}
+                            />
+                          ) : null}
+                        </div>
+                      );
+                    })}
                   </div>
+                </div>
+                {push > 0 ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      background: c.sheet,
+                      transform: `translateX(${(1 - push) * SW}px)`,
+                      boxShadow: "-8px 0 24px rgba(0,0,0,0.08)",
+                    }}
+                  >
+                    <div style={{ position: "absolute", left: 14, top: 18 }}>
+                      <Glyph d={PATH.back} size={28} color={c.blue} sw={2.4} />
+                    </div>
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: 24,
+                        right: 24,
+                        top: 62,
+                        textAlign: "center",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 24,
+                          fontWeight: 400,
+                          letterSpacing: "-0.02em",
+                          color: c.text,
+                        }}
+                      >
+                        {widgetName}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 15,
+                          color: c.muted,
+                          marginTop: 6,
+                          textWrap: "balance",
+                        }}
+                      >
+                        {widgetDescription}
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: 0,
+                        top: PREVIEW_Y,
+                        display: "flex",
+                        transform: `translateX(${-pageDrag * SW}px)`,
+                      }}
+                    >
+                      {(["small", "medium"] as const).map((sz) => (
+                        <div
+                          key={sz}
+                          style={{
+                            width: SW,
+                            display: "flex",
+                            justifyContent: "center",
+                            opacity: f >= T_ADD && sz === size ? 0 : 1,
+                          }}
+                        >
+                          <div
+                            style={{
+                              boxShadow:
+                                "0 1px 3px rgba(0,0,0,0.06), 0 10px 30px -8px rgba(0,0,0,0.18)",
+                              borderRadius: 22,
+                            }}
+                          >
+                            <StatsWidget
+                              c={c}
+                              accent={accent}
+                              size={sz}
+                              appName={appName}
+                              stat={stat}
+                              value={stat.from}
+                              bars={bars}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: 0,
+                        right: 0,
+                        top: PREVIEW_Y + WH + 32,
+                        display: "flex",
+                        justifyContent: "center",
+                        gap: 8,
+                      }}
+                    >
+                      {[0, 1].map((i) => (
+                        <div
+                          key={i}
+                          style={{
+                            width: 7,
+                            height: 7,
+                            borderRadius: 4,
+                            background: c.text,
+                            opacity: (pageDrag > 0.5 ? i === 1 : i === 0)
+                              ? 0.85
+                              : 0.2,
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: 20,
+                        right: 20,
+                        bottom: 34,
+                        height: 50,
+                        borderRadius: 25,
+                        background: c.blue,
+                        color: "#ffffff",
+                        fontSize: 17,
+                        fontWeight: 400,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 6,
+                        transform: `scale(${1 - addPress * 0.03})`,
+                      }}
+                    >
+                      <Glyph d={PATH.plus} size={18} color="#ffffff" sw={2.4} />
+                      {addLabel}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                transform: `scale(${1 - homeDim * 0.06})`,
+                zIndex: 25,
+              }}
+            >
+              {landed ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: wx,
+                    top: wy,
+                    width: W.w,
+                    zIndex: 6,
+                    transform: `translateY(${jiggle(20).y}px) rotate(${jiggle(20).r * 0.5}deg) scale(${1 + lift})`,
+                    filter: `drop-shadow(0 ${10 * lift * 20}px ${24 * lift * 20}px rgba(0,0,0,${0.25 * lift * 20}))`,
+                  }}
+                >
+                  {widgetEl}
+                  <div
+                    style={{
+                      marginTop: 6,
+                      textAlign: "center",
+                      fontSize: 12,
+                      fontWeight: 400,
+                      color: "#ffffff",
+                      textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+                      opacity: interpolate(fly, [0.7, 1], [0, 1], clamp),
+                    }}
+                  >
+                    {appName}
+                  </div>
+                  {badge(editOp * interpolate(fly, [0.8, 1], [0, 1], clamp))}
                 </div>
               ) : null}
             </div>
-          ) : null}
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              transform: `scale(${1 - homeDim * 0.06})`,
-              zIndex: 25,
-            }}
-          >
-            {landed ? (
-              <div
-                style={{
-                  position: "absolute",
-                  left: wx,
-                  top: wy,
-                  width: W.w,
-                  zIndex: 6,
-                  transform: `translateY(${jiggle(20).y}px) rotate(${jiggle(20).r * 0.5}deg) scale(${1 + lift})`,
-                  filter: `drop-shadow(0 ${10 * lift * 20}px ${24 * lift * 20}px rgba(0,0,0,${0.25 * lift * 20}))`,
-                }}
-              >
-                {widgetEl}
-                <div
-                  style={{
-                    marginTop: 6,
-                    textAlign: "center",
-                    fontSize: 12,
-                    fontWeight: 400,
-                    color: "#ffffff",
-                    textShadow: "0 1px 2px rgba(0,0,0,0.3)",
-                    opacity: interpolate(fly, [0.7, 1], [0, 1], clamp),
-                  }}
-                >
-                  {appName}
-                </div>
-                {badge(editOp * interpolate(fly, [0.8, 1], [0, 1], clamp))}
-              </div>
-            ) : null}
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              left: touch.x - 22,
-              top: touch.y - 22,
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              background: "rgba(255,255,255,0.22)",
-              border: "1.5px solid rgba(255,255,255,0.8)",
-              boxShadow: "0 2px 10px rgba(0,0,0,0.25)",
-              opacity: touchOpacity,
-              transform: `scale(${1 - down * 0.14})`,
-              zIndex: 50,
-            }}
-          />
-        </Frame>
-      </div>
+            <div
+              style={{
+                position: "absolute",
+                left: touch.x - 22,
+                top: touch.y - 22,
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                background: "rgba(255,255,255,0.22)",
+                border: "1.5px solid rgba(255,255,255,0.8)",
+                boxShadow: "0 2px 10px rgba(0,0,0,0.25)",
+                opacity: touchOpacity,
+                transform: `scale(${1 - down * 0.14})`,
+                zIndex: 50,
+              }}
+            />
+          </Frame>
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -88,6 +88,18 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Supporting line under the grid heading",
     },
     {
+      name: "tabs",
+      type: "string[]",
+      default: "[\"All\", \"Videos\", \"Stills\", \"Captions\"]",
+      description: "Filter tabs above the card grid in scene B.",
+    },
+    {
+      name: "ctaLabel",
+      type: "string",
+      default: "\"New kit\"",
+      description: "Label of the pill next to the grid heading.",
+    },
+    {
       name: "covers",
       type: "CoverItem[]",
       default: "DEFAULT_COVERS",
@@ -114,9 +126,54 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Overrides for the scene B shader parameters",
     },
     {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Figtree\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
+    },
+    {
       name: "transition",
       type: "CardSwipeCoverProps",
       description: "Overrides for the transition presentation props",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "3",
+      description: "Frames between cards as the grid lands.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
     },
   ]}
 />

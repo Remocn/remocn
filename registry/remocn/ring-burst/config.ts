@@ -1,18 +1,23 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const ringBurstConfig: ComponentConfig = {
   componentName: "RingBurst",
   importPath: "@/components/remocn/ring-burst",
   controls: {
     theme: {
-      type: "text-content",
+      type: "enum",
       default: "dark",
+      variants: {
+        dark: {},
+        light: {},
+      },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     from: {
       type: "text-content",
@@ -24,6 +29,31 @@ export const ringBurstConfig: ComponentConfig = {
       default: "remocn",
       description: "To",
     },
+    expand: {
+      type: "number",
+      default: 32,
+      min: 8,
+      max: 80,
+      step: 1,
+      description: "Ring expand (frames)",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 4,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Ring stagger (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Fraunces", grain: true }),
+    // After sceneControls so its 0-default delay doesn't replace this one.
     delay: {
       type: "number",
       default: 20,

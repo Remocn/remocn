@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Afacad";
+import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -27,7 +28,19 @@ export interface CrunchProps {
   snag?: StoryBeat;
   resolution?: StoryBeat;
   accent?: string;
+  /** Text color of the first two lines; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Color of the walls that close in; overrides the theme. */
+  wall?: string;
+  /** Typeface for the copy. Load it yourself; Afacad by default. */
+  fontFamily?: string;
+  /** Weight of the story lines; the slugs keep 500. */
+  fontWeight?: number;
+  /** Size of the copy, around the frame's center; the walls stay put. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -80,7 +93,7 @@ function words(s: string) {
   return s.split(/\s+/).filter(Boolean);
 }
 
-function useWidths(strings: string[]) {
+function useWidths(strings: string[], family: string) {
   const key = strings.join("\u0001");
   const [state, setState] = useState<{
     key: string;
@@ -94,14 +107,14 @@ function useWidths(strings: string[]) {
     let live = true;
     Promise.all([
       afacad.waitUntilDone(),
-      document.fonts.load(`500 ${PX}px "${afacad.fontFamily}"`),
+      document.fonts.load(`500 ${PX}px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
         const ctx = document.createElement("canvas").getContext("2d");
         const w: Record<string, number> = {};
-        if (ctx) ctx.font = `500 ${PX}px "${afacad.fontFamily}"`;
+        if (ctx) ctx.font = `500 ${PX}px "${family}"`;
         for (const s of ref.current) {
           w[s] = ctx ? ctx.measureText(s).width / PX : s.length * 0.45;
         }
@@ -114,7 +127,7 @@ function useWidths(strings: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, family]);
   return state && state.key === key ? state.w : null;
 }
 
@@ -165,20 +178,43 @@ interface Block {
   slugWords: string[];
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function Crunch({
   setup = DEFAULT_SETUP,
   snag = DEFAULT_SNAG,
   resolution = DEFAULT_RESOLUTION,
   accent,
+  ink,
   background,
+  wall,
+  fontFamily = afacad.fontFamily,
+  fontWeight = 400,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: CrunchProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay);
   const t = frame * speed;
   const { width: W, height: H, durationInFrames: T } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
@@ -189,7 +225,7 @@ export function Crunch({
   const strings = Array.from(
     new Set([" ", ...blocks.flatMap((b) => [...b.lineWords, ...b.slugWords])]),
   );
-  const w = useWidths(strings);
+  const w = useWidths(strings, fontFamily);
 
   if (!w) {
     return (
@@ -363,7 +399,7 @@ export function Crunch({
             fontSize: size,
             lineHeight: `${isSlug ? size * 1.25 : size * LH}px`,
             whiteSpace: "pre",
-            fontWeight: isSlug ? 500 : 400,
+            fontWeight: isSlug ? 500 : fontWeight,
             letterSpacing: `${isSlug ? SLUG_TRACK : LINE_TRACK}em`,
             color: isSlug ? slugColor : lineColor,
             opacity: o,
@@ -383,7 +419,7 @@ export function Crunch({
     bottom: 0,
     [side]: 0,
     width: Math.max(0, wallW),
-    background: c.wall,
+    background: wall ?? c.wall,
     boxShadow:
       wallW > 1
         ? `inset ${side === "left" ? -1 : 1}px 0 0 ${c.edge}`
@@ -395,22 +431,26 @@ export function Crunch({
       style={{
         background: stage,
         overflow: "hidden",
-        fontFamily: afacad.fontFamily,
+        fontFamily,
       }}
     >
-      {renderBlock(
-        blocks[0],
-        wideFor(blocks[0]),
-        "a",
-        setupIn,
-        setupOut,
-        c.ink,
-        hi,
-      )}
-      {renderBlock(blocks[1], snagPts, "b", snagIn, release - 4, c.ink, hi)}
+      <ScaleLayer scale={scale}>
+        {renderBlock(
+          blocks[0],
+          wideFor(blocks[0]),
+          "a",
+          setupIn,
+          setupOut,
+          fg,
+          hi,
+        )}
+        {renderBlock(blocks[1], snagPts, "b", snagIn, release - 4, fg, hi)}
+      </ScaleLayer>
       <div style={wallStyle("left")} />
       <div style={wallStyle("right")} />
-      {renderBlock(blocks[2], wideFor(blocks[2]), "c", resIn, null, hi, hi)}
+      <ScaleLayer scale={scale}>
+        {renderBlock(blocks[2], wideFor(blocks[2]), "c", resIn, null, hi, hi)}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

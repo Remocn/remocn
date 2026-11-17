@@ -1,8 +1,35 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const whatSticksConfig: ComponentConfig = {
   componentName: "WhatSticks",
   importPath: "@/components/remocn/what-sticks",
+  lists: {
+    lines: {
+      default: [
+        "Scenes install with one command.",
+        "Every word on screen is a prop.",
+        "Transitions land on the beat.",
+        "Captions come from the transcript.",
+        "You own every file.",
+        "It renders on your laptop.",
+      ],
+      description: "Lines",
+    },
+    moments: {
+      default: [
+        "Tonight, you’ll remember all of it.",
+        "Tomorrow, about half.",
+        "Next week, just this.",
+      ],
+      description: "Moments",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -13,6 +40,17 @@ export const whatSticksConfig: ComponentConfig = {
       },
       description: "Theme",
     },
+    stagger: {
+      type: "number",
+      default: 5,
+      min: 0,
+      max: 15,
+      step: 1,
+      description: "Line stagger",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Rubik" }),
     speed: {
       type: "number",
       default: 1,

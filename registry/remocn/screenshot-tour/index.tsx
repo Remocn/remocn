@@ -16,7 +16,7 @@ import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const { fontFamily: sans } = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -50,8 +50,22 @@ export interface ScreenshotTourProps {
   dim?: number;
   /** Pull back to the full shot after the last stop. */
   pullBack?: boolean;
+  /** Workspace name in the built-in mock's sidebar. */
+  brand?: string;
+  /** Replaces the remocn mark in the built-in mock's sidebar. */
+  logo?: React.ReactNode;
   theme?: "light" | "dark";
   accent?: string;
+  /** Text color of the stop labels; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the stop labels. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the screenshot and labels, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   /** gradients.sh preset for the ground. Defaults to "earthshine" (dark) or "glasswork" (light). */
   ground?: GshPresetId;
@@ -109,6 +123,22 @@ function travel(a: Cam, b: Cam, p: number, pull: number): Cam {
   return { x: a.x + dx * p - dy * bend, y: a.y + dy * p + dx * bend, s };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ScreenshotTour({
   src,
   children,
@@ -118,13 +148,20 @@ export function ScreenshotTour({
   framesPerStop = 45,
   dim = 0.55,
   pullBack = true,
+  brand = "remocn",
+  logo,
   theme = "light",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  scale: layerScale = 1,
+  delay = 0,
   speed = 1,
   ground,
   groundParams,
 }: ScreenshotTourProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const sw = screenshotWidth;
   const sh = screenshotHeight;
@@ -213,7 +250,14 @@ export function ScreenshotTour({
     />
   ) : (
     (children ?? (
-      <IssuesMock theme={theme} accent={accent} width={sw} height={sh} />
+      <IssuesMock
+        theme={theme}
+        accent={accent}
+        width={sw}
+        height={sh}
+        brand={brand}
+        logo={logo}
+      />
     ))
   );
 
@@ -236,7 +280,12 @@ export function ScreenshotTour({
     h: (spotRect.height + pad) * scale + slack * 2,
   };
   const r = 10 * u;
-  const hole = `M0 0H${W}V${H}H0Z M${ring.x + r} ${ring.y}H${ring.x + ring.w - r}A${r} ${r} 0 0 1 ${ring.x + ring.w} ${ring.y + r}V${ring.y + ring.h - r}A${r} ${r} 0 0 1 ${ring.x + ring.w - r} ${ring.y + ring.h}H${ring.x + r}A${r} ${r} 0 0 1 ${ring.x} ${ring.y + ring.h - r}V${ring.y + r}A${r} ${r} 0 0 1 ${ring.x + r} ${ring.y}Z`;
+  // Scaled down, the veil's outer edge would show; reach past the frame instead.
+  const outer =
+    layerScale === 1
+      ? `M0 0H${W}V${H}H0Z`
+      : `M${-W} ${-H}H${2 * W}V${2 * H}H${-W}Z`;
+  const hole = `${outer} M${ring.x + r} ${ring.y}H${ring.x + ring.w - r}A${r} ${r} 0 0 1 ${ring.x + ring.w} ${ring.y + r}V${ring.y + ring.h - r}A${r} ${r} 0 0 1 ${ring.x + ring.w - r} ${ring.y + ring.h}H${ring.x + r}A${r} ${r} 0 0 1 ${ring.x} ${ring.y + ring.h - r}V${ring.y + r}A${r} ${r} 0 0 1 ${ring.x + r} ${ring.y}Z`;
 
   const zoomed = clamp((cam.s / s0 - 1) / 0.8, 0, 1);
   const veil = dark ? "#040507" : "#F3F3F5";
@@ -257,86 +306,207 @@ export function ScreenshotTour({
         fontFamily,
         overflow: "hidden",
         WebkitFontSmoothing: "antialiased",
-        background: dark ? "#02040a" : "#eef0f6",
+        background:
+          background === undefined ? (dark ? "#02040a" : "#eef0f6") : undefined,
       }}
     >
-      <AbsoluteFill style={{ transform: `scale(${1.04 + 0.06 * zoomed})` }}>
-        <GshGround
-          preset={ground ?? (dark ? "earthshine" : "glasswork")}
-          params={groundParams}
-          timeOffset={3}
-          timeScale={0.5}
-        />
-      </AbsoluteFill>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: sw,
-          height: sh,
-          transformOrigin: "0 0",
-          transform: `translate(${W / 2 - cam.x * scale}px, ${cy + lift - cam.y * scale}px) scale(${scale})`,
-          opacity: interpolate(enter, [0, 0.5], [0, 1], {
-            extrapolateRight: "clamp",
-          }),
-        }}
-      >
-        <div
-          style={{
-            position: "relative",
-            width: sw,
-            height: sh,
-            borderRadius: 14,
-            overflow: "hidden",
-            boxShadow: dark
-              ? "0 0 0 1px rgba(255,255,255,0.1), 0 30px 80px -20px rgba(0,0,0,0.8)"
-              : "0 0 0 1px rgba(16,24,40,0.08), 0 2px 4px rgba(16,24,40,0.05), 0 30px 80px -24px rgba(16,24,40,0.28)",
-          }}
-        >
-          {content}
-        </div>
-      </div>
-      {spotAmount > 0 && n > 0 && (
-        <>
-          <svg
-            width={W}
-            height={H}
-            style={{ position: "absolute", inset: 0 }}
-            aria-hidden
-          >
-            <path
-              d={hole}
-              fillRule="evenodd"
-              fill={veil}
-              opacity={dim * spotAmount}
-            />
-          </svg>
-          <div
-            style={{
-              position: "absolute",
-              left: ring.x,
-              top: ring.y,
-              width: ring.w,
-              height: ring.h,
-              boxSizing: "border-box",
-              borderRadius: r,
-              border: `${1.5 * u}px solid ${accent}`,
-              opacity: spotAmount,
-            }}
+      {background === undefined ? (
+        <AbsoluteFill style={{ transform: `scale(${1.04 + 0.06 * zoomed})` }}>
+          <GshGround
+            preset={ground ?? (dark ? "earthshine" : "glasswork")}
+            params={groundParams}
+            timeOffset={3}
+            timeScale={0.5}
           />
-        </>
+        </AbsoluteFill>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
       )}
-      {tall && n > 0 ? (
+      <ScaleLayer scale={layerScale}>
         <div
           style={{
             position: "absolute",
-            left: W * 0.08,
-            right: W * 0.08,
-            top: H * 0.1,
+            left: 0,
+            top: 0,
+            width: sw,
+            height: sh,
+            transformOrigin: "0 0",
+            transform: `translate(${W / 2 - cam.x * scale}px, ${cy + lift - cam.y * scale}px) scale(${scale})`,
+            opacity: interpolate(enter, [0, 0.5], [0, 1], {
+              extrapolateRight: "clamp",
+            }),
           }}
         >
-          {stops.map((st, i) => {
+          <div
+            style={{
+              position: "relative",
+              width: sw,
+              height: sh,
+              borderRadius: 14,
+              overflow: "hidden",
+              boxShadow: dark
+                ? "0 0 0 1px rgba(255,255,255,0.1), 0 30px 80px -20px rgba(0,0,0,0.8)"
+                : "0 0 0 1px rgba(16,24,40,0.08), 0 2px 4px rgba(16,24,40,0.05), 0 30px 80px -24px rgba(16,24,40,0.28)",
+            }}
+          >
+            {content}
+          </div>
+        </div>
+        {spotAmount > 0 && n > 0 && (
+          <>
+            <svg
+              width={W}
+              height={H}
+              style={{
+                position: "absolute",
+                inset: 0,
+                overflow: layerScale === 1 ? undefined : "visible",
+              }}
+              aria-hidden
+            >
+              <path
+                d={hole}
+                fillRule="evenodd"
+                fill={veil}
+                opacity={dim * spotAmount}
+              />
+            </svg>
+            <div
+              style={{
+                position: "absolute",
+                left: ring.x,
+                top: ring.y,
+                width: ring.w,
+                height: ring.h,
+                boxSizing: "border-box",
+                borderRadius: r,
+                border: `${1.5 * u}px solid ${accent}`,
+                opacity: spotAmount,
+              }}
+            />
+          </>
+        )}
+        {tall && n > 0 ? (
+          <div
+            style={{
+              position: "absolute",
+              left: W * 0.08,
+              right: W * 0.08,
+              top: H * 0.1,
+            }}
+          >
+            {stops.map((st, i) => {
+              const a = arrivals[i];
+              const exitAt =
+                i < n - 1
+                  ? ESTABLISH + (i + 1) * F
+                  : pullBack
+                    ? tourEnd
+                    : Number.POSITIVE_INFINITY;
+              const e = EXIT(clamp((frame - exitAt) / 6, 0, 1));
+              const opacity = clamp(a, 0, 1) * (1 - e);
+              if (opacity <= 0.001) return null;
+              return (
+                <div
+                  key={`${st.label}-${i}`}
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    opacity,
+                    transform: `translateY(${((1 - a) * 0.03 - e * 0.02) * H}px)`,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontFamily: mono,
+                      fontSize: 0.024 * H,
+                      letterSpacing: "0.04em",
+                      color: dark
+                        ? "rgba(244,244,245,0.55)"
+                        : "rgba(20,21,24,0.5)",
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {step(i)}
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 0.018 * H,
+                      fontSize: 0.042 * H,
+                      fontWeight: 300,
+                      lineHeight: 1.08,
+                      letterSpacing: "-0.03em",
+                      color: ink ?? (dark ? "#F4F4F5" : "#141518"),
+                      textWrap: "balance",
+                    }}
+                  >
+                    {st.label}
+                  </div>
+                </div>
+              );
+            })}
+            {pullBack
+              ? stops.map((st, i) => {
+                  const a = spring({
+                    frame: frame - (tourEnd + 4 + i * 3),
+                    fps,
+                    config: CARD,
+                  });
+                  if (a <= 0.001) return null;
+                  return (
+                    <div
+                      key={`recap-${st.label}`}
+                      style={{
+                        position: "absolute",
+                        left: 0,
+                        right: 0,
+                        top: i * 0.072 * H,
+                        display: "flex",
+                        alignItems: "baseline",
+                        gap: 0.03 * W,
+                        paddingBottom: 0.022 * H,
+                        borderBottom: `1px solid ${dark ? "rgba(255,255,255,0.12)" : "rgba(20,21,24,0.12)"}`,
+                        opacity: clamp(a, 0, 1),
+                        transform: `translateY(${(1 - a) * 0.025 * H}px)`,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: mono,
+                          fontSize: 0.022 * H,
+                          color: dark
+                            ? "rgba(244,244,245,0.5)"
+                            : "rgba(20,21,24,0.45)",
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 0.03 * H,
+                          fontWeight: 300,
+                          letterSpacing: "-0.02em",
+                          whiteSpace: "nowrap",
+                          color: ink ?? (dark ? "#F4F4F5" : "#141518"),
+                        }}
+                      >
+                        {st.label}
+                      </span>
+                    </div>
+                  );
+                })
+              : null}
+          </div>
+        ) : null}
+        {!tall &&
+          stops.map((st, i) => {
             const a = arrivals[i];
             const exitAt =
               i < n - 1
@@ -347,170 +517,71 @@ export function ScreenshotTour({
             const e = EXIT(clamp((frame - exitAt) / 6, 0, 1));
             const opacity = clamp(a, 0, 1) * (1 - e);
             if (opacity <= 0.001) return null;
+            const fs = 18 * u;
+            const cardW = (st.label.length * fs * 0.5 + 92 * u) | 0;
+            const cardH = 48 * u;
+            const gap = 14 * u;
+            const bottom = toScreen(
+              st.x + st.width / 2,
+              st.y + st.height + pad,
+            );
+            const top = toScreen(st.x, st.y - pad);
+            const below = bottom.y + gap + cardH < H - 20 * u;
+            const y = below ? bottom.y + gap : top.y - gap - cardH;
+            const x = clamp(
+              bottom.x,
+              cardW / 2 + 24 * u,
+              W - cardW / 2 - 24 * u,
+            );
             return (
               <div
                 key={`${st.label}-${i}`}
                 style={{
                   position: "absolute",
-                  left: 0,
-                  right: 0,
-                  top: 0,
+                  left: x,
+                  top: y,
+                  height: cardH,
+                  boxSizing: "border-box",
+                  transformOrigin: below ? "50% 0%" : "50% 100%",
+                  transform: `translate(-50%, ${((1 - a) * 10 - e * 6) * u * (below ? 1 : -1)}px) scale(${interpolate(a, [0, 1], [0.94, 1])})`,
                   opacity,
-                  transform: `translateY(${((1 - a) * 0.03 - e * 0.02) * H}px)`,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14 * u,
+                  padding: `0 ${18 * u}px`,
+                  borderRadius: 12 * u,
+                  whiteSpace: "nowrap",
+                  background: card.bg,
+                  boxShadow: card.edge,
+                  color: ink ?? card.ink,
+                  fontSize: fs,
+                  fontWeight: 400,
+                  letterSpacing: "-0.01em",
                 }}
               >
-                <div
+                <span
                   style={{
                     fontFamily: mono,
-                    fontSize: 0.024 * H,
-                    letterSpacing: "0.04em",
-                    color: dark
-                      ? "rgba(244,244,245,0.55)"
-                      : "rgba(20,21,24,0.5)",
+                    fontSize: 16 * u,
+                    color: card.sub,
                     fontVariantNumeric: "tabular-nums",
                   }}
                 >
                   {step(i)}
-                </div>
-                <div
+                </span>
+                <span
                   style={{
-                    marginTop: 0.018 * H,
-                    fontSize: 0.042 * H,
-                    fontWeight: 300,
-                    lineHeight: 1.08,
-                    letterSpacing: "-0.03em",
-                    color: dark ? "#F4F4F5" : "#141518",
-                    textWrap: "balance",
+                    width: 1,
+                    alignSelf: "stretch",
+                    margin: `${14 * u}px 0`,
+                    background: "rgba(255,255,255,0.12)",
                   }}
-                >
-                  {st.label}
-                </div>
+                />
+                {st.label}
               </div>
             );
           })}
-          {pullBack
-            ? stops.map((st, i) => {
-                const a = spring({
-                  frame: frame - (tourEnd + 4 + i * 3),
-                  fps,
-                  config: CARD,
-                });
-                if (a <= 0.001) return null;
-                return (
-                  <div
-                    key={`recap-${st.label}`}
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      right: 0,
-                      top: i * 0.072 * H,
-                      display: "flex",
-                      alignItems: "baseline",
-                      gap: 0.03 * W,
-                      paddingBottom: 0.022 * H,
-                      borderBottom: `1px solid ${dark ? "rgba(255,255,255,0.12)" : "rgba(20,21,24,0.12)"}`,
-                      opacity: clamp(a, 0, 1),
-                      transform: `translateY(${(1 - a) * 0.025 * H}px)`,
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontFamily: mono,
-                        fontSize: 0.022 * H,
-                        color: dark
-                          ? "rgba(244,244,245,0.5)"
-                          : "rgba(20,21,24,0.45)",
-                        fontVariantNumeric: "tabular-nums",
-                      }}
-                    >
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: 0.03 * H,
-                        fontWeight: 300,
-                        letterSpacing: "-0.02em",
-                        whiteSpace: "nowrap",
-                        color: dark ? "#F4F4F5" : "#141518",
-                      }}
-                    >
-                      {st.label}
-                    </span>
-                  </div>
-                );
-              })
-            : null}
-        </div>
-      ) : null}
-      {!tall &&
-        stops.map((st, i) => {
-          const a = arrivals[i];
-          const exitAt =
-            i < n - 1
-              ? ESTABLISH + (i + 1) * F
-              : pullBack
-                ? tourEnd
-                : Number.POSITIVE_INFINITY;
-          const e = EXIT(clamp((frame - exitAt) / 6, 0, 1));
-          const opacity = clamp(a, 0, 1) * (1 - e);
-          if (opacity <= 0.001) return null;
-          const fs = 18 * u;
-          const cardW = (st.label.length * fs * 0.5 + 92 * u) | 0;
-          const cardH = 48 * u;
-          const gap = 14 * u;
-          const bottom = toScreen(st.x + st.width / 2, st.y + st.height + pad);
-          const top = toScreen(st.x, st.y - pad);
-          const below = bottom.y + gap + cardH < H - 20 * u;
-          const y = below ? bottom.y + gap : top.y - gap - cardH;
-          const x = clamp(bottom.x, cardW / 2 + 24 * u, W - cardW / 2 - 24 * u);
-          return (
-            <div
-              key={`${st.label}-${i}`}
-              style={{
-                position: "absolute",
-                left: x,
-                top: y,
-                height: cardH,
-                boxSizing: "border-box",
-                transformOrigin: below ? "50% 0%" : "50% 100%",
-                transform: `translate(-50%, ${((1 - a) * 10 - e * 6) * u * (below ? 1 : -1)}px) scale(${interpolate(a, [0, 1], [0.94, 1])})`,
-                opacity,
-                display: "flex",
-                alignItems: "center",
-                gap: 14 * u,
-                padding: `0 ${18 * u}px`,
-                borderRadius: 12 * u,
-                whiteSpace: "nowrap",
-                background: card.bg,
-                boxShadow: card.edge,
-                color: card.ink,
-                fontSize: fs,
-                fontWeight: 400,
-                letterSpacing: "-0.01em",
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: mono,
-                  fontSize: 16 * u,
-                  color: card.sub,
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                {step(i)}
-              </span>
-              <span
-                style={{
-                  width: 1,
-                  alignSelf: "stretch",
-                  margin: `${14 * u}px 0`,
-                  background: "rgba(255,255,255,0.12)",
-                }}
-              />
-              {st.label}
-            </div>
-          );
-        })}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -915,6 +986,8 @@ interface IssuesMockProps {
   width?: number;
   height?: number;
   headerExtra?: React.ReactNode;
+  brand?: string;
+  logo?: React.ReactNode;
 }
 
 function IssuesMock({
@@ -923,6 +996,8 @@ function IssuesMock({
   width = MOCK_W,
   height = MOCK_H,
   headerExtra,
+  brand = "remocn",
+  logo,
 }: IssuesMockProps) {
   const c = MOCK_COLORS[theme];
   const box = (size: number) => ({
@@ -939,7 +1014,7 @@ function IssuesMock({
         height,
         background: c.app,
         display: "flex",
-        fontFamily,
+        fontFamily: sans,
         color: c.text,
         position: "relative",
         overflow: "hidden",
@@ -972,11 +1047,13 @@ function IssuesMock({
               background: accent,
             }}
           >
-            <svg viewBox="0 0 124.06 134.26" height={11} aria-hidden>
-              <path fill="#fff" d={REMOCN_R_PATH} />
-            </svg>
+            {logo ?? (
+              <svg viewBox="0 0 124.06 134.26" height={11} aria-hidden>
+                <path fill="#fff" d={REMOCN_R_PATH} />
+              </svg>
+            )}
           </div>
-          <span style={{ fontSize: 13.5, fontWeight: 400 }}>remocn</span>
+          <span style={{ fontSize: 13.5, fontWeight: 400 }}>{brand}</span>
           <Glyph name="chevron" size={12} color={c.sub} />
           <div style={{ flex: 1 }} />
           <Glyph name="search" size={15} color={c.sub} />

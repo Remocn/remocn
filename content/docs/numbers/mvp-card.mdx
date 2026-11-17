@@ -88,10 +88,55 @@ The card slams up and opens from its centre line, the giant title rises letter b
       description: "Stat rows that count up inside the card; set from above value to count down.",
     },
     {
+      name: "stagger",
+      type: "number",
+      default: "8",
+      description: "Frames between stat rows starting their count.",
+    },
+    {
+      name: "countDuration",
+      type: "number",
+      default: "22",
+      description: "Frames each stat takes to count to its value.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Small markers such as the kicker tick and stat ticks.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Antonio\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "theme",

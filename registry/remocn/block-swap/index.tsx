@@ -23,7 +23,19 @@ export interface BlockSwapProps {
   lines?: string[];
   highlight?: string;
   accent?: string;
+  /** Text and block color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the lines. Load it yourself; Space Grotesk by default. */
+  fontFamily?: string;
+  /** Frames each line holds before the blocks cover it. */
+  hold?: number;
+  /** Corner radius of the blocks, in em of the line size. */
+  radius?: number;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -81,12 +93,17 @@ interface Layout {
   desc: number;
 }
 
-function measureLayout(lines: string[], W: number, H: number): Layout {
+function measureLayout(
+  lines: string[],
+  W: number,
+  H: number,
+  fontFamily: string,
+): Layout {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("block-swap: no 2d context");
   const PX = 200;
-  ctx.font = `500 ${PX}px "${space.fontFamily}"`;
+  ctx.font = `500 ${PX}px "${fontFamily}"`;
   const wOf = (s: string) =>
     ctx.measureText(s).width / PX + TRACK * Array.from(s).length;
   const fm = ctx.measureText("Hg");
@@ -172,7 +189,7 @@ function measureLayout(lines: string[], W: number, H: number): Layout {
   return { F, heads, asc, desc };
 }
 
-function useLayout(lines: string[], W: number, H: number) {
+function useLayout(lines: string[], W: number, H: number, fontFamily: string) {
   const [layout, setLayout] = useState<Layout | null>(null);
   const [handle] = useState(() => delayRender("block-swap: measuring"));
   const released = useRef(false);
@@ -180,12 +197,12 @@ function useLayout(lines: string[], W: number, H: number) {
     let live = true;
     Promise.all([
       space.waitUntilDone(),
-      document.fonts.load(`500 100px "${space.fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setLayout(measureLayout(lines, W, H));
+        setLayout(measureLayout(lines, W, H, fontFamily));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -194,7 +211,7 @@ function useLayout(lines: string[], W: number, H: number) {
     return () => {
       live = false;
     };
-  }, [lines, W, H, handle]);
+  }, [lines, W, H, handle, fontFamily]);
   return layout;
 }
 
@@ -209,7 +226,7 @@ interface Swap {
   end: number;
 }
 
-function plan(counts: number[]): Swap[] {
+function plan(counts: number[], hold: number): Swap[] {
   const out: Swap[] = [];
   let at = 0;
   counts.forEach((n, i) => {
@@ -228,7 +245,7 @@ function plan(counts: number[]): Swap[] {
         uncoverAt,
         end,
       });
-      at = end + HOLD;
+      at = end + hold;
       return;
     }
     const m = counts[i - 1];
@@ -248,14 +265,17 @@ function plan(counts: number[]): Swap[] {
       uncoverAt,
       end,
     });
-    at = end + HOLD;
+    at = end + hold;
   });
   return out;
 }
 
-export function blockSwapDuration(lines: string[] = DEFAULT_LINES) {
+export function blockSwapDuration(
+  lines: string[] = DEFAULT_LINES,
+  hold = HOLD,
+) {
   const counts = lines.map((l) => l.split(/\s+/).filter(Boolean).length);
-  const p = plan(counts);
+  const p = plan(counts, hold);
   return p[p.length - 1].end + END_HOLD;
 }
 
@@ -270,26 +290,53 @@ const lerpRect = (a: Rect, b: Rect, k: number): Rect => ({
 
 const bare = (s: string) => s.replace(/[.,!?;:…]+$/, "").toLowerCase();
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function BlockSwap({
   lines = DEFAULT_LINES,
   highlight = "launch",
   accent = "#3B5BFD",
+  ink,
   background,
+  fontFamily = space.fontFamily,
+  hold = HOLD,
+  radius = RADIUS,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: BlockSwapProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const bg = background ?? c.bg;
   const safeLines = useMemo(
     () => (lines.length > 0 ? lines : DEFAULT_LINES),
     [lines],
   );
-  const layout = useLayout(safeLines, W, H);
+  const layout = useLayout(safeLines, W, H, fontFamily);
   const swaps = useMemo(
-    () => plan(safeLines.map((l) => l.split(/\s+/).filter(Boolean).length)),
-    [safeLines],
+    () =>
+      plan(
+        safeLines.map((l) => l.split(/\s+/).filter(Boolean).length),
+        hold,
+      ),
+    [safeLines, hold],
   );
 
   if (!layout) {
@@ -308,14 +355,14 @@ export function BlockSwap({
       ? next.findIndex((w) => bare(w.text) === bare(highlight))
       : -1;
 
-  const r = RADIUS * F;
+  const r = radius * F;
   const drift = (t / 30) * 0.18;
   const shimmer = `linear-gradient(90deg, ${FLUTED[0]} 0%, ${FLUTED[1]} 18%, ${accent} 30%, ${FLUTED[2]} 48%, ${FLUTED[3]} 58%, ${FLUTED[1]} 76%, ${FLUTED[0]} 100%)`;
   const pill = `linear-gradient(100deg, ${accent} 0%, ${FLUTED[1]} 45%, ${FLUTED[2]} 100%)`;
 
   const textStyle = {
     position: "absolute" as const,
-    fontFamily: space.fontFamily,
+    fontFamily,
     fontWeight: 500,
     fontSize: F,
     lineHeight: 1,
@@ -341,13 +388,13 @@ export function BlockSwap({
   if (prev) {
     prev.forEach((w, i) => {
       const done = sw.start + i * STAGGER + RUN;
-      if (t < done) nodes.push(<div key={`old-${i}`}>{wordAt(w, c.ink)}</div>);
+      if (t < done) nodes.push(<div key={`old-${i}`}>{wordAt(w, fg)}</div>);
     });
   }
   next.forEach((w, i) => {
     if (i === hiIndex) return;
     const off = sw.uncoverAt + i * STAGGER;
-    if (t >= off) nodes.push(<div key={`new-${i}`}>{wordAt(w, c.ink)}</div>);
+    if (t >= off) nodes.push(<div key={`new-${i}`}>{wordAt(w, fg)}</div>);
   });
 
   for (let j = 0; j < k; j++) {
@@ -446,7 +493,7 @@ export function BlockSwap({
           borderRadius: Math.min(r, rect.w / 2),
           overflow: "hidden",
           opacity: alpha,
-          background: c.ink,
+          background: fg,
         }}
       >
         {fill > 0 ? (
@@ -493,7 +540,7 @@ export function BlockSwap({
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

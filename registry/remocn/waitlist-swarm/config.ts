@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const waitlistSwarmConfig: ComponentConfig = {
   componentName: "WaitlistSwarm",
@@ -12,11 +19,6 @@ export const waitlistSwarmConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     label: {
       type: "text-content",
@@ -41,6 +43,27 @@ export const waitlistSwarmConfig: ComponentConfig = {
       description: "Count",
       hiddenFromList: false,
     },
+    dotSize: {
+      type: "number",
+      default: 1,
+      min: 0.5,
+      max: 2,
+      step: 0.05,
+      description: "Dot size",
+      hiddenFromList: false,
+    },
+    pulse: {
+      type: "boolean",
+      default: true,
+      description: "Pulse",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Bricolage Grotesque" }),
     speed: {
       type: "number",
       default: 1,

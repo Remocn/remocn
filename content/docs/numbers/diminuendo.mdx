@@ -104,6 +104,35 @@ A big figure counts from `from` to `value` on a log-like curve, adding new leadi
       description: "Stage colour; pass 'transparent' to layer over other footage.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Arimo\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "countDuration",
+      type: "number",
+      default: "64",
+      description: "Frames the number takes to count up to its final value.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
       name: "speed",
       type: "number",
       default: "1",

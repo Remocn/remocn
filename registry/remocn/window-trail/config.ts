@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const windowTrailConfig: ComponentConfig = {
   componentName: "WindowTrail",
@@ -28,6 +34,30 @@ export const windowTrailConfig: ComponentConfig = {
       default: "Repainted in one render.",
       description: "Tagline",
     },
+    slide: {
+      type: "number",
+      default: 30,
+      min: 8,
+      max: 60,
+      step: 1,
+      description: "Slide in (frames)",
+      hiddenFromList: false,
+    },
+    tail: {
+      type: "number",
+      default: 4,
+      min: 0,
+      max: 10,
+      step: 1,
+      description: "Trail copies",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#FF4F00",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Familjen Grotesk" }),
     speed: {
       type: "number",
       default: 1,

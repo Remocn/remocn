@@ -57,10 +57,45 @@ A flock flies in from the edges and snaps into an arrow with accent-coloured lea
       description: "Number of birds. Formations resample to match.",
     },
     {
+      name: "stagger",
+      type: "number",
+      default: "18",
+      description: "Spread, in frames, of the birds' arrival into the arrow.",
+    },
+    {
+      name: "birdSize",
+      type: "number",
+      default: "1",
+      description: "Size of each bird relative to the formation spacing.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Color of the lead birds on the arrow tip.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the sky gradient; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "speed",

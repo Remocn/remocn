@@ -2,6 +2,7 @@
 
 import { loadFont } from "@remotion/google-fonts/Figtree";
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
+import type React from "react";
 import { useId } from "react";
 import {
   AbsoluteFill,
@@ -16,7 +17,7 @@ import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const { fontFamily: figtree } = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -33,7 +34,23 @@ export interface AiImageGridProps {
   layout?: "2x2" | "3x2";
   /** Index of the tile that gets picked and zoomed. */
   pick?: number;
+  /** Placeholder in the empty prompt box. */
+  placeholder?: string;
+  /** Label of the primary button under the picked image. */
+  downloadLabel?: string;
+  /** Frames between tiles as they start generating. */
+  stagger?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Figtree by default. */
+  fontFamily?: string;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "light" | "dark";
   ground?: GshPresetId;
@@ -667,25 +684,50 @@ function pressAt(frame: number, fps: number, clicks: number[]) {
   return v;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function AiImageGrid({
   prompt = "isometric glass city at sunrise, soft light",
   images = [],
   model = "remocn Image 2",
   layout = "2x2",
   pick = 1,
+  placeholder = "Describe an image",
+  downloadLabel = "Download",
+  stagger = STAGGER,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = figtree,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
   ground,
   groundParams,
 }: AiImageGridProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width * 1.2;
   const u = tall ? width / 640 : Math.min(width / 1280, height / 720);
   const dw = width / u;
   const dh = height / u;
   const c = PALETTES[theme];
+  const fg = ink ?? c.text;
 
   const count = layout === "3x2" ? 6 : 4;
   const cols = tall ? 2 : count === 6 ? 3 : 2;
@@ -706,7 +748,7 @@ export function AiImageGrid({
   }));
   const pickIdx = Math.min(Math.max(0, pick), count - 1);
   const resolved = Math.max(
-    ...rects.map((_, i) => i * STAGGER + 6 + DIFFUSE[i % DIFFUSE.length]),
+    ...rects.map((_, i) => i * stagger + 6 + DIFFUSE[i % DIFFUSE.length]),
   );
   const PICK = GEN + 6 + resolved + 20;
 
@@ -777,334 +819,346 @@ export function AiImageGrid({
   const d3 = spring({ frame: frame - PICK - 18, fps, config: CARD });
 
   const push = interpolate(frame, [0, 240], [1, 1.03], clamp01);
-  const tileLocal = (i: number) => frame - GEN - 6 - i * STAGGER;
+  const tileLocal = (i: number) => frame - GEN - 6 - i * stagger;
 
   return (
     <AbsoluteFill
       style={{ overflow: "hidden", WebkitFontSmoothing: "antialiased" }}
     >
-      <GshGround
-        preset={ground ?? (c.dark ? "static-sunset" : "paper-crease")}
-        params={
-          groundParams ??
-          (c.dark || ground
-            ? undefined
-            : {
-                colors: ["#e98d63", "#f4c3a2", "#efe3d8", "#6a4636"],
-                background: "#f1ebe4",
-              })
-        }
-        timeOffset={c.dark ? 4 : 3}
-        timeScale={0.4}
-      />
-      <AbsoluteFill
-        style={{
-          background: c.dark
-            ? "radial-gradient(70% 80% at 50% 50%, rgba(12,9,8,0.5), rgba(12,9,8,0.18))"
-            : "radial-gradient(70% 80% at 50% 50%, rgba(244,239,233,0.45), rgba(244,239,233,0.1))",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: dw,
-          height: dh,
-          transform: `scale(${u})`,
-          transformOrigin: "0 0",
-          fontFamily,
-          color: c.text,
-        }}
-      >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? (c.dark ? "static-sunset" : "paper-crease")}
+            params={
+              groundParams ??
+              (c.dark || ground
+                ? undefined
+                : {
+                    colors: ["#e98d63", "#f4c3a2", "#efe3d8", "#6a4636"],
+                    background: "#f1ebe4",
+                  })
+            }
+            timeOffset={c.dark ? 4 : 3}
+            timeScale={0.4}
+          />
+          <AbsoluteFill
+            style={{
+              background: c.dark
+                ? "radial-gradient(70% 80% at 50% 50%, rgba(12,9,8,0.5), rgba(12,9,8,0.18))"
+                : "radial-gradient(70% 80% at 50% 50%, rgba(244,239,233,0.45), rgba(244,239,233,0.1))",
+            }}
+          />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transform: `scale(${push})`,
-            transformOrigin: "50% 50%",
+            left: 0,
+            top: 0,
+            width: dw,
+            height: dh,
+            transform: `scale(${u})`,
+            transformOrigin: "0 0",
+            fontFamily,
+            color: fg,
           }}
         >
-          {rects.map((r, i) => {
-            const local = tileLocal(i);
-            if (local < -1) return null;
-            const pop = spring({ frame: local, fps, config: CARD });
-            const isPick = i === pickIdx;
-            const h = isPick ? hover : 0;
-            const out = isPick ? 0 : othersOut;
-            return (
-              <div
-                key={`${r.x}-${r.y}`}
-                style={{
-                  position: "absolute",
-                  left: r.x,
-                  top: r.y,
-                  width: tw,
-                  height: th,
-                  borderRadius: 14,
-                  overflow: "hidden",
-                  opacity:
-                    ramp(local, 0, 6, ENTER_SOFT) *
-                    (1 - out) *
-                    (isPick && z > 0.001 ? 0 : 1),
-                  transform: `translateY(${(1 - pop) * 28 + out * 10}px) scale(${(0.95 + 0.05 * pop) * (1 + 0.02 * h) * (1 - 0.03 * out)})`,
-                  boxShadow: `0 0 0 ${2 * h}px ${accent}, ${c.tileDepth}`,
-                }}
-              >
-                <Tile
-                  index={i}
-                  src={images[i]}
-                  local={local}
-                  dur={DIFFUSE[i % DIFFUSE.length]}
-                  c={c}
-                  frame={frame}
-                />
-              </div>
-            );
-          })}
-
           <div
             style={{
               position: "absolute",
-              left: cardX,
-              top: cardY,
-              width: cardW,
-              height: cardH,
-              borderRadius: 20,
-              background: c.card,
-              backdropFilter: c.dark ? "blur(24px)" : undefined,
-              boxShadow: c.depth,
-              boxSizing: "border-box",
-              padding: "20px 22px 0",
-              opacity: ramp(frame, 0, 10, ENTER_SOFT) * (1 - cardOut),
-              transform: `scale(${cardS})`,
+              inset: 0,
+              transform: `scale(${push})`,
               transformOrigin: "50% 50%",
             }}
           >
-            <div
-              style={{
-                fontSize: 20,
-                lineHeight: "28px",
-                height: 28,
-                letterSpacing: "-0.01em",
-                color: text ? c.text : c.faint,
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-              }}
-            >
-              {text || "Describe an image"}
-              {frame < GEN && (
-                <span
+            {rects.map((r, i) => {
+              const local = tileLocal(i);
+              if (local < -1) return null;
+              const pop = spring({ frame: local, fps, config: CARD });
+              const isPick = i === pickIdx;
+              const h = isPick ? hover : 0;
+              const out = isPick ? 0 : othersOut;
+              return (
+                <div
+                  key={`${r.x}-${r.y}`}
                   style={{
-                    display: "inline-block",
-                    width: 2,
-                    height: 22,
-                    marginLeft: 2,
-                    verticalAlign: "-4px",
-                    background: accent,
-                    opacity: caretOn ? 1 : 0,
+                    position: "absolute",
+                    left: r.x,
+                    top: r.y,
+                    width: tw,
+                    height: th,
+                    borderRadius: 14,
+                    overflow: "hidden",
+                    opacity:
+                      ramp(local, 0, 6, ENTER_SOFT) *
+                      (1 - out) *
+                      (isPick && z > 0.001 ? 0 : 1),
+                    transform: `translateY(${(1 - pop) * 28 + out * 10}px) scale(${(0.95 + 0.05 * pop) * (1 + 0.02 * h) * (1 - 0.03 * out)})`,
+                    boxShadow: `0 0 0 ${2 * h}px ${accent}, ${c.tileDepth}`,
                   }}
-                />
-              )}
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: 22,
-                bottom: 22,
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                fontSize: 16,
-                color: c.muted,
-                whiteSpace: "nowrap",
-              }}
-            >
-              <Glyph name="attach" color={c.muted} size={18} />
-              <span>{model}</span>
-              <span style={{ color: c.faint }}>·</span>
-              <span>4:3</span>
-              <span style={{ color: c.faint }}>·</span>
-              <span style={{ fontVariantNumeric: "tabular-nums" }}>
-                {count} images
-              </span>
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: sendLocal.x - 22,
-                top: sendLocal.y - 22,
-                width: 44,
-                height: 44,
-                borderRadius: 999,
-                background: c.solid,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transform: `scale(${1 - 0.04 * sendPress})`,
-                opacity: text.length > 0 ? 1 : 0.35,
-              }}
-            >
-              {generating ? (
-                <svg
-                  width={20}
-                  height={20}
-                  viewBox="0 0 20 20"
-                  aria-hidden="true"
-                  style={{ transform: `rotate(${frame * 12}deg)` }}
                 >
-                  <circle
-                    cx={10}
-                    cy={10}
-                    r={7}
-                    fill="none"
-                    stroke={withAlpha(c.onSolid, 0.25)}
-                    strokeWidth={1.5}
+                  <Tile
+                    index={i}
+                    src={images[i]}
+                    local={local}
+                    dur={DIFFUSE[i % DIFFUSE.length]}
+                    c={c}
+                    frame={frame}
                   />
-                  <path
-                    d="M10 3a7 7 0 0 1 7 7"
-                    fill="none"
-                    stroke={c.onSolid}
-                    strokeWidth={1.5}
-                    strokeLinecap="round"
-                  />
-                </svg>
-              ) : (
-                <Glyph name="up" color={c.onSolid} size={20} />
-              )}
-            </div>
-          </div>
+                </div>
+              );
+            })}
 
-          {z > 0.001 && (
-            <>
+            <div
+              style={{
+                position: "absolute",
+                left: cardX,
+                top: cardY,
+                width: cardW,
+                height: cardH,
+                borderRadius: 20,
+                background: c.card,
+                backdropFilter: c.dark ? "blur(24px)" : undefined,
+                boxShadow: c.depth,
+                boxSizing: "border-box",
+                padding: "20px 22px 0",
+                opacity: ramp(frame, 0, 10, ENTER_SOFT) * (1 - cardOut),
+                transform: `scale(${cardS})`,
+                transformOrigin: "50% 50%",
+              }}
+            >
               <div
                 style={{
-                  position: "absolute",
-                  left: hero.x,
-                  top: hero.y,
-                  width: hero.w,
-                  height: hero.h,
-                  borderRadius: lerp(14, 20, z),
+                  fontSize: 20,
+                  lineHeight: "28px",
+                  height: 28,
+                  letterSpacing: "-0.01em",
+                  color: text ? fg : c.faint,
+                  whiteSpace: "nowrap",
                   overflow: "hidden",
-                  boxShadow: `0 0 0 ${2 * (1 - z)}px ${accent}, ${c.tileDepth}, 0 40px 90px -30px rgba(0,0,0,${0.5 * z})`,
                 }}
               >
-                <Tile
-                  index={pickIdx}
-                  src={images[pickIdx]}
-                  local={999}
-                  dur={1}
-                  c={c}
-                  frame={frame}
-                />
+                {text || placeholder}
+                {frame < GEN && (
+                  <span
+                    style={{
+                      display: "inline-block",
+                      width: 2,
+                      height: 22,
+                      marginLeft: 2,
+                      verticalAlign: "-4px",
+                      background: accent,
+                      opacity: caretOn ? 1 : 0,
+                    }}
+                  />
+                )}
               </div>
               <div
                 style={{
                   position: "absolute",
-                  left: det.x,
-                  top: det.y,
-                  width: det.w,
-                  padding: tall ? "0 4px" : 0,
-                  boxSizing: "border-box",
+                  left: 22,
+                  bottom: 22,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  fontSize: 16,
+                  color: c.muted,
+                  whiteSpace: "nowrap",
                 }}
               >
+                <Glyph name="attach" color={c.muted} size={18} />
+                <span>{model}</span>
+                <span style={{ color: c.faint }}>·</span>
+                <span>4:3</span>
+                <span style={{ color: c.faint }}>·</span>
+                <span style={{ fontVariantNumeric: "tabular-nums" }}>
+                  {count} images
+                </span>
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: sendLocal.x - 22,
+                  top: sendLocal.y - 22,
+                  width: 44,
+                  height: 44,
+                  borderRadius: 999,
+                  background: c.solid,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transform: `scale(${1 - 0.04 * sendPress})`,
+                  opacity: text.length > 0 ? 1 : 0.35,
+                }}
+              >
+                {generating ? (
+                  <svg
+                    width={20}
+                    height={20}
+                    viewBox="0 0 20 20"
+                    aria-hidden="true"
+                    style={{ transform: `rotate(${frame * 12}deg)` }}
+                  >
+                    <circle
+                      cx={10}
+                      cy={10}
+                      r={7}
+                      fill="none"
+                      stroke={withAlpha(c.onSolid, 0.25)}
+                      strokeWidth={1.5}
+                    />
+                    <path
+                      d="M10 3a7 7 0 0 1 7 7"
+                      fill="none"
+                      stroke={c.onSolid}
+                      strokeWidth={1.5}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                ) : (
+                  <Glyph name="up" color={c.onSolid} size={20} />
+                )}
+              </div>
+            </div>
+
+            {z > 0.001 && (
+              <>
                 <div
                   style={{
-                    fontFamily: monoFamily,
-                    fontSize: 16,
-                    color: c.muted,
-                    letterSpacing: "0.02em",
-                    opacity: d1,
-                    transform: `translateY(${(1 - d1) * 14}px)`,
+                    position: "absolute",
+                    left: hero.x,
+                    top: hero.y,
+                    width: hero.w,
+                    height: hero.h,
+                    borderRadius: lerp(14, 20, z),
+                    overflow: "hidden",
+                    boxShadow: `0 0 0 ${2 * (1 - z)}px ${accent}, ${c.tileDepth}, 0 40px 90px -30px rgba(0,0,0,${0.5 * z})`,
                   }}
                 >
-                  {pickIdx + 1} of {count} · {model}
+                  <Tile
+                    index={pickIdx}
+                    src={images[pickIdx]}
+                    local={999}
+                    dur={1}
+                    c={c}
+                    frame={frame}
+                  />
                 </div>
                 <div
                   style={{
-                    marginTop: 16,
-                    fontSize: tall ? 46 : 38,
-                    fontWeight: 300,
-                    lineHeight: 1.12,
-                    letterSpacing: "-0.025em",
-                    textWrap: "balance",
-                    opacity: d1,
-                    transform: `translateY(${(1 - d1) * 22}px)`,
+                    position: "absolute",
+                    left: det.x,
+                    top: det.y,
+                    width: det.w,
+                    padding: tall ? "0 4px" : 0,
+                    boxSizing: "border-box",
                   }}
                 >
-                  {prompt}
-                </div>
-                <div
-                  style={{
-                    marginTop: 20,
-                    display: "flex",
-                    gap: 18,
-                    fontFamily: monoFamily,
-                    fontSize: 16,
-                    color: c.muted,
-                    fontVariantNumeric: "tabular-nums",
-                    opacity: d2,
-                    transform: `translateY(${(1 - d2) * 14}px)`,
-                  }}
-                >
-                  <span>2048 × 1536</span>
-                  <span>seed 48213</span>
-                  <span>9.4 s</span>
-                </div>
-                <div
-                  style={{
-                    marginTop: tall ? 36 : 32,
-                    display: "flex",
-                    gap: 10,
-                    opacity: Math.min(1, d3 * 1.4),
-                    transform: `translateY(${(1 - d3) * 18}px)`,
-                  }}
-                >
-                  {[
-                    { l: "Vary", i: "vary" },
-                    { l: "Upscale", i: "upscale" },
-                  ].map((b) => (
+                  <div
+                    style={{
+                      fontFamily: monoFamily,
+                      fontSize: 16,
+                      color: c.muted,
+                      letterSpacing: "0.02em",
+                      opacity: d1,
+                      transform: `translateY(${(1 - d1) * 14}px)`,
+                    }}
+                  >
+                    {pickIdx + 1} of {count} · {model}
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 16,
+                      fontSize: tall ? 46 : 38,
+                      fontWeight: 300,
+                      lineHeight: 1.12,
+                      letterSpacing: "-0.025em",
+                      textWrap: "balance",
+                      opacity: d1,
+                      transform: `translateY(${(1 - d1) * 22}px)`,
+                    }}
+                  >
+                    {prompt}
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 20,
+                      display: "flex",
+                      gap: 18,
+                      fontFamily: monoFamily,
+                      fontSize: 16,
+                      color: c.muted,
+                      fontVariantNumeric: "tabular-nums",
+                      opacity: d2,
+                      transform: `translateY(${(1 - d2) * 14}px)`,
+                    }}
+                  >
+                    <span>2048 × 1536</span>
+                    <span>seed 48213</span>
+                    <span>9.4 s</span>
+                  </div>
+                  <div
+                    style={{
+                      marginTop: tall ? 36 : 32,
+                      display: "flex",
+                      gap: 10,
+                      opacity: Math.min(1, d3 * 1.4),
+                      transform: `translateY(${(1 - d3) * 18}px)`,
+                    }}
+                  >
+                    {[
+                      { l: "Vary", i: "vary" },
+                      { l: "Upscale", i: "upscale" },
+                    ].map((b) => (
+                      <div
+                        key={b.l}
+                        style={{
+                          height: 46,
+                          padding: "0 18px 0 14px",
+                          borderRadius: 999,
+                          background: c.ghost,
+                          boxShadow: `inset 0 0 0 1px ${c.rule}`,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          fontSize: 17,
+                        }}
+                      >
+                        <Glyph name={b.i} color={fg} size={18} />
+                        {b.l}
+                      </div>
+                    ))}
                     <div
-                      key={b.l}
                       style={{
                         height: 46,
-                        padding: "0 18px 0 14px",
+                        padding: "0 20px 0 16px",
                         borderRadius: 999,
-                        background: c.ghost,
-                        boxShadow: `inset 0 0 0 1px ${c.rule}`,
+                        background: c.solid,
+                        color: c.onSolid,
                         display: "flex",
                         alignItems: "center",
                         gap: 8,
                         fontSize: 17,
                       }}
                     >
-                      <Glyph name={b.i} color={c.text} size={18} />
-                      {b.l}
+                      <Glyph name="down" color={c.onSolid} size={18} />
+                      {downloadLabel}
                     </div>
-                  ))}
-                  <div
-                    style={{
-                      height: 46,
-                      padding: "0 20px 0 16px",
-                      borderRadius: 999,
-                      background: c.solid,
-                      color: c.onSolid,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      fontSize: 17,
-                    }}
-                  >
-                    <Glyph name="down" color={c.onSolid} size={18} />
-                    Download
                   </div>
                 </div>
-              </div>
-            </>
-          )}
-          <Cursor x={cur.x} y={cur.y} press={press} opacity={curOpacity} />
+              </>
+            )}
+            <Cursor x={cur.x} y={cur.y} press={press} opacity={curOpacity} />
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Bitter";
+import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -22,7 +23,19 @@ export interface WeCallItProps {
   lead?: string;
   name?: string;
   accent?: string;
+  /** Text color of the descriptions; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Bitter by default. */
+  fontFamily?: string;
+  /** Frames between words as a description builds. */
+  stagger?: number;
+  /** Frames each description gets before the next one starts. */
+  beat?: number;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -51,20 +64,20 @@ const KICK_DIM = 0.62;
 const CAP = 0.7;
 const DESC = 0.24;
 
-function useFontsReady() {
-  const [ready, setReady] = useState(false);
+function useFontsReady(fontFamily: string) {
+  const [ready, setReady] = useState<string | null>(null);
   const [handle] = useState(() => delayRender("we-call-it: fonts"));
   const released = useRef(false);
   useEffect(() => {
     let live = true;
     Promise.all([
       bitter.waitUntilDone(),
-      document.fonts.load(`400 100px "${bitter.fontFamily}"`),
-      document.fonts.load(`500 100px "${bitter.fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
-        if (live) setReady(true);
+        if (live) setReady(fontFamily);
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -73,22 +86,24 @@ function useFontsReady() {
     return () => {
       live = false;
     };
-  }, [handle]);
+  }, [handle, fontFamily]);
   return ready;
 }
 
-function useMeasure() {
+// `loaded` is part of the cache key so widths measured before a new font
+// arrived are not reused once it has.
+function useMeasure(fontFamily: string, loaded: string | null) {
   const ctx = useRef<CanvasRenderingContext2D | null>(null);
   const cache = useRef(new Map<string, number>());
   return (text: string, weight: 400 | 500, track: number) => {
-    const key = `${weight}\u0001${track}\u0001${text}`;
+    const key = `${fontFamily}\u0001${loaded}\u0001${weight}\u0001${track}\u0001${text}`;
     const hit = cache.current.get(key);
     if (hit !== undefined) return hit;
     if (!ctx.current)
       ctx.current = document.createElement("canvas").getContext("2d");
     let w = text.length * 0.5;
     if (ctx.current) {
-      ctx.current.font = `${weight} 100px "${bitter.fontFamily}"`;
+      ctx.current.font = `${weight} 100px "${fontFamily}"`;
       w = ctx.current.measureText(text).width / 100;
     }
     const em = w + track * Array.from(text).length;
@@ -138,15 +153,18 @@ function balanced(
   return best;
 }
 
-function useBaseline() {
+function useBaseline(fontFamily: string, loaded: string | null) {
   const memo = useRef<number | null>(null);
+  const memoKey = useRef("");
   return () => {
-    if (memo.current !== null) return memo.current;
+    const key = `${fontFamily}\u0001${loaded}`;
+    if (memo.current !== null && memoKey.current === key) return memo.current;
+    memoKey.current = key;
     const ctx = document.createElement("canvas").getContext("2d");
     let asc = 0.935;
     let desc = 0.265;
     if (ctx) {
-      ctx.font = `500 100px "${bitter.fontFamily}"`;
+      ctx.font = `500 100px "${fontFamily}"`;
       const m = ctx.measureText("Hg");
       if (m.fontBoundingBoxAscent > 0) {
         asc = m.fontBoundingBoxAscent / 100;
@@ -173,6 +191,22 @@ function splitWords(s: string) {
   return s.trim().split(/\s+/).filter(Boolean);
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function WeCallIt({
   descriptions = [
     "Scenes you install like components.",
@@ -182,19 +216,27 @@ export function WeCallIt({
   lead = "We call it a",
   name = "video registry.",
   accent,
+  ink,
   background,
+  fontFamily = bitter.fontFamily,
+  stagger = 3,
+  beat = STEP,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: WeCallItProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames: T } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const ready = useFontsReady();
-  const measure = useMeasure();
-  const baselineOf = useBaseline();
+  const fg = ink ?? c.ink;
+  const loaded = useFontsReady(fontFamily);
+  const ready = loaded !== null;
+  const measure = useMeasure(fontFamily, loaded);
+  const baselineOf = useBaseline(fontFamily, loaded);
 
   if (!ready) {
     return (
@@ -206,7 +248,7 @@ export function WeCallIt({
   const n = descs.length;
   const nameWords = splitWords(name);
 
-  const leadAt = 6 + n * STEP - 2;
+  const leadAt = 6 + n * beat - 2;
   const ruleAt = leadAt + 4;
   const nameAt = leadAt + 10;
   const motionEnd = nameAt + nameWords.length * 4 + 24;
@@ -290,109 +332,114 @@ export function WeCallIt({
     <AbsoluteFill
       style={{
         background: stage,
-        color: c.ink,
-        fontFamily: bitter.fontFamily,
+        color: fg,
+        fontFamily,
         fontWeight: 400,
         overflow: "hidden",
       }}
     >
-      {descs.map((_, i) => {
-        const a = 6 + i * STEP;
-        const m = a + HOLD;
-        const mv = ease(m, m + MOVE, EASE_IO);
-        const left = mx;
-        const top = stageTopOf(i) + (kickTops[i] - stageTopOf(i)) * mv;
-        const scale = 1 + (s - 1) * mv;
-        let wi = 0;
-        return (
+      <ScaleLayer scale={scale}>
+        {descs.map((_, i) => {
+          const a = 6 + i * beat;
+          const m = a + HOLD;
+          const mv = ease(m, m + MOVE, EASE_IO);
+          const left = mx;
+          const top = stageTopOf(i) + (kickTops[i] - stageTopOf(i)) * mv;
+          const shrink = 1 + (s - 1) * mv;
+          let wi = 0;
+          return (
+            <div
+              key={`d${i}`}
+              style={{
+                position: "absolute",
+                left,
+                top,
+                transform: `scale(${shrink.toFixed(4)})`,
+                transformOrigin: "0 0",
+                opacity: 1 - (1 - KICK_DIM) * mv,
+                letterSpacing: `${BODY_TRACK}em`,
+              }}
+            >
+              {stageLines[i].map((row, li) => (
+                <div key={`d${i}-${li}`} style={lineStyle(Fb, bigLineH)}>
+                  {row.map((word, k) => {
+                    const order = wi++;
+                    const p = ease(
+                      a + order * stagger,
+                      a + order * stagger + 16,
+                    );
+                    return (
+                      <span
+                        key={`d${i}-${li}-${k}`}
+                        style={{
+                          display: "inline-block",
+                          whiteSpace: "pre",
+                          opacity: p,
+                          transform: `translateY(${((1 - p) * Fb * 0.32).toFixed(2)}px)`,
+                        }}
+                      >
+                        {k < row.length - 1 ? `${word} ` : word}
+                      </span>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          );
+        })}
+
+        {lead.trim() ? (
           <div
-            key={`d${i}`}
             style={{
               position: "absolute",
-              left,
-              top,
-              transform: `scale(${scale.toFixed(4)})`,
-              transformOrigin: "0 0",
-              opacity: 1 - (1 - KICK_DIM) * mv,
+              left: mx,
+              top: leadTop,
+              ...lineStyle(Fk, Fk * LH),
               letterSpacing: `${BODY_TRACK}em`,
+              color: hi,
+              opacity: ease(leadAt, leadAt + 14),
+              transform: `translateY(${((1 - ease(leadAt, leadAt + 14)) * Fk * 0.5).toFixed(2)}px)`,
             }}
           >
-            {stageLines[i].map((row, li) => (
-              <div key={`d${i}-${li}`} style={lineStyle(Fb, bigLineH)}>
-                {row.map((word, k) => {
-                  const order = wi++;
-                  const p = ease(a + order * 3, a + order * 3 + 16);
-                  return (
-                    <span
-                      key={`d${i}-${li}-${k}`}
-                      style={{
-                        display: "inline-block",
-                        whiteSpace: "pre",
-                        opacity: p,
-                        transform: `translateY(${((1 - p) * Fb * 0.32).toFixed(2)}px)`,
-                      }}
-                    >
-                      {k < row.length - 1 ? `${word} ` : word}
-                    </span>
-                  );
-                })}
-              </div>
-            ))}
+            {lead.trim()}
           </div>
-        );
-      })}
+        ) : null}
 
-      {lead.trim() ? (
         <div
           style={{
             position: "absolute",
             left: mx,
-            top: leadTop,
-            ...lineStyle(Fk, Fk * LH),
-            letterSpacing: `${BODY_TRACK}em`,
-            color: hi,
-            opacity: ease(leadAt, leadAt + 14),
-            transform: `translateY(${((1 - ease(leadAt, leadAt + 14)) * Fk * 0.5).toFixed(2)}px)`,
+            top: ruleY,
+            width: innerW,
+            height: Math.max(2, Fk * 0.07),
+            background: hi,
+            transform: `scaleX(${ease(ruleAt, ruleAt + 22, EASE_IO).toFixed(4)})`,
+            transformOrigin: "0 50%",
           }}
-        >
-          {lead.trim()}
-        </div>
-      ) : null}
+        />
 
-      <div
-        style={{
-          position: "absolute",
-          left: mx,
-          top: ruleY,
-          width: innerW,
-          height: Math.max(2, Fk * 0.07),
-          background: hi,
-          transform: `scaleX(${ease(ruleAt, ruleAt + 22, EASE_IO).toFixed(4)})`,
-          transformOrigin: "0 50%",
-        }}
-      />
-
-      {nameRows.map((row, li) => {
-        const p = ease(nameAt + li * 5, nameAt + li * 5 + 24);
-        const boxTop = nameTop + li * NAME_LH * Fn;
-        return (
-          <div
-            key={`n${li}`}
-            style={{
-              position: "absolute",
-              left: mx,
-              top: boxTop,
-              ...lineStyle(Fn, NAME_BOX * Fn),
-              fontWeight: 500,
-              letterSpacing: `${NAME_TRACK}em`,
-              color: hi,
-              transform: `translateY(${((1 - p) * (H - boxTop)).toFixed(2)}px)`,
-            }}
-          >
-            {row.join(" ")}
-          </div>
-        );
-      })}
+        {nameRows.map((row, li) => {
+          const p = ease(nameAt + li * 5, nameAt + li * 5 + 24);
+          const boxTop = nameTop + li * NAME_LH * Fn;
+          return (
+            <div
+              key={`n${li}`}
+              style={{
+                position: "absolute",
+                left: mx,
+                top: boxTop,
+                ...lineStyle(Fn, NAME_BOX * Fn),
+                fontWeight: 500,
+                letterSpacing: `${NAME_TRACK}em`,
+                color: hi,
+                transform: `translateY(${((1 - p) * (H - boxTop)).toFixed(2)}px)`,
+              }}
+            >
+              {row.join(" ")}
+            </div>
+          );
+        })}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

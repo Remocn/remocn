@@ -20,6 +20,22 @@ export interface TornEdgeProps {
   title?: string;
   /** Mid colour of the sheet's gradient (gradients.sh "fluted"). */
   accent?: string;
+  /** Frames for the tear to run across the sheet. */
+  tear?: number;
+  /** How far each half pulls away, as a share of the frame height. */
+  spread?: number;
+  /** Headline color; overrides the theme ink. */
+  ink?: string;
+  /** Stage color under the sheet; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the headline. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the headline, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -116,13 +132,27 @@ function piece(edge: Pt[], farY: number) {
 export function TornEdge({
   title = "Make it yours.",
   accent = "#3B5BFD",
+  tear = TEAR_END - TEAR_START,
+  spread = 0.205,
+  ink,
+  background,
+  fontFamily = display,
+  grain = true,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: TornEdgeProps) {
-  const f = useCurrentFrame() * speed;
+  const f = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const transparent = background === "transparent";
+  const stage = transparent ? "transparent" : (background ?? p.stage);
+  const tearEnd = TEAR_START + tear;
+  const partStart = tearEnd - (TEAR_END - PART_START);
+  const partEnd = partStart + (PART_END - PART_START);
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const paperId = `pa${uid}`;
   const frayId = `fr${uid}`;
@@ -135,16 +165,16 @@ export function TornEdge({
   const step = 2.5 * u;
   const count = Math.ceil((W + 2 * M) / step) + 1;
 
-  const tip = interpolate(f, [TEAR_START, TEAR_END], [-M * 0.5, W + M], {
+  const tip = interpolate(f, [TEAR_START, tearEnd], [-M * 0.5, W + M], {
     ...CLAMP,
     easing: EASE_TEAR,
   });
-  const part = interpolate(f, [PART_START, PART_END], [0, 1], {
+  const part = interpolate(f, [partStart, partEnd], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
 
-  const D = 0.205 * H;
+  const D = spread * H;
   const OPEN_MAX = 10 * u;
 
   const topFiber: Pt[] = [];
@@ -193,19 +223,21 @@ export function TornEdge({
   const sOff = u * (1.5 + 6 * part);
   const sBlur = u * (2.2 + 5 * part);
 
-  const push = interpolate(f, [0, PART_END + 40], [1, 1.035], {
+  const push = interpolate(f, [0, partEnd + 40], [1, 1.035], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const drift = interpolate(f, [0, PART_END + 40], [0, 1], CLAMP);
+  const drift = interpolate(f, [0, partEnd + 40], [0, 1], CLAMP);
   const cam = `translate(${W / 2} ${H / 2}) scale(${push}) translate(${-W / 2} ${-H / 2})`;
 
   const fs = Math.min(150 * u, (W * 0.78) / (Math.max(title.length, 1) * 0.47));
-  const settle = interpolate(f, [PART_START, PART_END + 6], [0, 1], {
+  const settle = interpolate(f, [partStart, partEnd + 6], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const headScale = 1.045 - 0.045 * settle;
+  // The headline is an SVG <text>, so `scale` joins its own transform rather
+  // than a ScaleLayer; the full-bleed sheet stays full-bleed.
+  const headScale = (1.045 - 0.045 * settle) * scale;
   const headY = H / 2 + 0.34 * fs + (1 - settle) * 6 * u;
 
   const userRegion = {
@@ -217,7 +249,7 @@ export function TornEdge({
   };
 
   return (
-    <AbsoluteFill style={{ background: p.stage, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <svg width={W} height={H} aria-hidden>
         <defs>
           <filter
@@ -306,23 +338,25 @@ export function TornEdge({
         </defs>
 
         <g transform={cam}>
-          <rect
-            x={-W}
-            y={-H}
-            width={W * 3}
-            height={H * 3}
-            fill={p.stage}
-            filter={`url(#${paperId})`}
-          />
+          {transparent ? null : (
+            <rect
+              x={-W}
+              y={-H}
+              width={W * 3}
+              height={H * 3}
+              fill={stage}
+              filter={`url(#${paperId})`}
+            />
+          )}
           <text
             x={W / 2}
             y={headY}
-            fontFamily={display}
+            fontFamily={fontFamily}
             fontWeight={500}
             fontSize={fs}
             letterSpacing={`${-0.035 * fs}px`}
             textAnchor="middle"
-            fill={p.fg}
+            fill={fg}
             transform={`translate(${W / 2} ${H / 2}) scale(${headScale}) translate(${-W / 2} ${-H / 2})`}
           >
             {title}
@@ -377,7 +411,7 @@ export function TornEdge({
           pointerEvents: "none",
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

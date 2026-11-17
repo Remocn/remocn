@@ -22,8 +22,20 @@ export interface PullInProps {
   lead?: string;
   places?: string[];
   hold?: number;
+  /** Frames between letters of a word pulling in, like carriages of a train. */
+  stagger?: number;
+  /** Frames a word takes to brake from the right edge to its stop. */
+  brake?: number;
   accent?: string;
+  /** Text color of the passing words; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Plus Jakarta Sans by default. */
+  fontFamily?: string;
+  /** Size of the copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -104,15 +116,15 @@ function measureWord(ctx: CanvasRenderingContext2D, s: string): WordMetrics {
   return { x, adv, width };
 }
 
-function measure(places: string[], lead: string): Metrics {
+function measure(places: string[], lead: string, family: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("pull-in: no 2d context");
-  ctx.font = `${WGHT} ${FONT_PX}px "${jakarta.fontFamily}"`;
+  ctx.font = `${WGHT} ${FONT_PX}px "${family}"`;
   const m = places.map((p) => measureWord(ctx, p));
   const fm = ctx.measureText("Hxg");
   const cap = ctx.measureText("H");
-  ctx.font = `${LEAD_WGHT} ${FONT_PX}px "${jakarta.fontFamily}"`;
+  ctx.font = `${LEAD_WGHT} ${FONT_PX}px "${family}"`;
   const leadW = lead
     ? ctx.measureText(lead).width / FONT_PX + WORD * spaces(lead)
     : 0;
@@ -125,22 +137,22 @@ function measure(places: string[], lead: string): Metrics {
   };
 }
 
-function useMetrics(places: string[], lead: string) {
-  const key = [lead, ...places].join("\u0001");
+function useMetrics(places: string[], lead: string, family: string) {
+  const key = [family, lead, ...places].join("\u0001");
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("pull-in: measuring"));
   const released = useRef(false);
   useEffect(() => {
     let live = true;
-    const [l, ...p] = key.split("\u0001");
+    const [, l, ...p] = key.split("\u0001");
     Promise.all([
       jakarta.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${jakarta.fontFamily}"`),
+      document.fonts.load(`${WGHT} 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measure(p, l) });
+        setState({ key, m: measure(p, l, family) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -149,18 +161,18 @@ function useMetrics(places: string[], lead: string) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, family]);
   return state && state.key === key ? state.m : null;
 }
 
-function arrival(tau: number, x0: number, nose: number) {
-  const v0 = (2 * x0) / BRAKE;
+function arrival(tau: number, x0: number, nose: number, brake = BRAKE) {
+  const v0 = (2 * x0) / brake;
   if (tau <= 0) return x0 - v0 * tau;
-  if (tau < BRAKE) {
-    const u = 1 - tau / BRAKE;
+  if (tau < brake) {
+    const u = 1 - tau / brake;
     return x0 * u * u - nose * Math.sin((Math.PI / 2) * (1 - u)) ** 3;
   }
-  const k = (tau - BRAKE) / SETTLE;
+  const k = (tau - brake) / SETTLE;
   if (k >= 1) return 0;
   return -nose * Math.cos((Math.PI / 2) * k) * (1 - k) ** 0.5;
 }
@@ -170,24 +182,47 @@ function departure(tau: number) {
   return 1.4 * tau * tau + 0.04 * tau * tau * tau;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function PullIn({
   lead = "Now in",
   places = ["vertical.", "4K.", "your codebase."],
   hold = 24,
+  stagger = HEADWAY,
+  brake = BRAKE,
   accent,
+  ink,
   background,
+  fontFamily = jakarta.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: PullInProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.teal;
+  const fg = ink ?? c.ink;
   const list = useMemo(
     () => (places.length > 0 ? places : ["your codebase."]),
     [places],
   );
-  const m = useMetrics(list, lead);
+  const m = useMetrics(list, lead, fontFamily);
 
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
@@ -215,7 +250,7 @@ export function PullIn({
   const placeBase = blockTop + blockH;
   const leadBase = blockTop + leadCap;
 
-  const STEP = ARRIVE + Math.max(8, hold) + DEPART_GAP;
+  const STEP = ARRIVE + (brake - BRAKE) + Math.max(8, hold) + DEPART_GAP;
   const arriveAt = (k: number) => FIRST_AT + k * STEP;
   const departAt = (k: number) => arriveAt(k + 1) - DEPART_GAP;
   const x0 = W - marginX + F * 0.6;
@@ -231,11 +266,11 @@ export function PullIn({
     const chars = Array.from(word);
     const start = arriveAt(k);
     const leave = k === list.length - 1 ? null : departAt(k);
-    if (t < start - chars.length * HEADWAY - 30) return;
-    if (leave !== null && t > leave + 40 + chars.length * HEADWAY) return;
+    if (t < start - chars.length * stagger - 30) return;
+    if (leave !== null && t > leave + 40 + chars.length * stagger) return;
     chars.forEach((ch, i) => {
-      let dx = arrival(t - start - i * HEADWAY, x0, NOSE * F);
-      if (leave !== null) dx -= departure(t - leave - i * HEADWAY);
+      let dx = arrival(t - start - i * stagger, x0, NOSE * F, brake);
+      if (leave !== null) dx -= departure(t - leave - i * stagger);
       glyphs.push({ k, i, ch, x: marginX + m.places[k].x[i] * F + dx });
     });
   });
@@ -265,10 +300,10 @@ export function PullIn({
           height: F,
           lineHeight: `${F}px`,
           whiteSpace: "pre",
-          fontFamily: jakarta.fontFamily,
+          fontFamily,
           fontWeight: WGHT,
           fontSize: F,
-          color: last ? hi : c.ink,
+          color: last ? hi : fg,
         }}
       >
         {ch}
@@ -287,35 +322,37 @@ export function PullIn({
         overflow: "hidden",
       }}
     >
-      {lead ? (
-        <div
-          style={{
-            position: "absolute",
-            left: marginX,
-            top: leadBase - ((1.4 - m.asc - m.desc) / 2 + m.asc) * L,
-            height: L * 1.4,
-            overflow: "hidden",
-          }}
-        >
+      <ScaleLayer scale={scale}>
+        {lead ? (
           <div
             style={{
-              fontFamily: jakarta.fontFamily,
-              fontWeight: LEAD_WGHT,
-              fontSize: L,
-              lineHeight: `${L * 1.4}px`,
+              position: "absolute",
+              left: marginX,
+              top: leadBase - ((1.4 - m.asc - m.desc) / 2 + m.asc) * L,
               height: L * 1.4,
-              letterSpacing: "-0.02em",
-              wordSpacing: `${WORD}em`,
-              whiteSpace: "pre",
-              color: c.muted,
-              transform: `translateY(${((1 - leadP) * L * 1.2).toFixed(2)}px)`,
+              overflow: "hidden",
             }}
           >
-            {lead}
+            <div
+              style={{
+                fontFamily,
+                fontWeight: LEAD_WGHT,
+                fontSize: L,
+                lineHeight: `${L * 1.4}px`,
+                height: L * 1.4,
+                letterSpacing: "-0.02em",
+                wordSpacing: `${WORD}em`,
+                whiteSpace: "pre",
+                color: c.muted,
+                transform: `translateY(${((1 - leadP) * L * 1.2).toFixed(2)}px)`,
+              }}
+            >
+              {lead}
+            </div>
           </div>
-        </div>
-      ) : null}
-      {letters}
+        ) : null}
+        {letters}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

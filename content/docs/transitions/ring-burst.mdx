@@ -87,10 +87,55 @@ The `from` headline holds for `delay` frames on the opposite tone. Then up to th
       description: "Frames the outgoing scene holds before the burst",
     },
     {
+      name: "expand",
+      type: "number",
+      default: "32",
+      description: "Frames each ring takes to grow past the frame's edge",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "4",
+      description: "Frames between one ring and the next",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Color of the outermost ring",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color of the headlines; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Fill of the incoming scene; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Fraunces\"",
+      description: "Typeface for text headlines, set in italic. Load the font in your project first.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark shown when `to` is remocn.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the headlines around the frame's center; the rings stay put.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "speed",

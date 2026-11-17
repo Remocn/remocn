@@ -61,10 +61,50 @@ Slanted stripes sweep in and mask the headline into view, then widen and retract
       description: "Stripe slant in degrees, leaning right.",
     },
     {
+      name: "stagger",
+      type: "number",
+      default: "5",
+      description: "Frames between the three bars as they sweep in.",
+    },
+    {
+      name: "hold",
+      type: "number",
+      default: "10",
+      description: "Frames the full slab holds before it breaks back into bars.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent colour (any CSS colour).",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Oswald\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "theme",

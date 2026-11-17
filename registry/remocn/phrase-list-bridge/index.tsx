@@ -35,9 +35,21 @@ export interface PhraseListBridgeProps {
   right?: string;
   items?: string[];
   pickedIndex?: number;
+  /** Placeholder in the panel's search field. */
+  searchLabel?: string;
   accent?: string;
   ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
   background?: string;
+  /** Typeface for the phrase and rows. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Frames between words of the phrase as they rise in. */
+  stagger?: number;
+  /** Size of the phrase and panel, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -127,14 +139,14 @@ const DURATIONS = [
 
 type Measure = (s: string, weight: number) => number;
 
-function buildMeasure(_version: number): Measure {
+function buildMeasure(_version: number, family: string): Measure {
   const ctx = document.createElement("canvas").getContext("2d");
   const cache: Record<string, number> = {};
   return (s: string, weight: number) => {
     const key = `${weight}|${s}`;
     if (cache[key] === undefined) {
       if (!ctx) return s.length * 0.52;
-      ctx.font = `${weight} ${FONT_PX}px "${geist.fontFamily}"`;
+      ctx.font = `${weight} ${FONT_PX}px "${family}"`;
       cache[key] =
         ctx.measureText(s).width / FONT_PX + TRACK * Array.from(s).length;
     }
@@ -142,7 +154,7 @@ function buildMeasure(_version: number): Measure {
   };
 }
 
-function useMeasure() {
+function useMeasure(family: string) {
   const [version, setVersion] = useState(0);
   const [handle] = useState(() => delayRender("phrase-list-bridge: measuring"));
   const released = useRef(false);
@@ -155,8 +167,8 @@ function useMeasure() {
     Promise.all([
       geist.waitUntilDone(),
       mono.waitUntilDone(),
-      document.fonts.load(`300 100px "${geist.fontFamily}"`),
-      document.fonts.load(`400 100px "${geist.fontFamily}"`),
+      document.fonts.load(`300 100px "${family}"`),
+      document.fonts.load(`400 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -170,8 +182,8 @@ function useMeasure() {
       live = false;
       document.fonts.removeEventListener("loadingdone", bump);
     };
-  }, [handle]);
-  return useMemo(() => buildMeasure(version), [version]);
+  }, [handle, family]);
+  return useMemo(() => buildMeasure(version, family), [version, family]);
 }
 
 function RowIcon({
@@ -294,6 +306,22 @@ function BlurDefs({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function PhraseListBridge({
   left = "Browse through",
   right = "ready-made scenes",
@@ -306,14 +334,20 @@ export function PhraseListBridge({
     "Orbit Lock",
   ],
   pickedIndex = 2,
+  searchLabel = "Search scenes",
   accent,
   ink,
   background,
+  fontFamily = geist.fontFamily,
+  stagger = BEAT.wordStep,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   theme = "dark",
   ground,
   groundParams,
 }: PhraseListBridgeProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
@@ -321,7 +355,7 @@ export function PhraseListBridge({
   const preset = ground ?? (groundParams ? undefined : c.ground);
   const gParams = groundParams ?? (ground ? undefined : c.groundParams);
   const bg = background ?? gshParams(preset, gParams).background;
-  const m = useMeasure();
+  const m = useMeasure(fontFamily);
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const portrait = H > W * 1.1;
 
@@ -470,7 +504,7 @@ export function PhraseListBridge({
             position: "absolute",
             left: ccx - (wEm * L.F) / 2,
             top: ccy - L.F / 2,
-            fontFamily: geist.fontFamily,
+            fontFamily,
             fontWeight: 300,
             fontSize: L.F,
             lineHeight: 1,
@@ -482,7 +516,7 @@ export function PhraseListBridge({
           }}
         >
           {parts.map((w, i) => {
-            const at = startAt + i * BEAT.wordStep;
+            const at = startAt + i * stagger;
             const e = interpolate(frame, [at - 3, at + BEAT.enter], [0, 1], {
               ...CLAMP,
               easing: RISE,
@@ -588,7 +622,7 @@ export function PhraseListBridge({
           </div>
           <div
             style={{
-              fontFamily: geist.fontFamily,
+              fontFamily,
               fontWeight: 400,
               fontSize: r,
               letterSpacing: "-0.01em",
@@ -668,7 +702,7 @@ export function PhraseListBridge({
         </div>
         <div
           style={{
-            fontFamily: geist.fontFamily,
+            fontFamily,
             fontWeight: 400,
             fontSize: r,
             letterSpacing: "-0.01em",
@@ -677,7 +711,7 @@ export function PhraseListBridge({
             whiteSpace: "pre",
           }}
         >
-          Search scenes
+          {searchLabel}
         </div>
         <div
           style={{
@@ -782,7 +816,7 @@ export function PhraseListBridge({
           right,
           L.rightCx,
           L.botY,
-          left.split(" ").filter(Boolean).length * BEAT.wordStep,
+          left.split(" ").filter(Boolean).length * stagger,
           `${uid}b`,
         )}
       </AbsoluteFill>
@@ -794,19 +828,23 @@ export function PhraseListBridge({
 
   return (
     <AbsoluteFill style={style}>
-      <GshGround
-        preset={preset}
-        params={gParams}
-        timeOffset={c.groundOffset}
-        timeScale={0.7}
-      />
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(${scrimShape} at 50% 50%, rgba(${c.scrim},${c.scrimAlpha}) 0%, rgba(${c.scrim},0) 100%)`,
-        }}
-      />
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={preset}
+            params={gParams}
+            timeOffset={c.groundOffset}
+            timeScale={0.7}
+          />
+          <AbsoluteFill
+            style={{
+              background: `radial-gradient(${scrimShape} at 50% 50%, rgba(${c.scrim},${c.scrimAlpha}) 0%, rgba(${c.scrim},0) 100%)`,
+            }}
+          />
+        </>
+      ) : null}
       <BlurDefs items={blurItems} />
-      {content}
+      <ScaleLayer scale={scale}>{content}</ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -26,7 +26,19 @@ export interface AcronymExpandProps {
   eyebrow?: string;
   subhead?: string;
   accent?: string;
+  /** Text color of the expanded words; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Sora by default. */
+  fontFamily?: string;
+  /** Frame the acronym starts expanding into the full name. */
+  expandAt?: number;
+  /** Frames each letter takes to travel to its place in the full name. */
+  expandLength?: number;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -73,7 +85,7 @@ type Measure = ((s: string) => number) & {
   base: number;
 };
 
-function useMeasure(): Measure {
+function useMeasure(fontFamily: string): Measure {
   const [ready, setReady] = useState(false);
   const [handle] = useState(() => delayRender("acronym-expand: measuring"));
   const released = useRef(false);
@@ -81,7 +93,7 @@ function useMeasure(): Measure {
 
   useEffect(() => {
     let live = true;
-    const font = `500 100px "${sora.fontFamily}"`;
+    const font = `500 100px "${fontFamily}"`;
     Promise.all([sora.waitUntilDone(), document.fonts.load(font)])
       .catch(() => undefined)
       .then(() => {
@@ -98,7 +110,7 @@ function useMeasure(): Measure {
     return () => {
       live = false;
     };
-  }, [handle]);
+  }, [handle, fontFamily]);
 
   const ctx = ready ? ctxRef.current : null;
   const fn = (s: string) =>
@@ -178,20 +190,43 @@ function placeLine(
   return out;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function AcronymExpand({
   short = "MCP",
   full = "Model Context Protocol",
   eyebrow = "Now in remocn",
   subhead = "Your agent browses, installs and edits every component.",
   accent = "#3B5BFD",
+  ink,
   background,
+  fontFamily = sora.fontFamily,
+  expandAt = 38,
+  expandLength = 26,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: AcronymExpandProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, durationInFrames } = useVideoConfig();
   const t = THEMES[theme];
-  const measure = useMeasure();
+  const fg = ink ?? t.fg;
+  const measure = useMeasure(fontFamily);
 
   const portrait = height > width * 1.1;
   const s = portrait ? width / 1080 : Math.min(width / 1280, height / 720);
@@ -277,8 +312,8 @@ export function AcronymExpand({
     }
   }
 
-  const EXPAND = 38;
-  const EXPAND_LEN = 26;
+  const EXPAND = expandAt;
+  const EXPAND_LEN = expandLength;
   const anchorT = (si: number) =>
     EASE_IO(clamp01((frame - EXPAND - si * 2) / EXPAND_LEN));
   const drift = interpolate(
@@ -455,8 +490,8 @@ export function AcronymExpand({
     }
   }
 
-  const eyeT = EASE_OUT(clamp01((frame - 60) / 18));
-  const subT = EASE_OUT(clamp01((frame - 66) / 20));
+  const eyeT = EASE_OUT(clamp01((frame - (EXPAND + 22)) / 18));
+  const subT = EASE_OUT(clamp01((frame - (EXPAND + 28)) / 20));
   const transparent = background === "transparent";
   const initImage = t.init(accent);
 
@@ -464,7 +499,7 @@ export function AcronymExpand({
     position: "absolute",
     left: d.x,
     top: d.y,
-    fontFamily: sora.fontFamily,
+    fontFamily,
     fontWeight: 500,
     fontSize: d.fs,
     lineHeight: LINE,
@@ -481,7 +516,7 @@ export function AcronymExpand({
           backgroundClip: "text",
           color: "transparent",
         }
-      : { color: t.fg }),
+      : { color: fg }),
   });
 
   return (
@@ -502,111 +537,114 @@ export function AcronymExpand({
         />
       ) : null}
 
-      {eyebrow ? (
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: stackTop + (1 - eyeT) * 10 * s,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: eyeFs * 0.6,
-            fontFamily: mono.fontFamily,
-            fontWeight: 500,
-            fontSize: eyeFs,
-            lineHeight: 1.2,
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            color: t.muted,
-            opacity: eyeT,
-          }}
-        >
-          <span
-            style={{
-              width: eyeFs * 0.42,
-              height: eyeFs * 0.42,
-              borderRadius: 999,
-              background: accent,
-            }}
-          />
-          {eyebrow}
-        </div>
-      ) : null}
-
-      {tails.map((tl) => {
-        const pad = tl.fs * 0.25;
-        const open = Math.max(
-          0,
-          Math.min(tl.w * tl.v + pad * tl.v, tl.max + pad * 0.2),
-        );
-        return (
+      <ScaleLayer scale={scale}>
+        {eyebrow ? (
           <div
-            key={tl.id}
             style={{
               position: "absolute",
-              left: tl.dir === 1 ? tl.edge : tl.edge - open,
-              top: tl.y - pad,
-              width: open,
-              height: LINE * tl.fs + pad * 2,
-              overflow: "hidden",
-              zIndex: 1,
+              left: 0,
+              right: 0,
+              top: stackTop + (1 - eyeT) * 10 * s,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: eyeFs * 0.6,
+              fontFamily: mono.fontFamily,
+              fontWeight: 500,
+              fontSize: eyeFs,
+              lineHeight: 1.2,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              color: t.muted,
+              opacity: eyeT,
             }}
           >
             <span
               style={{
+                width: eyeFs * 0.42,
+                height: eyeFs * 0.42,
+                borderRadius: 999,
+                background: accent,
+              }}
+            />
+            {eyebrow}
+          </div>
+        ) : null}
+
+        {tails.map((tl) => {
+          const pad = tl.fs * 0.25;
+          const open = Math.max(
+            0,
+            Math.min(tl.w * tl.v + pad * tl.v, tl.max + pad * 0.2),
+          );
+          return (
+            <div
+              key={tl.id}
+              style={{
                 position: "absolute",
-                top: pad,
-                ...(tl.dir === 1 ? { left: 0 } : { right: 0 }),
-                fontFamily: sora.fontFamily,
-                fontWeight: 500,
-                fontSize: tl.fs,
-                lineHeight: LINE,
-                letterSpacing: `${TRACK_FULL}em`,
-                whiteSpace: "pre",
-                color: t.fg,
-                transform: `translateX(${(-(1 - tl.v) * tl.w * 0.45 * tl.dir).toFixed(2)}px)`,
-                filter:
-                  tl.v < 0.98
-                    ? `blur(${((1 - tl.v) * 0.04 * tl.fs).toFixed(2)}px)`
-                    : undefined,
+                left: tl.dir === 1 ? tl.edge : tl.edge - open,
+                top: tl.y - pad,
+                width: open,
+                height: LINE * tl.fs + pad * 2,
+                overflow: "hidden",
+                zIndex: 1,
               }}
             >
-              {tl.text}
-            </span>
+              <span
+                style={{
+                  position: "absolute",
+                  top: pad,
+                  ...(tl.dir === 1 ? { left: 0 } : { right: 0 }),
+                  fontFamily,
+                  fontWeight: 500,
+                  fontSize: tl.fs,
+                  lineHeight: LINE,
+                  letterSpacing: `${TRACK_FULL}em`,
+                  whiteSpace: "pre",
+                  color: fg,
+                  transform: `translateX(${(-(1 - tl.v) * tl.w * 0.45 * tl.dir).toFixed(2)}px)`,
+                  filter:
+                    tl.v < 0.98
+                      ? `blur(${((1 - tl.v) * 0.04 * tl.fs).toFixed(2)}px)`
+                      : undefined,
+                }}
+              >
+                {tl.text}
+              </span>
+            </div>
+          );
+        })}
+
+        {draws.map((d) => (
+          <div key={d.id} style={glyphStyle(d)}>
+            {d.ch}
           </div>
-        );
-      })}
+        ))}
 
-      {draws.map((d) => (
-        <div key={d.id} style={glyphStyle(d)}>
-          {d.ch}
-        </div>
-      ))}
-
-      {subhead ? (
-        <div
-          style={{
-            position: "absolute",
-            left: (width - Math.min(maxW, 820 * s * (portrait ? 1.1 : 1))) / 2,
-            width: Math.min(maxW, 820 * s * (portrait ? 1.1 : 1)),
-            top: fullTop + fullH + fsF * 0.34 + (1 - subT) * 12 * s,
-            textAlign: "center",
-            fontFamily: sora.fontFamily,
-            fontWeight: 400,
-            fontSize: subFs,
-            lineHeight: 1.4,
-            letterSpacing: "-0.01em",
-            color: t.muted,
-            textWrap: "balance",
-            opacity: subT,
-            filter: `blur(${((1 - subT) * 5 * s).toFixed(2)}px)`,
-          }}
-        >
-          {subhead}
-        </div>
-      ) : null}
+        {subhead ? (
+          <div
+            style={{
+              position: "absolute",
+              left:
+                (width - Math.min(maxW, 820 * s * (portrait ? 1.1 : 1))) / 2,
+              width: Math.min(maxW, 820 * s * (portrait ? 1.1 : 1)),
+              top: fullTop + fullH + fsF * 0.34 + (1 - subT) * 12 * s,
+              textAlign: "center",
+              fontFamily,
+              fontWeight: 400,
+              fontSize: subFs,
+              lineHeight: 1.4,
+              letterSpacing: "-0.01em",
+              color: t.muted,
+              textWrap: "balance",
+              opacity: subT,
+              filter: `blur(${((1 - subT) * 5 * s).toFixed(2)}px)`,
+            }}
+          >
+            {subhead}
+          </div>
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

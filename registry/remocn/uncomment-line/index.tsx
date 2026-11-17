@@ -2,6 +2,7 @@
 
 import { loadFont as loadGeist } from "@remotion/google-fonts/Geist";
 import { loadFont as loadGeistMono } from "@remotion/google-fonts/GeistMono";
+import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -26,8 +27,20 @@ export interface UncommentLineProps {
   lines?: string[];
   marker?: string;
   highlight?: number;
+  /** Frames between one line uncommenting and the next. */
+  stagger?: number;
+  /** Opacity of a line while it is still commented out. */
+  dim?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the lines (the marker stays mono). Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the lines, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -65,10 +78,10 @@ interface Metrics {
 
 const baseOf = (asc: number, desc: number) => (1 - (asc + desc)) / 2 + asc;
 
-function measure(lines: string[], marker: string): Metrics {
+function measure(lines: string[], marker: string, fontFamily: string): Metrics {
   const ctx = document.createElement("canvas").getContext("2d");
   if (!ctx) throw new Error("uncomment-line: no 2d context");
-  ctx.font = `500 100px "${geist.fontFamily}"`;
+  ctx.font = `500 100px "${fontFamily}"`;
   const widths = lines.map(
     (s) =>
       ctx.measureText(s).width / 100 +
@@ -92,7 +105,7 @@ function measure(lines: string[], marker: string): Metrics {
   };
 }
 
-function useMetrics(lines: string[], marker: string) {
+function useMetrics(lines: string[], marker: string, fontFamily: string) {
   const key = [marker, ...lines].join("\u0001");
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("uncomment-line: measuring"));
@@ -103,13 +116,13 @@ function useMetrics(lines: string[], marker: string) {
     Promise.all([
       geist.waitUntilDone(),
       geistMono.waitUntilDone(),
-      document.fonts.load(`500 100px "${geist.fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
       document.fonts.load(`400 100px "${geistMono.fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measure(ls, mk) });
+        setState({ key, m: measure(ls, mk, fontFamily) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -118,25 +131,48 @@ function useMetrics(lines: string[], marker: string) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, fontFamily, handle]);
   return state && state.key === key ? state.m : null;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function UncommentLine({
   lines = ["Fork the scenes.", "Change anything.", "Own the cut."],
   marker = "// ",
   highlight = -1,
+  stagger = OPEN_GAP,
+  dim = DIM,
   accent,
+  ink,
   background,
+  fontFamily = geist.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: UncommentLineProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
   const spot = accent ?? c.pink;
+  const fg = ink ?? c.ink;
   const list = lines.length > 0 ? lines : [" "];
-  const m = useMetrics(list, marker);
+  const m = useMetrics(list, marker, fontFamily);
 
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
@@ -167,7 +203,7 @@ export function UncommentLine({
       ...CLAMP,
       easing: EASE_OUT,
     });
-    const at = OPEN_AT + i * OPEN_GAP;
+    const at = OPEN_AT + i * stagger;
     const o = interpolate(t, [at, at + OPEN_LEN], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
@@ -180,7 +216,7 @@ export function UncommentLine({
     const h = F * 1.3;
     const top = baseY - F * 1.05;
     const drop = (1 - r) * h;
-    const color = i === hl ? spot : c.ink;
+    const color = i === hl ? spot : fg;
     const markOpacity = 1 - interpolate(o, [0, 0.6], [0, 1], CLAMP);
     return (
       <div key={`l${i}`}>
@@ -231,13 +267,13 @@ export function UncommentLine({
               top: F * 1.05 - m.base * F + drop,
               height: F,
               lineHeight: `${F}px`,
-              fontFamily: geist.fontFamily,
+              fontFamily,
               fontWeight: 500,
               fontSize: F,
               letterSpacing: `${TRACK}em`,
               whiteSpace: "pre",
               color,
-              opacity: DIM + (1 - DIM) * lit,
+              opacity: dim + (1 - dim) * lit,
             }}
           >
             {line}
@@ -249,7 +285,7 @@ export function UncommentLine({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

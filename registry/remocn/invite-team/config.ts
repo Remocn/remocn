@@ -1,8 +1,21 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const inviteTeamConfig: ComponentConfig = {
   componentName: "InviteTeam",
   importPath: "@/components/remocn/invite-team",
+  lists: {
+    emails: {
+      default: ["maya@kitebase.io", "leo@kitebase.io", "priya@kitebase.io"],
+      description: "Emails",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -12,11 +25,6 @@ export const inviteTeamConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     role: {
       type: "text-content",
@@ -28,6 +36,28 @@ export const inviteTeamConfig: ComponentConfig = {
       default: "Kitebase",
       description: "Workspace",
     },
+    pageTitle: {
+      type: "text-content",
+      default: "Projects",
+      description: "Page title",
+    },
+    fieldLabel: {
+      type: "text-content",
+      default: "Email addresses",
+      description: "Field label",
+    },
+    doneLabel: {
+      type: "text-content",
+      default: "Invites sent",
+      description: "Done label",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Hanken Grotesk" }),
     speed: {
       type: "number",
       default: 1,

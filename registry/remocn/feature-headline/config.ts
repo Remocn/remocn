@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const featureHeadlineConfig: ComponentConfig = {
   componentName: "FeatureHeadline",
@@ -12,11 +18,6 @@ export const featureHeadlineConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     tag: {
       type: "text-content",
@@ -58,6 +59,30 @@ export const featureHeadlineConfig: ComponentConfig = {
       default: true,
       description: "Exit",
     },
+    stagger: {
+      type: "number",
+      default: 2,
+      min: 0,
+      max: 10,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    fontWeight: {
+      type: "number",
+      default: 500,
+      min: 400,
+      max: 500,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Geist" }),
     speed: {
       type: "number",
       default: 1,

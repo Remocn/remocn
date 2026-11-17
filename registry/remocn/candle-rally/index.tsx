@@ -2,7 +2,7 @@
 
 import { loadFont } from "@remotion/google-fonts/BarlowCondensed";
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
-import { useId } from "react";
+import { type ReactNode, useId } from "react";
 import {
   AbsoluteFill,
   Easing,
@@ -32,6 +32,20 @@ export interface CandleRallyProps {
   /** Second line of the slam. */
   headline2?: string;
   accent?: string;
+  /** Label before the previous-high price on the dashed level. */
+  levelLabel?: string;
+  /** Weight of the slam headline. */
+  fontWeight?: number;
+  /** Text color of the slam; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the slam. Load it yourself; Barlow Condensed by default. */
+  fontFamily?: string;
+  /** Size of the chart and slam, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -105,6 +119,22 @@ const THEMES = {
   },
 } as const;
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function CandleRally({
   symbol = "RMCN",
   price = 128.4,
@@ -112,13 +142,21 @@ export function CandleRally({
   headline = "All-time",
   headline2 = "high",
   accent = "#3B5BFD",
+  levelLabel = "PREV HIGH",
+  fontWeight = 500,
+  ink,
+  background,
+  fontFamily = display,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: CandleRallyProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   // ---- candle slots: chop narrow and even, rally widening, last one huge ---
@@ -327,7 +365,9 @@ export function CandleRally({
   const S = H * 0.3;
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{ background: background ?? p.bg, overflow: "hidden" }}
+    >
       {/* aurora ground behind the breakout */}
       <div
         style={{
@@ -341,167 +381,169 @@ export function CandleRally({
         }}
       />
 
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        role="img"
-        aria-label={`${symbol} candles rally to ${price.toFixed(2)}, ${headline} ${headline2}`}
-      >
-        <defs>
-          <linearGradient
-            id={`${uid}aurora`}
-            gradientUnits="userSpaceOnUse"
-            x1={0}
-            y1={yOf(finalCandle[1])}
-            x2={0}
-            y2={yOf(finalCandle[0])}
-          >
-            {AURORA.map((c, i) => (
-              <stop key={c} offset={i / (AURORA.length - 1)} stopColor={c} />
-            ))}
-          </linearGradient>
-          <linearGradient
-            id={`${uid}wick`}
-            gradientUnits="userSpaceOnUse"
-            x1={0}
-            y1={yOf(finalCandle[2])}
-            x2={0}
-            y2={yOf(finalCandle[3])}
-          >
-            <stop offset={0} stopColor={AURORA[0]} />
-            <stop offset={1} stopColor={AURORA[3]} />
-          </linearGradient>
-        </defs>
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          role="img"
+          aria-label={`${symbol} candles rally to ${price.toFixed(2)}, ${headline} ${headline2}`}
+        >
+          <defs>
+            <linearGradient
+              id={`${uid}aurora`}
+              gradientUnits="userSpaceOnUse"
+              x1={0}
+              y1={yOf(finalCandle[1])}
+              x2={0}
+              y2={yOf(finalCandle[0])}
+            >
+              {AURORA.map((c, i) => (
+                <stop key={c} offset={i / (AURORA.length - 1)} stopColor={c} />
+              ))}
+            </linearGradient>
+            <linearGradient
+              id={`${uid}wick`}
+              gradientUnits="userSpaceOnUse"
+              x1={0}
+              y1={yOf(finalCandle[2])}
+              x2={0}
+              y2={yOf(finalCandle[3])}
+            >
+              <stop offset={0} stopColor={AURORA[0]} />
+              <stop offset={1} stopColor={AURORA[3]} />
+            </linearGradient>
+          </defs>
 
-        <g transform={`translate(0 ${hit})`}>
-          {/* minimal axis: four faint levels with mono ticks */}
-          {[60, 80, 100, 120].map((v) => (
-            <g key={v} opacity={levelIn * (1 - dim * 0.6)}>
-              <rect
-                x={W * 0.04}
-                y={yOf(v) - 0.5 * u}
-                width={W * 0.88}
-                height={1 * u}
-                fill={p.hair}
+          <g transform={`translate(0 ${hit})`}>
+            {/* minimal axis: four faint levels with mono ticks */}
+            {[60, 80, 100, 120].map((v) => (
+              <g key={v} opacity={levelIn * (1 - dim * 0.6)}>
+                <rect
+                  x={W * 0.04}
+                  y={yOf(v) - 0.5 * u}
+                  width={W * 0.88}
+                  height={1 * u}
+                  fill={p.hair}
+                />
+                <text
+                  x={W * 0.965}
+                  y={yOf(v) + 5 * u}
+                  textAnchor="end"
+                  fontFamily={mono}
+                  fontWeight={400}
+                  fontSize={13 * u}
+                  fill={p.muted}
+                >
+                  {v.toFixed(0)}
+                </text>
+              </g>
+            ))}
+
+            {/* previous high: dashed level the last candle punches through */}
+            <g opacity={levelIn * levelOut * (1 - dim)}>
+              <line
+                x1={W * 0.04}
+                x2={W * 0.92}
+                y1={levelY}
+                y2={levelY}
+                stroke={broke ? p.up : accent}
+                strokeOpacity={0.55 + 0.45 * levelFlash}
+                strokeWidth={(1.5 + 2 * levelFlash) * u}
+                strokeDasharray={`${6 * u} ${6 * u}`}
               />
               <text
-                x={W * 0.965}
-                y={yOf(v) + 5 * u}
-                textAnchor="end"
+                x={W * 0.04}
+                y={levelY - 12 * u}
                 fontFamily={mono}
-                fontWeight={400}
-                fontSize={13 * u}
+                fontWeight={500}
+                fontSize={14 * u}
+                letterSpacing="0.1em"
                 fill={p.muted}
               >
-                {v.toFixed(0)}
+                {levelLabel} {prevHigh.toFixed(2)}
               </text>
             </g>
-          ))}
 
-          {/* previous high: dashed level the last candle punches through */}
-          <g opacity={levelIn * levelOut * (1 - dim)}>
-            <line
-              x1={W * 0.04}
-              x2={W * 0.92}
-              y1={levelY}
-              y2={levelY}
-              stroke={broke ? p.up : accent}
-              strokeOpacity={0.55 + 0.45 * levelFlash}
-              strokeWidth={(1.5 + 2 * levelFlash) * u}
-              strokeDasharray={`${6 * u} ${6 * u}`}
-            />
-            <text
-              x={W * 0.04}
-              y={levelY - 12 * u}
-              fontFamily={mono}
-              fontWeight={500}
-              fontSize={14 * u}
-              letterSpacing="0.1em"
-              fill={p.muted}
-            >
-              PREV HIGH {prevHigh.toFixed(2)}
-            </text>
+            {all.map((_, i) => candle(i))}
           </g>
-
-          {all.map((_, i) => candle(i))}
-        </g>
-      </svg>
-
-      {/* price tag riding the last wick */}
-      <div
-        style={{
-          position: "absolute",
-          left: fx - fw / 2 - 14 * u,
-          top: wickTop + hit,
-          height: tagH,
-          transform: `translate(-100%, -50%) translateX(${(1 - tagIn) * 16 * u}px)`,
-          opacity: tagIn,
-          display: "flex",
-          alignItems: "center",
-          gap: 10 * u,
-          padding: `0 ${16 * u}px`,
-          borderRadius: tagH / 2,
-          background: AURORA[0],
-          color: p.tagInk,
-          fontFamily: mono,
-          fontWeight: 500,
-          fontSize: tagFont,
-          letterSpacing: "0.02em",
-          fontVariantNumeric: "tabular-nums",
-          whiteSpace: "nowrap",
-          lineHeight: 1,
-        }}
-      >
-        <span style={{ opacity: 0.62 }}>{symbol}</span>
-        <span>{live.toFixed(2)}</span>
-        <svg
-          width={0.62 * tagFont}
-          height={0.54 * tagFont}
-          viewBox="0 0 10 8.66"
-          aria-hidden
-          style={{ display: "block" }}
-        >
-          <path d="M5 0 L10 8.66 L0 8.66 Z" fill={p.tagInk} />
         </svg>
-      </div>
 
-      {/* the slam */}
-      <div
-        style={{
-          position: "absolute",
-          left: W * 0.058,
-          top: H * 0.255,
-          fontFamily: display,
-          fontWeight: 500,
-          fontSize: S,
-          lineHeight: 0.96,
-          letterSpacing: "-0.012em",
-          textTransform: "uppercase",
-          color: p.fg,
-          whiteSpace: "nowrap",
-        }}
-      >
+        {/* price tag riding the last wick */}
         <div
           style={{
-            opacity: Math.min(1, slam1 * 2.5),
-            transform: `scale(${1.28 - 0.28 * slam1})`,
-            transformOrigin: "0% 60%",
+            position: "absolute",
+            left: fx - fw / 2 - 14 * u,
+            top: wickTop + hit,
+            height: tagH,
+            transform: `translate(-100%, -50%) translateX(${(1 - tagIn) * 16 * u}px)`,
+            opacity: tagIn,
+            display: "flex",
+            alignItems: "center",
+            gap: 10 * u,
+            padding: `0 ${16 * u}px`,
+            borderRadius: tagH / 2,
+            background: AURORA[0],
+            color: p.tagInk,
+            fontFamily: mono,
+            fontWeight: 500,
+            fontSize: tagFont,
+            letterSpacing: "0.02em",
+            fontVariantNumeric: "tabular-nums",
+            whiteSpace: "nowrap",
+            lineHeight: 1,
           }}
         >
-          {headline}
+          <span style={{ opacity: 0.62 }}>{symbol}</span>
+          <span>{live.toFixed(2)}</span>
+          <svg
+            width={0.62 * tagFont}
+            height={0.54 * tagFont}
+            viewBox="0 0 10 8.66"
+            aria-hidden
+            style={{ display: "block" }}
+          >
+            <path d="M5 0 L10 8.66 L0 8.66 Z" fill={p.tagInk} />
+          </svg>
         </div>
+
+        {/* the slam */}
         <div
           style={{
-            opacity: Math.min(1, slam2 * 2.5),
-            transform: `scale(${1.28 - 0.28 * slam2})`,
-            transformOrigin: "0% 60%",
+            position: "absolute",
+            left: W * 0.058,
+            top: H * 0.255,
+            fontFamily,
+            fontWeight,
+            fontSize: S,
+            lineHeight: 0.96,
+            letterSpacing: "-0.012em",
+            textTransform: "uppercase",
+            color: fg,
+            whiteSpace: "nowrap",
           }}
         >
-          {headline2}
+          <div
+            style={{
+              opacity: Math.min(1, slam1 * 2.5),
+              transform: `scale(${1.28 - 0.28 * slam1})`,
+              transformOrigin: "0% 60%",
+            }}
+          >
+            {headline}
+          </div>
+          <div
+            style={{
+              opacity: Math.min(1, slam2 * 2.5),
+              transform: `scale(${1.28 - 0.28 * slam2})`,
+              transformOrigin: "0% 60%",
+            }}
+          >
+            {headline2}
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

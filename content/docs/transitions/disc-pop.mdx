@@ -75,6 +75,18 @@ Scene A is a prompt card with a greeting that types a request and presses send. 
       description: "Request typed into the scene A prompt card",
     },
     {
+      name: "fileName",
+      type: "string",
+      default: "\"brand-kit.zip\"",
+      description: "Name of the file attached to the scene A prompt.",
+    },
+    {
+      name: "fileMeta",
+      type: "string",
+      default: "\"Logo, colours, 6 shots\"",
+      description: "Detail line under the attached file name.",
+    },
+    {
       name: "image",
       type: "string",
       description: "Image src for the player; the default exists only in the Remocn repo",
@@ -90,6 +102,23 @@ Scene A is a prompt card with a greeting that types a request and presses send. 
       type: "string",
       default: "\"Keys, in an afternoon.\"",
       description: "Title shown in the scene B player",
+    },
+    {
+      name: "exportLabel",
+      type: "string",
+      default: "\"Export\"",
+      description: "Label of the export button above the scene B player.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Figtree\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
     },
     {
       name: "discs",
@@ -117,6 +146,11 @@ Scene A is a prompt card with a greeting that types a request and presses send. 
       description: "Overrides for the scene B shader parameters",
     },
     {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
       name: "sceneA",
       type: "number",
       default: "DISC_POP_DEMO.sceneA",
@@ -133,6 +167,24 @@ Scene A is a prompt card with a greeting that types a request and presses send. 
       type: "number",
       default: "DISC_POP_DEMO.transition",
       description: "Transition length in frames",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
     },
   ]}
 />

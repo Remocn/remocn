@@ -17,7 +17,7 @@ import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const { fontFamily: onest } = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -39,6 +39,22 @@ export interface ReelsFeedProps {
   pollOptions?: [string, string];
   likes?: [string, string];
   accent?: string;
+  /** Color of the lines beside the phone; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy and the app UI. Load it yourself; Onest by default. */
+  fontFamily?: string;
+  /** Caption of the feed post on the home screen. */
+  postCaption?: string;
+  /** Caption of the reel. */
+  reelCaption?: string;
+  /** Replaces the remocn wordmark in the app header. */
+  logo?: React.ReactNode;
+  /** Size of the phone and lines, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "light" | "dark";
   lines?: [string, string, string];
@@ -1089,6 +1105,22 @@ function Scene({ src, children }: { src?: string; children: React.ReactNode }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ReelsFeed({
   account = "remocn",
   stories = [],
@@ -1097,13 +1129,21 @@ export function ReelsFeed({
   pollOptions = ["Yes, this week", "Not yet"],
   likes = ["12.4K", "12.5K"],
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = onest,
+  postCaption = "Our launch film is out. Cut it in an afternoon with remocn",
+  reelCaption = "v2 is live. 200+ components for launch videos",
+  logo,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "light",
   lines,
   ground,
   groundParams,
 }: ReelsFeedProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay);
   const { fps, width, height } = useVideoConfig();
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const f = frame * speed;
@@ -1179,7 +1219,7 @@ export function ReelsFeed({
               fontWeight: 300,
               lineHeight: 1.02,
               letterSpacing: "-0.045em",
-              color: c.over,
+              color: ink ?? c.over,
               textWrap: "balance",
               transform: `translateY(${(1 - inn) * 105 - out * 40}%)`,
               opacity: 1 - out,
@@ -1343,714 +1383,733 @@ export function ReelsFeed({
         overflow: "hidden",
       }}
     >
-      <GshGround
-        preset={ground ?? (dark ? "static-sunset" : "paper-crease")}
-        params={
-          groundParams ??
-          (dark
-            ? undefined
-            : {
-                colors: ["#f29a6b", "#f6c3a0", "#efdccf", "#3a2430"],
-                background: "#f1ebe4",
-              })
-        }
-        timeOffset={6}
-        timeScale={0.35}
-      />
-      <AbsoluteFill
-        style={{
-          background: dark
-            ? tall
-              ? "linear-gradient(180deg, rgba(0,0,0,0) 50%, rgba(8,4,2,0.55) 100%)"
-              : "linear-gradient(90deg, rgba(8,4,2,0.55) 0%, rgba(8,4,2,0) 55%)"
-            : "transparent",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          ...(tall
-            ? { left: 80 * u, right: 80 * u, top: height * 0.71 }
-            : { left: 92 * u, width: 470 * u, top: height / 2 - 110 * u }),
-        }}
-      >
-        {lineEls}
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          left: phoneC.x - BW / 2,
-          top: phoneC.y - BH / 2,
-          width: BW,
-          height: BH,
-          transform: `translateY(${(1 - rise) * height * 0.8}px) scale(${k * (1 + 0.02 * (f / 300))})`,
-        }}
-      >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? (dark ? "static-sunset" : "paper-crease")}
+            params={
+              groundParams ??
+              (dark
+                ? undefined
+                : {
+                    colors: ["#f29a6b", "#f6c3a0", "#efdccf", "#3a2430"],
+                    background: "#f1ebe4",
+                  })
+            }
+            timeOffset={6}
+            timeScale={0.35}
+          />
+          <AbsoluteFill
+            style={{
+              background: dark
+                ? tall
+                  ? "linear-gradient(180deg, rgba(0,0,0,0) 50%, rgba(8,4,2,0.55) 100%)"
+                  : "linear-gradient(90deg, rgba(8,4,2,0.55) 0%, rgba(8,4,2,0) 55%)"
+                : "transparent",
+            }}
+          />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            borderRadius: 68,
-            boxShadow: dark
-              ? "0 50px 100px -20px rgba(0,0,0,0.75)"
-              : "0 2px 6px rgba(60,30,20,0.12), 0 50px 100px -30px rgba(80,40,20,0.45)",
+            ...(tall
+              ? { left: 80 * u, right: 80 * u, top: height * 0.71 }
+              : { left: 92 * u, width: 470 * u, top: height / 2 - 110 * u }),
           }}
-        />
-        <Phone>
-          {f < OPEN + 16 && (
-            <AbsoluteFill style={{ background: c.bg, color: c.text }}>
-              <StatusBar color={c.text} />
-              <div
-                style={{
-                  position: "absolute",
-                  top: 54,
-                  left: 16,
-                  right: 16,
-                  height: 46,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <Icon d={P.plus} size={27} color={c.text} sw={2} />
-                <span
-                  style={{
-                    display: "flex",
-                    alignItems: "baseline",
-                    fontFamily: manrope.fontFamily,
-                    fontSize: 24,
-                    fontWeight: 600,
-                    letterSpacing: "-0.025em",
-                    lineHeight: 1,
-                  }}
-                >
-                  <svg
-                    viewBox="0 0 124.06 134.26"
-                    style={{ height: "0.76em", width: "auto" }}
-                    aria-hidden
-                  >
-                    <path fill="currentColor" d={REMOCN_R_PATH} />
-                  </svg>
-                  <span style={{ marginLeft: "0.04em" }}>emocn</span>
-                </span>
-                <div style={{ position: "relative" }}>
-                  <Icon d={P.heart} size={27} color={c.text} sw={2} />
-                  <div
-                    style={{
-                      position: "absolute",
-                      right: -1,
-                      top: 0,
-                      width: 9,
-                      height: 9,
-                      borderRadius: 5,
-                      background: "#ff3040",
-                      border: `2px solid ${c.bg}`,
-                    }}
-                  />
-                </div>
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  top: 106,
-                  left: 12,
-                  display: "flex",
-                  gap: 12,
-                }}
-              >
-                {[
-                  {
-                    name: "Your story",
-                    bg: "#9ca3af",
-                    glyph:
-                      "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 21a7.5 7.5 0 0 1 15 0",
-                  },
-                  { name: account, bg: accent, play: true },
-                  ...ACCOUNTS,
-                ].map((a, i) => (
-                  <div
-                    key={a.name}
-                    style={{
-                      width: RING,
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      transform: i === 1 ? `scale(${ringPress})` : undefined,
-                    }}
-                  >
-                    <div style={{ position: "relative" }}>
-                      {i === 0 ? (
-                        <div
-                          style={{
-                            width: RING,
-                            height: RING,
-                            padding: 4,
-                            boxSizing: "border-box",
-                          }}
-                        >
-                          <Avatar
-                            size={RING - 8}
-                            bg={a.bg}
-                            glyph={"glyph" in a ? a.glyph : undefined}
-                          />
-                        </div>
-                      ) : (
-                        <Ring
-                          size={RING}
-                          gap={c.bg}
-                          seen={i > 3}
-                          color={accent}
-                        >
-                          <Avatar
-                            size={RING - 12}
-                            bg={a.bg}
-                            glyph={"glyph" in a ? a.glyph : undefined}
-                            play={"play" in a}
-                          />
-                        </Ring>
-                      )}
-                      {i === 0 && (
-                        <div
-                          style={{
-                            position: "absolute",
-                            right: 2,
-                            bottom: 2,
-                            width: 26,
-                            height: 26,
-                            borderRadius: 13,
-                            background: c.text,
-                            border: `3px solid ${c.bg}`,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <Icon d={P.plus} size={14} color={c.bg} sw={3} />
-                        </div>
-                      )}
-                    </div>
-                    <span
-                      style={{
-                        fontSize: 12,
-                        marginTop: 5,
-                        color: i === 0 ? c.muted : c.text,
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {a.name}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  top: 222,
-                  left: 0,
-                  right: 0,
-                  borderTop: `0.5px solid ${c.line}`,
-                }}
-              >
+        >
+          {lineEls}
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            left: phoneC.x - BW / 2,
+            top: phoneC.y - BH / 2,
+            width: BW,
+            height: BH,
+            transform: `translateY(${(1 - rise) * height * 0.8}px) scale(${k * (1 + 0.02 * (f / 300))})`,
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: 68,
+              boxShadow: dark
+                ? "0 50px 100px -20px rgba(0,0,0,0.75)"
+                : "0 2px 6px rgba(60,30,20,0.12), 0 50px 100px -30px rgba(80,40,20,0.45)",
+            }}
+          />
+          <Phone>
+            {f < OPEN + 16 && (
+              <AbsoluteFill style={{ background: c.bg, color: c.text }}>
+                <StatusBar color={c.text} />
                 <div
                   style={{
-                    height: 56,
+                    position: "absolute",
+                    top: 54,
+                    left: 16,
+                    right: 16,
+                    height: 46,
                     display: "flex",
                     alignItems: "center",
-                    gap: 10,
-                    padding: "0 12px",
+                    justifyContent: "space-between",
                   }}
                 >
-                  <Ring size={36} gap={c.bg} color={accent}>
-                    <Avatar size={28} bg="#5f7f86" glyph={ACCOUNTS[0].glyph} />
-                  </Ring>
-                  <div style={{ flex: 1, lineHeight: "17px" }}>
-                    <div style={{ fontSize: 14, fontWeight: 400 }}>
-                      kitebase
-                    </div>
-                    <div style={{ fontSize: 12 }}>Lisbon, Portugal</div>
+                  <Icon d={P.plus} size={27} color={c.text} sw={2} />
+                  {logo ?? (
+                    <span
+                      style={{
+                        display: "flex",
+                        alignItems: "baseline",
+                        fontFamily: manrope.fontFamily,
+                        fontSize: 24,
+                        fontWeight: 600,
+                        letterSpacing: "-0.025em",
+                        lineHeight: 1,
+                      }}
+                    >
+                      <svg
+                        viewBox="0 0 124.06 134.26"
+                        style={{ height: "0.76em", width: "auto" }}
+                        aria-hidden
+                      >
+                        <path fill="currentColor" d={REMOCN_R_PATH} />
+                      </svg>
+                      <span style={{ marginLeft: "0.04em" }}>emocn</span>
+                    </span>
+                  )}
+                  <div style={{ position: "relative" }}>
+                    <Icon d={P.heart} size={27} color={c.text} sw={2} />
+                    <div
+                      style={{
+                        position: "absolute",
+                        right: -1,
+                        top: 0,
+                        width: 9,
+                        height: 9,
+                        borderRadius: 5,
+                        background: "#ff3040",
+                        border: `2px solid ${c.bg}`,
+                      }}
+                    />
                   </div>
-                  <svg width="22" height="22" viewBox="0 0 24 24">
-                    {[5, 12, 19].map((x) => (
-                      <circle key={x} cx={x} cy={12} r={1.6} fill={c.text} />
-                    ))}
-                  </svg>
                 </div>
                 <div
                   style={{
-                    position: "relative",
-                    width: SW,
-                    height: SW * 1.25,
+                    position: "absolute",
+                    top: 106,
+                    left: 12,
+                    display: "flex",
+                    gap: 12,
+                  }}
+                >
+                  {[
+                    {
+                      name: "Your story",
+                      bg: "#9ca3af",
+                      glyph:
+                        "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 21a7.5 7.5 0 0 1 15 0",
+                    },
+                    { name: account, bg: accent, play: true },
+                    ...ACCOUNTS,
+                  ].map((a, i) => (
+                    <div
+                      key={a.name}
+                      style={{
+                        width: RING,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        transform: i === 1 ? `scale(${ringPress})` : undefined,
+                      }}
+                    >
+                      <div style={{ position: "relative" }}>
+                        {i === 0 ? (
+                          <div
+                            style={{
+                              width: RING,
+                              height: RING,
+                              padding: 4,
+                              boxSizing: "border-box",
+                            }}
+                          >
+                            <Avatar
+                              size={RING - 8}
+                              bg={a.bg}
+                              glyph={"glyph" in a ? a.glyph : undefined}
+                            />
+                          </div>
+                        ) : (
+                          <Ring
+                            size={RING}
+                            gap={c.bg}
+                            seen={i > 3}
+                            color={accent}
+                          >
+                            <Avatar
+                              size={RING - 12}
+                              bg={a.bg}
+                              glyph={"glyph" in a ? a.glyph : undefined}
+                              play={"play" in a}
+                            />
+                          </Ring>
+                        )}
+                        {i === 0 && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              right: 2,
+                              bottom: 2,
+                              width: 26,
+                              height: 26,
+                              borderRadius: 13,
+                              background: c.text,
+                              border: `3px solid ${c.bg}`,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <Icon d={P.plus} size={14} color={c.bg} sw={3} />
+                          </div>
+                        )}
+                      </div>
+                      <span
+                        style={{
+                          fontSize: 12,
+                          marginTop: 5,
+                          color: i === 0 ? c.muted : c.text,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {a.name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 222,
+                    left: 0,
+                    right: 0,
+                    borderTop: `0.5px solid ${c.line}`,
+                  }}
+                >
+                  <div
+                    style={{
+                      height: 56,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      padding: "0 12px",
+                    }}
+                  >
+                    <Ring size={36} gap={c.bg} color={accent}>
+                      <Avatar
+                        size={28}
+                        bg="#5f7f86"
+                        glyph={ACCOUNTS[0].glyph}
+                      />
+                    </Ring>
+                    <div style={{ flex: 1, lineHeight: "17px" }}>
+                      <div style={{ fontSize: 14, fontWeight: 400 }}>
+                        kitebase
+                      </div>
+                      <div style={{ fontSize: 12 }}>Lisbon, Portugal</div>
+                    </div>
+                    <svg width="22" height="22" viewBox="0 0 24 24">
+                      {[5, 12, 19].map((x) => (
+                        <circle key={x} cx={x} cy={12} r={1.6} fill={c.text} />
+                      ))}
+                    </svg>
+                  </div>
+                  <div
+                    style={{
+                      position: "relative",
+                      width: SW,
+                      height: SW * 1.25,
+                      overflow: "hidden",
+                    }}
+                  >
+                    <Photo mood="sunset" seed={4} />
+                  </div>
+                  <div
+                    style={{
+                      height: 48,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 16,
+                      padding: "0 14px",
+                    }}
+                  >
+                    <Icon d={P.heart} size={26} color={c.text} />
+                    <Icon d={P.comment} size={25} color={c.text} />
+                    <Icon d={P.repost} size={25} color={c.text} />
+                    <Icon d={P.send} size={25} color={c.text} />
+                    <div style={{ flex: 1 }} />
+                    <Icon d={P.bookmark} size={25} color={c.text} />
+                  </div>
+                  <div
+                    style={{
+                      padding: "0 14px",
+                      fontSize: 14,
+                      lineHeight: "19px",
+                    }}
+                  >
+                    <span>2,184 likes</span>
+                    <div>
+                      <span>kitebase</span> {postCaption}
+                    </div>
+                  </div>
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    height: 84,
+                    background: c.bg,
+                    borderTop: `0.5px solid ${c.line}`,
+                    display: "flex",
+                    justifyContent: "space-around",
+                    paddingTop: 12,
+                    boxSizing: "border-box",
+                  }}
+                >
+                  {[P.home, P.reels, P.send, P.search].map((d, i) => (
+                    <Icon
+                      key={d}
+                      d={d}
+                      size={27}
+                      color={c.text}
+                      sw={i === 0 ? 2.3 : 1.9}
+                      fill={i === 0 ? c.text : "none"}
+                    />
+                  ))}
+                  <Avatar
+                    size={27}
+                    bg="#e879a6"
+                    glyph="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"
+                  />
+                </div>
+                <AbsoluteFill
+                  style={{ background: "#000", opacity: open * 0.7 }}
+                />
+              </AbsoluteFill>
+            )}
+
+            {f >= OPEN && (
+              <AbsoluteFill
+                style={{
+                  background: "#000",
+                  overflow: "hidden",
+                  borderRadius: (1 - open) * 120 + 56,
+                  opacity:
+                    interpolate(open, [0, 0.12], [0, 1], clamp) *
+                    (1 - swipe * 0.7),
+                  transform: `translate(${(ringX - SW / 2) * (1 - open)}px, ${(ringY - SH / 2) * (1 - open) - swipe * SH * 0.35}px) scale(${(0.18 + 0.82 * open) * (1 - swipe * 0.08)})`,
+                }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    top: 50,
+                    height: 718,
+                    borderRadius: 10,
                     overflow: "hidden",
                   }}
                 >
-                  <Photo mood="sunset" seed={4} />
+                  <Scene src={stories[storyIdx]?.src}>
+                    {storyIdx === 0 && (
+                      <ProductScene t={segT + 22} accent={accent} />
+                    )}
+                    {storyIdx === 1 && <LaunchScene t={segT} accent={accent} />}
+                    {storyIdx === 2 && (
+                      <PollScene
+                        t={segT}
+                        accent={accent}
+                        question={pollQuestion}
+                        options={pollOptions}
+                        vote={vote}
+                      />
+                    )}
+                  </Scene>
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      top: 0,
+                      height: 120,
+                      background:
+                        "linear-gradient(rgba(0,0,0,0.35), transparent)",
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      background: "#fff",
+                      opacity: interpolate(segT, [0, 5], [0, 0], clamp),
+                    }}
+                  />
                 </div>
+                {storyHeader}
                 <div
                   style={{
-                    height: 48,
+                    position: "absolute",
+                    left: 12,
+                    right: 12,
+                    top: 780,
+                    height: 44,
                     display: "flex",
                     alignItems: "center",
                     gap: 16,
-                    padding: "0 14px",
                   }}
                 >
-                  <Icon d={P.heart} size={26} color={c.text} />
-                  <Icon d={P.comment} size={25} color={c.text} />
-                  <Icon d={P.repost} size={25} color={c.text} />
-                  <Icon d={P.send} size={25} color={c.text} />
-                  <div style={{ flex: 1 }} />
-                  <Icon d={P.bookmark} size={25} color={c.text} />
-                </div>
-                <div
-                  style={{
-                    padding: "0 14px",
-                    fontSize: 14,
-                    lineHeight: "19px",
-                  }}
-                >
-                  <span>2,184 likes</span>
-                  <div>
-                    <span>kitebase</span> Our launch film is out. Cut it in an
-                    afternoon with remocn
+                  <div
+                    style={{
+                      flex: 1,
+                      height: 44,
+                      borderRadius: 22,
+                      border: "1px solid rgba(255,255,255,0.55)",
+                      color: "#fff",
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "0 18px",
+                      fontSize: 15,
+                    }}
+                  >
+                    Send message
                   </div>
+                  <Icon d={P.heart} size={27} color="#fff" />
+                  <Icon d={P.send} size={26} color="#fff" />
                 </div>
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  height: 84,
-                  background: c.bg,
-                  borderTop: `0.5px solid ${c.line}`,
-                  display: "flex",
-                  justifyContent: "space-around",
-                  paddingTop: 12,
-                  boxSizing: "border-box",
-                }}
-              >
-                {[P.home, P.reels, P.send, P.search].map((d, i) => (
-                  <Icon
-                    key={d}
-                    d={d}
-                    size={27}
-                    color={c.text}
-                    sw={i === 0 ? 2.3 : 1.9}
-                    fill={i === 0 ? c.text : "none"}
-                  />
-                ))}
-                <Avatar
-                  size={27}
-                  bg="#e879a6"
-                  glyph="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"
-                />
-              </div>
-              <AbsoluteFill
-                style={{ background: "#000", opacity: open * 0.7 }}
-              />
-            </AbsoluteFill>
-          )}
+              </AbsoluteFill>
+            )}
 
-          {f >= OPEN && (
-            <AbsoluteFill
-              style={{
-                background: "#000",
-                overflow: "hidden",
-                borderRadius: (1 - open) * 120 + 56,
-                opacity:
-                  interpolate(open, [0, 0.12], [0, 1], clamp) *
-                  (1 - swipe * 0.7),
-                transform: `translate(${(ringX - SW / 2) * (1 - open)}px, ${(ringY - SH / 2) * (1 - open) - swipe * SH * 0.35}px) scale(${(0.18 + 0.82 * open) * (1 - swipe * 0.08)})`,
-              }}
-            >
-              <div
+            {f >= SWIPE && (
+              <AbsoluteFill
                 style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  top: 50,
-                  height: 718,
-                  borderRadius: 10,
-                  overflow: "hidden",
+                  background: "#000",
+                  transform: `translateY(${(1 - swipe) * SH}px)`,
                 }}
               >
-                <Scene src={stories[storyIdx]?.src}>
-                  {storyIdx === 0 && (
-                    <ProductScene t={segT + 22} accent={accent} />
-                  )}
-                  {storyIdx === 1 && <LaunchScene t={segT} accent={accent} />}
-                  {storyIdx === 2 && (
-                    <PollScene
-                      t={segT}
-                      accent={accent}
-                      question={pollQuestion}
-                      options={pollOptions}
-                      vote={vote}
-                    />
-                  )}
-                </Scene>
                 <div
                   style={{
                     position: "absolute",
                     left: 0,
                     right: 0,
                     top: 0,
-                    height: 120,
-                    background:
-                      "linear-gradient(rgba(0,0,0,0.35), transparent)",
-                  }}
-                />
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    background: "#fff",
-                    opacity: interpolate(segT, [0, 5], [0, 0], clamp),
-                  }}
-                />
-              </div>
-              {storyHeader}
-              <div
-                style={{
-                  position: "absolute",
-                  left: 12,
-                  right: 12,
-                  top: 780,
-                  height: 44,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 16,
-                }}
-              >
-                <div
-                  style={{
-                    flex: 1,
-                    height: 44,
-                    borderRadius: 22,
-                    border: "1px solid rgba(255,255,255,0.55)",
-                    color: "#fff",
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "0 18px",
-                    fontSize: 15,
-                  }}
-                >
-                  Send message
-                </div>
-                <Icon d={P.heart} size={27} color="#fff" />
-                <Icon d={P.send} size={26} color="#fff" />
-              </div>
-            </AbsoluteFill>
-          )}
-
-          {f >= SWIPE && (
-            <AbsoluteFill
-              style={{
-                background: "#000",
-                transform: `translateY(${(1 - swipe) * SH}px)`,
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  top: 0,
-                  bottom: 84,
-                  overflow: "hidden",
-                }}
-              >
-                <Scene src={reelSrc}>
-                  <ReelScene t={f - SWIPE} />
-                </Scene>
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    background:
-                      "linear-gradient(rgba(0,0,0,0.3), transparent 18%, transparent 70%, rgba(0,0,0,0.55))",
-                  }}
-                />
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  top: 58,
-                  left: 16,
-                  right: 16,
-                  display: "flex",
-                  alignItems: "center",
-                  color: "#fff",
-                }}
-              >
-                <Icon d={P.plus} size={27} color="#fff" sw={2} />
-                <div
-                  style={{
-                    flex: 1,
-                    display: "flex",
-                    justifyContent: "center",
-                    gap: 14,
-                    fontSize: 21,
-                    fontWeight: 400,
-                    letterSpacing: -0.3,
-                  }}
-                >
-                  <span>Reels</span>
-                  <span style={{ opacity: 0.6 }}>Friends</span>
-                </div>
-                <Icon d={P.sliders} size={26} color="#fff" sw={2} />
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  right: 10,
-                  bottom: 116,
-                  width: 52,
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: 18,
-                  color: "#fff",
-                  fontSize: 13,
-                  fontWeight: 400,
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                {actions.map((a, i) => (
-                  <div
-                    key={a.d}
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      gap: 4,
-                    }}
-                  >
-                    {i === 0 ? (
-                      <div
-                        style={{
-                          transform: `scale(${1 + (liked > 0.01 ? Math.sin(Math.min(1, liked) * Math.PI) * 0.35 : 0)})`,
-                        }}
-                      >
-                        <Icon
-                          d={P.heart}
-                          size={30}
-                          color={liked > 0.02 ? "#ff3040" : "#fff"}
-                          fill={liked > 0.02 ? "#ff3040" : "none"}
-                          sw={2}
-                        />
-                      </div>
-                    ) : (
-                      <Icon d={a.d} size={28} color="#fff" sw={2} />
-                    )}
-                    {i === 0 ? (
-                      <Ticker
-                        from={likes[0]}
-                        to={likes[1]}
-                        p={tick}
-                        style={{ height: 16, lineHeight: "16px" }}
-                      />
-                    ) : (
-                      <span>{a.n}</span>
-                    )}
-                  </div>
-                ))}
-                <svg width="24" height="24" viewBox="0 0 24 24">
-                  {[5, 12, 19].map((x) => (
-                    <circle key={x} cx={x} cy={12} r={1.8} fill="#fff" />
-                  ))}
-                </svg>
-                <div
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 7,
-                    border: "2px solid #fff",
-                    position: "relative",
+                    bottom: 84,
                     overflow: "hidden",
                   }}
                 >
-                  <Photo mood="alpine" seed={12} />
-                </div>
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  left: 14,
-                  right: 76,
-                  bottom: 100,
-                  color: "#fff",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                  <Avatar size={32} bg={accent} play />
-                  <span style={{ fontSize: 14, fontWeight: 400 }}>
-                    {account}
-                  </span>
-                  <svg width="14" height="14" viewBox="0 0 24 24">
-                    <path
-                      d="M12 1.5l2.6 1.9 3.2-.1 1 3 2.6 1.9-1 3 1 3-2.6 1.9-1 3-3.2-.1L12 22.5l-2.6-1.9-3.2.1-1-3L2.6 15.8l1-3-1-3 2.6-1.9 1-3 3.2.1z"
-                      fill="#3897f0"
-                    />
-                    <path
-                      d="M8 12.2l2.7 2.6L16 9.5"
-                      stroke="#fff"
-                      strokeWidth={2.2}
-                      fill="none"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <span
+                  <Scene src={reelSrc}>
+                    <ReelScene t={f - SWIPE} />
+                  </Scene>
+                  <div
                     style={{
-                      marginLeft: 4,
-                      border: "1px solid rgba(255,255,255,0.6)",
-                      borderRadius: 8,
-                      padding: "4px 10px",
-                      fontSize: 13,
-                      fontWeight: 400,
+                      position: "absolute",
+                      inset: 0,
+                      background:
+                        "linear-gradient(rgba(0,0,0,0.3), transparent 18%, transparent 70%, rgba(0,0,0,0.55))",
                     }}
-                  >
-                    Follow
-                  </span>
-                </div>
-                <div
-                  style={{ fontSize: 14, marginTop: 10, lineHeight: "19px" }}
-                >
-                  v2 is live. 200+ components for launch videos
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    marginTop: 8,
-                    fontSize: 13,
-                    opacity: 0.92,
-                  }}
-                >
-                  <Icon d={P.music} size={13} color="#fff" sw={2} />
-                  <span>{account} · Original audio</span>
-                </div>
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  bottom: 84,
-                  height: 2,
-                  background: "rgba(255,255,255,0.25)",
-                }}
-              >
-                <div
-                  style={{
-                    width: `${interpolate(f, [REEL, REEL + 120], [4, 60], clamp)}%`,
-                    height: "100%",
-                    background: "#fff",
-                  }}
-                />
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  height: 84,
-                  background: "#000",
-                  display: "flex",
-                  justifyContent: "space-around",
-                  paddingTop: 12,
-                  boxSizing: "border-box",
-                }}
-              >
-                {[P.home, P.reels, P.send, P.search].map((d, i) => (
-                  <Icon
-                    key={d}
-                    d={d}
-                    size={27}
-                    color="#fff"
-                    sw={i === 1 ? 2.4 : 1.9}
                   />
-                ))}
-                <Avatar
-                  size={27}
-                  bg="#e879a6"
-                  glyph="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"
-                />
-              </div>
-              {f >= DT + 6 && (
+                </div>
                 <div
                   style={{
                     position: "absolute",
-                    left: SW / 2 - 70,
-                    top: 340,
-                    width: 140,
-                    height: 140,
-                    transform: `translateY(${-burstOut * 40}px) scale(${(0.6 + burst * 0.4) * (1 - burstOut * 0.15)}) rotate(${-8 + (1 - burst) * 12}deg)`,
-                    opacity: Math.min(1, burst * 3) * (1 - burstOut),
+                    top: 58,
+                    left: 16,
+                    right: 16,
+                    display: "flex",
+                    alignItems: "center",
+                    color: "#fff",
                   }}
                 >
-                  <svg
-                    width="140"
-                    height="140"
-                    viewBox="0 0 24 24"
+                  <Icon d={P.plus} size={27} color="#fff" sw={2} />
+                  <div
                     style={{
-                      filter: "drop-shadow(0 6px 16px rgba(0,0,0,0.28))",
+                      flex: 1,
+                      display: "flex",
+                      justifyContent: "center",
+                      gap: 14,
+                      fontSize: 21,
+                      fontWeight: 400,
+                      letterSpacing: -0.3,
                     }}
                   >
-                    <defs>
-                      <linearGradient
-                        id={`${uid}heart`}
-                        x1="0"
-                        y1="0"
-                        x2="1"
-                        y2="1"
-                      >
-                        <stop offset="0" stopColor="#ff6a6a" />
-                        <stop offset="1" stopColor="#ff1e56" />
-                      </linearGradient>
-                    </defs>
-                    <path d={P.heart} fill={`url(#${uid}heart)`} />
-                  </svg>
+                    <span>Reels</span>
+                    <span style={{ opacity: 0.6 }}>Friends</span>
+                  </div>
+                  <Icon d={P.sliders} size={26} color="#fff" sw={2} />
                 </div>
-              )}
-            </AbsoluteFill>
-          )}
+                <div
+                  style={{
+                    position: "absolute",
+                    right: 10,
+                    bottom: 116,
+                    width: 52,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 18,
+                    color: "#fff",
+                    fontSize: 13,
+                    fontWeight: 400,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  {actions.map((a, i) => (
+                    <div
+                      key={a.d}
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 4,
+                      }}
+                    >
+                      {i === 0 ? (
+                        <div
+                          style={{
+                            transform: `scale(${1 + (liked > 0.01 ? Math.sin(Math.min(1, liked) * Math.PI) * 0.35 : 0)})`,
+                          }}
+                        >
+                          <Icon
+                            d={P.heart}
+                            size={30}
+                            color={liked > 0.02 ? "#ff3040" : "#fff"}
+                            fill={liked > 0.02 ? "#ff3040" : "none"}
+                            sw={2}
+                          />
+                        </div>
+                      ) : (
+                        <Icon d={a.d} size={28} color="#fff" sw={2} />
+                      )}
+                      {i === 0 ? (
+                        <Ticker
+                          from={likes[0]}
+                          to={likes[1]}
+                          p={tick}
+                          style={{ height: 16, lineHeight: "16px" }}
+                        />
+                      ) : (
+                        <span>{a.n}</span>
+                      )}
+                    </div>
+                  ))}
+                  <svg width="24" height="24" viewBox="0 0 24 24">
+                    {[5, 12, 19].map((x) => (
+                      <circle key={x} cx={x} cy={12} r={1.8} fill="#fff" />
+                    ))}
+                  </svg>
+                  <div
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: 7,
+                      border: "2px solid #fff",
+                      position: "relative",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <Photo mood="alpine" seed={12} />
+                  </div>
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 14,
+                    right: 76,
+                    bottom: 100,
+                    color: "#fff",
+                  }}
+                >
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 9 }}
+                  >
+                    <Avatar size={32} bg={accent} play />
+                    <span style={{ fontSize: 14, fontWeight: 400 }}>
+                      {account}
+                    </span>
+                    <svg width="14" height="14" viewBox="0 0 24 24">
+                      <path
+                        d="M12 1.5l2.6 1.9 3.2-.1 1 3 2.6 1.9-1 3 1 3-2.6 1.9-1 3-3.2-.1L12 22.5l-2.6-1.9-3.2.1-1-3L2.6 15.8l1-3-1-3 2.6-1.9 1-3 3.2.1z"
+                        fill="#3897f0"
+                      />
+                      <path
+                        d="M8 12.2l2.7 2.6L16 9.5"
+                        stroke="#fff"
+                        strokeWidth={2.2}
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <span
+                      style={{
+                        marginLeft: 4,
+                        border: "1px solid rgba(255,255,255,0.6)",
+                        borderRadius: 8,
+                        padding: "4px 10px",
+                        fontSize: 13,
+                        fontWeight: 400,
+                      }}
+                    >
+                      Follow
+                    </span>
+                  </div>
+                  <div
+                    style={{ fontSize: 14, marginTop: 10, lineHeight: "19px" }}
+                  >
+                    {reelCaption}
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      marginTop: 8,
+                      fontSize: 13,
+                      opacity: 0.92,
+                    }}
+                  >
+                    <Icon d={P.music} size={13} color="#fff" sw={2} />
+                    <span>{account} · Original audio</span>
+                  </div>
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    bottom: 84,
+                    height: 2,
+                    background: "rgba(255,255,255,0.25)",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${interpolate(f, [REEL, REEL + 120], [4, 60], clamp)}%`,
+                      height: "100%",
+                      background: "#fff",
+                    }}
+                  />
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    height: 84,
+                    background: "#000",
+                    display: "flex",
+                    justifyContent: "space-around",
+                    paddingTop: 12,
+                    boxSizing: "border-box",
+                  }}
+                >
+                  {[P.home, P.reels, P.send, P.search].map((d, i) => (
+                    <Icon
+                      key={d}
+                      d={d}
+                      size={27}
+                      color="#fff"
+                      sw={i === 1 ? 2.4 : 1.9}
+                    />
+                  ))}
+                  <Avatar
+                    size={27}
+                    bg="#e879a6"
+                    glyph="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"
+                  />
+                </div>
+                {f >= DT + 6 && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: SW / 2 - 70,
+                      top: 340,
+                      width: 140,
+                      height: 140,
+                      transform: `translateY(${-burstOut * 40}px) scale(${(0.6 + burst * 0.4) * (1 - burstOut * 0.15)}) rotate(${-8 + (1 - burst) * 12}deg)`,
+                      opacity: Math.min(1, burst * 3) * (1 - burstOut),
+                    }}
+                  >
+                    <svg
+                      width="140"
+                      height="140"
+                      viewBox="0 0 24 24"
+                      style={{
+                        filter: "drop-shadow(0 6px 16px rgba(0,0,0,0.28))",
+                      }}
+                    >
+                      <defs>
+                        <linearGradient
+                          id={`${uid}heart`}
+                          x1="0"
+                          y1="0"
+                          x2="1"
+                          y2="1"
+                        >
+                          <stop offset="0" stopColor="#ff6a6a" />
+                          <stop offset="1" stopColor="#ff1e56" />
+                        </linearGradient>
+                      </defs>
+                      <path d={P.heart} fill={`url(#${uid}heart)`} />
+                    </svg>
+                  </div>
+                )}
+              </AbsoluteFill>
+            )}
 
-          {f >= OPEN + 8 && <StatusBar color="#fff" />}
-          <div
-            style={{
-              position: "absolute",
-              left: tap.x - 22,
-              top: tap.y - 22,
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              background: "rgba(40,40,48,0.28)",
-              border: "2px solid rgba(255,255,255,0.9)",
-              boxShadow: "0 4px 14px rgba(0,0,0,0.25)",
-              opacity: tapOpacity,
-              transform: `scale(${tapScale})`,
-              zIndex: 35,
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              bottom: 8,
-              left: (SW - 136) / 2,
-              width: 136,
-              height: 5,
-              borderRadius: 3,
-              background: f >= OPEN + 4 || dark ? "#fff" : "#111",
-              zIndex: 36,
-            }}
-          />
-        </Phone>
-      </div>
+            {f >= OPEN + 8 && <StatusBar color="#fff" />}
+            <div
+              style={{
+                position: "absolute",
+                left: tap.x - 22,
+                top: tap.y - 22,
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                background: "rgba(40,40,48,0.28)",
+                border: "2px solid rgba(255,255,255,0.9)",
+                boxShadow: "0 4px 14px rgba(0,0,0,0.25)",
+                opacity: tapOpacity,
+                transform: `scale(${tapScale})`,
+                zIndex: 35,
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                bottom: 8,
+                left: (SW - 136) / 2,
+                width: 136,
+                height: 5,
+                borderRadius: 3,
+                background: f >= OPEN + 4 || dark ? "#fff" : "#111",
+                zIndex: 36,
+              }}
+            />
+          </Phone>
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

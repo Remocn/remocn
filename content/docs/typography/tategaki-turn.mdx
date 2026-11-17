@@ -68,14 +68,43 @@ Each word of `text` drops in as a vertical column, letter by letter. After a hol
       description: "Frames the vertical columns hold before they turn.",
     },
     {
+      name: "stagger",
+      type: "number",
+      default: "5",
+      description: "Frames between words dropping into their columns.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Highlight color. Defaults to vermilion.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Stage color. Overrides the theme background.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Zen Kaku Gothic New\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

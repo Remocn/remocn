@@ -1,8 +1,24 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const ovalTypeConfig: ComponentConfig = {
   componentName: "OvalType",
   importPath: "@/components/remocn/oval-type",
+  lists: {
+    tagline: {
+      default: ["Make", "it", "move"],
+      description: "Tagline",
+    },
+    words: {
+      default: ["Plan", "Cut", "Edit", "Loop", "Sync", "Draft"],
+      description: "Words",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -12,11 +28,6 @@ export const ovalTypeConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     accentWord: {
       type: "number",
@@ -36,6 +47,21 @@ export const ovalTypeConfig: ComponentConfig = {
       description: "Beat",
       hiddenFromList: false,
     },
+    landLen: {
+      type: "number",
+      default: 18,
+      min: 4,
+      max: 48,
+      step: 1,
+      description: "Land (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Instrument Sans", grain: true }),
     speed: {
       type: "number",
       default: 1,

@@ -29,7 +29,21 @@ export interface ResClimbProps {
   eyebrow?: string;
   steps?: number[];
   accent?: string;
+  /** Color of the label; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the figure and label. Load it yourself; Onest by default. */
+  fontFamily?: string;
+  /** Frame of the first sharpening step. */
+  snapAt?: number;
+  /** Frames for the coarsest grid to fill in, left to right. */
+  build?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the figure and copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -88,11 +102,12 @@ function measure(
   steps: number[],
   label: string,
   eyebrow: string,
+  fontFamily: string,
 ): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) throw new Error("res-climb: no 2d context");
-  ctx.font = `500 ${SAMPLE}px "${onest.fontFamily}"`;
+  ctx.font = `500 ${SAMPLE}px "${fontFamily}"`;
   ctx.letterSpacing = `${TRACK * SAMPLE}px`;
   const tm = ctx.measureText(value);
   const L = tm.actualBoundingBoxLeft;
@@ -106,7 +121,7 @@ function measure(
 
   canvas.width = inkW;
   canvas.height = inkH;
-  ctx.font = `500 ${SAMPLE}px "${onest.fontFamily}"`;
+  ctx.font = `500 ${SAMPLE}px "${fontFamily}"`;
   ctx.letterSpacing = `${TRACK * SAMPLE}px`;
   ctx.textBaseline = "alphabetic";
   ctx.fillStyle = "#000";
@@ -140,7 +155,7 @@ function measure(
   });
 
   ctx.letterSpacing = "0px";
-  ctx.font = `400 ${SAMPLE}px "${onest.fontFamily}"`;
+  ctx.font = `400 ${SAMPLE}px "${fontFamily}"`;
   const lw = label ? ctx.measureText(label).width / SAMPLE : 0;
   ctx.font = `400 ${SAMPLE}px "${mono.fontFamily}"`;
   const ew = eyebrow ? ctx.measureText(eyebrow).width / SAMPLE : 0;
@@ -162,6 +177,7 @@ function useMetrics(
   steps: number[],
   label: string,
   eyebrow: string,
+  fontFamily: string,
 ) {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("res-climb: measuring"));
@@ -171,14 +187,14 @@ function useMetrics(
     Promise.all([
       onest.waitUntilDone(),
       mono.waitUntilDone(),
-      document.fonts.load(`500 100px "${onest.fontFamily}"`),
-      document.fonts.load(`400 100px "${onest.fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
       document.fonts.load(`400 100px "${mono.fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setMetrics(measure(value, steps, label, eyebrow));
+        setMetrics(measure(value, steps, label, eyebrow, fontFamily));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -187,7 +203,7 @@ function useMetrics(
     return () => {
       live = false;
     };
-  }, [value, steps, label, eyebrow, handle]);
+  }, [value, steps, label, eyebrow, fontFamily, handle]);
   return metrics;
 }
 
@@ -215,26 +231,50 @@ function rampAt(ramp: [number, number, number][], u: number) {
 
 const DEFAULT_STEPS = [7, 14, 28];
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ResClimb({
   value = "200+",
   label = "components, ready to drop in",
   eyebrow = "remocn registry",
   steps = DEFAULT_STEPS,
   accent = "#3B5BFD",
+  ink,
   background,
+  fontFamily = onest.fontFamily,
+  snapAt = FIRST_SNAP,
+  build = BUILD,
+  grain = true,
+  scale: size = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: ResClimbProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const stage = background ?? c.bg;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const stepList = useMemo(
     () => (steps.length ? steps.slice(0, 4) : DEFAULT_STEPS),
     [steps],
   );
-  const m = useMetrics(value, stepList, label, eyebrow);
+  const m = useMetrics(value, stepList, label, eyebrow, fontFamily);
   const ramp = useMemo(
     () =>
       c.ramp.map((col) => hexRgb(col === "ACCENT" ? accent : col)) as [
@@ -271,7 +311,7 @@ export function ResClimb({
 
   const snaps: number[] = [];
   for (let i = 0; i < m.levels.length; i++)
-    snaps.push(i === 0 ? FIRST_SNAP : snaps[i - 1] + SNAP_GAPS[i - 1]);
+    snaps.push(i === 0 ? snapAt : snaps[i - 1] + SNAP_GAPS[i - 1]);
   const crispAt = snaps[snaps.length - 1];
   const labelAt = crispAt + 3;
   let level = 0;
@@ -303,7 +343,7 @@ export function ResClimb({
       const col = lv.lit[k];
       const row = lv.lit[k + 1];
       if (level === 0) {
-        const at = (col / Math.max(1, lv.cols - 1)) * BUILD - BUILD * 0.33;
+        const at = (col / Math.max(1, lv.cols - 1)) * build - build * 0.33;
         if (t < at) continue;
       }
       const x = left + col * cellPx;
@@ -347,93 +387,95 @@ export function ResClimb({
           }}
         />
       ) : null}
-      <div style={{ position: "absolute", inset: 0, transform: scale }}>
-        <svg
-          width={W}
-          height={H}
-          viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
-        >
-          <defs>
-            <linearGradient
-              id={`${uid}beam`}
-              gradientUnits="userSpaceOnUse"
-              x1={gx0}
-              y1={gy0}
-              x2={gx1}
-              y2={gy1}
-            >
-              {ramp.map((col, i) => (
-                <stop
-                  key={`${col.join(",")}-${i}`}
-                  offset={i / (ramp.length - 1)}
-                  stopColor={`rgb(${col.join(",")})`}
-                />
-              ))}
-            </linearGradient>
-          </defs>
-          {crisp ? (
-            <text
-              x={left + m.ox * F}
-              y={top + m.oy * F}
-              fill={`url(#${uid}beam)`}
+      <ScaleLayer scale={size}>
+        <div style={{ position: "absolute", inset: 0, transform: scale }}>
+          <svg
+            width={W}
+            height={H}
+            viewBox={`0 0 ${W} ${H}`}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            <defs>
+              <linearGradient
+                id={`${uid}beam`}
+                gradientUnits="userSpaceOnUse"
+                x1={gx0}
+                y1={gy0}
+                x2={gx1}
+                y2={gy1}
+              >
+                {ramp.map((col, i) => (
+                  <stop
+                    key={`${col.join(",")}-${i}`}
+                    offset={i / (ramp.length - 1)}
+                    stopColor={`rgb(${col.join(",")})`}
+                  />
+                ))}
+              </linearGradient>
+            </defs>
+            {crisp ? (
+              <text
+                x={left + m.ox * F}
+                y={top + m.oy * F}
+                fill={`url(#${uid}beam)`}
+                style={{
+                  fontFamily,
+                  fontWeight: 500,
+                  fontSize: F,
+                  letterSpacing: `${TRACK}em`,
+                }}
+              >
+                {value}
+              </text>
+            ) : (
+              <g shapeRendering="crispEdges">{cells}</g>
+            )}
+          </svg>
+          {eyebrow ? (
+            <div
               style={{
-                fontFamily: onest.fontFamily,
-                fontWeight: 500,
-                fontSize: F,
-                letterSpacing: `${TRACK}em`,
+                position: "absolute",
+                left: 0,
+                width: W,
+                top: top - eyebrowGap - eyebrowSize,
+                textAlign: "center",
+                fontFamily: mono.fontFamily,
+                fontWeight: 400,
+                fontSize: eyebrowSize,
+                lineHeight: 1,
+                letterSpacing: "0.02em",
+                color: c.muted,
+                opacity: eyebrowP,
               }}
             >
-              {value}
-            </text>
-          ) : (
-            <g shapeRendering="crispEdges">{cells}</g>
-          )}
-        </svg>
-        {eyebrow ? (
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              width: W,
-              top: top - eyebrowGap - eyebrowSize,
-              textAlign: "center",
-              fontFamily: mono.fontFamily,
-              fontWeight: 400,
-              fontSize: eyebrowSize,
-              lineHeight: 1,
-              letterSpacing: "0.02em",
-              color: c.muted,
-              opacity: eyebrowP,
-            }}
-          >
-            {eyebrow}
-          </div>
-        ) : null}
-        {label ? (
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              width: W,
-              top: top + inkH + labelGap,
-              textAlign: "center",
-              fontFamily: onest.fontFamily,
-              fontWeight: 400,
-              fontSize: labelSize,
-              lineHeight: 1.2,
-              letterSpacing: "-0.01em",
-              color: c.ink,
-              opacity: labelP,
-              transform: `translateY(${((1 - labelP) * labelSize * 0.6).toFixed(2)}px)`,
-            }}
-          >
-            {label}
-          </div>
-        ) : null}
-      </div>
-      <Grain opacity={c.grain} />
+              {eyebrow}
+            </div>
+          ) : null}
+          {label ? (
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                width: W,
+                top: top + inkH + labelGap,
+                textAlign: "center",
+                fontFamily,
+                fontWeight: 400,
+                fontSize: labelSize,
+                lineHeight: 1.2,
+                letterSpacing: "-0.01em",
+                color: fg,
+                opacity: labelP,
+                transform: `translateY(${((1 - labelP) * labelSize * 0.6).toFixed(2)}px)`,
+              }}
+            >
+              {label}
+            </div>
+          ) : null}
+        </div>
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

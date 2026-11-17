@@ -1,8 +1,28 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const stockScrubConfig: ComponentConfig = {
   componentName: "StockScrub",
   importPath: "@/components/remocn/stock-scrub",
+  lists: {
+    lines: {
+      default: [
+        "Every tick, live.",
+        "Drag through the day.",
+        "Zoom out to the year.",
+        "Buy in two taps.",
+      ],
+      description: "Lines",
+      min: 4,
+      max: 4,
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -12,11 +32,6 @@ export const stockScrubConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     ticker: {
       type: "text-content",
@@ -28,6 +43,23 @@ export const stockScrubConfig: ComponentConfig = {
       default: "remocn Inc.",
       description: "Name",
     },
+    ctaLabel: {
+      type: "text-content",
+      default: "Buy",
+      description: "Buy button",
+    },
+    orderLabel: {
+      type: "text-content",
+      default: "Review order",
+      description: "Order button",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Geist" }),
     speed: {
       type: "number",
       default: 1,

@@ -1,8 +1,20 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const monoSettleConfig: ComponentConfig = {
   componentName: "MonoSettle",
   importPath: "@/components/remocn/mono-settle",
+  lists: {
+    lines: {
+      default: ["From your editor", "to the edit."],
+      description: "Lines",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -18,6 +30,26 @@ export const monoSettleConfig: ComponentConfig = {
       default: "the edit.",
       description: "Highlight",
     },
+    settleAt: {
+      type: "number",
+      default: 36,
+      min: 0,
+      max: 90,
+      step: 1,
+      description: "Settle at (frame)",
+      hiddenFromList: false,
+    },
+    sweep: {
+      type: "number",
+      default: 26,
+      min: 0,
+      max: 60,
+      step: 1,
+      description: "Sweep (frames)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Geist" }),
     speed: {
       type: "number",
       default: 1,

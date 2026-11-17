@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const fileDropzoneConfig: ComponentConfig = {
   componentName: "FileDropzone",
@@ -13,11 +20,6 @@ export const fileDropzoneConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     title: {
       type: "text-content",
       default: "Upload files",
@@ -28,6 +30,28 @@ export const fileDropzoneConfig: ComponentConfig = {
       default: "Research",
       description: "Destination",
     },
+    prompt: {
+      type: "text-content",
+      default: "Drop files here or",
+      description: "Prompt",
+    },
+    releaseLabel: {
+      type: "text-content",
+      default: "Release to upload",
+      description: "Release label",
+    },
+    hint: {
+      type: "text-content",
+      default: "PDF, PNG or CSV, up to 50 MB",
+      description: "Hint",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Geist" }),
     speed: {
       type: "number",
       default: 1,

@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/SchibstedGrotesk";
+import type React from "react";
 import { useId } from "react";
 import {
   AbsoluteFill,
@@ -34,6 +35,21 @@ export interface GrowthLineProps {
   /** How hard the curve bends upward: 2 = gentle, 6 = hockey stick. */
   steepness?: number;
   accent?: string;
+  /** Color of the value and milestone labels; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Schibsted Grotesk by default. */
+  fontFamily?: string;
+  /** Weight of the value. */
+  fontWeight?: number;
+  /** Width of the curve, in pixels at 720p. */
+  strokeWidth?: number;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -135,19 +151,44 @@ function parseValue(v: string) {
 
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function GrowthLine({
   value = "100k",
   label = "creators in the first year",
   milestones = DEFAULT_MILESTONES,
   steepness = 4.6,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  fontWeight = 400,
+  strokeWidth = 3,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: GrowthLineProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const u = height / 720;
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   // World: the full curve as it sits in the final, pulled-back frame.
@@ -257,7 +298,13 @@ export function GrowthLine({
   const valueSize = 128 * u;
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? p.bg),
+        overflow: "hidden",
+      }}
+    >
       {/* depth: a sparse dot plane that drifts slower than the line */}
       <AbsoluteFill
         style={{
@@ -278,230 +325,232 @@ export function GrowthLine({
         }}
       />
 
-      <svg
-        width={width}
-        height={height}
-        style={{ position: "absolute", inset: 0, opacity: enter }}
-        aria-hidden
-      >
-        <defs>
-          <linearGradient
-            id={`${id}s`}
-            gradientUnits="userSpaceOnUse"
-            x1={pts[0][0]}
-            y1={pts[0][1]}
-            x2={tipX}
-            y2={tipY}
-          >
-            <stop offset="0" stopColor={p.line[0]} stopOpacity={p.tail} />
-            <stop offset="0.42" stopColor={p.line[1]} stopOpacity={0.9} />
-            <stop offset="0.86" stopColor={p.line[2]} stopOpacity={1} />
-            <stop offset="1" stopColor={p.line[3]} stopOpacity={1} />
-          </linearGradient>
-          {/* area: the same palette left to right, faded out toward the axis */}
-          <linearGradient
-            id={`${id}f`}
-            gradientUnits="userSpaceOnUse"
-            x1={pts[0][0]}
-            y1={0}
-            x2={tipX}
-            y2={0}
-          >
-            <stop offset="0" stopColor={p.line[0]} />
-            <stop offset="0.5" stopColor={p.line[1]} />
-            <stop offset="1" stopColor={p.line[2]} />
-          </linearGradient>
-          <linearGradient
-            id={`${id}v`}
-            gradientUnits="userSpaceOnUse"
-            x1={0}
-            y1={Math.min(tipY, syTop)}
-            x2={0}
+      <ScaleLayer scale={scale}>
+        <svg
+          width={width}
+          height={height}
+          style={{ position: "absolute", inset: 0, opacity: enter }}
+          aria-hidden
+        >
+          <defs>
+            <linearGradient
+              id={`${id}s`}
+              gradientUnits="userSpaceOnUse"
+              x1={pts[0][0]}
+              y1={pts[0][1]}
+              x2={tipX}
+              y2={tipY}
+            >
+              <stop offset="0" stopColor={p.line[0]} stopOpacity={p.tail} />
+              <stop offset="0.42" stopColor={p.line[1]} stopOpacity={0.9} />
+              <stop offset="0.86" stopColor={p.line[2]} stopOpacity={1} />
+              <stop offset="1" stopColor={p.line[3]} stopOpacity={1} />
+            </linearGradient>
+            {/* area: the same palette left to right, faded out toward the axis */}
+            <linearGradient
+              id={`${id}f`}
+              gradientUnits="userSpaceOnUse"
+              x1={pts[0][0]}
+              y1={0}
+              x2={tipX}
+              y2={0}
+            >
+              <stop offset="0" stopColor={p.line[0]} />
+              <stop offset="0.5" stopColor={p.line[1]} />
+              <stop offset="1" stopColor={p.line[2]} />
+            </linearGradient>
+            <linearGradient
+              id={`${id}v`}
+              gradientUnits="userSpaceOnUse"
+              x1={0}
+              y1={Math.min(tipY, syTop)}
+              x2={0}
+              y2={sy0}
+            >
+              <stop offset="0" stopColor="#fff" stopOpacity={p.fill} />
+              <stop offset="1" stopColor="#fff" stopOpacity={0} />
+            </linearGradient>
+            <mask id={`${id}m`} maskUnits="userSpaceOnUse">
+              <rect
+                x={0}
+                y={Math.min(tipY, syTop) - 10}
+                width={width}
+                height={height * 4}
+                fill={`url(#${id}v)`}
+              />
+            </mask>
+            <radialGradient id={`${id}h`}>
+              <stop offset="0" stopColor={p.line[2]} stopOpacity={0.3} />
+              <stop offset="1" stopColor={p.line[2]} stopOpacity={0} />
+            </radialGradient>
+          </defs>
+
+          {/* hairline axes */}
+          <line
+            x1={sx0}
+            y1={sy0}
+            x2={sxr}
             y2={sy0}
-          >
-            <stop offset="0" stopColor="#fff" stopOpacity={p.fill} />
-            <stop offset="1" stopColor="#fff" stopOpacity={0} />
-          </linearGradient>
-          <mask id={`${id}m`} maskUnits="userSpaceOnUse">
-            <rect
-              x={0}
-              y={Math.min(tipY, syTop) - 10}
-              width={width}
-              height={height * 4}
-              fill={`url(#${id}v)`}
-            />
-          </mask>
-          <radialGradient id={`${id}h`}>
-            <stop offset="0" stopColor={p.line[2]} stopOpacity={0.3} />
-            <stop offset="1" stopColor={p.line[2]} stopOpacity={0} />
-          </radialGradient>
-        </defs>
+            stroke={p.axis}
+            strokeWidth={Math.max(1, u)}
+          />
+          <line
+            x1={sx0}
+            y1={sy0}
+            x2={sx0}
+            y2={syTop}
+            stroke={p.axis}
+            strokeWidth={Math.max(1, u)}
+          />
 
-        {/* hairline axes */}
-        <line
-          x1={sx0}
-          y1={sy0}
-          x2={sxr}
-          y2={sy0}
-          stroke={p.axis}
-          strokeWidth={Math.max(1, u)}
-        />
-        <line
-          x1={sx0}
-          y1={sy0}
-          x2={sx0}
-          y2={syTop}
-          stroke={p.axis}
-          strokeWidth={Math.max(1, u)}
-        />
+          <path d={fillD} fill={`url(#${id}f)`} mask={`url(#${id}m)`} />
+          <path
+            d={d}
+            fill="none"
+            stroke={`url(#${id}s)`}
+            strokeWidth={strokeWidth * u}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
 
-        <path d={fillD} fill={`url(#${id}f)`} mask={`url(#${id}m)`} />
-        <path
-          d={d}
-          fill="none"
-          stroke={`url(#${id}s)`}
-          strokeWidth={3 * u}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+          {/* milestones */}
+          {marks.map((m) => {
+            const [mx, my] = proj(...world(m.at));
+            const reach = reachFrame(m.at);
+            const pop = spring({
+              frame: t - reach,
+              fps,
+              config: { damping: 13, stiffness: 190, mass: 0.6 },
+            });
+            if (t < reach) return null;
+            return (
+              <g key={m.label}>
+                <circle
+                  cx={mx}
+                  cy={my}
+                  r={5.5 * u * (0.6 + 0.4 * pop)}
+                  fill={p.bg}
+                  stroke={accent}
+                  strokeWidth={2.2 * u}
+                  opacity={Math.min(1, pop * 1.5)}
+                />
+              </g>
+            );
+          })}
 
-        {/* milestones */}
+          {/* tip */}
+          <circle cx={tipX} cy={tipY} r={18 * u} fill={`url(#${id}h)`} />
+          <circle
+            cx={tipX}
+            cy={tipY}
+            r={lerp(6, 40, ring) * u}
+            fill="none"
+            stroke={p.line[2]}
+            strokeWidth={1.5 * u}
+            opacity={t >= HIT ? (1 - ring) * 0.7 : 0}
+          />
+          <circle cx={tipX} cy={tipY} r={5 * u} fill={p.tip} />
+          <circle cx={tipX} cy={tipY} r={1.8 * u} fill={p.bg} opacity={0.9} />
+        </svg>
+
+        {/* milestone labels: screen-space type, upper-left of the dot */}
         {marks.map((m) => {
           const [mx, my] = proj(...world(m.at));
           const reach = reachFrame(m.at);
-          const pop = spring({
-            frame: t - reach,
-            fps,
-            config: { damping: 13, stiffness: 190, mass: 0.6 },
+          const a = interpolate(t, [reach + 1, reach + 14], [0, 1], {
+            ...CLAMP,
+            easing: EASE_OUT,
           });
-          if (t < reach) return null;
+          // labels quiet down once the camera pulls back so the value owns the frame
+          const quiet = interpolate(t, [HIT - 6, HIT + 14], [1, 0.55], CLAMP);
           return (
-            <g key={m.label}>
-              <circle
-                cx={mx}
-                cy={my}
-                r={5.5 * u * (0.6 + 0.4 * pop)}
-                fill={p.bg}
-                stroke={accent}
-                strokeWidth={2.2 * u}
-                opacity={Math.min(1, pop * 1.5)}
-              />
-            </g>
+            <div
+              key={m.label}
+              style={{
+                position: "absolute",
+                left: mx - 200 * u,
+                top: my - 46 * u,
+                width: 200 * u + 6 * u,
+                textAlign: "right",
+                fontFamily,
+                fontWeight: 500,
+                fontSize: 17 * u,
+                letterSpacing: "-0.01em",
+                color: fg,
+                opacity: a * quiet,
+                transform: `translateY(${(1 - a) * 10 * u}px)`,
+                fontVariantNumeric: "tabular-nums",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {m.label}
+            </div>
           );
         })}
 
-        {/* tip */}
-        <circle cx={tipX} cy={tipY} r={18 * u} fill={`url(#${id}h)`} />
-        <circle
-          cx={tipX}
-          cy={tipY}
-          r={lerp(6, 40, ring) * u}
-          fill="none"
-          stroke={p.line[2]}
-          strokeWidth={1.5 * u}
-          opacity={t >= HIT ? (1 - ring) * 0.7 : 0}
-        />
-        <circle cx={tipX} cy={tipY} r={5 * u} fill={p.tip} />
-        <circle cx={tipX} cy={tipY} r={1.8 * u} fill={p.bg} opacity={0.9} />
-      </svg>
-
-      {/* milestone labels: screen-space type, upper-left of the dot */}
-      {marks.map((m) => {
-        const [mx, my] = proj(...world(m.at));
-        const reach = reachFrame(m.at);
-        const a = interpolate(t, [reach + 1, reach + 14], [0, 1], {
-          ...CLAMP,
-          easing: EASE_OUT,
-        });
-        // labels quiet down once the camera pulls back so the value owns the frame
-        const quiet = interpolate(t, [HIT - 6, HIT + 14], [1, 0.55], CLAMP);
-        return (
+        {count !== null && (
           <div
-            key={m.label}
             style={{
               position: "absolute",
-              left: mx - 200 * u,
-              top: my - 46 * u,
-              width: 200 * u + 6 * u,
-              textAlign: "right",
-              fontFamily: sans,
-              fontWeight: 500,
-              fontSize: 17 * u,
+              left: tipX + 14 * u,
+              top: tipY - 34 * u,
+              fontFamily,
+              fontWeight: 400,
+              fontSize: 16 * u,
               letterSpacing: "-0.01em",
-              color: p.fg,
-              opacity: a * quiet,
-              transform: `translateY(${(1 - a) * 10 * u}px)`,
+              color: p.muted,
+              fontVariantNumeric: "tabular-nums",
+              opacity: countO,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {count.toLocaleString("en-US")}
+          </div>
+        )}
+
+        {/* the value lands at the tip */}
+        <div
+          style={{
+            position: "absolute",
+            right: width - tipX + 78 * u,
+            top: tipY - 16 * u,
+            textAlign: "right",
+            opacity: hitO,
+            transform: `translateY(${(1 - hit) * 26 * u}px) scale(${1.06 - 0.06 * hit})`,
+            transformOrigin: "100% 0%",
+          }}
+        >
+          <div
+            style={{
+              fontFamily,
+              fontWeight,
+              fontSize: valueSize,
+              lineHeight: 0.9,
+              letterSpacing: "-0.05em",
+              color: fg,
               fontVariantNumeric: "tabular-nums",
               whiteSpace: "nowrap",
             }}
           >
-            {m.label}
+            {value}
           </div>
-        );
-      })}
-
-      {count !== null && (
-        <div
-          style={{
-            position: "absolute",
-            left: tipX + 14 * u,
-            top: tipY - 34 * u,
-            fontFamily: sans,
-            fontWeight: 400,
-            fontSize: 16 * u,
-            letterSpacing: "-0.01em",
-            color: p.muted,
-            fontVariantNumeric: "tabular-nums",
-            opacity: countO,
-            whiteSpace: "nowrap",
-          }}
-        >
-          {count.toLocaleString("en-US")}
+          <div
+            style={{
+              marginTop: 14 * u,
+              fontFamily,
+              fontWeight: 400,
+              fontSize: 20 * u,
+              letterSpacing: "-0.01em",
+              color: p.muted,
+              opacity: lab,
+              transform: `translateY(${(1 - lab) * 10 * u}px)`,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {label}
+          </div>
         </div>
-      )}
-
-      {/* the value lands at the tip */}
-      <div
-        style={{
-          position: "absolute",
-          right: width - tipX + 78 * u,
-          top: tipY - 16 * u,
-          textAlign: "right",
-          opacity: hitO,
-          transform: `translateY(${(1 - hit) * 26 * u}px) scale(${1.06 - 0.06 * hit})`,
-          transformOrigin: "100% 0%",
-        }}
-      >
-        <div
-          style={{
-            fontFamily: sans,
-            fontWeight: 400,
-            fontSize: valueSize,
-            lineHeight: 0.9,
-            letterSpacing: "-0.05em",
-            color: p.fg,
-            fontVariantNumeric: "tabular-nums",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {value}
-        </div>
-        <div
-          style={{
-            marginTop: 14 * u,
-            fontFamily: sans,
-            fontWeight: 400,
-            fontSize: 20 * u,
-            letterSpacing: "-0.01em",
-            color: p.muted,
-            opacity: lab,
-            transform: `translateY(${(1 - lab) * 10 * u}px)`,
-            whiteSpace: "nowrap",
-          }}
-        >
-          {label}
-        </div>
-      </div>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
@@ -509,7 +558,7 @@ export function GrowthLine({
           opacity: 0.7,
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

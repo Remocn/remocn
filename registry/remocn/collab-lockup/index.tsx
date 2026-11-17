@@ -31,6 +31,22 @@ export interface CollabLockupProps {
   joiner?: "×" | "&";
   caption?: string;
   accent?: string;
+  /** Color of the two names; overrides the theme ink. */
+  ink?: string;
+  /** Background fill under the horizon arc; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the names and caption. Load it yourself; Manrope by default. */
+  fontFamily?: string;
+  /** Weight of the two names. */
+  fontWeight?: number;
+  /** Motion trail behind each name as it slides in. */
+  trail?: boolean;
+  /** Size of the lockup, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -179,11 +195,15 @@ function Side({
   logo,
   size,
   color,
+  fontFamily,
+  fontWeight,
 }: {
   name: string;
   logo: React.ReactNode;
   size: number;
   color: string;
+  fontFamily: string;
+  fontWeight: number;
 }) {
   if (isRemocn(name) && !logo) {
     return <RemocnLogo fontSize={size} color={color} />;
@@ -210,8 +230,8 @@ function Side({
       ) : null}
       <span
         style={{
-          fontFamily: sans,
-          fontWeight: 500,
+          fontFamily,
+          fontWeight,
           fontSize: size,
           lineHeight: 1,
           letterSpacing: `${TRACK}em`,
@@ -224,6 +244,22 @@ function Side({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function CollabLockup({
   left = DEFAULT_LEFT,
   right = DEFAULT_RIGHT,
@@ -232,13 +268,23 @@ export function CollabLockup({
   joiner = "×",
   caption = "Launch videos, rendered from every Kitebase workspace.",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  fontWeight = 500,
+  trail = true,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: CollabLockupProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const u = H / 720;
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
+  const stage = background ?? c.bg;
 
   const joinerEm = joiner === "&" ? 0.62 : 0.42;
   const joinerScale = 1.7;
@@ -258,9 +304,7 @@ export function CollabLockup({
   const lLogo = leftLogo ?? null;
   const rLogo =
     rightLogo ??
-    (right === DEFAULT_RIGHT ? (
-      <KiteMark size={markSize} color={c.fg} />
-    ) : null);
+    (right === DEFAULT_RIGHT ? <KiteMark size={markSize} color={fg} /> : null);
 
   const glide = (start: number) => (frame: number) =>
     interpolate(frame, [start, start + 26], [0, 1], {
@@ -312,11 +356,13 @@ export function CollabLockup({
         name={side === "l" ? left : right}
         logo={side === "l" ? lLogo : rLogo}
         size={N}
-        color={c.fg}
+        color={fg}
+        fontFamily={fontFamily}
+        fontWeight={fontWeight}
       />
     );
     const speedPx = Math.abs(v);
-    const ghosts = speedPx > 2 * u ? [1, 2, 3] : [];
+    const ghosts = trail && speedPx > 2 * u ? [1, 2, 3] : [];
     return (
       <div
         style={{
@@ -355,107 +401,114 @@ export function CollabLockup({
   const jr = (1 - drop) * (joiner === "×" ? -45 : -10);
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{
+        background: stage === "transparent" ? undefined : stage,
+        overflow: "hidden",
+      }}
+    >
       <AbsoluteFill
         style={{ background: ground, opacity: 0.25 + 0.75 * dawn }}
       />
-      <AbsoluteFill
-        style={{
-          transform: `scale(${1 + push * 0.03})`,
-          transformOrigin: `50% ${(baseline / H) * 100}%`,
-        }}
-      >
-        <div
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: H - baseline - N * (1 - MANROPE_BASELINE),
-            display: "flex",
-            justifyContent: "center",
+            transform: `scale(${1 + push * 0.03})`,
+            transformOrigin: `50% ${(baseline / H) * 100}%`,
           }}
         >
-          <div
-            style={{
-              position: "relative",
-              display: "flex",
-              alignItems: "baseline",
-              gap,
-            }}
-          >
-            {sideLayer("l")}
-            {joiner === "&" ? (
-              <span
-                style={{
-                  fontFamily: serif,
-                  fontStyle: "italic",
-                  fontWeight: 400,
-                  fontSize: J,
-                  lineHeight: 0.8,
-                  color: accent,
-                  opacity: dropIn,
-                  display: "inline-block",
-                  transform: `translateY(${jy + J * 0.1}px) rotate(${jr}deg)`,
-                  transformOrigin: "50% 70%",
-                }}
-              >
-                &amp;
-              </span>
-            ) : (
-              <svg
-                width={N * 0.7}
-                height={N * 0.7}
-                viewBox="0 0 100 100"
-                aria-hidden
-                style={{
-                  alignSelf: "baseline",
-                  opacity: dropIn,
-                  overflow: "visible",
-                  transform: `translateY(${jy - N * 0.01}px) rotate(${jr}deg)`,
-                }}
-              >
-                <path d="M8 18 L18 8 L92 82 L82 92 Z" fill={accent} />
-                <path d="M82 8 L92 18 L18 92 L8 82 Z" fill={accent} />
-              </svg>
-            )}
-            {sideLayer("r")}
-          </div>
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: (W - lockupW) / 2,
-            width: lockupW,
-            top: baseline + N * 0.3,
-            height: Math.max(1, u),
-            background: c.rule,
-            transform: `scaleX(${rule})`,
-          }}
-        />
-        {caption ? (
           <div
             style={{
               position: "absolute",
               left: 0,
               right: 0,
-              top: baseline + N * 0.3 + 30 * u,
-              textAlign: "center",
-              fontFamily: sans,
-              fontWeight: 500,
-              fontSize: 21 * u,
-              lineHeight: 1.2,
-              letterSpacing: "-0.01em",
-              color: c.muted,
-              opacity: cap,
-              transform: `translateY(${(1 - cap) * 12 * u}px)`,
-              whiteSpace: "nowrap",
+              bottom: H - baseline - N * (1 - MANROPE_BASELINE),
+              display: "flex",
+              justifyContent: "center",
             }}
           >
-            {caption}
+            <div
+              style={{
+                position: "relative",
+                display: "flex",
+                alignItems: "baseline",
+                gap,
+              }}
+            >
+              {sideLayer("l")}
+              {joiner === "&" ? (
+                <span
+                  style={{
+                    fontFamily: serif,
+                    fontStyle: "italic",
+                    fontWeight: 400,
+                    fontSize: J,
+                    lineHeight: 0.8,
+                    color: accent,
+                    opacity: dropIn,
+                    display: "inline-block",
+                    transform: `translateY(${jy + J * 0.1}px) rotate(${jr}deg)`,
+                    transformOrigin: "50% 70%",
+                  }}
+                >
+                  &amp;
+                </span>
+              ) : (
+                <svg
+                  width={N * 0.7}
+                  height={N * 0.7}
+                  viewBox="0 0 100 100"
+                  aria-hidden
+                  style={{
+                    alignSelf: "baseline",
+                    opacity: dropIn,
+                    overflow: "visible",
+                    transform: `translateY(${jy - N * 0.01}px) rotate(${jr}deg)`,
+                  }}
+                >
+                  <path d="M8 18 L18 8 L92 82 L82 92 Z" fill={accent} />
+                  <path d="M82 8 L92 18 L18 92 L8 82 Z" fill={accent} />
+                </svg>
+              )}
+              {sideLayer("r")}
+            </div>
           </div>
-        ) : null}
-      </AbsoluteFill>
-      <Grain opacity={c.grain} />
+          <div
+            style={{
+              position: "absolute",
+              left: (W - lockupW) / 2,
+              width: lockupW,
+              top: baseline + N * 0.3,
+              height: Math.max(1, u),
+              background: c.rule,
+              transform: `scaleX(${rule})`,
+            }}
+          />
+          {caption ? (
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: baseline + N * 0.3 + 30 * u,
+                textAlign: "center",
+                fontFamily,
+                fontWeight: 500,
+                fontSize: 21 * u,
+                lineHeight: 1.2,
+                letterSpacing: "-0.01em",
+                color: c.muted,
+                opacity: cap,
+                transform: `translateY(${(1 - cap) * 12 * u}px)`,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {caption}
+            </div>
+          ) : null}
+        </AbsoluteFill>
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

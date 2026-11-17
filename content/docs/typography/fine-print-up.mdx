@@ -63,14 +63,43 @@ Each line is set big in turn with a star mark, then shrinks and travels down to 
       description: "Final big line shown after the fine print is built.",
     },
     {
+      name: "travel",
+      type: "number",
+      default: "26",
+      description: "Frames each word takes to travel from the fine print up to the headline.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Color of the star marks; defaults to the theme accent.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Stage fill color; pass \"transparent\" to overlay your own footage.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Gloock\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

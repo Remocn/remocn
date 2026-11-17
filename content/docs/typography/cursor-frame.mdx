@@ -66,6 +66,46 @@ Words fade in, a cursor presses and drags a selection frame over them, then resi
       description: "Accent color (any valid CSS color)",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Geist\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "400",
+      description: "Weight of the title.",
+    },
+    {
+      name: "showCursor",
+      type: "boolean",
+      default: "true",
+      description: "Draws the mouse cursor that drags the frame.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
       name: "theme",
       type: "\"dark\" | \"light\"",
       default: "\"light\"",

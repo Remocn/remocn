@@ -3,6 +3,7 @@
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import { loadFont as loadMono } from "@remotion/google-fonts/JetBrainsMono";
 import { loadFont as loadDisplay } from "@remotion/google-fonts/SchibstedGrotesk";
+import type React from "react";
 import { useId } from "react";
 import {
   AbsoluteFill,
@@ -48,7 +49,22 @@ export interface SpeedRampWordProps {
   keyWord?: string;
   /** Show the small timecode and speed readout that slow down with the shot. */
   hud?: boolean;
+  /** Trailing copies of the key word that gather while it slows. */
+  ghosts?: boolean;
+  /** Weight of the phrase; the key word keeps its serif italic. */
+  fontWeight?: number;
   accent?: string;
+  /** Text color of the phrase; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the phrase; the key word keeps its serif italic. Load it yourself; Schibsted Grotesk by default. */
+  fontFamily?: string;
+  grain?: boolean;
+  /** Size of the phrase and readout, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -170,18 +186,43 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function SpeedRampWord({
   text = "Everything changes in an instant.",
   keyWord = "instant",
   hud = true,
+  ghosts: showGhosts = true,
+  fontWeight = 500,
   accent = "#3B5BFD",
+  ink: textInk,
+  background,
+  fontFamily = display,
+  grain = true,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: SpeedRampWordProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
   const c = THEMES[theme];
+  const fg = textInk ?? c.fg;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const blurId = `srw-blur-${uid}`;
   const ghostBlurId = `srw-ghost-${uid}`;
@@ -253,8 +294,8 @@ export function SpeedRampWord({
   const restDefocus = 1.6 * u * slow;
 
   const textStyle = {
-    fontFamily: display,
-    fontWeight: 500,
+    fontFamily,
+    fontWeight,
     fontSize: fs,
     letterSpacing: "-0.035em",
     lineHeight: 1,
@@ -275,7 +316,13 @@ export function SpeedRampWord({
   const sharp = blur < 0.3;
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? c.bg),
+        overflow: "hidden",
+      }}
+    >
       <svg width={0} height={0} style={{ position: "absolute" }} aria-hidden>
         <filter
           id={blurId}
@@ -299,131 +346,142 @@ export function SpeedRampWord({
         </filter>
       </svg>
 
-      <AbsoluteFill
-        style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
-      >
-        {/* ghosts sit under the phrase */}
-        {ghostX.map((gx, k) => {
-          const gap = Math.abs(gx - anchor);
-          const merge = interpolate(gap, [2 * u, 26 * u], [0, 1], CLAMP);
-          const o = [0.3, 0.2, 0.12][k] * ghostEnv * merge;
-          if (o < 0.004) return null;
-          return (
-            <div
-              key={k}
-              style={{
-                position: "absolute",
-                left: gx,
-                top: H / 2 + drift,
-                transform: "translate(-50%, -52%)",
-                opacity: o,
-                color: ghostColor,
-                filter: `url(#${ghostBlurId})`,
-                ...keyStyle,
-              }}
-            >
-              {key}
-            </div>
-          );
-        })}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
+        >
+          {/* ghosts sit under the phrase */}
+          {ghostX.map((gx, k) => {
+            if (!showGhosts) return null;
+            const gap = Math.abs(gx - anchor);
+            const merge = interpolate(gap, [2 * u, 26 * u], [0, 1], CLAMP);
+            const o = [0.3, 0.2, 0.12][k] * ghostEnv * merge;
+            if (o < 0.004) return null;
+            return (
+              <div
+                key={k}
+                style={{
+                  position: "absolute",
+                  left: gx,
+                  top: H / 2 + drift,
+                  transform: "translate(-50%, -52%)",
+                  opacity: o,
+                  color: ghostColor,
+                  filter: `url(#${ghostBlurId})`,
+                  ...keyStyle,
+                }}
+              >
+                {key}
+              </div>
+            );
+          })}
 
-        <AbsoluteFill style={{ filter: sharp ? undefined : `url(#${blurId})` }}>
-          <div style={{ position: "absolute", left: anchor, top: H / 2 }}>
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                top: 0,
-                transform: `translate(-50%, -52%) translateY(${drift}px)`,
-                ...textStyle,
-              }}
-            >
-              <span style={{ position: "relative", display: "inline-block" }}>
-                <span
-                  style={{
-                    position: "absolute",
-                    right: "100%",
-                    top: 0,
-                    color: c.fg,
-                    opacity: restDim,
-                    filter:
-                      restDefocus > 0.05 ? `blur(${restDefocus}px)` : undefined,
-                  }}
-                >
-                  {before}
-                </span>
-                <span
-                  style={{
-                    position: "relative",
-                    display: "inline-block",
-                    padding: `0 ${0.06 * fs}px`,
-                    ...keyStyle,
-                  }}
-                >
-                  <span style={{ color: c.fg, opacity: 1 - accentMix }}>
-                    {key}
+          <AbsoluteFill
+            style={{ filter: sharp ? undefined : `url(#${blurId})` }}
+          >
+            <div style={{ position: "absolute", left: anchor, top: H / 2 }}>
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  transform: `translate(-50%, -52%) translateY(${drift}px)`,
+                  ...textStyle,
+                }}
+              >
+                <span style={{ position: "relative", display: "inline-block" }}>
+                  <span
+                    style={{
+                      position: "absolute",
+                      right: "100%",
+                      top: 0,
+                      color: fg,
+                      opacity: restDim,
+                      filter:
+                        restDefocus > 0.05
+                          ? `blur(${restDefocus}px)`
+                          : undefined,
+                    }}
+                  >
+                    {before}
+                  </span>
+                  <span
+                    style={{
+                      position: "relative",
+                      display: "inline-block",
+                      padding: `0 ${0.06 * fs}px`,
+                      ...keyStyle,
+                    }}
+                  >
+                    <span style={{ color: fg, opacity: 1 - accentMix }}>
+                      {key}
+                    </span>
+                    <span
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        padding: `0 ${0.06 * fs}px`,
+                        backgroundImage: ink,
+                        WebkitBackgroundClip: "text",
+                        backgroundClip: "text",
+                        color: "transparent",
+                        opacity: accentMix,
+                      }}
+                    >
+                      {key}
+                    </span>
                   </span>
                   <span
                     style={{
                       position: "absolute",
-                      inset: 0,
-                      padding: `0 ${0.06 * fs}px`,
-                      backgroundImage: ink,
-                      WebkitBackgroundClip: "text",
-                      backgroundClip: "text",
-                      color: "transparent",
-                      opacity: accentMix,
+                      left: "100%",
+                      top: 0,
+                      color: fg,
+                      opacity: restDim,
+                      filter:
+                        restDefocus > 0.05
+                          ? `blur(${restDefocus}px)`
+                          : undefined,
                     }}
                   >
-                    {key}
+                    {after}
                   </span>
                 </span>
-                <span
-                  style={{
-                    position: "absolute",
-                    left: "100%",
-                    top: 0,
-                    color: c.fg,
-                    opacity: restDim,
-                    filter:
-                      restDefocus > 0.05 ? `blur(${restDefocus}px)` : undefined,
-                  }}
-                >
-                  {after}
-                </span>
-              </span>
+              </div>
             </div>
-          </div>
+          </AbsoluteFill>
         </AbsoluteFill>
-      </AbsoluteFill>
 
-      {hud && (
-        <div
-          style={{
-            position: "absolute",
-            left: 48 * u,
-            right: 48 * u,
-            bottom: 40 * u,
-            display: "flex",
-            justifyContent: "space-between",
-            fontFamily: mono,
-            fontWeight: 400,
-            fontSize: 14 * u,
-            letterSpacing: "0.02em",
-            fontVariantNumeric: "tabular-nums",
-            color: c.hud,
-          }}
-        >
-          <span>{timecode(tau)}</span>
-          <span
-            style={{ color: interpolateColors(slow, [0, 1], [c.hud, accent]) }}
+        {hud && (
+          <div
+            style={{
+              position: "absolute",
+              left: 48 * u,
+              right: 48 * u,
+              bottom: 40 * u,
+              display: "flex",
+              justifyContent: "space-between",
+              fontFamily: mono,
+              fontWeight: 400,
+              fontSize: 14 * u,
+              letterSpacing: "0.02em",
+              fontVariantNumeric: "tabular-nums",
+              color: c.hud,
+            }}
           >
-            {`${(rate(frame) * 100).toFixed(rate(frame) < 0.1 ? 1 : 0)}%`}
-          </span>
-        </div>
-      )}
+            <span>{timecode(tau)}</span>
+            <span
+              style={{
+                color: interpolateColors(slow, [0, 1], [c.hud, accent]),
+              }}
+            >
+              {`${(rate(frame) * 100).toFixed(rate(frame) < 0.1 ? 1 : 0)}%`}
+            </span>
+          </div>
+        )}
+      </ScaleLayer>
 
-      <Grain opacity={c.grain} />
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

@@ -1,8 +1,28 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const pricePageConfig: ComponentConfig = {
   componentName: "PricePage",
   importPath: "@/components/remocn/price-page",
+  lists: {
+    lines: {
+      default: [
+        "Starter, Pro, Team, Enterprise",
+        "Per seat, per month",
+        "Billed yearly, save 20%",
+        "Watermark on the free plan",
+        "Three exports a month",
+        "Overage fees may apply",
+        "Contact sales",
+      ],
+      description: "Lines",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -28,6 +48,17 @@ export const pricePageConfig: ComponentConfig = {
       default: "That’s the whole pricing page.",
       description: "Note",
     },
+    hold: {
+      type: "number",
+      default: 40,
+      min: 0,
+      max: 120,
+      step: 1,
+      description: "Hold before cuts (frames)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Albert Sans" }),
     speed: {
       type: "number",
       default: 1,

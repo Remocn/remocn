@@ -271,6 +271,47 @@ export interface CaretCollapseDemoProps {
   groundParams?: Partial<GradientParams>;
   groundB?: GshPresetId;
   groundParamsB?: Partial<GradientParams>;
+  /** Typeface for the label, heading and prompt. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Text color of the URL, heading and prompt; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of both gradient grounds; "transparent" drops it. */
+  background?: string;
+  /** Replaces the remocn mark next to the label. */
+  logo?: React.ReactNode;
+  /** Second line of the attachment chip in the prompt box. */
+  attachmentLabel?: string;
+  /** Mode pill under the prompt. */
+  modeLabel?: string;
+  /** Frames between words of the scene B heading. */
+  stagger?: number;
+  /** Size of the foreground in both scenes, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
+/** Solid stand-in for a gradient ground; nothing when "transparent". */
+function Fill({ background }: { background: string }) {
+  if (background === "transparent") return null;
+  return <AbsoluteFill style={{ background }} />;
 }
 
 const THEMES = {
@@ -411,14 +452,26 @@ function SceneA({
   palette,
   ground,
   groundParams,
+  fontFamily,
+  background,
+  logo,
+  fgScale,
+  delay,
+  speed,
 }: {
   url: string;
   label: string;
   palette: (typeof THEMES)["dark"];
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  fontFamily: string;
+  background?: string;
+  logo?: React.ReactNode;
+  fgScale: number;
+  delay: number;
+  speed: number;
 }) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const L = urlLayout(W, H, url);
   const typed = Math.floor(
@@ -432,85 +485,95 @@ function SceneA({
   const slash = url.indexOf("/");
   return (
     <AbsoluteFill>
-      <GshGround
-        preset={ground}
-        params={ground ? groundParams : { ...palette.groundA, ...groundParams }}
-        timeOffset={2}
-        timeScale={0.6}
-      />
-      <AbsoluteFill
-        style={{
-          transform: `scale(${push})`,
-          transformOrigin: `${L.caretX}px ${L.cy}px`,
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: L.cy - L.fs * 1.55,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: L.fs * 0.22,
-            opacity: lab,
-            transform: `translateY(${(1 - lab) * 12}px)`,
-            fontFamily: sans.fontFamily,
-            fontWeight: 400,
-            fontSize: Math.max(H * 0.028, L.fs * 0.3),
-            color: palette.muted,
-          }}
-        >
-          <RemocnLogo
-            fontSize={Math.max(H * 0.03, L.fs * 0.32)}
-            color={palette.ink}
-          />
-          <span>{label}</span>
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: L.left,
-            top: L.cy - L.fs * 0.6,
-            height: L.fs * 1.2,
-            lineHeight: `${L.fs * 1.2}px`,
-            fontFamily: mono.fontFamily,
-            fontWeight: 300,
-            fontSize: L.fs,
-            letterSpacing: 0,
-            whiteSpace: "pre",
-            color: palette.ink,
-          }}
-        >
-          {url.split("").map((ch, i) => (
-            <span
-              key={`${ch}-${i}`}
-              style={{
-                color:
-                  i >= typed
-                    ? "transparent"
-                    : slash >= 0 && i >= slash
-                      ? palette.caret
-                      : palette.ink,
-              }}
-            >
-              {ch}
-            </span>
-          ))}
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: L.left + typed * MONO_ADVANCE * L.fs + L.fs * 0.08,
-            top: L.cy - L.caretH / 2,
-            width: L.caretW,
-            height: L.caretH,
-            borderRadius: L.caretW,
-            backgroundColor: palette.caret,
-          }}
+      {background === undefined ? (
+        <GshGround
+          preset={ground}
+          params={
+            ground ? groundParams : { ...palette.groundA, ...groundParams }
+          }
+          timeOffset={2}
+          timeScale={0.6}
         />
-      </AbsoluteFill>
+      ) : (
+        <Fill background={background} />
+      )}
+      <ScaleLayer scale={fgScale}>
+        <AbsoluteFill
+          style={{
+            transform: `scale(${push})`,
+            transformOrigin: `${L.caretX}px ${L.cy}px`,
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: L.cy - L.fs * 1.55,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: L.fs * 0.22,
+              opacity: lab,
+              transform: `translateY(${(1 - lab) * 12}px)`,
+              fontFamily,
+              fontWeight: 400,
+              fontSize: Math.max(H * 0.028, L.fs * 0.3),
+              color: palette.muted,
+            }}
+          >
+            {logo ?? (
+              <RemocnLogo
+                fontSize={Math.max(H * 0.03, L.fs * 0.32)}
+                color={palette.ink}
+              />
+            )}
+            <span>{label}</span>
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: L.left,
+              top: L.cy - L.fs * 0.6,
+              height: L.fs * 1.2,
+              lineHeight: `${L.fs * 1.2}px`,
+              fontFamily: mono.fontFamily,
+              fontWeight: 300,
+              fontSize: L.fs,
+              letterSpacing: 0,
+              whiteSpace: "pre",
+              color: palette.ink,
+            }}
+          >
+            {url.split("").map((ch, i) => (
+              <span
+                key={`${ch}-${i}`}
+                style={{
+                  color:
+                    i >= typed
+                      ? "transparent"
+                      : slash >= 0 && i >= slash
+                        ? palette.caret
+                        : palette.ink,
+                }}
+              >
+                {ch}
+              </span>
+            ))}
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: L.left + typed * MONO_ADVANCE * L.fs + L.fs * 0.08,
+              top: L.cy - L.caretH / 2,
+              width: L.caretW,
+              height: L.caretH,
+              borderRadius: L.caretW,
+              backgroundColor: palette.caret,
+            }}
+          />
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -548,6 +611,13 @@ function SceneB({
   palette,
   ground,
   groundParams,
+  fontFamily,
+  background,
+  attachmentLabel,
+  modeLabel,
+  stagger,
+  fgScale,
+  speed,
 }: {
   question: string;
   prompt: string;
@@ -555,8 +625,15 @@ function SceneB({
   palette: (typeof THEMES)["dark"];
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  fontFamily: string;
+  background?: string;
+  attachmentLabel: string;
+  modeLabel: string;
+  stagger: number;
+  fgScale: number;
+  speed: number;
 }) {
-  const frame = useCurrentFrame();
+  const frame = useCurrentFrame() * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const P = promptLayout(W, H);
   const s = P.s;
@@ -600,185 +677,196 @@ function SceneB({
   );
   return (
     <AbsoluteFill>
-      <GshGround
-        preset={ground}
-        params={ground ? groundParams : { ...palette.groundB, ...groundParams }}
-        timeOffset={5}
-        timeScale={0.6}
-      />
-      <AbsoluteFill
-        style={{
-          transform: `scale(${push})`,
-          transformOrigin: `${P.caretX}px ${P.caretY}px`,
-          fontFamily: sans.fontFamily,
-        }}
-      >
-        <div
+      {background === undefined ? (
+        <GshGround
+          preset={ground}
+          params={
+            ground ? groundParams : { ...palette.groundB, ...groundParams }
+          }
+          timeOffset={5}
+          timeScale={0.6}
+        />
+      ) : (
+        <Fill background={background} />
+      )}
+      <ScaleLayer scale={fgScale}>
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: P.cardLeft - 40 * s,
-            width: P.cardW + 80 * s,
-            top: P.cardTop - qfs * (P.tall ? 2.9 : 1.75),
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent: "center",
-            columnGap: "0.24em",
-            fontSize: qfs,
-            fontWeight: 300,
-            letterSpacing: "-0.035em",
-            lineHeight: 1.08,
-            color: palette.ink,
+            transform: `scale(${push})`,
+            transformOrigin: `${P.caretX}px ${P.caretY}px`,
+            fontFamily,
           }}
         >
-          {words.map((w, i) => {
-            const p = interpolate(
-              frame,
-              [B_BEATS.heading + i * 2, B_BEATS.heading + i * 2 + 13],
-              [0, 1],
-              { ...CLAMP, easing: TYPE_IN },
-            );
-            return (
-              <span
-                key={`${w}-${i}`}
-                style={{
-                  display: "inline-block",
-                  overflow: "hidden",
-                  padding: "0.04em 0.04em 0.14em",
-                  margin: "-0.04em -0.04em -0.14em",
-                }}
-              >
+          <div
+            style={{
+              position: "absolute",
+              left: P.cardLeft - 40 * s,
+              width: P.cardW + 80 * s,
+              top: P.cardTop - qfs * (P.tall ? 2.9 : 1.75),
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              columnGap: "0.24em",
+              fontSize: qfs,
+              fontWeight: 300,
+              letterSpacing: "-0.035em",
+              lineHeight: 1.08,
+              color: palette.ink,
+            }}
+          >
+            {words.map((w, i) => {
+              const p = interpolate(
+                frame,
+                [
+                  B_BEATS.heading + i * stagger,
+                  B_BEATS.heading + i * stagger + 13,
+                ],
+                [0, 1],
+                { ...CLAMP, easing: TYPE_IN },
+              );
+              return (
                 <span
+                  key={`${w}-${i}`}
                   style={{
                     display: "inline-block",
-                    transform: `translateY(${(1 - p) * 130}%)`,
+                    overflow: "hidden",
+                    padding: "0.04em 0.04em 0.14em",
+                    margin: "-0.04em -0.04em -0.14em",
                   }}
                 >
-                  {w}
+                  <span
+                    style={{
+                      display: "inline-block",
+                      transform: `translateY(${(1 - p) * 130}%)`,
+                    }}
+                  >
+                    {w}
+                  </span>
                 </span>
-              </span>
-            );
-          })}
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: P.cardLeft,
-            top: P.cardTop,
-            width: P.cardW,
-            padding: P.pad,
-            borderRadius: 24 * s,
-            backgroundColor: palette.card,
-            boxShadow: `inset 0 0 0 1px ${palette.hairline}, inset 0 1px 0 ${palette.highlight}, 0 1px 2px rgba(${palette.shadow},0.12), 0 12px 32px rgba(${palette.shadow},0.18), 0 40px 90px rgba(${palette.shadow},0.22)`,
-            backdropFilter: "blur(18px)",
-            display: "flex",
-            flexDirection: "column",
-            gap: 16 * s,
-          }}
-        >
+              );
+            })}
+          </div>
           <div
             style={{
-              alignSelf: "flex-start",
+              position: "absolute",
+              left: P.cardLeft,
+              top: P.cardTop,
+              width: P.cardW,
+              padding: P.pad,
+              borderRadius: 24 * s,
+              backgroundColor: palette.card,
+              boxShadow: `inset 0 0 0 1px ${palette.hairline}, inset 0 1px 0 ${palette.highlight}, 0 1px 2px rgba(${palette.shadow},0.12), 0 12px 32px rgba(${palette.shadow},0.18), 0 40px 90px rgba(${palette.shadow},0.22)`,
+              backdropFilter: "blur(18px)",
               display: "flex",
-              alignItems: "center",
-              gap: 8 * s,
-              height: P.chipH,
-              padding: `0 ${10 * s}px 0 ${6 * s}px`,
-              borderRadius: 12 * s,
-              backgroundColor: palette.chip,
-              boxShadow: `inset 0 0 0 1px ${palette.hairline}`,
-              fontSize: 15 * s,
-              color: palette.ink,
+              flexDirection: "column",
+              gap: 16 * s,
             }}
           >
             <div
               style={{
-                width: 28 * s,
-                height: 28 * s,
-                borderRadius: 8 * s,
-                backgroundColor: palette.caret,
+                alignSelf: "flex-start",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Icon d={ICONS.link} size={16 * s} color="#ffffff" />
-            </div>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                lineHeight: 1.15,
-              }}
-            >
-              <span>{url}</span>
-              <span style={{ color: palette.faint, fontSize: 12.5 * s }}>
-                Brand kit attached
-              </span>
-            </div>
-            <Icon d={ICONS.close} size={14 * s} color={palette.faint} />
-          </div>
-          <div
-            style={{
-              minHeight: P.fs * 1.38 * (P.tall ? 3 : 2),
-              fontSize: P.fs,
-              lineHeight: 1.38,
-              fontWeight: 400,
-              letterSpacing: "-0.01em",
-              color: palette.ink,
-            }}
-          >
-            {prompt.slice(0, typed)}
-            <span
-              style={{
-                display: "inline-block",
-                width: P.caretW,
-                height: P.caretH,
-                marginLeft: typed > 0 ? 2 * s : 0,
-                verticalAlign: "-0.2em",
-                borderRadius: P.caretW,
-                backgroundColor: palette.caret,
-                opacity: caretOn ? 1 : 0,
-              }}
-            />
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 * s }}>
-            <div
-              style={{
-                width: 36 * s,
-                height: 36 * s,
-                borderRadius: 999,
+                gap: 8 * s,
+                height: P.chipH,
+                padding: `0 ${10 * s}px 0 ${6 * s}px`,
+                borderRadius: 12 * s,
+                backgroundColor: palette.chip,
                 boxShadow: `inset 0 0 0 1px ${palette.hairline}`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                fontSize: 15 * s,
+                color: palette.ink,
               }}
             >
-              <Icon d={ICONS.plus} size={18 * s} color={palette.muted} />
+              <div
+                style={{
+                  width: 28 * s,
+                  height: 28 * s,
+                  borderRadius: 8 * s,
+                  backgroundColor: palette.caret,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Icon d={ICONS.link} size={16 * s} color="#ffffff" />
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  lineHeight: 1.15,
+                }}
+              >
+                <span>{url}</span>
+                <span style={{ color: palette.faint, fontSize: 12.5 * s }}>
+                  {attachmentLabel}
+                </span>
+              </div>
+              <Icon d={ICONS.close} size={14 * s} color={palette.faint} />
             </div>
-            {pill("Launch film", ICONS.spark)}
-            <div style={{ flex: 1 }} />
-            {pill("Build")}
-            <Icon d={ICONS.mic} size={20 * s} color={palette.muted} />
             <div
               style={{
-                width: 38 * s,
-                height: 38 * s,
-                marginLeft: 6 * s,
-                borderRadius: 11 * s,
-                backgroundColor: palette.caret,
-                opacity: 0.35 + armed * 0.65,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transform: `scale(${1 - Math.sin(Math.min(1, send) * Math.PI) * 0.12})`,
-                boxShadow: `0 6px 18px rgba(${palette.shadow},${0.25 * armed})`,
+                minHeight: P.fs * 1.38 * (P.tall ? 3 : 2),
+                fontSize: P.fs,
+                lineHeight: 1.38,
+                fontWeight: 400,
+                letterSpacing: "-0.01em",
+                color: palette.ink,
               }}
             >
-              <Icon d={ICONS.up} size={20 * s} color={palette.sendInk} />
+              {prompt.slice(0, typed)}
+              <span
+                style={{
+                  display: "inline-block",
+                  width: P.caretW,
+                  height: P.caretH,
+                  marginLeft: typed > 0 ? 2 * s : 0,
+                  verticalAlign: "-0.2em",
+                  borderRadius: P.caretW,
+                  backgroundColor: palette.caret,
+                  opacity: caretOn ? 1 : 0,
+                }}
+              />
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 * s }}>
+              <div
+                style={{
+                  width: 36 * s,
+                  height: 36 * s,
+                  borderRadius: 999,
+                  boxShadow: `inset 0 0 0 1px ${palette.hairline}`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Icon d={ICONS.plus} size={18 * s} color={palette.muted} />
+              </div>
+              {pill(modeLabel, ICONS.spark)}
+              <div style={{ flex: 1 }} />
+              {pill("Build")}
+              <Icon d={ICONS.mic} size={20 * s} color={palette.muted} />
+              <div
+                style={{
+                  width: 38 * s,
+                  height: 38 * s,
+                  marginLeft: 6 * s,
+                  borderRadius: 11 * s,
+                  backgroundColor: palette.caret,
+                  opacity: 0.35 + armed * 0.65,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transform: `scale(${1 - Math.sin(Math.min(1, send) * Math.PI) * 0.12})`,
+                  boxShadow: `0 6px 18px rgba(${palette.shadow},${0.25 * armed})`,
+                }}
+              >
+                <Icon d={ICONS.up} size={20 * s} color={palette.sendInk} />
+              </div>
             </div>
           </div>
-        </div>
-      </AbsoluteFill>
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -794,39 +882,73 @@ export function CaretCollapseDemo({
   groundParams,
   groundB,
   groundParamsB,
+  fontFamily = sans.fontFamily,
+  ink,
+  background,
+  logo,
+  attachmentLabel = "Brand kit attached",
+  modeLabel = "Launch film",
+  stagger = 2,
+  scale = 1,
+  delay = 0,
+  speed = 1,
 }: CaretCollapseDemoProps) {
   const base = THEMES[theme];
-  const palette = { ...base, caret: accent ?? base.caret };
+  const palette = {
+    ...base,
+    ink: ink ?? base.ink,
+    caret: accent ?? base.caret,
+  };
   const { width: W, height: H } = useVideoConfig();
   const A = urlLayout(W, H, url);
   const B = promptLayout(W, H);
+  // The caret handoff points live in frame space, so they follow the scaled scenes.
+  const at = (v: number) => (scale === 1 ? v : 0.5 + (v - 0.5) * scale);
+  const sz = (v: number) => (scale === 1 ? v : v * scale);
+  // Speed scales the series itself so the transition keeps pace with the scenes.
+  const len = (f: number) => Math.max(1, Math.round(f / speed));
   return (
-    <AbsoluteFill style={{ backgroundColor: palette.paper }}>
+    <AbsoluteFill
+      style={{
+        backgroundColor:
+          background === "transparent" ? undefined : palette.paper,
+      }}
+    >
       <TransitionSeries>
-        <TransitionSeries.Sequence durationInFrames={A_LEN}>
+        <TransitionSeries.Sequence durationInFrames={delay + len(A_LEN)}>
           <SceneA
             url={url}
             label={label}
             palette={palette}
             ground={ground}
             groundParams={groundParams}
+            fontFamily={fontFamily}
+            background={background}
+            logo={logo}
+            fgScale={scale}
+            delay={delay}
+            speed={speed}
           />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition
           presentation={caretCollapse({
             from: {
-              x: A.caretX / W,
-              y: A.cy / H,
-              h: A.caretH / H,
+              x: at(A.caretX / W),
+              y: at(A.cy / H),
+              h: sz(A.caretH / H),
             },
-            to: { x: B.caretX / W, y: B.caretY / H, h: B.caretH / H },
+            to: {
+              x: at(B.caretX / W),
+              y: at(B.caretY / H),
+              h: sz(B.caretH / H),
+            },
             paper: palette.paper,
             caret: palette.caret,
-            caretWidth: A.caretW,
+            caretWidth: sz(A.caretW),
           })}
-          timing={linearTiming({ durationInFrames: T_LEN })}
+          timing={linearTiming({ durationInFrames: len(T_LEN) })}
         />
-        <TransitionSeries.Sequence durationInFrames={B_LEN}>
+        <TransitionSeries.Sequence durationInFrames={len(B_LEN)}>
           <SceneB
             question={question}
             prompt={prompt}
@@ -834,6 +956,13 @@ export function CaretCollapseDemo({
             palette={palette}
             ground={groundB}
             groundParams={groundParamsB}
+            fontFamily={fontFamily}
+            background={background}
+            attachmentLabel={attachmentLabel}
+            modeLabel={modeLabel}
+            stagger={stagger}
+            fgScale={scale}
+            speed={speed}
           />
         </TransitionSeries.Sequence>
       </TransitionSeries>

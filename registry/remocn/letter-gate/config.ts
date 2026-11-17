@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const letterGateConfig: ComponentConfig = {
   componentName: "LetterGateDemo",
@@ -42,6 +49,28 @@ export const letterGateConfig: ComponentConfig = {
       type: "text-content",
       default: "Script",
       description: "Next label",
+    },
+    fontWeight: {
+      type: "number",
+      default: 400,
+      min: 300,
+      max: 400,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ground: groundControl("Ground A"),
+    groundB: groundControl("Ground B"),
+    ...sceneControls({ font: "Geist" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
+      hiddenFromList: false,
     },
   },
   durationInFrames: 118,

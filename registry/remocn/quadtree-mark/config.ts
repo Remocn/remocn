@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const quadtreeMarkConfig: ComponentConfig = {
   componentName: "QuadtreeMark",
@@ -13,16 +19,35 @@ export const quadtreeMarkConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     name: {
       type: "text-content",
       default: "emocn",
       description: "Name",
     },
+    stagger: {
+      type: "number",
+      default: 2.5,
+      min: 0,
+      max: 8,
+      step: 0.5,
+      description: "Letter stagger",
+      hiddenFromList: false,
+    },
+    depth: {
+      type: "number",
+      default: 6,
+      min: 3,
+      max: 6,
+      step: 1,
+      description: "Depth",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ grain: true }),
     speed: {
       type: "number",
       default: 1,

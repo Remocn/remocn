@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const quoteHeroConfig: ComponentConfig = {
   componentName: "QuoteHero",
@@ -27,6 +33,25 @@ export const quoteHeroConfig: ComponentConfig = {
       description: "Quote duration",
       hiddenFromList: false,
     },
+    stagger: {
+      type: "number",
+      default: 5,
+      min: 0,
+      max: 16,
+      step: 1,
+      description: "Line stagger",
+      hiddenFromList: false,
+    },
+    sweep: {
+      type: "number",
+      default: 18,
+      min: 6,
+      max: 48,
+      step: 1,
+      description: "Highlight sweep (frames)",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Instrument Serif", grain: true }),
     speed: {
       type: "number",
       default: 1,

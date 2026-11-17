@@ -1,8 +1,23 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const strobeMontageConfig: ComponentConfig = {
   componentName: "StrobeMontage",
   importPath: "@/components/remocn/strobe-montage",
+  lists: {
+    heading: {
+      default: ["What will you", "launch next"],
+      description: "Heading",
+      min: 2,
+      max: 2,
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -33,10 +48,78 @@ export const strobeMontageConfig: ComponentConfig = {
       default: "A 30-second film for our 2.0 release",
       description: "Prompt",
     },
+    placeholder: {
+      type: "text-content",
+      default: "Describe your launch film",
+      description: "Placeholder",
+    },
     file: {
       type: "text-content",
       default: "launch-notes.md",
       description: "File",
+    },
+    fileMeta: {
+      type: "text-content",
+      default: "Release notes · 2.4 KB",
+      description: "File details",
+    },
+    transitionFrames: {
+      type: "number",
+      default: 28,
+      min: 8,
+      max: 60,
+      step: 1,
+      description: "Transition (frames)",
+      hiddenFromList: false,
+    },
+    framesPerHit: {
+      type: "number",
+      default: 4,
+      min: 1,
+      max: 12,
+      step: 1,
+      description: "Frames per hit",
+      hiddenFromList: false,
+    },
+    growHits: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 8,
+      step: 1,
+      description: "Grow hits",
+      hiddenFromList: false,
+    },
+    growFrom: {
+      type: "number",
+      default: 0.58,
+      min: 0.2,
+      max: 1,
+      step: 0.02,
+      description: "Grow from",
+      hiddenFromList: false,
+    },
+    punch: {
+      type: "number",
+      default: 0.1,
+      min: 0,
+      max: 0.4,
+      step: 0.02,
+      description: "Punch",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ground: groundControl("Ground A"),
+    groundB: groundControl("Ground B"),
+    ...sceneControls({ font: "Hanken Grotesk" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
+      hiddenFromList: false,
     },
   },
   durationInFrames: 128,

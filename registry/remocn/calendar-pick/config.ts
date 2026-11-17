@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const calendarPickConfig: ComponentConfig = {
   componentName: "CalendarPick",
@@ -12,11 +19,6 @@ export const calendarPickConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#F26A2E",
-      description: "Accent",
     },
     title: {
       type: "text-content",
@@ -43,6 +45,16 @@ export const calendarPickConfig: ComponentConfig = {
       default: "Launch",
       description: "Event label",
     },
+    todayLabel: {
+      type: "text-content",
+      default: "Today",
+      description: "Today button",
+    },
+    placeholder: {
+      type: "text-content",
+      default: "Add time",
+      description: "Placeholder",
+    },
     firstWeekday: {
       type: "number",
       default: 0,
@@ -68,6 +80,31 @@ export const calendarPickConfig: ComponentConfig = {
       max: 27,
       step: 1,
       description: "Today",
+      hiddenFromList: false,
+    },
+    pickDay: {
+      type: "number",
+      default: 18,
+      min: 1,
+      max: 31,
+      step: 1,
+      description: "Picked day",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#F26A2E",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Onest" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
       hiddenFromList: false,
     },
   },

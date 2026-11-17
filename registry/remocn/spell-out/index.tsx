@@ -22,7 +22,19 @@ export interface SpellOutProps {
   name?: string;
   line?: string;
   accent?: string;
+  /** Color of the spelled word; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the word and line. Load it yourself; Nunito by default. */
+  fontFamily?: string;
+  /** Frames between letters as they drop in. */
+  stagger?: number;
+  /** Frames the spelled-out word holds before it closes up. */
+  hold?: number;
+  /** Size of the word and line, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -74,11 +86,11 @@ interface Metrics {
   lineCap: number;
 }
 
-function measure(chars: string[], line: string): Metrics {
+function measure(chars: string[], line: string, font: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("spell-out: no 2d context");
-  const fam = `"${nunito.fontFamily}"`;
+  const fam = `"${font}"`;
   ctx.font = `500 ${FONT_PX}px ${fam}`;
   const adv = chars.map((ch) => ctx.measureText(ch).width / FONT_PX);
   const pos: number[] = [];
@@ -111,7 +123,7 @@ function measure(chars: string[], line: string): Metrics {
   };
 }
 
-function useMetrics(chars: string[], line: string) {
+function useMetrics(chars: string[], line: string, font: string) {
   const key = chars.join("");
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("spell-out: measuring"));
@@ -120,12 +132,12 @@ function useMetrics(chars: string[], line: string) {
     let live = true;
     Promise.all([
       nunito.waitUntilDone(),
-      document.fonts.load(`500 100px "${nunito.fontFamily}"`),
+      document.fonts.load(`500 100px "${font}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setMetrics(measure(Array.from(key), line));
+        setMetrics(measure(Array.from(key), line, font));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -134,7 +146,7 @@ function useMetrics(chars: string[], line: string) {
     return () => {
       live = false;
     };
-  }, [key, line, handle]);
+  }, [key, line, font, handle]);
   return metrics;
 }
 
@@ -143,21 +155,44 @@ function impact(u: number) {
   return Math.exp(-u / 3.6) * Math.cos(u * 0.55);
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function SpellOut({
   name = "remocn",
   line = "Say it once. Remember it.",
   accent,
+  ink,
   background,
+  fontFamily = nunito.fontFamily,
+  stagger = LETTER_GAP,
+  hold = HOLD_SPELLED,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: SpellOutProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const bg = background ?? c.bg;
   const dash = accent ?? c.accent;
   const chars = useMemo(() => Array.from(name.replace(/\s+/g, "")), [name]);
-  const m = useMetrics(chars, line);
+  const m = useMetrics(chars, line, fontFamily);
 
   if (!m || chars.length === 0) {
     return <div style={{ position: "absolute", inset: 0, background: bg }} />;
@@ -185,8 +220,8 @@ export function SpellOut({
   const lh = R * 1.4;
   const bo = (lh - (m.asc + m.desc) * R) / 2 + m.asc * R;
 
-  const lastLand = SPELL_AT + (n - 1) * LETTER_GAP + FALL;
-  const closeAt = lastLand + HOLD_SPELLED;
+  const lastLand = SPELL_AT + (n - 1) * stagger + FALL;
+  const closeAt = lastLand + hold;
   const close = interpolate(t, [closeAt, closeAt + CLOSE_LEN], [0, 1], {
     ...CLAMP,
     easing: EASE_IN_OUT,
@@ -198,7 +233,7 @@ export function SpellOut({
 
   const nodes: React.ReactNode[] = [];
   for (let i = 0; i < n; i++) {
-    const landAt = SPELL_AT + i * LETTER_GAP + FALL;
+    const landAt = SPELL_AT + i * stagger + FALL;
     const fall = interpolate(t, [landAt - FALL, landAt], [0, 1], {
       ...CLAMP,
       easing: EASE_IN,
@@ -226,12 +261,12 @@ export function SpellOut({
           left: x + (m.adv[i] * (size - R)) / 2,
           top: base - bo + dy,
           height: lh,
-          fontFamily: nunito.fontFamily,
+          fontFamily,
           fontWeight: 500,
           fontSize: R,
           lineHeight: `${lh}px`,
           whiteSpace: "pre",
-          color: c.ink,
+          color: fg,
           opacity: o,
           transform: `scale(${(s * sx).toFixed(4)}, ${(s * sy).toFixed(4)})`,
           transformOrigin: `${((m.adv[i] * R) / 2).toFixed(1)}px ${bo.toFixed(1)}px`,
@@ -287,36 +322,38 @@ export function SpellOut({
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      {nodes}
-      {line ? (
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            width: W,
-            top: lineBase - lbo,
-            height: llh,
-            overflow: "hidden",
-            display: "flex",
-            justifyContent: "center",
-          }}
-        >
+      <ScaleLayer scale={scale}>
+        {nodes}
+        {line ? (
           <div
             style={{
-              fontFamily: nunito.fontFamily,
-              fontWeight: 500,
-              fontSize: lineSize0,
-              lineHeight: `${llh}px`,
-              letterSpacing: `${LINE_TRACK}em`,
-              color: c.line,
-              whiteSpace: "pre",
-              transform: `translateY(${((1 - lp) * llh).toFixed(2)}px)`,
+              position: "absolute",
+              left: 0,
+              width: W,
+              top: lineBase - lbo,
+              height: llh,
+              overflow: "hidden",
+              display: "flex",
+              justifyContent: "center",
             }}
           >
-            {line}
+            <div
+              style={{
+                fontFamily,
+                fontWeight: 500,
+                fontSize: lineSize0,
+                lineHeight: `${llh}px`,
+                letterSpacing: `${LINE_TRACK}em`,
+                color: c.line,
+                whiteSpace: "pre",
+                transform: `translateY(${((1 - lp) * llh).toFixed(2)}px)`,
+              }}
+            >
+              {line}
+            </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

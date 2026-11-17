@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/SchibstedGrotesk";
+import type React from "react";
 import { useId } from "react";
 import {
   AbsoluteFill,
@@ -19,6 +20,22 @@ export interface PatternTileProps {
   steps?: [string, string, string, string];
   unit?: string;
   accent?: string;
+  /** How close the camera starts on the first tile (1 = the whole wall). */
+  zoom?: number;
+  /** Dim the wall at the end so the first tile stands out. */
+  highlight?: boolean;
+  /** Color of the active step, the counter and the highlighted tile; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the labels. Load it yourself; Schibsted Grotesk by default. */
+  fontFamily?: string;
+  /** Size of the wall and labels, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -243,17 +260,44 @@ function GroupView({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function PatternTile({
   steps = ["tile", "rotate 90°", "mirror", "translate"],
   unit = "tiles",
   accent = "#3B5BFD",
+  zoom = 2.8,
+  highlight = true,
+  ink,
+  background,
+  fontFamily = sans,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: PatternTileProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
+  const bg =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const labelF = 18 * u;
   const labelGap = 30 * u;
@@ -268,7 +312,7 @@ export function PatternTile({
     interpolate(t, k, v, { ...CLAMP, easing: EASE_IO });
   const camK = [24, 64, 66, 94, 96, 124];
   const logS = camAt(camK, [
-    Math.log(2.8),
+    Math.log(zoom),
     Math.log(2.05),
     Math.log(2.05),
     Math.log(1.45),
@@ -297,10 +341,12 @@ export function PatternTile({
   const flip = interpolate(t, MIRROR, [1, -1], { ...CLAMP, easing: EASE_IO });
   const slideH = interpolate(t, SLIDE_H, [0, 1], { ...CLAMP, easing: EASE_IO });
   const slideV = interpolate(t, SLIDE_V, [0, 1], { ...CLAMP, easing: EASE_IO });
-  const focus = interpolate(t, [FOCUS, FOCUS + 16], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const focus = highlight
+    ? interpolate(t, [FOCUS, FOCUS + 16], [0, 1], {
+        ...CLAMP,
+        easing: EASE_IO,
+      })
+    : 0;
 
   const look: Look = {
     disc: c.disc,
@@ -368,7 +414,7 @@ export function PatternTile({
     }
   }
   const stillGroup: Group = { key: "still", tf: "", tiles: still };
-  const heroLook: Look = { disc: c.fg, bar: c.fg, motif: 1 };
+  const heroLook: Look = { disc: fg, bar: fg, motif: 1 };
   const gid = `pt${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const field = `url(#${gid}f)`;
   const fdx = Math.sin(t / 48) * 0.35 * T;
@@ -412,179 +458,181 @@ export function PatternTile({
   });
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
       <AbsoluteFill
         style={{
           background: `radial-gradient(ellipse 70% 80% at 45% 35%, ${c.key}, transparent 70%)`,
         }}
       />
-      <svg
-        width={W}
-        height={H}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <g
-          transform={`translate(${tx.toFixed(3)} ${ty.toFixed(3)}) scale(${S.toFixed(5)})`}
-          opacity={appear}
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
         >
-          <defs>
-            <linearGradient
-              id={`${gid}f`}
-              gradientUnits="userSpaceOnUse"
-              x1={fdx}
-              y1={0}
-              x2={COLS * T + fdx}
-              y2={ROWS * T}
-            >
-              <stop offset={0.04} stopColor={FLUTED[0]} />
-              <stop offset={0.36} stopColor={FLUTED[1]} />
-              <stop offset={0.68} stopColor={FLUTED[2]} />
-              <stop offset={0.96} stopColor={FLUTED[3]} />
-            </linearGradient>
-          </defs>
-          {under.map((g) => (
-            <GroupView
-              key={g.key}
-              group={g}
-              T={T}
-              surface={c.surface}
-              bleed={0.6 / S}
-              look={look}
-              field={field}
-              maskId={`${gid}${g.key}`}
-            />
-          ))}
-          <GroupView
-            group={stillGroup}
-            T={T}
-            surface={c.surface}
-            look={look}
-            bleed={0.6 / S}
-            field={field}
-            maskId={`${gid}still`}
-          />
-          {over.map((g) => (
-            <GroupView
-              key={g.key}
-              group={g}
-              T={T}
-              surface={c.surface}
-              bleed={0.6 / S}
-              look={look}
-              field={field}
-              maskId={`${gid}${g.key}`}
-            />
-          ))}
-          {focus > 0 ? (
-            <g transform={heroTf} opacity={focus}>
-              <Motif T={T} look={heroLook} sweep={1} grow={1} bleed={0} />
-            </g>
-          ) : null}
-          {pivotO > 0 ? (
-            <circle
-              cx={(HERO[0] + 1) * T}
-              cy={(HERO[1] + 1) * T}
-              r={(5 * u) / S}
-              fill={accent}
-              opacity={pivotO}
-            />
-          ) : null}
-          {axisO > 0 ? (
-            <rect
-              x={MIRROR_X * T - (0.75 * u) / S}
-              y={(HERO[1] + 1) * T - 1.25 * T * axisGrow}
-              width={(1.5 * u) / S}
-              height={2.5 * T * axisGrow}
-              fill={accent}
-              opacity={axisO}
-            />
-          ) : null}
-          {edgeFade > 0 ? (
-            <rect
-              x={HERO[0] * T}
-              y={HERO[1] * T}
-              width={T}
-              height={T}
-              fill="none"
-              stroke={c.edge}
-              strokeWidth={1.2 / S}
-              strokeDasharray={`${edgeLen * edgeDraw} ${edgeLen}`}
-              opacity={edgeFade}
-            />
-          ) : null}
-        </g>
-      </svg>
-
-      <div
-        style={{
-          position: "absolute",
-          left: pcx - gridW / 2,
-          width: gridW,
-          top: blockTop + gridH + labelGap,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          fontFamily: sans,
-          fontWeight: 500,
-          fontSize: labelF,
-          lineHeight: 1,
-          letterSpacing: "-0.01em",
-          whiteSpace: "nowrap",
-          opacity: labelIn,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 14 * u }}>
-          {steps.map((s, i) => {
-            const active = i === phase && !allDone;
-            const done = i < phase || allDone;
-            return (
-              <div
-                key={s}
-                style={{ display: "flex", alignItems: "center", gap: 14 * u }}
+          <g
+            transform={`translate(${tx.toFixed(3)} ${ty.toFixed(3)}) scale(${S.toFixed(5)})`}
+            opacity={appear}
+          >
+            <defs>
+              <linearGradient
+                id={`${gid}f`}
+                gradientUnits="userSpaceOnUse"
+                x1={fdx}
+                y1={0}
+                x2={COLS * T + fdx}
+                y2={ROWS * T}
               >
-                {i > 0 ? (
-                  <span style={{ color: c.muted, opacity: 0.5 }}>→</span>
-                ) : null}
-                <span
-                  style={{
-                    color: active ? c.fg : c.muted,
-                    opacity: active || done ? 1 : 0.45,
-                  }}
-                >
-                  {s}
-                </span>
-              </div>
-            );
-          })}
-        </div>
+                <stop offset={0.04} stopColor={FLUTED[0]} />
+                <stop offset={0.36} stopColor={FLUTED[1]} />
+                <stop offset={0.68} stopColor={FLUTED[2]} />
+                <stop offset={0.96} stopColor={FLUTED[3]} />
+              </linearGradient>
+            </defs>
+            {under.map((g) => (
+              <GroupView
+                key={g.key}
+                group={g}
+                T={T}
+                surface={c.surface}
+                bleed={0.6 / S}
+                look={look}
+                field={field}
+                maskId={`${gid}${g.key}`}
+              />
+            ))}
+            <GroupView
+              group={stillGroup}
+              T={T}
+              surface={c.surface}
+              look={look}
+              bleed={0.6 / S}
+              field={field}
+              maskId={`${gid}still`}
+            />
+            {over.map((g) => (
+              <GroupView
+                key={g.key}
+                group={g}
+                T={T}
+                surface={c.surface}
+                bleed={0.6 / S}
+                look={look}
+                field={field}
+                maskId={`${gid}${g.key}`}
+              />
+            ))}
+            {focus > 0 ? (
+              <g transform={heroTf} opacity={focus}>
+                <Motif T={T} look={heroLook} sweep={1} grow={1} bleed={0} />
+              </g>
+            ) : null}
+            {pivotO > 0 ? (
+              <circle
+                cx={(HERO[0] + 1) * T}
+                cy={(HERO[1] + 1) * T}
+                r={(5 * u) / S}
+                fill={accent}
+                opacity={pivotO}
+              />
+            ) : null}
+            {axisO > 0 ? (
+              <rect
+                x={MIRROR_X * T - (0.75 * u) / S}
+                y={(HERO[1] + 1) * T - 1.25 * T * axisGrow}
+                width={(1.5 * u) / S}
+                height={2.5 * T * axisGrow}
+                fill={accent}
+                opacity={axisO}
+              />
+            ) : null}
+            {edgeFade > 0 ? (
+              <rect
+                x={HERO[0] * T}
+                y={HERO[1] * T}
+                width={T}
+                height={T}
+                fill="none"
+                stroke={c.edge}
+                strokeWidth={1.2 / S}
+                strokeDasharray={`${edgeLen * edgeDraw} ${edgeLen}`}
+                opacity={edgeFade}
+              />
+            ) : null}
+          </g>
+        </svg>
+
         <div
           style={{
+            position: "absolute",
+            left: pcx - gridW / 2,
+            width: gridW,
+            top: blockTop + gridH + labelGap,
             display: "flex",
             alignItems: "center",
-            gap: 10 * u,
-            color: c.fg,
+            justifyContent: "space-between",
+            fontFamily,
             fontWeight: 500,
-            fontVariantNumeric: "tabular-nums",
+            fontSize: labelF,
+            lineHeight: 1,
+            letterSpacing: "-0.01em",
+            whiteSpace: "nowrap",
+            opacity: labelIn,
           }}
         >
-          <span
+          <div style={{ display: "flex", alignItems: "center", gap: 14 * u }}>
+            {steps.map((s, i) => {
+              const active = i === phase && !allDone;
+              const done = i < phase || allDone;
+              return (
+                <div
+                  key={s}
+                  style={{ display: "flex", alignItems: "center", gap: 14 * u }}
+                >
+                  {i > 0 ? (
+                    <span style={{ color: c.muted, opacity: 0.5 }}>→</span>
+                  ) : null}
+                  <span
+                    style={{
+                      color: active ? fg : c.muted,
+                      opacity: active || done ? 1 : 0.45,
+                    }}
+                  >
+                    {s}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <div
             style={{
-              width: 10 * u,
-              height: 10 * u,
-              background: accent,
-              opacity: focus,
+              display: "flex",
+              alignItems: "center",
+              gap: 10 * u,
+              color: fg,
+              fontWeight: 500,
+              fontVariantNumeric: "tabular-nums",
             }}
-          />
-          <span>
-            {tiles}{" "}
-            <span style={{ color: c.muted, fontWeight: 400 }}>
-              {tiles === 1 ? unit.replace(/s$/, "") : unit}
+          >
+            <span
+              style={{
+                width: 10 * u,
+                height: 10 * u,
+                background: accent,
+                opacity: focus,
+              }}
+            />
+            <span>
+              {tiles}{" "}
+              <span style={{ color: c.muted, fontWeight: 400 }}>
+                {tiles === 1 ? unit.replace(/s$/, "") : unit}
+              </span>
             </span>
-          </span>
+          </div>
         </div>
-      </div>
-      <Grain opacity={c.grain} />
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

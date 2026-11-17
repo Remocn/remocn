@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/DMSans";
+import type React from "react";
 import { useLayoutEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -25,7 +26,21 @@ export interface TittleDropProps {
   subline?: string;
   /** Which landing dot takes the accent (0-based, negative counts from the end). */
   accentDot?: number;
+  /** Frames between words setting in. */
+  stagger?: number;
+  /** Frames between one dot hopping out of the bubble and the next. */
+  hopGap?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; DM Sans by default. */
+  fontFamily?: string;
+  /** Size of the line, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -163,17 +178,45 @@ function sameLayout(a: Layout | null, b: Layout) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  style,
+  children,
+}: {
+  scale: number;
+  style?: React.CSSProperties;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ ...style, transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function TittleDrop({
   title = "Ship it in minutes.",
   subline = "Launch videos from ready-made Remotion components.",
   accentDot = -1,
+  stagger = WORD_STAGGER,
+  hopGap = HOP_GAP,
   accent = "#3B5BFD",
+  ink: inkColor,
+  background,
+  fontFamily = face.fontFamily,
+  scale = 1,
+  delay = 0,
   theme = "light",
   speed = 1,
 }: TittleDropProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const t = THEMES[theme];
+  const fg = inkColor ?? t.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? t.bg);
 
   const fontSize = Math.round(width * 0.076);
   const subSize = Math.round(width * 0.0165);
@@ -194,8 +237,11 @@ export function TittleDrop({
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-measure when the copy or size changes
   useLayoutEffect(() => {
     let live = true;
+    const family = fontFamily.includes('"') ? fontFamily : `"${fontFamily}"`;
     face
       .waitUntilDone()
+      .catch(() => undefined)
+      .then(() => document.fonts.load(`400 ${fontSize}px ${family}`))
       .catch(() => undefined)
       .then(() => document.fonts.ready)
       .then(() => {
@@ -203,9 +249,6 @@ export function TittleDrop({
         const row = rowRef.current;
         const base = baseRef.current;
         if (row && base) {
-          const family = face.fontFamily.includes('"')
-            ? face.fontFamily
-            : `"${face.fontFamily}"`;
           const rowRect = row.getBoundingClientRect();
           // Studio scales the stage; work in unscaled composition pixels.
           const scale = rowRect.width / row.offsetWidth || 1;
@@ -247,7 +290,7 @@ export function TittleDrop({
     return () => {
       live = false;
     };
-  }, [title, fontSize, handle]);
+  }, [title, fontSize, fontFamily, handle]);
 
   const targets = layout?.targets ?? [];
   const n = targets.length;
@@ -273,7 +316,7 @@ export function TittleDrop({
 
   // Queue: three dots wait in the bubble, the front one hops, the rest shuffle
   // forward and a new one surfaces at the back until the line is dotted.
-  const hopStart = (k: number) => HOP0 + k * HOP_GAP;
+  const hopStart = (k: number) => HOP0 + k * hopGap;
   let departed = 0;
   for (let k = 0; k < n; k++) {
     departed += interpolate(
@@ -307,7 +350,7 @@ export function TittleDrop({
     const start = hopStart(k);
     const land = start + HOP_LEN;
     const isAccent = k === accentIndex;
-    const ink = isAccent ? accent : t.fg;
+    const ink = isAccent ? accent : fg;
     if (frame < start) {
       const slot = k - departed;
       if (slot > 3) return null;
@@ -366,110 +409,113 @@ export function TittleDrop({
   return (
     <AbsoluteFill
       style={{
-        background: t.bg,
+        background: stage,
         alignItems: "center",
         justifyContent: "center",
-        fontFamily: face.fontFamily,
+        fontFamily,
       }}
     >
-      <div
-        ref={rowRef}
-        style={{
-          position: "relative",
-          whiteSpace: "pre",
-          fontSize,
-          fontWeight: 400,
-          letterSpacing: "-0.03em",
-          lineHeight: 1.2,
-          color: t.fg,
-          marginTop: height * 0.02,
-        }}
+      <ScaleLayer
+        scale={scale}
+        style={{ alignItems: "center", justifyContent: "center" }}
       >
-        {chars.map((ch, i) => {
-          const isStop = hasStop && i === chars.length - 1;
-          const p = interpolate(
-            frame,
-            [
-              SET + wordOf[i] * WORD_STAGGER,
-              SET + wordOf[i] * WORD_STAGGER + SET_LEN,
-            ],
-            [0, 1],
-            { ...clamp, easing: EASE_OUT },
-          );
-          return (
-            <span
-              key={i}
-              ref={(el) => {
-                glyphRefs.current[i] = el;
-              }}
-              style={{
-                position: "relative",
-                top: (1 - p) * fontSize * 0.2 + dip(i),
-                opacity: isStop ? 0 : p,
-                filter: p < 1 ? `blur(${(1 - p) * 9}px)` : undefined,
-              }}
-            >
-              {DOTLESS[ch] ?? ch}
-            </span>
-          );
-        })}
-        <span
-          ref={baseRef}
-          style={{ display: "inline-block", width: 0, height: 0 }}
-        />
         <div
+          ref={rowRef}
           style={{
-            position: "absolute",
-            left: bubbleX - (bubbleW * bubbleK) / 2,
-            top: bubbleY - (bubbleH * bubbleK) / 2,
-            width: bubbleW * bubbleK,
-            height: bubbleH * bubbleK,
-            borderRadius: (bubbleH * bubbleK) / 2,
-            background: t.bubble,
-            opacity: layout ? bubbleOpacity : 0,
-            filter: bubbleIn < 1 ? `blur(${(1 - bubbleIn) * 8}px)` : undefined,
-          }}
-        />
-        {layout
-          ? dots.map((dot) =>
-              dot ? (
-                <div
-                  key={dot.key}
-                  style={{
-                    position: "absolute",
-                    left: dot.x - dot.w / 2,
-                    top: dot.y - dot.h / 2,
-                    width: dot.w,
-                    height: dot.h,
-                    borderRadius: "50%",
-                    background: dot.color,
-                    opacity: dot.opacity,
-                    transformOrigin: "50% 100%",
-                    transform: `scale(${dot.sx}, ${dot.sy ?? 1})`,
-                  }}
-                />
-              ) : null,
-            )
-          : null}
-        <div
-          style={{
-            position: "absolute",
-            left: "50%",
-            top: "100%",
-            marginTop: fontSize * 0.36,
-            transform: `translate(-50%, ${(1 - subP) * 12}px)`,
-            whiteSpace: "nowrap",
-            fontSize: subSize,
-            letterSpacing: "-0.005em",
-            lineHeight: 1.4,
-            color: t.muted,
-            opacity: subP,
-            filter: `blur(${(1 - subP) * 8}px)`,
+            position: "relative",
+            whiteSpace: "pre",
+            fontSize,
+            fontWeight: 400,
+            letterSpacing: "-0.03em",
+            lineHeight: 1.2,
+            color: fg,
+            marginTop: height * 0.02,
           }}
         >
-          {subline}
+          {chars.map((ch, i) => {
+            const isStop = hasStop && i === chars.length - 1;
+            const p = interpolate(
+              frame,
+              [SET + wordOf[i] * stagger, SET + wordOf[i] * stagger + SET_LEN],
+              [0, 1],
+              { ...clamp, easing: EASE_OUT },
+            );
+            return (
+              <span
+                key={i}
+                ref={(el) => {
+                  glyphRefs.current[i] = el;
+                }}
+                style={{
+                  position: "relative",
+                  top: (1 - p) * fontSize * 0.2 + dip(i),
+                  opacity: isStop ? 0 : p,
+                  filter: p < 1 ? `blur(${(1 - p) * 9}px)` : undefined,
+                }}
+              >
+                {DOTLESS[ch] ?? ch}
+              </span>
+            );
+          })}
+          <span
+            ref={baseRef}
+            style={{ display: "inline-block", width: 0, height: 0 }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: bubbleX - (bubbleW * bubbleK) / 2,
+              top: bubbleY - (bubbleH * bubbleK) / 2,
+              width: bubbleW * bubbleK,
+              height: bubbleH * bubbleK,
+              borderRadius: (bubbleH * bubbleK) / 2,
+              background: t.bubble,
+              opacity: layout ? bubbleOpacity : 0,
+              filter:
+                bubbleIn < 1 ? `blur(${(1 - bubbleIn) * 8}px)` : undefined,
+            }}
+          />
+          {layout
+            ? dots.map((dot) =>
+                dot ? (
+                  <div
+                    key={dot.key}
+                    style={{
+                      position: "absolute",
+                      left: dot.x - dot.w / 2,
+                      top: dot.y - dot.h / 2,
+                      width: dot.w,
+                      height: dot.h,
+                      borderRadius: "50%",
+                      background: dot.color,
+                      opacity: dot.opacity,
+                      transformOrigin: "50% 100%",
+                      transform: `scale(${dot.sx}, ${dot.sy ?? 1})`,
+                    }}
+                  />
+                ) : null,
+              )
+            : null}
+          <div
+            style={{
+              position: "absolute",
+              left: "50%",
+              top: "100%",
+              marginTop: fontSize * 0.36,
+              transform: `translate(-50%, ${(1 - subP) * 12}px)`,
+              whiteSpace: "nowrap",
+              fontSize: subSize,
+              letterSpacing: "-0.005em",
+              lineHeight: 1.4,
+              color: t.muted,
+              opacity: subP,
+              filter: `blur(${(1 - subP) * 8}px)`,
+            }}
+          >
+            {subline}
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -18,7 +18,7 @@ import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const { fontFamily: sans } = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -45,7 +45,25 @@ export interface DeviceMorphProps {
   stops?: DeviceStop[];
   /** Phone to desktop instead of desktop to phone. */
   reverse?: boolean;
+  /** Product name in the built-in dashboard's sidebar and phone header. */
+  brand?: string;
+  /** Greeting at the top of the built-in dashboard. */
+  greeting?: string;
+  /** Label of the built-in dashboard's primary button. */
+  ctaLabel?: string;
+  /** Replaces the remocn mark in the built-in dashboard's sidebar. */
+  logo?: React.ReactNode;
   accent?: string;
+  /** Text color of the device label; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the scene and dashboard. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the device, label and switcher, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "light" | "dark";
   /** Thumbnails for the six project cards. */
@@ -311,6 +329,10 @@ function Dashboard({
   c,
   accent,
   images,
+  brand,
+  greeting,
+  ctaLabel,
+  logo,
 }: {
   t: number;
   vw: number;
@@ -318,6 +340,10 @@ function Dashboard({
   c: Palette;
   accent: string;
   images: string[];
+  brand: string;
+  greeting: string;
+  ctaLabel: string;
+  logo?: React.ReactNode;
 }) {
   const tp = range(t, 1, 2);
   const label = 1 - range(t, 0, 0.55);
@@ -449,9 +475,11 @@ function Dashboard({
               justifyContent: "center",
             }}
           >
-            <svg viewBox="0 0 124.06 134.26" height={14} aria-hidden>
-              <path fill="#fff" d={REMOCN_R_PATH} />
-            </svg>
+            {logo ?? (
+              <svg viewBox="0 0 124.06 134.26" height={14} aria-hidden>
+                <path fill="#fff" d={REMOCN_R_PATH} />
+              </svg>
+            )}
           </div>
           <span
             style={{
@@ -461,7 +489,7 @@ function Dashboard({
               opacity: label,
             }}
           >
-            remocn
+            {brand}
           </span>
         </div>
         {NAV.map((n, i) => {
@@ -582,7 +610,7 @@ function Dashboard({
         >
           <G n="menu" color={c.text} size={24} />
           <span style={{ fontSize: 19, fontWeight: 400, letterSpacing: -0.3 }}>
-            remocn
+            {brand}
           </span>
         </div>
       </div>
@@ -659,7 +687,7 @@ function Dashboard({
             display: btnW < 60 ? "none" : "inline",
           }}
         >
-          New video
+          {ctaLabel}
         </span>
       </div>
       <div
@@ -689,7 +717,7 @@ function Dashboard({
             letterSpacing: -0.6,
           }}
         >
-          Good morning, Maya
+          {greeting}
         </div>
         <div style={{ fontSize: 14.5, color: c.muted, marginTop: 6 }}>
           3 renders finished overnight.
@@ -918,24 +946,50 @@ function Cursor({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function DeviceMorph({
   children,
   src,
   stops = DEFAULT_STOPS,
   reverse = false,
+  brand = "remocn",
+  greeting = "Good morning, Maya",
+  ctaLabel = "New video",
+  logo,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "light",
   images = DEFAULT_IMAGES,
   ground,
   groundParams,
 }: DeviceMorphProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const tall = H > W * 1.2;
   const L = tall ? LAYOUT.tall : LAYOUT.wide;
   const k = W / L.dw;
   const c = PALETTES[theme];
+  const fg = ink ?? c.text;
   const dark = theme === "dark";
   const [s0, s1, s2] = [
     stops[0] ?? DEFAULT_STOPS[0],
@@ -1040,337 +1094,356 @@ export function DeviceMorph({
   return (
     <AbsoluteFill
       style={{
-        background: dark ? "#01040a" : "#eeece8",
+        background:
+          background === undefined ? (dark ? "#01040a" : "#eeece8") : undefined,
         overflow: "hidden",
       }}
     >
-      <AbsoluteFill style={{ transform: `scale(${1.04 + 0.03 * (t / 2)})` }}>
-        <GshGround
-          preset={ground ?? (dark ? "europa" : "paper-crease")}
-          params={groundParams}
-          timeOffset={4}
-          timeScale={0.5}
+      {background === undefined ? (
+        <AbsoluteFill style={{ transform: `scale(${1.04 + 0.03 * (t / 2)})` }}>
+          <GshGround
+            preset={ground ?? (dark ? "europa" : "paper-crease")}
+            params={groundParams}
+            timeOffset={4}
+            timeScale={0.5}
+          />
+        </AbsoluteFill>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
         />
-      </AbsoluteFill>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: L.dw,
-          height: L.dh,
-          transform: `scale(${k})`,
-          transformOrigin: "0 0",
-          fontFamily,
-          color: c.text,
-          WebkitFontSmoothing: "antialiased",
-        }}
-      >
-        {tall ? (
-          <div
-            style={{
-              position: "absolute",
-              left: 64,
-              right: 64,
-              top: 150,
-              opacity: chromeIn,
-              transform: `translateY(${(1 - chromeIn) * 24}px)`,
-            }}
-          >
+      )}
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: L.dw,
+            height: L.dh,
+            transform: `scale(${k})`,
+            transformOrigin: "0 0",
+            fontFamily,
+            color: fg,
+            WebkitFontSmoothing: "antialiased",
+          }}
+        >
+          {tall ? (
             <div
               style={{
-                position: "relative",
-                height: 96,
-                fontSize: 88,
-                fontWeight: 300,
-                lineHeight: 1,
-                letterSpacing: "-0.04em",
-                color: c.text,
+                position: "absolute",
+                left: 64,
+                right: 64,
+                top: 150,
+                opacity: chromeIn,
+                transform: `translateY(${(1 - chromeIn) * 24}px)`,
               }}
             >
-              {[s0, s1, s2].map((s, i) => {
-                const vis = Math.max(0, 1 - Math.abs(t - i) * 2);
-                if (vis <= 0.001) return null;
-                return (
-                  <div
-                    key={s.label}
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      top: 0,
-                      opacity: vis,
-                      transform: `translateY(${(t - i) * -40}px)`,
-                      filter: `blur(${(1 - vis) * 8}px)`,
-                    }}
-                  >
-                    {s.label}
-                  </div>
-                );
-              })}
+              <div
+                style={{
+                  position: "relative",
+                  height: 96,
+                  fontSize: 88,
+                  fontWeight: 300,
+                  lineHeight: 1,
+                  letterSpacing: "-0.04em",
+                  color: fg,
+                }}
+              >
+                {[s0, s1, s2].map((s, i) => {
+                  const vis = Math.max(0, 1 - Math.abs(t - i) * 2);
+                  if (vis <= 0.001) return null;
+                  return (
+                    <div
+                      key={s.label}
+                      style={{
+                        position: "absolute",
+                        left: 0,
+                        top: 0,
+                        opacity: vis,
+                        transform: `translateY(${(t - i) * -40}px)`,
+                        filter: `blur(${(1 - vis) * 8}px)`,
+                      }}
+                    >
+                      {s.label}
+                    </div>
+                  );
+                })}
+              </div>
+              <div
+                style={{
+                  marginTop: 18,
+                  fontFamily: mono,
+                  fontSize: 28,
+                  color: c.muted,
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {dims}
+              </div>
             </div>
+          ) : (
             <div
               style={{
-                marginTop: 18,
+                position: "absolute",
+                left: fx - o,
+                top: fy - o - 28,
                 fontFamily: mono,
-                fontSize: 28,
+                fontSize: 16,
                 color: c.muted,
+                whiteSpace: "nowrap",
                 fontVariantNumeric: "tabular-nums",
+                opacity: chromeIn,
               }}
             >
+              <span style={{ color: fg }}>{[s0, s1, s2][nearest].label}</span>
+              {"  "}
               {dims}
             </div>
-          </div>
-        ) : (
+          )}
+
           <div
             style={{
               position: "absolute",
               left: fx - o,
-              top: fy - o - 28,
-              fontFamily: mono,
-              fontSize: 16,
-              color: c.muted,
-              whiteSpace: "nowrap",
-              fontVariantNumeric: "tabular-nums",
+              top: fy - o,
+              width: outerW + 2 * o,
+              height: outerH + 2 * o,
+              border: `1px solid ${withAlpha(accent, 0.6)}`,
+              borderRadius: radius + o,
+              boxSizing: "border-box",
               opacity: chromeIn,
             }}
           >
-            <span style={{ color: c.text }}>{[s0, s1, s2][nearest].label}</span>
-            {"  "}
-            {dims}
+            {[
+              [0, 0],
+              [1, 0],
+              [0, 1],
+              [1, 1],
+            ].map(([u, v]) =>
+              handle(u * (outerW + 2 * o), v * (outerH + 2 * o)),
+            )}
           </div>
-        )}
 
-        <div
-          style={{
-            position: "absolute",
-            left: fx - o,
-            top: fy - o,
-            width: outerW + 2 * o,
-            height: outerH + 2 * o,
-            border: `1px solid ${withAlpha(accent, 0.6)}`,
-            borderRadius: radius + o,
-            boxSizing: "border-box",
-            opacity: chromeIn,
-          }}
-        >
-          {[
-            [0, 0],
-            [1, 0],
-            [0, 1],
-            [1, 1],
-          ].map(([u, v]) => handle(u * (outerW + 2 * o), v * (outerH + 2 * o)))}
-        </div>
-
-        <div
-          style={{
-            position: "absolute",
-            left: fx,
-            top: fy + (1 - enter) * 36,
-            width: outerW,
-            height: outerH,
-            borderRadius: radius,
-            background: deviceBg,
-            padding: bezel,
-            boxSizing: "border-box",
-            boxShadow: dark
-              ? "0 0 0 1px rgba(255,255,255,0.1), 0 40px 80px -24px rgba(0,0,0,0.85)"
-              : "0 0 0 1px rgba(16,24,40,0.08), 0 2px 6px rgba(16,24,40,0.06), 0 40px 80px -28px rgba(16,24,40,0.4)",
-            opacity: interpolate(enter, [0, 0.4], [0, 1], clamp01),
-            transform: `scale(${0.96 + 0.04 * enter})`,
-          }}
-        >
-          {barH > 0.5 && (
+          <div
+            style={{
+              position: "absolute",
+              left: fx,
+              top: fy + (1 - enter) * 36,
+              width: outerW,
+              height: outerH,
+              borderRadius: radius,
+              background: deviceBg,
+              padding: bezel,
+              boxSizing: "border-box",
+              boxShadow: dark
+                ? "0 0 0 1px rgba(255,255,255,0.1), 0 40px 80px -24px rgba(0,0,0,0.85)"
+                : "0 0 0 1px rgba(16,24,40,0.08), 0 2px 6px rgba(16,24,40,0.06), 0 40px 80px -28px rgba(16,24,40,0.4)",
+              opacity: interpolate(enter, [0, 0.4], [0, 1], clamp01),
+              transform: `scale(${0.96 + 0.04 * enter})`,
+            }}
+          >
+            {barH > 0.5 && (
+              <div
+                style={{
+                  position: "relative",
+                  height: barH,
+                  overflow: "hidden",
+                  opacity: 1 - range(t, 0, 0.2),
+                }}
+              >
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    style={{
+                      position: "absolute",
+                      left: 14 + i * 18,
+                      top: barH / 2 - 6,
+                      width: 12,
+                      height: 12,
+                      borderRadius: 12,
+                      background: dark ? "#3A3A40" : "#D4D4D8",
+                    }}
+                  />
+                ))}
+                <div
+                  style={{
+                    position: "absolute",
+                    left: "50%",
+                    top: barH / 2 - 11,
+                    width: 300,
+                    marginLeft: -150,
+                    height: 22,
+                    borderRadius: 7,
+                    background: dark ? "#0F0F11" : "#FFFFFF",
+                    boxShadow: `inset 0 0 0 1px ${c.border}`,
+                    fontSize: 12,
+                    color: c.muted,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  remocn.dev/projects
+                </div>
+              </div>
+            )}
             <div
               style={{
                 position: "relative",
-                height: barH,
+                width: screenW,
+                height: screenH,
+                borderRadius: Math.max(0, radius - bezel) * range(t, 0, 0.5),
                 overflow: "hidden",
-                opacity: 1 - range(t, 0, 0.2),
+                background: c.app,
               }}
             >
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  style={{
-                    position: "absolute",
-                    left: 14 + i * 18,
-                    top: barH / 2 - 6,
-                    width: 12,
-                    height: 12,
-                    borderRadius: 12,
-                    background: dark ? "#3A3A40" : "#D4D4D8",
-                  }}
-                />
-              ))}
               <div
                 style={{
                   position: "absolute",
-                  left: "50%",
-                  top: barH / 2 - 11,
-                  width: 300,
-                  marginLeft: -150,
-                  height: 22,
-                  borderRadius: 7,
-                  background: dark ? "#0F0F11" : "#FFFFFF",
-                  boxShadow: `inset 0 0 0 1px ${c.border}`,
-                  fontSize: 12,
-                  color: c.muted,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  left: 0,
+                  top: 0,
+                  width: vw,
+                  height: vh,
+                  transform: `scale(${sc})`,
+                  transformOrigin: "0 0",
                 }}
               >
-                remocn.dev/projects
+                {children ? (
+                  <div style={{ position: "absolute", inset: 0 }}>
+                    {children}
+                  </div>
+                ) : src ? (
+                  <Img
+                    src={src}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      objectPosition: "top",
+                    }}
+                  />
+                ) : (
+                  <Dashboard
+                    t={t}
+                    vw={vw}
+                    vh={vh}
+                    c={c}
+                    accent={accent}
+                    images={images}
+                    brand={brand}
+                    greeting={greeting}
+                    ctaLabel={ctaLabel}
+                    logo={logo}
+                  />
+                )}
               </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: screenW / 2 - 40,
+                  top: 8,
+                  width: 80,
+                  height: 22,
+                  borderRadius: 20,
+                  background: "#000",
+                  opacity: range(t, 1.45, 1.9),
+                  transform: `scale(${0.6 + 0.4 * range(t, 1.45, 1.9)})`,
+                }}
+              />
             </div>
-          )}
+            <div
+              style={{
+                position: "absolute",
+                left: outerW / 2 - 3,
+                top: bezel / 2 - 3,
+                width: 6,
+                height: 6,
+                borderRadius: 6,
+                background: "#2A2A2E",
+                opacity: range(t, 0.5, 1) * (1 - range(t, 1.2, 1.5)),
+              }}
+            />
+          </div>
+
           <div
             style={{
-              position: "relative",
-              width: screenW,
-              height: screenH,
-              borderRadius: Math.max(0, radius - bezel) * range(t, 0, 0.5),
-              overflow: "hidden",
-              background: c.app,
+              position: "absolute",
+              left: segX,
+              top: segY,
+              width: segW,
+              height: 48,
+              borderRadius: 13,
+              background: c.pill,
+              boxSizing: "border-box",
+              boxShadow: dark
+                ? "inset 0 0 0 1px rgba(255,255,255,0.08), inset 0 1px 0 rgba(255,255,255,0.05), 0 12px 32px -12px rgba(0,0,0,0.7)"
+                : "0 0 0 1px rgba(16,24,40,0.06), 0 1px 2px rgba(16,24,40,0.06), 0 12px 32px -12px rgba(16,24,40,0.25)",
+              opacity: chromeIn,
+              transform: `translateY(${(1 - chromeIn) * 16}px)`,
             }}
           >
             <div
               style={{
                 position: "absolute",
-                left: 0,
-                top: 0,
-                width: vw,
-                height: vh,
-                transform: `scale(${sc})`,
-                transformOrigin: "0 0",
-              }}
-            >
-              {children ? (
-                <div style={{ position: "absolute", inset: 0 }}>{children}</div>
-              ) : src ? (
-                <Img
-                  src={src}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    objectPosition: "top",
-                  }}
-                />
-              ) : (
-                <Dashboard
-                  t={t}
-                  vw={vw}
-                  vh={vh}
-                  c={c}
-                  accent={accent}
-                  images={images}
-                />
-              )}
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: screenW / 2 - 40,
-                top: 8,
-                width: 80,
-                height: 22,
-                borderRadius: 20,
-                background: "#000",
-                opacity: range(t, 1.45, 1.9),
-                transform: `scale(${0.6 + 0.4 * range(t, 1.45, 1.9)})`,
+                left: 4 + t * chipW,
+                top: 4,
+                width: chipW,
+                height: 40,
+                borderRadius: 9,
+                background: withAlpha(accent, dark ? 0.22 : 0.1),
               }}
             />
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              left: outerW / 2 - 3,
-              top: bezel / 2 - 3,
-              width: 6,
-              height: 6,
-              borderRadius: 6,
-              background: "#2A2A2E",
-              opacity: range(t, 0.5, 1) * (1 - range(t, 1.2, 1.5)),
-            }}
-          />
-        </div>
-
-        <div
-          style={{
-            position: "absolute",
-            left: segX,
-            top: segY,
-            width: segW,
-            height: 48,
-            borderRadius: 13,
-            background: c.pill,
-            boxSizing: "border-box",
-            boxShadow: dark
-              ? "inset 0 0 0 1px rgba(255,255,255,0.08), inset 0 1px 0 rgba(255,255,255,0.05), 0 12px 32px -12px rgba(0,0,0,0.7)"
-              : "0 0 0 1px rgba(16,24,40,0.06), 0 1px 2px rgba(16,24,40,0.06), 0 12px 32px -12px rgba(16,24,40,0.25)",
-            opacity: chromeIn,
-            transform: `translateY(${(1 - chromeIn) * 16}px)`,
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              left: 4 + t * chipW,
-              top: 4,
-              width: chipW,
-              height: 40,
-              borderRadius: 9,
-              background: withAlpha(accent, dark ? 0.22 : 0.1),
-            }}
-          />
-          {[s0, s1, s2].map((s, i) => {
-            const on = 1 - Math.min(1, Math.abs(t - i));
-            const pressed =
-              (i === firstTarget ? pressA : 0) +
-              (i === secondTarget ? pressB : 0);
-            return (
-              <div
-                key={s.label}
-                style={{
-                  position: "absolute",
-                  left: 4 + i * chipW,
-                  top: 4,
-                  width: chipW,
-                  height: 40,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                  fontSize: 16,
-                  fontWeight: 400,
-                  color: interpolateColors(on, [0, 1], [c.muted, c.text]),
-                  transform: `scale(${1 - 0.04 * pressed})`,
-                }}
-              >
-                <G
-                  n={["monitor", "tablet", "phone"][i]}
-                  color={on > 0.5 ? accent : c.muted}
-                  size={17}
-                  sw={1.5}
-                />
-                {s.label}
-                <span
+            {[s0, s1, s2].map((s, i) => {
+              const on = 1 - Math.min(1, Math.abs(t - i));
+              const pressed =
+                (i === firstTarget ? pressA : 0) +
+                (i === secondTarget ? pressB : 0);
+              return (
+                <div
+                  key={s.label}
                   style={{
-                    fontFamily: mono,
+                    position: "absolute",
+                    left: 4 + i * chipW,
+                    top: 4,
+                    width: chipW,
+                    height: 40,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
                     fontSize: 16,
-                    color: c.muted,
-                    fontVariantNumeric: "tabular-nums",
+                    fontWeight: 400,
+                    color: interpolateColors(on, [0, 1], [c.muted, c.text]),
+                    transform: `scale(${1 - 0.04 * pressed})`,
                   }}
                 >
-                  {s.width}
-                </span>
-              </div>
-            );
-          })}
+                  <G
+                    n={["monitor", "tablet", "phone"][i]}
+                    color={on > 0.5 ? accent : c.muted}
+                    size={17}
+                    sw={1.5}
+                  />
+                  {s.label}
+                  <span
+                    style={{
+                      fontFamily: mono,
+                      fontSize: 16,
+                      color: c.muted,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {s.width}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <Cursor x={cur.x} y={cur.y} press={press} opacity={curOpacity} />
         </div>
-        <Cursor x={cur.x} y={cur.y} press={press} opacity={curOpacity} />
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

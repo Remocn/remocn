@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont as loadFamiljen } from "@remotion/google-fonts/FamiljenGrotesk";
+import type React from "react";
 import { useEffect, useId, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -25,7 +26,19 @@ export interface StripeCountProps {
   label?: string;
   stripes?: number;
   accent?: string;
+  /** Color of the striped figure; overrides the theme. */
+  ink?: string;
   background?: string;
+  /** Typeface for the figure and label. Load it yourself; Familjen Grotesk by default. */
+  fontFamily?: string;
+  /** Frames the stripes take to paint the figure in. */
+  paintDuration?: number;
+  /** Frames between label words. */
+  stagger?: number;
+  /** Size of the figure and label, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -61,11 +74,11 @@ function format(n: number) {
   return Math.round(n).toLocaleString("en-US");
 }
 
-function measureAll(label: string): Metrics {
+function measureAll(label: string, fontFamily: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("stripe-count: no 2d context");
-  const fam = `"${familjen.fontFamily}"`;
+  const fam = `"${fontFamily}"`;
   ctx.font = `500 100px ${fam}`;
   const figH = ctx.measureText("0123456789").actualBoundingBoxAscent / 100;
   const cache = new Map<string, number>();
@@ -83,7 +96,7 @@ function measureAll(label: string): Metrics {
   return { figH, label: labelW, width };
 }
 
-function useMetrics(label: string) {
+function useMetrics(label: string, fontFamily: string) {
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("stripe-count: measuring"));
   const released = useRef(false);
@@ -91,13 +104,16 @@ function useMetrics(label: string) {
     let live = true;
     Promise.all([
       familjen.waitUntilDone(),
-      document.fonts.load(`500 100px "${familjen.fontFamily}"`),
-      document.fonts.load(`400 100px "${familjen.fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key: label, m: measureAll(label) });
+        setState({
+          key: `${fontFamily}|${label}`,
+          m: measureAll(label, fontFamily),
+        });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -106,8 +122,24 @@ function useMetrics(label: string) {
     return () => {
       live = false;
     };
-  }, [label, handle]);
-  return state && state.key === label ? state.m : null;
+  }, [label, fontFamily, handle]);
+  return state && state.key === `${fontFamily}|${label}` ? state.m : null;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function StripeCount({
@@ -118,15 +150,21 @@ export function StripeCount({
   label = "scenes that take your brand colour from one prop",
   stripes = 12,
   accent,
+  ink,
   background,
+  fontFamily = familjen.fontFamily,
+  paintDuration = PAINT_END - PAINT_AT,
+  stagger = 2,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: StripeCountProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
-  const m = useMetrics(label);
+  const m = useMetrics(label, fontFamily);
 
   const transparent = background === "transparent";
   const hot = accent ?? ORANGE;
@@ -149,7 +187,7 @@ export function StripeCount({
   const pad = Math.min(W, H) * 0.075;
 
   const paint = (time: number) =>
-    interpolate(time, [PAINT_AT, PAINT_END], [0, 1], {
+    interpolate(time, [PAINT_AT, PAINT_AT + paintDuration], [0, 1], {
       ...CLAMP,
       easing: EASE_IN_OUT,
     });
@@ -188,7 +226,8 @@ export function StripeCount({
 
   const outline = 1 - interpolate(p, [0.78, 1], [0, 1], CLAMP);
   const strokeW = Math.max(1.2, F * 0.0065);
-  const ink = transparent ? c.ink : c.inkOnAccent;
+  const figInk = ink ?? (transparent ? c.ink : c.inkOnAccent);
+  const labelAt = PAINT_AT + paintDuration - (PAINT_END - LABEL_AT);
 
   const labelWords = label ? label.split(" ") : [];
 
@@ -196,7 +235,7 @@ export function StripeCount({
     x: right,
     y: baseY + dy,
     textAnchor: "end" as const,
-    fontFamily: familjen.fontFamily,
+    fontFamily,
     fontWeight: 500,
     fontSize: F,
     letterSpacing: `${TRACK}em`,
@@ -223,105 +262,107 @@ export function StripeCount({
         />
       )}
 
-      <svg
-        width={W}
-        height={H}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <clipPath id={`${uid}t`}>
-            <text {...textProps}>{text}</text>
-          </clipPath>
-          <filter id={`${uid}o`} x="-5%" y="-20%" width="110%" height="140%">
-            <feMorphology
-              in="SourceAlpha"
-              operator="erode"
-              radius={strokeW}
-              result="in"
-            />
-            <feComposite in="SourceGraphic" in2="in" operator="out" />
-          </filter>
-          <clipPath id={`${uid}b`}>
-            <rect x={0} y={top} width={W} height={bandClipH} />
-          </clipPath>
-        </defs>
-        <g clipPath={`url(#${uid}b)`}>
-          <g clipPath={`url(#${uid}t)`}>
-            {Array.from({ length: rows }, (_, k) => {
-              const local = interpolate(
-                p * (1 + reach) - (k / Math.max(1, rows - 1)) * reach,
-                [0, 1],
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            <clipPath id={`${uid}t`}>
+              <text {...textProps}>{text}</text>
+            </clipPath>
+            <filter id={`${uid}o`} x="-5%" y="-20%" width="110%" height="140%">
+              <feMorphology
+                in="SourceAlpha"
+                operator="erode"
+                radius={strokeW}
+                result="in"
+              />
+              <feComposite in="SourceGraphic" in2="in" operator="out" />
+            </filter>
+            <clipPath id={`${uid}b`}>
+              <rect x={0} y={top} width={W} height={bandClipH} />
+            </clipPath>
+          </defs>
+          <g clipPath={`url(#${uid}b)`}>
+            <g clipPath={`url(#${uid}t)`}>
+              {Array.from({ length: rows }, (_, k) => {
+                const local = interpolate(
+                  p * (1 + reach) - (k / Math.max(1, rows - 1)) * reach,
+                  [0, 1],
+                  [0, 1],
+                  { ...CLAMP, easing: EASE_OUT },
+                );
+                const th = pitch * (minK + (1.04 - minK) * local);
+                const yc = firstY + dy + pitch * (k + 0.5);
+                return (
+                  <rect
+                    key={`s${k}`}
+                    x={0}
+                    y={yc - th / 2}
+                    width={W}
+                    height={th}
+                    style={{ fill: figInk }}
+                  />
+                );
+              })}
+            </g>
+            {outline > 0 ? (
+              <text
+                {...textProps}
+                filter={`url(#${uid}o)`}
+                opacity={outline}
+                style={{ ...textProps.style, fill: figInk }}
+              >
+                {text}
+              </text>
+            ) : null}
+          </g>
+        </svg>
+
+        {label ? (
+          <div
+            style={{
+              position: "absolute",
+              left: pad,
+              width: labelW,
+              top: pad - labelFs * 0.12,
+              display: "flex",
+              flexWrap: "wrap",
+              columnGap: "0.26em",
+              fontFamily,
+              fontWeight: 400,
+              fontSize: labelFs,
+              lineHeight: 1.22,
+              letterSpacing: "-0.01em",
+              color: c.ink,
+            }}
+          >
+            {labelWords.map((w, k) => {
+              const q = interpolate(
+                t,
+                [labelAt + k * stagger, labelAt + k * stagger + 16],
                 [0, 1],
                 { ...CLAMP, easing: EASE_OUT },
               );
-              const th = pitch * (minK + (1.04 - minK) * local);
-              const yc = firstY + dy + pitch * (k + 0.5);
               return (
-                <rect
-                  key={`s${k}`}
-                  x={0}
-                  y={yc - th / 2}
-                  width={W}
-                  height={th}
-                  style={{ fill: ink }}
-                />
+                <span
+                  key={`${w}-${k}`}
+                  style={{
+                    display: "inline-block",
+                    opacity: q,
+                    transform: `translateY(${((1 - q) * labelFs * 0.7).toFixed(2)}px)`,
+                  }}
+                >
+                  {w}
+                </span>
               );
             })}
-          </g>
-          {outline > 0 ? (
-            <text
-              {...textProps}
-              filter={`url(#${uid}o)`}
-              opacity={outline}
-              style={{ ...textProps.style, fill: ink }}
-            >
-              {text}
-            </text>
-          ) : null}
-        </g>
-      </svg>
-
-      {label ? (
-        <div
-          style={{
-            position: "absolute",
-            left: pad,
-            width: labelW,
-            top: pad - labelFs * 0.12,
-            display: "flex",
-            flexWrap: "wrap",
-            columnGap: "0.26em",
-            fontFamily: familjen.fontFamily,
-            fontWeight: 400,
-            fontSize: labelFs,
-            lineHeight: 1.22,
-            letterSpacing: "-0.01em",
-            color: c.ink,
-          }}
-        >
-          {labelWords.map((w, k) => {
-            const q = interpolate(
-              t,
-              [LABEL_AT + k * 2, LABEL_AT + k * 2 + 16],
-              [0, 1],
-              { ...CLAMP, easing: EASE_OUT },
-            );
-            return (
-              <span
-                key={`${w}-${k}`}
-                style={{
-                  display: "inline-block",
-                  opacity: q,
-                  transform: `translateY(${((1 - q) * labelFs * 0.7).toFixed(2)}px)`,
-                }}
-              >
-                {w}
-              </span>
-            );
-          })}
-        </div>
-      ) : null}
+          </div>
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

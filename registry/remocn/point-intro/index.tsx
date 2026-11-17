@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Figtree";
+import type React from "react";
 import { useLayoutEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -24,6 +25,20 @@ export interface PointIntroProps {
   subline?: string;
   /** Colour of the point. */
   accent?: string;
+  /** Headline color; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the headline and subline. Load it yourself; Figtree by default. */
+  fontFamily?: string;
+  /** Frames between words as the point writes them. */
+  stagger?: number;
+  /** How much larger the point is while it is alone on the stage. */
+  soloScale?: number;
+  /** Size of the headline, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -74,16 +89,47 @@ function sameLayout(a: Layout | null, b: Layout) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill
+      style={{
+        alignItems: "center",
+        justifyContent: "center",
+        transform: `scale(${scale})`,
+      }}
+    >
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function PointIntro({
   title = "Introducing remocn 2.0",
   subline = "Animated components for Remotion. Free and open source.",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = face.fontFamily,
+  stagger = WORD_STAGGER,
+  soloScale = SOLO_SCALE,
+  scale = 1,
+  delay = 0,
   theme = "light",
   speed = 1,
 }: PointIntroProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const t = THEMES[theme];
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? t.bg);
   const words = title.split(/\s+/).filter(Boolean);
 
   const fontSize = Math.round(width * 0.052);
@@ -103,6 +149,8 @@ export function PointIntro({
     let live = true;
     face
       .waitUntilDone()
+      .catch(() => undefined)
+      .then(() => document.fonts.load(`400 100px "${fontFamily}"`))
       .catch(() => undefined)
       .then(() => document.fonts.ready)
       .then(() => {
@@ -132,7 +180,7 @@ export function PointIntro({
     return () => {
       live = false;
     };
-  }, [title, fontSize, handle]);
+  }, [title, fontSize, handle, fontFamily]);
 
   // The point: in, one breath, a glide to the start of the line, then it
   // leads the writing word by word and settles as the full stop.
@@ -151,7 +199,7 @@ export function PointIntro({
     extrapolateRight: "clamp",
     easing: EASE_IN_OUT,
   });
-  const lastLand = WRITE + (words.length - 1) * WORD_STAGGER + DOT_STEP;
+  const lastLand = WRITE + (words.length - 1) * stagger + DOT_STEP;
   const settle = interpolate(frame, [GLIDE, lastLand], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
@@ -159,7 +207,7 @@ export function PointIntro({
   });
   const dotScale =
     interpolate(dotIn, [0, 1], [0.6, 1]) *
-    interpolate(settle, [0, 1], [SOLO_SCALE, 1]) *
+    interpolate(settle, [0, 1], [soloScale, 1]) *
     (1 + breathe);
 
   let dotX = 0;
@@ -179,7 +227,7 @@ export function PointIntro({
           : (layout.wordRight[i] ?? 0) + stopOffset;
       const p = interpolate(
         frame,
-        [WRITE + i * WORD_STAGGER, WRITE + i * WORD_STAGGER + DOT_STEP],
+        [WRITE + i * stagger, WRITE + i * stagger + DOT_STEP],
         [0, 1],
         {
           extrapolateLeft: "clamp",
@@ -218,101 +266,103 @@ export function PointIntro({
   return (
     <AbsoluteFill
       style={{
-        background: t.bg,
+        background: stage,
         alignItems: "center",
         justifyContent: "center",
-        fontFamily: face.fontFamily,
+        fontFamily,
       }}
     >
-      <div
-        ref={rowRef}
-        style={{
-          position: "relative",
-          whiteSpace: "nowrap",
-          fontSize,
-          fontWeight: 400,
-          letterSpacing: "-0.028em",
-          lineHeight: 1.2,
-          color: t.fg,
-          // Optical centring: the line sits a touch above the true middle so
-          // the subline below balances it.
-          marginTop: -height * 0.03,
-        }}
-      >
-        <span
+      <ScaleLayer scale={scale}>
+        <div
+          ref={rowRef}
           style={{
-            display: "inline-block",
-            padding: `${MASK_PAD}em`,
-            margin: `-${MASK_PAD}em`,
-            maskImage: mask,
-            WebkitMaskImage: mask,
+            position: "relative",
+            whiteSpace: "nowrap",
+            fontSize,
+            fontWeight: 400,
+            letterSpacing: "-0.028em",
+            lineHeight: 1.2,
+            color: ink ?? t.fg,
+            // Optical centring: the line sits a touch above the true middle so
+            // the subline below balances it.
+            marginTop: -height * 0.03,
           }}
         >
-          {words.map((w, i) => {
-            const start = WRITE + i * WORD_STAGGER;
-            const p = interpolate(frame, [start, start + WORD_LEN], [0, 1], {
-              extrapolateLeft: "clamp",
-              extrapolateRight: "clamp",
-              easing: EASE_OUT,
-            });
-            return (
-              <span key={`${w}-${i}`}>
-                <span
-                  ref={(el) => {
-                    wordRefs.current[i] = el;
-                  }}
-                  style={{
-                    display: "inline-block",
-                    opacity: p,
-                    filter: `blur(${(1 - p) * 10}px)`,
-                    transform: `translateY(${(1 - p) * 0.24}em)`,
-                  }}
-                >
-                  {w}
+          <span
+            style={{
+              display: "inline-block",
+              padding: `${MASK_PAD}em`,
+              margin: `-${MASK_PAD}em`,
+              maskImage: mask,
+              WebkitMaskImage: mask,
+            }}
+          >
+            {words.map((w, i) => {
+              const start = WRITE + i * stagger;
+              const p = interpolate(frame, [start, start + WORD_LEN], [0, 1], {
+                extrapolateLeft: "clamp",
+                extrapolateRight: "clamp",
+                easing: EASE_OUT,
+              });
+              return (
+                <span key={`${w}-${i}`}>
+                  <span
+                    ref={(el) => {
+                      wordRefs.current[i] = el;
+                    }}
+                    style={{
+                      display: "inline-block",
+                      opacity: p,
+                      filter: `blur(${(1 - p) * 10}px)`,
+                      transform: `translateY(${(1 - p) * 0.24}em)`,
+                    }}
+                  >
+                    {w}
+                  </span>
+                  {i < words.length - 1 ? " " : null}
                 </span>
-                {i < words.length - 1 ? " " : null}
-              </span>
-            );
-          })}
-        </span>
-        <span ref={stopRef} style={{ display: "inline-block", opacity: 0 }}>
-          .
-        </span>
-        <span
-          ref={baseRef}
-          style={{ display: "inline-block", width: 0, height: 0 }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            left: dotX - dot / 2,
-            top: dotY - dot / 2,
-            width: dot,
-            height: dot,
-            borderRadius: "50%",
-            background: accent,
-            opacity: layout ? dotIn : 0,
-            transform: `scale(${dotScale})`,
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            left: "50%",
-            top: "100%",
-            marginTop: fontSize * 0.42,
-            transform: `translate(-50%, ${(1 - subP) * 12}px)`,
-            fontSize: subSize,
-            letterSpacing: "-0.005em",
-            lineHeight: 1.4,
-            color: t.muted,
-            opacity: subP,
-            filter: `blur(${(1 - subP) * 8}px)`,
-          }}
-        >
-          {subline}
+              );
+            })}
+          </span>
+          <span ref={stopRef} style={{ display: "inline-block", opacity: 0 }}>
+            .
+          </span>
+          <span
+            ref={baseRef}
+            style={{ display: "inline-block", width: 0, height: 0 }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: dotX - dot / 2,
+              top: dotY - dot / 2,
+              width: dot,
+              height: dot,
+              borderRadius: "50%",
+              background: accent,
+              opacity: layout ? dotIn : 0,
+              transform: `scale(${dotScale})`,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: "50%",
+              top: "100%",
+              marginTop: fontSize * 0.42,
+              transform: `translate(-50%, ${(1 - subP) * 12}px)`,
+              fontSize: subSize,
+              letterSpacing: "-0.005em",
+              lineHeight: 1.4,
+              color: t.muted,
+              opacity: subP,
+              filter: `blur(${(1 - subP) * 8}px)`,
+            }}
+          >
+            {subline}
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

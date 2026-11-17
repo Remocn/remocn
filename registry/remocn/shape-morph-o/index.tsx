@@ -2,6 +2,7 @@
 
 import { loadFont } from "@remotion/google-fonts/Manrope";
 import { interpolatePath } from "@remotion/paths";
+import type React from "react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -36,7 +37,21 @@ export interface ShapeMorphOProps {
    * the logo. Ignored when the word doesn't start with "r".
    */
   mark?: boolean;
+  /** Replaces the R mark set for a leading "r". */
+  logo?: React.ReactNode;
   accent?: string;
+  /** Color of the word; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the word. Load it yourself; Manrope by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Frames between one shape change and the next. */
+  beat?: number;
+  /** Size of the shape and word, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   /** Playback multiplier. */
   speed?: number;
@@ -188,8 +203,13 @@ function findSlot(chars: string[], from: number) {
   return Math.floor(chars.length / 2);
 }
 
-function measure(chars: string[], withMark: boolean): Metrics {
-  const font = `${WEIGHT} ${PROBE}px "${display.fontFamily}"`;
+function measure(
+  chars: string[],
+  withMark: boolean,
+  family: string,
+  weight: number,
+): Metrics {
+  const font = `${weight} ${PROBE}px "${family}"`;
   const ctx = document.createElement("canvas").getContext("2d");
   if (!ctx) throw new Error("shape-morph-o: no 2d context");
   ctx.font = font;
@@ -354,7 +374,12 @@ function measure(chars: string[], withMark: boolean): Metrics {
   };
 }
 
-function useMetrics(chars: string[], withMark: boolean) {
+function useMetrics(
+  chars: string[],
+  withMark: boolean,
+  family: string,
+  weight: number,
+) {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("shape-morph-o: measuring"));
   const released = useRef(false);
@@ -362,12 +387,12 @@ function useMetrics(chars: string[], withMark: boolean) {
     let live = true;
     Promise.all([
       display.waitUntilDone(),
-      document.fonts.load(`${WEIGHT} 100px "${display.fontFamily}"`),
+      document.fonts.load(`${weight} 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setMetrics(measure(chars, withMark));
+        setMetrics(measure(chars, withMark, family, weight));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -376,7 +401,7 @@ function useMetrics(chars: string[], withMark: boolean) {
     return () => {
       live = false;
     };
-  }, [chars, withMark, handle]);
+  }, [chars, withMark, family, weight, handle]);
   return metrics;
 }
 
@@ -390,25 +415,57 @@ const MESH = {
   light: { top: "#8796EE", blob: "#ECDCF2", blobAlpha: 0.45, deep: "#1D2A8F" },
 } as const;
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ShapeMorphO({
   word = "remocn",
   mark = true,
+  logo,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = display.fontFamily,
+  fontWeight = WEIGHT,
+  beat = GAP,
+  scale: zoom = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: ShapeMorphOProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
+  const landAt = FIRST + MORPHS * beat + 2;
+  const revealAt = landAt + (REVEAL - LAND);
+  const counterAt = revealAt + (COUNTER - REVEAL);
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const chars = useMemo(() => Array.from(word), [word]);
   const withMark = mark && chars.length > 1 && /^r$/i.test(chars[0]);
-  const m = useMetrics(chars, withMark);
+  const m = useMetrics(chars, withMark, fontFamily, fontWeight);
   const shapes = useMemo(() => buildShapes().map(toPath), []);
   const oPath = useMemo(() => (m ? toPath(m.contour) : ""), [m]);
 
   if (!m) {
-    return <div style={{ position: "absolute", inset: 0, background: c.bg }} />;
+    return (
+      <div style={{ position: "absolute", inset: 0, background: stage }} />
+    );
   }
 
   // Word layout.
@@ -422,23 +479,23 @@ export function ShapeMorphO({
   // Shape chain: each morph starts from wherever the previous one was.
   const prog = (k: number) =>
     spring({
-      frame: t - (FIRST + (k - 1) * GAP),
+      frame: t - (FIRST + (k - 1) * beat),
       fps,
       config: SPRING_MORPH,
     });
   let d = shapes[0];
   let rot = 0;
   for (let k = 1; k <= MORPHS; k++) {
-    const start = FIRST + (k - 1) * GAP;
+    const start = FIRST + (k - 1) * beat;
     const p = prog(k);
     rot += (ROT[k] - ROT[k - 1]) * p;
     if (t >= start) d = interpolatePath(p, d, shapes[k]);
   }
-  const land = spring({ frame: t - LAND, fps, config: SPRING_LAND });
-  if (t >= LAND) d = interpolatePath(land, d, oPath);
+  const land = spring({ frame: t - landAt, fps, config: SPRING_LAND });
+  if (t >= landAt) d = interpolatePath(land, d, oPath);
 
   // The counter eases open from the centre, turning the solid bowl into the letter.
-  const open = interpolate(t, [COUNTER, COUNTER + COUNTER_LEN], [0, 1], {
+  const open = interpolate(t, [counterAt, counterAt + COUNTER_LEN], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.bezier(0.22, 1, 0.36, 1),
@@ -458,7 +515,7 @@ export function ShapeMorphO({
   const sy = interpolate(land, [0, 1], [H / 2, oY]);
 
   // Word halves slide out from behind the landed shape.
-  const reveal = spring({ frame: t - REVEAL, fps, config: SPRING_REVEAL });
+  const reveal = spring({ frame: t - revealAt, fps, config: SPRING_REVEAL });
   const left = chars.slice(0, m.slot);
   const right = chars.slice(m.slot + 1);
   const leftSpan = m.slot > 0 ? oX - (x0 + m.pen[0] * F) + 4 : 0;
@@ -472,12 +529,35 @@ export function ShapeMorphO({
 
   const glyph = (ch: string, i: number, dx: number) => {
     if (i === 0 && withMark) {
+      if (logo !== undefined) {
+        return (
+          <foreignObject
+            key="mark"
+            x={x0 + m.pen[0] * F + dx}
+            y={baseline - MARK_EM * F}
+            width={MARK_ADV * F}
+            height={MARK_EM * F}
+          >
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {logo}
+            </div>
+          </foreignObject>
+        );
+      }
       const k = (MARK_EM * F) / MARK_H;
       return (
         <path
           key="mark"
           d={REMOCN_R_PATH}
-          fill={c.fg}
+          fill={fg}
           transform={`translate(${x0 + m.pen[0] * F + dx} ${baseline - MARK_EM * F}) scale(${k})`}
         />
       );
@@ -487,10 +567,10 @@ export function ShapeMorphO({
         key={`${i}-${ch}`}
         x={x0 + m.pen[i] * F + dx}
         y={baseline}
-        fill={c.fg}
+        fill={fg}
         style={{
-          fontFamily: display.fontFamily,
-          fontWeight: WEIGHT,
+          fontFamily,
+          fontWeight,
           fontSize: F,
           whiteSpace: "pre",
         }}
@@ -507,83 +587,85 @@ export function ShapeMorphO({
   const tilt = Math.sin(t / 60) * 0.12;
 
   return (
-    <AbsoluteFill style={{ background: c.bg }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <clipPath id={`l${uid}`}>
-            <rect x={0} y={0} width={oX} height={H} />
-          </clipPath>
-          <clipPath id={`r${uid}`}>
-            <rect x={oX} y={0} width={W - oX} height={H} />
-          </clipPath>
-          <clipPath id={`s${uid}`}>
-            <path
-              d={d}
-              clipRule="evenodd"
-              transform={`translate(${sx} ${sy}) rotate(${rot}) scale(${scale})`}
+    <AbsoluteFill style={{ background: stage }}>
+      <ScaleLayer scale={zoom}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            <clipPath id={`l${uid}`}>
+              <rect x={0} y={0} width={oX} height={H} />
+            </clipPath>
+            <clipPath id={`r${uid}`}>
+              <rect x={oX} y={0} width={W - oX} height={H} />
+            </clipPath>
+            <clipPath id={`s${uid}`}>
+              <path
+                d={d}
+                clipRule="evenodd"
+                transform={`translate(${sx} ${sy}) rotate(${rot}) scale(${scale})`}
+              />
+            </clipPath>
+            <linearGradient
+              id={`w${uid}`}
+              gradientUnits="userSpaceOnUse"
+              x1={sx - (0.55 + tilt) * scale}
+              y1={sy - scale}
+              x2={sx + (0.55 + tilt) * scale}
+              y2={sy + scale}
+            >
+              <stop offset="0" stopColor={mesh.top} />
+              <stop
+                offset="0.22"
+                stopColor={interpolateColors(0.62, [0, 1], [mesh.top, accent])}
+              />
+              <stop offset="0.5" stopColor={accent} />
+              <stop
+                offset="0.78"
+                stopColor={interpolateColors(0.55, [0, 1], [accent, mesh.deep])}
+              />
+              <stop offset="1" stopColor={mesh.deep} />
+            </linearGradient>
+            <radialGradient id={`b${uid}`}>
+              <stop
+                offset="0"
+                stopColor={mesh.blob}
+                stopOpacity={mesh.blobAlpha}
+              />
+              <stop offset="1" stopColor={mesh.blob} stopOpacity={0} />
+            </radialGradient>
+          </defs>
+          {reveal > 0 && (
+            <>
+              <g clipPath={`url(#l${uid})`}>
+                {left.map((ch, i) => glyph(ch, i, dxL))}
+              </g>
+              <g clipPath={`url(#r${uid})`}>
+                {right.map((ch, i) => glyph(ch, m.slot + 1 + i, dxR))}
+              </g>
+            </>
+          )}
+          <g clipPath={`url(#s${uid})`}>
+            <rect
+              x={sx - scale * 1.6}
+              y={sy - scale * 1.6}
+              width={scale * 3.2}
+              height={scale * 3.2}
+              fill={`url(#w${uid})`}
             />
-          </clipPath>
-          <linearGradient
-            id={`w${uid}`}
-            gradientUnits="userSpaceOnUse"
-            x1={sx - (0.55 + tilt) * scale}
-            y1={sy - scale}
-            x2={sx + (0.55 + tilt) * scale}
-            y2={sy + scale}
-          >
-            <stop offset="0" stopColor={mesh.top} />
-            <stop
-              offset="0.22"
-              stopColor={interpolateColors(0.62, [0, 1], [mesh.top, accent])}
+            <circle
+              cx={blobX}
+              cy={blobY}
+              r={scale * 0.95}
+              fill={`url(#b${uid})`}
             />
-            <stop offset="0.5" stopColor={accent} />
-            <stop
-              offset="0.78"
-              stopColor={interpolateColors(0.55, [0, 1], [accent, mesh.deep])}
-            />
-            <stop offset="1" stopColor={mesh.deep} />
-          </linearGradient>
-          <radialGradient id={`b${uid}`}>
-            <stop
-              offset="0"
-              stopColor={mesh.blob}
-              stopOpacity={mesh.blobAlpha}
-            />
-            <stop offset="1" stopColor={mesh.blob} stopOpacity={0} />
-          </radialGradient>
-        </defs>
-        {reveal > 0 && (
-          <>
-            <g clipPath={`url(#l${uid})`}>
-              {left.map((ch, i) => glyph(ch, i, dxL))}
-            </g>
-            <g clipPath={`url(#r${uid})`}>
-              {right.map((ch, i) => glyph(ch, m.slot + 1 + i, dxR))}
-            </g>
-          </>
-        )}
-        <g clipPath={`url(#s${uid})`}>
-          <rect
-            x={sx - scale * 1.6}
-            y={sy - scale * 1.6}
-            width={scale * 3.2}
-            height={scale * 3.2}
-            fill={`url(#w${uid})`}
-          />
-          <circle
-            cx={blobX}
-            cy={blobY}
-            r={scale * 0.95}
-            fill={`url(#b${uid})`}
-          />
-        </g>
-      </svg>
+          </g>
+        </svg>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

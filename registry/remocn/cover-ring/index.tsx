@@ -2,6 +2,7 @@
 
 import { loadFont } from "@remotion/google-fonts/Geist";
 import { loadFont as loadSerif } from "@remotion/google-fonts/Newsreader";
+import type React from "react";
 import {
   AbsoluteFill,
   Easing,
@@ -31,12 +32,23 @@ export interface CoverRingProps {
   line?: string;
   caption?: string;
   theme?: "dark" | "light";
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
   background?: string;
   ink?: string;
   accent?: string;
   fog?: string[];
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /** Typeface for the line and caption. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Frames between words as the opening line reveals. */
+  stagger?: number;
+  /** Size of the ring and copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
 }
 
 const THEMES = {
@@ -199,6 +211,22 @@ function RevealWords({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function CoverRing({
   images,
   line = "Launch videos aren't edited anymore",
@@ -210,8 +238,14 @@ export function CoverRing({
   fog,
   ground,
   groundParams,
+  fontFamily = geist.fontFamily,
+  fontWeight = 300,
+  stagger = 2,
+  scale = 1,
+  delay = 0,
+  speed = 1,
 }: CoverRingProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const t = THEMES[theme];
   const light = theme === "light";
@@ -321,17 +355,21 @@ export function CoverRing({
 
   return (
     <AbsoluteFill style={{ backgroundColor: bg, overflow: "hidden" }}>
-      <GshGround
-        preset={preset}
-        params={gParams}
-        timeOffset={light ? 3 : 4}
-        timeScale={0.8}
-      />
-      <AbsoluteFill
-        style={{
-          backgroundImage: `radial-gradient(${portrait ? "60% 26%" : "36% 34%"} at 50% ${(cy / H) * 100}%, ${t.scrim} 0%, transparent 74%)`,
-        }}
-      />
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={preset}
+            params={gParams}
+            timeOffset={light ? 3 : 4}
+            timeScale={0.8}
+          />
+          <AbsoluteFill
+            style={{
+              backgroundImage: `radial-gradient(${portrait ? "60% 26%" : "36% 34%"} at 50% ${(cy / H) * 100}%, ${t.scrim} 0%, transparent 74%)`,
+            }}
+          />
+        </>
+      ) : null}
       <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden>
         {order.map((i) => {
           const now = tileAt(i, frame);
@@ -352,170 +390,172 @@ export function CoverRing({
           );
         })}
       </svg>
-      <AbsoluteFill
-        style={{
-          transform: `scale(${push})`,
-          perspective: portrait ? 2200 : 1400,
-          perspectiveOrigin: `50% ${(cy / H) * 100}%`,
-        }}
-      >
-        <div
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: cx - (portrait ? W * 0.34 : W * 0.2),
-            width: portrait ? W * 0.68 : W * 0.4,
-            top: cy,
-            height: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-            fontFamily: geist.fontFamily,
-            fontWeight: 300,
-            fontSize: lineSize,
-            lineHeight: 1.1,
-            letterSpacing: "-0.03em",
-            color: fg,
-            opacity: 1 - lineOut,
-            transform: `scale(${1 - lineOut * 0.2})`,
-            filter: `blur(${lineOut * 8}px)`,
-            zIndex: 50,
+            transform: `scale(${push})`,
+            perspective: portrait ? 2200 : 1400,
+            perspectiveOrigin: `50% ${(cy / H) * 100}%`,
           }}
         >
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            {balance(line).map((row, r) => (
-              <RevealWords
-                key={row}
-                text={row}
-                start={beat("lineIn") + r * 2 * row.split(" ").length}
-                frame={frame}
-                stagger={2}
-              />
-            ))}
+          <div
+            style={{
+              position: "absolute",
+              left: cx - (portrait ? W * 0.34 : W * 0.2),
+              width: portrait ? W * 0.68 : W * 0.4,
+              top: cy,
+              height: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              fontFamily,
+              fontWeight,
+              fontSize: lineSize,
+              lineHeight: 1.1,
+              letterSpacing: "-0.03em",
+              color: fg,
+              opacity: 1 - lineOut,
+              transform: `scale(${1 - lineOut * 0.2})`,
+              filter: `blur(${lineOut * 8}px)`,
+              zIndex: 50,
+            }}
+          >
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              {balance(line).map((row, r) => (
+                <RevealWords
+                  key={row}
+                  text={row}
+                  start={beat("lineIn") + r * stagger * row.split(" ").length}
+                  frame={frame}
+                  stagger={stagger}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-        {order.map((i, z) => {
-          const s = tileAt(i, frame);
-          if (frame < enterTime(i)) return null;
-          const prev = tileAt(i, frame - 1);
-          const moving = Math.hypot(s.x - prev.x, s.y - prev.y) > 3;
-          const depthScale = 0.62 + 0.52 * s.depth;
-          const sizeRing = tile * depthScale * (1 + s.fly * 1.6);
-          const size = sizeRing * (1 - s.q) + dot * s.q;
-          const flat = 1 - s.q;
-          const rotY = -Math.cos(s.theta) * 28 * flat;
-          const rotX = (12 - Math.sin(s.theta) * 6) * flat;
-          const rotZ = (s.jitter * 16 + s.fly * s.jitter * 70) * flat;
-          const depthBlur = (1 - s.depth) * (light ? 4 : 5) * flat;
-          const fill = interpolate(s.q, [0.5, 0.92], [0, 1], CLAMP);
-          const enter = Math.min(1, Math.max(0, s.land) * 3);
-          const dim = light
-            ? 1 - (1 - s.depth) * 0.12 * flat
-            : (0.45 + 0.55 * s.depth) * flat + s.q;
-          const extra = i >= dots;
-          const fadeExtra = extra
-            ? interpolate(s.q, [0.72, 0.98], [1, 0], CLAMP)
-            : 1;
-          const barShape = !extra && frame >= beat("bars");
-          const k = i % dots;
-          const hBar =
-            dot +
-            (barMax * (barHeights[k] ?? 0.7) - dot) * barP +
-            barMax *
-              ((pulseHeights[k] ?? 0.7) - (barHeights[k] ?? 0.7)) *
-              pulse;
-          const w = size;
-          const h = barShape ? hBar : size;
-          const radius = s.q > 0.6 ? Math.min(w, h) / 2 : size * 0.16;
-          const ex = -Math.cos(s.theta) * 0.035 * size * flat;
-          const ey = 0.04 * size * flat;
-          const edge = [1, 2, 3, 4]
-            .map(
-              (m) =>
-                `${(ex * m) / 4}px ${(ey * m) / 4}px 0 0 ${m === 4 ? t.edge : mix(t.edge, 70)}`,
-            )
-            .join(", ");
-          const lift = size * (0.12 + 0.2 * s.depth) * flat;
-          const shadow =
-            s.q > 0.6
-              ? `0 0 ${dot * 1.2}px ${mix(acc, 50)}, 0 0 ${dot * 0.3}px ${mix(acc, 70)}`
-              : `${edge}, 0 ${lift * 0.3}px ${lift * 0.5}px rgba(${t.shadowRgb},0.28), 0 ${lift}px ${lift * 2.2}px rgba(${t.shadowRgb},0.38)`;
-          return (
-            <div
-              key={`cr-${i}`}
-              style={{
-                position: "absolute",
-                left: s.x - w / 2,
-                top: s.y - h / 2,
-                width: w,
-                height: h,
-                borderRadius: radius,
-                zIndex: z,
-                opacity: enter * fadeExtra,
-                transform: `rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg)`,
-                filter: `${moving ? `url(#cr2-mb-${i}) ` : ""}blur(${depthBlur + Math.max(0, s.fly) * 8}px) brightness(${dim})`,
-                boxShadow: shadow,
-                backgroundColor: acc,
-              }}
-            >
+          {order.map((i, z) => {
+            const s = tileAt(i, frame);
+            if (frame < enterTime(i)) return null;
+            const prev = tileAt(i, frame - 1);
+            const moving = Math.hypot(s.x - prev.x, s.y - prev.y) > 3;
+            const depthScale = 0.62 + 0.52 * s.depth;
+            const sizeRing = tile * depthScale * (1 + s.fly * 1.6);
+            const size = sizeRing * (1 - s.q) + dot * s.q;
+            const flat = 1 - s.q;
+            const rotY = -Math.cos(s.theta) * 28 * flat;
+            const rotX = (12 - Math.sin(s.theta) * 6) * flat;
+            const rotZ = (s.jitter * 16 + s.fly * s.jitter * 70) * flat;
+            const depthBlur = (1 - s.depth) * (light ? 4 : 5) * flat;
+            const fill = interpolate(s.q, [0.5, 0.92], [0, 1], CLAMP);
+            const enter = Math.min(1, Math.max(0, s.land) * 3);
+            const dim = light
+              ? 1 - (1 - s.depth) * 0.12 * flat
+              : (0.45 + 0.55 * s.depth) * flat + s.q;
+            const extra = i >= dots;
+            const fadeExtra = extra
+              ? interpolate(s.q, [0.72, 0.98], [1, 0], CLAMP)
+              : 1;
+            const barShape = !extra && frame >= beat("bars");
+            const k = i % dots;
+            const hBar =
+              dot +
+              (barMax * (barHeights[k] ?? 0.7) - dot) * barP +
+              barMax *
+                ((pulseHeights[k] ?? 0.7) - (barHeights[k] ?? 0.7)) *
+                pulse;
+            const w = size;
+            const h = barShape ? hBar : size;
+            const radius = s.q > 0.6 ? Math.min(w, h) / 2 : size * 0.16;
+            const ex = -Math.cos(s.theta) * 0.035 * size * flat;
+            const ey = 0.04 * size * flat;
+            const edge = [1, 2, 3, 4]
+              .map(
+                (m) =>
+                  `${(ex * m) / 4}px ${(ey * m) / 4}px 0 0 ${m === 4 ? t.edge : mix(t.edge, 70)}`,
+              )
+              .join(", ");
+            const lift = size * (0.12 + 0.2 * s.depth) * flat;
+            const shadow =
+              s.q > 0.6
+                ? `0 0 ${dot * 1.2}px ${mix(acc, 50)}, 0 0 ${dot * 0.3}px ${mix(acc, 70)}`
+                : `${edge}, 0 ${lift * 0.3}px ${lift * 0.5}px rgba(${t.shadowRgb},0.28), 0 ${lift}px ${lift * 2.2}px rgba(${t.shadowRgb},0.38)`;
+            return (
               <div
+                key={`cr-${i}`}
                 style={{
                   position: "absolute",
-                  inset: 0,
-                  borderRadius: "inherit",
-                  overflow: "hidden",
-                  opacity: 1 - fill,
+                  left: s.x - w / 2,
+                  top: s.y - h / 2,
+                  width: w,
+                  height: h,
+                  borderRadius: radius,
+                  zIndex: z,
+                  opacity: enter * fadeExtra,
+                  transform: `rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg)`,
+                  filter: `${moving ? `url(#cr2-mb-${i}) ` : ""}blur(${depthBlur + Math.max(0, s.fly) * 8}px) brightness(${dim})`,
+                  boxShadow: shadow,
+                  backgroundColor: acc,
                 }}
               >
-                <Img
-                  src={srcs[i % srcs.length] as string}
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                  }}
-                />
                 <div
                   style={{
                     position: "absolute",
                     inset: 0,
                     borderRadius: "inherit",
-                    backgroundImage:
-                      "linear-gradient(145deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 34%, rgba(0,0,0,0) 66%, rgba(0,0,0,0.24) 100%)",
-                    boxShadow:
-                      "inset 0 0 0 1px rgba(255,255,255,0.18), inset 0 1px 0 rgba(255,255,255,0.35)",
+                    overflow: "hidden",
+                    opacity: 1 - fill,
                   }}
-                />
+                >
+                  <Img
+                    src={srcs[i % srcs.length] as string}
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      borderRadius: "inherit",
+                      backgroundImage:
+                        "linear-gradient(145deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 34%, rgba(0,0,0,0) 66%, rgba(0,0,0,0.24) 100%)",
+                      boxShadow:
+                        "inset 0 0 0 1px rgba(255,255,255,0.18), inset 0 1px 0 rgba(255,255,255,0.35)",
+                    }}
+                  />
+                </div>
               </div>
-            </div>
-          );
-        })}
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            width: W,
-            top: cy - liftAt(frame) + barMax * 0.5 + capGap,
-            textAlign: "center",
-            fontFamily: geist.fontFamily,
-            fontSize: capSize,
-            letterSpacing: "-0.045em",
-            fontWeight: 300,
-            lineHeight: 1,
-            color: fg,
-          }}
-        >
-          <RevealWords
-            text={caption}
-            start={beat("caption")}
-            frame={frame}
-            stagger={3}
-            accentFrom={Math.max(1, captionWords.length - 1)}
-          />
-        </div>
-      </AbsoluteFill>
+            );
+          })}
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              width: W,
+              top: cy - liftAt(frame) + barMax * 0.5 + capGap,
+              textAlign: "center",
+              fontFamily,
+              fontSize: capSize,
+              letterSpacing: "-0.045em",
+              fontWeight,
+              lineHeight: 1,
+              color: fg,
+            }}
+          >
+            <RevealWords
+              text={caption}
+              start={beat("caption")}
+              frame={frame}
+              stagger={3}
+              accentFrom={Math.max(1, captionWords.length - 1)}
+            />
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

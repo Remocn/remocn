@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const spellOutConfig: ComponentConfig = {
   componentName: "SpellOut",
@@ -23,6 +29,26 @@ export const spellOutConfig: ComponentConfig = {
       default: "Say it once. Remember it.",
       description: "Line",
     },
+    stagger: {
+      type: "number",
+      default: 8,
+      min: 2,
+      max: 16,
+      step: 1,
+      description: "Letter stagger",
+      hiddenFromList: false,
+    },
+    hold: {
+      type: "number",
+      default: 14,
+      min: 0,
+      max: 40,
+      step: 1,
+      description: "Hold (frames)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Nunito" }),
     speed: {
       type: "number",
       default: 1,

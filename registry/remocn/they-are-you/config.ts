@@ -1,8 +1,24 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const theyAreYouConfig: ComponentConfig = {
   componentName: "TheyAreYou",
   importPath: "@/components/remocn/they-are-you",
+  lists: {
+    facts: {
+      default: [
+        "They write React for a living.",
+        "They have a launch on Monday.",
+        "They’ve never touched a timeline.",
+      ],
+      description: "Facts",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -23,6 +39,17 @@ export const theyAreYouConfig: ComponentConfig = {
       default: "You",
       description: "To",
     },
+    stagger: {
+      type: "number",
+      default: 6,
+      min: 0,
+      max: 20,
+      step: 1,
+      description: "Flip stagger",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Gabarito" }),
     speed: {
       type: "number",
       default: 1,

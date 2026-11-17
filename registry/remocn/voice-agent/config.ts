@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const voiceAgentConfig: ComponentConfig = {
   componentName: "VoiceAgent",
@@ -12,11 +19,6 @@ export const voiceAgentConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     agentName: {
       type: "text-content",
@@ -48,6 +50,11 @@ export const voiceAgentConfig: ComponentConfig = {
       default: "Booked",
       description: "Summary status",
     },
+    endLabel: {
+      type: "text-content",
+      default: "End call",
+      description: "End call label",
+    },
     startSeconds: {
       type: "number",
       default: 41,
@@ -57,6 +64,22 @@ export const voiceAgentConfig: ComponentConfig = {
       description: "Start seconds",
       hiddenFromList: false,
     },
+    stagger: {
+      type: "number",
+      default: 2.4,
+      min: 1,
+      max: 6,
+      step: 0.2,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Hanken Grotesk" }),
     speed: {
       type: "number",
       default: 1,

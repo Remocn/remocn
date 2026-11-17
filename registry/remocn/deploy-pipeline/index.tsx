@@ -44,7 +44,23 @@ export interface DeployPipelineProps {
   buildSeconds?: number;
   /** Site screenshot shown once the deployment is ready. */
   preview?: string;
+  /** Environment shown in the summary (16:9 only). */
+  environment?: string;
+  /** Heading above the log stream. */
+  logsTitle?: string;
+  /** Button that appears once the deployment is ready. */
+  visitLabel?: string;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the window, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "light" | "dark";
   ground?: GshPresetId;
@@ -251,6 +267,22 @@ function formatTime(ms: number) {
   return `${p(m)}:${p(s)}.${p(x, 3)}`;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function DeployPipeline({
   project = "remocn-web",
   deploymentId = "7Hq2xKfaW",
@@ -261,19 +293,28 @@ export function DeployPipeline({
   logs = DEFAULT_LOGS,
   buildSeconds = 21,
   preview,
+  environment = "Production",
+  logsTitle = "Build logs",
+  visitLabel = "Visit",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = geist.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
   ground,
   groundParams,
 }: DeployPipelineProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width;
   const SW = tall ? 720 : 1280;
   const SH = tall ? 1280 : 720;
   const u = Math.min(width / SW, height / SH);
-  const c = theme === "dark" ? DARK : LIGHT;
+  const base = theme === "dark" ? DARK : LIGHT;
+  const c: Palette = { ...base, text: ink ?? base.text };
   const sp = (at: number, config: Partial<typeof CARD>) =>
     spring({ frame: frame - at, fps, config });
   const ease = (a: number, b: number, easing = ENTER) =>
@@ -394,7 +435,7 @@ export function DeployPipeline({
       </Field>
       {tall ? null : (
         <Field label="Environment" c={c}>
-          Production
+          {environment}
         </Field>
       )}
       <div style={{ gridColumn: tall ? "1 / 3" : "1 / 3" }}>
@@ -433,349 +474,368 @@ export function DeployPipeline({
   return (
     <AbsoluteFill
       style={{
-        fontFamily: geist.fontFamily,
+        fontFamily,
         WebkitFontSmoothing: "antialiased",
         overflow: "hidden",
       }}
     >
-      <GshGround
-        preset={ground ?? (c.dark ? "film-blue" : "paper-crease")}
-        params={groundParams}
-        timeOffset={c.dark ? 5 : 3}
-        timeScale={0.4}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: (width - SW * u) / 2,
-          top: (height - SH * u) / 2,
-          width: SW,
-          height: SH,
-          transform: `scale(${u})`,
-          transformOrigin: "0 0",
-        }}
-      >
-        {tall ? (
+      {background === undefined ? (
+        <GshGround
+          preset={ground ?? (c.dark ? "film-blue" : "paper-crease")}
+          params={groundParams}
+          timeOffset={c.dark ? 5 : 3}
+          timeScale={0.4}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            left: (width - SW * u) / 2,
+            top: (height - SH * u) / 2,
+            width: SW,
+            height: SH,
+            transform: `scale(${u})`,
+            transformOrigin: "0 0",
+          }}
+        >
+          {tall ? (
+            <div
+              style={{
+                position: "absolute",
+                left: WIN.x,
+                top: 150,
+                width: WIN.w,
+                fontSize: 52,
+                fontWeight: 300,
+                letterSpacing: "-0.035em",
+                lineHeight: 1.04,
+                color: ink ?? (c.dark ? "#F2F4F8" : "#16181D"),
+                opacity: headIn,
+                transform: `translateY(${(1 - headIn) * 18}px)`,
+                fontVariantNumeric: "tabular-nums",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {ready ? (
+                <span
+                  style={{
+                    display: "inline-block",
+                    opacity: statusSwap,
+                    transform: `translateY(${(1 - statusSwap) * 14}px)`,
+                  }}
+                >
+                  Live in {buildSeconds}s
+                </span>
+              ) : (
+                <span>
+                  Building
+                  <span style={{ color: c.muted }}>
+                    {" "}
+                    · {frame < LOG_START ? 0 : seconds}s
+                  </span>
+                </span>
+              )}
+            </div>
+          ) : null}
           <div
             style={{
               position: "absolute",
               left: WIN.x,
-              top: 150,
+              top: WIN.y,
               width: WIN.w,
-              fontSize: 52,
-              fontWeight: 300,
-              letterSpacing: "-0.035em",
-              lineHeight: 1.04,
-              color: c.dark ? "#F2F4F8" : "#16181D",
-              opacity: headIn,
-              transform: `translateY(${(1 - headIn) * 18}px)`,
-              fontVariantNumeric: "tabular-nums",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {ready ? (
-              <span
-                style={{
-                  display: "inline-block",
-                  opacity: statusSwap,
-                  transform: `translateY(${(1 - statusSwap) * 14}px)`,
-                }}
-              >
-                Live in {buildSeconds}s
-              </span>
-            ) : (
-              <span>
-                Building
-                <span style={{ color: c.muted }}>
-                  {" "}
-                  · {frame < LOG_START ? 0 : seconds}s
-                </span>
-              </span>
-            )}
-          </div>
-        ) : null}
-        <div
-          style={{
-            position: "absolute",
-            left: WIN.x,
-            top: WIN.y,
-            width: WIN.w,
-            height: WIN.h,
-            borderRadius: 18,
-            overflow: "hidden",
-            background: c.window,
-            boxShadow: c.depth,
-            opacity: winFade,
-            transformOrigin: "50% 50%",
-            transform: `translateY(${(1 - win) * 60}px) scale(${(0.96 + 0.04 * win) * cam})`,
-          }}
-        >
-          <div
-            style={{
-              height: HEAD,
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              padding: `0 ${PAD}px`,
-              boxShadow: `inset 0 -1px 0 ${c.rule}`,
-              fontSize: 15,
-              whiteSpace: "nowrap",
-              position: "relative",
+              height: WIN.h,
+              borderRadius: 18,
+              overflow: "hidden",
+              background: c.window,
+              boxShadow: c.depth,
+              opacity: winFade,
+              transformOrigin: "50% 50%",
+              transform: `translateY(${(1 - win) * 60}px) scale(${(0.96 + 0.04 * win) * cam})`,
             }}
           >
             <div
               style={{
-                position: "absolute",
-                left: 0,
-                bottom: 0,
-                height: 2,
-                width: `${(elapsed / buildSeconds) * 100}%`,
-                background: accent,
-                opacity: 1 - ease(readyAt + 2, readyAt + 12, EXIT),
-              }}
-            />
-            <span style={{ color: c.text }}>{project}</span>
-            <span style={{ color: c.faint }}>/</span>
-            {tall ? null : (
-              <>
-                <span style={{ color: c.muted }}>Deployments</span>
-                <span style={{ color: c.faint }}>/</span>
-              </>
-            )}
-            <span
-              style={{
-                color: c.muted,
-                fontFamily: mono.fontFamily,
-                fontSize: 14,
-              }}
-            >
-              {deploymentId}
-            </span>
-            <div style={{ marginLeft: "auto" }} />
-            {frame >= readyAt + 10 ? (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 7,
-                  height: 34,
-                  padding: "0 14px",
-                  borderRadius: 9,
-                  background: c.button,
-                  color: c.buttonText,
-                  fontSize: 15,
-                  transformOrigin: "100% 50%",
-                  transform: `scale(${0.85 + 0.15 * visitS})`,
-                  opacity: clamp(visitS * 1.5),
-                }}
-              >
-                Visit
-                <Icon name="external" size={14} color={c.buttonText} />
-              </div>
-            ) : null}
-          </div>
-          <div
-            style={{
-              height: SUMMARY_H,
-              boxSizing: "border-box",
-              padding: `24px ${PAD}px`,
-              display: "flex",
-              flexDirection: tall ? "column" : "row",
-              gap: tall ? 26 : 32,
-              boxShadow: `inset 0 -1px 0 ${c.rule}`,
-            }}
-          >
-            <div
-              style={{
+                height: HEAD,
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: `0 ${PAD}px`,
+                boxShadow: `inset 0 -1px 0 ${c.rule}`,
+                fontSize: 15,
+                whiteSpace: "nowrap",
                 position: "relative",
-                width: PREV.w,
-                height: PREV.h,
-                flexShrink: 0,
-                borderRadius: 10,
-                overflow: "hidden",
-                background: c.raised,
               }}
             >
-              <div
-                style={{ position: "absolute", inset: 0, opacity: skeletonOut }}
-              >
-                {[
-                  [0.06, 0.1, 0.14, 0.05],
-                  [0.7, 0.08, 0.22, 0.07],
-                  [0.22, 0.34, 0.56, 0.1],
-                  [0.3, 0.5, 0.4, 0.07],
-                  [0.38, 0.66, 0.24, 0.09],
-                ].map(([x, y, w, h]) => (
-                  <div
-                    key={`${x}-${y}`}
-                    style={{
-                      position: "absolute",
-                      left: `${x * 100}%`,
-                      top: `${y * 100}%`,
-                      width: `${w * 100}%`,
-                      height: `${h * 100}%`,
-                      borderRadius: 999,
-                      background: c.skeleton,
-                    }}
-                  />
-                ))}
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    background: `linear-gradient(100deg, transparent ${shimmer - 24}%, ${c.dark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.7)"} ${shimmer}%, transparent ${shimmer + 24}%)`,
-                  }}
-                />
-              </div>
-              {ready ? (
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    opacity: previewFade,
-                    transform: `scale(${1.06 - 0.06 * previewS})`,
-                    filter: `blur(${(1 - previewS) * 6}px)`,
-                  }}
-                >
-                  <Img
-                    src={preview ?? staticFile("hero.png")}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                      display: "block",
-                    }}
-                  />
-                </div>
-              ) : null}
               <div
                 style={{
                   position: "absolute",
-                  inset: 0,
-                  borderRadius: 10,
-                  boxShadow: `inset 0 0 0 1px ${c.outline}`,
+                  left: 0,
+                  bottom: 0,
+                  height: 2,
+                  width: `${(elapsed / buildSeconds) * 100}%`,
+                  background: accent,
+                  opacity: 1 - ease(readyAt + 2, readyAt + 12, EXIT),
                 }}
               />
-            </div>
-            {fieldsGrid}
-          </div>
-          <div
-            style={{
-              height: LOG_HEAD,
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              padding: `0 ${PAD}px`,
-            }}
-          >
-            <span style={{ fontSize: 16, color: c.text }}>Build logs</span>
-            <span
-              style={{
-                marginLeft: "auto",
-                fontSize: 15,
-                color: c.muted,
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
-              {frame < LOG_START ? "" : `${seconds}s`}
-            </span>
-            {ready ? (
-              <div
+              <span style={{ color: c.text }}>{project}</span>
+              <span style={{ color: c.faint }}>/</span>
+              {tall ? null : (
+                <>
+                  <span style={{ color: c.muted }}>Deployments</span>
+                  <span style={{ color: c.faint }}>/</span>
+                </>
+              )}
+              <span
                 style={{
-                  width: 18,
-                  height: 18,
-                  borderRadius: 9,
-                  background: c.success,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  transform: `scale(${checkS})`,
+                  color: c.muted,
+                  fontFamily: mono.fontFamily,
+                  fontSize: 14,
                 }}
               >
-                <svg
-                  width={11}
-                  height={11}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke={c.window}
-                  strokeWidth={3}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                {deploymentId}
+              </span>
+              <div style={{ marginLeft: "auto" }} />
+              {frame >= readyAt + 10 ? (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 7,
+                    height: 34,
+                    padding: "0 14px",
+                    borderRadius: 9,
+                    background: c.button,
+                    color: c.buttonText,
+                    fontSize: 15,
+                    transformOrigin: "100% 50%",
+                    transform: `scale(${0.85 + 0.15 * visitS})`,
+                    opacity: clamp(visitS * 1.5),
+                  }}
                 >
-                  <path d="M5 12l5 5 9-10" />
-                </svg>
-              </div>
-            ) : building ? (
-              <Spinner frame={frame} size={16} track={c.rule} color={c.amber} />
-            ) : null}
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              top: LOG_TOP + LOG_HEAD,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              overflow: "hidden",
-              fontFamily: mono.fontFamily,
-              fontSize: 14,
-              maskImage: `linear-gradient(to bottom, rgba(0,0,0,${1 - clamp(scroll / ROW_H)}) 0, #000 30px)`,
-            }}
-          >
-            <div style={{ transform: `translateY(${-scroll}px)` }}>
-              {lines.map((l, i) => {
-                const p = appear[i];
-                if (p <= 0) return null;
-                const tone = l.tone ?? "default";
-                const color =
-                  tone === "warn"
-                    ? c.warnText
-                    : tone === "success"
-                      ? c.success
-                      : tone === "muted"
-                        ? c.muted
-                        : c.text;
-                const ms =
-                  baseMs +
-                  (ats[i] - LOG_START) * msPerFrame +
-                  Math.floor(hash(i) * 90);
-                return (
+                  {visitLabel}
+                  <Icon name="external" size={14} color={c.buttonText} />
+                </div>
+              ) : null}
+            </div>
+            <div
+              style={{
+                height: SUMMARY_H,
+                boxSizing: "border-box",
+                padding: `24px ${PAD}px`,
+                display: "flex",
+                flexDirection: tall ? "column" : "row",
+                gap: tall ? 26 : 32,
+                boxShadow: `inset 0 -1px 0 ${c.rule}`,
+              }}
+            >
+              <div
+                style={{
+                  position: "relative",
+                  width: PREV.w,
+                  height: PREV.h,
+                  flexShrink: 0,
+                  borderRadius: 10,
+                  overflow: "hidden",
+                  background: c.raised,
+                }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    opacity: skeletonOut,
+                  }}
+                >
+                  {[
+                    [0.06, 0.1, 0.14, 0.05],
+                    [0.7, 0.08, 0.22, 0.07],
+                    [0.22, 0.34, 0.56, 0.1],
+                    [0.3, 0.5, 0.4, 0.07],
+                    [0.38, 0.66, 0.24, 0.09],
+                  ].map(([x, y, w, h]) => (
+                    <div
+                      key={`${x}-${y}`}
+                      style={{
+                        position: "absolute",
+                        left: `${x * 100}%`,
+                        top: `${y * 100}%`,
+                        width: `${w * 100}%`,
+                        height: `${h * 100}%`,
+                        borderRadius: 999,
+                        background: c.skeleton,
+                      }}
+                    />
+                  ))}
                   <div
-                    key={`${i}-${l.text}`}
                     style={{
-                      height: ROW_H,
-                      display: "flex",
-                      alignItems: "center",
-                      padding: `0 ${PAD}px`,
-                      background: tone === "warn" ? c.warnBg : "transparent",
-                      opacity: p,
-                      transform: `translateX(${(1 - p) * -10}px)`,
-                      whiteSpace: "pre",
+                      position: "absolute",
+                      inset: 0,
+                      background: `linear-gradient(100deg, transparent ${shimmer - 24}%, ${c.dark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.7)"} ${shimmer}%, transparent ${shimmer + 24}%)`,
+                    }}
+                  />
+                </div>
+                {ready ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      opacity: previewFade,
+                      transform: `scale(${1.06 - 0.06 * previewS})`,
+                      filter: `blur(${(1 - previewS) * 6}px)`,
                     }}
                   >
-                    {tall ? null : (
-                      <span
-                        style={{ width: 104, flexShrink: 0, color: c.faint }}
-                      >
-                        {formatTime(ms)}
-                      </span>
-                    )}
-                    <span
+                    <Img
+                      src={preview ?? staticFile("hero.png")}
                       style={{
-                        color,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        display: "block",
+                      }}
+                    />
+                  </div>
+                ) : null}
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    borderRadius: 10,
+                    boxShadow: `inset 0 0 0 1px ${c.outline}`,
+                  }}
+                />
+              </div>
+              {fieldsGrid}
+            </div>
+            <div
+              style={{
+                height: LOG_HEAD,
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: `0 ${PAD}px`,
+              }}
+            >
+              <span style={{ fontSize: 16, color: c.text }}>{logsTitle}</span>
+              <span
+                style={{
+                  marginLeft: "auto",
+                  fontSize: 15,
+                  color: c.muted,
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {frame < LOG_START ? "" : `${seconds}s`}
+              </span>
+              {ready ? (
+                <div
+                  style={{
+                    width: 18,
+                    height: 18,
+                    borderRadius: 9,
+                    background: c.success,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transform: `scale(${checkS})`,
+                  }}
+                >
+                  <svg
+                    width={11}
+                    height={11}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke={c.window}
+                    strokeWidth={3}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M5 12l5 5 9-10" />
+                  </svg>
+                </div>
+              ) : building ? (
+                <Spinner
+                  frame={frame}
+                  size={16}
+                  track={c.rule}
+                  color={c.amber}
+                />
+              ) : null}
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                top: LOG_TOP + LOG_HEAD,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                overflow: "hidden",
+                fontFamily: mono.fontFamily,
+                fontSize: 14,
+                maskImage: `linear-gradient(to bottom, rgba(0,0,0,${1 - clamp(scroll / ROW_H)}) 0, #000 30px)`,
+              }}
+            >
+              <div style={{ transform: `translateY(${-scroll}px)` }}>
+                {lines.map((l, i) => {
+                  const p = appear[i];
+                  if (p <= 0) return null;
+                  const tone = l.tone ?? "default";
+                  const color =
+                    tone === "warn"
+                      ? c.warnText
+                      : tone === "success"
+                        ? c.success
+                        : tone === "muted"
+                          ? c.muted
+                          : c.text;
+                  const ms =
+                    baseMs +
+                    (ats[i] - LOG_START) * msPerFrame +
+                    Math.floor(hash(i) * 90);
+                  return (
+                    <div
+                      key={`${i}-${l.text}`}
+                      style={{
+                        height: ROW_H,
+                        display: "flex",
+                        alignItems: "center",
+                        padding: `0 ${PAD}px`,
+                        background: tone === "warn" ? c.warnBg : "transparent",
+                        opacity: p,
+                        transform: `translateX(${(1 - p) * -10}px)`,
+                        whiteSpace: "pre",
                       }}
                     >
-                      {l.text}
-                    </span>
-                  </div>
-                );
-              })}
+                      {tall ? null : (
+                        <span
+                          style={{ width: 104, flexShrink: 0, color: c.faint }}
+                        >
+                          {formatTime(ms)}
+                        </span>
+                      )}
+                      <span
+                        style={{
+                          color,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {l.text}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

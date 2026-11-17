@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const streamgraphConfig: ComponentConfig = {
   componentName: "Streamgraph",
@@ -12,11 +18,6 @@ export const streamgraphConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     label: {
       type: "text-content",
@@ -32,6 +33,30 @@ export const streamgraphConfig: ComponentConfig = {
       description: "Highlight",
       hiddenFromList: false,
     },
+    landAt: {
+      type: "number",
+      default: 82,
+      min: 20,
+      max: 140,
+      step: 1,
+      description: "Land at (frame)",
+      hiddenFromList: false,
+    },
+    dim: {
+      type: "number",
+      default: 0.38,
+      min: 0,
+      max: 1,
+      step: 0.01,
+      description: "Dim others",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Bricolage Grotesque", grain: true }),
     speed: {
       type: "number",
       default: 1,

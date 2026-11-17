@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const multiplayerCursorsConfig: ComponentConfig = {
   componentName: "MultiplayerCursors",
@@ -12,11 +19,6 @@ export const multiplayerCursorsConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     boardTitle: {
       type: "text-content",
@@ -38,6 +40,23 @@ export const multiplayerCursorsConfig: ComponentConfig = {
       default: "Love this. Ship it Friday.",
       description: "Comment text",
     },
+    shareLabel: {
+      type: "text-content",
+      default: "Share",
+      description: "Share button",
+    },
+    shapeLabel: {
+      type: "text-content",
+      default: "Launch day",
+      description: "Shape label",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Figtree" }),
     speed: {
       type: "number",
       default: 1,

@@ -15,7 +15,7 @@ import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const { fontFamily: hanken } = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -63,8 +63,22 @@ export interface VoiceAgentProps {
   summary?: VoiceSummaryRow[];
   /** Seconds already on the call clock when the clip starts. */
   startSeconds?: number;
+  /** Label of the red button while the call is live. */
+  endLabel?: string;
+  /** Frames between spoken words; punctuation adds a short pause on top. */
+  stagger?: number;
   theme?: "light" | "dark";
   accent?: string;
+  /** Text color of the transcript and labels; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Size of the call window, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -613,6 +627,22 @@ function SummaryCard({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function VoiceAgent({
   agentName = "Ava",
   agentRole = "Fernway concierge",
@@ -623,20 +653,28 @@ export function VoiceAgent({
   summaryStatus = "Booked",
   summary = DEFAULT_SUMMARY,
   startSeconds = 41,
+  endLabel = "End call",
+  stagger = WPF,
   theme = "light",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = hanken,
+  scale = 1,
+  delay = 0,
   speed = 1,
   ground,
   groundParams,
 }: VoiceAgentProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width;
   const DW = tall ? 720 : 1280;
   const DH = tall ? 1280 : 720;
   const u = Math.min(width / DW, height / DH);
-  const pal = palette(theme);
-  const tl = plan(turns);
+  const themePal = palette(theme);
+  const pal = ink === undefined ? themePal : { ...themePal, text: ink };
+  const tl = plan(turns, stagger);
   const ended = tween(frame, tl.callEnd, tl.callEnd + 8, MOVE);
   const callSec = startSeconds + Math.min(frame, tl.callEnd) / 30;
   const winIn = spring({ frame, fps, config: HEAVY });
@@ -808,7 +846,7 @@ export function VoiceAgent({
             size={18}
             style={{ transform: "rotate(135deg)" }}
           />
-          {live > 0.5 ? "End call" : "Call ended"}
+          {live > 0.5 ? endLabel : "Call ended"}
         </div>
       </div>
     </div>
@@ -816,214 +854,233 @@ export function VoiceAgent({
 
   return (
     <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={ground ?? "kiruna"}
-        params={
-          groundParams ??
-          (pal.dark
-            ? undefined
-            : {
-                background: "#edf3f0",
-                colors: ["#ffffff", "#bfe9d9", "#7cc9ad", "#e2ece7"],
-                grain: 0.05,
-              })
-        }
-        timeOffset={6}
-        timeScale={0.3}
-      />
-      <AbsoluteFill style={{ background: pal.scrim }} />
-      <div
-        style={{
-          position: "absolute",
-          left: (width - DW * u) / 2,
-          top: (height - DH * u) / 2,
-          width: DW,
-          height: DH,
-          transformOrigin: "0 0",
-          transform: `scale(${u})`,
-        }}
-      >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? "kiruna"}
+            params={
+              groundParams ??
+              (pal.dark
+                ? undefined
+                : {
+                    background: "#edf3f0",
+                    colors: ["#ffffff", "#bfe9d9", "#7cc9ad", "#e2ece7"],
+                    grain: 0.05,
+                  })
+            }
+            timeOffset={6}
+            timeScale={0.3}
+          />
+          <AbsoluteFill style={{ background: pal.scrim }} />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: L.win.x,
-            top: L.win.y,
-            width: L.win.w,
-            height: L.win.h,
-            borderRadius: 18,
-            background: pal.win,
-            boxShadow: pal.shadow,
-            overflow: "hidden",
-            opacity: Math.min(1, winIn * 2),
-            transform: `translateY(${(1 - winIn) * 80}px) scale(${(0.96 + 0.04 * winIn) * cam})`,
-            transformOrigin: "60% 70%",
-            display: "flex",
-            flexDirection: "column",
+            left: (width - DW * u) / 2,
+            top: (height - DH * u) / 2,
+            width: DW,
+            height: DH,
+            transformOrigin: "0 0",
+            transform: `scale(${u})`,
           }}
         >
           <div
             style={{
-              height: headH,
-              flexShrink: 0,
+              position: "absolute",
+              left: L.win.x,
+              top: L.win.y,
+              width: L.win.w,
+              height: L.win.h,
+              borderRadius: 18,
+              background: pal.win,
+              boxShadow: pal.shadow,
+              overflow: "hidden",
+              opacity: Math.min(1, winIn * 2),
+              transform: `translateY(${(1 - winIn) * 80}px) scale(${(0.96 + 0.04 * winIn) * cam})`,
+              transformOrigin: "60% 70%",
               display: "flex",
-              alignItems: "center",
-              padding: "0 28px",
-              borderBottom: `1px solid ${pal.hair}`,
-              gap: 14,
+              flexDirection: "column",
             }}
           >
             <div
               style={{
-                width: 32,
-                height: 32,
-                borderRadius: 16,
-                background: accent,
+                height: headH,
+                flexShrink: 0,
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <svg width={18} height={18} viewBox="0 0 24 24" aria-hidden>
-                <path
-                  d="M4 10v4M8 7v10M12 4v16M16 8v8M20 10.5v3"
-                  stroke="#fff"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                />
-              </svg>
-            </div>
-            <span style={{ fontSize: 18, color: pal.text }}>{agentName}</span>
-            <span style={{ fontSize: 16, color: pal.faint }}>{agentRole}</span>
-            <div
-              style={{
-                marginLeft: "auto",
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                fontSize: 16,
-                color: live > 0.5 ? pal.red : pal.muted,
+                padding: "0 28px",
+                borderBottom: `1px solid ${pal.hair}`,
+                gap: 14,
               }}
             >
               <div
                 style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: 4,
-                  background: live > 0.5 ? pal.red : pal.faint,
-                  opacity:
-                    live > 0.5
-                      ? 0.55 + 0.45 * Math.abs(Math.cos(frame / 12))
-                      : 1,
-                }}
-              />
-              {live > 0.5 ? "Live" : "Ended"}
-              <span
-                style={{
-                  fontFamily: mono,
-                  fontSize: 16,
-                  color: pal.text,
-                  fontVariantNumeric: "tabular-nums",
-                  width: 52,
-                  textAlign: "right",
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  background: accent,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
-                {clock(callSec)}
+                <svg width={18} height={18} viewBox="0 0 24 24" aria-hidden>
+                  <path
+                    d="M4 10v4M8 7v10M12 4v16M16 8v8M20 10.5v3"
+                    stroke="#fff"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </div>
+              <span style={{ fontSize: 18, color: pal.text }}>{agentName}</span>
+              <span style={{ fontSize: 16, color: pal.faint }}>
+                {agentRole}
               </span>
+              <div
+                style={{
+                  marginLeft: "auto",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  fontSize: 16,
+                  color: live > 0.5 ? pal.red : pal.muted,
+                }}
+              >
+                <div
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    background: live > 0.5 ? pal.red : pal.faint,
+                    opacity:
+                      live > 0.5
+                        ? 0.55 + 0.45 * Math.abs(Math.cos(frame / 12))
+                        : 1,
+                  }}
+                />
+                {live > 0.5 ? "Live" : "Ended"}
+                <span
+                  style={{
+                    fontFamily: mono,
+                    fontSize: 16,
+                    color: pal.text,
+                    fontVariantNumeric: "tabular-nums",
+                    width: 52,
+                    textAlign: "right",
+                  }}
+                >
+                  {clock(callSec)}
+                </span>
+              </div>
             </div>
-          </div>
-          <div
-            style={{
-              flex: 1,
-              minHeight: 0,
-              display: "flex",
-              flexDirection: tall ? "column" : "row",
-            }}
-          >
-            {sidePanel}
             <div
               style={{
                 flex: 1,
                 minHeight: 0,
-                minWidth: 0,
-                overflow: "hidden",
                 display: "flex",
-                flexDirection: "column",
-                justifyContent: "flex-end",
-                padding: "0 32px 24px 28px",
-                WebkitMaskImage:
-                  "linear-gradient(to bottom, transparent 0, #000 40px)",
-                maskImage:
-                  "linear-gradient(to bottom, transparent 0, #000 40px)",
+                flexDirection: tall ? "column" : "row",
               }}
             >
-              <div style={{ marginBottom: "auto", paddingTop: 14 }}>
-                {tl.turns.map((p, i) => {
-                  const g = tween(frame, p.start - 3, p.start + 7, MOVE);
-                  if (g <= 0) return null;
-                  return (
-                    <Grow key={i} p={g}>
+              {sidePanel}
+              <div
+                style={{
+                  flex: 1,
+                  minHeight: 0,
+                  minWidth: 0,
+                  overflow: "hidden",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "flex-end",
+                  padding: "0 32px 24px 28px",
+                  WebkitMaskImage:
+                    "linear-gradient(to bottom, transparent 0, #000 40px)",
+                  maskImage:
+                    "linear-gradient(to bottom, transparent 0, #000 40px)",
+                }}
+              >
+                <div style={{ marginBottom: "auto", paddingTop: 14 }}>
+                  {tl.turns.map((p, i) => {
+                    const g = tween(frame, p.start - 3, p.start + 7, MOVE);
+                    if (g <= 0) return null;
+                    return (
+                      <Grow key={i} p={g}>
+                        <div
+                          style={{
+                            opacity: tween(frame, p.start - 1, p.start + 7),
+                          }}
+                        >
+                          <TurnRow
+                            p={p}
+                            frame={frame}
+                            pal={pal}
+                            accent={accent}
+                            agentName={agentName}
+                            callerName={callerName}
+                            startSeconds={startSeconds}
+                          />
+                        </div>
+                      </Grow>
+                    );
+                  })}
+                  {frame >= tl.callEnd ? (
+                    <Grow p={tween(frame, tl.callEnd, tl.callEnd + 8, MOVE)}>
                       <div
                         style={{
-                          opacity: tween(frame, p.start - 1, p.start + 7),
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 14,
+                          padding: "14px 0 10px",
+                          fontSize: 16,
+                          color: pal.faint,
+                          fontVariantNumeric: "tabular-nums",
                         }}
                       >
-                        <TurnRow
-                          p={p}
-                          frame={frame}
-                          pal={pal}
-                          accent={accent}
-                          agentName={agentName}
-                          callerName={callerName}
-                          startSeconds={startSeconds}
+                        <div
+                          style={{ flex: 1, height: 1, background: pal.hair }}
+                        />
+                        Call ended · {clock(callSec)}
+                        <div
+                          style={{ flex: 1, height: 1, background: pal.hair }}
                         />
                       </div>
                     </Grow>
-                  );
-                })}
-                {frame >= tl.callEnd ? (
-                  <Grow p={tween(frame, tl.callEnd, tl.callEnd + 8, MOVE)}>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 14,
-                        padding: "14px 0 10px",
-                        fontSize: 16,
-                        color: pal.faint,
-                        fontVariantNumeric: "tabular-nums",
-                      }}
+                  ) : null}
+                  {frame >= tl.summaryAt - 2 ? (
+                    <Grow
+                      p={tween(
+                        frame,
+                        tl.summaryAt - 2,
+                        tl.summaryAt + 10,
+                        MOVE,
+                      )}
                     >
-                      <div
-                        style={{ flex: 1, height: 1, background: pal.hair }}
+                      <SummaryCard
+                        rows={summary}
+                        title={summaryTitle}
+                        status={summaryStatus}
+                        at={tl.summaryAt}
+                        frame={frame}
+                        fps={fps}
+                        pal={pal}
+                        callerLine={callerLine}
                       />
-                      Call ended · {clock(callSec)}
-                      <div
-                        style={{ flex: 1, height: 1, background: pal.hair }}
-                      />
-                    </div>
-                  </Grow>
-                ) : null}
-                {frame >= tl.summaryAt - 2 ? (
-                  <Grow
-                    p={tween(frame, tl.summaryAt - 2, tl.summaryAt + 10, MOVE)}
-                  >
-                    <SummaryCard
-                      rows={summary}
-                      title={summaryTitle}
-                      status={summaryStatus}
-                      at={tl.summaryAt}
-                      frame={frame}
-                      fps={fps}
-                      pal={pal}
-                      callerLine={callerLine}
-                    />
-                  </Grow>
-                ) : null}
+                    </Grow>
+                  ) : null}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -1052,7 +1109,7 @@ interface TurnPlan {
   toolDone: number;
 }
 
-function plan(turns: VoiceTurn[]) {
+function plan(turns: VoiceTurn[], stagger = WPF) {
   let t = 12;
   const out: TurnPlan[] = [];
   for (const turn of turns) {
@@ -1066,7 +1123,7 @@ function plan(turns: VoiceTurn[]) {
     let w = t;
     for (const word of words) {
       wordAt.push(w);
-      w += WPF + (/[,.?!]$/.test(word) ? 3 : 0);
+      w += stagger + (/[,.?!]$/.test(word) ? 3 : 0);
     }
     const end = w + 2;
     let toolStart = -1;

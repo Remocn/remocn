@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const hookPunchConfig: ComponentConfig = {
   componentName: "HookPunch",
@@ -12,11 +19,6 @@ export const hookPunchConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     stop: {
       type: "text-content",
@@ -38,6 +40,22 @@ export const hookPunchConfig: ComponentConfig = {
       default: "1 day.",
       description: "Payoff",
     },
+    hold: {
+      type: "number",
+      default: 30,
+      min: 12,
+      max: 90,
+      step: 1,
+      description: "Hold (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Bricolage Grotesque" }),
     speed: {
       type: "number",
       default: 1,

@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const offTheChartsConfig: ComponentConfig = {
   componentName: "OffTheCharts",
@@ -12,11 +18,6 @@ export const offTheChartsConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     unit: {
       type: "text-content",
@@ -51,6 +52,30 @@ export const offTheChartsConfig: ComponentConfig = {
       description: "Max",
       hiddenFromList: false,
     },
+    push: {
+      type: "number",
+      default: 26,
+      min: 6,
+      max: 60,
+      step: 1,
+      description: "Push (frames)",
+      hiddenFromList: false,
+    },
+    radius: {
+      type: "number",
+      default: 4,
+      min: 0,
+      max: 24,
+      step: 1,
+      description: "Bar radius",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Bricolage Grotesque", grain: true }),
     speed: {
       type: "number",
       default: 1,

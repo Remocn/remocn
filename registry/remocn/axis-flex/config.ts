@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const axisFlexConfig: ComponentConfig = {
   componentName: "AxisFlex",
@@ -13,11 +19,6 @@ export const axisFlexConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     word: {
       type: "text-content",
       default: "elastic",
@@ -28,6 +29,30 @@ export const axisFlexConfig: ComponentConfig = {
       default: "One family, every width",
       description: "Line",
     },
+    settleAt: {
+      type: "number",
+      default: 84,
+      min: 20,
+      max: 120,
+      step: 1,
+      description: "Settle at (frame)",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 2,
+      min: 0,
+      max: 8,
+      step: 1,
+      description: "Letter stagger",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Mona Sans", ink: false }),
     speed: {
       type: "number",
       default: 1,

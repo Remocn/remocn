@@ -2,6 +2,7 @@
 
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadFont } from "@remotion/google-fonts/Saira";
+import type React from "react";
 import {
   AbsoluteFill,
   Easing,
@@ -14,7 +15,8 @@ const { fontFamily: saira } = loadFont("normal", {
   weights: ["500"],
   subsets: ["latin"],
 });
-const { fontFamily: sairaItalic } = loadFont("italic", {
+// the italic face of the same family, for the title and stat
+loadFont("italic", {
   weights: ["500"],
   subsets: ["latin"],
 });
@@ -86,6 +88,21 @@ export interface PlayOfTheGameProps {
   highlight?: string;
   /** Small markers: the role tick. */
   accent?: string;
+  /** Color of the player and the role badge; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the title, role and stat. Load it yourself; Saira by default. */
+  fontFamily?: string;
+  /** Replaces the remocn logo as the player. */
+  logo?: React.ReactNode;
+  /** Camera shake on impact, in px at 720p. */
+  impact?: number;
+  /** The hexagon role badge next to the player. */
+  badge?: boolean;
+  /** Size of the banner, player and stat, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -180,18 +197,45 @@ function shake(t: number, at: number, len: number, amp: number) {
   };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function PlayOfTheGame({
   title = "Play of the game",
   role = "Solo builder",
   stat = "Shipped in 6 hours",
   highlight = "6 hours",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = saira,
+  logo,
+  impact = 14,
+  badge = true,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: PlayOfTheGameProps) {
-  const t = useCurrentFrame() * speed + 4;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed + 4;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.stage);
   const u = Math.min(W / 1280, H / 720);
 
   const SLANT = Math.tan((14 * Math.PI) / 180);
@@ -203,8 +247,8 @@ export function PlayOfTheGame({
 
   // ── Impact ────────────────────────────────────────────────────────────────
   const hitAt = NAME_AT + NAME_LEN;
-  const sh = shake(t, hitAt, 11, 14 * u);
-  const sh2 = shake(t, STAT_AT + 6, 6, 5 * u);
+  const sh = shake(t, hitAt, 11, impact * u);
+  const sh2 = shake(t, STAT_AT + 6, 6, 5 * u * (impact / 14));
   const flash = t >= hitAt && t < hitAt + speed ? 1 : 0;
 
   // ── Banner ────────────────────────────────────────────────────────────────
@@ -252,7 +296,7 @@ export function PlayOfTheGame({
   const sweep = INOUT(ramp(t, SWEEP_AT, SWEEP_LEN));
 
   return (
-    <AbsoluteFill style={{ background: c.stage, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <div
         style={{
           position: "absolute",
@@ -301,200 +345,205 @@ export function PlayOfTheGame({
           );
         })}
 
-        {/* Banner: slices open behind a hot edge. */}
-        {banP > 0 ? (
+        <ScaleLayer scale={scale}>
+          {/* Banner: slices open behind a hot edge. */}
+          {banP > 0 ? (
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                top: banY,
+                width: W,
+                height: banH,
+                clipPath: `polygon(${banX + banLean}px 0, ${Math.min(banEdge + banLean, banX + banW + banLean)}px 0, ${Math.min(banEdge - banLean, banX + banW - banLean)}px 100%, ${banX - banLean}px 100%)`,
+              }}
+            >
+              <div
+                style={{ position: "absolute", inset: 0, background: BANNER }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  width: W,
+                  top: 0,
+                  height: banH,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transform: `translateX(${(1 - titleP) * -60 * u}px)`,
+                  opacity: titleP,
+                  fontFamily,
+                  fontStyle: "italic",
+                  fontWeight: 500,
+                  fontSize: banTitleFs,
+                  lineHeight: 1,
+                  letterSpacing: "-0.01em",
+                  textTransform: "uppercase",
+                  color: "#FFFFFF",
+                  whiteSpace: "nowrap",
+                  paddingTop: 4 * u,
+                }}
+              >
+                {title}
+              </div>
+              {banP < 1 ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    clipPath: `polygon(${banEdge + banLean - 18 * u}px 0, ${banEdge + banLean}px 0, ${banEdge - banLean}px 100%, ${banEdge - banLean - 18 * u}px 100%)`,
+                    background: SWIRL[0],
+                  }}
+                />
+              ) : null}
+            </div>
+          ) : null}
+
+          {/* Player row: role badge + the logo. */}
           <div
             style={{
               position: "absolute",
               left: 0,
-              top: banY,
               width: W,
-              height: banH,
-              clipPath: `polygon(${banX + banLean}px 0, ${Math.min(banEdge + banLean, banX + banW + banLean)}px 0, ${Math.min(banEdge - banLean, banX + banW - banLean)}px 100%, ${banX - banLean}px 100%)`,
+              top: rowCy - logoFs * 0.5,
+              height: logoFs,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 40 * u,
             }}
           >
-            <div
-              style={{ position: "absolute", inset: 0, background: BANNER }}
-            />
+            {badge ? (
+              <div
+                style={{
+                  width: glyphSize,
+                  height: glyphSize,
+                  opacity: ramp(t, GLYPH_AT, 2),
+                  transform: `rotate(${(1 - glyphP) * -40}deg) scale(${1.4 - 0.4 * glyphP})`,
+                }}
+              >
+                <RoleGlyph size={glyphSize} color={fg} />
+              </div>
+            ) : null}
+            <div style={{ position: "relative" }}>
+              {[4, 2, 0].map((lag) => {
+                const ghost = lag > 0;
+                if (ghost && t >= hitAt + lag) return null;
+                const tt = t - lag;
+                const op = ramp(tt, NAME_AT, 2) * (ghost ? 0.2 / lag : 1);
+                return (
+                  <div
+                    key={lag}
+                    style={{
+                      position: ghost ? "absolute" : "relative",
+                      left: 0,
+                      top: 0,
+                      transform: `scale(${nameScale(tt)})`,
+                      opacity: op,
+                      paddingTop: logoFs * 0.04,
+                    }}
+                  >
+                    {logo ?? <RemocnLogo fontSize={logoFs} color={fg} />}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Role label under the player. */}
+          {roleP > 0 ? (
             <div
               style={{
                 position: "absolute",
                 left: 0,
                 width: W,
-                top: 0,
-                height: banH,
+                top: rowCy + logoFs * 0.5,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 14 * u,
+                clipPath: `inset(-30% ${50 - 50 * roleP}% -30% ${50 - 50 * roleP}%)`,
+                fontFamily,
+                fontWeight: 500,
+                fontSize: 22 * u,
+                letterSpacing: "0.3em",
+                textTransform: "uppercase",
+                color: c.dim,
+              }}
+            >
+              <div
+                style={{
+                  width: 26 * u,
+                  height: 5 * u,
+                  background: accent,
+                  transform: "skewX(-14deg)",
+                }}
+              />
+              {role}
+              <div
+                style={{
+                  width: 26 * u,
+                  height: 5 * u,
+                  background: accent,
+                  transform: "skewX(-14deg)",
+                }}
+              />
+            </div>
+          ) : null}
+
+          {/* Stat plate: two flashes, then holds. */}
+          {blink !== "off" ? (
+            <div
+              style={{
+                position: "absolute",
+                left: (W - plateW) / 2,
+                top: plateY - plateH / 2,
+                width: plateW,
+                height: plateH,
+                clipPath: `polygon(${plateLean}px 0, 100% 0, calc(100% - ${plateLean}px) 100%, 0 100%)`,
+                background: blink === "flash" ? c.flash : c.plate,
+                boxShadow: `inset 0 0 0 ${2 * u}px ${c.plateEdge}`,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                transform: `translateX(${(1 - titleP) * -60 * u}px)`,
-                opacity: titleP,
-                fontFamily: sairaItalic,
-                fontStyle: "italic",
-                fontWeight: 500,
-                fontSize: banTitleFs,
-                lineHeight: 1,
-                letterSpacing: "-0.01em",
-                textTransform: "uppercase",
-                color: "#FFFFFF",
-                whiteSpace: "nowrap",
-                paddingTop: 4 * u,
               }}
             >
-              {title}
-            </div>
-            {banP < 1 ? (
               <div
                 style={{
-                  position: "absolute",
-                  inset: 0,
-                  clipPath: `polygon(${banEdge + banLean - 18 * u}px 0, ${banEdge + banLean}px 0, ${banEdge - banLean}px 100%, ${banEdge - banLean - 18 * u}px 100%)`,
-                  background: SWIRL[0],
-                }}
-              />
-            ) : null}
-          </div>
-        ) : null}
-
-        {/* Player row: role badge + the logo. */}
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            width: W,
-            top: rowCy - logoFs * 0.5,
-            height: logoFs,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 40 * u,
-          }}
-        >
-          <div
-            style={{
-              width: glyphSize,
-              height: glyphSize,
-              opacity: ramp(t, GLYPH_AT, 2),
-              transform: `rotate(${(1 - glyphP) * -40}deg) scale(${1.4 - 0.4 * glyphP})`,
-            }}
-          >
-            <RoleGlyph size={glyphSize} color={c.ink} />
-          </div>
-          <div style={{ position: "relative" }}>
-            {[4, 2, 0].map((lag) => {
-              const ghost = lag > 0;
-              if (ghost && t >= hitAt + lag) return null;
-              const tt = t - lag;
-              const op = ramp(tt, NAME_AT, 2) * (ghost ? 0.2 / lag : 1);
-              return (
-                <div
-                  key={lag}
-                  style={{
-                    position: ghost ? "absolute" : "relative",
-                    left: 0,
-                    top: 0,
-                    transform: `scale(${nameScale(tt)})`,
-                    opacity: op,
-                    paddingTop: logoFs * 0.04,
-                  }}
-                >
-                  <RemocnLogo fontSize={logoFs} color={c.ink} />
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Role label under the player. */}
-        {roleP > 0 ? (
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              width: W,
-              top: rowCy + logoFs * 0.5,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: 14 * u,
-              clipPath: `inset(-30% ${50 - 50 * roleP}% -30% ${50 - 50 * roleP}%)`,
-              fontFamily: saira,
-              fontWeight: 500,
-              fontSize: 22 * u,
-              letterSpacing: "0.3em",
-              textTransform: "uppercase",
-              color: c.dim,
-            }}
-          >
-            <div
-              style={{
-                width: 26 * u,
-                height: 5 * u,
-                background: accent,
-                transform: "skewX(-14deg)",
-              }}
-            />
-            {role}
-            <div
-              style={{
-                width: 26 * u,
-                height: 5 * u,
-                background: accent,
-                transform: "skewX(-14deg)",
-              }}
-            />
-          </div>
-        ) : null}
-
-        {/* Stat plate: two flashes, then holds. */}
-        {blink !== "off" ? (
-          <div
-            style={{
-              position: "absolute",
-              left: (W - plateW) / 2,
-              top: plateY - plateH / 2,
-              width: plateW,
-              height: plateH,
-              clipPath: `polygon(${plateLean}px 0, 100% 0, calc(100% - ${plateLean}px) 100%, 0 100%)`,
-              background: blink === "flash" ? c.flash : c.plate,
-              boxShadow: `inset 0 0 0 ${2 * u}px ${c.plateEdge}`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "baseline",
-                transform: `translateX(${(1 - statP) * 30 * u}px)`,
-                fontFamily: sairaItalic,
-                fontStyle: "italic",
-                fontWeight: 500,
-                fontSize: statFs,
-                lineHeight: 1,
-                letterSpacing: "0.01em",
-                textTransform: "uppercase",
-                color: blink === "flash" ? c.stage : c.plateInk,
-                whiteSpace: "pre",
-                paddingTop: 3 * u,
-              }}
-            >
-              <span>{before}</span>
-              <span
-                style={{
-                  backgroundImage: blink === "flash" ? undefined : c.word,
-                  WebkitBackgroundClip: blink === "flash" ? undefined : "text",
-                  backgroundClip: blink === "flash" ? undefined : "text",
-                  color: blink === "flash" ? c.stage : "transparent",
-                  paddingRight: 4 * u,
+                  display: "flex",
+                  alignItems: "baseline",
+                  transform: `translateX(${(1 - statP) * 30 * u}px)`,
+                  fontFamily,
+                  fontStyle: "italic",
+                  fontWeight: 500,
+                  fontSize: statFs,
+                  lineHeight: 1,
+                  letterSpacing: "0.01em",
+                  textTransform: "uppercase",
+                  color: blink === "flash" ? c.stage : c.plateInk,
+                  whiteSpace: "pre",
+                  paddingTop: 3 * u,
                 }}
               >
-                {hi}
-              </span>
-              <span>{after}</span>
+                <span>{before}</span>
+                <span
+                  style={{
+                    backgroundImage: blink === "flash" ? undefined : c.word,
+                    WebkitBackgroundClip:
+                      blink === "flash" ? undefined : "text",
+                    backgroundClip: blink === "flash" ? undefined : "text",
+                    color: blink === "flash" ? c.stage : "transparent",
+                    paddingRight: 4 * u,
+                  }}
+                >
+                  {hi}
+                </span>
+                <span>{after}</span>
+              </div>
             </div>
-          </div>
-        ) : null}
+          ) : null}
+        </ScaleLayer>
       </div>
 
       {/* Impact flash. */}

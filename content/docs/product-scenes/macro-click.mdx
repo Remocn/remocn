@@ -71,6 +71,27 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Accent color for highlights, buttons and progress",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Geist\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
+    },
+    {
       name: "title",
       type: "string",
       default: "\"One click. It's live.\"",
@@ -125,9 +146,45 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Hero headline on the published page",
     },
     {
+      name: "heroSub",
+      type: "string",
+      default: "\"Write the brief, pick the beats and render the film before lunch.\"",
+      description: "Line under the hero headline on the site preview.",
+    },
+    {
+      name: "ctaLabel",
+      type: "string",
+      default: "\"Start free\"",
+      description: "Call to action in the site preview's nav.",
+    },
+    {
+      name: "inviteLabel",
+      type: "string",
+      default: "\"Invite\"",
+      description: "Button next to Publish in the toolbar.",
+    },
+    {
       name: "src",
       type: "string",
       description: "Hero image URL; default exists only in the Remocn repo",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
     },
     {
       name: "ground",

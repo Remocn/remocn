@@ -341,6 +341,21 @@ export type GraphRelayoutProps = {
   layouts?: GraphLayout[];
   kicker?: string;
   cursorName?: string;
+  /** Frames the first layout holds before the first relayout. */
+  hold?: number;
+  /** Dot grid behind the graph. */
+  dots?: boolean;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the titles. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the graph and titles, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
 };
@@ -454,9 +469,9 @@ const FIRST_HOLD = 36;
 const STEP_GAPS = [34, 30, 28, 26];
 const FINAL_HOLD = 58;
 
-export function graphRelayoutTimeline(count: number) {
+export function graphRelayoutTimeline(count: number, hold = FIRST_HOLD) {
   const starts: number[] = [];
-  let t = FIRST_HOLD;
+  let t = hold;
   for (let i = 1; i < count; i++) {
     starts.push(t);
     t += STEP_GAPS[Math.min(i - 1, STEP_GAPS.length - 1)];
@@ -603,6 +618,22 @@ function Cursor({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function GraphRelayout({
   theme = "dark",
   accent,
@@ -610,13 +641,22 @@ export function GraphRelayout({
   layouts = DEFAULT_LAYOUTS,
   kicker = "Use case",
   cursorName = "Mia",
+  hold = FIRST_HOLD,
+  dots = true,
+  ink,
+  background,
+  fontFamily = geist.fontFamily,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   ground,
   groundParams,
 }: GraphRelayoutProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const uid = useId().replace(/:/g, "");
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const tints = TINTS[theme];
   const acc = accent ?? (theme === "dark" ? tints.blue : c.accent);
   const btn = accent ?? c.accent;
@@ -624,7 +664,7 @@ export function GraphRelayout({
   const u = Math.min(W, H) / 720;
   const k = tall ? 1.42 * u : 1.34 * u;
   const labelU = tall ? 17 : LABEL;
-  const { starts } = graphRelayoutTimeline(layouts.length);
+  const { starts } = graphRelayoutTimeline(layouts.length, hold);
 
   const rect = tall
     ? { x: 0.1 * W, y: 0.27 * H, w: 0.8 * W, h: 0.65 * H }
@@ -801,414 +841,431 @@ export function GraphRelayout({
   const kickSize = (tall ? 18 : 16) * u;
 
   return (
-    <AbsoluteFill style={{ background: c.ground.background }}>
-      <GshGround
-        preset={ground}
-        params={
-          ground && !groundParams ? undefined : (groundParams ?? c.ground)
-        }
-        timeOffset={7}
-        timeScale={0.6}
-      />
-      <AbsoluteFill
-        style={{
-          transform: `scale(${push})`,
-          transformOrigin: "50% 60%",
-        }}
-      >
-        <svg
-          width={W}
-          height={H}
-          style={{ position: "absolute", inset: 0, overflow: "visible" }}
-          aria-hidden
+    <AbsoluteFill style={{ background: background ?? c.ground.background }}>
+      {background === undefined ? (
+        <GshGround
+          preset={ground}
+          params={
+            ground && !groundParams ? undefined : (groundParams ?? c.ground)
+          }
+          timeOffset={7}
+          timeScale={0.6}
+        />
+      ) : null}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
+            transform: `scale(${push})`,
+            transformOrigin: "50% 60%",
+          }}
         >
-          <defs>
-            <pattern
-              id={`${uid}-dots`}
-              width={24 * k}
-              height={24 * k}
-              patternUnits="userSpaceOnUse"
-            >
-              <circle cx={12 * k} cy={12 * k} r={1.1 * k} fill={c.dot} />
-            </pattern>
-          </defs>
-          <rect x={0} y={0} width={W} height={H} fill={`url(#${uid}-dots)`} />
-          {[...edgeKeys.entries()].map(([key, [a, b]], ei) => {
-            const v = edgeDraw(key, frame);
-            if (v <= 0.001 || !states[a] || !states[b]) return null;
-            const p0 = port(a, true);
-            const p3 = port(b, false);
-            const d = sampleCurve(curve(p0, p3, tall, k), v);
-            if (!d) return null;
-            const gid = `${uid}-g${ei}`;
-            return (
-              <g key={key}>
-                <defs>
-                  <linearGradient
-                    id={gid}
-                    gradientUnits="userSpaceOnUse"
-                    x1={p0.x}
-                    y1={p0.y}
-                    x2={p3.x + 0.01}
-                    y2={p3.y + 0.01}
-                  >
-                    <stop offset="0" stopColor={specs[a].tint} />
-                    <stop offset="1" stopColor={specs[b].tint} />
-                  </linearGradient>
-                </defs>
-                <path
-                  d={d}
-                  fill="none"
-                  stroke={`url(#${gid})`}
-                  strokeWidth={1.6 * k}
-                  strokeDasharray={`${5 * k} ${5 * k}`}
-                  strokeDashoffset={-frame * 0.4 * k}
-                  strokeLinecap="round"
-                />
-              </g>
-            );
-          })}
-        </svg>
+          <svg
+            width={W}
+            height={H}
+            style={{ position: "absolute", inset: 0, overflow: "visible" }}
+            aria-hidden
+          >
+            <defs>
+              <pattern
+                id={`${uid}-dots`}
+                width={24 * k}
+                height={24 * k}
+                patternUnits="userSpaceOnUse"
+              >
+                <circle cx={12 * k} cy={12 * k} r={1.1 * k} fill={c.dot} />
+              </pattern>
+            </defs>
+            {dots ? (
+              <rect
+                x={0}
+                y={0}
+                width={W}
+                height={H}
+                fill={`url(#${uid}-dots)`}
+              />
+            ) : null}
+            {[...edgeKeys.entries()].map(([key, [a, b]], ei) => {
+              const v = edgeDraw(key, frame);
+              if (v <= 0.001 || !states[a] || !states[b]) return null;
+              const p0 = port(a, true);
+              const p3 = port(b, false);
+              const d = sampleCurve(curve(p0, p3, tall, k), v);
+              if (!d) return null;
+              const gid = `${uid}-g${ei}`;
+              return (
+                <g key={key}>
+                  <defs>
+                    <linearGradient
+                      id={gid}
+                      gradientUnits="userSpaceOnUse"
+                      x1={p0.x}
+                      y1={p0.y}
+                      x2={p3.x + 0.01}
+                      y2={p3.y + 0.01}
+                    >
+                      <stop offset="0" stopColor={specs[a].tint} />
+                      <stop offset="1" stopColor={specs[b].tint} />
+                    </linearGradient>
+                  </defs>
+                  <path
+                    d={d}
+                    fill="none"
+                    stroke={`url(#${gid})`}
+                    strokeWidth={1.6 * k}
+                    strokeDasharray={`${5 * k} ${5 * k}`}
+                    strokeDashoffset={-frame * 0.4 * k}
+                    strokeLinecap="round"
+                  />
+                </g>
+              );
+            })}
+          </svg>
 
-        {ids.map((id) => {
-          const st = states[id];
-          if (st.vis <= 0.005) return null;
-          const sp = specs[id];
-          const pw = sp.w * k;
-          const ph = sp.h * k;
-          const scale = 0.5 + 0.5 * st.vis;
-          const isDrag = starts.some(
-            (s, i) => dragged[i] === id && frame >= s - 3 && frame < s + 20,
-          );
-          const dragT = starts.reduce((acc, s, i) => {
-            if (dragged[i] !== id) return acc;
-            return Math.max(
-              acc,
-              spring({ frame: frame - s + 3, fps, config: CHIP }) -
-                EXIT(clamp01((frame - s - 18) / 6)),
+          {ids.map((id) => {
+            const st = states[id];
+            if (st.vis <= 0.005) return null;
+            const sp = specs[id];
+            const pw = sp.w * k;
+            const ph = sp.h * k;
+            const scale = 0.5 + 0.5 * st.vis;
+            const isDrag = starts.some(
+              (s, i) => dragged[i] === id && frame >= s - 3 && frame < s + 20,
             );
-          }, 0);
-          const labelSize = labelU * k;
-          const ins = [...edgeKeys.entries()].some(
-            ([key, [, b]]) => b === id && edgeDraw(key, frame) > 0,
-          );
-          const outs = [...edgeKeys.entries()].some(
-            ([key, [a]]) => a === id && edgeDraw(key, frame) > 0,
-          );
-          const portR = 3.4 * k;
-          const portStyle = (x: number, y: number): React.CSSProperties => ({
-            position: "absolute",
-            left: x - portR,
-            top: y - portR,
-            width: portR * 2,
-            height: portR * 2,
-            borderRadius: portR,
-            background: c.handle,
-            border: `${1.4 * k}px solid ${sp.tint}`,
-            boxSizing: "border-box",
-          });
-          const labelBox: React.CSSProperties = tall
-            ? {
-                left: -80 * k,
-                width: pw + 160 * k,
-                bottom: ph + 6 * k,
-                justifyContent: "center",
-              }
-            : {
-                left: -60 * k,
-                width: pw + 120 * k,
-                bottom: ph + 8 * k,
-                justifyContent: "center",
-              };
-          return (
-            <div
-              key={id}
-              style={{
-                position: "absolute",
-                left: st.x - pw / 2,
-                top: st.y - ph / 2,
-                width: pw,
-                height: ph,
-                opacity: clamp01(st.vis * 1.6),
-                transform: `scale(${scale * (1 + 0.04 * (isDrag ? dragT : 0))})`,
-                zIndex: isDrag ? 2 : 1,
-              }}
-            >
+            const dragT = starts.reduce((acc, s, i) => {
+              if (dragged[i] !== id) return acc;
+              return Math.max(
+                acc,
+                spring({ frame: frame - s + 3, fps, config: CHIP }) -
+                  EXIT(clamp01((frame - s - 18) / 6)),
+              );
+            }, 0);
+            const labelSize = labelU * k;
+            const ins = [...edgeKeys.entries()].some(
+              ([key, [, b]]) => b === id && edgeDraw(key, frame) > 0,
+            );
+            const outs = [...edgeKeys.entries()].some(
+              ([key, [a]]) => a === id && edgeDraw(key, frame) > 0,
+            );
+            const portR = 3.4 * k;
+            const portStyle = (x: number, y: number): React.CSSProperties => ({
+              position: "absolute",
+              left: x - portR,
+              top: y - portR,
+              width: portR * 2,
+              height: portR * 2,
+              borderRadius: portR,
+              background: c.handle,
+              border: `${1.4 * k}px solid ${sp.tint}`,
+              boxSizing: "border-box",
+            });
+            const labelBox: React.CSSProperties = tall
+              ? {
+                  left: -80 * k,
+                  width: pw + 160 * k,
+                  bottom: ph + 6 * k,
+                  justifyContent: "center",
+                }
+              : {
+                  left: -60 * k,
+                  width: pw + 120 * k,
+                  bottom: ph + 8 * k,
+                  justifyContent: "center",
+                };
+            return (
               <div
+                key={id}
                 style={{
                   position: "absolute",
-                  display: "flex",
-                  whiteSpace: "nowrap",
-                  fontFamily: mono.fontFamily,
-                  fontWeight: 400,
-                  fontSize: labelSize,
-                  lineHeight: 1,
-                  color: sp.tint,
-                  ...labelBox,
+                  left: st.x - pw / 2,
+                  top: st.y - ph / 2,
+                  width: pw,
+                  height: ph,
+                  opacity: clamp01(st.vis * 1.6),
+                  transform: `scale(${scale * (1 + 0.04 * (isDrag ? dragT : 0))})`,
+                  zIndex: isDrag ? 2 : 1,
                 }}
               >
-                <span
-                  style={
-                    tall
-                      ? {
-                          background: c.handle,
-                          padding: `${3 * k}px ${6 * k}px`,
-                          borderRadius: 4 * k,
-                        }
-                      : undefined
-                  }
-                >
-                  {sp.label}
-                </span>
-              </div>
-              {sp.input !== undefined ? (
                 <div
                   style={{
                     position: "absolute",
-                    inset: 0,
-                    borderRadius: 10 * k,
-                    background: c.field,
-                    border: `${1.5 * k}px solid ${sp.tint}`,
-                    boxShadow: c.shadow,
                     display: "flex",
-                    alignItems: "center",
-                    paddingLeft: 14 * k,
-                    boxSizing: "border-box",
+                    whiteSpace: "nowrap",
                     fontFamily: mono.fontFamily,
                     fontWeight: 400,
-                    fontSize: FIELD_TEXT * k,
-                    color: c.ink,
-                    whiteSpace: "pre",
+                    fontSize: labelSize,
+                    lineHeight: 1,
+                    color: sp.tint,
+                    ...labelBox,
                   }}
                 >
-                  {sp.input}
+                  <span
+                    style={
+                      tall
+                        ? {
+                            background: c.handle,
+                            padding: `${3 * k}px ${6 * k}px`,
+                            borderRadius: 4 * k,
+                          }
+                        : undefined
+                    }
+                  >
+                    {sp.label}
+                  </span>
+                </div>
+                {sp.input !== undefined ? (
                   <div
                     style={{
                       position: "absolute",
-                      right: 8 * k,
-                      top: ph / 2 - 15 * k,
-                      width: 30 * k,
-                      height: 30 * k,
-                      borderRadius: 15 * k,
-                      background: btn,
+                      inset: 0,
+                      borderRadius: 10 * k,
+                      background: c.field,
+                      border: `${1.5 * k}px solid ${sp.tint}`,
+                      boxShadow: c.shadow,
                       display: "flex",
                       alignItems: "center",
-                      justifyContent: "center",
+                      paddingLeft: 14 * k,
+                      boxSizing: "border-box",
+                      fontFamily: mono.fontFamily,
+                      fontWeight: 400,
+                      fontSize: FIELD_TEXT * k,
+                      color: fg,
+                      whiteSpace: "pre",
                     }}
                   >
-                    <svg
-                      viewBox="0 0 24 24"
-                      width={16 * k}
-                      height={16 * k}
-                      aria-hidden
-                    >
-                      <path
-                        d="M5 12h14M13 6l6 6-6 6"
-                        fill="none"
-                        stroke={c.onAccent}
-                        strokeWidth={2}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              ) : (
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    borderRadius: 6 * k,
-                    background: `linear-gradient(${alpha(sp.tint, theme === "dark" ? 0.12 : 0.09)}, ${alpha(sp.tint, theme === "dark" ? 0.12 : 0.09)}), ${c.nodeBase}`,
-                    border: `${1.5 * k}px solid ${sp.tint}`,
-                    boxShadow: c.shadow,
-                    boxSizing: "border-box",
-                    padding: (PAD - 1.5) * k,
-                    display: "grid",
-                    gridTemplateColumns: `repeat(${Math.max(1, Math.min(sp.cols ?? sp.icons?.length ?? 1, sp.icons?.length ?? 1))}, ${TILE * k}px)`,
-                    gridAutoRows: TILE * k,
-                    gap: TILE_GAP * k,
-                  }}
-                >
-                  {(sp.icons ?? []).map((ic, j) => (
+                    {sp.input}
                     <div
-                      key={`${id}-${ic}-${j}`}
                       style={{
-                        width: TILE * k,
-                        height: TILE * k,
-                        borderRadius: 7 * k,
-                        border: `${1.2 * k}px dashed ${alpha(sp.tint, 0.6)}`,
-                        background: alpha(
-                          sp.tint,
-                          theme === "dark" ? 0.08 : 0.07,
-                        ),
+                        position: "absolute",
+                        right: 8 * k,
+                        top: ph / 2 - 15 * k,
+                        width: 30 * k,
+                        height: 30 * k,
+                        borderRadius: 15 * k,
+                        background: btn,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        boxSizing: "border-box",
                       }}
                     >
-                      <NodeGlyph
-                        icon={ic}
-                        size={21 * k}
-                        color={sp.tint}
-                        frame={frame}
-                      />
+                      <svg
+                        viewBox="0 0 24 24"
+                        width={16 * k}
+                        height={16 * k}
+                        aria-hidden
+                      >
+                        <path
+                          d="M5 12h14M13 6l6 6-6 6"
+                          fill="none"
+                          stroke={c.onAccent}
+                          strokeWidth={2}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
                     </div>
-                  ))}
-                </div>
-              )}
-              {ins ? (
-                <div
-                  style={tall ? portStyle(pw / 2, 0) : portStyle(0, ph / 2)}
-                />
-              ) : null}
-              {outs ? (
-                <div
-                  style={tall ? portStyle(pw / 2, ph) : portStyle(pw, ph / 2)}
-                />
-              ) : null}
-              <Handles
-                w={pw}
-                h={ph}
-                k={k}
-                color={sp.tint}
-                fill={c.handle}
-                t={isDrag ? dragT : 0}
-              />
-            </div>
-          );
-        })}
-
-        {layouts.map((l, li) => {
-          if (!l.note || !states[l.note.node]) return null;
-          const s0 = li === 0 ? 0 : starts[li - 1];
-          const s1 = li < starts.length ? starts[li] : 1e9;
-          const inT = ENTER(clamp01((frame - s0 - 16) / 12));
-          const outT = EXIT(clamp01((frame - s1) / 7));
-          const v = inT * (1 - outT);
-          if (v <= 0.001) return null;
-          const st = states[l.note.node];
-          const sp = specs[l.note.node];
-          const size = (tall ? 20 : 17) * u;
-          const textW = l.note.text.length * 0.6 * size;
-          const pos: React.CSSProperties = tall
-            ? {
-                left: Math.min(
-                  Math.max(st.x - textW / 2, rect.x),
-                  rect.x + rect.w - textW,
-                ),
-                top: st.y + (sp.h * k) / 2 + 22 * k,
-              }
-            : {
-                left: st.x + (sp.w * k) / 2 + 22 * k,
-                top: st.y - size / 2,
-              };
-          return (
-            <div
-              key={`note-${l.title}`}
-              style={{
-                position: "absolute",
-                ...pos,
-                display: "flex",
-                alignItems: "center",
-                gap: 10 * k,
-                fontFamily: mono.fontFamily,
-                fontWeight: 400,
-                fontSize: size,
-                lineHeight: 1,
-                color: c.ink,
-                whiteSpace: "nowrap",
-                opacity: v,
-                transform: `translate${tall ? "Y" : "X"}(${(1 - inT) * 14 * k}px)`,
-              }}
-            >
-              {tall ? null : (
-                <span
-                  style={{
-                    width: 26 * k * inT,
-                    height: Math.max(1, 1.25 * k),
-                    background: c.boardStroke,
-                  }}
-                />
-              )}
-              {l.note.text}
-            </div>
-          );
-        })}
-
-        <Cursor
-          x={cursor.x}
-          y={cursor.y}
-          s={1 - 0.12 * cursor.press}
-          name={cursorName}
-          color={btn}
-          ink={theme === "dark" ? "#ffffff" : "#16181d"}
-          edge={theme === "dark" ? "#16181d" : "#ffffff"}
-          u={tall ? 1.4 * u : u}
-        />
-
-        <div
-          style={{
-            position: "absolute",
-            left: tall ? 0.08 * W : 0.075 * W,
-            top: tall ? 0.075 * H : 0.1 * H,
-            width: tall ? 0.84 * W : 0.85 * W,
-          }}
-        >
-          {layouts.map((l, li) => {
-            const s0 = li === 0 ? -14 : starts[li - 1];
-            const s1 = li < starts.length ? starts[li] : 1e9;
-            const inT = ENTER(clamp01((frame - s0 - 6) / 12));
-            const outT = EXIT(clamp01((frame - s1) / 7));
-            if (inT <= 0 || outT >= 1) return null;
-            return (
-              <div
-                key={`t-${l.title}`}
-                style={{ position: "absolute", left: 0, top: 0, width: "100%" }}
-              >
-                <div style={{ overflow: "hidden", paddingBottom: 4 * u }}>
+                  </div>
+                ) : (
                   <div
                     style={{
-                      fontFamily: mono.fontFamily,
-                      fontWeight: 400,
-                      fontSize: kickSize,
-                      lineHeight: 1.2,
-                      color: c.muted,
-                      transform: `translateY(${((1 - inT) * 1.2 - outT * 1.2) * kickSize}px)`,
+                      position: "absolute",
+                      inset: 0,
+                      borderRadius: 6 * k,
+                      background: `linear-gradient(${alpha(sp.tint, theme === "dark" ? 0.12 : 0.09)}, ${alpha(sp.tint, theme === "dark" ? 0.12 : 0.09)}), ${c.nodeBase}`,
+                      border: `${1.5 * k}px solid ${sp.tint}`,
+                      boxShadow: c.shadow,
+                      boxSizing: "border-box",
+                      padding: (PAD - 1.5) * k,
+                      display: "grid",
+                      gridTemplateColumns: `repeat(${Math.max(1, Math.min(sp.cols ?? sp.icons?.length ?? 1, sp.icons?.length ?? 1))}, ${TILE * k}px)`,
+                      gridAutoRows: TILE * k,
+                      gap: TILE_GAP * k,
                     }}
                   >
-                    {`${kicker} ${String(li + 1).padStart(2, "0")} / ${String(layouts.length).padStart(2, "0")}`}
+                    {(sp.icons ?? []).map((ic, j) => (
+                      <div
+                        key={`${id}-${ic}-${j}`}
+                        style={{
+                          width: TILE * k,
+                          height: TILE * k,
+                          borderRadius: 7 * k,
+                          border: `${1.2 * k}px dashed ${alpha(sp.tint, 0.6)}`,
+                          background: alpha(
+                            sp.tint,
+                            theme === "dark" ? 0.08 : 0.07,
+                          ),
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          boxSizing: "border-box",
+                        }}
+                      >
+                        <NodeGlyph
+                          icon={ic}
+                          size={21 * k}
+                          color={sp.tint}
+                          frame={frame}
+                        />
+                      </div>
+                    ))}
                   </div>
-                </div>
-                <div
-                  style={{
-                    overflow: "hidden",
-                    marginTop: 10 * u,
-                    paddingBottom: titleSize * 0.2,
-                  }}
-                >
+                )}
+                {ins ? (
                   <div
-                    style={{
-                      fontFamily: geist.fontFamily,
-                      fontWeight: 300,
-                      fontSize: titleSize,
-                      letterSpacing: "-0.035em",
-                      lineHeight: 1.06,
-                      color: c.ink,
-                      textWrap: "balance",
-                      transform: `translateY(${((1 - inT) * 1.15 - outT * 1.15) * titleSize * (tall ? 2.2 : 1)}px)`,
-                      filter: `blur(${(1 - inT + outT) * 4}px)`,
-                    }}
-                  >
-                    {l.title}
-                  </div>
-                </div>
+                    style={tall ? portStyle(pw / 2, 0) : portStyle(0, ph / 2)}
+                  />
+                ) : null}
+                {outs ? (
+                  <div
+                    style={tall ? portStyle(pw / 2, ph) : portStyle(pw, ph / 2)}
+                  />
+                ) : null}
+                <Handles
+                  w={pw}
+                  h={ph}
+                  k={k}
+                  color={sp.tint}
+                  fill={c.handle}
+                  t={isDrag ? dragT : 0}
+                />
               </div>
             );
           })}
-        </div>
-      </AbsoluteFill>
+
+          {layouts.map((l, li) => {
+            if (!l.note || !states[l.note.node]) return null;
+            const s0 = li === 0 ? 0 : starts[li - 1];
+            const s1 = li < starts.length ? starts[li] : 1e9;
+            const inT = ENTER(clamp01((frame - s0 - 16) / 12));
+            const outT = EXIT(clamp01((frame - s1) / 7));
+            const v = inT * (1 - outT);
+            if (v <= 0.001) return null;
+            const st = states[l.note.node];
+            const sp = specs[l.note.node];
+            const size = (tall ? 20 : 17) * u;
+            const textW = l.note.text.length * 0.6 * size;
+            const pos: React.CSSProperties = tall
+              ? {
+                  left: Math.min(
+                    Math.max(st.x - textW / 2, rect.x),
+                    rect.x + rect.w - textW,
+                  ),
+                  top: st.y + (sp.h * k) / 2 + 22 * k,
+                }
+              : {
+                  left: st.x + (sp.w * k) / 2 + 22 * k,
+                  top: st.y - size / 2,
+                };
+            return (
+              <div
+                key={`note-${l.title}`}
+                style={{
+                  position: "absolute",
+                  ...pos,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10 * k,
+                  fontFamily: mono.fontFamily,
+                  fontWeight: 400,
+                  fontSize: size,
+                  lineHeight: 1,
+                  color: fg,
+                  whiteSpace: "nowrap",
+                  opacity: v,
+                  transform: `translate${tall ? "Y" : "X"}(${(1 - inT) * 14 * k}px)`,
+                }}
+              >
+                {tall ? null : (
+                  <span
+                    style={{
+                      width: 26 * k * inT,
+                      height: Math.max(1, 1.25 * k),
+                      background: c.boardStroke,
+                    }}
+                  />
+                )}
+                {l.note.text}
+              </div>
+            );
+          })}
+
+          <Cursor
+            x={cursor.x}
+            y={cursor.y}
+            s={1 - 0.12 * cursor.press}
+            name={cursorName}
+            color={btn}
+            ink={theme === "dark" ? "#ffffff" : "#16181d"}
+            edge={theme === "dark" ? "#16181d" : "#ffffff"}
+            u={tall ? 1.4 * u : u}
+          />
+
+          <div
+            style={{
+              position: "absolute",
+              left: tall ? 0.08 * W : 0.075 * W,
+              top: tall ? 0.075 * H : 0.1 * H,
+              width: tall ? 0.84 * W : 0.85 * W,
+            }}
+          >
+            {layouts.map((l, li) => {
+              const s0 = li === 0 ? -14 : starts[li - 1];
+              const s1 = li < starts.length ? starts[li] : 1e9;
+              const inT = ENTER(clamp01((frame - s0 - 6) / 12));
+              const outT = EXIT(clamp01((frame - s1) / 7));
+              if (inT <= 0 || outT >= 1) return null;
+              return (
+                <div
+                  key={`t-${l.title}`}
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: 0,
+                    width: "100%",
+                  }}
+                >
+                  <div style={{ overflow: "hidden", paddingBottom: 4 * u }}>
+                    <div
+                      style={{
+                        fontFamily: mono.fontFamily,
+                        fontWeight: 400,
+                        fontSize: kickSize,
+                        lineHeight: 1.2,
+                        color: c.muted,
+                        transform: `translateY(${((1 - inT) * 1.2 - outT * 1.2) * kickSize}px)`,
+                      }}
+                    >
+                      {`${kicker} ${String(li + 1).padStart(2, "0")} / ${String(layouts.length).padStart(2, "0")}`}
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      overflow: "hidden",
+                      marginTop: 10 * u,
+                      paddingBottom: titleSize * 0.2,
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontFamily,
+                        fontWeight: 300,
+                        fontSize: titleSize,
+                        letterSpacing: "-0.035em",
+                        lineHeight: 1.06,
+                        color: fg,
+                        textWrap: "balance",
+                        transform: `translateY(${((1 - inT) * 1.15 - outT * 1.15) * titleSize * (tall ? 2.2 : 1)}px)`,
+                        filter: `blur(${(1 - inT + outT) * 4}px)`,
+                      }}
+                    >
+                      {l.title}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
