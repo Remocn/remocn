@@ -10,7 +10,11 @@ export function GET() {
   return new Response(
     buildLlmsTxt(docsIndexPages(), { components: COMPONENT_COUNT }),
     {
-      headers: { "Content-Type": "text/plain; charset=utf-8" },
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        // Agents fetch it by URL; in search it would compete with the docs.
+        "X-Robots-Tag": "noindex",
+      },
     },
   );
 }

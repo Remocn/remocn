@@ -331,6 +331,67 @@ export function showcaseJsonLd(showcase: {
   };
 }
 
+type PageInput = {
+  url: string;
+  title: string;
+  description: string;
+  crumbs: Crumb[];
+};
+
+/** JSON-LD for a standalone page that is neither an article nor a list. */
+export function webPageJsonLd(page: PageInput) {
+  const url = absolute(page.url);
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": `${url}#webpage`,
+        name: page.title,
+        description: page.description,
+        url,
+        inLanguage: "en",
+        isPartOf: { "@id": WEBSITE_ID },
+        publisher: ORG_REF,
+      },
+      breadcrumbList(page.url, page.crumbs),
+    ],
+  };
+}
+
+/** JSON-LD for an index page (blog, showcases, changelog) and what it lists. */
+export function collectionPageJsonLd(
+  page: PageInput & { items: { url: string; name: string }[] },
+) {
+  const url = absolute(page.url);
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": `${url}#webpage`,
+        name: page.title,
+        description: page.description,
+        url,
+        inLanguage: "en",
+        isPartOf: { "@id": WEBSITE_ID },
+        publisher: ORG_REF,
+        mainEntity: {
+          "@type": "ItemList",
+          numberOfItems: page.items.length,
+          itemListElement: page.items.map((item, index) => ({
+            "@type": "ListItem",
+            position: index + 1,
+            url: absolute(item.url),
+            name: item.name,
+          })),
+        },
+      },
+      breadcrumbList(page.url, page.crumbs),
+    ],
+  };
+}
+
 /** `JSON.stringify` safe to inline in a `<script>` (Next's JSON-LD guide). */
 export function serializeJsonLd(data: unknown): string {
   return JSON.stringify(data).replace(/</g, "\\u003c");

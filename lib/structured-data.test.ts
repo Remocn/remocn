@@ -55,9 +55,9 @@ describe("home JSON-LD", () => {
   });
 
   test("leads with a product term from the page title", () => {
-    expect("Remocn - Make a product demo video with your AI agent").toContain(
-      HOME_KEYWORDS[0],
-    );
+    expect(
+      "Remocn - shadcn/ui for Remotion: AI-made product demo videos",
+    ).toContain(HOME_KEYWORDS[0]);
   });
 });
 

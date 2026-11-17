@@ -8,7 +8,7 @@ import { NotFoundVideo } from "./not-found-video";
 
 export const metadata: Metadata = {
   title: "Page not found",
-  robots: { index: false, follow: true },
+  // Next.js already adds noindex to a 404; a second robots tag only duplicates it.
 };
 
 const BUTTON = "h-12 w-full md:w-auto";
