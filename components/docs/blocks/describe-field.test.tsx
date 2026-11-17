@@ -99,6 +99,43 @@ describe("describe field", () => {
     ).toEqual([{ text: "slower", summary: "Speed 0.75" }]);
   });
 
+  test("Show agent off applies at once, and the choice is remembered", async () => {
+    localStorage.clear();
+    const onApply = vi.fn();
+    const field = () => (
+      <DescribeField
+        name="demo"
+        controls={controls}
+        values={defaults}
+        onApply={onApply}
+        post={reply({})}
+        device={null}
+        loadPresets={async () => [neon]}
+      />
+    );
+    const { unmount } = render(field());
+    const toggle = screen.getByRole("switch", { name: "Show agent" });
+    expect(toggle.getAttribute("aria-checked")).toBe("true");
+    await userEvent.click(toggle);
+    await userEvent.click(await screen.findByRole("button", { name: "Neon" }));
+    expect(onApply).toHaveBeenLastCalledWith(
+      expect.objectContaining({ speed: 2 }),
+      expect.anything(),
+      { animate: false },
+    );
+    expect(localStorage.getItem("remocn:describe-animate")).toBe("off");
+
+    unmount();
+    render(field());
+    await waitFor(() =>
+      expect(
+        screen
+          .getByRole("switch", { name: "Show agent" })
+          .getAttribute("aria-checked"),
+      ).toBe("false"),
+    );
+  });
+
   test("an off-topic request changes nothing and says what the field is for", async () => {
     render(<Harness post={reply({ ai: "rejected" })} />);
     await userEvent.type(

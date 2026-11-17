@@ -8,9 +8,11 @@ import {
 } from "@ui-sdk/react/collapsible";
 import { Field } from "@ui-sdk/react/field";
 import { Input } from "@ui-sdk/react/input";
+import { Switch, SwitchThumb } from "@ui-sdk/react/switch";
 import {
   type FormEvent,
   useEffect,
+  useId,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -98,6 +100,25 @@ function useHistory() {
     });
   };
   return { items, add };
+}
+
+const ANIMATE_KEY = "remocn:describe-animate";
+
+/** Whether the agent shows its work; the visitor's choice, kept in this browser. */
+function useShowAgent(): [boolean, (next: boolean) => void] {
+  const [show, setShow] = useState(true);
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(ANIMATE_KEY) === "off") setShow(false);
+    } catch {}
+  }, []);
+  const change = (next: boolean) => {
+    setShow(next);
+    try {
+      localStorage.setItem(ANIMATE_KEY, next ? "on" : "off");
+    } catch {}
+  };
+  return [show, change];
 }
 
 async function fetchPresets(name: string): Promise<Preset[]> {
@@ -193,10 +214,14 @@ export function DescribeField({
   swatch?: string;
   controls: ControlConfig;
   values: Record<string, unknown>;
-  /** Applies a patch; `origin` is where the agent's cursor starts. */
+  /**
+   * Applies a patch; `origin` is where the agent's cursor starts, and
+   * `animate` whether the agent shows its work or sets the values at once.
+   */
   onApply: (
     patch: Record<string, unknown>,
     origin?: HTMLElement | null,
+    options?: { animate: boolean },
   ) => void | Promise<void>;
   /** The element the dock centres over: the preview. */
   anchor?: () => HTMLElement | null;
@@ -216,6 +241,8 @@ export function DescribeField({
   const [own, setOwn] = useState<Preset[]>([]);
   const [mounted, setMounted] = useState(false);
   const history = useHistory();
+  const [showAgent, setShowAgent] = useShowAgent();
+  const switchId = useId();
   const [historyOpen, setHistoryOpen] = useState(false);
   const form = useRef<HTMLFormElement>(null);
   const request = useRef(0);
@@ -263,7 +290,7 @@ export function DescribeField({
   ) => {
     setTuning(true);
     try {
-      await onApply(patch, origin);
+      await onApply(patch, origin, { animate: showAgent });
     } finally {
       setTuning(false);
     }
@@ -359,10 +386,7 @@ export function DescribeField({
         <Collapsible
           open={historyOpen}
           onOpenChange={setHistoryOpen}
-          className={cn(
-            "flex flex-col",
-            !status && history.items.length === 0 && "sr-only",
-          )}
+          className="flex flex-col"
         >
           {/* The dock sits at the bottom of the screen, so history opens upwards. */}
           <CollapsiblePanel className="h-(--collapsible-panel-height) overflow-hidden transition-[height] duration-200 ease-out data-ending-style:h-0 data-starting-style:h-0 motion-reduce:transition-none">
@@ -384,7 +408,22 @@ export function DescribeField({
               ))}
             </ul>
           </CollapsiblePanel>
-          <div className="flex min-h-5 items-center gap-2 px-0.5">
+          <div className="flex min-h-5 items-center gap-2.5 px-0.5">
+            <label
+              htmlFor={switchId}
+              className="flex shrink-0 cursor-pointer items-center gap-1.5 text-xs text-muted-foreground select-none"
+            >
+              Show agent
+              <Switch
+                id={switchId}
+                checked={showAgent}
+                onCheckedChange={(checked) => setShowAgent(checked)}
+                disabled={working}
+                className="relative h-4 w-7 shrink-0 cursor-pointer rounded-full bg-muted-foreground/30 outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:ring-offset-2 focus-visible:ring-offset-card disabled:cursor-default disabled:opacity-50 data-checked:bg-foreground"
+              >
+                <SwitchThumb className="absolute top-0.5 left-0.5 size-3 rounded-full bg-card transition-transform duration-150 ease-[cubic-bezier(0.19,1,0.22,1)] data-checked:translate-x-3 motion-reduce:transition-none" />
+              </Switch>
+            </label>
             <p
               aria-live="polite"
               className={cn(

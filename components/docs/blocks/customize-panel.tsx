@@ -159,13 +159,17 @@ export function CustomizePanel({
   const tune = async (
     patch: Record<string, unknown>,
     origin?: HTMLElement | null,
+    options?: { animate: boolean },
   ) => {
     const panel = root.current;
     if (!panel || !batch) {
       onApply?.(patch);
       return;
     }
-    const pace = reducedMotion ? INSTANT : PACE;
+    // The dock's "Show agent" switch off, or reduced motion: no cursor, no
+    // walk through the controls, the values change at once.
+    const animate = (options?.animate ?? true) && !reducedMotion;
+    const pace = animate ? PACE : INSTANT;
     const show = pace.move > 0;
     const place = (element: HTMLElement | null, duration: number) => {
       if (!element) return cursor.current?.moveTo(null, 0);
@@ -205,7 +209,7 @@ export function CustomizePanel({
       cursor.current?.moveTo(null, 0);
     }
     const player = panel.closest<HTMLElement>("[data-docs-player]");
-    if (player) await scrollToTop(player, show);
+    if (player) await scrollToTop(player, !reducedMotion);
   };
   const [shared, setShared] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
