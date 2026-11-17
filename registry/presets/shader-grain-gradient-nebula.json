@@ -1,0 +1,96 @@
+{
+  "component": "shader-grain-gradient-nebula",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-drift",
+      "label": "Slow Drift",
+      "description": "A calm, barely moving nebula with smooth soft glow for long ambient intros.",
+      "askedAs": [
+        "slow calm space background",
+        "gentle ambient nebula",
+        "make it move very slowly",
+        "медленная спокойная туманность",
+        "плавный космический фон"
+      ],
+      "props": {
+        "speed": 0.25,
+        "softness": 1,
+        "intensity": 0.5,
+        "noise": 0.1
+      }
+    },
+    {
+      "id": "film-grain",
+      "label": "Film Grain",
+      "description": "Heavy analog grain over a dimmer glow for a textured, cinematic feel.",
+      "askedAs": [
+        "grainy film look",
+        "more noise and texture",
+        "vintage cinematic grain",
+        "зернистый киношный вид",
+        "больше шума и текстуры"
+      ],
+      "props": {
+        "noise": 0.7,
+        "intensity": 0.55,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "supernova",
+      "label": "Supernova",
+      "description": "Fast, bright, sharper bursts of magenta and cyan for an energetic launch moment.",
+      "askedAs": [
+        "bright energetic glow",
+        "fast intense cosmic burst",
+        "punchy launch background",
+        "яркая энергичная вспышка",
+        "быстрый интенсивный космос"
+      ],
+      "props": {
+        "speed": 2.5,
+        "intensity": 1,
+        "softness": 0.4,
+        "noise": 0.15
+      }
+    },
+    {
+      "id": "deep-void",
+      "label": "Deep Void",
+      "description": "Near-black field with a faint, distant glow that keeps focus on foreground text.",
+      "askedAs": [
+        "darker subtle background",
+        "faint glow behind text",
+        "minimal dark space",
+        "тёмный едва заметный фон",
+        "почти чёрный космос"
+      ],
+      "props": {
+        "colorBack": "#000000",
+        "intensity": 0.3,
+        "speed": 0.5,
+        "noise": 0.05
+      }
+    },
+    {
+      "id": "midnight-indigo",
+      "label": "Midnight Indigo",
+      "description": "A richer indigo base with crisper edges for a moodier, more saturated nebula.",
+      "askedAs": [
+        "blue purple space backdrop",
+        "indigo nebula",
+        "richer colored background",
+        "индиго туманность",
+        "сине-фиолетовый космос"
+      ],
+      "props": {
+        "colorBack": "#140a3a",
+        "softness": 0.6,
+        "intensity": 0.8,
+        "noise": 0.3
+      }
+    }
+  ]
+}

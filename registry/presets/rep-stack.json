@@ -1,0 +1,104 @@
+{
+  "component": "rep-stack",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "echo-chamber",
+      "label": "Echo Chamber",
+      "description": "A deep stack of eighteen fast outlines that cascade like a stuttering echo on near-black.",
+      "askedAs": [
+        "lots of repeated outlines fast",
+        "deep echo stack effect",
+        "more copies quicker animation",
+        "много повторов слова быстро",
+        "эффект эха с кучей контуров"
+      ],
+      "props": {
+        "reps": 18,
+        "runLength": 24,
+        "speed": 1.5,
+        "background": "#0b0d12",
+        "ink": "#f2f2ee"
+      }
+    },
+    {
+      "id": "paper-press",
+      "label": "Paper Press",
+      "description": "Warm off-white paper with ink-black serif letters and a terracotta period, unfolding slowly.",
+      "askedAs": [
+        "light editorial serif version",
+        "calm print look on cream paper",
+        "slow elegant serif repeat",
+        "светлый вариант с засечками",
+        "спокойная газетная типографика"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#c4572e",
+        "fontFamily": "Fraunces",
+        "runLength": 70
+      }
+    },
+    {
+      "id": "terminal-loop",
+      "label": "Terminal Loop",
+      "description": "Monospaced green-on-charcoal stack that reads like a code loop iterating.",
+      "askedAs": [
+        "code style repeat word",
+        "monospace terminal look",
+        "developer loop animation",
+        "моноширинный шрифт как в терминале",
+        "стиль кода для повтора"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#14161a",
+        "ink": "#d8dee4",
+        "accent": "#3fb950",
+        "reps": 10,
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "single-beat",
+      "label": "Single Beat",
+      "description": "Just a couple of echoes at oversized scale for one heavy, deliberate hit after a short pause.",
+      "askedAs": [
+        "big bold minimal word",
+        "fewer copies larger text",
+        "one strong slow hit",
+        "крупное слово без лишних повторов",
+        "минималистичный мощный акцент"
+      ],
+      "props": {
+        "reps": 2,
+        "scale": 1.4,
+        "delay": 15,
+        "speed": 0.75,
+        "fontFamily": "Bricolage Grotesque"
+      }
+    },
+    {
+      "id": "dusk-band",
+      "label": "Dusk Band",
+      "description": "Plum-dusk background with soft peach letters and a coral period at a relaxed pace.",
+      "askedAs": [
+        "sunset purple colour scheme",
+        "warm dusk palette",
+        "soft evening colours",
+        "закатная фиолетовая палитра",
+        "тёплые вечерние цвета"
+      ],
+      "props": {
+        "background": "#2a1b3d",
+        "ink": "#f6d8c4",
+        "accent": "#ff7a59",
+        "fontFamily": "Space Grotesk",
+        "runLength": 56
+      }
+    }
+  ]
+}

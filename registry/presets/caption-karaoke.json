@@ -1,0 +1,102 @@
+{
+  "component": "caption-karaoke",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "punchy-bold",
+      "label": "Punchy Bold",
+      "description": "Huge heavy words in short bursts with a hot coral fill, built for fast-cut social clips.",
+      "askedAs": [
+        "big bold tiktok captions",
+        "fast short caption pages",
+        "one or two words at a time huge text",
+        "крупные жирные субтитры как в тикток",
+        "короткие быстрые субтитры по паре слов"
+      ],
+      "props": {
+        "fontSize": 104,
+        "fontWeight": 900,
+        "activeColor": "#ff6b4a",
+        "combineTokensWithinMilliseconds": 400,
+        "holdMs": 200
+      }
+    },
+    {
+      "id": "calm-documentary",
+      "label": "Calm Documentary",
+      "description": "Smaller regular-weight lines in soft ivory with a muted sand fill and long, relaxed pages.",
+      "askedAs": [
+        "subtle captions for interviews",
+        "calm readable subtitles",
+        "understated documentary style captions",
+        "спокойные субтитры для интервью",
+        "аккуратные неброские субтитры"
+      ],
+      "props": {
+        "fontSize": 44,
+        "fontWeight": 500,
+        "color": "#f5f1e8",
+        "activeColor": "#d6b98c",
+        "combineTokensWithinMilliseconds": 2400,
+        "holdMs": 1000
+      }
+    },
+    {
+      "id": "mint-podcast",
+      "label": "Mint Podcast",
+      "description": "Medium semibold captions with a fresh mint fill and full sentence-length pages for talking heads.",
+      "askedAs": [
+        "podcast clip captions",
+        "green highlight subtitles",
+        "captions that show whole sentences",
+        "субтитры для подкаста",
+        "субтитры с зелёной подсветкой слов"
+      ],
+      "props": {
+        "fontSize": 58,
+        "fontWeight": 700,
+        "activeColor": "#5eead4",
+        "combineTokensWithinMilliseconds": 2000
+      }
+    },
+    {
+      "id": "clean-light",
+      "label": "Clean Light",
+      "description": "Shadowless dark slate text filling with a deep blue, made for bright or white backgrounds.",
+      "askedAs": [
+        "captions for white background",
+        "dark text subtitles no shadow",
+        "clean minimal light captions",
+        "субтитры для светлого фона",
+        "тёмные субтитры без тени"
+      ],
+      "props": {
+        "color": "#1e293b",
+        "activeColor": "#2563eb",
+        "shadow": false,
+        "fontWeight": 700,
+        "fontSize": 56
+      }
+    },
+    {
+      "id": "rose-lyric",
+      "label": "Rose Lyric",
+      "description": "Large flowing lyric-style lines with a dusty rose fill and lingering holds for music and slow speech.",
+      "askedAs": [
+        "song lyric style captions",
+        "pink karaoke text",
+        "slow lingering subtitles",
+        "субтитры как текст песни",
+        "розовые караоке субтитры"
+      ],
+      "props": {
+        "fontSize": 80,
+        "fontWeight": 600,
+        "activeColor": "#f472b6",
+        "combineTokensWithinMilliseconds": 3000,
+        "holdMs": 1500
+      }
+    }
+  ]
+}

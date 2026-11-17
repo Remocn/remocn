@@ -1,0 +1,106 @@
+{
+  "component": "heat-trace",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-forge",
+      "label": "Slow Forge",
+      "description": "A long, deliberate heat pass with wide word stagger on a deep charcoal ground and an ember-orange accent.",
+      "askedAs": [
+        "slow cinematic logo burn",
+        "dramatic warm glow reveal",
+        "take your time tracing the logo",
+        "медленное раскаление логотипа",
+        "кинематографичное появление с тёплым свечением"
+      ],
+      "props": {
+        "pass": 92,
+        "stagger": 6,
+        "accent": "#e8743b",
+        "background": "#141110",
+        "ink": "#f3ece6",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-spark",
+      "label": "Quick Spark",
+      "description": "A fast, tight heat trace with no stagger for a snappy, energetic sign-off.",
+      "askedAs": [
+        "fast punchy logo reveal",
+        "quick energetic ending",
+        "short snappy wordmark trace",
+        "быстрое энергичное появление логотипа",
+        "короткая резкая концовка"
+      ],
+      "props": {
+        "pass": 28,
+        "stagger": 0,
+        "speed": 1.5,
+        "fontFamily": "Space Grotesk",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "lab-paper",
+      "label": "Lab Paper",
+      "description": "A clean light theme on warm off-white with a cobalt accent and monospace type, grain switched off.",
+      "askedAs": [
+        "light technical developer look",
+        "clean white monospace logo",
+        "minimal light version for docs",
+        "светлая техническая версия",
+        "минималистичный моноширинный логотип на белом"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f6f4ef",
+        "ink": "#1a1c22",
+        "accent": "#2f4fd8",
+        "fontFamily": "JetBrains Mono",
+        "grain": false
+      }
+    },
+    {
+      "id": "editorial-ember",
+      "label": "Editorial Ember",
+      "description": "An elegant serif wordmark in cream on near-black with a soft rose-copper accent and a measured pace.",
+      "askedAs": [
+        "elegant serif luxury reveal",
+        "premium editorial logo ending",
+        "classy warm serif wordmark",
+        "элегантный логотип с засечками",
+        "премиальная редакционная концовка"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "accent": "#c9785d",
+        "background": "#0f0d0c",
+        "ink": "#efe6da",
+        "scale": 1.25,
+        "pass": 72
+      }
+    },
+    {
+      "id": "cold-steel",
+      "label": "Cold Steel",
+      "description": "A compact, cool-toned trace on dark slate with a teal accent and a short opening delay.",
+      "askedAs": [
+        "cool blue hardware launch look",
+        "small icy logo with pause before",
+        "steel tech product ending",
+        "холодный стальной стиль для железа",
+        "компактный логотип в холодных тонах"
+      ],
+      "props": {
+        "accent": "#3ba7a0",
+        "background": "#0e1418",
+        "ink": "#dce6ea",
+        "scale": 0.8,
+        "delay": 18,
+        "fontFamily": "Manrope"
+      }
+    }
+  ]
+}

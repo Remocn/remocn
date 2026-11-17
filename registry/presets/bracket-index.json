@@ -1,0 +1,122 @@
+{
+  "component": "bracket-index",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Monospaced type on near-black with a soft green accent, like a command line stepping through options.",
+      "askedAs": [
+        "make it look like a terminal",
+        "monospace code style",
+        "hacker console look",
+        "как в терминале",
+        "моноширинный шрифт как код"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0c",
+        "ink": "#d8e6dc",
+        "accent": "#4ade80",
+        "fontWeight": 400
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Fast, punchy cycling with short holds and heavy type for a high-energy montage beat.",
+      "askedAs": [
+        "make it faster and punchier",
+        "quick cuts between words",
+        "energetic fast version",
+        "сделай быстрее и динамичнее",
+        "быстрая смена слов"
+      ],
+      "props": {
+        "speed": 2,
+        "hold": 10,
+        "fontWeight": 800,
+        "fontFamily": "Space Grotesk",
+        "accent": "#ff5a36"
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Slow, elegant serif on warm paper with a deep burgundy accent for a refined launch.",
+      "askedAs": [
+        "elegant serif version",
+        "make it feel like a magazine",
+        "calm premium look",
+        "элегантный шрифт с засечками",
+        "спокойный журнальный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1e1b18",
+        "accent": "#8c2f39",
+        "hold": 36
+      }
+    },
+    {
+      "id": "clean-light",
+      "label": "Clean Light",
+      "description": "Crisp white background with Inter type and a cobalt accent for a product-site feel.",
+      "askedAs": [
+        "light minimal version",
+        "white background clean",
+        "simple saas style",
+        "светлая минималистичная версия",
+        "белый фон, чистый стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "fontWeight": 600,
+        "accent": "#1f4fe0"
+      }
+    },
+    {
+      "id": "big-statement",
+      "label": "Big Statement",
+      "description": "Oversized bold Geist with a violet accent and a measured pace for a headline moment.",
+      "askedAs": [
+        "make the text huge",
+        "bold big headline",
+        "larger dramatic reveal",
+        "сделай текст крупнее",
+        "большой жирный заголовок"
+      ],
+      "props": {
+        "scale": 1.4,
+        "fontFamily": "Geist",
+        "fontWeight": 700,
+        "accent": "#8b5cf6",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "midnight-amber",
+      "label": "Midnight Amber",
+      "description": "Deep navy backdrop with warm amber brackets and light Bricolage type, unhurried and moody.",
+      "askedAs": [
+        "dark blue with orange accent",
+        "moody night version",
+        "warm accent on dark",
+        "тёмно-синий с янтарным",
+        "мрачная вечерняя версия"
+      ],
+      "props": {
+        "background": "#0e1628",
+        "ink": "#eae6dd",
+        "accent": "#f2a93b",
+        "fontFamily": "Bricolage Grotesque",
+        "fontWeight": 300,
+        "hold": 30
+      }
+    }
+  ]
+}

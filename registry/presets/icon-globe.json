@@ -1,0 +1,116 @@
+{
+  "component": "icon-globe",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-slow",
+      "label": "Hairline Slow",
+      "description": "A large, thin-stroked globe that draws itself in slowly and calmly.",
+      "askedAs": [
+        "thin slow globe",
+        "delicate line globe drawing",
+        "elegant minimal globe icon",
+        "тонкий медленный глобус",
+        "изящная линия глобуса"
+      ],
+      "props": {
+        "size": 120,
+        "strokeWidth": 1,
+        "speed": 0.5,
+        "animation": "draw"
+      }
+    },
+    {
+      "id": "bold-spin",
+      "label": "Bold Spin",
+      "description": "A heavy, chunky globe in deep navy that spins quickly on loop.",
+      "askedAs": [
+        "thick fast spinning globe",
+        "bold globe icon rotating",
+        "chunky world icon animation",
+        "жирный быстрый глобус",
+        "крутящийся толстый глобус"
+      ],
+      "props": {
+        "strokeWidth": 3,
+        "speed": 2,
+        "animation": "action",
+        "color": "#1e3a8a",
+        "size": 96
+      }
+    },
+    {
+      "id": "ocean-blue",
+      "label": "Ocean Blue",
+      "description": "A medium globe in calm ocean blue with the full draw-and-spin sequence.",
+      "askedAs": [
+        "blue globe icon",
+        "earth icon in blue",
+        "calm blue world animation",
+        "синий глобус",
+        "голубая иконка земли"
+      ],
+      "props": {
+        "color": "#1f6feb",
+        "size": 72,
+        "strokeWidth": 1.75
+      }
+    },
+    {
+      "id": "forest-once",
+      "label": "Forest Once",
+      "description": "A muted forest-green globe that draws and turns a single time, then holds.",
+      "askedAs": [
+        "green globe play once",
+        "eco earth icon no loop",
+        "sustainability globe animation",
+        "зелёный глобус один раз",
+        "эко глобус без повтора"
+      ],
+      "props": {
+        "color": "#2f6b4f",
+        "loop": false,
+        "size": 64,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "tiny-terracotta",
+      "label": "Tiny Terracotta",
+      "description": "A small, warm terracotta globe with a brisk inline-sized spin.",
+      "askedAs": [
+        "small warm globe icon",
+        "tiny orange globe for text",
+        "compact language icon",
+        "маленький тёплый глобус",
+        "мини иконка глобуса"
+      ],
+      "props": {
+        "size": 32,
+        "color": "#c2410c",
+        "strokeWidth": 2.25,
+        "speed": 1.5,
+        "animation": "action"
+      }
+    },
+    {
+      "id": "hero-slate",
+      "label": "Hero Slate",
+      "description": "An oversized slate-gray globe that slowly draws in as a hero centrepiece.",
+      "askedAs": [
+        "huge globe for title",
+        "big gray world icon",
+        "large hero globe animation",
+        "огромный серый глобус",
+        "большой глобус на весь экран"
+      ],
+      "props": {
+        "size": 200,
+        "color": "#475569",
+        "strokeWidth": 1.5,
+        "speed": 0.75
+      }
+    }
+  ]
+}

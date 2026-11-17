@@ -1,0 +1,82 @@
+{
+  "component": "fomo-limit-orders",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "mint-signal",
+      "label": "Mint Signal",
+      "description": "Cool mint accent that reads like a calm green buy signal against the graphite interface.",
+      "askedAs": [
+        "green trading accent",
+        "calm mint highlight color",
+        "make it look like a buy signal",
+        "зелёный акцент для трейдинга",
+        "мятный цвет кнопок"
+      ],
+      "props": {
+        "accentColor": "#3ecf9a"
+      }
+    },
+    {
+      "id": "cobalt-desk",
+      "label": "Cobalt Desk",
+      "description": "Crisp cobalt blue accent for a sober, institutional trading-desk feel.",
+      "askedAs": [
+        "blue professional accent",
+        "institutional bank look",
+        "corporate blue controls",
+        "синий деловой акцент",
+        "как у банковского терминала"
+      ],
+      "props": {
+        "accentColor": "#4c8dff"
+      }
+    },
+    {
+      "id": "coral-alert",
+      "label": "Coral Alert",
+      "description": "Warm coral-red accent that gives the controls an urgent, sell-side energy.",
+      "askedAs": [
+        "red sell accent",
+        "urgent warm highlight",
+        "coral colored buttons",
+        "красный акцент продажи",
+        "коралловый цвет элементов"
+      ],
+      "props": {
+        "accentColor": "#ef6f5e"
+      }
+    },
+    {
+      "id": "violet-night",
+      "label": "Violet Night",
+      "description": "Muted lavender accent for a modern crypto-app look on dark graphite.",
+      "askedAs": [
+        "purple crypto style",
+        "lavender accent on dark ui",
+        "modern web3 look",
+        "фиолетовый крипто стиль",
+        "лавандовый акцент"
+      ],
+      "props": {
+        "accentColor": "#a78bfa"
+      }
+    },
+    {
+      "id": "platinum-mono",
+      "label": "Platinum Mono",
+      "description": "Soft platinum-grey accent for an almost monochrome, understated premium finish.",
+      "askedAs": [
+        "monochrome minimal look",
+        "silver grey accent",
+        "no color just neutral",
+        "монохромный минимализм",
+        "серебристый нейтральный акцент"
+      ],
+      "props": {
+        "accentColor": "#c9ced6"
+      }
+    }
+  ]
+}

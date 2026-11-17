@@ -1,0 +1,119 @@
+{
+  "component": "toolbar-unfurl",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "studio-light",
+      "label": "Studio Light",
+      "description": "A clean light canvas with crisp Inter type and a calm cobalt accent for product docs.",
+      "askedAs": [
+        "light clean toolbar",
+        "white background product demo",
+        "bright minimal editor tools",
+        "светлая версия панели инструментов",
+        "белый чистый фон"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "fontWeight": 400,
+        "accent": "#2f54eb",
+        "ground": "paper-crease"
+      }
+    },
+    {
+      "id": "terminal-dev",
+      "label": "Terminal Dev",
+      "description": "Monospaced captions on a near-black ground with a muted mint accent for a developer-tool feel.",
+      "askedAs": [
+        "code editor style toolbar",
+        "monospace developer look",
+        "hacker terminal vibe",
+        "стиль терминала для разработчиков",
+        "моноширинный шрифт тёмный фон"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "ink": "#e6edf3",
+        "accent": "#3fb950",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "quick-tour",
+      "label": "Quick Tour",
+      "description": "A snappy, bold run-through at double speed with a larger strip and no cursor.",
+      "askedAs": [
+        "fast toolbar animation",
+        "speed it up for social",
+        "bold quick feature tour",
+        "быстрая анимация панели",
+        "ускорить и сделать крупнее"
+      ],
+      "props": {
+        "speed": 2,
+        "scale": 1.2,
+        "fontWeight": 700,
+        "fontFamily": "Space Grotesk",
+        "cursor": false
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "An unhurried, cinematic unfurl with a short lead-in and soft serif captions over a dusky ground.",
+      "askedAs": [
+        "slow elegant toolbar reveal",
+        "cinematic calm product intro",
+        "relaxed pace with serif font",
+        "медленное плавное появление",
+        "спокойный кинематографичный стиль"
+      ],
+      "props": {
+        "speed": 0.5,
+        "delay": 20,
+        "fontFamily": "Instrument Serif",
+        "ground": "velvet-hour",
+        "accent": "#c9a7ff"
+      }
+    },
+    {
+      "id": "warm-ember",
+      "label": "Warm Ember",
+      "description": "A warm copper glow behind the ribbon with an amber accent and medium Manrope type.",
+      "askedAs": [
+        "warm orange toolbar",
+        "cozy copper glow",
+        "amber accent instead of blue",
+        "тёплые оранжевые тона",
+        "медный тёплый фон"
+      ],
+      "props": {
+        "ground": "ember",
+        "accent": "#f59e0b",
+        "fontFamily": "Manrope",
+        "fontWeight": 500
+      }
+    },
+    {
+      "id": "compact-polar",
+      "label": "Compact Polar",
+      "description": "A smaller, cool-toned strip on an icy ground with a teal accent for tight layouts.",
+      "askedAs": [
+        "smaller toolbar for corner",
+        "cool icy blue look",
+        "compact teal version",
+        "компактная панель поменьше",
+        "холодные голубые тона"
+      ],
+      "props": {
+        "scale": 0.75,
+        "ground": "polar",
+        "accent": "#14b8a6",
+        "fontFamily": "Geist"
+      }
+    }
+  ]
+}

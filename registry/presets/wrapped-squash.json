@@ -1,0 +1,125 @@
+{
+  "component": "wrapped-squash",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snappy-tomato",
+      "label": "Snappy Tomato",
+      "description": "Fast, punchy line beats on warm tomato-red blocks with cream type.",
+      "askedAs": [
+        "fast red recap poster",
+        "quick punchy year in review",
+        "loud warm stat card",
+        "быстрый красный постер",
+        "энергичные красные блоки"
+      ],
+      "props": {
+        "beat": 14,
+        "accent": "#e5482f",
+        "ink": "#fff4e6",
+        "speed": 1.5,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "editorial-cream",
+      "label": "Editorial Cream",
+      "description": "A light, slow serif poster with deep green blocks on warm paper.",
+      "askedAs": [
+        "elegant serif recap",
+        "calm magazine style poster",
+        "light green editorial blocks",
+        "элегантный журнальный стиль",
+        "спокойный светлый постер с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "accent": "#1f4d3a",
+        "background": "#f3ede2",
+        "beat": 40,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-lime",
+      "label": "Terminal Lime",
+      "description": "Monospace type on near-black with muted lime blocks and no grain, like a dev changelog.",
+      "askedAs": [
+        "code style shipped summary",
+        "developer changelog look",
+        "monospace dark poster",
+        "стиль терминала",
+        "моноширинный шрифт на тёмном"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accent": "#b5d334",
+        "ink": "#111311",
+        "background": "#0e0f0d",
+        "grain": false,
+        "beat": 20
+      }
+    },
+    {
+      "id": "slow-violet",
+      "label": "Slow Violet",
+      "description": "Unhurried, slightly smaller stacks in soft violet with a delayed start.",
+      "askedAs": [
+        "slow purple reveal",
+        "gentle calm section break",
+        "delayed soft poster",
+        "медленный фиолетовый",
+        "плавное появление строк"
+      ],
+      "props": {
+        "accent": "#6e56cf",
+        "beat": 48,
+        "speed": 0.5,
+        "scale": 0.85,
+        "delay": 20,
+        "ink": "#f5f2ff"
+      }
+    },
+    {
+      "id": "clean-ink",
+      "label": "Clean Ink",
+      "description": "Crisp Inter type in black blocks on a white, grain-free frame for a modern product look.",
+      "askedAs": [
+        "minimal black and white",
+        "clean modern product recap",
+        "no grain light poster",
+        "минималистичный чёрно-белый",
+        "чистый современный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#111111",
+        "ink": "#ffffff",
+        "background": "#fafafa",
+        "grain": false
+      }
+    },
+    {
+      "id": "big-amber",
+      "label": "Big Amber",
+      "description": "Oversized, fast amber blocks with dark type that fill the frame loudly.",
+      "askedAs": [
+        "huge bold yellow type",
+        "oversized loud stat card",
+        "big orange blocks fast",
+        "огромный жёлтый текст",
+        "крупные яркие блоки"
+      ],
+      "props": {
+        "scale": 1.3,
+        "accent": "#f2a93b",
+        "ink": "#1a1410",
+        "speed": 1.25,
+        "fontFamily": "Manrope"
+      }
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "component": "opencode",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "emerald-swift",
+      "label": "Emerald Swift",
+      "description": "A calm emerald accent bar with typing that runs at double pace.",
+      "askedAs": [
+        "green accent faster typing",
+        "make it green and quick",
+        "emerald terminal look",
+        "зелёный акцент и быстрее",
+        "изумрудный вариант быстрый"
+      ],
+      "props": {
+        "accentColor": "#10b981",
+        "speed": 2
+      }
+    },
+    {
+      "id": "amber-glow",
+      "label": "Amber Glow",
+      "description": "A warm amber accent that evokes a classic phosphor terminal at a relaxed pace.",
+      "askedAs": [
+        "orange accent terminal",
+        "warm retro color",
+        "amber highlight",
+        "оранжевый акцент",
+        "тёплый ретро цвет"
+      ],
+      "props": {
+        "accentColor": "#f59e0b"
+      }
+    },
+    {
+      "id": "violet-rapid",
+      "label": "Violet Rapid",
+      "description": "A soft violet accent with brisk, punchy typing for snappy demos.",
+      "askedAs": [
+        "purple accent fast",
+        "quick purple version",
+        "violet snappy typing",
+        "фиолетовый быстрый",
+        "сиреневый акцент побыстрее"
+      ],
+      "props": {
+        "accentColor": "#8b5cf6",
+        "speed": 2.75
+      }
+    },
+    {
+      "id": "coral-blitz",
+      "label": "Coral Blitz",
+      "description": "A muted coral accent with near-instant typing for very short cuts.",
+      "askedAs": [
+        "red accent super fast",
+        "instant typing pink",
+        "fastest possible",
+        "коралловый очень быстро",
+        "мгновенный набор текста"
+      ],
+      "props": {
+        "accentColor": "#f2645a",
+        "speed": 4
+      }
+    },
+    {
+      "id": "slate-steady",
+      "label": "Slate Steady",
+      "description": "A understated slate-gray accent for a neutral, minimal look with a slightly quicker rhythm.",
+      "askedAs": [
+        "gray neutral accent",
+        "minimal no color",
+        "subtle monochrome look",
+        "серый нейтральный акцент",
+        "минималистичный без цвета"
+      ],
+      "props": {
+        "accentColor": "#94a3b8",
+        "speed": 1.5
+      }
+    }
+  ]
+}

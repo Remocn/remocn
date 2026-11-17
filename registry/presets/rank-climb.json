@@ -1,0 +1,105 @@
+{
+  "component": "rank-climb",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "product-hunt-orange",
+      "label": "Hunt Orange",
+      "description": "Warm light card with Product Hunt orange accent and a snappy final swap.",
+      "askedAs": [
+        "product hunt orange style",
+        "light warm leaderboard",
+        "orange accent ranking",
+        "оранжевый стиль продакт хант",
+        "светлый рейтинг с оранжевым"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#da552f",
+        "background": "#fbf7f3",
+        "ink": "#1f1a17",
+        "fontFamily": "Manrope",
+        "finalSwap": 14
+      }
+    },
+    {
+      "id": "slow-drama",
+      "label": "Slow Drama",
+      "description": "Elegant serif on deep ink with a long, suspenseful final swap.",
+      "askedAs": [
+        "dramatic slow climb",
+        "suspenseful rank reveal",
+        "elegant serif leaderboard",
+        "медленный драматичный подъём",
+        "элегантный рейтинг с засечками"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "background": "#0e0f14",
+        "ink": "#f2eee6",
+        "accent": "#c9a45c",
+        "finalSwap": 48,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-hit",
+      "label": "Quick Hit",
+      "description": "Fast, punchy climb that starts almost immediately for short social cuts.",
+      "askedAs": [
+        "fast rank climb",
+        "quick leaderboard for reels",
+        "snappy ranking animation",
+        "быстрый подъём в рейтинге",
+        "короткая анимация для сторис"
+      ],
+      "props": {
+        "speed": 1.75,
+        "climbAt": 8,
+        "finalSwap": 10,
+        "scale": 1.15,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "terminal-mint",
+      "label": "Terminal Mint",
+      "description": "Monospace dev-tool look with a mint accent on near-black, no grain.",
+      "askedAs": [
+        "developer terminal style ranking",
+        "monospace leaderboard",
+        "hacker look rank list",
+        "моноширинный стиль для разработчиков",
+        "рейтинг в стиле терминала"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0d",
+        "ink": "#d7e4dc",
+        "accent": "#3ddc97",
+        "grain": false
+      }
+    },
+    {
+      "id": "clean-minimal",
+      "label": "Clean Minimal",
+      "description": "Crisp white, grain-free Inter layout at a smaller scale with a calm pace.",
+      "askedAs": [
+        "minimal clean leaderboard",
+        "white simple ranking",
+        "subtle corporate rank climb",
+        "минималистичный белый рейтинг",
+        "чистый простой стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#111111",
+        "grain": false,
+        "scale": 0.85,
+        "delay": 12
+      }
+    }
+  ]
+}

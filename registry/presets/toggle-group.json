@@ -1,0 +1,84 @@
+{
+  "component": "toggle-group",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-glide",
+      "label": "Slow Glide",
+      "description": "A full-size control whose thumb drifts leisurely between segments for a calm, deliberate feel.",
+      "askedAs": [
+        "slow smooth toggle slide",
+        "calm segmented control animation",
+        "leisurely switch between options",
+        "медленное плавное переключение",
+        "спокойный слайдер переключателя"
+      ],
+      "props": {
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "snappy",
+      "label": "Snappy",
+      "description": "A full-size control with a brisk thumb that zips between segments like a responsive native UI.",
+      "askedAs": [
+        "fast toggle switch animation",
+        "snappy segmented control",
+        "quick responsive tab switch",
+        "быстрое переключение сегментов",
+        "резкий отзывчивый переключатель"
+      ],
+      "props": {
+        "speed": 2
+      }
+    },
+    {
+      "id": "compact",
+      "label": "Compact",
+      "description": "A smaller, tighter segmented control at the standard pace that fits neatly into dense layouts.",
+      "askedAs": [
+        "small segmented control",
+        "compact toggle group",
+        "mini view mode switcher",
+        "компактный переключатель",
+        "маленькая группа переключателей"
+      ],
+      "props": {
+        "size": "sm"
+      }
+    },
+    {
+      "id": "compact-rapid",
+      "label": "Compact Rapid",
+      "description": "A small control with a very fast thumb that flicks between options for energetic, punchy edits.",
+      "askedAs": [
+        "tiny fast toggle",
+        "quick small switcher for fast edits",
+        "rapid compact segmented control",
+        "маленький быстрый переключатель",
+        "стремительный компактный тоггл"
+      ],
+      "props": {
+        "size": "sm",
+        "speed": 3
+      }
+    },
+    {
+      "id": "mini-drift",
+      "label": "Mini Drift",
+      "description": "A small control with a gently drifting thumb, subtle and unhurried for background UI moments.",
+      "askedAs": [
+        "small slow toggle animation",
+        "subtle compact switch",
+        "gentle mini segmented control",
+        "маленький медленный переключатель",
+        "тонкая плавная анимация тоггла"
+      ],
+      "props": {
+        "size": "sm",
+        "speed": 0.5
+      }
+    }
+  ]
+}

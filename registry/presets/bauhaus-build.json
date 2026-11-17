@@ -1,0 +1,118 @@
+{
+  "component": "bauhaus-build",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "classic-primaries",
+      "label": "Classic Primaries",
+      "description": "Textbook Bauhaus red, yellow and blue shapes with near-black ink.",
+      "askedAs": [
+        "red yellow blue bauhaus",
+        "primary colors geometric poster",
+        "classic bauhaus palette",
+        "классические цвета баухаус",
+        "красный жёлтый синий"
+      ],
+      "props": {
+        "inkColor": "#1a1a1a",
+        "accentColor": "#d62828",
+        "secondaryColor": "#f2b705",
+        "tertiaryColor": "#1d4e89"
+      }
+    },
+    {
+      "id": "slow-monument",
+      "label": "Slow Monument",
+      "description": "Large shapes tumble deliberately in a calm, weighty build.",
+      "askedAs": [
+        "slow big shapes",
+        "calm heavy animation",
+        "large slow poster build",
+        "медленно и крупно",
+        "спокойная сборка"
+      ],
+      "props": {
+        "scale": 1.2,
+        "speed": 0.5,
+        "seed": 7
+      }
+    },
+    {
+      "id": "quick-frieze",
+      "label": "Quick Frieze",
+      "description": "Small, dense shapes snap into place at a brisk, playful pace.",
+      "askedAs": [
+        "fast small shapes",
+        "snappy geometric intro",
+        "quick bauhaus build",
+        "быстрая анимация",
+        "мелкие фигуры быстро"
+      ],
+      "props": {
+        "scale": 0.7,
+        "speed": 2,
+        "seed": 14
+      }
+    },
+    {
+      "id": "nordic-muted",
+      "label": "Nordic Muted",
+      "description": "Soft sage, dusty blue and sand tones with a slate ink for a quiet, modern feel.",
+      "askedAs": [
+        "muted calm colors",
+        "soft scandinavian palette",
+        "pastel geometric",
+        "приглушённые цвета",
+        "спокойная палитра"
+      ],
+      "props": {
+        "inkColor": "#2f3a40",
+        "accentColor": "#8fa98b",
+        "secondaryColor": "#d9cdb8",
+        "tertiaryColor": "#7f97a8",
+        "seed": 4
+      }
+    },
+    {
+      "id": "mono-loop",
+      "label": "Mono Loop",
+      "description": "Grayscale shapes with a single deep blue accent rebuilding on a continuous loop.",
+      "askedAs": [
+        "black and white looping",
+        "monochrome background loop",
+        "grayscale geometric loop",
+        "монохромный цикл",
+        "чёрно-белая зацикленная анимация"
+      ],
+      "props": {
+        "inkColor": "#111111",
+        "accentColor": "#2b4c9b",
+        "secondaryColor": "#c8c8c8",
+        "tertiaryColor": "#6b6b6b",
+        "loop": true,
+        "seed": 19
+      }
+    },
+    {
+      "id": "terracotta-warm",
+      "label": "Terracotta Warm",
+      "description": "Earthy terracotta, ochre and olive shapes in a warm, sunbaked palette.",
+      "askedAs": [
+        "warm earthy colors",
+        "terracotta and mustard",
+        "retro warm poster",
+        "тёплые землистые тона",
+        "терракотовая палитра"
+      ],
+      "props": {
+        "inkColor": "#2a1f1a",
+        "accentColor": "#b5532f",
+        "secondaryColor": "#d9a441",
+        "tertiaryColor": "#6b6a3a",
+        "speed": 0.75,
+        "seed": 11
+      }
+    }
+  ]
+}

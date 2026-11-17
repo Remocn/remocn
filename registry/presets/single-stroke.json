@@ -1,0 +1,104 @@
+{
+  "component": "single-stroke",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-ink",
+      "label": "Slow Ink",
+      "description": "A calm, deliberate draw on a warm paper background with a deep teal accent and serif type.",
+      "askedAs": [
+        "slow hand-drawn number on paper",
+        "calm elegant date reveal",
+        "serif poster with slow pen stroke",
+        "медленная прорисовка цифры на бумаге",
+        "спокойный элегантный показ даты"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1d2a2e",
+        "accent": "#1f6f6b",
+        "fontFamily": "Instrument Serif",
+        "drawDuration": 96
+      }
+    },
+    {
+      "id": "quick-scribble",
+      "label": "Quick Scribble",
+      "description": "A fast, punchy scribble with tight word timing and a chunky grotesk for snappy social cuts.",
+      "askedAs": [
+        "fast energetic number draw",
+        "snappy date for reels",
+        "quick scribble countdown",
+        "быстрая прорисовка цифры",
+        "энергичный анонс даты"
+      ],
+      "props": {
+        "drawDuration": 18,
+        "stagger": 1,
+        "speed": 1.5,
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#ff6b4a"
+      }
+    },
+    {
+      "id": "midnight-mono",
+      "label": "Midnight Mono",
+      "description": "A dark navy field with a soft amber accent and monospace captions for a techy demo-day feel.",
+      "askedAs": [
+        "dark tech style event date",
+        "developer demo day announcement",
+        "monospace night look",
+        "тёмный технологичный стиль",
+        "анонс демо-дня для разработчиков"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#0f1626",
+        "ink": "#e8ecf3",
+        "accent": "#f2b45a",
+        "fontFamily": "JetBrains Mono",
+        "stagger": 6
+      }
+    },
+    {
+      "id": "big-poster",
+      "label": "Big Poster",
+      "description": "An oversized numeral with bold contemporary type that fills the frame like a gig poster.",
+      "askedAs": [
+        "make the number huge",
+        "bold poster style date",
+        "giant numeral filling screen",
+        "огромная цифра на весь экран",
+        "крупный постерный стиль"
+      ],
+      "props": {
+        "scale": 1.35,
+        "fontFamily": "Space Grotesk",
+        "drawDuration": 60,
+        "accent": "#e94f37"
+      }
+    },
+    {
+      "id": "soft-sage",
+      "label": "Soft Sage",
+      "description": "A gentle light sage palette with rounded type and a delayed, relaxed entrance.",
+      "askedAs": [
+        "soft pastel green date reveal",
+        "gentle friendly invitation look",
+        "muted light calm palette",
+        "мягкая пастельная палитра",
+        "нежный светлый стиль приглашения"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#e3ebe1",
+        "ink": "#26332b",
+        "accent": "#d98a6c",
+        "fontFamily": "Manrope",
+        "delay": 15
+      }
+    }
+  ]
+}

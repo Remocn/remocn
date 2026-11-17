@@ -1,0 +1,118 @@
+{
+  "component": "pendulum-wave",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-ink",
+      "label": "Paper Ink",
+      "description": "Dark ink bobs and a muted blue wave line on warm off-white paper, without guides.",
+      "askedAs": [
+        "light version on paper background",
+        "black and white print style pendulums",
+        "clean light theme loop",
+        "светлый вариант на бумажном фоне",
+        "маятники в стиле печати"
+      ],
+      "props": {
+        "background": "#f4f1ea",
+        "color": "#1c1c1c",
+        "accent": "#2f5d8a",
+        "showGuides": false
+      }
+    },
+    {
+      "id": "slow-drift",
+      "label": "Slow Drift",
+      "description": "A long, unhurried loop in cool midnight blues where the waves unfold gently.",
+      "askedAs": [
+        "very slow calm background loop",
+        "meditative slow pendulums",
+        "long relaxing loop in blue",
+        "медленный спокойный фон",
+        "очень медленные маятники"
+      ],
+      "props": {
+        "loopFrames": 900,
+        "cycles": 6,
+        "speed": 0.5,
+        "background": "#0e1420",
+        "color": "#e6edf5",
+        "accent": "#7fa7c9"
+      }
+    },
+    {
+      "id": "quick-pulse",
+      "label": "Quick Pulse",
+      "description": "A short, brisk loop with a golden wave line that snaps back into alignment fast.",
+      "askedAs": [
+        "fast energetic pendulum loop",
+        "short quick rhythm animation",
+        "speed it up with a gold line",
+        "быстрый короткий цикл",
+        "энергичная анимация маятников"
+      ],
+      "props": {
+        "loopFrames": 180,
+        "speed": 2,
+        "cycles": 12,
+        "accent": "#f2b33d"
+      }
+    },
+    {
+      "id": "minimal-mono",
+      "label": "Minimal Mono",
+      "description": "Pure black with soft white bobs and a quiet grey wave line, guides removed.",
+      "askedAs": [
+        "monochrome minimal pendulums",
+        "no red, just black and white",
+        "stripped down clean look",
+        "минималистичный монохром",
+        "чёрно-белые маятники без линий"
+      ],
+      "props": {
+        "background": "#000000",
+        "color": "#ededed",
+        "accent": "#555555",
+        "showGuides": false
+      }
+    },
+    {
+      "id": "dense-braid",
+      "label": "Dense Braid",
+      "description": "Many swings per loop weave intricate braids in deep green tones with a jade wave line.",
+      "askedAs": [
+        "more complex wave patterns",
+        "intricate braiding pendulums",
+        "green tinted hypnotic loop",
+        "сложные узоры волн",
+        "зелёные гипнотические маятники"
+      ],
+      "props": {
+        "cycles": 24,
+        "loopFrames": 600,
+        "background": "#0f1a17",
+        "color": "#e8f1ee",
+        "accent": "#4fb39a"
+      }
+    },
+    {
+      "id": "warm-dusk",
+      "label": "Warm Dusk",
+      "description": "Cream bobs over a deep brown ground with a terracotta wave line, swinging slightly slower.",
+      "askedAs": [
+        "warm cozy color version",
+        "earthy brown and orange pendulums",
+        "sunset tones slow swing",
+        "тёплые цвета",
+        "коричневый и терракотовый вариант"
+      ],
+      "props": {
+        "background": "#2a1e1a",
+        "color": "#f3e3d3",
+        "accent": "#d9825b",
+        "speed": 0.75
+      }
+    }
+  ]
+}

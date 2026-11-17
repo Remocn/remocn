@@ -1,0 +1,124 @@
+{
+  "component": "cover-ring",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A slow, airy serif statement on a warm paper ground with a deep ink accent.",
+      "askedAs": [
+        "elegant serif magazine look",
+        "slow classy light version",
+        "editorial print style",
+        "элегантный журнальный стиль",
+        "светлый вариант с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "ground": "paper-crease",
+        "speed": 0.75,
+        "accent": "#8a5a2b"
+      }
+    },
+    {
+      "id": "midnight-velvet",
+      "label": "Midnight Velvet",
+      "description": "Light-weight type drifting slowly over a deep violet evening glow with a soft rose accent.",
+      "askedAs": [
+        "moody purple night look",
+        "luxury slow dark version",
+        "velvet evening vibe",
+        "тёмный бархатный фиолетовый",
+        "медленный люксовый вариант"
+      ],
+      "props": {
+        "ground": "velvet-hour",
+        "fontWeight": 200,
+        "speed": 0.5,
+        "stagger": 4,
+        "accent": "#d8a7b1"
+      }
+    },
+    {
+      "id": "bold-punch",
+      "label": "Bold Punch",
+      "description": "Heavy, oversized grotesk that snaps in fast with no word stagger for a hard-hitting payoff.",
+      "askedAs": [
+        "big bold fast text",
+        "punchy launch slam",
+        "make it loud and quick",
+        "крупный жирный быстрый текст",
+        "резкий акцентный вариант"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 700,
+        "scale": 1.3,
+        "speed": 1.75,
+        "stagger": 0,
+        "ground": "charcoal-satin"
+      }
+    },
+    {
+      "id": "studio-mono",
+      "label": "Studio Mono",
+      "description": "Technical monospace readout in cool blue tones, like a mixing desk meter at night.",
+      "askedAs": [
+        "techy monospace audio look",
+        "code style blue meter",
+        "engineer studio vibe",
+        "технический моноширинный стиль",
+        "синий студийный вариант"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "fontWeight": 400,
+        "ground": "blue-hour",
+        "accent": "#7cc4ff",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "copper-warmth",
+      "label": "Copper Warmth",
+      "description": "Warm copper light with a soft Fraunces headline that settles in after a short pause.",
+      "askedAs": [
+        "warm orange cozy look",
+        "copper glow with serif",
+        "delayed warm intro",
+        "тёплый медный стиль",
+        "уютный оранжевый вариант"
+      ],
+      "props": {
+        "ground": "copper",
+        "fontFamily": "Fraunces",
+        "fontWeight": 300,
+        "delay": 15,
+        "accent": "#f2c39b"
+      }
+    },
+    {
+      "id": "clean-minimal",
+      "label": "Clean Minimal",
+      "description": "Crisp off-white background with near-black Inter type and a single graphite accent.",
+      "askedAs": [
+        "clean white minimal",
+        "simple light corporate look",
+        "plain background black text",
+        "минималистичный белый фон",
+        "чистый светлый вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f5f4f0",
+        "ink": "#141414",
+        "accent": "#3a3a3a",
+        "fontFamily": "Inter",
+        "fontWeight": 500
+      }
+    }
+  ]
+}

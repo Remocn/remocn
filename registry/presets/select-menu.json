@@ -1,0 +1,87 @@
+{
+  "component": "select-menu",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "solid-snap",
+      "label": "Solid Snap",
+      "description": "A filled highlight bar that snaps briskly between rows for a punchy, game-menu feel.",
+      "askedAs": [
+        "fast solid menu highlight",
+        "snappy game style selection",
+        "bold filled menu that jumps quickly",
+        "быстрое меню с заливкой",
+        "резкое переключение пунктов меню"
+      ],
+      "props": {
+        "variant": "solid",
+        "speed": 2.5
+      }
+    },
+    {
+      "id": "soft-drift",
+      "label": "Soft Drift",
+      "description": "A gentle tinted highlight that drifts slowly between options for a calm, relaxed demo.",
+      "askedAs": [
+        "slow subtle menu highlight",
+        "calm gliding selection",
+        "gentle soft menu animation",
+        "плавное мягкое выделение",
+        "медленное меню с лёгкой подсветкой"
+      ],
+      "props": {
+        "variant": "soft",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "solid-glide",
+      "label": "Solid Glide",
+      "description": "A strong filled bar that glides at an unhurried pace, confident but smooth.",
+      "askedAs": [
+        "smooth solid highlight bar",
+        "filled selection that glides",
+        "confident menu with solid bar",
+        "плавная сплошная подсветка",
+        "меню со сплошной полосой выделения"
+      ],
+      "props": {
+        "variant": "solid",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-flick",
+      "label": "Quick Flick",
+      "description": "A light soft highlight that flicks almost instantly between rows for fast-cut edits.",
+      "askedAs": [
+        "instant menu selection change",
+        "very fast soft highlight",
+        "quick flick between options",
+        "мгновенное переключение выбора",
+        "очень быстрое мягкое меню"
+      ],
+      "props": {
+        "variant": "soft",
+        "speed": 4
+      }
+    },
+    {
+      "id": "cinematic-solid",
+      "label": "Cinematic Slow",
+      "description": "A solid highlight moving in deliberate slow motion for dramatic, cinematic reveals.",
+      "askedAs": [
+        "slow motion menu selection",
+        "dramatic solid highlight",
+        "cinematic menu transition",
+        "медленное кинематографичное меню",
+        "драматичное выделение пункта"
+      ],
+      "props": {
+        "variant": "solid",
+        "speed": 0.25
+      }
+    }
+  ]
+}

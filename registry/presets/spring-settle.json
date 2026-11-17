@@ -1,0 +1,97 @@
+{
+  "component": "spring-settle",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gentle-drift",
+      "label": "Gentle Drift",
+      "description": "Slow, soft settling with a barely-there scale change and a relaxed exit for a calm, luxurious cadence.",
+      "askedAs": [
+        "make it slower and softer",
+        "calm subtle transitions",
+        "less dramatic scale, more relaxed",
+        "медленнее и мягче",
+        "спокойные плавные переходы"
+      ],
+      "props": {
+        "enterScale": 1.08,
+        "exitScale": 0.94,
+        "exitFrames": 14,
+        "enterStagger": 5,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "snap-cut",
+      "label": "Snap Cut",
+      "description": "Fast, punchy scene changes where items drop in nearly together and the old scene vanishes in a blink.",
+      "askedAs": [
+        "quicker snappier scene changes",
+        "fast punchy transitions",
+        "everything lands at once",
+        "быстрые резкие переходы",
+        "сделай динамичнее"
+      ],
+      "props": {
+        "speed": 2,
+        "exitFrames": 3,
+        "enterStagger": 1,
+        "enterScale": 1.16
+      }
+    },
+    {
+      "id": "grand-drop",
+      "label": "Grand Drop",
+      "description": "Items fall from well above life size and the outgoing scene collapses deeply, for a bold theatrical landing.",
+      "askedAs": [
+        "bigger dramatic entrance",
+        "items crash down from large",
+        "more scale on enter and exit",
+        "эффектное появление с большого масштаба",
+        "драматичный переход"
+      ],
+      "props": {
+        "enterScale": 1.6,
+        "exitScale": 0.6,
+        "exitFrames": 10,
+        "enterStagger": 4
+      }
+    },
+    {
+      "id": "cascade",
+      "label": "Cascade",
+      "description": "A long, clearly sequenced stagger so each element arrives one after another like a measured reveal.",
+      "askedAs": [
+        "stagger items more one by one",
+        "longer delay between elements",
+        "sequential cascading reveal",
+        "элементы по очереди с задержкой",
+        "каскадное появление"
+      ],
+      "props": {
+        "enterStagger": 8,
+        "enterScale": 1.3,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quiet-swap",
+      "label": "Quiet Swap",
+      "description": "Minimal, almost static transitions with tiny scale shifts at standard pace for understated editorial pacing.",
+      "askedAs": [
+        "barely noticeable motion",
+        "minimal subtle scene swap",
+        "no big zoom, just a hint",
+        "минимальная анимация",
+        "едва заметный масштаб"
+      ],
+      "props": {
+        "enterScale": 1.02,
+        "exitScale": 0.98,
+        "enterStagger": 2,
+        "exitFrames": 8
+      }
+    }
+  ]
+}

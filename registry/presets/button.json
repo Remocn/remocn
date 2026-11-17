@@ -1,0 +1,109 @@
+{
+  "component": "button",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "bold-cta",
+      "label": "Bold CTA",
+      "description": "A large indigo primary button held in its hover state, inviting the click.",
+      "askedAs": [
+        "big blue call to action button",
+        "large primary button hovering",
+        "prominent signup button",
+        "большая синяя кнопка призыва",
+        "крупная кнопка CTA при наведении"
+      ],
+      "props": {
+        "size": "lg",
+        "state": "hover",
+        "primary": "#4f46e5"
+      }
+    },
+    {
+      "id": "success-green",
+      "label": "Success Green",
+      "description": "A forest-green button landing on its success checkmark at a calm, slightly slower pace.",
+      "askedAs": [
+        "button showing success checkmark",
+        "green confirmed submit button",
+        "completed action button",
+        "зелёная кнопка с галочкой успеха",
+        "кнопка после успешной отправки"
+      ],
+      "props": {
+        "state": "success",
+        "primary": "#15803d",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "danger-press",
+      "label": "Danger Press",
+      "description": "A destructive red button caught mid-press for delete or irreversible actions.",
+      "askedAs": [
+        "red delete button being clicked",
+        "destructive action press",
+        "danger button pressed",
+        "красная кнопка удаления нажата",
+        "опасное действие кнопка"
+      ],
+      "props": {
+        "variant": "destructive",
+        "state": "press"
+      }
+    },
+    {
+      "id": "quiet-outline",
+      "label": "Quiet Outline",
+      "description": "A small outlined button spinning through a slow, understated loading state.",
+      "askedAs": [
+        "subtle outlined loading button",
+        "small bordered button with spinner",
+        "minimal secondary loading",
+        "тонкая кнопка с обводкой и загрузкой",
+        "маленькая контурная кнопка спиннер"
+      ],
+      "props": {
+        "variant": "outline",
+        "size": "sm",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "snappy-ghost",
+      "label": "Snappy Ghost",
+      "description": "A borderless ghost button with a fast, energetic hover in deep slate.",
+      "askedAs": [
+        "fast ghost button hover",
+        "text-only button quick animation",
+        "transparent button snappy",
+        "быстрая прозрачная кнопка",
+        "кнопка без фона с быстрым наведением"
+      ],
+      "props": {
+        "variant": "ghost",
+        "state": "hover",
+        "primary": "#334155",
+        "speed": 2
+      }
+    },
+    {
+      "id": "soft-secondary",
+      "label": "Soft Secondary",
+      "description": "A muted secondary button resting idle at large size for neutral options.",
+      "askedAs": [
+        "gray neutral button idle",
+        "large secondary cancel button",
+        "soft muted button",
+        "серая нейтральная кнопка",
+        "большая второстепенная кнопка"
+      ],
+      "props": {
+        "variant": "secondary",
+        "size": "lg",
+        "state": "idle"
+      }
+    }
+  ]
+}

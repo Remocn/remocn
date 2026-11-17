@@ -1,0 +1,121 @@
+{
+  "component": "packed-count",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-serif",
+      "label": "Paper Serif",
+      "description": "Light warm paper background with an elegant serif count in deep ink and a muted red accent.",
+      "askedAs": [
+        "elegant serif number on cream",
+        "editorial style counter",
+        "light classy view count",
+        "счётчик с засечками на светлом фоне",
+        "элегантная редакционная цифра"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#b5442e",
+        "countLength": 96
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Monospaced digits in soft green on near-black, ticking up quickly like a live stats readout.",
+      "askedAs": [
+        "hacker style counter",
+        "monospace live stats number",
+        "fast code-like count",
+        "моноширинный счётчик как в терминале",
+        "быстрые цифры в стиле кода"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0c",
+        "ink": "#d7e3da",
+        "accent": "#4ade80",
+        "speed": 1.5,
+        "countLength": 40
+      }
+    },
+    {
+      "id": "slow-build",
+      "label": "Slow Build",
+      "description": "A larger, unhurried count that climbs gradually after a short pause for dramatic effect.",
+      "askedAs": [
+        "slow dramatic counter",
+        "big number that builds up slowly",
+        "suspenseful count up",
+        "медленный нарастающий счётчик",
+        "драматичный рост цифры"
+      ],
+      "props": {
+        "countLength": 148,
+        "delay": 20,
+        "scale": 1.3,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "midnight-violet",
+      "label": "Midnight Violet",
+      "description": "Deep navy backdrop with a lavender accent and a geometric grotesk for a modern product feel.",
+      "askedAs": [
+        "purple counter on dark navy",
+        "modern startup metric",
+        "violet downloads number",
+        "фиолетовый счётчик на тёмно-синем",
+        "современная метрика для продукта"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "background": "#11142b",
+        "ink": "#ecebfa",
+        "accent": "#9b8cff"
+      }
+    },
+    {
+      "id": "compact-snap",
+      "label": "Compact Snap",
+      "description": "A smaller, crisp counter that snaps to its total fast on a clean white card.",
+      "askedAs": [
+        "quick small counter",
+        "snappy number on white",
+        "fast clean stat",
+        "быстрый компактный счётчик",
+        "короткая цифра на белом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "scale": 0.75,
+        "countLength": 24,
+        "speed": 2,
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "warm-fraunces",
+      "label": "Warm Fraunces",
+      "description": "Chunky soft serif digits in amber on a dark espresso background for a friendly, warm tone.",
+      "askedAs": [
+        "warm brown and orange counter",
+        "cozy friendly number",
+        "amber serif stat",
+        "тёплый янтарный счётчик",
+        "уютная цифра на коричневом фоне"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#1f1712",
+        "ink": "#f5e9dc",
+        "accent": "#e8a04a",
+        "scale": 1.15
+      }
+    }
+  ]
+}

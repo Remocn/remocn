@@ -1,0 +1,124 @@
+{
+  "component": "looks-like-this",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "Light serif headline on warm paper with soft corners and an unhurried word-by-word reveal.",
+      "askedAs": [
+        "warm editorial serif look",
+        "light magazine style intro",
+        "slow elegant paper background",
+        "светлый журнальный стиль с засечками",
+        "спокойная редакционная подача"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "ground": "paper-crease",
+        "stagger": 4,
+        "speed": 0.75,
+        "radius": 8
+      }
+    },
+    {
+      "id": "snappy-launch",
+      "label": "Snappy Launch",
+      "description": "Fast, punchy grotesk reveal on a cobalt ground with a crisp blue accent.",
+      "askedAs": [
+        "fast energetic product launch",
+        "quick punchy reveal blue",
+        "make it snappy and bold",
+        "быстрый энергичный запуск продукта",
+        "резкая динамичная анимация"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "ground": "cobalt-rise",
+        "accent": "#4c8dff",
+        "speed": 1.75,
+        "stagger": 1,
+        "radius": 12
+      }
+    },
+    {
+      "id": "midnight-cinema",
+      "label": "Midnight Cinema",
+      "description": "Slow, cinematic spotlight reveal with large type and generously rounded screenshot corners.",
+      "askedAs": [
+        "cinematic dramatic reveal",
+        "dark moody spotlight intro",
+        "slow movie trailer feel",
+        "кинематографичное драматичное появление",
+        "тёмный медленный трейлер"
+      ],
+      "props": {
+        "ground": "spotlight",
+        "fontFamily": "Fraunces",
+        "speed": 0.5,
+        "stagger": 6,
+        "scale": 1.15,
+        "delay": 12
+      }
+    },
+    {
+      "id": "dev-terminal",
+      "label": "Dev Terminal",
+      "description": "Monospace type on charcoal with sharp corners and a muted green accent for developer tools.",
+      "askedAs": [
+        "developer tool terminal look",
+        "monospace code style",
+        "sharp technical dark theme",
+        "стиль терминала для разработчиков",
+        "моноширинный технический вид"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "ground": "charcoal-satin",
+        "accent": "#3fb68b",
+        "radius": 2,
+        "stagger": 1.5
+      }
+    },
+    {
+      "id": "warm-ember",
+      "label": "Warm Ember",
+      "description": "Cozy copper-toned ground with friendly rounded type and a soft amber accent.",
+      "askedAs": [
+        "warm cozy orange look",
+        "friendly soft copper tones",
+        "rounded warm intro",
+        "тёплый уютный оранжевый стиль",
+        "мягкие медные оттенки"
+      ],
+      "props": {
+        "ground": "ember",
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#e8a15a",
+        "radius": 28
+      }
+    },
+    {
+      "id": "polar-minimal",
+      "label": "Polar Minimal",
+      "description": "Cool, airy light layout with compact Inter type, tight radius and a quiet slate accent.",
+      "askedAs": [
+        "clean minimal light version",
+        "cool airy white look",
+        "compact simple and calm",
+        "чистый минималистичный светлый вариант",
+        "холодный воздушный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "polar",
+        "fontFamily": "Inter",
+        "accent": "#3b5b7a",
+        "scale": 0.85,
+        "radius": 6
+      }
+    }
+  ]
+}

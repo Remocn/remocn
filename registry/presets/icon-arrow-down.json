@@ -1,0 +1,101 @@
+{
+  "component": "icon-arrow-down",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "scroll-cue",
+      "label": "Scroll Cue",
+      "description": "A small, thin arrow that keeps bobbing gently at a relaxed pace to invite scrolling.",
+      "askedAs": [
+        "looping scroll down hint",
+        "bouncing arrow to scroll",
+        "gentle repeating down arrow",
+        "стрелка листать вниз",
+        "повторяющаяся стрелка вниз"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "size": 36,
+        "strokeWidth": 1.5,
+        "speed": 0.75,
+        "color": "#6b7280"
+      }
+    },
+    {
+      "id": "hand-drawn",
+      "label": "Hand Drawn",
+      "description": "A large, fine-lined arrow that slowly sketches itself in like a pen stroke.",
+      "askedAs": [
+        "slowly draw the arrow",
+        "sketch in a down arrow",
+        "thin arrow drawing animation",
+        "стрелка рисуется медленно",
+        "нарисовать стрелку вниз"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1.25,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "bold-download",
+      "label": "Bold Download",
+      "description": "A chunky blue arrow with a heavy stroke that drops in quickly like a download prompt.",
+      "askedAs": [
+        "big blue download arrow",
+        "thick fast down arrow",
+        "download button icon",
+        "синяя стрелка скачать",
+        "жирная стрелка загрузки"
+      ],
+      "props": {
+        "size": 96,
+        "strokeWidth": 3,
+        "color": "#1f6feb",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "decline-alert",
+      "label": "Decline Alert",
+      "description": "A muted red arrow that snaps down fast and repeats, signalling a drop or loss.",
+      "askedAs": [
+        "red arrow for falling numbers",
+        "price going down icon",
+        "looping red down arrow",
+        "красная стрелка падение",
+        "стрелка снижения цены"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "color": "#c2410c",
+        "strokeWidth": 2.5,
+        "speed": 2,
+        "size": 64
+      }
+    },
+    {
+      "id": "hero-glyph",
+      "label": "Hero Glyph",
+      "description": "An oversized deep-green arrow that draws and moves at a calm, cinematic pace.",
+      "askedAs": [
+        "huge arrow for a title card",
+        "giant slow down arrow",
+        "cinematic arrow reveal",
+        "огромная стрелка вниз",
+        "медленная большая стрелка"
+      ],
+      "props": {
+        "size": 200,
+        "color": "#0f766e",
+        "strokeWidth": 1.75,
+        "speed": 0.5
+      }
+    }
+  ]
+}

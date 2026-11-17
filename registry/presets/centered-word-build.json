@@ -1,0 +1,123 @@
+{
+  "component": "centered-word-build",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "bold-punch",
+      "label": "Bold Punch",
+      "description": "Large heavy type that slams in fast with a strong push toward the viewer on every word.",
+      "askedAs": [
+        "big bold words punching in",
+        "aggressive fast word reveal",
+        "heavy type with strong zoom",
+        "жирный крупный текст с ударом",
+        "быстрое появление слов с сильным зумом"
+      ],
+      "props": {
+        "fontSize": 96,
+        "fontWeight": "700",
+        "zoomStep": 0.07,
+        "settleFrames": 5,
+        "rise": 0.3,
+        "wordGap": 7
+      }
+    },
+    {
+      "id": "calm-drift",
+      "label": "Calm Drift",
+      "description": "Light, slow-paced words float gently into place with almost no zoom and a long soft exit.",
+      "askedAs": [
+        "slow gentle word build",
+        "calm minimal text reveal",
+        "soft floating words",
+        "медленное спокойное появление слов",
+        "мягкий плавный текст"
+      ],
+      "props": {
+        "speed": 0.75,
+        "wordGap": 18,
+        "zoomStep": 0.01,
+        "settleFrames": 16,
+        "exitFrames": 24,
+        "rise": 0.1
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Words snap in on tight, accelerating beats for a quick energetic statement.",
+      "askedAs": [
+        "quick snappy words",
+        "fast beat synced text",
+        "rapid word by word typography",
+        "быстрые слова под бит",
+        "резкое быстрое появление текста"
+      ],
+      "props": {
+        "speed": 1.5,
+        "wordGap": 6,
+        "accel": 0.5,
+        "settleFrames": 4,
+        "exitFrames": 6
+      }
+    },
+    {
+      "id": "editorial-cool",
+      "label": "Editorial Cool",
+      "description": "Medium-weight cool grey-blue type with a measured, magazine-like rhythm.",
+      "askedAs": [
+        "elegant editorial text",
+        "cool toned clean typography",
+        "refined magazine style words",
+        "элегантная редакционная типографика",
+        "холодный сдержанный текст"
+      ],
+      "props": {
+        "color": "#dbe4ee",
+        "fontWeight": "500",
+        "fontSize": 64,
+        "accel": 0.9,
+        "zoomStep": 0.02
+      }
+    },
+    {
+      "id": "flat-steady",
+      "label": "Flat Steady",
+      "description": "Words pop straight in without rise or zoom, keeping a static, even cadence.",
+      "askedAs": [
+        "no zoom simple word reveal",
+        "static words appearing one by one",
+        "flat even text build",
+        "слова без зума и движения",
+        "простое ровное появление слов"
+      ],
+      "props": {
+        "rise": 0,
+        "zoomStep": 0,
+        "accel": 1,
+        "fontWeight": "600"
+      }
+    },
+    {
+      "id": "warm-headline",
+      "label": "Warm Headline",
+      "description": "Oversized semibold amber headline that rises tall and holds longer before wiping away.",
+      "askedAs": [
+        "big warm headline text",
+        "golden title word build",
+        "large statement that lingers",
+        "крупный тёплый заголовок",
+        "золотистый текст который долго держится"
+      ],
+      "props": {
+        "fontSize": 120,
+        "color": "#f2c27b",
+        "fontWeight": "600",
+        "rise": 0.25,
+        "exitAt": 75,
+        "exitFrames": 18
+      }
+    }
+  ]
+}

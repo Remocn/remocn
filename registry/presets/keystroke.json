@@ -1,0 +1,114 @@
+{
+  "component": "keystroke",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-mac",
+      "label": "Midnight Keys",
+      "description": "Dark keycaps with a soft violet accent for moody editor demos.",
+      "askedAs": [
+        "dark keyboard shortcut keys",
+        "night mode keycaps",
+        "shortcut overlay for dark UI",
+        "тёмные клавиши",
+        "клавиши в тёмной теме"
+      ],
+      "props": {
+        "theme": "dark",
+        "accent": "#8b7cf6"
+      }
+    },
+    {
+      "id": "windows-office",
+      "label": "Windows Office",
+      "description": "Light Windows-style keys with a calm teal accent for business software walkthroughs.",
+      "askedAs": [
+        "windows shortcut keys",
+        "ctrl key combos for pc",
+        "shortcuts for windows users",
+        "клавиши windows",
+        "горячие клавиши ctrl"
+      ],
+      "props": {
+        "platform": "windows",
+        "accent": "#0f9d8a"
+      }
+    },
+    {
+      "id": "hero-center",
+      "label": "Hero Shortcut",
+      "description": "Oversized keycaps centered on screen that press slowly and linger for a launch-moment reveal.",
+      "askedAs": [
+        "big keys in the middle of the screen",
+        "large centered shortcut reveal",
+        "slow dramatic keystroke",
+        "большие клавиши по центру",
+        "крупный показ сочетания клавиш"
+      ],
+      "props": {
+        "size": 112,
+        "x": 0.5,
+        "y": 0.5,
+        "speed": 0.75,
+        "linger": 60
+      }
+    },
+    {
+      "id": "power-user",
+      "label": "Power User",
+      "description": "Small, fast keys tucked in the lower right that tap quickly and leave almost at once.",
+      "askedAs": [
+        "quick small shortcut hints",
+        "fast keystrokes in the corner",
+        "subtle keyboard overlay",
+        "быстрые маленькие клавиши",
+        "клавиши в углу экрана"
+      ],
+      "props": {
+        "size": 40,
+        "x": 0.86,
+        "y": 0.9,
+        "speed": 2,
+        "linger": 10,
+        "accent": "#64748b"
+      }
+    },
+    {
+      "id": "warm-tutorial",
+      "label": "Warm Tutorial",
+      "description": "Relaxed, slightly larger dark keys with an amber accent that hold long enough to read.",
+      "askedAs": [
+        "slow keys for a tutorial",
+        "beginner friendly shortcut display",
+        "warm orange keycaps dark",
+        "медленные клавиши для обучения",
+        "клавиши с оранжевым акцентом"
+      ],
+      "props": {
+        "theme": "dark",
+        "accent": "#f59e0b",
+        "size": 80,
+        "speed": 0.5,
+        "linger": 75
+      }
+    },
+    {
+      "id": "top-banner",
+      "label": "Top Banner",
+      "description": "Light keys with a coral accent riding along the top edge, clear of bottom captions.",
+      "askedAs": [
+        "shortcut keys at the top",
+        "keys above the interface",
+        "put keystrokes near top edge",
+        "клавиши сверху экрана",
+        "сочетания клавиш вверху"
+      ],
+      "props": {
+        "y": 0.12,
+        "accent": "#e5484d",
+        "size": 56
+      }
+    }
+  ]
+}

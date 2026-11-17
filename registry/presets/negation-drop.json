@@ -1,0 +1,117 @@
+{
+  "component": "negation-drop",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "All three lines flip almost at once at double speed for a snappy, punchy hit.",
+      "askedAs": [
+        "make it faster and snappier",
+        "quick flips all together",
+        "punchy fast version",
+        "быстрее и резче",
+        "все строки почти одновременно"
+      ],
+      "props": {
+        "speed": 2,
+        "dropAt": 18,
+        "stagger": 4
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A patient build that holds each negative line before dropping the answers one by one with wide spacing.",
+      "askedAs": [
+        "slower dramatic reveal",
+        "give each line time to land",
+        "more suspense before the flip",
+        "медленное раскрытие",
+        "больше паузы между строками"
+      ],
+      "props": {
+        "speed": 0.75,
+        "dropAt": 70,
+        "stagger": 30,
+        "delay": 12
+      }
+    },
+    {
+      "id": "paper-poster",
+      "label": "Paper Poster",
+      "description": "Light cream paper with near-black ink and a warm tomato highlight, like a printed protest poster.",
+      "askedAs": [
+        "light printed poster look",
+        "cream background with red highlight",
+        "print style version",
+        "светлый плакат на бумаге",
+        "кремовый фон с красным"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f3eee3",
+        "ink": "#1a1a1a",
+        "accent": "#e4572e"
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Elegant Instrument Serif type on deep ink navy with a soft gold highlight block.",
+      "askedAs": [
+        "classy serif version",
+        "magazine editorial style",
+        "navy and gold elegant",
+        "элегантный шрифт с засечками",
+        "журнальный стиль"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "background": "#14192b",
+        "ink": "#f2ede1",
+        "accent": "#d9b45a",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "giant-billboard",
+      "label": "Giant Billboard",
+      "description": "Oversized condensed caps that fill the frame with a bright electric blue highlight.",
+      "askedAs": [
+        "make the text huge",
+        "big bold billboard",
+        "bigger with blue highlight",
+        "огромный текст на весь экран",
+        "крупно как билборд"
+      ],
+      "props": {
+        "scale": 1.35,
+        "accent": "#3d7bff",
+        "ink": "#ffffff",
+        "background": "#0b0d12"
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Compact monospace lines on charcoal with a mint highlight for a techy developer feel.",
+      "askedAs": [
+        "code style monospace",
+        "developer terminal look",
+        "techy version with mint",
+        "моноширинный шрифт как в терминале",
+        "стиль для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "scale": 0.75,
+        "background": "#16181d",
+        "ink": "#e6e8eb",
+        "accent": "#5fd4a8",
+        "stagger": 8
+      }
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "component": "infinite-marquee",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "outline-drift",
+      "label": "Outline Drift",
+      "description": "Large hollow outlined letters gliding slowly across the frame for a quiet ambient band.",
+      "askedAs": [
+        "slow outlined scrolling text",
+        "hollow letters marquee background",
+        "stroke only ticker text",
+        "контурный бегущий текст медленно",
+        "полые буквы бегущая строка"
+      ],
+      "props": {
+        "stroke": true,
+        "strokeColor": "#171717",
+        "fontSize": 200,
+        "pixelsPerFrame": 2
+      }
+    },
+    {
+      "id": "news-ticker",
+      "label": "News Ticker",
+      "description": "Small, medium-weight text moving briskly like a broadcast lower-third crawl.",
+      "askedAs": [
+        "small fast ticker at the bottom",
+        "lower third news crawl",
+        "quick scrolling headline strip",
+        "бегущая строка как в новостях",
+        "маленький быстрый тикер внизу"
+      ],
+      "props": {
+        "fontSize": 40,
+        "fontWeight": "500",
+        "pixelsPerFrame": 8,
+        "color": "#1f2937"
+      }
+    },
+    {
+      "id": "giant-billboard",
+      "label": "Giant Billboard",
+      "description": "Maximum-size heavy type rolling steadily as a bold full-bleed statement.",
+      "askedAs": [
+        "huge bold scrolling words",
+        "full screen marquee text",
+        "massive headline loop",
+        "огромный жирный бегущий текст",
+        "текст на весь экран прокрутка"
+      ],
+      "props": {
+        "fontSize": 240,
+        "fontWeight": "700",
+        "pixelsPerFrame": 5,
+        "color": "#0a0a0a"
+      }
+    },
+    {
+      "id": "cobalt-rush",
+      "label": "Cobalt Rush",
+      "description": "Energetic cobalt-blue semibold text racing past at double speed.",
+      "askedAs": [
+        "fast blue marquee",
+        "energetic scrolling brand words",
+        "speedy colored text loop",
+        "быстрая синяя бегущая строка",
+        "энергичный бегущий текст"
+      ],
+      "props": {
+        "color": "#1f4fd8",
+        "fontWeight": "600",
+        "pixelsPerFrame": 12,
+        "speed": 2
+      }
+    },
+    {
+      "id": "soft-whisper",
+      "label": "Soft Whisper",
+      "description": "Light gray regular-weight text drifting gently as a subtle background texture.",
+      "askedAs": [
+        "subtle faded background text",
+        "light gray slow marquee",
+        "barely noticeable scrolling words",
+        "еле заметный фоновый текст",
+        "светло-серая медленная строка"
+      ],
+      "props": {
+        "color": "#c4c4c4",
+        "fontWeight": "400",
+        "fontSize": 96,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "terracotta-outline",
+      "label": "Terracotta Outline",
+      "description": "Warm terracotta stroked lettering at mid size moving at an easy pace.",
+      "askedAs": [
+        "warm orange outlined marquee",
+        "earthy stroke text scrolling",
+        "rust colored hollow ticker",
+        "терракотовый контурный текст",
+        "тёплая обводка бегущая строка"
+      ],
+      "props": {
+        "stroke": true,
+        "strokeColor": "#c2410c",
+        "color": "#c2410c",
+        "fontSize": 150,
+        "pixelsPerFrame": 3
+      }
+    }
+  ]
+}

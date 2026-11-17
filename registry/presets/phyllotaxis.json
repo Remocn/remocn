@@ -1,0 +1,122 @@
+{
+  "component": "phyllotaxis",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "sunflower-field",
+      "label": "Sunflower Field",
+      "description": "Warm golden seeds on deep olive with a rust arm, growing slowly like a real flower head.",
+      "askedAs": [
+        "make it look like a real sunflower",
+        "warm natural yellow version",
+        "earthy golden spiral",
+        "как настоящий подсолнух",
+        "тёплая жёлтая спираль"
+      ],
+      "props": {
+        "background": "#1f2418",
+        "color": "#e8c468",
+        "accent": "#c2562b",
+        "growFrames": 100,
+        "rotation": 2
+      }
+    },
+    {
+      "id": "paper-print",
+      "label": "Paper Print",
+      "description": "Ink-black seeds on warm off-white paper with a cobalt arm, calm and editorial.",
+      "askedAs": [
+        "light background version",
+        "print style on white",
+        "minimal editorial look",
+        "светлый фон как бумага",
+        "минималистичный печатный стиль"
+      ],
+      "props": {
+        "background": "#f4f1ea",
+        "color": "#1c1c1c",
+        "accent": "#2f5bd3",
+        "rotation": 0,
+        "pulseFrames": 70
+      }
+    },
+    {
+      "id": "fine-dust",
+      "label": "Fine Dust",
+      "description": "Tiny pale seeds packed densely into a slowly turning disc with a soft teal arm.",
+      "askedAs": [
+        "small dense dots",
+        "fine detailed pattern",
+        "delicate galaxy of points",
+        "мелкие плотные точки",
+        "тонкий детальный узор"
+      ],
+      "props": {
+        "size": 0.45,
+        "background": "#0e1417",
+        "color": "#c9d6db",
+        "accent": "#4fb3a9",
+        "rotation": -6
+      }
+    },
+    {
+      "id": "bold-pop",
+      "label": "Bold Pop",
+      "description": "Chunky seeds burst out fast and spin briskly, with a quick punchy arm pulse.",
+      "askedAs": [
+        "fast energetic version",
+        "big dots quick growth",
+        "snappy punchy intro",
+        "быстрая энергичная версия",
+        "крупные точки и быстрый рост"
+      ],
+      "props": {
+        "size": 1.6,
+        "growFrames": 25,
+        "pulseFrames": 20,
+        "rotation": 14,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "midnight-bloom",
+      "label": "Midnight Bloom",
+      "description": "Lavender seeds on deep navy with a coral arm traced at wide spacing, slow and dreamy.",
+      "askedAs": [
+        "slow dreamy night mood",
+        "calm blue and purple",
+        "meditative slow spiral",
+        "медленная мечтательная спираль",
+        "ночной спокойный вариант"
+      ],
+      "props": {
+        "background": "#121630",
+        "color": "#b8b2e6",
+        "accent": "#f08a6c",
+        "arm": 34,
+        "speed": 0.5,
+        "growFrames": 120
+      }
+    },
+    {
+      "id": "forest-moss",
+      "label": "Forest Moss",
+      "description": "Sage seeds on dark forest green with a cream arm drawn at tight spacing.",
+      "askedAs": [
+        "green nature look",
+        "botanical forest colours",
+        "organic plant feel",
+        "зелёный природный стиль",
+        "ботанический вариант"
+      ],
+      "props": {
+        "background": "#14211a",
+        "color": "#9dbf9e",
+        "accent": "#f2e6c9",
+        "arm": 13,
+        "rotation": -3
+      }
+    }
+  ]
+}

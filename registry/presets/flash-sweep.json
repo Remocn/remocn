@@ -1,0 +1,124 @@
+{
+  "component": "flash-sweep",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "camera-flash",
+      "label": "Camera Flash",
+      "description": "A near-vertical white flash that snaps between shots almost instantly, like a photographer's strobe.",
+      "askedAs": [
+        "quick white flash between photos",
+        "camera strobe transition",
+        "snappy flash cut",
+        "вспышка фотоаппарата между кадрами",
+        "быстрая белая вспышка"
+      ],
+      "props": {
+        "angle": 4,
+        "duration": 5,
+        "hold": 20,
+        "accent": "#ffffff",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "golden-glint",
+      "label": "Golden Glint",
+      "description": "A slow, steeply angled warm gold glint glides across a dark frame in elegant serif type.",
+      "askedAs": [
+        "luxury gold light sweep",
+        "slow elegant shine transition",
+        "warm lens glint for jewelry",
+        "золотой блик премиум",
+        "медленный элегантный перелив света"
+      ],
+      "props": {
+        "angle": 38,
+        "duration": 26,
+        "hold": 60,
+        "accent": "#c9a45c",
+        "fontFamily": "Instrument Serif",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "studio-light",
+      "label": "Studio Light",
+      "description": "A bright, clean light theme with a soft grey-blue pass and no grain for crisp product shots.",
+      "askedAs": [
+        "clean white product transition",
+        "light minimal sweep",
+        "apple style bright swap",
+        "светлый чистый переход",
+        "минималистичная светлая смена кадра"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#8fa3bf",
+        "ink": "#14171c",
+        "grain": false,
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "rapid-tour",
+      "label": "Rapid Tour",
+      "description": "A fast left-moving teal band with short holds for punchy feature walkthroughs.",
+      "askedAs": [
+        "fast feature tour cuts",
+        "quick swipe between screens",
+        "energetic app walkthrough",
+        "быстрый обзор функций",
+        "резкие переходы между экранами"
+      ],
+      "props": {
+        "direction": "left",
+        "duration": 8,
+        "hold": 14,
+        "accent": "#2bb3a3",
+        "speed": 2,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "midnight-ember",
+      "label": "Midnight Ember",
+      "description": "A wide, shallow-angled copper band rolls over a deep navy tint with oversized type.",
+      "askedAs": [
+        "moody dark cinematic sweep",
+        "copper light over navy",
+        "bold slow reveal transition",
+        "тёмный кинематографичный переход",
+        "медный свет на тёмно-синем"
+      ],
+      "props": {
+        "tint": "#0e1424",
+        "accent": "#d9783f",
+        "ink": "#f2ede6",
+        "angle": 12,
+        "duration": 20,
+        "scale": 1.25
+      }
+    },
+    {
+      "id": "mono-terminal",
+      "label": "Mono Terminal",
+      "description": "A sharply tilted lime-green pass with monospace type and compact scale for technical products.",
+      "askedAs": [
+        "developer tool transition",
+        "code style light sweep",
+        "techy monospace swap",
+        "переход в стиле терминала",
+        "технологичная смена кадров"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accent": "#a3e635",
+        "angle": 55,
+        "scale": 0.85,
+        "grain": false
+      }
+    }
+  ]
+}

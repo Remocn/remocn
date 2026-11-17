@@ -1,0 +1,122 @@
+{
+  "component": "nonstop",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "A fast, punchy tick-down in a tight grotesk that snaps straight to the payoff.",
+      "askedAs": [
+        "make the countdown really quick",
+        "snappy fast count to no stops",
+        "punchy quick version",
+        "быстрый отсчёт",
+        "сделай резче и быстрее"
+      ],
+      "props": {
+        "interval": 8,
+        "hold": 12,
+        "speed": 1.5,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "Warm off-white paper with a dark serif and a muted terracotta accent, like a magazine pull quote.",
+      "askedAs": [
+        "serif on cream background",
+        "magazine style light version",
+        "elegant warm editorial look",
+        "светлый вариант с засечками",
+        "как в журнале"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f5f1ea",
+        "ink": "#1c1a17",
+        "accent": "#b4532a",
+        "interval": 28
+      }
+    },
+    {
+      "id": "terminal",
+      "label": "Terminal",
+      "description": "Monospace type on a deep charcoal background with a calm green accent, like a dev console readout.",
+      "askedAs": [
+        "code terminal style",
+        "monospace developer look",
+        "hacker console vibe",
+        "в стиле терминала",
+        "моноширинный шрифт на тёмном"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "ink": "#e6edf3",
+        "accent": "#3fb950",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "An unhurried, oversized countdown in a soft display serif that lingers on the final phrase.",
+      "askedAs": [
+        "slow dramatic countdown",
+        "big and calm reveal",
+        "let it breathe longer",
+        "медленный эффектный отсчёт",
+        "крупно и не спеша"
+      ],
+      "props": {
+        "interval": 40,
+        "hold": 50,
+        "speed": 0.75,
+        "fontFamily": "Fraunces",
+        "scale": 1.2
+      }
+    },
+    {
+      "id": "cobalt-bold",
+      "label": "Cobalt Bold",
+      "description": "Large white grotesk on saturated cobalt blue with a warm yellow accent for a confident brand promise.",
+      "askedAs": [
+        "bold blue background version",
+        "big confident brand look",
+        "white text on blue",
+        "яркий синий фон",
+        "крупно и смело"
+      ],
+      "props": {
+        "background": "#1f3fbf",
+        "ink": "#ffffff",
+        "accent": "#ffd166",
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.3
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "A small, restrained light layout in Inter with slate grey accents and a short lead-in pause.",
+      "askedAs": [
+        "minimal clean light look",
+        "subtle understated version",
+        "small and quiet text",
+        "минималистичный светлый вариант",
+        "сдержанно и аккуратно"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#475569",
+        "scale": 0.75,
+        "delay": 15
+      }
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "component": "full-bleed-type",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Words hit in quick succession with a near-instant slam for a punchy, high-energy cut.",
+      "askedAs": [
+        "make it faster and punchier",
+        "quick aggressive word slams",
+        "fast tiktok style slogan",
+        "сделай быстрее и резче",
+        "быстрые удары слов"
+      ],
+      "props": {
+        "beat": 5,
+        "slam": 3,
+        "accent": "#ff4d2e",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A measured, cinematic pace where each word eases in with a soft, long landing.",
+      "askedAs": [
+        "slower more dramatic words",
+        "cinematic slow slogan reveal",
+        "let each word breathe",
+        "медленнее и драматичнее",
+        "плавное появление слов"
+      ],
+      "props": {
+        "beat": 24,
+        "slam": 18,
+        "accent": "#c9a227",
+        "delay": 10
+      }
+    },
+    {
+      "id": "paper-poster",
+      "label": "Paper Poster",
+      "description": "Warm off-white paper with deep ink and a terracotta accent, like a printed protest poster.",
+      "askedAs": [
+        "light background poster look",
+        "printed paper style slogan",
+        "warm cream poster type",
+        "светлый плакатный стиль",
+        "как бумажный постер"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f3ede2",
+        "ink": "#1c1a17",
+        "accent": "#c4512d"
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Elegant serif words on a deep navy ground with a muted gold highlight for a magazine feel.",
+      "askedAs": [
+        "classy serif version",
+        "magazine editorial headline",
+        "elegant instead of loud",
+        "элегантный шрифт с засечками",
+        "журнальный стиль"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "background": "#0f1a2b",
+        "ink": "#f2eee6",
+        "accent": "#d4a85a",
+        "scale": 0.9,
+        "slam": 14
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Compact monospace caps on near-black with a mint accent for a techy, developer vibe.",
+      "askedAs": [
+        "code style monospace slogan",
+        "tech startup look",
+        "hacker terminal words",
+        "моноширинный технический стиль",
+        "как в терминале"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0e",
+        "ink": "#e6edea",
+        "accent": "#3ddc97",
+        "scale": 0.75,
+        "beat": 8
+      }
+    }
+  ]
+}

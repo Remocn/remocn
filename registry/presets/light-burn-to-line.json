@@ -1,0 +1,106 @@
+{
+  "component": "light-burn-to-line",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "ember-cinema",
+      "label": "Ember Cinema",
+      "description": "A slow, warm burn through copper light that settles on a serif closing line.",
+      "askedAs": [
+        "warm cinematic ending with fire light",
+        "slow film-style burn to the final line",
+        "elegant serif closing title with warm glow",
+        "тёплая кинематографичная концовка",
+        "медленное выжигание светом в тёплых тонах"
+      ],
+      "props": {
+        "ground": "ember",
+        "groundB": "copper",
+        "fontFamily": "Instrument Serif",
+        "accent": "#e08a4f",
+        "speed": 0.75,
+        "scale": 1.1
+      }
+    },
+    {
+      "id": "cold-flash",
+      "label": "Cold Flash",
+      "description": "A quick, icy blue burn that snaps to a crisp grotesk line.",
+      "askedAs": [
+        "fast blue light transition",
+        "snappy cool tech ending",
+        "quick flash to call to action",
+        "быстрая холодная вспышка",
+        "резкий синий переход к финальной фразе"
+      ],
+      "props": {
+        "ground": "coldlight",
+        "groundB": "blue-hour",
+        "fontFamily": "Space Grotesk",
+        "accent": "#6fa8ff",
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "paper-daylight",
+      "label": "Paper Daylight",
+      "description": "A light theme burn on soft paper tones with dark ink and a calm sans line.",
+      "askedAs": [
+        "light mode version of the burn",
+        "bright clean ending on white",
+        "soft daylight closing frame",
+        "светлая версия перехода",
+        "спокойная светлая концовка"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "groundB": "polar",
+        "background": "#f4f1ea",
+        "ink": "#1c1b19",
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "velvet-night",
+      "label": "Velvet Night",
+      "description": "A deep garnet-to-velvet burn with a large Fraunces line and a held beat before it starts.",
+      "askedAs": [
+        "moody dark red luxury ending",
+        "dramatic premium finale",
+        "big bold closing statement after a pause",
+        "тёмная роскошная концовка",
+        "драматичный финал в бордовых тонах"
+      ],
+      "props": {
+        "ground": "garnet",
+        "groundB": "velvet-hour",
+        "fontFamily": "Fraunces",
+        "accent": "#c94a5e",
+        "scale": 1.3,
+        "delay": 20
+      }
+    },
+    {
+      "id": "terminal-line",
+      "label": "Terminal Line",
+      "description": "A compact monospace line revealed by a stark projector burn in neutral greys.",
+      "askedAs": [
+        "developer style ending with code font",
+        "minimal monochrome burn transition",
+        "small understated closing line",
+        "минималистичная концовка моноширинным шрифтом",
+        "строгий серый переход для разработчиков"
+      ],
+      "props": {
+        "ground": "projector",
+        "groundB": "charcoal-satin",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#d4d4d4",
+        "scale": 0.8,
+        "speed": 1.25
+      }
+    }
+  ]
+}

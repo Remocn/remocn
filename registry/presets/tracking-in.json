@@ -1,0 +1,119 @@
+{
+  "component": "tracking-in",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "cinematic-wide",
+      "label": "Cinematic Wide",
+      "description": "Very wide letter-spacing slowly pulls together from a heavy blur, like a film title emerging.",
+      "askedAs": [
+        "slow movie title reveal",
+        "wide spaced letters coming together slowly",
+        "epic film opening text",
+        "медленное кинематографичное появление заголовка",
+        "широкие буквы сходятся медленно"
+      ],
+      "props": {
+        "startTracking": 1.5,
+        "startBlur": 28,
+        "speed": 0.5,
+        "fontWeight": "500",
+        "fontSize": 110
+      }
+    },
+    {
+      "id": "crisp-snap",
+      "label": "Crisp Snap",
+      "description": "A quick, tight collapse with almost no blur for a sharp, decisive entrance.",
+      "askedAs": [
+        "fast sharp text snap",
+        "quick tight letter animation",
+        "punchy title without blur",
+        "быстрый резкий заголовок",
+        "текст появляется четко и быстро"
+      ],
+      "props": {
+        "startTracking": 0.25,
+        "startBlur": 2,
+        "speed": 2
+      }
+    },
+    {
+      "id": "soft-focus",
+      "label": "Soft Focus",
+      "description": "Light-weight warm grey type drifts out of a dreamy blur with gentle spacing.",
+      "askedAs": [
+        "dreamy blurry text fade in",
+        "soft elegant title focus",
+        "gentle light font reveal",
+        "мягкое размытое появление текста",
+        "нежный элегантный заголовок"
+      ],
+      "props": {
+        "startBlur": 36,
+        "startTracking": 0.6,
+        "fontWeight": "400",
+        "color": "#57534e",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "luxury-gold",
+      "label": "Luxury Gold",
+      "description": "Medium-weight muted gold lettering collapses from airy spacing for a high-end brand feel.",
+      "askedAs": [
+        "gold luxury brand name",
+        "elegant golden logo text",
+        "premium fashion title",
+        "золотой люксовый логотип",
+        "дорогой бренд текст золотом"
+      ],
+      "props": {
+        "color": "#a8834a",
+        "fontWeight": "500",
+        "startTracking": 1,
+        "startBlur": 16,
+        "fontSize": 84
+      }
+    },
+    {
+      "id": "bold-headline",
+      "label": "Bold Headline",
+      "description": "Huge heavy navy type that tightens from a modest spread with brisk energy.",
+      "askedAs": [
+        "big bold headline entrance",
+        "large heavy title animation",
+        "strong impactful word reveal",
+        "большой жирный заголовок",
+        "крупный текст с энергичным появлением"
+      ],
+      "props": {
+        "fontSize": 160,
+        "color": "#1e293b",
+        "startTracking": 0.35,
+        "startBlur": 8,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "minimal-caption",
+      "label": "Minimal Caption",
+      "description": "Small slate-grey semi-bold text that subtly tightens into place for understated labels.",
+      "askedAs": [
+        "small subtle subtitle animation",
+        "minimal caption reveal",
+        "understated small text entrance",
+        "маленькая минималистичная подпись",
+        "тонкое появление подзаголовка"
+      ],
+      "props": {
+        "fontSize": 40,
+        "fontWeight": "600",
+        "color": "#64748b",
+        "startTracking": 0.8,
+        "startBlur": 6
+      }
+    }
+  ]
+}

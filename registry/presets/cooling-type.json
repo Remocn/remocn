@@ -1,0 +1,107 @@
+{
+  "component": "cooling-type",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "ember-forge",
+      "label": "Ember Forge",
+      "description": "Slow, glowing letters cool from molten orange into warm ivory over an ember ground.",
+      "askedAs": [
+        "hot glowing molten text",
+        "warm orange cooling letters",
+        "fiery slow typing title",
+        "раскалённый текст с свечением",
+        "тёплый оранжевый заголовок"
+      ],
+      "props": {
+        "ground": "ember",
+        "hot": "#ff7a2f",
+        "ink": "#f6ede2",
+        "glow": 2.2,
+        "coolFrames": 40,
+        "charFrames": 2.4
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A large, calm Instrument Serif line on a light paper ground with a soft ink-blue accent.",
+      "askedAs": [
+        "elegant serif headline",
+        "magazine style light title",
+        "calm editorial typing",
+        "элегантный шрифт с засечками",
+        "светлый журнальный заголовок"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "scale": 1.25,
+        "glow": 0.3
+      }
+    },
+    {
+      "id": "terminal-rush",
+      "label": "Terminal Rush",
+      "description": "Fast monospace typing with a short cyan cool-down, like code landing in a terminal.",
+      "askedAs": [
+        "fast code typing look",
+        "monospace terminal text",
+        "quick developer style hook",
+        "быстрый текст как в терминале",
+        "моноширинный шрифт печать"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "charFrames": 0.6,
+        "coolFrames": 8,
+        "hot": "#5ee0d0",
+        "ground": "nightfold",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "cobalt-bold",
+      "label": "Cobalt Bold",
+      "description": "Heavy Space Grotesk letters snap in over a cobalt gradient with a crisp pale accent.",
+      "askedAs": [
+        "bold blue launch title",
+        "strong punchy headline",
+        "heavy font on blue gradient",
+        "жирный заголовок на синем",
+        "яркий запуск продукта текст"
+      ],
+      "props": {
+        "ground": "cobalt-rise",
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 700,
+        "accent": "#bcd4ff",
+        "speed": 1.5,
+        "glow": 0.6
+      }
+    },
+    {
+      "id": "velvet-whisper",
+      "label": "Velvet Whisper",
+      "description": "Thin, unhurried Fraunces type drifts in with a long rose cool over a velvet dusk ground.",
+      "askedAs": [
+        "slow dreamy cinematic text",
+        "soft romantic title reveal",
+        "thin elegant slow typing",
+        "медленный кинематографичный текст",
+        "нежный тонкий заголовок"
+      ],
+      "props": {
+        "ground": "velvet-hour",
+        "fontFamily": "Fraunces",
+        "fontWeight": 200,
+        "hot": "#f2a6b8",
+        "speed": 0.5,
+        "coolFrames": 55
+      }
+    }
+  ]
+}

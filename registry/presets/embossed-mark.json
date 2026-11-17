@@ -1,0 +1,106 @@
+{
+  "component": "embossed-mark",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "letterpress-cream",
+      "label": "Letterpress Cream",
+      "description": "A deep serif impression pressed into warm cream paper with an oxblood foil and a slow, patient light.",
+      "askedAs": [
+        "logo pressed into paper like letterpress",
+        "warm cream paper emboss with serif",
+        "stationery style debossed logo",
+        "логотип вдавлен в бумагу, как высокая печать",
+        "кремовая бумага с тиснением и засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f1ebdd",
+        "ink": "#2b2622",
+        "accent": "#7a2e2a",
+        "fontFamily": "Fraunces",
+        "relief": 1.8
+      }
+    },
+    {
+      "id": "gold-foil-noir",
+      "label": "Gold Foil Noir",
+      "description": "A near-black surface with a muted gold foil fill and an unhurried reveal for a luxury sign-off.",
+      "askedAs": [
+        "black and gold luxury logo ending",
+        "gold foil stamped logo on dark",
+        "expensive looking end card",
+        "черно-золотая концовка с логотипом",
+        "золотое тиснение на темном фоне"
+      ],
+      "props": {
+        "background": "#121110",
+        "ink": "#e8e1d3",
+        "accent": "#c9a45c",
+        "fontFamily": "Instrument Serif",
+        "speed": 0.75,
+        "stagger": 5
+      }
+    },
+    {
+      "id": "machined-steel",
+      "label": "Machined Steel",
+      "description": "A crisp, shallow engraving in cool graphite with a steel-blue accent and quick, precise motion.",
+      "askedAs": [
+        "logo engraved in metal",
+        "industrial steel plate logo",
+        "clean tech brushed metal reveal",
+        "логотип, выгравированный на металле",
+        "индустриальная стальная табличка с логотипом"
+      ],
+      "props": {
+        "background": "#2a2e33",
+        "ink": "#d5dae0",
+        "accent": "#7fa3c4",
+        "fontFamily": "Space Grotesk",
+        "relief": 0.6,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "deep-relief-slow",
+      "label": "Deep Relief",
+      "description": "An oversized mark with heavy relief and a very slow light sweep that lingers on the texture.",
+      "askedAs": [
+        "big dramatic embossed logo",
+        "slow cinematic deep emboss",
+        "heavy 3d pressed logo reveal",
+        "крупный логотип с глубоким тиснением",
+        "медленное кинематографичное появление логотипа"
+      ],
+      "props": {
+        "relief": 2.8,
+        "scale": 1.3,
+        "speed": 0.5,
+        "stagger": 8,
+        "delay": 20
+      }
+    },
+    {
+      "id": "clean-blind-emboss",
+      "label": "Clean Blind",
+      "description": "A grain-free white blind emboss with a soft sage accent, small scale and no letter stagger.",
+      "askedAs": [
+        "minimal white embossed logo",
+        "subtle blind emboss without texture",
+        "clean simple paper logo outro",
+        "минималистичное белое тиснение логотипа",
+        "чистая концовка без зерна"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f7f7f5",
+        "ink": "#3a3d3b",
+        "accent": "#8fa394",
+        "grain": false,
+        "stagger": 0
+      }
+    }
+  ]
+}

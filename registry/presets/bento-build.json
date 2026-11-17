@@ -1,0 +1,105 @@
+{
+  "component": "bento-build",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "A calm light grid on a soft paper ground with an ink-blue accent and gentle, unhurried spotlights.",
+      "askedAs": [
+        "light clean feature grid",
+        "white bento with blue accent",
+        "calm minimal features overview",
+        "светлая сетка карточек",
+        "минималистичный светлый бенто"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "accent": "#1f4fd8",
+        "hold": 40,
+        "radius": 22
+      }
+    },
+    {
+      "id": "rapid-launch",
+      "label": "Rapid Launch",
+      "description": "A dense dark grid that snaps in quickly with tight stagger and short spotlight beats.",
+      "askedAs": [
+        "fast punchy feature grid",
+        "quick launch features montage",
+        "energetic bento build",
+        "быстрая сетка фич для запуска",
+        "динамичный бенто"
+      ],
+      "props": {
+        "columns": 5,
+        "stagger": 1,
+        "hold": 16,
+        "speed": 1.5,
+        "ground": "cobalt-rise",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Large serif-set tiles in a warm ember glow with long, magazine-like holds on each feature.",
+      "askedAs": [
+        "elegant serif feature cards",
+        "slow editorial bento",
+        "warm premium features grid",
+        "элегантная сетка с засечками",
+        "медленный премиальный бенто"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "ground": "ember",
+        "accent": "#e0a15a",
+        "columns": 3,
+        "hold": 54,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-grid",
+      "label": "Terminal Grid",
+      "description": "Square-cornered monospace tiles on near-black with a muted green accent for a developer-tool feel.",
+      "askedAs": [
+        "developer tool features grid",
+        "monospace square bento",
+        "dark terminal style cards",
+        "сетка в стиле терминала",
+        "моноширинный бенто для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "radius": 0,
+        "background": "#0e1110",
+        "ink": "#d6e2da",
+        "accent": "#4fb286"
+      }
+    },
+    {
+      "id": "soft-focus",
+      "label": "Soft Focus",
+      "description": "A zoomed-in two-column layout with rounded pill tiles and a lilac accent over an iris gradient.",
+      "askedAs": [
+        "big rounded feature tiles",
+        "two column bento for vertical",
+        "soft purple features grid",
+        "крупные скругленные карточки",
+        "мягкий фиолетовый бенто"
+      ],
+      "props": {
+        "columns": 2,
+        "scale": 1.25,
+        "radius": 36,
+        "ground": "iris",
+        "accent": "#9b8cff",
+        "fontFamily": "Manrope"
+      }
+    }
+  ]
+}

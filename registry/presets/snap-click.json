@@ -1,0 +1,100 @@
+{
+  "component": "snap-click",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hair-trigger",
+      "label": "Hair Trigger",
+      "description": "An instant, fast snap on a dark ground with a bright signal-red accent for a punchy sting.",
+      "askedAs": [
+        "fast punchy logo click",
+        "quick snappy logo sting",
+        "make it snap instantly",
+        "быстрый резкий щелчок логотипа",
+        "очень быстрое появление логотипа"
+      ],
+      "props": {
+        "click": 6,
+        "speed": 1.75,
+        "accent": "#e5484d",
+        "grain": false
+      }
+    },
+    {
+      "id": "paper-press",
+      "label": "Paper Press",
+      "description": "A warm off-white page with charcoal type and a deep ink-blue accent, snapping at an unhurried pace.",
+      "askedAs": [
+        "light paper style logo",
+        "warm cream background clean",
+        "editorial light version",
+        "светлый тёплый фон для логотипа",
+        "логотип на бумажном фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f0e8",
+        "ink": "#1e1e1c",
+        "accent": "#1f3a8a",
+        "click": 18
+      }
+    },
+    {
+      "id": "slow-latch",
+      "label": "Slow Latch",
+      "description": "A deliberate, heavy close that builds tension before the click, set large on near-black.",
+      "askedAs": [
+        "slow dramatic logo reveal",
+        "big heavy mechanical close",
+        "cinematic slow snap",
+        "медленное драматичное появление логотипа",
+        "крупный тяжёлый щелчок"
+      ],
+      "props": {
+        "click": 34,
+        "speed": 0.75,
+        "scale": 1.3,
+        "background": "#0b0c0e",
+        "ink": "#ededed",
+        "accent": "#c9a227"
+      }
+    },
+    {
+      "id": "swiss-mint",
+      "label": "Swiss Mint",
+      "description": "A crisp grain-free light layout with a cool green accent and compact, precise type.",
+      "askedAs": [
+        "minimal clean white logo",
+        "precise swiss style tagline",
+        "small tidy light version",
+        "минималистичный белый вариант",
+        "аккуратный чистый логотип"
+      ],
+      "props": {
+        "theme": "light",
+        "grain": false,
+        "accent": "#0f9d74",
+        "scale": 0.8
+      }
+    },
+    {
+      "id": "midnight-navy",
+      "label": "Midnight Navy",
+      "description": "Deep navy backdrop with pale text and a soft coral accent, entering after a short pause.",
+      "askedAs": [
+        "dark blue brand sting",
+        "navy background with coral",
+        "logo after a short pause",
+        "тёмно-синий фон с коралловым",
+        "логотип с задержкой на тёмном"
+      ],
+      "props": {
+        "background": "#0f1b33",
+        "ink": "#e8ecf4",
+        "accent": "#ff7a59",
+        "delay": 20
+      }
+    }
+  ]
+}

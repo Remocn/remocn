@@ -1,0 +1,113 @@
+{
+  "component": "caption-slot",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Short, punchy phrases that flip quickly in heavy white type for high-energy clips.",
+      "askedAs": [
+        "fast captions that change quickly",
+        "snappy short caption phrases",
+        "quick punchy subtitles",
+        "быстрые короткие субтитры",
+        "динамичные титры по паре слов"
+      ],
+      "props": {
+        "combineTokensWithinMilliseconds": 300,
+        "holdMs": 200,
+        "fontWeight": 900,
+        "fontSize": 76
+      }
+    },
+    {
+      "id": "calm-read",
+      "label": "Calm Read",
+      "description": "Longer phrases held on screen in a lighter, smaller weight for relaxed, easy reading.",
+      "askedAs": [
+        "slower captions that are easier to read",
+        "relaxed subtitle pacing",
+        "longer caption lines that stay on screen",
+        "спокойные субтитры подольше на экране",
+        "медленные читаемые титры"
+      ],
+      "props": {
+        "combineTokensWithinMilliseconds": 1500,
+        "holdMs": 1200,
+        "fontWeight": 500,
+        "fontSize": 52
+      }
+    },
+    {
+      "id": "sunny-yellow",
+      "label": "Sunny Yellow",
+      "description": "Bold warm-yellow captions with a drop shadow in the classic social video style.",
+      "askedAs": [
+        "yellow captions like tiktok",
+        "bright yellow subtitles",
+        "warm colored bold captions",
+        "жёлтые субтитры как в тикток",
+        "яркие жёлтые титры"
+      ],
+      "props": {
+        "color": "#ffd43b",
+        "fontWeight": 900,
+        "shadow": true
+      }
+    },
+    {
+      "id": "big-shout",
+      "label": "Big Shout",
+      "description": "Oversized black-weight type that dominates the frame for loud, meme-style moments.",
+      "askedAs": [
+        "huge caption text",
+        "giant bold subtitles",
+        "make the captions really big",
+        "огромные субтитры",
+        "очень крупный жирный текст титров"
+      ],
+      "props": {
+        "fontSize": 120,
+        "fontWeight": 900,
+        "combineTokensWithinMilliseconds": 500
+      }
+    },
+    {
+      "id": "clean-ink",
+      "label": "Clean Ink",
+      "description": "Flat dark charcoal text without a shadow, suited to bright or white backgrounds.",
+      "askedAs": [
+        "dark captions for light background",
+        "black subtitles without shadow",
+        "minimal flat caption text",
+        "тёмные субтитры для светлого фона",
+        "чистые титры без тени"
+      ],
+      "props": {
+        "color": "#1f2328",
+        "shadow": false,
+        "fontWeight": 700,
+        "fontSize": 56
+      }
+    },
+    {
+      "id": "soft-mint",
+      "label": "Soft Mint",
+      "description": "Pale mint medium-weight captions at a compact size for a fresh, gentle feel.",
+      "askedAs": [
+        "pastel green captions",
+        "soft subtle subtitles",
+        "small gentle caption style",
+        "мятные пастельные субтитры",
+        "мягкие небольшие титры"
+      ],
+      "props": {
+        "color": "#b8f2d8",
+        "fontWeight": 600,
+        "fontSize": 44,
+        "holdMs": 900
+      }
+    }
+  ]
+}

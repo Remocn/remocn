@@ -1,0 +1,124 @@
+{
+  "component": "activity-rings",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snappy-light",
+      "label": "Snappy Light",
+      "description": "A bright, clean light theme where the rings close fast and the numbers pop in quickly.",
+      "askedAs": [
+        "fast light version",
+        "quick bright rings",
+        "energetic white background",
+        "быстрые кольца на светлом фоне",
+        "яркая быстрая версия"
+      ],
+      "props": {
+        "theme": "light",
+        "fill": 20,
+        "speed": 1.5,
+        "fontFamily": "Bricolage Grotesque",
+        "grain": false
+      }
+    },
+    {
+      "id": "slow-midnight",
+      "label": "Slow Midnight",
+      "description": "Deep navy backdrop with a soft teal accent and an unhurried, cinematic ring fill.",
+      "askedAs": [
+        "slow calm dark version",
+        "cinematic navy rings",
+        "relaxed paced recap",
+        "медленные кольца на тёмно-синем",
+        "спокойная тёмная версия"
+      ],
+      "props": {
+        "background": "#0b1220",
+        "ink": "#e6edf7",
+        "accent": "#2dd4bf",
+        "fill": 80,
+        "speed": 0.75,
+        "delay": 12
+      }
+    },
+    {
+      "id": "editorial-cream",
+      "label": "Editorial Cream",
+      "description": "Warm cream paper with terracotta rings and elegant serif numerals for a magazine feel.",
+      "askedAs": [
+        "warm serif look",
+        "magazine style rings",
+        "cream background elegant",
+        "тёплый журнальный стиль",
+        "кремовый фон с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f5efe4",
+        "ink": "#2a2320",
+        "accent": "#c2562f",
+        "fontFamily": "Fraunces",
+        "fill": 56
+      }
+    },
+    {
+      "id": "terminal-stats",
+      "label": "Terminal Stats",
+      "description": "Near-black screen with lime-green rings and monospace readouts like a dev dashboard.",
+      "askedAs": [
+        "hacker style stats",
+        "monospace dashboard look",
+        "developer terminal rings",
+        "стиль терминала",
+        "моноширинный шрифт и зелёный"
+      ],
+      "props": {
+        "background": "#0d0f0c",
+        "ink": "#d9f2d0",
+        "accent": "#84cc16",
+        "fontFamily": "JetBrains Mono",
+        "grain": false,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "big-hero",
+      "label": "Big Hero",
+      "description": "Oversized rings in a coral accent that fill the frame for a bold wrapped-style climax.",
+      "askedAs": [
+        "make it huge",
+        "bold full screen rings",
+        "big wrapped finale",
+        "крупные кольца на весь экран",
+        "сделай больше и ярче"
+      ],
+      "props": {
+        "scale": 1.35,
+        "accent": "#ff5a5f",
+        "fontFamily": "Space Grotesk",
+        "fill": 34
+      }
+    },
+    {
+      "id": "compact-corner",
+      "label": "Compact Inset",
+      "description": "A small, understated version on a slate background that sits quietly as a secondary element.",
+      "askedAs": [
+        "smaller subtle rings",
+        "minimal compact version",
+        "understated grey look",
+        "маленькие аккуратные кольца",
+        "минималистичная версия"
+      ],
+      "props": {
+        "scale": 0.7,
+        "background": "#1e2228",
+        "ink": "#c9d1db",
+        "accent": "#8da2fb",
+        "fontFamily": "Inter",
+        "grain": false
+      }
+    }
+  ]
+}

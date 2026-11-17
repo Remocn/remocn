@@ -1,0 +1,100 @@
+{
+  "component": "icon-credit-card",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-slow-draw",
+      "label": "Hairline Draw",
+      "description": "A large, thin-stroked card that slowly sketches itself in muted slate.",
+      "askedAs": [
+        "thin slow drawing card icon",
+        "elegant line card animation",
+        "minimal outline credit card",
+        "тонкая линия рисуется медленно",
+        "элегантная иконка карты"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "bold-payment-pulse",
+      "label": "Payment Pulse",
+      "description": "A chunky blue card that loops its tap action at a brisk pace.",
+      "askedAs": [
+        "looping payment animation",
+        "bold blue card icon",
+        "card tap repeating",
+        "повторяющаяся анимация оплаты",
+        "жирная синяя карта"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "strokeWidth": 2.75,
+        "speed": 1.5,
+        "color": "#1f6feb",
+        "size": 72
+      }
+    },
+    {
+      "id": "success-green",
+      "label": "Paid Green",
+      "description": "A mid-sized forest green card that draws in and confirms with a single action.",
+      "askedAs": [
+        "payment success icon",
+        "green card checkout",
+        "card paid confirmation",
+        "зелёная карта оплачено",
+        "иконка успешной оплаты"
+      ],
+      "props": {
+        "color": "#15803d",
+        "size": 64,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "hero-card-showcase",
+      "label": "Hero Showcase",
+      "description": "An oversized deep indigo card drawing and acting in a calm continuous loop.",
+      "askedAs": [
+        "huge card icon for intro",
+        "big looping credit card",
+        "large hero payment graphic",
+        "огромная иконка карты",
+        "большая карта в цикле"
+      ],
+      "props": {
+        "size": 200,
+        "color": "#3730a3",
+        "loop": true,
+        "speed": 0.75,
+        "strokeWidth": 1.75
+      }
+    },
+    {
+      "id": "snappy-inline",
+      "label": "Snappy Inline",
+      "description": "A small, quick warm-amber card that pops in fast beside text.",
+      "askedAs": [
+        "small fast card icon",
+        "quick inline payment icon",
+        "tiny card for buttons",
+        "маленькая быстрая иконка карты",
+        "иконка карты для кнопки"
+      ],
+      "props": {
+        "size": 32,
+        "speed": 2.5,
+        "color": "#b45309",
+        "strokeWidth": 2.25
+      }
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "component": "spec-sheet",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-datasheet",
+      "label": "Paper Datasheet",
+      "description": "A warm off-white printed datasheet look with serif type and a deep ink-blue accent.",
+      "askedAs": [
+        "make it look like a printed spec sheet",
+        "light paper style table with serif font",
+        "editorial product facts on cream background",
+        "светлая таблица как на бумаге",
+        "характеристики в печатном стиле"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f0e8",
+        "ink": "#1c1b19",
+        "accent": "#1f3a8a",
+        "fontFamily": "Fraunces",
+        "stagger": 7
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A dark monospaced readout with a muted green accent and quick, tight row reveals.",
+      "askedAs": [
+        "make it look like a terminal",
+        "monospace dev spec table",
+        "hacker style specs list",
+        "как в терминале",
+        "моноширинный шрифт таблица характеристик"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0e1110",
+        "ink": "#d6e2da",
+        "accent": "#4fb286",
+        "stagger": 3,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "hero-spec",
+      "label": "Hero Spec",
+      "description": "An oversized table that lingers before expanding, with a strong highlight on the hero value.",
+      "askedAs": [
+        "make one spec really stand out",
+        "big bold hero number",
+        "large table with emphasized value",
+        "выделить главную характеристику",
+        "крупная таблица с акцентом"
+      ],
+      "props": {
+        "scale": 1.3,
+        "highlight": 8,
+        "expandAt": 80,
+        "accent": "#f2643a",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "quick-recap",
+      "label": "Quick Recap",
+      "description": "A compact, fast-paced table that snaps in early for a brisk closing summary.",
+      "askedAs": [
+        "fast compact recap table",
+        "quick summary at the end",
+        "speed up the spec list",
+        "быстрая итоговая таблица",
+        "компактно и быстро"
+      ],
+      "props": {
+        "scale": 0.8,
+        "speed": 2,
+        "stagger": 2,
+        "expandAt": 30,
+        "highlight": 1
+      }
+    },
+    {
+      "id": "slow-studio",
+      "label": "Slow Studio",
+      "description": "A calm, unhurried reveal in clean light grey with Inter type and no grain.",
+      "askedAs": [
+        "slow calm clean reveal",
+        "minimal light apple style specs",
+        "gentle elegant table animation",
+        "медленная спокойная анимация",
+        "минималистичный светлый стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "speed": 0.5,
+        "stagger": 10,
+        "grain": false,
+        "accent": "#111111"
+      }
+    },
+    {
+      "id": "midnight-violet",
+      "label": "Midnight Violet",
+      "description": "A deep navy table with a soft violet accent and Geist type for a premium product feel.",
+      "askedAs": [
+        "dark navy premium look",
+        "purple accent dark table",
+        "sleek night mode specs",
+        "тёмно-синий премиальный стиль",
+        "фиолетовый акцент на тёмном"
+      ],
+      "props": {
+        "background": "#0f1324",
+        "ink": "#e6e8f2",
+        "accent": "#8b7cf6",
+        "fontFamily": "Geist",
+        "delay": 12
+      }
+    }
+  ]
+}

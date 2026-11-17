@@ -1,0 +1,123 @@
+{
+  "component": "magnet-letters",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snappy-swap",
+      "label": "Snappy Swap",
+      "description": "A fast, tight swap where the letters snap in almost together on a dark stage with a warm coral accent.",
+      "askedAs": [
+        "quick word swap",
+        "fast magnet replace",
+        "snappy correction text",
+        "быстрая замена слова",
+        "резкая анимация букв"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 1,
+        "accent": "#ff6b4a",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "slow-theatre",
+      "label": "Slow Theatre",
+      "description": "A slow, theatrical drop with wide letter stagger and a beat of anticipation before it starts.",
+      "askedAs": [
+        "dramatic slow word drop",
+        "theatrical word replacement",
+        "letters fall one by one slowly",
+        "медленная драматичная замена",
+        "буквы падают по одной"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 10,
+        "delay": 20,
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "Elegant serif lettering in deep ink on warm cream paper with a muted terracotta accent.",
+      "askedAs": [
+        "serif magazine style swap",
+        "light cream elegant text",
+        "classy editorial word change",
+        "элегантный шрифт с засечками",
+        "светлый журнальный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1e1b18",
+        "accent": "#b5523b",
+        "scale": 1.2
+      }
+    },
+    {
+      "id": "terminal-fix",
+      "label": "Terminal Fix",
+      "description": "Monospace letters in soft green-white on near-black, like a code correction in a terminal.",
+      "askedAs": [
+        "code editor look",
+        "monospace developer style",
+        "terminal text swap",
+        "стиль терминала",
+        "моноширинный шрифт для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "ink": "#e6edf3",
+        "accent": "#3fb950",
+        "stagger": 2,
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "bold-pop",
+      "label": "Bold Pop",
+      "description": "Big chunky grotesque type on a clean white ground with a punchy violet accent and bouncy pacing.",
+      "askedAs": [
+        "big bold playful text",
+        "large fun word swap",
+        "chunky letters on white",
+        "крупный яркий текст",
+        "весёлая замена слова"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.4,
+        "accent": "#7c3aed",
+        "speed": 1.25,
+        "stagger": 6
+      }
+    },
+    {
+      "id": "midnight-calm",
+      "label": "Midnight Calm",
+      "description": "A small, understated swap in Inter on deep navy with a soft sky-blue accent and gentle timing.",
+      "askedAs": [
+        "subtle minimal word change",
+        "calm navy background text",
+        "understated correction",
+        "спокойный минималистичный стиль",
+        "тёмно-синий фон"
+      ],
+      "props": {
+        "fontFamily": "Inter",
+        "background": "#0f1b2d",
+        "ink": "#e8eef6",
+        "accent": "#7db4ff",
+        "scale": 0.75,
+        "speed": 0.75
+      }
+    }
+  ]
+}

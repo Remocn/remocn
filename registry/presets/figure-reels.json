@@ -1,0 +1,121 @@
+{
+  "component": "figure-reels",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A light, paper-toned frame with a large Instrument Serif figure that reads like a magazine cover.",
+      "askedAs": [
+        "make it look like a magazine",
+        "elegant serif number on light background",
+        "classy editorial funding reveal",
+        "элегантный журнальный стиль с засечками",
+        "светлая версия с красивым шрифтом"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "ground": "paper-crease",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "bold-impact",
+      "label": "Bold Impact",
+      "description": "A heavy, oversized Inter figure that lands fast and hits hard on a deep charcoal ground.",
+      "askedAs": [
+        "big bold number that hits hard",
+        "make the figure heavy and punchy",
+        "fast aggressive milestone reveal",
+        "жирная крупная цифра",
+        "быстро и мощно"
+      ],
+      "props": {
+        "fontFamily": "Inter",
+        "fontWeight": 800,
+        "scale": 1.3,
+        "speed": 1.5,
+        "ground": "charcoal-satin"
+      }
+    },
+    {
+      "id": "slow-cinematic",
+      "label": "Slow Cinematic",
+      "description": "An unhurried, film-blue reveal with a thin Geist figure and a short held beat before it starts.",
+      "askedAs": [
+        "slow cinematic reveal",
+        "calm moody blue version",
+        "let it breathe before the number",
+        "медленно и кинематографично",
+        "спокойная синяя атмосфера"
+      ],
+      "props": {
+        "speed": 0.5,
+        "delay": 20,
+        "ground": "film-blue",
+        "fontFamily": "Geist",
+        "fontWeight": 200
+      }
+    },
+    {
+      "id": "warm-copper",
+      "label": "Warm Copper",
+      "description": "A warm copper ground with a Fraunces figure and a soft amber accent for a rich, celebratory feel.",
+      "askedAs": [
+        "warm golden celebratory look",
+        "copper tones with a serif number",
+        "rich warm premium style",
+        "тёплые медные тона",
+        "праздничный тёплый вариант"
+      ],
+      "props": {
+        "ground": "copper",
+        "fontFamily": "Fraunces",
+        "fontWeight": 500,
+        "accent": "#e0a96d"
+      }
+    },
+    {
+      "id": "tech-mono",
+      "label": "Tech Mono",
+      "description": "A crisp monospaced figure on a near-black ground with a cool cyan accent and no motion blur.",
+      "askedAs": [
+        "technical developer style",
+        "monospace numbers like a terminal",
+        "sharp crisp dashboard look",
+        "моноширинный технический шрифт",
+        "строгий стиль для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "fontWeight": 500,
+        "background": "#0b0e12",
+        "ink": "#e6edf3",
+        "accent": "#5cc8d6",
+        "motionBlur": false
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "A small, understated light-theme figure in Manrope on a clean polar ground.",
+      "askedAs": [
+        "subtle minimal version",
+        "smaller quieter number",
+        "clean white understated look",
+        "минималистично и сдержанно",
+        "маленькая аккуратная цифра"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "polar",
+        "fontFamily": "Manrope",
+        "scale": 0.75,
+        "speed": 0.75
+      }
+    }
+  ]
+}

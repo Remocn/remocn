@@ -1,0 +1,122 @@
+{
+  "component": "handwrite",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-letter",
+      "label": "Slow Letter",
+      "description": "Large, light strokes in deep ink blue written one careful letter at a time on a choppy, deliberate clock.",
+      "askedAs": [
+        "slow careful handwriting",
+        "writing a letter by hand slowly",
+        "big calm pen text",
+        "медленный рукописный текст",
+        "как будто пишут письмо от руки"
+      ],
+      "props": {
+        "fontSize": 96,
+        "perStep": 0.8,
+        "weight": "400",
+        "color": "#1f3a5f",
+        "step": 4
+      }
+    },
+    {
+      "id": "quick-note",
+      "label": "Quick Note",
+      "description": "Small left-aligned scribble in graphite gray that dashes across the page in quick bursts.",
+      "askedAs": [
+        "fast scribbled note",
+        "quick margin note handwriting",
+        "small hurried caption",
+        "быстрая заметка от руки",
+        "мелкий торопливый почерк"
+      ],
+      "props": {
+        "fontSize": 44,
+        "perStep": 3,
+        "weight": "500",
+        "color": "#4a4a52",
+        "align": "left",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "marker-headline",
+      "label": "Marker Headline",
+      "description": "Huge bold marker-style headline in near-black that stamps on with chunky, snappy poses.",
+      "askedAs": [
+        "big bold marker title",
+        "thick handwritten headline",
+        "poster style hand lettering",
+        "жирный заголовок маркером",
+        "крупная рукописная надпись"
+      ],
+      "props": {
+        "fontSize": 120,
+        "weight": "700",
+        "color": "#1a1a1a",
+        "perStep": 1.2,
+        "step": 2
+      }
+    },
+    {
+      "id": "red-pen",
+      "label": "Red Pen",
+      "description": "Teacher's red-ink annotation, medium size and left-aligned, written at a brisk correcting pace.",
+      "askedAs": [
+        "red pen correction",
+        "teacher annotation handwriting",
+        "red ink comment",
+        "красная ручка пометка",
+        "исправления красными чернилами"
+      ],
+      "props": {
+        "color": "#b3261e",
+        "fontSize": 56,
+        "align": "left",
+        "perStep": 2.2,
+        "weight": "500"
+      }
+    },
+    {
+      "id": "smooth-pencil",
+      "label": "Smooth Pencil",
+      "description": "Soft sepia pencil writing on every frame for a fluid, almost continuous stroke.",
+      "askedAs": [
+        "smooth handwriting animation",
+        "soft pencil writing",
+        "less choppy hand text",
+        "плавный рукописный текст",
+        "мягкий карандаш"
+      ],
+      "props": {
+        "step": 1,
+        "perStep": 0.5,
+        "color": "#6b5640",
+        "weight": "400",
+        "fontSize": 64
+      }
+    },
+    {
+      "id": "jittery-zine",
+      "label": "Jittery Zine",
+      "description": "Forest-green ink jerking on in long, ragged stop-motion holds like a cut-and-paste zine.",
+      "askedAs": [
+        "jerky stop motion text",
+        "low frame rate handwriting",
+        "choppy zine lettering",
+        "дерганый стоп-моушен текст",
+        "рваная анимация надписи"
+      ],
+      "props": {
+        "step": 6,
+        "perStep": 3.5,
+        "color": "#2f5d3a",
+        "weight": "700",
+        "speed": 0.75
+      }
+    }
+  ]
+}

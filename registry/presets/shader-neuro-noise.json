@@ -1,0 +1,101 @@
+{
+  "component": "shader-neuro-noise",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "deep-synapse",
+      "label": "Deep Synapse",
+      "description": "A near-black field with faint indigo filaments drifting slowly, built to sit quietly behind text.",
+      "askedAs": [
+        "very subtle dark neural background",
+        "slow faint web behind titles",
+        "barely visible ai texture",
+        "тёмный едва заметный нейрофон",
+        "медленная тонкая паутина на фоне"
+      ],
+      "props": {
+        "speed": 0.5,
+        "brightness": 0,
+        "contrast": 0.15,
+        "colorBack": "#0a0a12",
+        "colorMid": "#3a3f6e"
+      }
+    },
+    {
+      "id": "teal-cortex",
+      "label": "Teal Cortex",
+      "description": "Deep navy ground with crisp teal filaments that read as active machine intelligence.",
+      "askedAs": [
+        "teal neural network background",
+        "blue green ai web texture",
+        "glowing data brain look",
+        "бирюзовая нейросеть фон",
+        "сине-зелёная текстура ии"
+      ],
+      "props": {
+        "brightness": 0.15,
+        "contrast": 0.55,
+        "colorBack": "#071a24",
+        "colorMid": "#2fa8a0"
+      }
+    },
+    {
+      "id": "amber-circuit",
+      "label": "Amber Circuit",
+      "description": "Warm charcoal backdrop with copper-amber strands moving at a brisk, energetic pace.",
+      "askedAs": [
+        "warm orange neural web",
+        "fast amber ai texture",
+        "copper glowing network background",
+        "тёплая янтарная нейросеть",
+        "быстрый оранжевый узор сети"
+      ],
+      "props": {
+        "speed": 2,
+        "brightness": 0.1,
+        "contrast": 0.5,
+        "colorBack": "#17110c",
+        "colorMid": "#c47a3a"
+      }
+    },
+    {
+      "id": "paper-mind",
+      "label": "Paper Mind",
+      "description": "A light, airy version with soft slate filaments on an off-white ground for clean editorial scenes.",
+      "askedAs": [
+        "light neural texture background",
+        "white ai web pattern",
+        "bright minimal network noise",
+        "светлый фон нейросети",
+        "белая паутина для ии сцены"
+      ],
+      "props": {
+        "speed": 0.75,
+        "brightness": 0.6,
+        "contrast": 0.25,
+        "colorBack": "#eef0f4",
+        "colorMid": "#6b7590"
+      }
+    },
+    {
+      "id": "violet-surge",
+      "label": "Violet Surge",
+      "description": "High-contrast violet strands on deep plum that morph rapidly for a charged, intense feel.",
+      "askedAs": [
+        "intense purple neural network",
+        "fast high contrast ai web",
+        "dramatic violet brain texture",
+        "яркая фиолетовая нейросеть",
+        "быстрый контрастный нейрофон"
+      ],
+      "props": {
+        "speed": 3,
+        "brightness": 0.2,
+        "contrast": 0.8,
+        "colorBack": "#140b1f",
+        "colorMid": "#8b6cd9"
+      }
+    }
+  ]
+}

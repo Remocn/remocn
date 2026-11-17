@@ -1,0 +1,120 @@
+{
+  "component": "ipo-open",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-green",
+      "label": "Terminal Green",
+      "description": "A dark trading-terminal look with monospace type and a muted green accent on near-black.",
+      "askedAs": [
+        "make it look like a bloomberg terminal",
+        "monospace dark trading screen",
+        "green ticker on black",
+        "как терминал биржи",
+        "моноширинный шрифт на тёмном фоне"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#2fbf71",
+        "background": "#0b0f0c",
+        "ink": "#e6f2ea"
+      }
+    },
+    {
+      "id": "financial-paper",
+      "label": "Financial Paper",
+      "description": "A light, newsprint-style editorial look with a serif face on warm salmon paper and a deep ink accent.",
+      "askedAs": [
+        "like a financial newspaper front page",
+        "salmon paper serif look",
+        "editorial print style ipo",
+        "как газета финансовая",
+        "светлый газетный стиль с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f6e3d4",
+        "ink": "#1e1a17",
+        "accent": "#9c2f2f"
+      }
+    },
+    {
+      "id": "opening-bell-rush",
+      "label": "Opening Bell Rush",
+      "description": "A fast, punchy open with a quick price count and oversized type that hits like a market spike.",
+      "askedAs": [
+        "make it faster and bigger",
+        "quick energetic open",
+        "snappy price jump",
+        "быстрее и крупнее",
+        "резкое открытие торгов"
+      ],
+      "props": {
+        "speed": 2,
+        "countLength": 20,
+        "scale": 1.3,
+        "accent": "#ff5a36"
+      }
+    },
+    {
+      "id": "slow-sunrise",
+      "label": "Slow Sunrise",
+      "description": "A calm, unhurried reveal with a long count and a warm amber accent over deep navy.",
+      "askedAs": [
+        "slow cinematic reveal",
+        "calm dramatic build up",
+        "warm sunrise colors slower",
+        "медленное плавное появление",
+        "тёплый рассвет, неспешно"
+      ],
+      "props": {
+        "speed": 0.5,
+        "countLength": 90,
+        "delay": 15,
+        "accent": "#f2a541",
+        "background": "#101a33",
+        "ink": "#f5efe4"
+      }
+    },
+    {
+      "id": "clean-minimal",
+      "label": "Clean Minimal",
+      "description": "A crisp light layout in Inter with a restrained graphite accent and slightly smaller scale for breathing room.",
+      "askedAs": [
+        "clean white minimal version",
+        "simple light corporate look",
+        "less flashy more neutral",
+        "минималистичный светлый вариант",
+        "чистый белый стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#2b2f36",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "violet-launch",
+      "label": "Violet Launch",
+      "description": "A modern startup-launch feel with Space Grotesk and a soft violet accent on dark plum.",
+      "askedAs": [
+        "startup launch day purple",
+        "modern tech brand vibe",
+        "purple dark product launch",
+        "фиолетовый стиль запуска стартапа",
+        "современный тёмный с фиолетовым"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "accent": "#8b7cf6",
+        "background": "#17121f",
+        "ink": "#eeeaf7",
+        "scale": 1.1
+      }
+    }
+  ]
+}

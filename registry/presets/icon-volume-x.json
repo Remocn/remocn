@@ -1,0 +1,99 @@
+{
+  "component": "icon-volume-x",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "muted-alert",
+      "label": "Muted Alert",
+      "description": "A large, bold red icon that snaps through its action animation at double speed.",
+      "askedAs": [
+        "big red mute icon",
+        "fast muted sound warning",
+        "bold volume off alert",
+        "красная иконка без звука",
+        "быстрый значок отключения звука"
+      ],
+      "props": {
+        "animation": "action",
+        "size": 96,
+        "color": "#d1453b",
+        "strokeWidth": 2.75,
+        "speed": 2
+      }
+    },
+    {
+      "id": "quiet-sketch",
+      "label": "Quiet Sketch",
+      "description": "A fine slate-grey line slowly drawing itself in, calm and understated.",
+      "askedAs": [
+        "thin slow drawn mute icon",
+        "subtle line volume off",
+        "gentle sketch speaker muted",
+        "тонкая медленная иконка звука",
+        "плавная отрисовка без звука"
+      ],
+      "props": {
+        "animation": "draw",
+        "color": "#64748b",
+        "strokeWidth": 1.25,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "hero-loop",
+      "label": "Hero Loop",
+      "description": "An oversized deep navy icon that continuously replays its full draw and action cycle.",
+      "askedAs": [
+        "huge looping mute icon",
+        "large repeating volume off",
+        "hero speaker muted animation",
+        "большая зацикленная иконка без звука",
+        "огромный значок звука по кругу"
+      ],
+      "props": {
+        "loop": true,
+        "size": 160,
+        "color": "#1e3a5f",
+        "strokeWidth": 2.25
+      }
+    },
+    {
+      "id": "compact-ui",
+      "label": "Compact UI",
+      "description": "A small, crisp blue interface icon with a quick action pulse.",
+      "askedAs": [
+        "small ui mute button icon",
+        "tiny blue volume off",
+        "quick interface speaker mute",
+        "маленькая синяя иконка звука",
+        "компактный значок выключенного звука"
+      ],
+      "props": {
+        "animation": "action",
+        "size": 32,
+        "color": "#1f6feb",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "soft-ambient",
+      "label": "Soft Ambient",
+      "description": "A medium sage-green icon looping slowly as a relaxed background accent.",
+      "askedAs": [
+        "slow looping green mute icon",
+        "calm ambient volume off",
+        "relaxed speaker muted loop",
+        "спокойная зелёная иконка без звука",
+        "медленный зацикленный значок звука"
+      ],
+      "props": {
+        "loop": true,
+        "size": 72,
+        "color": "#5b8a72",
+        "strokeWidth": 1.75,
+        "speed": 0.75
+      }
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "component": "spotlight-text",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A wide, unhurried spotlight drifts across the headline for a calm, cinematic opener.",
+      "askedAs": [
+        "slow dramatic spotlight reveal",
+        "cinematic slow headline",
+        "calm wide light sweep",
+        "медленное раскрытие заголовка",
+        "кинематографичный прожектор"
+      ],
+      "props": {
+        "sweep": 140,
+        "spotSize": 2,
+        "delay": 15,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-flash",
+      "label": "Quick Flash",
+      "description": "A tight, fast beam snaps across the text for a punchy, energetic reveal.",
+      "askedAs": [
+        "fast spotlight snap",
+        "quick punchy text reveal",
+        "narrow fast beam",
+        "быстрая вспышка текста",
+        "резкий прожектор"
+      ],
+      "props": {
+        "sweep": 36,
+        "spotSize": 0.7,
+        "speed": 1.5,
+        "accent": "#22c55e"
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Monospaced type on near-black with a soft green accent, like a developer console.",
+      "askedAs": [
+        "terminal style headline",
+        "monospace code look",
+        "hacker console text",
+        "стиль терминала",
+        "моноширинный шрифт как в консоли"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0c",
+        "ink": "#d7e5da",
+        "accent": "#4ade80",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "editorial-light",
+      "label": "Editorial Light",
+      "description": "A light paper background with elegant serif type and a warm terracotta accent.",
+      "askedAs": [
+        "light serif editorial look",
+        "elegant magazine headline",
+        "warm light background version",
+        "светлая редакционная версия",
+        "элегантный шрифт с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f5f1ea",
+        "ink": "#1c1a17",
+        "accent": "#c2562f",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "midnight-violet",
+      "label": "Midnight Violet",
+      "description": "Deep indigo backdrop with a violet glow and bold grotesque type at large scale.",
+      "askedAs": [
+        "purple night spotlight",
+        "big bold violet headline",
+        "deep indigo tech look",
+        "фиолетовый ночной стиль",
+        "крупный жирный заголовок"
+      ],
+      "props": {
+        "background": "#0e0b1f",
+        "ink": "#ece8ff",
+        "accent": "#8b5cf6",
+        "fontFamily": "Space Grotesk",
+        "scale": 1.3,
+        "spotSize": 1.6
+      }
+    }
+  ]
+}

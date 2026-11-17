@@ -1,0 +1,92 @@
+{
+  "component": "shader-mesh-gradient-dusk",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "still-twilight",
+      "label": "Still Twilight",
+      "description": "A near-motionless dusk where the coral glow barely drifts across smooth, calm bands of indigo.",
+      "askedAs": [
+        "very slow calm gradient",
+        "barely moving background",
+        "quiet subtle dusk backdrop",
+        "очень медленный спокойный градиент",
+        "почти неподвижный фон"
+      ],
+      "props": {
+        "speed": 0.25,
+        "distortion": 0.35,
+        "swirl": 0.1
+      }
+    },
+    {
+      "id": "evening-swirl",
+      "label": "Evening Swirl",
+      "description": "Coral and peach light curls into slow, deep spirals through the violet field.",
+      "askedAs": [
+        "swirly dusk colors",
+        "spiral gradient motion",
+        "twisting evening glow",
+        "закрученный вечерний градиент",
+        "спирали цвета на фоне"
+      ],
+      "props": {
+        "speed": 0.75,
+        "distortion": 1.1,
+        "swirl": 0.85
+      }
+    },
+    {
+      "id": "liquid-sunset",
+      "label": "Liquid Sunset",
+      "description": "Heavily warped, molten shapes of peach and coral flow briskly like liquid across the indigo.",
+      "askedAs": [
+        "liquid flowing gradient",
+        "molten sunset colors",
+        "wavy energetic dusk",
+        "жидкий переливающийся закат",
+        "текучий градиент"
+      ],
+      "props": {
+        "speed": 1.75,
+        "distortion": 1.5,
+        "swirl": 0.45
+      }
+    },
+    {
+      "id": "soft-horizon",
+      "label": "Soft Horizon",
+      "description": "Gentle, mostly straight color bands glide slowly like a fading horizon line.",
+      "askedAs": [
+        "soft horizon gradient",
+        "smooth bands of color",
+        "minimal clean dusk background",
+        "мягкий горизонт",
+        "плавные полосы цвета"
+      ],
+      "props": {
+        "speed": 0.5,
+        "distortion": 0.15,
+        "swirl": 0
+      }
+    },
+    {
+      "id": "night-pulse",
+      "label": "Night Pulse",
+      "description": "A fast, lively churn of dusk light suited to energetic launch openers.",
+      "askedAs": [
+        "fast moving dusk gradient",
+        "energetic animated background",
+        "dynamic launch backdrop",
+        "быстрый динамичный градиент",
+        "энергичный фон для запуска"
+      ],
+      "props": {
+        "speed": 3,
+        "distortion": 0.8,
+        "swirl": 0.6
+      }
+    }
+  ]
+}

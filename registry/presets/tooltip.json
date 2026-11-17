@@ -1,0 +1,103 @@
+{
+  "component": "tooltip",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "quick-below",
+      "label": "Quick Below",
+      "description": "A snappy tooltip that pops in from beneath the element at double speed.",
+      "askedAs": [
+        "fast tooltip under the button",
+        "snappy hint from below",
+        "quick bottom tooltip",
+        "быстрая подсказка снизу",
+        "подсказка резко появляется под кнопкой"
+      ],
+      "props": {
+        "side": "bottom",
+        "speed": 2
+      }
+    },
+    {
+      "id": "slow-reveal-right",
+      "label": "Slow Reveal",
+      "description": "A calm, unhurried tooltip that glides in from the right for a relaxed walkthrough pace.",
+      "askedAs": [
+        "slow tooltip from the right",
+        "gentle side hint",
+        "relaxed tooltip fade in",
+        "медленная подсказка справа",
+        "плавное появление подсказки сбоку"
+      ],
+      "props": {
+        "side": "right",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "left-label",
+      "label": "Left Label",
+      "description": "A side label that slides in from the left at a measured, slightly brisk pace.",
+      "askedAs": [
+        "tooltip on the left side",
+        "label appearing left of icon",
+        "left aligned hint",
+        "подсказка слева",
+        "метка слева от иконки"
+      ],
+      "props": {
+        "side": "left",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "dismiss-top",
+      "label": "Gentle Dismiss",
+      "description": "The tooltip eases out of view upward slowly, ideal for closing a read moment.",
+      "askedAs": [
+        "tooltip disappearing slowly",
+        "hide the hint softly",
+        "fade out tooltip",
+        "подсказка плавно исчезает",
+        "скрыть тултип медленно"
+      ],
+      "props": {
+        "state": "hidden",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "instant-flash",
+      "label": "Instant Flash",
+      "description": "A near-instant top tooltip that snaps into place with almost no transition.",
+      "askedAs": [
+        "instant tooltip",
+        "no animation hint popup",
+        "super fast tooltip appear",
+        "мгновенная подсказка",
+        "тултип без задержки"
+      ],
+      "props": {
+        "speed": 4
+      }
+    },
+    {
+      "id": "quick-hide-bottom",
+      "label": "Quick Exit",
+      "description": "A brisk downward dismissal that clears the tooltip below the element in a blink.",
+      "askedAs": [
+        "tooltip quickly hides down",
+        "fast dismiss below",
+        "snap tooltip away",
+        "подсказка быстро исчезает вниз",
+        "быстро убрать тултип"
+      ],
+      "props": {
+        "side": "bottom",
+        "state": "hidden",
+        "speed": 2.5
+      }
+    }
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "component": "figure-to-label",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A light, paper-toned frame with an elegant serif figure and a slow, measured reveal.",
+      "askedAs": [
+        "make it look like a magazine cover",
+        "elegant serif on light background",
+        "slow classy financial reveal",
+        "элегантный журнальный стиль с засечками",
+        "светлый фон и шрифт с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "ground": "paper-crease",
+        "speed": 0.75,
+        "stagger": 3
+      }
+    },
+    {
+      "id": "terminal-ledger",
+      "label": "Terminal Ledger",
+      "description": "A monospaced, fast-typing readout on a cool dark ground with a soft green accent.",
+      "askedAs": [
+        "code terminal style number",
+        "monospace fintech look",
+        "fast typed data readout",
+        "в стиле терминала моноширинный",
+        "быстрый техничный вывод цифр"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "fontWeight": 400,
+        "ground": "nightfold",
+        "accent": "#5fbf8f",
+        "speed": 1.5,
+        "stagger": 1
+      }
+    },
+    {
+      "id": "gold-hour",
+      "label": "Gold Hour",
+      "description": "A warm copper ground with a heavy, oversized figure and a muted gold accent.",
+      "askedAs": [
+        "warm luxurious gold look",
+        "big bold number with copper tones",
+        "premium warm announcement",
+        "тёплый золотой премиальный стиль",
+        "крупная жирная цифра в тёплых тонах"
+      ],
+      "props": {
+        "ground": "copper",
+        "accent": "#d4a85a",
+        "fontWeight": 700,
+        "fontFamily": "Manrope",
+        "scale": 1.25
+      }
+    },
+    {
+      "id": "quiet-whisper",
+      "label": "Quiet Whisper",
+      "description": "Hairline type at a smaller scale on a pale polar ground, unfolding very slowly with wide letter stagger.",
+      "askedAs": [
+        "minimal and calm reveal",
+        "thin small text very slow",
+        "subtle understated valuation",
+        "минималистичный спокойный стиль",
+        "тонкий шрифт и медленная анимация"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "polar",
+        "fontWeight": 100,
+        "scale": 0.8,
+        "speed": 0.5,
+        "stagger": 6
+      }
+    },
+    {
+      "id": "cobalt-launch",
+      "label": "Cobalt Launch",
+      "description": "A deep cobalt ground with punchy grotesque type and a crisp ice-blue accent for a confident reveal.",
+      "askedAs": [
+        "bold blue tech announcement",
+        "energetic startup funding reveal",
+        "confident blue headline number",
+        "смелый синий стиль для стартапа",
+        "энергичное объявление раунда"
+      ],
+      "props": {
+        "ground": "cobalt-rise",
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 600,
+        "accent": "#9cc8ff",
+        "speed": 1.25,
+        "scale": 1.1
+      }
+    },
+    {
+      "id": "ink-on-bone",
+      "label": "Ink On Bone",
+      "description": "A flat bone-white background with near-black Fraunces type and an oxblood accent, delayed for a held open.",
+      "askedAs": [
+        "black text on off-white",
+        "print style flat background",
+        "classic report look with red accent",
+        "чёрный текст на молочном фоне",
+        "строгий печатный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f3efe6",
+        "ink": "#1a1816",
+        "accent": "#8a2b2b",
+        "fontFamily": "Fraunces",
+        "delay": 20
+      }
+    }
+  ]
+}

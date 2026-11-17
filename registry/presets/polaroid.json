@@ -1,0 +1,105 @@
+{
+  "component": "polaroid",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snapshot-pocket",
+      "label": "Pocket Snapshot",
+      "description": "A small, compact print with a tight caption that reads like a keepsake tucked in a wallet.",
+      "askedAs": [
+        "make the polaroid smaller",
+        "tiny instant photo with small caption",
+        "compact photo card",
+        "маленький полароид",
+        "уменьшить фото и подпись"
+      ],
+      "props": {
+        "width": 420,
+        "captionSize": 26
+      }
+    },
+    {
+      "id": "gallery-print",
+      "label": "Gallery Print",
+      "description": "A large, centred print with a bold handwritten caption that fills the frame like a wall piece.",
+      "askedAs": [
+        "make the photo big",
+        "large polaroid with big handwriting",
+        "fill the screen with the instant photo",
+        "большой полароид на весь экран",
+        "крупная подпись под фото"
+      ],
+      "props": {
+        "width": 860,
+        "captionSize": 50
+      }
+    },
+    {
+      "id": "choppy-stop-motion",
+      "label": "Choppy Stop Motion",
+      "description": "Heavy, deliberate stop-motion with long holds on each pose for a handmade, jerky feel.",
+      "askedAs": [
+        "more stop motion feel",
+        "choppy handmade animation",
+        "make it jitter like claymation",
+        "эффект покадровой анимации",
+        "более рваная анимация"
+      ],
+      "props": {
+        "step": 6,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "smooth-quick",
+      "label": "Smooth Quick",
+      "description": "Fluid, fast motion with every frame rendered so the card lands crisply and without stutter.",
+      "askedAs": [
+        "smooth fast polaroid",
+        "no stop motion just fluid",
+        "quick snappy photo drop",
+        "плавная быстрая анимация",
+        "без рывков и быстрее"
+      ],
+      "props": {
+        "step": 1,
+        "speed": 2
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A leisurely, unhurried entrance where the handwritten caption arrives well after the photo settles.",
+      "askedAs": [
+        "slow down the polaroid",
+        "caption appears later",
+        "gentle delayed caption",
+        "медленное появление фото",
+        "подпись появляется позже"
+      ],
+      "props": {
+        "speed": 0.5,
+        "captionAt": 40,
+        "step": 4
+      }
+    },
+    {
+      "id": "scrapbook-note",
+      "label": "Scrapbook Note",
+      "description": "A mid-sized print with an oversized caption that leads, like a scribbled scrapbook entry.",
+      "askedAs": [
+        "caption bigger than usual",
+        "handwriting should stand out",
+        "scrapbook style photo note",
+        "крупная рукописная подпись",
+        "как в скрапбуке"
+      ],
+      "props": {
+        "width": 540,
+        "captionSize": 46,
+        "captionAt": 12
+      }
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "component": "icon-plus",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-slow-draw",
+      "label": "Hairline Draw",
+      "description": "A large, thin plus that slowly sketches itself in a soft graphite tone.",
+      "askedAs": [
+        "thin elegant plus drawing slowly",
+        "minimal line plus icon big",
+        "slow sketch plus sign",
+        "тонкий плюс медленно рисуется",
+        "минималистичная иконка плюса"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1,
+        "speed": 0.5,
+        "color": "#525252"
+      }
+    },
+    {
+      "id": "bold-snappy-action",
+      "label": "Bold Snap",
+      "description": "A chunky, heavy-stroked plus that pops with a quick, punchy action.",
+      "askedAs": [
+        "thick plus that pops fast",
+        "bold add button animation",
+        "punchy quick plus icon",
+        "жирный плюс быстро выскакивает",
+        "резкая анимация кнопки добавить"
+      ],
+      "props": {
+        "animation": "action",
+        "strokeWidth": 3,
+        "speed": 2,
+        "size": 72
+      }
+    },
+    {
+      "id": "ocean-loop",
+      "label": "Ocean Loop",
+      "description": "A medium plus in calm deep blue that draws and moves on a continuous loop.",
+      "askedAs": [
+        "looping blue plus icon",
+        "repeating add animation blue",
+        "plus sign that keeps animating",
+        "синий плюс по кругу",
+        "зацикленная иконка плюса"
+      ],
+      "props": {
+        "loop": true,
+        "color": "#1f6feb",
+        "size": 64,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "tiny-ui-accent",
+      "label": "Tiny Accent",
+      "description": "A small, crisp plus in muted emerald suited to compact interface moments.",
+      "askedAs": [
+        "small green plus for ui",
+        "tiny add icon",
+        "compact plus button animation",
+        "маленький зелёный плюс",
+        "крошечная иконка добавить"
+      ],
+      "props": {
+        "size": 28,
+        "color": "#15803d",
+        "strokeWidth": 2.5,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "hero-terracotta",
+      "label": "Hero Terracotta",
+      "description": "An oversized warm terracotta plus that draws and acts at a measured, cinematic pace.",
+      "askedAs": [
+        "huge warm colored plus",
+        "big orange plus for title screen",
+        "cinematic large add icon",
+        "огромный тёплый плюс",
+        "большой плюс для заставки"
+      ],
+      "props": {
+        "size": 200,
+        "color": "#c2410c",
+        "strokeWidth": 1.5,
+        "speed": 0.75
+      }
+    }
+  ]
+}

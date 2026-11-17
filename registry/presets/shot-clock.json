@@ -1,0 +1,123 @@
+{
+  "component": "shot-clock",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "arena-night",
+      "label": "Arena Night",
+      "description": "Deep navy arena backdrop with warm off-white digits and an amber accent, set in a crisp mono face.",
+      "askedAs": [
+        "night game scoreboard look",
+        "dark navy with amber accents",
+        "stadium lights at night",
+        "ночная арена",
+        "тёмно-синий с янтарным"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#0b0f1a",
+        "ink": "#f4f1ea",
+        "accent": "#f5a524",
+        "fontFamily": "JetBrains Mono"
+      }
+    },
+    {
+      "id": "hardwood",
+      "label": "Hardwood",
+      "description": "Warm maple-court tones with dark brown type and burnt orange accents in a chunky grotesque.",
+      "askedAs": [
+        "basketball court wood colors",
+        "warm beige gym floor style",
+        "orange and brown sporty",
+        "цвета паркета баскетбольной площадки",
+        "тёплый деревянный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f3e6d0",
+        "ink": "#2a1a0e",
+        "accent": "#c2410c",
+        "alarm": "#b91c1c",
+        "fontFamily": "Bricolage Grotesque"
+      }
+    },
+    {
+      "id": "buzzer-beater",
+      "label": "Buzzer Beater",
+      "description": "A frantic, oversized countdown with rapid ticks and an almost instant buzzer slam.",
+      "askedAs": [
+        "fast frantic countdown",
+        "quick punchy shot clock",
+        "big and fast last second",
+        "быстрый отсчёт крупно",
+        "резкий финал на сирене"
+      ],
+      "props": {
+        "tick": 1.2,
+        "hold": 2,
+        "speed": 1.5,
+        "scale": 1.2,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "slow-drama",
+      "label": "Slow Drama",
+      "description": "A tense, slow-ticking countdown in an elegant serif that lingers on the tenths and holds the buzzer.",
+      "askedAs": [
+        "slow suspenseful countdown",
+        "dramatic final seconds",
+        "cinematic tense timer",
+        "медленный напряжённый отсчёт",
+        "драматичная пауза перед финалом"
+      ],
+      "props": {
+        "tick": 5,
+        "hold": 24,
+        "tenthsBelow": 10,
+        "speed": 0.75,
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "clean-court",
+      "label": "Clean Court",
+      "description": "A light, compact and minimal clock with teal accents and a rose alarm in neutral sans type.",
+      "askedAs": [
+        "minimal light shot clock",
+        "clean white corporate version",
+        "small subtle countdown",
+        "минималистичный светлый таймер",
+        "аккуратный компактный вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#0f766e",
+        "alarm": "#e11d48",
+        "fontFamily": "Inter",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "retro-scoreboard",
+      "label": "Retro Scoreboard",
+      "description": "Old-school amber digits on a near-black board with an orange alarm, like a vintage gym scoreboard.",
+      "askedAs": [
+        "vintage amber scoreboard",
+        "old school gym clock",
+        "retro LED digits",
+        "ретро табло",
+        "старое янтарное табло"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#111111",
+        "ink": "#ffb000",
+        "accent": "#ffb000",
+        "alarm": "#ff5a1f",
+        "scale": 1.1
+      }
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "component": "icon-code",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-slow-draw",
+      "label": "Hero Draw",
+      "description": "A large, fine-lined code icon that sketches itself in slowly and elegantly.",
+      "askedAs": [
+        "big icon slowly drawing in",
+        "elegant slow line reveal",
+        "large thin code symbol"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 160,
+        "strokeWidth": 1.25,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "brand-blue-loop",
+      "label": "Brand Pulse",
+      "description": "A medium blue icon that keeps looping its action motion as a steady accent.",
+      "askedAs": [
+        "blue looping code icon",
+        "repeating animation in brand color",
+        "icon that keeps moving"
+      ],
+      "props": {
+        "color": "#1f6feb",
+        "loop": true,
+        "animation": "action",
+        "size": 72
+      }
+    },
+    {
+      "id": "bold-snappy",
+      "label": "Bold Snap",
+      "description": "A chunky, heavy-stroked icon that pops in with quick, punchy motion.",
+      "askedAs": [
+        "thick fast code icon",
+        "punchy bold animation",
+        "quick heavy brackets"
+      ],
+      "props": {
+        "strokeWidth": 3,
+        "speed": 2,
+        "size": 96,
+        "color": "#0a0a0a"
+      }
+    },
+    {
+      "id": "terminal-green",
+      "label": "Terminal Green",
+      "description": "A muted terminal-green icon drawn in and looping at a calm developer pace.",
+      "askedAs": [
+        "green terminal style icon",
+        "hacker console look",
+        "мягкий зелёный как в терминале"
+      ],
+      "props": {
+        "color": "#3fa66b",
+        "animation": "both",
+        "loop": true,
+        "speed": 0.75,
+        "strokeWidth": 1.75
+      }
+    },
+    {
+      "id": "subtle-inline",
+      "label": "Subtle Inline",
+      "description": "A small, soft grey icon with a light stroke and gentle motion for inline use.",
+      "askedAs": [
+        "small quiet grey icon",
+        "subtle icon next to text",
+        "minimal muted code symbol"
+      ],
+      "props": {
+        "size": 32,
+        "color": "#6b7280",
+        "strokeWidth": 1.5,
+        "animation": "action"
+      }
+    }
+  ]
+}

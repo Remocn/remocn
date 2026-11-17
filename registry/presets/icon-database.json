@@ -1,0 +1,100 @@
+{
+  "component": "icon-database",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-slow-draw",
+      "label": "Hero Draw",
+      "description": "A large, fine-lined database icon that slowly sketches itself in for title cards.",
+      "askedAs": [
+        "big slow drawing database icon",
+        "large thin line database reveal",
+        "elegant hero icon animation",
+        "большая иконка базы данных медленно рисуется",
+        "крупная тонкая иконка с плавной отрисовкой"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 160,
+        "strokeWidth": 1.25,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "bold-pulse-loop",
+      "label": "Bold Pulse",
+      "description": "A heavy-stroked deep blue icon that keeps looping its action at a brisk pace.",
+      "askedAs": [
+        "thick looping database icon",
+        "bold blue animated database",
+        "repeating database animation fast",
+        "жирная иконка базы данных по кругу",
+        "синяя толстая иконка с повтором"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "strokeWidth": 2.75,
+        "color": "#1f4fd1",
+        "size": 96,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "quick-ui-tick",
+      "label": "Quick Inline",
+      "description": "A small, snappy icon in muted slate that plays fast to sit beside interface text.",
+      "askedAs": [
+        "small fast database icon",
+        "tiny inline icon for UI",
+        "quick subtle database animation",
+        "маленькая быстрая иконка базы",
+        "иконка для интерфейса мелкая"
+      ],
+      "props": {
+        "size": 32,
+        "color": "#475569",
+        "speed": 2,
+        "strokeWidth": 1.75
+      }
+    },
+    {
+      "id": "emerald-ambient",
+      "label": "Emerald Ambient",
+      "description": "A medium green icon with a calm, slow, endlessly looping motion for background scenes.",
+      "askedAs": [
+        "calm green looping database",
+        "slow ambient database icon",
+        "soft green background icon animation",
+        "спокойная зелёная иконка в цикле",
+        "медленная фоновая анимация базы данных"
+      ],
+      "props": {
+        "color": "#0f766e",
+        "loop": true,
+        "speed": 0.75,
+        "size": 72
+      }
+    },
+    {
+      "id": "amber-sketch",
+      "label": "Amber Sketch",
+      "description": "A warm amber outline that draws itself once with a delicate, hairline stroke.",
+      "askedAs": [
+        "warm orange outline database",
+        "thin amber line drawing icon",
+        "hand drawn style database reveal",
+        "оранжевая контурная иконка базы",
+        "тонкая тёплая линия рисует иконку"
+      ],
+      "props": {
+        "animation": "draw",
+        "color": "#b45309",
+        "strokeWidth": 1,
+        "size": 120,
+        "speed": 1.25
+      }
+    }
+  ]
+}

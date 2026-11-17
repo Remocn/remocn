@@ -1,0 +1,104 @@
+{
+  "component": "changed-mind",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-ivory",
+      "label": "Editorial Ivory",
+      "description": "A warm ivory page with deep ink and an oxblood accent, set in Instrument Serif like a magazine spread.",
+      "askedAs": [
+        "make it look like a magazine page",
+        "cream paper with serif quote",
+        "light editorial testimonial",
+        "как в журнале, светлый фон",
+        "кремовый фон с антиквой"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f5efe4",
+        "ink": "#1d1a16",
+        "accent": "#8a2c2c",
+        "fontFamily": "Instrument Serif",
+        "scale": 1.1
+      }
+    },
+    {
+      "id": "slow-reflection",
+      "label": "Slow Reflection",
+      "description": "A deliberate, unhurried rewrite on deep charcoal with a soft gold accent, giving the change of heart room to breathe.",
+      "askedAs": [
+        "slower more thoughtful quote change",
+        "calm premium dark testimonial",
+        "let the edit happen slowly",
+        "медленная смена цитаты",
+        "спокойный тёмный отзыв"
+      ],
+      "props": {
+        "transition": 34,
+        "speed": 0.75,
+        "delay": 20,
+        "background": "#141312",
+        "ink": "#ece6da",
+        "accent": "#c9a45c"
+      }
+    },
+    {
+      "id": "snap-edit",
+      "label": "Snap Edit",
+      "description": "A quick, crisp rewrite in clean Geist sans with a cobalt accent for punchy product launch cuts.",
+      "askedAs": [
+        "fast modern quote swap",
+        "sans serif testimonial for tech launch",
+        "quick snappy edit",
+        "быстрая смена текста",
+        "современный шрифт без засечек"
+      ],
+      "props": {
+        "fontFamily": "Geist",
+        "transition": 8,
+        "speed": 1.5,
+        "accent": "#3b6ef5"
+      }
+    },
+    {
+      "id": "forest-fraunces",
+      "label": "Forest Study",
+      "description": "Fraunces on a deep forest green with pale sage text and a muted brass accent for a rich, literary feel.",
+      "askedAs": [
+        "dark green background quote",
+        "rich bookish testimonial",
+        "literary serif on green",
+        "тёмно-зелёный фон с цитатой",
+        "книжный стиль отзыва"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#17271f",
+        "ink": "#e4eadf",
+        "accent": "#b8935a",
+        "scale": 0.95
+      }
+    },
+    {
+      "id": "changelog-mono",
+      "label": "Changelog Mono",
+      "description": "A compact monospaced take on a near-white canvas with a teal accent, reading like a tracked edit in a document.",
+      "askedAs": [
+        "code style quote edit",
+        "monospace testimonial",
+        "looks like a diff or changelog",
+        "моноширинный шрифт для цитаты",
+        "как правка в документе"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "JetBrains Mono",
+        "background": "#f7f7f5",
+        "ink": "#202124",
+        "accent": "#0f7b6c",
+        "scale": 0.8
+      }
+    }
+  ]
+}

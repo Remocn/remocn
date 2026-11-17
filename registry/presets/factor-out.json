@@ -1,0 +1,106 @@
+{
+  "component": "factor-out",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-editorial",
+      "label": "Paper Editorial",
+      "description": "Warm off-white page with a serif face and a deep ink-blue accent, unfolding at a calm pace.",
+      "askedAs": [
+        "light serif version",
+        "editorial look on cream paper",
+        "slower elegant magazine style",
+        "светлый вариант с засечками",
+        "как в журнале, спокойно"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f6f1e7",
+        "ink": "#1d1a16",
+        "accent": "#1f4e8c",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-snap",
+      "label": "Terminal Snap",
+      "description": "Monospace lines on near-black with a mint accent that snap in quickly, like commands in a shell.",
+      "askedAs": [
+        "make it look like a terminal",
+        "fast monospace code style",
+        "developer console vibe",
+        "в стиле терминала",
+        "быстро и моноширинным шрифтом"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "ink": "#c9d1d9",
+        "accent": "#3fb950",
+        "speed": 1.75,
+        "stagger": 4
+      }
+    },
+    {
+      "id": "slow-cascade",
+      "label": "Slow Cascade",
+      "description": "Lighter Inter type with a wide stagger and slow motion, so each imperative lands on its own beat.",
+      "askedAs": [
+        "slower with more space between lines",
+        "dramatic one by one reveal",
+        "gentle relaxed pacing",
+        "медленнее, по одной строке",
+        "плавное появление с паузами"
+      ],
+      "props": {
+        "fontFamily": "Inter",
+        "fontWeight": 400,
+        "stagger": 20,
+        "speed": 0.5,
+        "delay": 12
+      }
+    },
+    {
+      "id": "bold-poster",
+      "label": "Bold Poster",
+      "description": "Oversized Bricolage Grotesque on a light stone background with a burnt orange accent, all lines arriving together.",
+      "askedAs": [
+        "bigger punchier text",
+        "poster style headline",
+        "large type with warm accent",
+        "крупный плакатный шрифт",
+        "сделай крупнее и ярче"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.3,
+        "background": "#ecebe6",
+        "ink": "#161616",
+        "accent": "#d9531e"
+      }
+    },
+    {
+      "id": "midnight-violet",
+      "label": "Midnight Violet",
+      "description": "Compact Geist type on deep navy with a soft violet accent and a brisk, tight rhythm.",
+      "askedAs": [
+        "dark navy with purple accent",
+        "smaller and tighter",
+        "sleek product launch look",
+        "тёмно-синий с фиолетовым",
+        "компактный и аккуратный стиль"
+      ],
+      "props": {
+        "fontFamily": "Geist",
+        "background": "#0f1424",
+        "ink": "#e6e8f0",
+        "accent": "#8b7cf6",
+        "scale": 0.85,
+        "speed": 1.25
+      }
+    }
+  ]
+}

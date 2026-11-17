@@ -1,0 +1,101 @@
+{
+  "component": "outline-trace",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-outline",
+      "label": "Hairline Outline",
+      "description": "Fine contours draw slowly and stay unfilled for a delicate, architectural line-only title.",
+      "askedAs": [
+        "outline only text",
+        "thin line drawing title",
+        "no fill just strokes",
+        "только контур букв",
+        "тонкие линии без заливки"
+      ],
+      "props": {
+        "fill": false,
+        "strokeWidth": 1,
+        "speed": 0.75,
+        "stagger": 5
+      }
+    },
+    {
+      "id": "gilded-ink",
+      "label": "Gilded Ink",
+      "description": "Warm gold strokes trace each letter before a deep charcoal fill rises inside, keeping the gold edge.",
+      "askedAs": [
+        "gold outline luxury title",
+        "elegant gold edge text",
+        "premium brand reveal with gold",
+        "золотой контур букв",
+        "люксовый заголовок с золотом"
+      ],
+      "props": {
+        "strokeColor": "#b8924a",
+        "color": "#1c1a17",
+        "keepStroke": true,
+        "strokeWidth": 2,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "bold-sketch",
+      "label": "Bold Sketch",
+      "description": "Thick strokes race around oversized letters all at once, then snap into a solid fill.",
+      "askedAs": [
+        "fast bold drawn headline",
+        "punchy thick outline reveal",
+        "quick big title draw",
+        "быстрый жирный заголовок",
+        "крупные буквы рисуются быстро"
+      ],
+      "props": {
+        "strokeWidth": 6,
+        "fontSize": 220,
+        "speed": 2,
+        "stagger": 0
+      }
+    },
+    {
+      "id": "blueprint",
+      "label": "Blueprint",
+      "description": "A cool slate-blue line traces letters one by one in a slow cascade, leaving a navy fill with its outline intact.",
+      "askedAs": [
+        "technical blueprint style text",
+        "blue line drawing title",
+        "slow cascading outline letters",
+        "чертёж в синих тонах",
+        "медленная отрисовка по буквам"
+      ],
+      "props": {
+        "strokeColor": "#4a6fa5",
+        "color": "#1e2a44",
+        "keepStroke": true,
+        "stagger": 10,
+        "speed": 0.5,
+        "strokeWidth": 1.5
+      }
+    },
+    {
+      "id": "terracotta-signature",
+      "label": "Terracotta Signature",
+      "description": "A compact title drawn in muted terracotta with a crisp medium stroke and an even, steady rhythm.",
+      "askedAs": [
+        "warm earthy drawn logo",
+        "small signature style title",
+        "terracotta brand word",
+        "тёплый терракотовый логотип",
+        "аккуратная подпись бренда"
+      ],
+      "props": {
+        "color": "#b5573a",
+        "strokeColor": "#b5573a",
+        "fontSize": 100,
+        "stagger": 6,
+        "speed": 1.25
+      }
+    }
+  ]
+}

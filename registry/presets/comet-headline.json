@@ -1,0 +1,126 @@
+{
+  "component": "comet-headline",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A light, airy serif headline on warm paper with a deep oxblood comet trail.",
+      "askedAs": [
+        "make it look like a magazine cover",
+        "elegant serif on light background",
+        "classy editorial headline",
+        "элегантный шрифт с засечками на светлом фоне",
+        "как обложка журнала"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "background": "#f4efe6",
+        "ink": "#1e1a17",
+        "accent": "#8c2f39"
+      }
+    },
+    {
+      "id": "slow-orbit",
+      "label": "Slow Orbit",
+      "description": "A calm, unhurried reveal with long comet flights and a soft violet glow.",
+      "askedAs": [
+        "slower and more cinematic",
+        "calm dreamy headline reveal",
+        "make the comet move slowly",
+        "медленнее и кинематографичнее",
+        "спокойная плавная анимация"
+      ],
+      "props": {
+        "speed": 0.5,
+        "flight": 48,
+        "delay": 12,
+        "accent": "#8b7cf6",
+        "fontWeight": 300
+      }
+    },
+    {
+      "id": "launch-punch",
+      "label": "Launch Punch",
+      "description": "Fast, heavy and oversized type that slams in with short, snappy comet streaks.",
+      "askedAs": [
+        "make it fast and punchy",
+        "big bold energetic headline",
+        "quick snappy launch reveal",
+        "быстро и мощно",
+        "крупный жирный заголовок с энергией"
+      ],
+      "props": {
+        "speed": 1.75,
+        "flight": 12,
+        "fontWeight": 800,
+        "scale": 1.25,
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#ff6b3d"
+      }
+    },
+    {
+      "id": "terminal-signal",
+      "label": "Terminal Signal",
+      "description": "A monospaced, developer-console look in near-black with a muted mint trail and no grain.",
+      "askedAs": [
+        "code style headline",
+        "developer terminal look",
+        "monospace dark tech vibe",
+        "в стиле терминала",
+        "моноширинный шрифт как в коде"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0e",
+        "ink": "#e3efea",
+        "accent": "#3fcf9a",
+        "grain": false,
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "Deep navy backdrop with champagne gold comets and refined Fraunces type for a luxury feel.",
+      "askedAs": [
+        "luxury gold and navy",
+        "premium dark with gold accent",
+        "fancy high-end announcement",
+        "роскошный тёмно-синий с золотом",
+        "премиальный стиль с золотом"
+      ],
+      "props": {
+        "background": "#0e1430",
+        "ink": "#f3eedf",
+        "accent": "#d4af6a",
+        "fontFamily": "Fraunces",
+        "fontWeight": 500,
+        "flight": 34
+      }
+    },
+    {
+      "id": "clean-minimal",
+      "label": "Clean Minimal",
+      "description": "A crisp light theme with compact Inter type, a cool slate accent and no grain.",
+      "askedAs": [
+        "clean minimal white version",
+        "simple light corporate look",
+        "smaller tidy headline",
+        "минималистично на белом",
+        "чистый простой светлый вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#334e68",
+        "grain": false,
+        "scale": 0.85,
+        "fontWeight": 600
+      }
+    }
+  ]
+}

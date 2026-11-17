@@ -1,0 +1,102 @@
+{
+  "component": "moves-up",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "rapid-release",
+      "label": "Rapid Release",
+      "description": "A fast, punchy dark roadmap where items ship in quick succession with a crisp green accent.",
+      "askedAs": [
+        "fast shipping roadmap",
+        "quick paced changelog",
+        "snappy release list",
+        "быстрый роадмап",
+        "быстрые релизы"
+      ],
+      "props": {
+        "interval": 34,
+        "hold": 8,
+        "speed": 1.5,
+        "accent": "#3fb950",
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "paper-editorial",
+      "label": "Paper Editorial",
+      "description": "A calm light layout on warm off-white paper with elegant serif type and a slow, considered pace.",
+      "askedAs": [
+        "elegant serif roadmap",
+        "calm light editorial list",
+        "slow classy changelog",
+        "элегантный светлый роадмап",
+        "спокойный список с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f6f2ea",
+        "ink": "#2a2622",
+        "accent": "#b4532a",
+        "fontFamily": "Instrument Serif",
+        "interval": 100
+      }
+    },
+    {
+      "id": "terminal-log",
+      "label": "Terminal Log",
+      "description": "A monospace dev-console look on near-black with an amber accent, like a release log scrolling by.",
+      "askedAs": [
+        "developer changelog style",
+        "monospace terminal roadmap",
+        "code console release list",
+        "роадмап в стиле терминала",
+        "моноширинный ченджлог"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "ink": "#e6edf3",
+        "accent": "#d29922",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "big-stage",
+      "label": "Big Stage",
+      "description": "An oversized, bold keynote-style roadmap with long holds so each shipped item lands with weight.",
+      "askedAs": [
+        "large keynote roadmap",
+        "big bold now next later",
+        "presentation style roadmap slow",
+        "крупный роадмап для презентации",
+        "большой шрифт и медленно"
+      ],
+      "props": {
+        "scale": 1.35,
+        "fontFamily": "Bricolage Grotesque",
+        "hold": 50,
+        "interval": 120,
+        "accent": "#7c6cf2"
+      }
+    },
+    {
+      "id": "clean-light",
+      "label": "Clean Light",
+      "description": "A bright, minimal light theme with neutral Inter type and a cool blue accent at a steady pace.",
+      "askedAs": [
+        "minimal white roadmap",
+        "clean light product update",
+        "simple bright changelog",
+        "минималистичный светлый роадмап",
+        "чистый белый список релизов"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#1f6feb",
+        "delay": 12
+      }
+    }
+  ]
+}

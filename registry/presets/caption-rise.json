@@ -1,0 +1,113 @@
+{
+  "component": "caption-rise",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-light",
+      "label": "Editorial Light",
+      "description": "Lighter-weight, mid-size white type with no shadow for a refined magazine feel.",
+      "askedAs": [
+        "thin elegant captions",
+        "magazine style subtitles",
+        "light weight clean text",
+        "тонкие элегантные субтитры",
+        "журнальный стиль подписей"
+      ],
+      "props": {
+        "fontWeight": 400,
+        "fontSize": 56,
+        "shadow": false
+      }
+    },
+    {
+      "id": "headline-punch",
+      "label": "Headline Punch",
+      "description": "Oversized black-weight words in short pages that land like headlines.",
+      "askedAs": [
+        "huge bold captions",
+        "big punchy words",
+        "one or two words at a time large",
+        "огромные жирные субтитры",
+        "крупные слова по одному"
+      ],
+      "props": {
+        "fontSize": 120,
+        "fontWeight": 900,
+        "combineTokensWithinMilliseconds": 400,
+        "holdMs": 300
+      }
+    },
+    {
+      "id": "documentary-lines",
+      "label": "Documentary Lines",
+      "description": "Small, medium-weight warm off-white captions that gather into longer lines and linger.",
+      "askedAs": [
+        "subtle documentary subtitles",
+        "small understated captions",
+        "longer lines that stay on screen",
+        "сдержанные документальные субтитры",
+        "маленькие спокойные подписи"
+      ],
+      "props": {
+        "fontSize": 40,
+        "fontWeight": 500,
+        "color": "#f3efe6",
+        "combineTokensWithinMilliseconds": 2400,
+        "holdMs": 1200
+      }
+    },
+    {
+      "id": "ink-on-paper",
+      "label": "Ink On Paper",
+      "description": "Deep charcoal semibold type without shadow for light, paper-toned footage.",
+      "askedAs": [
+        "dark text for white background",
+        "black captions on light video",
+        "print style dark subtitles",
+        "тёмный текст на светлом фоне",
+        "чёрные субтитры для светлого видео"
+      ],
+      "props": {
+        "color": "#1c1c1e",
+        "fontWeight": 600,
+        "shadow": false
+      }
+    },
+    {
+      "id": "brand-gold",
+      "label": "Brand Gold",
+      "description": "Muted gold heavy captions at a larger size for a premium brand-film tone.",
+      "askedAs": [
+        "luxury gold captions",
+        "premium brand film subtitles",
+        "warm golden text",
+        "золотые премиальные субтитры",
+        "люксовые подписи золотом"
+      ],
+      "props": {
+        "color": "#d9b56c",
+        "fontSize": 80,
+        "fontWeight": 700,
+        "holdMs": 900
+      }
+    },
+    {
+      "id": "rapid-cut",
+      "label": "Rapid Cut",
+      "description": "Compact bold captions with tiny pages and almost no hold for fast-paced edits.",
+      "askedAs": [
+        "fast snappy captions",
+        "quick word by word subtitles",
+        "captions for fast edits",
+        "быстрые резкие субтитры",
+        "субтитры по слову для динамичного монтажа"
+      ],
+      "props": {
+        "fontSize": 72,
+        "combineTokensWithinMilliseconds": 0,
+        "holdMs": 100
+      }
+    }
+  ]
+}

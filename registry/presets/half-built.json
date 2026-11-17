@@ -1,0 +1,120 @@
+{
+  "component": "half-built",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "Warm off-white page with near-black ink and a muted blue accent for the outlined verbs.",
+      "askedAs": [
+        "light version on cream background",
+        "clean white roadmap sentence",
+        "print-like light look",
+        "светлая версия на бежевом фоне",
+        "как на бумаге, светлый"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f6f3ec",
+        "ink": "#1c1b19",
+        "accent": "#2f5fd0"
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Large Instrument Serif type on deep charcoal with a soft amber accent, unfolding slowly.",
+      "askedAs": [
+        "elegant serif magazine style",
+        "slow classy roadmap text",
+        "bigger serif headline look",
+        "элегантный шрифт с засечками",
+        "медленно и красиво, как в журнале"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "scale": 1.25,
+        "background": "#17161a",
+        "ink": "#efe9df",
+        "accent": "#d9a441"
+      }
+    },
+    {
+      "id": "changelog-mono",
+      "label": "Changelog Mono",
+      "description": "Compact JetBrains Mono on dark slate with a green accent, snapping in fast like a terminal log.",
+      "askedAs": [
+        "developer terminal style",
+        "fast monospace changelog",
+        "code font build in public",
+        "как в терминале, моноширинный",
+        "быстро, для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "fontWeight": 400,
+        "scale": 0.85,
+        "background": "#0f1419",
+        "ink": "#d5dde5",
+        "accent": "#3fb950"
+      }
+    },
+    {
+      "id": "quick-cut",
+      "label": "Quick Cut",
+      "description": "Words land almost together at double speed for a punchy, short beat.",
+      "askedAs": [
+        "make it faster and snappier",
+        "all words appear at once",
+        "quick punchy status update",
+        "сделай быстрее и резче",
+        "слова появляются почти одновременно"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 0,
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A patient cascade with wide word stagger, a short lead-in and a calm violet accent in Fraunces.",
+      "askedAs": [
+        "slow dramatic word by word",
+        "calm cinematic reveal",
+        "gentle pacing with pause before",
+        "медленное появление по словам",
+        "спокойно, с паузой в начале"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 9,
+        "delay": 20,
+        "fontFamily": "Fraunces",
+        "accent": "#8b7cf6"
+      }
+    },
+    {
+      "id": "bold-grotesk",
+      "label": "Bold Grotesk",
+      "description": "Oversized Space Grotesk on midnight navy with a coral accent for a confident launch feel.",
+      "askedAs": [
+        "big bold startup style",
+        "larger text with coral highlight",
+        "confident launch announcement",
+        "крупный жирный текст",
+        "яркий акцент для анонса"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "scale": 1.4,
+        "background": "#101827",
+        "ink": "#f3f5f9",
+        "accent": "#ff7a59"
+      }
+    }
+  ]
+}

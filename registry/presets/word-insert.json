@@ -1,0 +1,106 @@
+{
+  "component": "word-insert",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A warm light page with an elegant serif, slow measured beats and a deep terracotta accent.",
+      "askedAs": [
+        "magazine style serif tagline",
+        "slow elegant light version",
+        "classy editorial look",
+        "элегантный журнальный стиль",
+        "светлый вариант с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1f1b16",
+        "accent": "#b5532e",
+        "beat": 72
+      }
+    },
+    {
+      "id": "snappy-launch",
+      "label": "Snappy Launch",
+      "description": "Fast, punchy edits in a bold grotesque with a bright violet accent on dark.",
+      "askedAs": [
+        "fast energetic product launch",
+        "quick punchy word insert",
+        "make it snappier",
+        "быстрый энергичный запуск",
+        "резкая динамичная анимация"
+      ],
+      "props": {
+        "beat": 30,
+        "stagger": 1,
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#7c5cff",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "terminal-diff",
+      "label": "Terminal Diff",
+      "description": "A monospace code-editor feel on near-black with a muted green insertion and no grain.",
+      "askedAs": [
+        "code editor style",
+        "developer terminal look",
+        "monospace git diff vibe",
+        "стиль терминала",
+        "как в редакторе кода"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "ink": "#c9d1d9",
+        "accent": "#3fb950",
+        "grain": false,
+        "stagger": 0
+      }
+    },
+    {
+      "id": "calm-minimal",
+      "label": "Calm Minimal",
+      "description": "A clean white canvas with crisp Inter type, generous pacing and a slate-blue accent.",
+      "askedAs": [
+        "clean minimal white",
+        "calm slow corporate",
+        "simple light and airy",
+        "минималистичный светлый",
+        "спокойный чистый вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "grain": false,
+        "accent": "#4a6fa5",
+        "speed": 0.75,
+        "stagger": 6
+      }
+    },
+    {
+      "id": "midnight-luxe",
+      "label": "Midnight Luxe",
+      "description": "Deep navy with soft ivory Fraunces type and a muted gold accent, unhurried and premium.",
+      "askedAs": [
+        "luxury premium feel",
+        "dark navy and gold",
+        "elegant slow reveal",
+        "премиальный тёмный стиль",
+        "тёмно-синий с золотом"
+      ],
+      "props": {
+        "background": "#0f1a2e",
+        "ink": "#f2ede3",
+        "accent": "#c9a45c",
+        "fontFamily": "Fraunces",
+        "beat": 84,
+        "scale": 0.9
+      }
+    }
+  ]
+}

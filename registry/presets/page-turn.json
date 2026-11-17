@@ -1,0 +1,90 @@
+{
+  "component": "page-turn",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "choppy-flip",
+      "label": "Choppy Flip",
+      "description": "A few jerky held poses give the page a handmade, low-frame stop-motion stutter.",
+      "askedAs": [
+        "more choppy stop motion page",
+        "jerky handmade page flip",
+        "fewer frames page turn",
+        "дёрганый перелистывание страницы",
+        "рваная стоп-моушн анимация"
+      ],
+      "props": {
+        "poses": 3,
+        "angle": -12
+      }
+    },
+    {
+      "id": "smooth-leaf",
+      "label": "Smooth Leaf",
+      "description": "Many fine poses and a gentle tilt make the page glide away almost fluidly.",
+      "askedAs": [
+        "smoother page turn",
+        "fluid notebook page flip",
+        "less stuttery transition",
+        "плавное перелистывание страницы",
+        "мягкий переход страницы"
+      ],
+      "props": {
+        "poses": 16,
+        "angle": -4,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-tear",
+      "label": "Quick Tear",
+      "description": "A fast, steeply tilted page snaps out of frame like it was ripped from the notebook.",
+      "askedAs": [
+        "fast page rip away",
+        "snappy page flip",
+        "quick dramatic page turn",
+        "быстро сорвать страницу",
+        "резкий переход как вырванный лист"
+      ],
+      "props": {
+        "speed": 2.5,
+        "angle": -18,
+        "poses": 5
+      }
+    },
+    {
+      "id": "lazy-drift",
+      "label": "Lazy Drift",
+      "description": "A slow, barely angled page drifts upward in unhurried steps for calm, reflective breaks.",
+      "askedAs": [
+        "slow gentle page lift",
+        "calm page turn",
+        "relaxed notebook transition",
+        "медленный спокойный переход",
+        "страница медленно уплывает"
+      ],
+      "props": {
+        "speed": 0.5,
+        "angle": -2,
+        "poses": 10
+      }
+    },
+    {
+      "id": "mirror-swing",
+      "label": "Mirror Swing",
+      "description": "The page tilts the opposite way, swinging out to the right with a lively, playful lean.",
+      "askedAs": [
+        "page turn other direction",
+        "flip page to the right",
+        "reverse tilt page transition",
+        "страница уходит вправо",
+        "перелистывание в другую сторону"
+      ],
+      "props": {
+        "angle": 11,
+        "speed": 1.25
+      }
+    }
+  ]
+}

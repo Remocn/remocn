@@ -1,0 +1,115 @@
+{
+  "component": "path-search",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "blueprint-light",
+      "label": "Blueprint Light",
+      "description": "A clean light grid with a deep navy route and no grain, like a technical diagram.",
+      "askedAs": [
+        "light version for docs",
+        "clean white pathfinding diagram",
+        "bright minimal search grid",
+        "светлая версия поиска пути",
+        "чистая белая схема маршрута"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#1e3a8a",
+        "grain": false
+      }
+    },
+    {
+      "id": "dense-maze",
+      "label": "Dense Maze",
+      "description": "A fine, wide grid that floods quickly for a sense of large-scale search.",
+      "askedAs": [
+        "bigger grid with more cells",
+        "make it look like a huge maze",
+        "fast flood over a large map",
+        "большая сетка с множеством клеток",
+        "огромный лабиринт с быстрым поиском"
+      ],
+      "props": {
+        "cols": 35,
+        "rows": 19,
+        "floodStep": 0.5,
+        "trace": 45
+      }
+    },
+    {
+      "id": "slow-explainer",
+      "label": "Slow Explainer",
+      "description": "A coarse, enlarged grid that floods deliberately so each search step can be followed.",
+      "askedAs": [
+        "slow it down for teaching",
+        "step by step search animation",
+        "big cells easy to follow",
+        "медленный поиск для объяснения",
+        "пошаговая анимация с крупными клетками"
+      ],
+      "props": {
+        "cols": 11,
+        "rows": 7,
+        "floodStep": 3.2,
+        "trace": 70,
+        "scale": 1.2
+      }
+    },
+    {
+      "id": "terminal-green",
+      "label": "Terminal Green",
+      "description": "A near-black console background with a muted phosphor green route.",
+      "askedAs": [
+        "hacker terminal style",
+        "green on black console look",
+        "retro command line path search",
+        "стиль терминала зелёный на чёрном",
+        "хакерский вид консоли"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#0b0f0c",
+        "ink": "#d7e7da",
+        "accent": "#3fb67a"
+      }
+    },
+    {
+      "id": "quick-answer",
+      "label": "Quick Answer",
+      "description": "A snappy run that floods and draws the route in a flash for fast-paced edits.",
+      "askedAs": [
+        "make it really fast",
+        "quick snappy pathfinding",
+        "short version for a reel",
+        "сделай очень быстро",
+        "короткая быстрая версия"
+      ],
+      "props": {
+        "speed": 2,
+        "floodStep": 0.75,
+        "trace": 14,
+        "grain": false
+      }
+    },
+    {
+      "id": "warm-paper",
+      "label": "Warm Paper",
+      "description": "An off-white paper background with charcoal text and a burnt orange route.",
+      "askedAs": [
+        "warm cream background",
+        "editorial paper look",
+        "orange route on beige",
+        "тёплый бумажный фон",
+        "оранжевый маршрут на бежевом"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#2a2622",
+        "accent": "#d9622b"
+      }
+    }
+  ]
+}

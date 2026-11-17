@@ -1,0 +1,92 @@
+{
+  "component": "shader-mesh-gradient-lagoon",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "still-water",
+      "label": "Still Water",
+      "description": "A slow, nearly flat drift of aqua with soft, gentle blending and almost no twist.",
+      "askedAs": [
+        "calm slow gradient",
+        "barely moving background",
+        "gentle soft water look",
+        "спокойный медленный градиент",
+        "почти неподвижный фон"
+      ],
+      "props": {
+        "speed": 0.25,
+        "distortion": 0.3,
+        "swirl": 0.1
+      }
+    },
+    {
+      "id": "tidal-swirl",
+      "label": "Tidal Swirl",
+      "description": "Colours curl into deep eddies, with the dark undertow spiralling through the bright shallows.",
+      "askedAs": [
+        "swirly water gradient",
+        "more twist and spiral",
+        "whirlpool effect",
+        "закрученный градиент",
+        "эффект водоворота"
+      ],
+      "props": {
+        "speed": 0.75,
+        "swirl": 0.85,
+        "distortion": 0.9
+      }
+    },
+    {
+      "id": "choppy-surf",
+      "label": "Choppy Surf",
+      "description": "Fast, heavily warped motion that feels like bright surf breaking over the shallows.",
+      "askedAs": [
+        "fast energetic gradient",
+        "wavy and lively background",
+        "more motion and distortion",
+        "быстрый энергичный градиент",
+        "динамичный волнистый фон"
+      ],
+      "props": {
+        "speed": 2.5,
+        "distortion": 1.35,
+        "swirl": 0.45
+      }
+    },
+    {
+      "id": "glass-shallows",
+      "label": "Glass Shallows",
+      "description": "Clean, smooth bands of colour slide past at an even pace with minimal warping.",
+      "askedAs": [
+        "smooth clean gradient",
+        "less distortion",
+        "simple flowing colors",
+        "гладкий чистый градиент",
+        "меньше искажений"
+      ],
+      "props": {
+        "speed": 1.25,
+        "distortion": 0.1,
+        "swirl": 0.2
+      }
+    },
+    {
+      "id": "deep-current",
+      "label": "Deep Current",
+      "description": "A slow, heavy flow with strong warping that lets the deep-blue undertow roll through.",
+      "askedAs": [
+        "slow dramatic gradient",
+        "heavy deep flow",
+        "moody ocean current",
+        "медленное глубокое течение",
+        "тяжёлый плавный поток"
+      ],
+      "props": {
+        "speed": 0.5,
+        "distortion": 1.1,
+        "swirl": 0.6
+      }
+    }
+  ]
+}

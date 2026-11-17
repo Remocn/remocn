@@ -1,0 +1,118 @@
+{
+  "component": "timer-duel",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snap-verdict",
+      "label": "Snap Verdict",
+      "description": "A quick, punchy duel where the fast clock stops almost instantly and the slow one races to catch up.",
+      "askedAs": [
+        "make it fast and punchy",
+        "quick timer comparison",
+        "snappy speed reveal",
+        "быстрее и резче",
+        "короткая динамичная анимация"
+      ],
+      "props": {
+        "run": 12,
+        "chase": 22,
+        "speed": 1.5,
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "lab-readout",
+      "label": "Lab Readout",
+      "description": "Monospaced digits in a clean light theme with a teal accent, like an instrument panel.",
+      "askedAs": [
+        "technical monospace look",
+        "benchmark style light version",
+        "make it look like a lab instrument",
+        "моноширинный шрифт как в бенчмарке",
+        "светлая техническая тема"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#0f8b7e",
+        "grain": false
+      }
+    },
+    {
+      "id": "slow-burn",
+      "label": "Slow Burn",
+      "description": "A patient, dramatic duel with long runs and an amber accent that lets the gap sink in.",
+      "askedAs": [
+        "slower more dramatic version",
+        "let the clocks run longer",
+        "build tension before the result",
+        "медленнее и драматичнее",
+        "пусть таймеры идут дольше"
+      ],
+      "props": {
+        "run": 60,
+        "chase": 110,
+        "speed": 0.75,
+        "delay": 12,
+        "accent": "#e8a23b"
+      }
+    },
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "Serif numerals on warm off-white paper with deep ink and a brick-red accent, like a magazine chart.",
+      "askedAs": [
+        "elegant serif style",
+        "magazine editorial look",
+        "warm paper background",
+        "элегантный журнальный стиль",
+        "тёплый бумажный фон с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1e1b18",
+        "accent": "#b5442e"
+      }
+    },
+    {
+      "id": "midnight-hero",
+      "label": "Midnight Hero",
+      "description": "Oversized clocks on deep navy with a mint accent, built to fill the frame as a headline moment.",
+      "askedAs": [
+        "big bold full screen version",
+        "make the timers huge",
+        "dark navy hero shot",
+        "крупные таймеры на весь экран",
+        "тёмно-синий акцентный вариант"
+      ],
+      "props": {
+        "scale": 1.35,
+        "background": "#0b1426",
+        "ink": "#e8eef7",
+        "accent": "#4fd1a5",
+        "fontFamily": "Bricolage Grotesque"
+      }
+    },
+    {
+      "id": "quiet-inset",
+      "label": "Quiet Inset",
+      "description": "A small, grain-free, understated duel in Inter with a muted slate accent for use inside a busier layout.",
+      "askedAs": [
+        "smaller subtle version",
+        "minimal clean timers",
+        "tone it down for a corner",
+        "маленький сдержанный вариант",
+        "минималистично без шума"
+      ],
+      "props": {
+        "scale": 0.7,
+        "grain": false,
+        "fontFamily": "Inter",
+        "accent": "#64748b"
+      }
+    }
+  ]
+}

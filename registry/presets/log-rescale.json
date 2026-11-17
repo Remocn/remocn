@@ -1,0 +1,104 @@
+{
+  "component": "log-rescale",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-report",
+      "label": "Paper Report",
+      "description": "A light, print-like chart with serif type and a deep green accent, as in an annual report.",
+      "askedAs": [
+        "make it look like an annual report",
+        "light serif chart for print",
+        "clean light finance style",
+        "светлый график как в годовом отчёте",
+        "сделай в стиле печатного отчёта"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "accent": "#1f6b4f",
+        "background": "#f6f3ec",
+        "ink": "#1c1b19",
+        "grain": false
+      }
+    },
+    {
+      "id": "terminal-quant",
+      "label": "Terminal Quant",
+      "description": "A near-black monospace chart with an amber accent that rescales early and quickly, like a trading terminal.",
+      "askedAs": [
+        "make it look like a bloomberg terminal",
+        "monospace dark data look",
+        "fast techy quant chart",
+        "график в стиле терминала",
+        "моноширинный тёмный стиль с янтарным"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accent": "#e8a33d",
+        "background": "#0b0c0e",
+        "ink": "#e6e2d8",
+        "morphAt": 40,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A patient, dramatic pacing that lingers on the linear chart before a late, unhurried rescale.",
+      "askedAs": [
+        "slow it down and make the rescale dramatic",
+        "let the linear chart sit longer",
+        "calm cinematic pacing",
+        "сделай медленнее и драматичнее",
+        "пусть переход на логарифм будет позже"
+      ],
+      "props": {
+        "speed": 0.75,
+        "morphAt": 92,
+        "delay": 20,
+        "accent": "#8a7cf0"
+      }
+    },
+    {
+      "id": "bold-pitch",
+      "label": "Bold Pitch",
+      "description": "An oversized, punchy chart with a coral accent and grotesque type, made for a startup pitch deck.",
+      "askedAs": [
+        "big bold chart for a pitch deck",
+        "make it punchy and larger",
+        "startup growth slide look",
+        "крупный яркий график для питча",
+        "сделай крупнее и энергичнее"
+      ],
+      "props": {
+        "scale": 1.3,
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#ff6b4a",
+        "speed": 1.25,
+        "morphAt": 52
+      }
+    },
+    {
+      "id": "swiss-minimal",
+      "label": "Swiss Minimal",
+      "description": "A crisp white, grain-free chart in Inter with a pure red accent and a slightly smaller frame.",
+      "askedAs": [
+        "minimal swiss style chart",
+        "clean white with red accent",
+        "no grain, simple and crisp",
+        "минималистичный швейцарский стиль",
+        "чистый белый график с красным акцентом"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#d7261e",
+        "background": "#ffffff",
+        "ink": "#111111",
+        "grain": false
+      }
+    }
+  ]
+}

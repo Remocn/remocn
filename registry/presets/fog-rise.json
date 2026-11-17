@@ -1,0 +1,106 @@
+{
+  "component": "fog-rise",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-mist",
+      "label": "Slow Mist",
+      "description": "A languid, heavily blurred emergence that takes its time to resolve and lingers before exiting.",
+      "askedAs": [
+        "slow dreamy fog reveal",
+        "make the text emerge very slowly from heavy blur",
+        "calm atmospheric title reveal",
+        "медленное появление из тумана",
+        "плавный мечтательный текст из дымки"
+      ],
+      "props": {
+        "blur": 0.32,
+        "stagger": 9,
+        "resolveFrames": 40,
+        "exitAt": 120,
+        "speed": 0.75,
+        "color": "#5b6b7f"
+      }
+    },
+    {
+      "id": "sharp-snap",
+      "label": "Sharp Snap",
+      "description": "A quick, punchy resolve with light blur and a springy bold word in deep ink.",
+      "askedAs": [
+        "fast punchy text reveal",
+        "quick snap into focus",
+        "energetic bold title pop",
+        "быстрое резкое появление текста",
+        "энергичный жирный заголовок"
+      ],
+      "props": {
+        "blur": 0.08,
+        "stagger": 2,
+        "stiffness": 180,
+        "damping": 10,
+        "fontWeight": "700",
+        "color": "#111827"
+      }
+    },
+    {
+      "id": "deep-rise",
+      "label": "Deep Rise",
+      "description": "Characters tilt steeply and climb from far below, giving a pronounced 3D rise in rich violet.",
+      "askedAs": [
+        "dramatic 3d rise from below",
+        "strong perspective tilt text",
+        "letters flying up from depth",
+        "драматичный подъём букв в 3D",
+        "текст поднимается из глубины"
+      ],
+      "props": {
+        "tilt": 80,
+        "depth": 2.5,
+        "lift": 1,
+        "mass": 2,
+        "color": "#4c3a8f"
+      }
+    },
+    {
+      "id": "quiet-flat",
+      "label": "Quiet Flat",
+      "description": "A smaller, flat, near-still dissolve with no tilt or drift for understated editorial titles.",
+      "askedAs": [
+        "subtle minimal text fade",
+        "no tilt just a soft focus pull",
+        "understated editorial heading",
+        "минималистичное мягкое появление",
+        "тихий заголовок без наклона"
+      ],
+      "props": {
+        "fontSize": 160,
+        "tilt": 0,
+        "lift": 0.2,
+        "drift": 0,
+        "tracking": -0.02,
+        "color": "#2f3a34"
+      }
+    },
+    {
+      "id": "airy-spread",
+      "label": "Airy Spread",
+      "description": "Light medium-weight letters with open tracking and a wide spread that drift gently in warm terracotta.",
+      "askedAs": [
+        "spaced out airy letters",
+        "wide tracking soft reveal",
+        "elegant loose lettering",
+        "воздушный текст с разрядкой",
+        "элегантные разреженные буквы"
+      ],
+      "props": {
+        "tracking": 0,
+        "spreadGap": 0.2,
+        "fontWeight": "500",
+        "drift": 0.009,
+        "color": "#b5543a",
+        "fontSize": 220
+      }
+    }
+  ]
+}

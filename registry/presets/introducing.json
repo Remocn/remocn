@@ -1,0 +1,124 @@
+{
+  "component": "introducing",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A warm light page with an elegant serif wordmark and a slow, unhurried beam.",
+      "askedAs": [
+        "elegant serif launch intro",
+        "magazine style product reveal",
+        "slow classy announcement on cream",
+        "элегантное интро с засечками",
+        "спокойный журнальный анонс"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f5f1ea",
+        "ink": "#1c1a17",
+        "accent": "#9a5b34",
+        "pass": 64
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "Deep navy ground with soft gold accents and a measured, luxurious pace.",
+      "askedAs": [
+        "luxury dark gold reveal",
+        "premium navy and gold intro",
+        "high end brand announcement",
+        "люксовое тёмное интро с золотом",
+        "премиальный запуск в тёмно-синем"
+      ],
+      "props": {
+        "background": "#0b1220",
+        "ink": "#f2ede3",
+        "accent": "#c9a45c",
+        "fontFamily": "Fraunces",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "snappy-launch",
+      "label": "Snappy Launch",
+      "description": "Quick, punchy reveal with a fast beam and tight word timing for energetic openers.",
+      "askedAs": [
+        "fast energetic product intro",
+        "quick punchy launch opener",
+        "short snappy announcement",
+        "быстрое динамичное интро",
+        "энергичный старт запуска"
+      ],
+      "props": {
+        "speed": 1.75,
+        "pass": 20,
+        "stagger": 1,
+        "fontFamily": "Space Grotesk",
+        "grain": false
+      }
+    },
+    {
+      "id": "dev-terminal",
+      "label": "Dev Terminal",
+      "description": "Monospaced type on near-black with a mint accent for developer tool releases.",
+      "askedAs": [
+        "developer tool launch intro",
+        "code style monospace reveal",
+        "terminal look announcement",
+        "интро в стиле терминала",
+        "анонс для разработчиков моноширинным шрифтом"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d0f0e",
+        "ink": "#e6ede8",
+        "accent": "#4fd1a5",
+        "stagger": 4,
+        "grain": false
+      }
+    },
+    {
+      "id": "clean-minimal",
+      "label": "Clean Minimal",
+      "description": "Bright, grain-free light layout with a compact wordmark and a calm cobalt accent.",
+      "askedAs": [
+        "clean white minimal intro",
+        "simple light product reveal",
+        "apple style minimal announcement",
+        "чистое минималистичное интро",
+        "светлый простой анонс"
+      ],
+      "props": {
+        "theme": "light",
+        "grain": false,
+        "fontFamily": "Inter",
+        "scale": 0.85,
+        "accent": "#2f4bd8"
+      }
+    },
+    {
+      "id": "grand-reveal",
+      "label": "Grand Reveal",
+      "description": "Oversized wordmark with a held pause, long beam and wide stagger for a cinematic moment.",
+      "askedAs": [
+        "big cinematic launch reveal",
+        "dramatic slow intro",
+        "keynote style grand opening",
+        "кинематографичное большое интро",
+        "драматичное медленное открытие"
+      ],
+      "props": {
+        "scale": 1.35,
+        "delay": 24,
+        "pass": 76,
+        "stagger": 6,
+        "fontFamily": "Bricolage Grotesque",
+        "speed": 0.75
+      }
+    }
+  ]
+}

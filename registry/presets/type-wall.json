@@ -1,0 +1,115 @@
+{
+  "component": "type-wall",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-giant",
+      "label": "Slow Giant",
+      "description": "Huge rows drift slowly across the frame for a calm, monumental poster feel.",
+      "askedAs": [
+        "big slow letters",
+        "huge type moving slowly",
+        "calm giant word wall",
+        "огромные медленные буквы",
+        "крупный текст медленно движется"
+      ],
+      "props": {
+        "fontSize": 150,
+        "speed": 0.5,
+        "seed": 21
+      }
+    },
+    {
+      "id": "frantic-ticker",
+      "label": "Frantic Ticker",
+      "description": "Small, dense rows race past at high speed for a jittery, overloaded energy.",
+      "askedAs": [
+        "fast tiny scrolling words",
+        "hyper busy text background",
+        "frantic word rows",
+        "быстрый мелкий бегущий текст",
+        "очень динамичная стена слов"
+      ],
+      "props": {
+        "fontSize": 32,
+        "speed": 3,
+        "seed": 58
+      }
+    },
+    {
+      "id": "electric-blue",
+      "label": "Electric Blue",
+      "description": "White rows with a cobalt band carrying crisp white lettering for a cool, tech-forward look.",
+      "askedAs": [
+        "blue accent stripe",
+        "cool blue type wall",
+        "tech style word band",
+        "синяя полоса с текстом",
+        "холодный синий акцент"
+      ],
+      "props": {
+        "accent": "#2f5bff",
+        "accentText": "#ffffff",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "mint-soft",
+      "label": "Soft Mint",
+      "description": "Muted sage rows and a pale mint band with deep green text give a fresh, gentle tone.",
+      "askedAs": [
+        "soft green word wall",
+        "pastel mint typography",
+        "gentle muted type",
+        "мятный мягкий текст",
+        "пастельная зеленая стена слов"
+      ],
+      "props": {
+        "color": "#c9d6c4",
+        "accent": "#b8f0d0",
+        "accentText": "#123524",
+        "speed": 0.75,
+        "fontSize": 88
+      }
+    },
+    {
+      "id": "acid-signal",
+      "label": "Acid Signal",
+      "description": "Bone-white rows cut by a sharp lime band with black text at a brisk, rave-poster pace.",
+      "askedAs": [
+        "lime yellow highlight band",
+        "rave poster typography",
+        "bright acid stripe",
+        "кислотная полоса с текстом",
+        "яркий лаймовый акцент"
+      ],
+      "props": {
+        "color": "#f2efe6",
+        "accent": "#d4ff3a",
+        "accentText": "#0a0a0a",
+        "speed": 2,
+        "seed": 33
+      }
+    },
+    {
+      "id": "warm-editorial",
+      "label": "Warm Editorial",
+      "description": "Cream lettering with a deep burgundy band in light pink type for a refined magazine mood.",
+      "askedAs": [
+        "magazine style type wall",
+        "burgundy and cream text",
+        "classy editorial words",
+        "журнальный стиль текста",
+        "бордовая полоса и кремовый текст"
+      ],
+      "props": {
+        "color": "#f3e6d3",
+        "accent": "#7a1e2c",
+        "accentText": "#f7d9dc",
+        "fontSize": 110,
+        "speed": 0.75
+      }
+    }
+  ]
+}

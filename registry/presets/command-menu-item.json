@@ -1,0 +1,91 @@
+{
+  "component": "command-menu-item",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "idle-search",
+      "label": "Quiet Search",
+      "description": "A calm resting row with a search icon and no highlight, gently paced.",
+      "askedAs": [
+        "plain search row no highlight",
+        "idle command item with magnifier",
+        "resting menu row slow",
+        "пункт поиска без выделения",
+        "спокойная строка меню поиска"
+      ],
+      "props": {
+        "icon": "search",
+        "state": "idle",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "hover-user",
+      "label": "Hover Glide",
+      "description": "A user row easing into its soft hover tint at a relaxed, unhurried pace.",
+      "askedAs": [
+        "slow hover on profile item",
+        "user row hover highlight",
+        "gentle hover command palette",
+        "медленное наведение на пункт пользователя",
+        "подсветка строки при наведении"
+      ],
+      "props": {
+        "icon": "user",
+        "state": "hover",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "press-snap",
+      "label": "Snappy Press",
+      "description": "A file row that clicks down into its pressed state with quick, tactile timing.",
+      "askedAs": [
+        "fast click on menu item",
+        "pressed file command row",
+        "quick tap feedback",
+        "быстрое нажатие на пункт меню",
+        "клик по строке файла"
+      ],
+      "props": {
+        "icon": "file",
+        "state": "press",
+        "speed": 2
+      }
+    },
+    {
+      "id": "slow-select",
+      "label": "Slow Reveal",
+      "description": "The settings row settles into its selected highlight in a slow, cinematic move.",
+      "askedAs": [
+        "slow motion selected item",
+        "cinematic command selection",
+        "selected settings row slowly",
+        "медленный выбор пункта настроек",
+        "плавное выделение строки"
+      ],
+      "props": {
+        "state": "selected",
+        "speed": 0.25
+      }
+    },
+    {
+      "id": "rapid-select-search",
+      "label": "Rapid Pick",
+      "description": "A search row jumps to its selected state at high speed for brisk, punchy edits.",
+      "askedAs": [
+        "quick select search result",
+        "fast highlight command palette",
+        "snappy selected row",
+        "быстрый выбор результата поиска",
+        "резкое выделение строки"
+      ],
+      "props": {
+        "icon": "search",
+        "state": "selected",
+        "speed": 3
+      }
+    }
+  ]
+}

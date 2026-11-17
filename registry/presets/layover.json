@@ -1,0 +1,102 @@
+{
+  "component": "layover",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "express-transfer",
+      "label": "Express Transfer",
+      "description": "Quick, snappy hops with short holds in a crisp grotesk on dark.",
+      "askedAs": [
+        "fast word cycling",
+        "quick snappy word swap",
+        "rapid headline flip",
+        "быстрая смена слов",
+        "резкое переключение слова"
+      ],
+      "props": {
+        "leg": 9,
+        "hold": 6,
+        "fontFamily": "Space Grotesk",
+        "accent": "#4c8dff"
+      }
+    },
+    {
+      "id": "slow-journey",
+      "label": "Slow Journey",
+      "description": "Unhurried hops and long pauses in an elegant serif on warm paper.",
+      "askedAs": [
+        "slow elegant word change",
+        "calm editorial headline",
+        "serif word that lingers",
+        "медленная элегантная смена слова",
+        "спокойный заголовок с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "leg": 40,
+        "hold": 45,
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#2a2420"
+      }
+    },
+    {
+      "id": "departure-board",
+      "label": "Departure Board",
+      "description": "Monospaced amber text on near-black, like an airport timetable.",
+      "askedAs": [
+        "airport board style",
+        "flight departures look",
+        "mono terminal headline",
+        "табло аэропорта",
+        "моноширинный шрифт как табло"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#111214",
+        "ink": "#e8e6e1",
+        "accent": "#f2a93b",
+        "leg": 14,
+        "hold": 12
+      }
+    },
+    {
+      "id": "clean-light",
+      "label": "Clean Light",
+      "description": "Bright minimal layout in Inter with a calm blue accent.",
+      "askedAs": [
+        "white minimal headline",
+        "light clean version",
+        "simple bright word cycle",
+        "светлый минималистичный вариант",
+        "чистый белый фон"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#1f6feb"
+      }
+    },
+    {
+      "id": "big-arrival",
+      "label": "Big Arrival",
+      "description": "Oversized Fraunces type with a forest-green ground and soft gold accent.",
+      "askedAs": [
+        "huge bold headline",
+        "large dramatic word reveal",
+        "big hero text cycling",
+        "крупный заголовок",
+        "большой драматичный текст"
+      ],
+      "props": {
+        "scale": 1.4,
+        "fontFamily": "Fraunces",
+        "background": "#1c2b24",
+        "ink": "#f1ece0",
+        "accent": "#d8b46a",
+        "delay": 12
+      }
+    }
+  ]
+}

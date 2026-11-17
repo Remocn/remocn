@@ -1,0 +1,106 @@
+{
+  "component": "what-sticks",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Warm paper background with dark ink and an elegant serif, paced slowly like a printed pull quote.",
+      "askedAs": [
+        "make it look like a magazine page",
+        "serif on cream background",
+        "slow elegant editorial style",
+        "журнальный стиль с засечками",
+        "светлый фон и классический шрифт"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1f1b16",
+        "accent": "#b5532e",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Near-black screen with monospace type and a soft green highlight, snapping through lines quickly.",
+      "askedAs": [
+        "developer console look",
+        "monospace code style",
+        "fast hacker terminal vibe",
+        "стиль терминала",
+        "моноширинный шрифт как в коде"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1110",
+        "ink": "#d5e3dc",
+        "accent": "#5fd39a",
+        "speed": 1.5,
+        "stagger": 3
+      }
+    },
+    {
+      "id": "bold-statement",
+      "label": "Bold Statement",
+      "description": "Oversized grotesque type on deep navy with a warm amber highlight for a punchy keynote finish.",
+      "askedAs": [
+        "big bold keynote text",
+        "larger type with strong contrast",
+        "make the takeaway hit hard",
+        "крупный жирный текст как на презентации",
+        "яркий акцент на тёмно-синем"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.3,
+        "background": "#0f1a2e",
+        "ink": "#eef1f6",
+        "accent": "#f2b33d"
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "Small, airy Inter type on clean white with a muted blue accent and a gentle, unhurried reveal.",
+      "askedAs": [
+        "calm minimal white version",
+        "subtle and understated",
+        "slow soft apple style",
+        "минималистичный светлый вариант",
+        "спокойно и медленно"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "scale": 0.85,
+        "accent": "#3b6fd8",
+        "speed": 0.5,
+        "stagger": 10
+      }
+    },
+    {
+      "id": "rapid-cut",
+      "label": "Rapid Cut",
+      "description": "Geist type on charcoal with a coral highlight, dimming lines in a fast, tight sequence for social edits.",
+      "askedAs": [
+        "quick version for reels",
+        "fast snappy pacing",
+        "make it faster with less gap",
+        "быстрая динамичная версия",
+        "короче и резче для соцсетей"
+      ],
+      "props": {
+        "fontFamily": "Geist",
+        "speed": 2,
+        "stagger": 2,
+        "background": "#18181b",
+        "ink": "#f4f4f5",
+        "accent": "#ff6b57"
+      }
+    }
+  ]
+}

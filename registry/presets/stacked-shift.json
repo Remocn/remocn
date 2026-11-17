@@ -1,0 +1,119 @@
+{
+  "component": "stacked-shift",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "boardroom-light",
+      "label": "Boardroom Light",
+      "description": "Clean light slide with a deep navy accent, Inter type and no grain for a crisp investor-deck feel.",
+      "askedAs": [
+        "clean light chart for a pitch deck",
+        "corporate white background market share",
+        "minimal business presentation bar",
+        "светлый деловой график для презентации",
+        "строгий корпоративный стиль на белом"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#1e3a8a",
+        "fontFamily": "Inter",
+        "grain": false
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "Each year lingers longer and the bar eases at half speed, giving the takeover a deliberate, dramatic build.",
+      "askedAs": [
+        "slower so viewers can read each year",
+        "dramatic gradual market share change",
+        "longer pause between periods",
+        "помедленнее, чтобы успели прочитать",
+        "плавная драматичная смена лет"
+      ],
+      "props": {
+        "hold": 96,
+        "speed": 0.5,
+        "delay": 20
+      }
+    },
+    {
+      "id": "quick-cut",
+      "label": "Quick Cut",
+      "description": "Snappy year changes at double speed with a slightly larger bar, made for fast social edits.",
+      "askedAs": [
+        "fast version for reels",
+        "snappy quick market share animation",
+        "short punchy chart for social",
+        "быстрая версия для соцсетей",
+        "резкая динамичная анимация графика"
+      ],
+      "props": {
+        "hold": 44,
+        "speed": 2,
+        "scale": 1.15,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "terminal-green",
+      "label": "Terminal",
+      "description": "Near-black background with soft green accent and monospace numerals for a technical, data-desk look.",
+      "askedAs": [
+        "hacker style monospace chart",
+        "dark terminal look with green",
+        "developer dashboard style bar",
+        "моноширинный шрифт как в терминале",
+        "тёмный технический стиль с зелёным"
+      ],
+      "props": {
+        "background": "#0b0f0c",
+        "ink": "#d7e4da",
+        "accent": "#3fb97a",
+        "fontFamily": "JetBrains Mono",
+        "grain": false
+      }
+    },
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "Warm paper tone with serif type and a muted terracotta accent, like a chart in a print magazine.",
+      "askedAs": [
+        "magazine style chart",
+        "warm newspaper look with serif",
+        "editorial print infographic",
+        "как инфографика в журнале",
+        "тёплый бумажный фон с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#2a2420",
+        "accent": "#c2562f",
+        "fontFamily": "Fraunces",
+        "highlight": 4
+      }
+    },
+    {
+      "id": "spotlight-violet",
+      "label": "Spotlight",
+      "description": "Deep indigo backdrop with a strong violet highlight on the leading series, scaled up for emphasis.",
+      "askedAs": [
+        "make our share stand out more",
+        "bold highlighted winner bar",
+        "emphasize the leading series",
+        "выделить нашу долю ярче",
+        "акцент на лидере рынка"
+      ],
+      "props": {
+        "background": "#14112b",
+        "ink": "#eceaf7",
+        "accent": "#8b6cf6",
+        "highlight": 8,
+        "scale": 1.25,
+        "fontFamily": "Bricolage Grotesque"
+      }
+    }
+  ]
+}

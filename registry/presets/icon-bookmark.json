@@ -1,0 +1,97 @@
+{
+  "component": "icon-bookmark",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-draw",
+      "label": "Hairline Draw",
+      "description": "A large, thin-stroked bookmark that slowly traces itself in soft slate grey.",
+      "askedAs": [
+        "thin slow outline bookmark",
+        "elegant line drawing icon",
+        "delicate bookmark sketch",
+        "тонкая медленная закладка",
+        "изящная линия иконки"
+      ],
+      "props": {
+        "animation": "draw",
+        "strokeWidth": 1.25,
+        "size": 120,
+        "speed": 0.5,
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "bold-save",
+      "label": "Bold Save",
+      "description": "A chunky, heavy-stroked bookmark that snaps into its save action quickly.",
+      "askedAs": [
+        "thick fast save icon",
+        "punchy bookmark click",
+        "heavy bookmark tap",
+        "жирная быстрая закладка",
+        "резкое сохранение иконка"
+      ],
+      "props": {
+        "animation": "action",
+        "strokeWidth": 3,
+        "size": 96,
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "looping-accent",
+      "label": "Looping Accent",
+      "description": "A blue bookmark that continuously draws and saves on a gentle loop.",
+      "askedAs": [
+        "repeating blue bookmark",
+        "looping save animation",
+        "bookmark that keeps animating",
+        "повторяющаяся синяя закладка",
+        "зацикленная анимация сохранения"
+      ],
+      "props": {
+        "loop": true,
+        "color": "#1f6feb",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "tiny-ui",
+      "label": "Tiny UI",
+      "description": "A compact, crisp bookmark sized for toolbars with a quick terracotta save.",
+      "askedAs": [
+        "small toolbar bookmark",
+        "mini save icon",
+        "compact bookmark button",
+        "маленькая иконка закладки",
+        "компактная кнопка сохранить"
+      ],
+      "props": {
+        "size": 28,
+        "strokeWidth": 1.75,
+        "color": "#c2410c",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "hero-emerald",
+      "label": "Hero Emerald",
+      "description": "An oversized deep green bookmark that draws and saves at an unhurried pace.",
+      "askedAs": [
+        "big green bookmark",
+        "large hero save icon",
+        "giant bookmark animation",
+        "большая зелёная закладка",
+        "крупная иконка сохранения"
+      ],
+      "props": {
+        "size": 180,
+        "color": "#047857",
+        "strokeWidth": 2.5,
+        "speed": 0.75
+      }
+    }
+  ]
+}

@@ -66,6 +66,19 @@ type AnalyticsEvents = {
   customizer_reset: {
     component: string;
   };
+  customizer_described: {
+    component: string;
+    /** The tier whose answer was applied, or "none". */
+    tier: "literal" | "preset" | "device" | "ai" | "none";
+    /** What the server's model did (lib/describe/types.ts `AiStatus`). */
+    ai: string;
+    understood: boolean;
+    props: number;
+  };
+  customizer_preset_applied: {
+    component: string;
+    preset: string;
+  };
   customizer_undo: {
     component: string;
     direction: "undo" | "redo";

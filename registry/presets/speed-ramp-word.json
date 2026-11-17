@@ -1,0 +1,106 @@
+{
+  "component": "speed-ramp-word",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-slowmo",
+      "label": "Editorial Slowmo",
+      "description": "Light paper backdrop with a refined serif and a warm terracotta accent, played at an unhurried pace.",
+      "askedAs": [
+        "elegant serif slow motion word",
+        "magazine style light version",
+        "calm classy emphasis text",
+        "элегантный светлый вариант с засечками",
+        "медленный журнальный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "accent": "#c2562f",
+        "speed": 0.75,
+        "hud": false
+      }
+    },
+    {
+      "id": "telemetry",
+      "label": "Telemetry",
+      "description": "Monospaced type on near-black with a mint accent and fast playback, like a race telemetry readout.",
+      "askedAs": [
+        "racing data overlay look",
+        "monospace tech speed ramp",
+        "fast technical timecode style",
+        "технический стиль как телеметрия",
+        "быстрый моноширинный шрифт"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0e",
+        "ink": "#e6f2ee",
+        "accent": "#3fd8a4",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "bold-impact",
+      "label": "Bold Impact",
+      "description": "Oversized heavy grotesk in a punchy coral accent with clean, grain-free frames.",
+      "askedAs": [
+        "big bold punchy word",
+        "huge heavy text emphasis",
+        "loud sports promo style",
+        "крупный жирный текст",
+        "мощный акцент на слове"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "fontWeight": 700,
+        "scale": 1.35,
+        "accent": "#ff5a4e",
+        "grain": false,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "minimal-clean",
+      "label": "Minimal Clean",
+      "description": "Stripped-back light layout with no HUD, ghosts or grain, just a crisp Inter word ramping in slate blue.",
+      "askedAs": [
+        "clean minimal version",
+        "no hud simple text",
+        "plain light speed ramp",
+        "минималистичный чистый вариант",
+        "без интерфейса и шума"
+      ],
+      "props": {
+        "theme": "light",
+        "hud": false,
+        "ghosts": false,
+        "grain": false,
+        "fontFamily": "Inter",
+        "accent": "#4a5f8c"
+      }
+    },
+    {
+      "id": "cinematic-dusk",
+      "label": "Cinematic Dusk",
+      "description": "Deep plum backdrop with a light Fraunces word warming to amber, slowed down for a filmic beat.",
+      "askedAs": [
+        "moody cinematic slow motion",
+        "warm film trailer look",
+        "dramatic slow emphasis",
+        "кинематографичный медленный стиль",
+        "тёплый драматичный вариант"
+      ],
+      "props": {
+        "background": "#1a1220",
+        "ink": "#f3e9df",
+        "accent": "#e8a045",
+        "fontFamily": "Fraunces",
+        "fontWeight": 300,
+        "speed": 0.5
+      }
+    }
+  ]
+}

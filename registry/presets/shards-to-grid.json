@@ -1,0 +1,119 @@
+{
+  "component": "shards-to-grid",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "A light, magazine-like layout with a serif headline and an ink-red accent on creased paper.",
+      "askedAs": [
+        "light magazine style grid",
+        "editorial serif collage",
+        "paper look with red accent",
+        "светлый журнальный стиль",
+        "сетка в стиле журнала с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "fontFamily": "Instrument Serif",
+        "accent": "#b23a2e",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-snap",
+      "label": "Terminal Snap",
+      "description": "A fast, code-flavoured take with monospace type and a mint accent on a near-black ground.",
+      "askedAs": [
+        "fast developer style grid",
+        "monospace code look",
+        "quick snappy tech collage",
+        "быстрый стиль для разработчиков",
+        "моноширинный шрифт как в терминале"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "ground": "nightfold",
+        "accent": "#3ddc97",
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "slow-cinema",
+      "label": "Slow Cinema",
+      "description": "An unhurried, filmic reveal with warm amber accents over a deep blue-hour ground.",
+      "askedAs": [
+        "slow cinematic reveal",
+        "moody film look grid",
+        "calm dramatic collage",
+        "медленное кинематографичное появление",
+        "атмосферный киношный стиль"
+      ],
+      "props": {
+        "ground": "blue-hour",
+        "accent": "#e0a458",
+        "fontFamily": "Fraunces",
+        "speed": 0.5,
+        "delay": 12
+      }
+    },
+    {
+      "id": "ember-bold",
+      "label": "Ember Bold",
+      "description": "A punchy, oversized grid with chunky grotesque type and a coral accent on a warm ember glow.",
+      "askedAs": [
+        "bold big warm grid",
+        "large punchy headline",
+        "orange energetic collage",
+        "крупный яркий тёплый стиль",
+        "смелая большая сетка"
+      ],
+      "props": {
+        "ground": "ember",
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#ff7a59",
+        "scale": 1.2,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "polar-minimal",
+      "label": "Polar Minimal",
+      "description": "A crisp, compact light composition with clean sans type and a cool steel-blue accent.",
+      "askedAs": [
+        "clean minimal white grid",
+        "small airy layout",
+        "cool corporate light look",
+        "минималистичный светлый стиль",
+        "чистая холодная сетка"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "polar",
+        "fontFamily": "Inter",
+        "accent": "#2f6f9f",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "velvet-night",
+      "label": "Velvet Night",
+      "description": "A rich, plush dark look with soft lilac accents and rounded geometric type.",
+      "askedAs": [
+        "purple luxury dark grid",
+        "elegant night style",
+        "soft violet premium look",
+        "фиолетовый премиальный стиль",
+        "тёмный элегантный вариант"
+      ],
+      "props": {
+        "ground": "velvet-hour",
+        "accent": "#b9a3ff",
+        "fontFamily": "Manrope",
+        "ink": "#f2eeff"
+      }
+    }
+  ]
+}

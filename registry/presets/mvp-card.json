@@ -1,0 +1,121 @@
+{
+  "component": "mvp-card",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gold-trophy",
+      "label": "Gold Trophy",
+      "description": "A deep charcoal card with a warm gold accent and condensed type, like a championship trophy plaque.",
+      "askedAs": [
+        "gold award card",
+        "championship style mvp",
+        "black and gold player card",
+        "золотая карточка mvp",
+        "чемпионский стиль золото"
+      ],
+      "props": {
+        "background": "#14120f",
+        "ink": "#f5eedc",
+        "accent": "#d4a537",
+        "fontFamily": "Antonio",
+        "countDuration": 30
+      }
+    },
+    {
+      "id": "fast-break",
+      "label": "Fast Break",
+      "description": "A quick, punchy reveal with tight stagger and snappy counters in a bold coral accent.",
+      "askedAs": [
+        "make it faster and punchier",
+        "quick energetic stat card",
+        "snappy mvp animation",
+        "быстрая энергичная карточка",
+        "сделай анимацию резче"
+      ],
+      "props": {
+        "speed": 1.75,
+        "stagger": 3,
+        "countDuration": 12,
+        "accent": "#ff5a4e",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "paper-editorial",
+      "label": "Paper Editorial",
+      "description": "A light cream card with elegant serif type and a forest green accent for a magazine-feature feel.",
+      "askedAs": [
+        "elegant light version",
+        "magazine style spotlight",
+        "serif mvp card on cream",
+        "светлая элегантная карточка",
+        "журнальный стиль с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f6f1e7",
+        "ink": "#1e1b16",
+        "accent": "#2f6b4f",
+        "fontFamily": "Fraunces",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "slow-hype",
+      "label": "Slow Hype",
+      "description": "A slow, dramatic build with long counting stats and wide stagger in a royal violet accent.",
+      "askedAs": [
+        "slow dramatic reveal",
+        "cinematic mvp build up",
+        "long counting stats",
+        "медленное драматичное появление",
+        "кинематографичная карточка"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 18,
+        "countDuration": 50,
+        "delay": 15,
+        "accent": "#7a5cfa"
+      }
+    },
+    {
+      "id": "dev-terminal",
+      "label": "Dev Terminal",
+      "description": "A compact monospace card on near-black with a mint accent, made for contributor shoutouts.",
+      "askedAs": [
+        "developer contributor card",
+        "monospace code style",
+        "terminal look for github stats",
+        "карточка для контрибьютора",
+        "моноширинный стиль как терминал"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "ink": "#e6edf3",
+        "accent": "#3fb68b",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "big-stage",
+      "label": "Big Stage",
+      "description": "An oversized, clean light card with friendly rounded type and a bright tangerine accent.",
+      "askedAs": [
+        "bigger bolder card",
+        "playful bright light version",
+        "large mvp for launch video",
+        "большая яркая карточка",
+        "светлая игривая версия крупно"
+      ],
+      "props": {
+        "theme": "light",
+        "scale": 1.3,
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#f2751a"
+      }
+    }
+  ]
+}

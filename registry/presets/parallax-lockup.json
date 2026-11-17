@@ -1,0 +1,107 @@
+{
+  "component": "parallax-lockup",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Light Instrument Serif lockup on warm paper with a deep oxblood gradient line and an unhurried settle.",
+      "askedAs": [
+        "elegant serif headline on cream",
+        "magazine style title lockup",
+        "slow classy serif text",
+        "элегантный заголовок с засечками",
+        "журнальный стиль заголовка"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#8c2f39"
+      }
+    },
+    {
+      "id": "bold-snap",
+      "label": "Bold Snap",
+      "description": "Heavy Space Grotesk set large that locks up early and fast with a vivid coral accent.",
+      "askedAs": [
+        "fast punchy bold headline",
+        "quick heavy title lockup",
+        "energetic big text slam",
+        "быстрый жирный заголовок",
+        "энергичная крупная надпись"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 800,
+        "lockAt": 52,
+        "speed": 1.5,
+        "scale": 1.15,
+        "accent": "#ff5a4e"
+      }
+    },
+    {
+      "id": "midnight-luxe",
+      "label": "Midnight Luxe",
+      "description": "Thin Fraunces in soft ivory on near-black navy with a muted gold gradient and a long, slow drift.",
+      "askedAs": [
+        "luxury dark gold title",
+        "slow premium brand statement",
+        "thin elegant text on navy",
+        "люксовый заголовок с золотом",
+        "медленный премиальный титр"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "fontWeight": 300,
+        "background": "#0b1020",
+        "ink": "#ede6d6",
+        "accent": "#c9a45c",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "swiss-clean",
+      "label": "Swiss Clean",
+      "description": "Compact medium-weight Inter on crisp white with a cobalt accent and a measured, tidy lockup.",
+      "askedAs": [
+        "clean minimal white headline",
+        "corporate neat title",
+        "simple modern sans lockup",
+        "чистый минималистичный заголовок",
+        "строгий белый титр"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "fontWeight": 600,
+        "scale": 0.85,
+        "background": "#ffffff",
+        "ink": "#111418"
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "JetBrains Mono on charcoal with a mint-teal gradient line and a delayed, technical reveal.",
+      "askedAs": [
+        "developer code style headline",
+        "monospace tech title",
+        "dark terminal text lockup",
+        "заголовок в стиле кода",
+        "моноширинный технический титр"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "fontWeight": 400,
+        "background": "#14161a",
+        "ink": "#d8dee4",
+        "accent": "#3fbfa0",
+        "delay": 12
+      }
+    }
+  ]
+}

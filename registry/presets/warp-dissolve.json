@@ -1,0 +1,94 @@
+{
+  "component": "warp-dissolve",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gentle-drift",
+      "label": "Gentle Drift",
+      "description": "A slow, low-warp melt that barely folds before settling into the next scene.",
+      "askedAs": [
+        "subtle slow dissolve",
+        "calm gentle melt transition",
+        "soft minimal warp",
+        "мягкий медленный переход",
+        "спокойное растворение"
+      ],
+      "props": {
+        "distortion": 0.3,
+        "swirl": 0.2,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "deep-vortex",
+      "label": "Deep Vortex",
+      "description": "Heavy distortion and full swirl twist the frame into a dense spiraling whirlpool.",
+      "askedAs": [
+        "strong swirl spiral transition",
+        "whirlpool vortex melt",
+        "twisting psychedelic warp",
+        "закрученный вихрь переход",
+        "сильная спираль искажение"
+      ],
+      "props": {
+        "distortion": 1,
+        "swirl": 1,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "liquid-snap",
+      "label": "Liquid Snap",
+      "description": "A quick, punchy warp that ripples through the frame and resolves fast.",
+      "askedAs": [
+        "fast liquid transition",
+        "quick warp cut",
+        "snappy melt between scenes",
+        "быстрый жидкий переход",
+        "резкое искажение"
+      ],
+      "props": {
+        "speed": 2.5,
+        "distortion": 0.6,
+        "swirl": 0.4
+      }
+    },
+    {
+      "id": "crisp-folds",
+      "label": "Crisp Folds",
+      "description": "Hard-edged color folds with sharp contours instead of a blurred blend.",
+      "askedAs": [
+        "sharp edged warp",
+        "crisp graphic melt",
+        "less blurry dissolve",
+        "чёткие складки переход",
+        "резкие края растворения"
+      ],
+      "props": {
+        "softness": 0.2,
+        "distortion": 0.7,
+        "swirl": 0.5,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "slow-tide",
+      "label": "Slow Tide",
+      "description": "A long, flowing wave-like melt with little rotation, like ink drifting in water.",
+      "askedAs": [
+        "ink in water transition",
+        "slow flowing wave dissolve",
+        "dreamy long melt",
+        "медленный переход как чернила",
+        "плавная волна растворение"
+      ],
+      "props": {
+        "speed": 0.25,
+        "swirl": 0,
+        "distortion": 0.9,
+        "softness": 0.85
+      }
+    }
+  ]
+}

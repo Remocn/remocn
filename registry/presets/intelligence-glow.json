@@ -1,0 +1,125 @@
+{
+  "component": "intelligence-glow",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-light",
+      "label": "Editorial Light",
+      "description": "A calm light page with serif type, slow word reveal and a gentle ink-blue glow.",
+      "askedAs": [
+        "light version with serif font",
+        "elegant editorial look on white",
+        "slower, softer magazine style",
+        "светлая версия с засечками",
+        "элегантный журнальный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "stagger": 7,
+        "intensity": 0.6,
+        "speed": 0.75,
+        "accent": "#2f4ad0"
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Monospace text on near-black with a quick, word-by-word cadence and a cool teal glow.",
+      "askedAs": [
+        "make it look like a terminal",
+        "code style monospace answer",
+        "fast developer console vibe",
+        "стиль терминала с моноширинным шрифтом",
+        "как консоль разработчика"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0e",
+        "ink": "#d8e6e1",
+        "accent": "#2bb39a",
+        "stagger": 2,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "violet-bloom",
+      "label": "Violet Bloom",
+      "description": "A deep plum backdrop with a bright, generous violet glow and slightly larger type.",
+      "askedAs": [
+        "stronger purple glow",
+        "more dramatic AI magic feel",
+        "bigger glowing violet underline",
+        "фиолетовое яркое свечение",
+        "более эффектный вариант"
+      ],
+      "props": {
+        "background": "#140e1f",
+        "ink": "#f1ecfa",
+        "accent": "#8b6cf6",
+        "intensity": 1.6,
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "A clean, grain-free dark frame with a faint glow, no logo and smaller understated type.",
+      "askedAs": [
+        "minimal and subtle",
+        "less glow, cleaner look",
+        "no logo, no grain",
+        "минималистичный без логотипа",
+        "тише и сдержаннее"
+      ],
+      "props": {
+        "showLogo": false,
+        "grain": false,
+        "intensity": 0.35,
+        "scale": 0.85,
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "warm-paper",
+      "label": "Warm Paper",
+      "description": "Cream paper tones with Fraunces type, an amber glow and an unhurried delayed start.",
+      "askedAs": [
+        "warm beige background",
+        "cozy amber glow version",
+        "slow start with classic serif",
+        "тёплый кремовый фон",
+        "янтарное свечение и медленный старт"
+      ],
+      "props": {
+        "background": "#f4eee3",
+        "ink": "#2a2420",
+        "accent": "#c97a2b",
+        "fontFamily": "Fraunces",
+        "delay": 20,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "snap-launch",
+      "label": "Snap Launch",
+      "description": "Punchy Space Grotesk at large scale with near-instant typing and a vivid cobalt glow.",
+      "askedAs": [
+        "fast and punchy",
+        "quick reveal for a launch video",
+        "big bold answer that pops",
+        "быстро и энергично",
+        "крупный текст для промо"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "scale": 1.3,
+        "speed": 2,
+        "stagger": 1,
+        "intensity": 1.3,
+        "accent": "#2f6bff"
+      }
+    }
+  ]
+}

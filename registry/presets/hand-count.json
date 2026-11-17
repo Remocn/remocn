@@ -1,0 +1,118 @@
+{
+  "component": "hand-count",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "quick-scribble",
+      "label": "Quick Scribble",
+      "description": "A fast, twitchy count with few poses that snaps onto its number like a hurried note.",
+      "askedAs": [
+        "fast hand-written counter",
+        "quick jittery number count",
+        "snappy scribbled stat",
+        "быстрый рукописный счётчик",
+        "число пишется быстро от руки"
+      ],
+      "props": {
+        "durationSteps": 8,
+        "step": 2,
+        "ease": "out",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "slow-ledger",
+      "label": "Slow Ledger",
+      "description": "A long, deliberate count in sepia ink with many held poses, like figures entered in an old account book.",
+      "askedAs": [
+        "slow careful handwritten number",
+        "vintage ledger count up",
+        "sepia ink stat reveal",
+        "медленный счётчик как в старой книге",
+        "винтажные цифры от руки"
+      ],
+      "props": {
+        "durationSteps": 24,
+        "step": 5,
+        "ease": "in-out",
+        "color": "#5a3e2b",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "big-marker",
+      "label": "Big Marker",
+      "description": "An oversized, heavy figure that fills the frame like a bold marker stat on a poster.",
+      "askedAs": [
+        "huge hand-drawn number",
+        "big poster stat counter",
+        "giant marker figure",
+        "огромная цифра маркером",
+        "крупный рукописный счётчик"
+      ],
+      "props": {
+        "fontSize": 180,
+        "color": "#1b1b1f",
+        "durationSteps": 12,
+        "step": 4
+      }
+    },
+    {
+      "id": "red-pencil",
+      "label": "Red Pencil",
+      "description": "A teacher's red-pencil tally that counts evenly and lands with a marked, editorial feel.",
+      "askedAs": [
+        "red pen handwritten number",
+        "editor's red pencil count",
+        "marked-up stat in red",
+        "число красным карандашом",
+        "красная рукописная цифра"
+      ],
+      "props": {
+        "color": "#b3362f",
+        "ease": "linear",
+        "durationSteps": 14,
+        "fontSize": 110
+      }
+    },
+    {
+      "id": "blueprint-note",
+      "label": "Blueprint Note",
+      "description": "A small, precise figure in drafting blue that ticks along steadily like a margin annotation.",
+      "askedAs": [
+        "small blue handwritten number",
+        "technical note style counter",
+        "subtle annotation count",
+        "маленькая синяя цифра от руки",
+        "аккуратная пометка на полях"
+      ],
+      "props": {
+        "color": "#2b4c7e",
+        "fontSize": 56,
+        "step": 1,
+        "durationSteps": 20,
+        "ease": "linear"
+      }
+    },
+    {
+      "id": "lazy-sketch",
+      "label": "Lazy Sketch",
+      "description": "A drowsy, low-frame-rate count in soft graphite that drifts into place with long holds.",
+      "askedAs": [
+        "slow choppy stop motion number",
+        "pencil graphite count up",
+        "dreamy hand-drawn counter",
+        "медленный карандашный счётчик",
+        "ленивая покадровая анимация цифр"
+      ],
+      "props": {
+        "color": "#5b5862",
+        "step": 6,
+        "durationSteps": 10,
+        "speed": 0.5,
+        "ease": "out"
+      }
+    }
+  ]
+}

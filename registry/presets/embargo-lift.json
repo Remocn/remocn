@@ -1,0 +1,103 @@
+{
+  "component": "embargo-lift",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "newsprint",
+      "label": "Newsprint",
+      "description": "Light paper background with black serif type and a deep red accent, like a printed press release.",
+      "askedAs": [
+        "newspaper style reveal",
+        "light serif press release",
+        "classic print look with red",
+        "газетный стиль",
+        "светлый вариант с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#f4f1ea",
+        "ink": "#141414",
+        "accent": "#b3261e",
+        "fontWeight": 400
+      }
+    },
+    {
+      "id": "classified-terminal",
+      "label": "Classified Terminal",
+      "description": "Monospaced green-on-near-black type with bars lifting slowly one after another.",
+      "askedAs": [
+        "hacker terminal look",
+        "declassified document monospace",
+        "slow dramatic redaction",
+        "как терминал",
+        "секретный документ моноширинный"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0c",
+        "ink": "#d7e3d9",
+        "accent": "#3fb950",
+        "speed": 0.75,
+        "stagger": 24
+      }
+    },
+    {
+      "id": "snap-reveal",
+      "label": "Snap Reveal",
+      "description": "Fast, nearly simultaneous bar lift for a punchy, large announcement.",
+      "askedAs": [
+        "quick punchy reveal",
+        "all bars at once fast",
+        "bigger and faster",
+        "быстрое раскрытие",
+        "крупно и резко"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 4,
+        "scale": 1.25
+      }
+    },
+    {
+      "id": "quiet-editorial",
+      "label": "Quiet Editorial",
+      "description": "Small, elegant Instrument Serif in warm ivory on charcoal with a soft gold accent and a gentle delayed start.",
+      "askedAs": [
+        "elegant understated version",
+        "soft gold serif",
+        "calm editorial teaser",
+        "элегантный спокойный вариант",
+        "золотой акцент с засечками"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "background": "#1c1b19",
+        "ink": "#efe8da",
+        "accent": "#c9a45c",
+        "scale": 0.85,
+        "delay": 20
+      }
+    },
+    {
+      "id": "product-blue",
+      "label": "Product Blue",
+      "description": "Clean light Inter layout with a confident blue accent for a modern product launch.",
+      "askedAs": [
+        "modern startup launch",
+        "light with blue accent",
+        "clean sans serif announcement",
+        "современный продуктовый стиль",
+        "светлый с синим"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#1f6feb",
+        "ink": "#0d1117",
+        "background": "#ffffff"
+      }
+    }
+  ]
+}

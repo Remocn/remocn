@@ -1,0 +1,99 @@
+{
+  "component": "icon-maximize",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-slow",
+      "label": "Hairline Slow",
+      "description": "A large, thin-stroked icon that draws itself in at a calm, unhurried pace.",
+      "askedAs": [
+        "thin slow drawing maximize icon",
+        "elegant fine line expand icon",
+        "big delicate fullscreen icon",
+        "тонкая медленная иконка развернуть",
+        "изящная линия иконки на весь экран"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#3f3f46"
+      }
+    },
+    {
+      "id": "bold-pulse",
+      "label": "Bold Pulse",
+      "description": "A heavy-stroked icon that repeats its expand action in a snappy, continuous loop.",
+      "askedAs": [
+        "looping thick expand icon",
+        "bold fullscreen icon that keeps pulsing",
+        "fast repeating maximize animation",
+        "жирная иконка развернуть в цикле",
+        "пульсирующая иконка полноэкранного режима"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "strokeWidth": 3,
+        "speed": 1.75,
+        "size": 72
+      }
+    },
+    {
+      "id": "ocean-blue",
+      "label": "Ocean Blue",
+      "description": "A medium-sized icon in a calm deep blue that draws and expands once at a relaxed tempo.",
+      "askedAs": [
+        "blue maximize icon",
+        "calm blue fullscreen animation",
+        "expand icon in brand blue",
+        "синяя иконка развернуть",
+        "спокойная синяя иконка на весь экран"
+      ],
+      "props": {
+        "color": "#1f6feb",
+        "size": 96,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "tiny-quick",
+      "label": "Tiny Quick",
+      "description": "A compact, crisp icon that plays its expand motion quickly, suited to small UI callouts.",
+      "askedAs": [
+        "small fast maximize icon",
+        "quick little fullscreen button animation",
+        "compact expand icon for UI",
+        "маленькая быстрая иконка развернуть",
+        "мини иконка полноэкранного режима"
+      ],
+      "props": {
+        "size": 32,
+        "speed": 2,
+        "animation": "action",
+        "strokeWidth": 1.75
+      }
+    },
+    {
+      "id": "terracotta-hero",
+      "label": "Terracotta Hero",
+      "description": "An oversized warm terracotta icon with a sturdy stroke that draws and expands in a gentle loop.",
+      "askedAs": [
+        "huge warm orange expand icon",
+        "large looping maximize icon earthy color",
+        "hero sized fullscreen icon",
+        "большая терракотовая иконка развернуть",
+        "крупная тёплая иконка в цикле"
+      ],
+      "props": {
+        "size": 180,
+        "color": "#c2562f",
+        "strokeWidth": 2.5,
+        "loop": true,
+        "speed": 0.75
+      }
+    }
+  ]
+}

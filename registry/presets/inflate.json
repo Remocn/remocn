@@ -1,0 +1,100 @@
+{
+  "component": "inflate",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "bubblegum-pastel",
+      "label": "Bubblegum",
+      "description": "A soft pink balloon on a pale cream backdrop with a dark plum dot for a sweet, kid-friendly feel.",
+      "askedAs": [
+        "pink pastel balloon",
+        "soft candy colors for kids app",
+        "light background cute bounce",
+        "розовый пастельный шарик",
+        "нежные цвета для детского приложения"
+      ],
+      "props": {
+        "color": "#f28db2",
+        "highlight": "#fff4f8",
+        "dotColor": "#3a1f33",
+        "backgroundColor": "#fff6ec"
+      }
+    },
+    {
+      "id": "slow-float",
+      "label": "Slow Float",
+      "description": "A deep blue balloon that inflates lazily against midnight navy, calm and dreamy.",
+      "askedAs": [
+        "slow calm inflate",
+        "blue balloon on dark navy",
+        "dreamy relaxed pace",
+        "медленное спокойное надувание",
+        "синий шарик на тёмном фоне"
+      ],
+      "props": {
+        "color": "#3b6fd8",
+        "highlight": "#dce8ff",
+        "dotColor": "#0b1530",
+        "backgroundColor": "#0b1530",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "quick-pop",
+      "label": "Quick Pop",
+      "description": "A punchy sunny-yellow mark that puffs up fast on charcoal for a snappy, energetic sting.",
+      "askedAs": [
+        "fast bouncy yellow pop",
+        "quick snappy inflate",
+        "energetic short sting",
+        "быстрый жёлтый попап",
+        "резкая короткая анимация"
+      ],
+      "props": {
+        "color": "#f5b82e",
+        "highlight": "#fff7dd",
+        "dotColor": "#1c1c1c",
+        "backgroundColor": "#1c1c1c",
+        "speed": 2
+      }
+    },
+    {
+      "id": "mint-fresh",
+      "label": "Mint Fresh",
+      "description": "A minty green balloon on a clean off-white background with a forest-green dot, light and friendly.",
+      "askedAs": [
+        "green mint balloon on white",
+        "fresh light clean look",
+        "friendly green brand mark",
+        "мятный зелёный шарик",
+        "светлый свежий стиль"
+      ],
+      "props": {
+        "color": "#3fbf8f",
+        "highlight": "#e9fff6",
+        "dotColor": "#123d2e",
+        "backgroundColor": "#f4f7f2"
+      }
+    },
+    {
+      "id": "grape-soda",
+      "label": "Grape Soda",
+      "description": "A rich violet balloon on deep aubergine with a lavender sheen, playful but grown-up.",
+      "askedAs": [
+        "purple balloon dark background",
+        "violet playful but premium",
+        "grape colored bouncy logo",
+        "фиолетовый шарик на тёмном",
+        "взрослый игривый фиолетовый"
+      ],
+      "props": {
+        "color": "#8a5cf6",
+        "highlight": "#ede4ff",
+        "dotColor": "#1e1530",
+        "backgroundColor": "#1e1530",
+        "speed": 1.25
+      }
+    }
+  ]
+}

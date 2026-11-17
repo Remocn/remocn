@@ -1,0 +1,114 @@
+{
+  "component": "icon-arrow-left",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-draw",
+      "label": "Hairline Draw",
+      "description": "A large, thin-stroked arrow that slowly sketches itself in once.",
+      "askedAs": [
+        "thin slow drawing arrow",
+        "elegant line arrow reveal",
+        "big delicate back arrow",
+        "тонкая стрелка рисуется медленно",
+        "изящная линия стрелки"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1.25,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "bold-nudge",
+      "label": "Bold Nudge",
+      "description": "A heavy, compact arrow that nudges left on a quick repeating loop.",
+      "askedAs": [
+        "thick arrow pointing back repeatedly",
+        "looping back button hint",
+        "bold bouncing left arrow",
+        "жирная стрелка влево в цикле",
+        "повторяющаяся анимация кнопки назад"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "strokeWidth": 3,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "ocean-accent",
+      "label": "Ocean Accent",
+      "description": "A mid-size deep blue arrow that draws in and moves at an easy pace.",
+      "askedAs": [
+        "blue back arrow",
+        "brand colored left arrow",
+        "calm blue navigation icon",
+        "синяя стрелка назад",
+        "стрелка в фирменном синем цвете"
+      ],
+      "props": {
+        "color": "#1f6feb",
+        "size": 72,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terracotta-pulse",
+      "label": "Terracotta Pulse",
+      "description": "A warm clay-toned arrow with a medium stroke that loops its full draw-and-move cycle.",
+      "askedAs": [
+        "warm orange looping arrow",
+        "earthy color back icon",
+        "rust arrow animation on repeat",
+        "тёплая оранжевая стрелка",
+        "стрелка терракотового цвета в цикле"
+      ],
+      "props": {
+        "color": "#c2410c",
+        "loop": true,
+        "strokeWidth": 2.5,
+        "size": 96
+      }
+    },
+    {
+      "id": "snappy-mini",
+      "label": "Snappy Mini",
+      "description": "A small slate-gray arrow that flicks into place at double speed.",
+      "askedAs": [
+        "small fast arrow",
+        "quick tiny back icon",
+        "subtle gray arrow snap",
+        "маленькая быстрая стрелка",
+        "серая иконка назад быстро"
+      ],
+      "props": {
+        "size": 32,
+        "color": "#64748b",
+        "speed": 2,
+        "strokeWidth": 1.75
+      }
+    },
+    {
+      "id": "hero-forest",
+      "label": "Hero Forest",
+      "description": "An oversized deep green arrow that draws slowly for a statement title moment.",
+      "askedAs": [
+        "huge green arrow for intro",
+        "giant slow arrow reveal",
+        "big statement back arrow",
+        "огромная зелёная стрелка",
+        "крупная стрелка для заставки"
+      ],
+      "props": {
+        "size": 200,
+        "color": "#166534",
+        "speed": 0.5,
+        "strokeWidth": 1.5
+      }
+    }
+  ]
+}

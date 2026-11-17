@@ -1,0 +1,121 @@
+{
+  "component": "ripple-mark",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-grid",
+      "label": "Terminal Grid",
+      "description": "A dense monospace dot field on near-black with a crisp mint accent, like a server console coming online.",
+      "askedAs": [
+        "dense terminal style logo reveal",
+        "monospace hacker look with green accent",
+        "console boot logo animation",
+        "логотип в стиле терминала",
+        "плотная сетка точек моноширинный шрифт"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "density": 110,
+        "accent": "#3dd68c",
+        "background": "#0b0f0e",
+        "ink": "#e6f2ec",
+        "stagger": 1
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "A clean light theme with a sparse dot field, ink-blue accent and no grain for a calm, documentation-like feel.",
+      "askedAs": [
+        "light clean logo reveal",
+        "white background minimal dots",
+        "calm bright version for docs",
+        "светлая минималистичная заставка",
+        "логотип на белом фоне без шума"
+      ],
+      "props": {
+        "theme": "light",
+        "density": 50,
+        "accent": "#1f4fd1",
+        "grain": false,
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "quick-sting",
+      "label": "Quick Sting",
+      "description": "A fast, tight ripple with almost no letter stagger that snaps the mark into place for short bumpers.",
+      "askedAs": [
+        "fast snappy logo sting",
+        "short quick intro reveal",
+        "punchy logo in two seconds",
+        "быстрая короткая заставка с логотипом",
+        "резкое появление логотипа"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 0.5,
+        "density": 90,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "slow-drift",
+      "label": "Slow Drift",
+      "description": "A slow, cinematic ripple with a wide letter cascade, warm amber accent and a slightly larger mark after a short pause.",
+      "askedAs": [
+        "slow cinematic logo reveal",
+        "elegant drifting dots intro",
+        "dramatic warm logo animation",
+        "медленное кинематографичное появление логотипа",
+        "плавная заставка с тёплым акцентом"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 6,
+        "accent": "#e0a458",
+        "scale": 1.2,
+        "delay": 20,
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "midnight-violet",
+      "label": "Midnight Violet",
+      "description": "Deep indigo background with a soft violet accent and Geist type for a polished infrastructure-brand look.",
+      "askedAs": [
+        "dark purple tech logo reveal",
+        "indigo background violet dots",
+        "premium saas brand intro",
+        "тёмно-фиолетовая техно заставка",
+        "логотип на тёмно-синем фоне"
+      ],
+      "props": {
+        "background": "#12112a",
+        "ink": "#edebff",
+        "accent": "#8b7cf6",
+        "fontFamily": "Geist",
+        "density": 70
+      }
+    },
+    {
+      "id": "compact-mark",
+      "label": "Compact Mark",
+      "description": "A small, sparse mark with a muted slate accent and no grain, sized for corner watermarks or end cards.",
+      "askedAs": [
+        "small logo for end card",
+        "subtle compact logo reveal",
+        "minimal watermark style mark",
+        "маленький логотип для финальной плашки",
+        "скромное компактное появление логотипа"
+      ],
+      "props": {
+        "scale": 0.65,
+        "density": 45,
+        "accent": "#7c8ba1",
+        "grain": false
+      }
+    }
+  ]
+}

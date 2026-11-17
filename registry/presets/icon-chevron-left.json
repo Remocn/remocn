@@ -1,0 +1,100 @@
+{
+  "component": "icon-chevron-left",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-draw",
+      "label": "Hairline Draw",
+      "description": "A large, thin chevron that slowly draws itself in a soft slate tone.",
+      "askedAs": [
+        "thin slow drawing arrow",
+        "elegant line back icon",
+        "delicate left chevron sketch",
+        "тонкая стрелка влево рисуется",
+        "медленная изящная стрелка назад"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1,
+        "speed": 0.5,
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "bold-nudge",
+      "label": "Bold Nudge",
+      "description": "A heavy, compact chevron that snaps left with a quick action motion.",
+      "askedAs": [
+        "thick quick back arrow",
+        "punchy left nudge",
+        "bold chevron that jumps left",
+        "жирная стрелка назад быстро",
+        "толстая стрелка с толчком влево"
+      ],
+      "props": {
+        "animation": "action",
+        "strokeWidth": 3,
+        "speed": 2,
+        "color": "#0f172a"
+      }
+    },
+    {
+      "id": "looping-hint",
+      "label": "Looping Hint",
+      "description": "A medium blue chevron that keeps nudging left to suggest swiping back.",
+      "askedAs": [
+        "repeating swipe back hint",
+        "looping left arrow cue",
+        "arrow that keeps pointing left",
+        "повторяющаяся подсказка свайпа",
+        "зацикленная стрелка влево"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "size": 64,
+        "color": "#2563eb",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "terracotta-hero",
+      "label": "Terracotta Hero",
+      "description": "An oversized warm terracotta chevron that draws and moves at a relaxed pace.",
+      "askedAs": [
+        "big warm orange back arrow",
+        "large earthy left chevron",
+        "huge rust colored arrow",
+        "большая терракотовая стрелка",
+        "крупная тёплая стрелка влево"
+      ],
+      "props": {
+        "size": 180,
+        "color": "#c2410c",
+        "strokeWidth": 2.5,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "sage-pulse",
+      "label": "Sage Pulse",
+      "description": "A small muted green chevron that draws and animates continuously in a loop.",
+      "askedAs": [
+        "small green looping arrow",
+        "calm repeating back icon",
+        "subtle green chevron animation",
+        "маленькая зелёная стрелка по кругу",
+        "спокойная зацикленная иконка назад"
+      ],
+      "props": {
+        "size": 32,
+        "color": "#4d7c5a",
+        "loop": true,
+        "strokeWidth": 1.5,
+        "speed": 0.75
+      }
+    }
+  ]
+}

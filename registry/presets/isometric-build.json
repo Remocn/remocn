@@ -1,0 +1,121 @@
+{
+  "component": "isometric-build",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "blueprint",
+      "label": "Blueprint",
+      "description": "Pale blue blocks on deep navy with an amber accent tower, like a technical drawing coming to life.",
+      "askedAs": [
+        "blueprint style isometric city",
+        "navy background with light blue blocks",
+        "technical drawing look",
+        "в стиле чертежа",
+        "синий фон, голубые блоки"
+      ],
+      "props": {
+        "background": "#0f1e3a",
+        "color": "#cfe0f5",
+        "accent": "#f2a93b",
+        "gap": 0.08
+      }
+    },
+    {
+      "id": "paper-model",
+      "label": "Paper Model",
+      "description": "A light, airy build of off-white blocks on warm paper with a graphite tower and no floor lines.",
+      "askedAs": [
+        "light background isometric",
+        "white paper model look",
+        "minimal clean bright version",
+        "светлый вариант на бумаге",
+        "бумажный макет"
+      ],
+      "props": {
+        "background": "#f3f0ea",
+        "color": "#2b2b2b",
+        "accent": "#3d6be0",
+        "floors": false,
+        "maxHeight": 1.6
+      }
+    },
+    {
+      "id": "skyline",
+      "label": "Skyline",
+      "description": "A dense 8x8 grid of tall towers rising slowly in a wide wave for a big city reveal.",
+      "askedAs": [
+        "big dense city skyline",
+        "tall towers many tiles",
+        "slow grand city build",
+        "большой город с небоскрёбами",
+        "плотная застройка, медленно"
+      ],
+      "props": {
+        "grid": 8,
+        "maxHeight": 3.6,
+        "stagger": 4,
+        "speed": 0.75,
+        "gap": 0.02
+      }
+    },
+    {
+      "id": "snap-stack",
+      "label": "Snap Stack",
+      "description": "A tiny 3x3 stack that pops up almost at once with low blocks, quick and punchy.",
+      "askedAs": [
+        "fast small block stack",
+        "quick pop up build",
+        "tiny compact cube",
+        "быстрая маленькая сборка",
+        "резкое появление блоков"
+      ],
+      "props": {
+        "grid": 3,
+        "maxHeight": 1.2,
+        "stagger": 0.5,
+        "speed": 2,
+        "gap": 0.1,
+        "seed": 12
+      }
+    },
+    {
+      "id": "terminal-green",
+      "label": "Terminal",
+      "description": "Muted sage blocks on near-black charcoal with a soft mint tower, a quiet server-room feel.",
+      "askedAs": [
+        "dark green tech look",
+        "server room infrastructure vibe",
+        "terminal style colors",
+        "тёмный зелёный техно стиль",
+        "как серверная"
+      ],
+      "props": {
+        "background": "#0e1412",
+        "color": "#8fa89a",
+        "accent": "#5fe0a8",
+        "seed": 21
+      }
+    },
+    {
+      "id": "low-plaza",
+      "label": "Low Plaza",
+      "description": "A broad, flat field of short slabs with wide gaps and a slow cascade, calm and architectural.",
+      "askedAs": [
+        "flat low blocks calm",
+        "wide spaced tiles slow",
+        "subtle platform build",
+        "низкие плоские блоки",
+        "спокойная медленная сборка"
+      ],
+      "props": {
+        "grid": 7,
+        "maxHeight": 0.8,
+        "gap": 0.18,
+        "stagger": 3,
+        "speed": 0.5,
+        "accent": "#e8b04a"
+      }
+    }
+  ]
+}

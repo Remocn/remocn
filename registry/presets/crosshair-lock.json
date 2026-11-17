@@ -1,0 +1,104 @@
+{
+  "component": "crosshair-lock",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A dark console look with monospace type and a mint accent that snaps into place quickly.",
+      "askedAs": [
+        "make it look like a terminal",
+        "monospace hacker style crosshair",
+        "fast code-like target lock",
+        "стиль терминала с моноширинным шрифтом",
+        "как в консоли, быстро"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accent": "#3ddc97",
+        "background": "#0b0f0e",
+        "ink": "#d7e4de",
+        "slide": 12,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "clean-report",
+      "label": "Clean Report",
+      "description": "A light, grain-free layout with crisp Inter type and a calm cobalt accent for business decks.",
+      "askedAs": [
+        "light version for a presentation",
+        "clean white analytics look",
+        "minimal corporate chart callout",
+        "светлая версия для отчёта",
+        "чистый деловой стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "grain": false,
+        "accent": "#2547d0",
+        "fontWeight": 600
+      }
+    },
+    {
+      "id": "slow-scope",
+      "label": "Slow Scope",
+      "description": "A long, deliberate glide onto the target with a short pause first, like a sniper scope settling.",
+      "askedAs": [
+        "slow cinematic lock on",
+        "dramatic scope zoom",
+        "take your time finding the target",
+        "медленное наведение прицела",
+        "кинематографичный плавный захват"
+      ],
+      "props": {
+        "slide": 54,
+        "speed": 0.5,
+        "delay": 15,
+        "accent": "#e5484d",
+        "fontWeight": 300
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A warm paper background with elegant serif numerals and a burnt-orange marker.",
+      "askedAs": [
+        "magazine style data callout",
+        "elegant serif version",
+        "warm editorial chart",
+        "журнальный стиль с засечками",
+        "тёплый элегантный вариант"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#f4efe6",
+        "ink": "#2a2420",
+        "accent": "#c2562b",
+        "grain": true
+      }
+    },
+    {
+      "id": "bold-hud",
+      "label": "Bold HUD",
+      "description": "An oversized, heavy readout on deep navy with an amber accent that locks on almost instantly.",
+      "askedAs": [
+        "big bold heads-up display",
+        "punchy fast target readout",
+        "large HUD style numbers",
+        "крупный жирный HUD",
+        "быстрый и яркий захват цели"
+      ],
+      "props": {
+        "scale": 1.3,
+        "fontWeight": 700,
+        "fontFamily": "Geist",
+        "accent": "#f5a524",
+        "background": "#0a1224",
+        "slide": 8
+      }
+    }
+  ]
+}

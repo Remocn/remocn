@@ -1,0 +1,86 @@
+{
+  "component": "tabs",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "calm-pill",
+      "label": "Calm Pill",
+      "description": "A soft pill indicator that glides slowly between tabs with an unhurried crossfade.",
+      "askedAs": [
+        "slow pill tabs",
+        "gentle tab switching",
+        "relaxed rounded tab animation",
+        "медленные вкладки с плашкой",
+        "плавное переключение вкладок"
+      ],
+      "props": {
+        "variant": "pill",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "snappy-pill",
+      "label": "Snappy Pill",
+      "description": "A quick pill highlight that snaps between tabs for an energetic product demo.",
+      "askedAs": [
+        "fast pill tabs",
+        "quick tab switch",
+        "punchy rounded tabs",
+        "быстрые вкладки с плашкой",
+        "резкое переключение вкладок"
+      ],
+      "props": {
+        "variant": "pill",
+        "speed": 2
+      }
+    },
+    {
+      "id": "minimal-underline",
+      "label": "Minimal Underline",
+      "description": "A thin underline indicator sliding at a natural pace for a clean, editorial feel.",
+      "askedAs": [
+        "underline tabs",
+        "minimal tab indicator",
+        "clean line under tabs",
+        "вкладки с подчёркиванием",
+        "минималистичные вкладки"
+      ],
+      "props": {
+        "variant": "underline"
+      }
+    },
+    {
+      "id": "slow-underline",
+      "label": "Slow Underline",
+      "description": "An underline that drifts leisurely beneath the labels with a long, cinematic crossfade.",
+      "askedAs": [
+        "slow underline tabs",
+        "cinematic tab transition",
+        "elegant sliding line",
+        "медленное подчёркивание вкладок",
+        "кинематографичный переход вкладок"
+      ],
+      "props": {
+        "variant": "underline",
+        "speed": 0.25
+      }
+    },
+    {
+      "id": "rapid-underline",
+      "label": "Rapid Underline",
+      "description": "A brisk underline that darts between tabs for fast-cut, high-tempo edits.",
+      "askedAs": [
+        "very fast underline tabs",
+        "rapid tab flicking",
+        "quick line indicator",
+        "очень быстрые вкладки",
+        "стремительное подчёркивание"
+      ],
+      "props": {
+        "variant": "underline",
+        "speed": 3.5
+      }
+    }
+  ]
+}

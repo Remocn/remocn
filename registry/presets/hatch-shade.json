@@ -1,0 +1,106 @@
+{
+  "component": "hatch-shade",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "copper-etching",
+      "label": "Copper Etching",
+      "description": "Warm copper accent on a deep brown plate with fine, dense hatching drawn in slowly.",
+      "askedAs": [
+        "make it look like an old copper engraving",
+        "warm brown etched number",
+        "slow fine hatching on copper",
+        "гравюра на меди",
+        "тёплый медный стиль с плотной штриховкой"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#2a1d16",
+        "ink": "#f1e3d3",
+        "accent": "#c07a4a",
+        "density": 1.6,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "ivory-banknote",
+      "label": "Ivory Banknote",
+      "description": "Light cream paper with a muted green-grey accent and crisp hairline hatching, like currency printing.",
+      "askedAs": [
+        "banknote style number",
+        "light paper with green engraving",
+        "looks like printed money",
+        "как на банкноте",
+        "светлая бумага с зелёной гравировкой"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe4",
+        "ink": "#1f2a24",
+        "accent": "#4e6b5a",
+        "density": 1.8,
+        "fontWeight": 400
+      }
+    },
+    {
+      "id": "bold-woodcut",
+      "label": "Bold Woodcut",
+      "description": "Heavy, oversized numeral with coarse open hatching and a brisk reveal in ink black and brick red.",
+      "askedAs": [
+        "big chunky woodcut number",
+        "coarse thick hatch lines",
+        "bold print block look",
+        "крупная цифра как гравюра на дереве",
+        "грубая жирная штриховка"
+      ],
+      "props": {
+        "fontWeight": 900,
+        "density": 0.6,
+        "scale": 1.3,
+        "accent": "#a63d2f",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "editorial-hairline",
+      "label": "Editorial Hairline",
+      "description": "Refined Instrument Serif in light weight on clean white, small and quiet with a delayed, unhurried draw.",
+      "askedAs": [
+        "elegant thin magazine style",
+        "minimal light editorial number",
+        "quiet slow refined reveal",
+        "элегантный журнальный стиль",
+        "тонкий минималистичный шрифт"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 300,
+        "scale": 0.85,
+        "delay": 20,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "midnight-steel",
+      "label": "Midnight Steel",
+      "description": "Clean grainless navy plate with a cool steel-blue accent and medium hatching for a modern technical feel.",
+      "askedAs": [
+        "cool blue dark version",
+        "clean modern no grain",
+        "steel engraving on navy",
+        "тёмно-синий холодный стиль",
+        "чистый без зерна современный"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#0f1724",
+        "ink": "#e3e9f2",
+        "accent": "#7a9cc6",
+        "grain": false,
+        "density": 1.2
+      }
+    }
+  ]
+}

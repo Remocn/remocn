@@ -1,0 +1,98 @@
+{
+  "component": "focus-blur-resolve",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-cinematic",
+      "label": "Slow Cinematic",
+      "description": "A long, dreamy focus pull from very deep blur into large, light type.",
+      "askedAs": [
+        "slow dreamy focus pull",
+        "movie title reveal",
+        "deep blur that resolves slowly",
+        "медленная кинематографичная фокусировка",
+        "плавное появление из сильного размытия"
+      ],
+      "props": {
+        "blur": 28,
+        "speed": 0.5,
+        "fontSize": 110,
+        "fontWeight": "400"
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "A fast, punchy rack focus with a light blur and bold type.",
+      "askedAs": [
+        "fast focus snap",
+        "quick sharp text reveal",
+        "punchy blur in",
+        "быстрая резкая фокусировка",
+        "короткое появление текста"
+      ],
+      "props": {
+        "blur": 6,
+        "speed": 2,
+        "fontWeight": "700"
+      }
+    },
+    {
+      "id": "ink-navy-headline",
+      "label": "Navy Headline",
+      "description": "An oversized deep navy headline that pulls into focus at a measured pace.",
+      "askedAs": [
+        "big navy title focus",
+        "large blue headline blur",
+        "corporate hero word",
+        "крупный синий заголовок",
+        "большой заголовок с размытием"
+      ],
+      "props": {
+        "fontSize": 140,
+        "color": "#1e2a44",
+        "fontWeight": "700",
+        "blur": 18
+      }
+    },
+    {
+      "id": "soft-whisper",
+      "label": "Soft Whisper",
+      "description": "Small, light warm-grey text that drifts gently into focus.",
+      "askedAs": [
+        "subtle small caption focus",
+        "gentle quiet text",
+        "soft understated blur",
+        "тихая мягкая подпись",
+        "небольшой нежный текст"
+      ],
+      "props": {
+        "fontSize": 40,
+        "color": "#6b6259",
+        "fontWeight": "400",
+        "blur": 10,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "bronze-luxe",
+      "label": "Bronze Luxe",
+      "description": "A rich bronze word resolving from heavy blur for a luxury brand feel.",
+      "askedAs": [
+        "luxury gold text focus",
+        "premium brand reveal",
+        "elegant bronze title",
+        "люксовый золотой текст",
+        "премиальное появление бренда"
+      ],
+      "props": {
+        "color": "#8a6a3b",
+        "blur": 22,
+        "fontWeight": "500",
+        "fontSize": 96,
+        "speed": 0.75
+      }
+    }
+  ]
+}

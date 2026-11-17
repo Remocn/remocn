@@ -1,0 +1,119 @@
+{
+  "component": "tile-snake-loader",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-studio",
+      "label": "Paper Studio",
+      "description": "A light, editorial look with serif type on a warm paper ground and a calm, unhurried reveal.",
+      "askedAs": [
+        "light editorial loader",
+        "warm paper studio intro",
+        "slow elegant landing reveal",
+        "светлая редакционная заставка",
+        "спокойный вариант на бумажном фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "fontFamily": "Instrument Serif",
+        "accent": "#c2410c",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-boot",
+      "label": "Terminal Boot",
+      "description": "A fast, dev-tool feel with monospace type, a cool green accent and a snappy tile run.",
+      "askedAs": [
+        "developer tool launch",
+        "fast monospace loader",
+        "code style boot screen",
+        "быстрая заставка в стиле терминала",
+        "моноширинный шрифт для девтулза"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "ground": "nightfold",
+        "accent": "#34d399",
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "ember-cinema",
+      "label": "Ember Cinema",
+      "description": "A warm, filmic dark look with copper accent and Fraunces headlines, slightly enlarged for drama.",
+      "askedAs": [
+        "warm cinematic opener",
+        "film studio dark warm reveal",
+        "dramatic big landing intro",
+        "тёплое киношное интро",
+        "драматичная заставка для студии"
+      ],
+      "props": {
+        "ground": "ember",
+        "accent": "#e08a4f",
+        "fontFamily": "Fraunces",
+        "scale": 1.15,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "polar-clean",
+      "label": "Polar Clean",
+      "description": "A crisp, cool light SaaS look with Inter type, an icy blue accent and a compact layout.",
+      "askedAs": [
+        "clean minimal saas reveal",
+        "cool light product launch",
+        "compact bright loader",
+        "чистый светлый минимализм",
+        "холодная светлая заставка продукта"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "polar",
+        "fontFamily": "Inter",
+        "accent": "#0ea5e9",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "velvet-launch",
+      "label": "Velvet Launch",
+      "description": "A moody violet night look with Space Grotesk type and a delayed, deliberate entrance.",
+      "askedAs": [
+        "moody purple tech launch",
+        "night creative tool reveal",
+        "delayed stylish opener",
+        "фиолетовая ночная заставка",
+        "стильный запуск с задержкой"
+      ],
+      "props": {
+        "ground": "velvet-hour",
+        "accent": "#a78bfa",
+        "fontFamily": "Space Grotesk",
+        "delay": 20
+      }
+    },
+    {
+      "id": "graphite-mono",
+      "label": "Graphite Mono",
+      "description": "A stark charcoal background with off-white text and a near-white accent for a quiet, premium feel.",
+      "askedAs": [
+        "monochrome premium loader",
+        "black and white studio intro",
+        "minimal graphite reveal",
+        "монохромная премиальная заставка",
+        "чёрно-белый минимализм"
+      ],
+      "props": {
+        "background": "#18181b",
+        "ink": "#f4f4f5",
+        "accent": "#e4e4e7",
+        "fontFamily": "Geist",
+        "speed": 1.25
+      }
+    }
+  ]
+}

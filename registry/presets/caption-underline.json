@@ -1,0 +1,124 @@
+{
+  "component": "caption-underline",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-editorial",
+      "label": "Hairline Editorial",
+      "description": "Light-weight type with a whisper-thin warm grey line sitting just below the baseline, like a magazine pull quote.",
+      "askedAs": [
+        "thin subtle underline captions",
+        "minimal elegant subtitles with fine line",
+        "light font with hairline underline",
+        "тонкая линия под словом",
+        "элегантные минималистичные субтитры"
+      ],
+      "props": {
+        "fontWeight": 400,
+        "fontSize": 56,
+        "thickness": 0.03,
+        "underlineOffset": 0.08,
+        "underlineColor": "#d6d3d1",
+        "shadow": false
+      }
+    },
+    {
+      "id": "highlighter-band",
+      "label": "Highlighter Band",
+      "description": "A thick translucent-feeling amber band rides up behind the lower half of each word like a marker stroke.",
+      "askedAs": [
+        "highlighter marker under words",
+        "thick underline like a marker",
+        "yellow highlight behind spoken word",
+        "маркер под словом",
+        "толстая подсветка слова"
+      ],
+      "props": {
+        "thickness": 0.28,
+        "underlineOffset": -0.18,
+        "underlineColor": "#f59e0b",
+        "fontWeight": 900,
+        "color": "#111827",
+        "shadow": false
+      }
+    },
+    {
+      "id": "brand-accent",
+      "label": "Brand Accent",
+      "description": "Neutral off-white type with a single cobalt brand line beneath the active word.",
+      "askedAs": [
+        "blue accent line under captions",
+        "corporate brand color underline",
+        "clean captions with blue bar",
+        "синяя линия под субтитрами",
+        "фирменный цвет подчеркивания"
+      ],
+      "props": {
+        "underlineColor": "#2563eb",
+        "color": "#f8fafc",
+        "fontWeight": 700,
+        "thickness": 0.06
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Big heavy words flash in short pages with a chunky coral bar snapping quickly from word to word.",
+      "askedAs": [
+        "fast punchy captions for shorts",
+        "big bold words one at a time",
+        "tiktok style quick underline",
+        "быстрые субтитры для рилс",
+        "крупные слова по одному"
+      ],
+      "props": {
+        "fontSize": 104,
+        "fontWeight": 900,
+        "combineTokensWithinMilliseconds": 300,
+        "holdMs": 150,
+        "underlineColor": "#fb7185",
+        "thickness": 0.12
+      }
+    },
+    {
+      "id": "calm-reader",
+      "label": "Calm Reader",
+      "description": "Small medium-weight lines that stay on screen longer, with a soft sage underline for unhurried narration.",
+      "askedAs": [
+        "slow relaxed subtitles",
+        "long lines for documentary narration",
+        "soft green underline captions",
+        "спокойные субтитры для документалки",
+        "длинные строки медленно"
+      ],
+      "props": {
+        "fontSize": 44,
+        "fontWeight": 500,
+        "combineTokensWithinMilliseconds": 2600,
+        "holdMs": 1200,
+        "underlineColor": "#86efac",
+        "thickness": 0.05
+      }
+    },
+    {
+      "id": "ink-on-paper",
+      "label": "Ink On Paper",
+      "description": "Dark charcoal type for light backgrounds with a deep crimson rule and no shadow.",
+      "askedAs": [
+        "dark text for white background",
+        "captions on light video",
+        "black text red underline",
+        "темный текст на светлом фоне",
+        "черные субтитры с красной линией"
+      ],
+      "props": {
+        "color": "#1c1917",
+        "underlineColor": "#b91c1c",
+        "shadow": false,
+        "fontWeight": 600,
+        "underlineOffset": 0.1
+      }
+    }
+  ]
+}

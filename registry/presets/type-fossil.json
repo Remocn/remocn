@@ -1,0 +1,103 @@
+{
+  "component": "type-fossil",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "deep-strata",
+      "label": "Deep Strata",
+      "description": "Dense, deep contour layers in warm terracotta on sand, unfolding slowly like sediment.",
+      "askedAs": [
+        "many thick layers slow reveal",
+        "geological layered text look",
+        "deep sculpted title in earthy tones",
+        "много слоёв медленно земляные тона",
+        "глубокий скульптурный заголовок"
+      ],
+      "props": {
+        "layers": 24,
+        "depth": 150,
+        "accentColor": "#b5532e",
+        "backgroundColor": "#efe6d8",
+        "color": "#2b2420",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "midnight-imprint",
+      "label": "Midnight Imprint",
+      "description": "Pale ivory type with soft gold contours on a deep navy ground.",
+      "askedAs": [
+        "dark mode gold contours",
+        "elegant night version of the text",
+        "navy background with gold lines",
+        "тёмный фон золотые контуры",
+        "элегантный ночной вариант"
+      ],
+      "props": {
+        "backgroundColor": "#141a2b",
+        "color": "#f2ede3",
+        "accentColor": "#c9a45c",
+        "fontWeight": "500"
+      }
+    },
+    {
+      "id": "quick-sketch",
+      "label": "Quick Sketch",
+      "description": "A light, fast pass with few shallow contours and slim type.",
+      "askedAs": [
+        "fast and minimal version",
+        "fewer lines quicker animation",
+        "light thin draft feel",
+        "быстро и минималистично",
+        "лёгкий набросок"
+      ],
+      "props": {
+        "layers": 6,
+        "depth": 60,
+        "fontWeight": "400",
+        "speed": 2,
+        "accentColor": "#7a8a99"
+      }
+    },
+    {
+      "id": "monolith",
+      "label": "Monolith",
+      "description": "Heavy oversized lettering with deep charcoal contours on cool stone grey, compressing deliberately.",
+      "askedAs": [
+        "big bold heavy title",
+        "monochrome grey sculptural type",
+        "massive slow stone text",
+        "крупный жирный заголовок",
+        "серый монохромный камень"
+      ],
+      "props": {
+        "fontSize": 280,
+        "fontWeight": "700",
+        "backgroundColor": "#d9dad7",
+        "color": "#1c1d1f",
+        "accentColor": "#5a5e63",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "botanical-press",
+      "label": "Botanical Press",
+      "description": "Forest green contours behind deep green ink on soft paper, like a pressed specimen.",
+      "askedAs": [
+        "green natural paper look",
+        "calm organic palette",
+        "herbarium style title",
+        "зелёный природный стиль",
+        "спокойная органическая палитра"
+      ],
+      "props": {
+        "accentColor": "#4f7a5a",
+        "color": "#1f2e25",
+        "backgroundColor": "#eef0e6",
+        "layers": 12,
+        "depth": 85
+      }
+    }
+  ]
+}

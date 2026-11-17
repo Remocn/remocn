@@ -1,0 +1,98 @@
+{
+  "component": "icon-gift",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "festive-red",
+      "label": "Festive Red",
+      "description": "A large, bold crimson gift that draws in and bounces with a celebratory feel.",
+      "askedAs": [
+        "red holiday gift icon",
+        "big christmas present animation",
+        "bold festive gift",
+        "красный подарок",
+        "новогодний подарок крупно"
+      ],
+      "props": {
+        "color": "#c0392b",
+        "size": 120,
+        "strokeWidth": 2.5,
+        "animation": "both"
+      }
+    },
+    {
+      "id": "fine-line-draw",
+      "label": "Fine Line",
+      "description": "A thin, slow-drawn outline in soft slate for an elegant, minimal reveal.",
+      "askedAs": [
+        "thin elegant gift outline",
+        "slow drawing gift icon",
+        "minimal line present",
+        "тонкий контур подарка",
+        "медленная отрисовка подарка"
+      ],
+      "props": {
+        "animation": "draw",
+        "strokeWidth": 1,
+        "speed": 0.5,
+        "color": "#475569",
+        "size": 96
+      }
+    },
+    {
+      "id": "looping-shake",
+      "label": "Looping Shake",
+      "description": "A compact gift that keeps jiggling quickly on loop, like a surprise waiting to be opened.",
+      "askedAs": [
+        "gift that keeps shaking",
+        "looping present animation",
+        "fast wiggle gift icon",
+        "подарок трясётся по кругу",
+        "зацикленная анимация подарка"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "speed": 1.75,
+        "color": "#7c3aed"
+      }
+    },
+    {
+      "id": "golden-hero",
+      "label": "Golden Hero",
+      "description": "An oversized warm gold gift with heavy strokes and an unhurried entrance for hero shots.",
+      "askedAs": [
+        "huge gold gift icon",
+        "luxury present animation",
+        "premium reward gift",
+        "золотой подарок большой",
+        "премиальный подарок анимация"
+      ],
+      "props": {
+        "size": 180,
+        "color": "#b8860b",
+        "strokeWidth": 3,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-pop",
+      "label": "Quick Pop",
+      "description": "A small forest-green gift that draws and pops in rapidly for snappy UI moments.",
+      "askedAs": [
+        "quick small gift animation",
+        "snappy present icon",
+        "fast gift pop",
+        "быстрый маленький подарок",
+        "резкая анимация подарка"
+      ],
+      "props": {
+        "size": 32,
+        "speed": 2.5,
+        "color": "#166534",
+        "strokeWidth": 1.75
+      }
+    }
+  ]
+}

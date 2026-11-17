@@ -1,0 +1,123 @@
+{
+  "component": "shadow-sweep-text",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-velvet",
+      "label": "Slow Velvet",
+      "description": "A slow, heavy reveal with a very soft shadow and a long rise on deep plum-black.",
+      "askedAs": [
+        "slow luxurious shadow reveal",
+        "soft dreamy text emerging from darkness",
+        "cinematic slow rise title",
+        "медленное мягкое появление текста из тени",
+        "роскошный плавный заголовок"
+      ],
+      "props": {
+        "speed": 0.5,
+        "shadowSoftness": 260,
+        "rise": 180,
+        "color": "#d8cfe6",
+        "fontWeight": "500"
+      }
+    },
+    {
+      "id": "hard-cut",
+      "label": "Hard Cut",
+      "description": "A fast, crisp sweep with a hard shadow edge and minimal travel for punchy beats.",
+      "askedAs": [
+        "quick sharp text reveal",
+        "snappy hard-edged shadow wipe",
+        "fast punchy title",
+        "быстрое резкое появление текста",
+        "жёсткая шторка для заголовка"
+      ],
+      "props": {
+        "speed": 2,
+        "shadowSoftness": 10,
+        "rise": 24,
+        "driftLeft": 0,
+        "color": "#f2f2f2"
+      }
+    },
+    {
+      "id": "ivory-gallery",
+      "label": "Ivory Gallery",
+      "description": "Light editorial look with charcoal type emerging through a warm ivory shadow.",
+      "askedAs": [
+        "light background shadow reveal",
+        "elegant white gallery title",
+        "cream minimal text animation",
+        "светлый элегантный заголовок",
+        "текст на бежевом фоне появляется из тени"
+      ],
+      "props": {
+        "backgroundColor": "#f4efe6",
+        "shadowColor": "#f4efe6",
+        "color": "#2a2622",
+        "fontWeight": "400",
+        "shadowSoftness": 180
+      }
+    },
+    {
+      "id": "gold-noir",
+      "label": "Gold Noir",
+      "description": "Muted gold lettering rising out of a near-black shadow for a high-end brand feel.",
+      "askedAs": [
+        "gold text on black reveal",
+        "luxury brand title animation",
+        "premium golden headline",
+        "золотой текст на чёрном фоне",
+        "люксовый заголовок с золотом"
+      ],
+      "props": {
+        "color": "#c9a96a",
+        "backgroundColor": "#0b0a08",
+        "shadowColor": "#0b0a08",
+        "fontWeight": "600",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "monument",
+      "label": "Monument",
+      "description": "Oversized bold type with a strong diagonal drift and long travel on deep navy.",
+      "askedAs": [
+        "huge bold title rising diagonally",
+        "big dramatic headline reveal",
+        "large statement text sweep",
+        "огромный жирный заголовок",
+        "крупный текст выезжает по диагонали"
+      ],
+      "props": {
+        "fontSize": 160,
+        "rise": 240,
+        "driftLeft": 90,
+        "backgroundColor": "#06101f",
+        "shadowColor": "#06101f",
+        "color": "#c8d4e6"
+      }
+    },
+    {
+      "id": "quiet-caption",
+      "label": "Quiet Caption",
+      "description": "Small, light-weight text with a gentle short rise for understated captions.",
+      "askedAs": [
+        "small subtle caption reveal",
+        "understated subtitle animation",
+        "minimal quiet text",
+        "маленькая скромная подпись",
+        "тихое появление подзаголовка"
+      ],
+      "props": {
+        "fontSize": 48,
+        "fontWeight": "400",
+        "rise": 40,
+        "driftLeft": 8,
+        "shadowSoftness": 90,
+        "color": "#8f8b99"
+      }
+    }
+  ]
+}

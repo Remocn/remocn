@@ -1,0 +1,106 @@
+{
+  "component": "tategaki-turn",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "washi-paper",
+      "label": "Washi Paper",
+      "description": "Warm off-white paper with sumi ink text and a muted vermilion accent, unfolding slowly.",
+      "askedAs": [
+        "light paper japanese look",
+        "calm cream background with black ink",
+        "slow traditional editorial style",
+        "светлый японский стиль на бумаге",
+        "спокойный бежевый фон с тёмным текстом"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#b5442f",
+        "speed": 0.75,
+        "hold": 28
+      }
+    },
+    {
+      "id": "serif-editorial",
+      "label": "Serif Editorial",
+      "description": "Large Instrument Serif type on deep charcoal with a soft gold accent and long, unhurried holds.",
+      "askedAs": [
+        "elegant serif magazine title",
+        "big classy serif text on dark",
+        "luxury slow tagline",
+        "элегантный заголовок с засечками",
+        "дорогой журнальный стиль"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "scale": 1.3,
+        "background": "#151515",
+        "ink": "#ede6d8",
+        "accent": "#c9a45c",
+        "hold": 36
+      }
+    },
+    {
+      "id": "snappy-mono",
+      "label": "Snappy Mono",
+      "description": "Compact JetBrains Mono text that flips quickly with tight word timing and a cool blue accent.",
+      "askedAs": [
+        "fast techy monospace version",
+        "quick code style text turn",
+        "snappy developer tagline",
+        "быстрый моноширинный вариант",
+        "технический стиль как в коде"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "speed": 2,
+        "stagger": 2,
+        "hold": 6,
+        "accent": "#4c8df6",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "indigo-night",
+      "label": "Indigo Night",
+      "description": "Deep indigo backdrop with pale text and a warm peach accent, with a slow cascading word stagger.",
+      "askedAs": [
+        "dark blue moody background",
+        "night sky calm title",
+        "slow cascading words on navy",
+        "тёмно-синий спокойный фон",
+        "медленное появление слов ночью"
+      ],
+      "props": {
+        "background": "#1b2340",
+        "ink": "#e8e9f0",
+        "accent": "#f2a27a",
+        "stagger": 11,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "swiss-minimal",
+      "label": "Swiss Minimal",
+      "description": "Clean white Inter layout with a crisp black accent-free look and a short delayed entrance.",
+      "askedAs": [
+        "plain modern sans on white",
+        "minimal swiss style title",
+        "clean corporate black and white",
+        "минималистичный чёрно-белый вариант",
+        "строгий современный шрифт на белом"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "background": "#ffffff",
+        "ink": "#111111",
+        "accent": "#111111",
+        "delay": 12
+      }
+    }
+  ]
+}

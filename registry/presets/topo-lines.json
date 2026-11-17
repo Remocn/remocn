@@ -1,0 +1,106 @@
+{
+  "component": "topo-lines",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "survey-paper",
+      "label": "Survey Paper",
+      "description": "Warm paper-toned map with brown contours and a muted blue accent line, like a printed survey sheet.",
+      "askedAs": [
+        "make it look like an old paper map",
+        "light beige topographic background",
+        "printed survey map style",
+        "светлая карта на бумаге",
+        "топографическая карта в бежевых тонах"
+      ],
+      "props": {
+        "background": "#f2ebdd",
+        "color": "#8a6a4a",
+        "accent": "#2f5d8a",
+        "indexEvery": 5,
+        "levels": 20
+      }
+    },
+    {
+      "id": "deep-sea",
+      "label": "Deep Sea",
+      "description": "Dense navy bathymetry lines drifting very slowly with a soft teal accent depth line.",
+      "askedAs": [
+        "ocean depth map background",
+        "dark blue slow contour lines",
+        "underwater bathymetry look",
+        "карта глубин океана",
+        "медленные синие линии рельефа"
+      ],
+      "props": {
+        "background": "#0b1a2b",
+        "color": "#6f8faf",
+        "accent": "#4fd1c5",
+        "levels": 28,
+        "speed": 0.5,
+        "loopFrames": 600
+      }
+    },
+    {
+      "id": "bold-minimal",
+      "label": "Bold Minimal",
+      "description": "A few wide, sparse contours around a single peak on charcoal with a warm amber accent.",
+      "askedAs": [
+        "fewer bigger contour lines",
+        "simple minimal topo background",
+        "one mountain contour loop",
+        "минималистичные линии рельефа",
+        "мало линий, одна вершина"
+      ],
+      "props": {
+        "levels": 7,
+        "peaks": 1,
+        "highlight": 3,
+        "indexEvery": 0,
+        "accent": "#f2a93b",
+        "background": "#1a1a1a"
+      }
+    },
+    {
+      "id": "alpine-mist",
+      "label": "Alpine Mist",
+      "description": "Pale grey-green terrain with many peaks, quiet slate lines and no accent for a calm texture.",
+      "askedAs": [
+        "soft light grey topo texture",
+        "calm background for a quote",
+        "mountain range contours no highlight",
+        "спокойный светлый фон с рельефом",
+        "горы без акцентной линии"
+      ],
+      "props": {
+        "background": "#e6eae6",
+        "color": "#7d8c86",
+        "peaks": 5,
+        "highlight": -1,
+        "speed": 0.75,
+        "seed": 17
+      }
+    },
+    {
+      "id": "data-pulse",
+      "label": "Data Pulse",
+      "description": "Fast-shifting fine graphite lines on near-black with an electric violet accent for a techy data-layer feel.",
+      "askedAs": [
+        "fast moving tech contour lines",
+        "data visualization terrain background",
+        "energetic dark topo with purple",
+        "быстрые технологичные линии",
+        "тёмный фон с фиолетовым акцентом"
+      ],
+      "props": {
+        "background": "#0e0e14",
+        "color": "#5a5f73",
+        "accent": "#8b7cf6",
+        "speed": 2.5,
+        "loopFrames": 180,
+        "levels": 24
+      }
+    }
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "component": "less-more",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A warm light page with Instrument Serif type and a deep rust accent, like a magazine pull quote.",
+      "askedAs": [
+        "make it look like a magazine quote",
+        "serif version on cream background",
+        "elegant editorial tagline",
+        "журнальный стиль с засечками",
+        "светлый фон и шрифт с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f5f0e8",
+        "ink": "#1f1b16",
+        "accent": "#b5462a",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "quick-punch",
+      "label": "Quick Punch",
+      "description": "A fast, tight swap where the second line lands almost immediately for snappy social cuts.",
+      "askedAs": [
+        "make it faster",
+        "snappy version for reels",
+        "quick punchy swap",
+        "быстрее и резче",
+        "динамичная версия для соцсетей"
+      ],
+      "props": {
+        "speed": 2,
+        "swapAt": 16,
+        "fillAt": 40,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A patient, lingering beat that holds the first line before the blue line settles in gently.",
+      "askedAs": [
+        "slower more dramatic timing",
+        "let the first line breathe",
+        "calm slow reveal",
+        "медленное появление",
+        "спокойный неторопливый темп"
+      ],
+      "props": {
+        "speed": 0.5,
+        "delay": 12,
+        "swapAt": 60,
+        "fillAt": 110
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Monospaced type on near-black with a muted mint accent for a developer-tool feel.",
+      "askedAs": [
+        "code style tagline",
+        "monospace dev look",
+        "make it look like a terminal",
+        "моноширинный шрифт как в терминале",
+        "стиль для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "ink": "#e6edf3",
+        "accent": "#3fb68b",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "bold-statement",
+      "label": "Bold Statement",
+      "description": "Oversized Bricolage Grotesque on deep navy with a warm amber payoff line.",
+      "askedAs": [
+        "bigger bolder text",
+        "huge manifesto headline",
+        "navy and gold version",
+        "крупный жирный заголовок",
+        "тёмно-синий фон с золотым акцентом"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.4,
+        "background": "#0f1a2e",
+        "ink": "#f2f4f8",
+        "accent": "#f2a93b"
+      }
+    },
+    {
+      "id": "clean-light",
+      "label": "Clean Light",
+      "description": "A crisp white Geist layout with an indigo accent for product and pricing slides.",
+      "askedAs": [
+        "light mode version",
+        "white background clean look",
+        "minimal saas style",
+        "светлая тема минимализм",
+        "белый фон в стиле продукта"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Geist",
+        "accent": "#4f46e5"
+      }
+    }
+  ]
+}

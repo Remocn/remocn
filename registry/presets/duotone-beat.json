@@ -1,0 +1,109 @@
+{
+  "component": "duotone-beat",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "club-strobe",
+      "label": "Club Strobe",
+      "description": "Fast eighth-note swaps with a hard punch-in for a high-energy club cut.",
+      "askedAs": [
+        "fast flashing beat portrait",
+        "high energy strobe poster",
+        "rapid color swaps on the beat",
+        "быстрое мигание в такт",
+        "энергичный клубный постер"
+      ],
+      "props": {
+        "beatFrames": 8,
+        "punch": 0.15,
+        "halftone": 6
+      }
+    },
+    {
+      "id": "slow-groove",
+      "label": "Slow Groove",
+      "description": "Long, relaxed beats with a gentle push and coarse print dots for a laid-back track.",
+      "askedAs": [
+        "slow chill beat portrait",
+        "relaxed lo-fi poster",
+        "gentle pulse on a slow song",
+        "медленный спокойный ритм",
+        "расслабленный постер под лоуфай"
+      ],
+      "props": {
+        "beatFrames": 26,
+        "punch": 0.03,
+        "halftone": 14
+      }
+    },
+    {
+      "id": "clean-poster",
+      "label": "Clean Poster",
+      "description": "Smooth flat duotone with no halftone screen, no punch and no indicator for a minimal look.",
+      "askedAs": [
+        "flat two color portrait no dots",
+        "minimal duotone without zoom",
+        "clean poster without bar counter",
+        "чистый дуотон без точек",
+        "минималистичный постер без зума"
+      ],
+      "props": {
+        "halftone": 0,
+        "punch": 0,
+        "showIndicator": false
+      }
+    },
+    {
+      "id": "waltz-time",
+      "label": "Waltz Time",
+      "description": "Three-beat bars at a moderate pace with a medium punch on every downbeat.",
+      "askedAs": [
+        "three four time beat",
+        "waltz rhythm portrait",
+        "3 beats per bar swap",
+        "вальс три четверти",
+        "ритм на три доли"
+      ],
+      "props": {
+        "beatsPerBar": 3,
+        "beatFrames": 18,
+        "punch": 0.09
+      }
+    },
+    {
+      "id": "gritty-print",
+      "label": "Gritty Print",
+      "description": "Very coarse halftone dots with a strong downbeat punch for a raw screen-printed feel.",
+      "askedAs": [
+        "big halftone dots",
+        "grungy screen print look",
+        "rough risograph portrait",
+        "крупный растр точками",
+        "грубая трафаретная печать"
+      ],
+      "props": {
+        "halftone": 20,
+        "punch": 0.12,
+        "showIndicator": false
+      }
+    },
+    {
+      "id": "double-time",
+      "label": "Double Time",
+      "description": "Doubled playback speed with single-beat bars so every hit lands as a downbeat punch.",
+      "askedAs": [
+        "every beat punches in",
+        "double speed beat flash",
+        "constant zoom hits",
+        "каждая доля с зумом",
+        "ускоренный ритм вдвое"
+      ],
+      "props": {
+        "speed": 2,
+        "beatsPerBar": 1,
+        "punch": 0.1
+      }
+    }
+  ]
+}

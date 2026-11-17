@@ -1,0 +1,125 @@
+{
+  "component": "number-split",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "A warm light page with serif numerals, a deep ink accent and an unhurried split.",
+      "askedAs": [
+        "magazine style number breakdown",
+        "light serif data split",
+        "print editorial stats look",
+        "светлый журнальный стиль цифр",
+        "разбивка числа как в журнале"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1e1b16",
+        "accent": "#b4532a",
+        "hold": 54,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-quick",
+      "label": "Terminal Quick",
+      "description": "Monospaced numbers on near-black with thin green-teal bars that snap apart fast.",
+      "askedAs": [
+        "fast monospace number split",
+        "developer terminal stats",
+        "quick code style breakdown",
+        "быстрая разбивка моноширинным шрифтом",
+        "как в терминале"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1110",
+        "ink": "#d7e4dd",
+        "accent": "#3fb68b",
+        "barHeight": 6,
+        "speed": 2
+      }
+    },
+    {
+      "id": "bold-blocks",
+      "label": "Bold Blocks",
+      "description": "Oversized grotesk type with chunky bars for a loud, poster-like launch beat.",
+      "askedAs": [
+        "big bold number with thick bars",
+        "poster style stats reveal",
+        "chunky launch number",
+        "крупные цифры с толстыми полосами",
+        "яркий плакатный стиль"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.3,
+        "barHeight": 34,
+        "accent": "#ff6a3d",
+        "grain": false
+      }
+    },
+    {
+      "id": "clean-saas",
+      "label": "Clean SaaS",
+      "description": "Crisp white product-dashboard look with Inter, slim indigo bars and no grain.",
+      "askedAs": [
+        "clean dashboard number breakdown",
+        "minimal white saas stats",
+        "simple light product metric",
+        "чистый минималистичный дашборд",
+        "светлая разбивка для продукта"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#4f46e5",
+        "barHeight": 10,
+        "grain": false
+      }
+    },
+    {
+      "id": "slow-midnight",
+      "label": "Slow Midnight",
+      "description": "Elegant serif on deep navy with a long hold and slow, cinematic split.",
+      "askedAs": [
+        "slow elegant number reveal",
+        "cinematic dark stats",
+        "luxury serif breakdown",
+        "медленное элегантное появление",
+        "тёмный кинематографичный стиль"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "background": "#0b1426",
+        "ink": "#ede6d6",
+        "accent": "#c9a45c",
+        "hold": 80,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "compact-inline",
+      "label": "Compact Inline",
+      "description": "A smaller, tight Geist layout with thin bars that splits almost immediately.",
+      "askedAs": [
+        "small compact number split",
+        "quick inline stat breakdown",
+        "tight minimal chart",
+        "компактная небольшая разбивка",
+        "быстро и мелко"
+      ],
+      "props": {
+        "fontFamily": "Geist",
+        "scale": 0.7,
+        "barHeight": 5,
+        "hold": 12,
+        "speed": 1.5,
+        "accent": "#7a8cff"
+      }
+    }
+  ]
+}

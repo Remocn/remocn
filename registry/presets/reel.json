@@ -1,0 +1,96 @@
+{
+  "component": "reel",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-gallery",
+      "label": "Slow Gallery",
+      "description": "Unhurried pacing where each image lingers and blooms open with a long, soft reveal.",
+      "askedAs": [
+        "slower calmer image reveals",
+        "let each screenshot linger longer",
+        "gentle gallery pace",
+        "медленная смена картинок",
+        "плавное неспешное раскрытие"
+      ],
+      "props": {
+        "step": 36,
+        "reveal": 26,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "rapid-flicker",
+      "label": "Rapid Flicker",
+      "description": "Fast, punchy cuts where images snap open in quick succession for an energetic montage.",
+      "askedAs": [
+        "fast snappy image flips",
+        "quick montage of screenshots",
+        "speed up the reveals",
+        "быстрая смена кадров",
+        "динамичный монтаж скриншотов"
+      ],
+      "props": {
+        "step": 8,
+        "reveal": 5,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "sharp-cinema",
+      "label": "Sharp Cinema",
+      "description": "A wide letterboxed card with square corners and measured reveals for a filmic feel.",
+      "askedAs": [
+        "cinematic widescreen frame",
+        "square corners wide card",
+        "letterbox look for product shots",
+        "кинематографичный широкий кадр",
+        "без скруглений, широкий формат"
+      ],
+      "props": {
+        "width": 1280,
+        "height": 540,
+        "radius": 0,
+        "step": 28,
+        "reveal": 20
+      }
+    },
+    {
+      "id": "soft-device",
+      "label": "Soft Device",
+      "description": "A compact, generously rounded card that reads like a floating app window.",
+      "askedAs": [
+        "smaller rounded card",
+        "looks like an app window",
+        "compact soft corners",
+        "маленькая карточка со скруглёнными углами",
+        "как окно приложения"
+      ],
+      "props": {
+        "width": 860,
+        "height": 540,
+        "radius": 32
+      }
+    },
+    {
+      "id": "square-tile",
+      "label": "Square Tile",
+      "description": "A near-square tile with modest rounding and brisk reveals suited to social posts.",
+      "askedAs": [
+        "square format for instagram",
+        "boxy tile for product shots",
+        "square card quick reveals",
+        "квадратный формат для соцсетей",
+        "квадратная карточка"
+      ],
+      "props": {
+        "width": 700,
+        "height": 700,
+        "radius": 20,
+        "step": 16,
+        "reveal": 10
+      }
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+{
+  "component": "ui-callout",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-pills",
+      "label": "Midnight Pills",
+      "description": "Dark theme with compact pill callouts on a deep charcoal ground and a cool cyan accent.",
+      "askedAs": [
+        "dark mode annotations with small pills",
+        "night style callouts",
+        "compact labels on dark screen",
+        "тёмные подписи-таблетки",
+        "ночной стиль выносок"
+      ],
+      "props": {
+        "theme": "dark",
+        "variant": "pill",
+        "ground": "charcoal-satin",
+        "accent": "#5ec8e5",
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Warm paper ground with serif tooltip cards and a muted terracotta accent, paced slowly.",
+      "askedAs": [
+        "magazine style annotations",
+        "elegant serif callouts",
+        "slow classy walkthrough",
+        "редакционный стиль с засечками",
+        "элегантные выноски на бумаге"
+      ],
+      "props": {
+        "ground": "paper-crease",
+        "fontFamily": "Fraunces",
+        "accent": "#b5543a",
+        "ink": "#2a2420",
+        "speed": 0.75,
+        "stagger": 45
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Quick, tight pill callouts that land almost together with a bold indigo accent.",
+      "askedAs": [
+        "fast annotations all at once",
+        "snappy quick callouts",
+        "short punchy labels for a reel",
+        "быстрые выноски",
+        "резкие подписи почти одновременно"
+      ],
+      "props": {
+        "variant": "pill",
+        "speed": 2,
+        "stagger": 10,
+        "accent": "#4f46e5",
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "dev-terminal",
+      "label": "Dev Terminal",
+      "description": "Monospaced dark tooltips with a soft green accent on a cold low-orbit ground for technical screens.",
+      "askedAs": [
+        "code style annotations",
+        "developer docs callouts",
+        "monospace tech labels",
+        "моноширинные подписи для разработчиков",
+        "технический стиль выносок"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "ground": "low-orbit",
+        "accent": "#4ade80",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "big-presentation",
+      "label": "Big Presentation",
+      "description": "Oversized tooltip cards with generous timing and a warm amber accent on a lantern glow.",
+      "askedAs": [
+        "large readable callouts for a keynote",
+        "big annotations for slides",
+        "slow large tutorial labels",
+        "крупные выноски для презентации",
+        "большие подписи медленно"
+      ],
+      "props": {
+        "scale": 1.3,
+        "stagger": 60,
+        "delay": 15,
+        "accent": "#d97706",
+        "ground": "lantern",
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "velvet-night",
+      "label": "Velvet Night",
+      "description": "Moody dark tooltips on a velvet-hour ground with a dusty rose accent and grotesque type.",
+      "askedAs": [
+        "moody purple annotations",
+        "stylish dark callouts with pink accent",
+        "luxury product walkthrough",
+        "бархатный тёмный стиль",
+        "выноски с розовым акцентом на тёмном"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "velvet-hour",
+        "accent": "#e8a0b4",
+        "fontFamily": "Bricolage Grotesque"
+      }
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "component": "dither-dissolve",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "phosphor-crt",
+      "label": "Phosphor CRT",
+      "description": "Green phosphor ink on near-black with a rolling wave pattern, like an old terminal monitor.",
+      "askedAs": [
+        "green terminal dissolve",
+        "retro crt monitor transition",
+        "old computer screen dither",
+        "зелёный терминал переход",
+        "эффект старого монитора"
+      ],
+      "props": {
+        "shape": "wave",
+        "colorBack": "#0b120d",
+        "colorFront": "#5fd38a"
+      }
+    },
+    {
+      "id": "riso-print",
+      "label": "Riso Print",
+      "description": "Warm paper background with coral halftone dots, like a risograph print.",
+      "askedAs": [
+        "risograph halftone transition",
+        "print paper texture dissolve",
+        "warm halftone dots",
+        "эффект ризографа",
+        "переход полутоновыми точками"
+      ],
+      "props": {
+        "shape": "dots",
+        "colorBack": "#f3ece0",
+        "colorFront": "#e2574c",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "amber-swirl",
+      "label": "Amber Swirl",
+      "description": "Amber ink spiralling over deep brown, a fast vintage-terminal vortex.",
+      "askedAs": [
+        "amber spiral transition",
+        "fast vortex dither",
+        "orange retro swirl",
+        "янтарная спираль переход",
+        "быстрый вихрь дизеринг"
+      ],
+      "props": {
+        "shape": "swirl",
+        "colorBack": "#1a120a",
+        "colorFront": "#f0a640",
+        "speed": 2
+      }
+    },
+    {
+      "id": "blueprint-ripple",
+      "label": "Blueprint Ripple",
+      "description": "Pale blue ripples spreading across a navy field, calm and technical.",
+      "askedAs": [
+        "blue ripple dissolve",
+        "blueprint style transition",
+        "slow water ripple dither",
+        "синяя рябь переход",
+        "спокойный технический переход"
+      ],
+      "props": {
+        "shape": "ripple",
+        "colorBack": "#0e1a2e",
+        "colorFront": "#9cc4ec",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "mono-glitch",
+      "label": "Mono Glitch",
+      "description": "High-contrast black and white warp noise moving quickly for an aggressive cut.",
+      "askedAs": [
+        "black and white glitch transition",
+        "fast noisy dissolve",
+        "monochrome warp effect",
+        "чёрно-белый глитч переход",
+        "резкий шумный переход"
+      ],
+      "props": {
+        "shape": "warp",
+        "colorBack": "#0a0a0a",
+        "colorFront": "#f2f2f2",
+        "speed": 3
+      }
+    },
+    {
+      "id": "ink-sphere",
+      "label": "Ink Sphere",
+      "description": "Dark ink on soft grey shaped as a dithered sphere, like a printed globe.",
+      "askedAs": [
+        "light grey sphere dither",
+        "printed globe transition",
+        "minimal light dissolve",
+        "светлый переход сферой",
+        "минималистичный дизеринг шар"
+      ],
+      "props": {
+        "shape": "sphere",
+        "colorBack": "#e6e6e3",
+        "colorFront": "#23232b",
+        "speed": 1.25
+      }
+    }
+  ]
+}

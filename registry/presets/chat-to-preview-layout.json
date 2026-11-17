@@ -1,0 +1,91 @@
+{
+  "component": "chat-to-preview-layout",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "chat-first-handoff",
+      "label": "Chat First",
+      "description": "The conversation opens dominant at most of the frame, then steps aside to a slim rail as the preview takes over.",
+      "askedAs": [
+        "start with big chat then shrink it",
+        "chat dominant at the beginning",
+        "conversation takes most of the screen first",
+        "сначала большой чат, потом превью",
+        "чат крупно в начале"
+      ],
+      "props": {
+        "startChatRatio": 0.75,
+        "endChatRatio": 0.2
+      }
+    },
+    {
+      "id": "full-reveal",
+      "label": "Full Reveal",
+      "description": "A dramatic handoff where chat collapses to a thin sliver and the preview fills almost the entire frame.",
+      "askedAs": [
+        "make the preview nearly full screen",
+        "chat almost disappears",
+        "maximize the output at the end",
+        "превью на весь экран",
+        "чат почти исчезает"
+      ],
+      "props": {
+        "startChatRatio": 0.6,
+        "endChatRatio": 0.05,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "gentle-drift",
+      "label": "Gentle Drift",
+      "description": "A slow, subtle shift from an even split to a slightly wider preview, keeping the chat comfortably readable.",
+      "askedAs": [
+        "slow subtle resize",
+        "keep chat readable the whole time",
+        "calm gradual split change",
+        "медленное плавное изменение",
+        "чат остаётся читаемым"
+      ],
+      "props": {
+        "startChatRatio": 0.5,
+        "endChatRatio": 0.4,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "snap-switch",
+      "label": "Snap Switch",
+      "description": "A fast, punchy transition that swings from a wide chat to a narrow sidebar in a quick beat.",
+      "askedAs": [
+        "quick snappy layout change",
+        "fast swap from chat to preview",
+        "energetic resize",
+        "быстрое переключение на превью",
+        "резкая смена раскладки"
+      ],
+      "props": {
+        "startChatRatio": 0.7,
+        "endChatRatio": 0.15,
+        "speed": 3
+      }
+    },
+    {
+      "id": "sidebar-glide",
+      "label": "Sidebar Glide",
+      "description": "Chat begins as a compact sidebar and quietly narrows further, keeping the preview the hero throughout.",
+      "askedAs": [
+        "preview is main from the start",
+        "small chat sidebar",
+        "chat as narrow panel",
+        "превью главное с самого начала",
+        "узкая боковая панель чата"
+      ],
+      "props": {
+        "startChatRatio": 0.35,
+        "endChatRatio": 0.15,
+        "speed": 0.75
+      }
+    }
+  ]
+}

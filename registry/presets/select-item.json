@@ -1,0 +1,87 @@
+{
+  "component": "select-item",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "idle-calm",
+      "label": "Idle Calm",
+      "description": "A resting option row with no highlight, played at a gentle half-speed pace.",
+      "askedAs": [
+        "unselected option row",
+        "plain resting list item",
+        "slow neutral option",
+        "невыбранный пункт списка",
+        "спокойная строка без выделения"
+      ],
+      "props": {
+        "state": "idle",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "hover-glide",
+      "label": "Hover Glide",
+      "description": "The row eases into its soft hover highlight at a relaxed, cinematic pace.",
+      "askedAs": [
+        "slow hover highlight",
+        "mouse over option",
+        "gentle hover effect on item",
+        "наведение на пункт медленно",
+        "подсветка при наведении"
+      ],
+      "props": {
+        "state": "hover",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-press",
+      "label": "Quick Press",
+      "description": "A snappy, fast press feedback that feels like a crisp click.",
+      "askedAs": [
+        "fast click on option",
+        "snappy press state",
+        "tap feedback quick",
+        "быстрое нажатие на пункт",
+        "резкий клик по строке"
+      ],
+      "props": {
+        "state": "press",
+        "speed": 2
+      }
+    },
+    {
+      "id": "slow-select",
+      "label": "Slow Select",
+      "description": "The selection and check icon land deliberately at quarter speed for a detailed showcase.",
+      "askedAs": [
+        "slow motion selection",
+        "checkmark appears slowly",
+        "detailed select animation",
+        "медленный выбор с галочкой",
+        "замедленное выделение пункта"
+      ],
+      "props": {
+        "state": "selected",
+        "speed": 0.25
+      }
+    },
+    {
+      "id": "instant-pick",
+      "label": "Instant Pick",
+      "description": "A brisk, near-instant selection with the check snapping in at high speed.",
+      "askedAs": [
+        "fast selected option",
+        "quick checkmark pick",
+        "instant selection",
+        "мгновенный выбор пункта",
+        "быстрая галочка"
+      ],
+      "props": {
+        "state": "selected",
+        "speed": 3
+      }
+    }
+  ]
+}

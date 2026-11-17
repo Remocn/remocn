@@ -1,0 +1,127 @@
+{
+  "component": "weight-wave",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-tide",
+      "label": "Slow Tide",
+      "description": "Long, unhurried weight swells in a light theme with a soft serif feel and a muted green accent.",
+      "askedAs": [
+        "slow calm weight wave",
+        "gentle breathing text animation",
+        "light elegant serif wave",
+        "медленная спокойная волна текста",
+        "мягкая анимация жирности шрифта"
+      ],
+      "props": {
+        "theme": "light",
+        "waveLength": 96,
+        "waves": 1,
+        "speed": 0.75,
+        "fontFamily": "Fraunces",
+        "accent": "#2f6b4f"
+      }
+    },
+    {
+      "id": "punchy-pulse",
+      "label": "Punchy Pulse",
+      "description": "Fast, tight waves that hit heavy weights and snap onto a warm coral word.",
+      "askedAs": [
+        "fast energetic bold text wave",
+        "punchy heavy font pulse",
+        "quick snappy tagline animation",
+        "быстрая энергичная волна",
+        "резкий жирный пульс текста"
+      ],
+      "props": {
+        "peak": 900,
+        "waves": 4,
+        "waveLength": 24,
+        "stagger": 1,
+        "speed": 1.5,
+        "accent": "#ff6b4a"
+      }
+    },
+    {
+      "id": "mono-terminal",
+      "label": "Mono Terminal",
+      "description": "Monospaced type on near-black with a mint accent and a quick, technical rhythm.",
+      "askedAs": [
+        "code style weight animation",
+        "monospace developer tagline",
+        "terminal look text wave",
+        "моноширинный шрифт как в терминале",
+        "техничная анимация текста для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "ink": "#c9d1d9",
+        "accent": "#3fd69a",
+        "grain": false,
+        "waveLength": 30
+      }
+    },
+    {
+      "id": "paper-editorial",
+      "label": "Paper Editorial",
+      "description": "Large serif headline on warm paper with a deep oxblood emphasis and a slow, staggered settle.",
+      "askedAs": [
+        "magazine style headline wave",
+        "warm paper background serif",
+        "editorial closing line animation",
+        "журнальный заголовок на бумаге",
+        "тёплый фон с засечками"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "background": "#f3ede2",
+        "ink": "#2a2420",
+        "accent": "#8c2f39",
+        "scale": 1.3,
+        "stagger": 4
+      }
+    },
+    {
+      "id": "whisper-thin",
+      "label": "Whisper Thin",
+      "description": "Ultra-light weights barely swelling, a subtle minimal shimmer with a cool slate accent.",
+      "askedAs": [
+        "very subtle thin text movement",
+        "minimal light weight shimmer",
+        "barely moving hero line",
+        "едва заметная анимация тонкого шрифта",
+        "минималистичный лёгкий текст"
+      ],
+      "props": {
+        "from": 0,
+        "peak": 300,
+        "settle": 250,
+        "fontFamily": "Manrope",
+        "accent": "#7a8ca8",
+        "grain": false
+      }
+    },
+    {
+      "id": "bold-statement",
+      "label": "Bold Statement",
+      "description": "Big grotesque type with a delayed start, heavy peaks and a settled saturated violet word.",
+      "askedAs": [
+        "big bold brand tagline",
+        "heavy grotesk statement animation",
+        "large impactful final word",
+        "крупный жирный слоган",
+        "мощная финальная фраза"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.4,
+        "peak": 1200,
+        "settle": 800,
+        "delay": 12,
+        "accent": "#6d4aff"
+      }
+    }
+  ]
+}

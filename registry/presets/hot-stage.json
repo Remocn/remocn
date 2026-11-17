@@ -1,0 +1,102 @@
+{
+  "component": "hot-stage",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "mission-control",
+      "label": "Mission Control",
+      "description": "Deep navy console with amber accent and mono type, paced like a steady launch countdown.",
+      "askedAs": [
+        "nasa launch console look",
+        "amber mono countdown on dark blue",
+        "retro mission control terminal",
+        "как пульт управления полётом",
+        "янтарный моноширинный обратный отсчёт"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b1220",
+        "ink": "#e6edf3",
+        "accent": "#f2a541",
+        "hold": 45
+      }
+    },
+    {
+      "id": "paper-spec",
+      "label": "Paper Spec",
+      "description": "Light off-white sheet with an editorial serif headline and a calm ink-blue accent.",
+      "askedAs": [
+        "light editorial version",
+        "serif on cream paper",
+        "clean documentation style",
+        "светлый редакционный вариант",
+        "засечки на бумажном фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f6f3ec",
+        "ink": "#1c1b19",
+        "accent": "#2f5d9f",
+        "scale": 1.1
+      }
+    },
+    {
+      "id": "rapid-ship",
+      "label": "Rapid Ship",
+      "description": "Fast, punchy cadence with short holds and a crisp green accent for a quick deploy beat.",
+      "askedAs": [
+        "make it faster and snappier",
+        "quick deploy style",
+        "short punchy stage changes",
+        "быстрее и динамичнее",
+        "короткие резкие смены этапов"
+      ],
+      "props": {
+        "speed": 2,
+        "hold": 12,
+        "accent": "#3fb950",
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "slow-burn",
+      "label": "Slow Burn",
+      "description": "Unhurried, oversized headline with long holds and a warm ember accent on near-black.",
+      "askedAs": [
+        "slow dramatic reveal",
+        "big text long pauses",
+        "cinematic ending beat",
+        "медленное драматичное появление",
+        "крупный текст с долгими паузами"
+      ],
+      "props": {
+        "speed": 0.5,
+        "hold": 75,
+        "scale": 1.3,
+        "background": "#111010",
+        "ink": "#f1ece4",
+        "accent": "#e2683c"
+      }
+    },
+    {
+      "id": "compact-inset",
+      "label": "Compact Inset",
+      "description": "Small, tidy layout in Inter with a delayed start, suited to a corner or overlay placement.",
+      "askedAs": [
+        "smaller version for overlay",
+        "compact with delayed start",
+        "subtle minimal inset",
+        "компактный вариант для оверлея",
+        "маленький с задержкой старта"
+      ],
+      "props": {
+        "scale": 0.7,
+        "delay": 20,
+        "fontFamily": "Inter",
+        "accent": "#8b9cf7"
+      }
+    }
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "component": "score-bug",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "prime-time",
+      "label": "Prime Time",
+      "description": "A big, punchy night-match bug with a deep navy field and a bold broadcast red accent.",
+      "askedAs": [
+        "make it look like a big night game broadcast",
+        "red and navy sports TV style",
+        "bigger bold score bug",
+        "как в вечерней трансляции матча",
+        "крупное табло в красно-синих тонах"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#0b0f1a",
+        "accent": "#e5484d",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "matchday-paper",
+      "label": "Matchday Paper",
+      "description": "A warm off-white programme look with a pitch-green accent and editorial serif numerals.",
+      "askedAs": [
+        "vintage matchday programme look",
+        "light version with serif font and green",
+        "classic newspaper football style",
+        "светлое табло в стиле старой программки матча",
+        "классический вариант с зелёным и засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f1ea",
+        "accent": "#1f7a4d",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "quick-fire",
+      "label": "Quick Fire",
+      "description": "Goals land almost immediately and back to back, with an amber accent for a snappy highlight-reel pace.",
+      "askedAs": [
+        "make the goals come fast",
+        "quick highlight reel version",
+        "faster snappier score animation",
+        "сделай голы быстрее, один за другим",
+        "динамичная быстрая версия"
+      ],
+      "props": {
+        "speed": 1.75,
+        "firstGoal": 12,
+        "goalGap": 8,
+        "accent": "#f5a524"
+      }
+    },
+    {
+      "id": "slow-burn",
+      "label": "Slow Burn",
+      "description": "A patient, dramatic build where the first goal arrives late and each scoreline gets room to breathe in an elegant serif.",
+      "askedAs": [
+        "slow dramatic reveal of the score",
+        "let each goal breathe",
+        "cinematic slower version",
+        "медленное драматичное появление счёта",
+        "неторопливая кинематографичная версия"
+      ],
+      "props": {
+        "speed": 0.75,
+        "delay": 15,
+        "firstGoal": 60,
+        "goalGap": 40,
+        "fontFamily": "Instrument Serif"
+      }
+    },
+    {
+      "id": "stats-desk",
+      "label": "Stats Desk",
+      "description": "A compact, clean white data-desk bug in monospace with a near-black accent.",
+      "askedAs": [
+        "minimal stats style score bug",
+        "monospace clean white version",
+        "small technical scoreboard",
+        "минималистичное табло моноширинным шрифтом",
+        "компактная светлая версия как у аналитиков"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#ffffff",
+        "accent": "#111827",
+        "fontFamily": "JetBrains Mono",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "club-kit",
+      "label": "Club Kit",
+      "description": "An oversized, chunky bug in a dark plum field with a violet club-colour accent and quirky grotesque type.",
+      "askedAs": [
+        "huge playful purple score bug",
+        "make it big and fun",
+        "club colours purple version",
+        "огромное весёлое табло в фиолетовом",
+        "крупно и игриво в цветах клуба"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#14101f",
+        "accent": "#8b5cf6",
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.3
+      }
+    }
+  ]
+}

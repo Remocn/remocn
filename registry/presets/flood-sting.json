@@ -1,0 +1,121 @@
+{
+  "component": "flood-sting",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "ember-flood",
+      "label": "Ember Flood",
+      "description": "A warm terracotta flood over a copper ground with a cream wordmark, played slightly slower for a crafted feel.",
+      "askedAs": [
+        "warm orange brand reveal",
+        "terracotta flood with cream logo",
+        "cozy slower logo sting",
+        "тёплая оранжевая заливка с логотипом",
+        "медленная тёплая заставка бренда"
+      ],
+      "props": {
+        "flood": "#c2522d",
+        "logoColor": "#fbf1e3",
+        "ground": "copper",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "A light, editorial take with off-white paper, ink-black glyphs and a deep navy flood revealing a white logo.",
+      "askedAs": [
+        "light mode logo sting",
+        "clean white editorial reveal",
+        "navy flood on paper",
+        "светлая версия заставки с логотипом",
+        "чистая белая анимация с синей заливкой"
+      ],
+      "props": {
+        "theme": "light",
+        "paper": "#f6f3ee",
+        "ink": "#1b1b1f",
+        "flood": "#1d2b53",
+        "logoColor": "#ffffff",
+        "ground": "paper-crease"
+      }
+    },
+    {
+      "id": "snap-quick",
+      "label": "Snap Quick",
+      "description": "A fast, punchy sting with tight tile stagger and a square highlight that floods in almost instantly.",
+      "askedAs": [
+        "fast snappy logo sting",
+        "quick punchy brand reveal",
+        "short intro for social",
+        "быстрая резкая заставка",
+        "короткий динамичный логотип"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 0,
+        "radius": 0.08,
+        "pick": 5
+      }
+    },
+    {
+      "id": "forest-hush",
+      "label": "Forest Hush",
+      "description": "A deep green flood on a greenhouse ground with a soft mint wordmark, rounded highlight and an unhurried pace.",
+      "askedAs": [
+        "calm green brand reveal",
+        "deep green logo sting",
+        "slow natural feeling intro",
+        "спокойная зелёная заставка",
+        "медленное появление логотипа в зелёном"
+      ],
+      "props": {
+        "flood": "#1f4d3a",
+        "logoColor": "#d8f0e2",
+        "ground": "greenhouse",
+        "radius": 0.5,
+        "stagger": 5,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "midnight-violet",
+      "label": "Midnight Violet",
+      "description": "A moody violet flood over a velvet-hour ground with a lavender logo, scaled up for a bold hero moment.",
+      "askedAs": [
+        "dark purple premium intro",
+        "big moody logo reveal",
+        "violet night brand sting",
+        "тёмно-фиолетовая премиальная заставка",
+        "крупный логотип в фиолетовых тонах"
+      ],
+      "props": {
+        "flood": "#3b2470",
+        "logoColor": "#e6dcff",
+        "ground": "velvet-hour",
+        "scale": 1.25,
+        "delay": 12
+      }
+    },
+    {
+      "id": "mono-graphite",
+      "label": "Mono Graphite",
+      "description": "A restrained monochrome version with a graphite flood, silver glyphs and a crisp white wordmark at a compact scale.",
+      "askedAs": [
+        "black and white logo sting",
+        "minimal monochrome reveal",
+        "grey understated brand intro",
+        "чёрно-белая минималистичная заставка",
+        "сдержанный серый логотип"
+      ],
+      "props": {
+        "flood": "#2a2c30",
+        "ink": "#c9ccd1",
+        "logoColor": "#ffffff",
+        "ground": "charcoal-satin",
+        "scale": 0.85
+      }
+    }
+  ]
+}

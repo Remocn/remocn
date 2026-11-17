@@ -1,0 +1,106 @@
+{
+  "component": "line-cascade",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-ivory",
+      "label": "Editorial Ivory",
+      "description": "Warm ivory paper with a deep oxblood gradient and a refined serif caption, unhurried and print-like.",
+      "askedAs": [
+        "light magazine style big number",
+        "elegant serif stat on cream",
+        "slow classy print poster number",
+        "светлый журнальный стиль с засечками",
+        "элегантная цифра на кремовом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1f1a17",
+        "accent": "#8a2b2b",
+        "fontFamily": "Instrument Serif",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "dense-terminal",
+      "label": "Dense Terminal",
+      "description": "Tightly packed lines in muted teal on near-black with a monospace caption and quick build.",
+      "askedAs": [
+        "hacker style number with tight lines",
+        "dev tool stat in monospace",
+        "fast techy dark counter",
+        "техничная цифра моноширинным шрифтом",
+        "плотные линии в стиле терминала"
+      ],
+      "props": {
+        "lineSpacing": 4,
+        "accent": "#2fb8a6",
+        "background": "#0b0f10",
+        "ink": "#d7e4e2",
+        "fontFamily": "JetBrains Mono",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "wide-amber",
+      "label": "Wide Amber",
+      "description": "Airy, widely spaced amber lines on charcoal for a slow, cinematic reveal with a light caption.",
+      "askedAs": [
+        "slow cinematic golden number",
+        "sparse lines warm orange reveal",
+        "dramatic launch stat with space",
+        "медленное кинематографичное появление",
+        "золотые редкие линии на тёмном"
+      ],
+      "props": {
+        "lineSpacing": 11,
+        "accent": "#e0a043",
+        "background": "#17140f",
+        "ink": "#f2eadb",
+        "fontWeight": 300,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "clean-violet",
+      "label": "Clean Violet",
+      "description": "Crisp white canvas with a violet gradient, bold Geist caption and no grain for a sleek product look.",
+      "askedAs": [
+        "clean white saas stat",
+        "modern minimal purple number",
+        "no grain crisp product slide",
+        "чистый белый слайд с фиолетовым",
+        "современная минималистичная цифра"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#ffffff",
+        "ink": "#14121f",
+        "accent": "#6a4ce0",
+        "fontFamily": "Geist",
+        "grain": false
+      }
+    },
+    {
+      "id": "punchy-oversize",
+      "label": "Punchy Oversize",
+      "description": "Oversized, fast-building figure in a coral gradient with a heavy grotesque caption for maximum impact.",
+      "askedAs": [
+        "huge bold number fast",
+        "make the stat bigger and punchier",
+        "energetic oversized poster figure",
+        "огромная яркая цифра быстро",
+        "крупно и энергично"
+      ],
+      "props": {
+        "scale": 1.35,
+        "speed": 2,
+        "accent": "#f0644b",
+        "fontFamily": "Bricolage Grotesque",
+        "fontWeight": 700
+      }
+    }
+  ]
+}

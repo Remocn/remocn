@@ -1,0 +1,94 @@
+{
+  "component": "shader-seam",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "crisp-burn",
+      "label": "Crisp Burn",
+      "description": "A hard-edged, finely detailed dissolve that eats away the material quickly like burning paper.",
+      "askedAs": [
+        "sharp edge dissolve",
+        "fast burn away transition",
+        "crisp detailed disintegration",
+        "резкое растворение с чёткими краями",
+        "быстрый переход как горящая бумага"
+      ],
+      "props": {
+        "softness": 0.03,
+        "detail": 0.9,
+        "speed": 2
+      }
+    },
+    {
+      "id": "velvet-fade",
+      "label": "Velvet Fade",
+      "description": "A slow, broad and pillowy dissolve with soft gradients and minimal texture.",
+      "askedAs": [
+        "slow soft dissolve",
+        "gentle smooth reveal",
+        "dreamy fade out",
+        "медленное мягкое растворение",
+        "плавный нежный переход"
+      ],
+      "props": {
+        "softness": 0.38,
+        "detail": 0.2,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "organic-bloom",
+      "label": "Organic Bloom",
+      "description": "A medium-paced, richly textured dissolve that spreads like mould or ink through paper.",
+      "askedAs": [
+        "organic textured dissolve",
+        "ink spreading reveal",
+        "natural growing transition",
+        "органическое растворение с текстурой",
+        "переход как растекающиеся чернила"
+      ],
+      "props": {
+        "softness": 0.12,
+        "detail": 1,
+        "timeOffset": 8.5,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-cut",
+      "label": "Quick Cut",
+      "description": "A snappy, mid-soft dissolve with simple shapes for fast edits.",
+      "askedAs": [
+        "fast simple dissolve",
+        "quick shader transition",
+        "snappy reveal",
+        "быстрый простой переход",
+        "резкая смена сцены"
+      ],
+      "props": {
+        "softness": 0.1,
+        "detail": 0.35,
+        "speed": 3.5
+      }
+    },
+    {
+      "id": "misty-drift",
+      "label": "Misty Drift",
+      "description": "A hazy, unhurried dissolve with moderate detail that reads like fog lifting.",
+      "askedAs": [
+        "foggy dissolve",
+        "mist clearing reveal",
+        "hazy slow transition",
+        "туманное растворение",
+        "переход как рассеивающийся туман"
+      ],
+      "props": {
+        "softness": 0.3,
+        "detail": 0.55,
+        "timeOffset": 17,
+        "speed": 0.25
+      }
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+{
+  "component": "macro-letter-pan",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A slow, elegant serif pan on warm paper with a deep oxblood payoff word.",
+      "askedAs": [
+        "elegant serif magazine title",
+        "slow luxurious text reveal on light paper",
+        "classy editorial closing line",
+        "элегантный заголовок с засечками",
+        "медленный журнальный титр"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "fontFamily": "Instrument Serif",
+        "accent": "#8a2e2e",
+        "speed": 0.75,
+        "pullLen": 50
+      }
+    },
+    {
+      "id": "midnight-cinema",
+      "label": "Midnight Cinema",
+      "description": "A long, brooding dwell on the key word over a deep blue-hour ground with a pale gold accent.",
+      "askedAs": [
+        "cinematic dark movie title",
+        "moody slow camera on the word",
+        "film trailer ending text",
+        "кинематографичный тёмный титр",
+        "мрачная концовка как в трейлере"
+      ],
+      "props": {
+        "ground": "blue-hour",
+        "accent": "#d9b56c",
+        "firstShot": 30,
+        "pullLen": 70,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "rapid-cut",
+      "label": "Rapid Cut",
+      "description": "Punchy, fast macro cuts across many letters with a quick snap back to the full line.",
+      "askedAs": [
+        "fast energetic text cuts",
+        "quick punchy launch title",
+        "snappy promo ending",
+        "быстрые резкие склейки текста",
+        "динамичный энергичный титр"
+      ],
+      "props": {
+        "speed": 2,
+        "maxShots": 12,
+        "firstShot": 6,
+        "pullLen": 12,
+        "fontFamily": "Space Grotesk",
+        "ground": "cobalt-rise"
+      }
+    },
+    {
+      "id": "terminal-launch",
+      "label": "Terminal Launch",
+      "description": "A technical monospace treatment on charcoal with a crisp mint accent for developer products.",
+      "askedAs": [
+        "code style launch text",
+        "developer product announcement",
+        "monospace tech title",
+        "текст в стиле терминала",
+        "титр для запуска IT-продукта"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "ground": "charcoal-satin",
+        "accent": "#5fd4a8",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "warm-ember",
+      "label": "Warm Ember",
+      "description": "A larger, warm copper-toned Fraunces title with a soft amber payoff and gentle pacing.",
+      "askedAs": [
+        "warm cozy big title",
+        "copper orange elegant ending",
+        "soft warm call to action",
+        "тёплый крупный заголовок",
+        "медный оттенок, мягкая концовка"
+      ],
+      "props": {
+        "ground": "ember",
+        "fontFamily": "Fraunces",
+        "accent": "#f2b880",
+        "scale": 1.2,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "clean-polar",
+      "label": "Clean Polar",
+      "description": "A bright, minimal light look on cool polar tones with a confident blue accent and a short delay.",
+      "askedAs": [
+        "clean minimal light title",
+        "bright corporate launch line",
+        "simple white and blue ending",
+        "чистый светлый минимализм",
+        "светлый титр с синим акцентом"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "polar",
+        "fontFamily": "Inter",
+        "accent": "#1f5fd1",
+        "delay": 12
+      }
+    }
+  ]
+}

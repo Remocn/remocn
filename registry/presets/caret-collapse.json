@@ -1,0 +1,123 @@
+{
+  "component": "caret-collapse",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A dark developer console look with monospaced type, a mint caret accent and brisk, unstaggered motion.",
+      "askedAs": [
+        "make it look like a terminal",
+        "code editor style with mono font",
+        "hacker console prompt",
+        "как терминал",
+        "моноширинный шрифт как в консоли"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#3ddc97",
+        "ground": "nightfold",
+        "stagger": 0,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "paper-calm",
+      "label": "Paper Calm",
+      "description": "A light, editorial hand-off on warm paper with a serif voice and slow, gentle pacing.",
+      "askedAs": [
+        "light and calm version",
+        "elegant serif on paper",
+        "slow soft minimal look",
+        "светлый спокойный вариант",
+        "элегантный шрифт с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "ground": "paper-crease",
+        "groundB": "polar",
+        "speed": 0.75,
+        "stagger": 4
+      }
+    },
+    {
+      "id": "cobalt-launch",
+      "label": "Cobalt Launch",
+      "description": "A confident product-launch look with a cobalt gradient, bold grotesk type and slightly larger scale.",
+      "askedAs": [
+        "product launch keynote style",
+        "bold blue launch look",
+        "bigger punchy text",
+        "как на презентации продукта",
+        "крупнее и ярче синий"
+      ],
+      "props": {
+        "ground": "cobalt-rise",
+        "groundB": "blue-hour",
+        "fontFamily": "Space Grotesk",
+        "accent": "#7aa2ff",
+        "scale": 1.2
+      }
+    },
+    {
+      "id": "ember-glow",
+      "label": "Ember Glow",
+      "description": "Warm copper and ember grounds with a soft amber caret for a cozy, late-night feel.",
+      "askedAs": [
+        "warm orange tones",
+        "cozy late night vibe",
+        "copper and amber colors",
+        "тёплые оранжевые тона",
+        "уютный вечерний стиль"
+      ],
+      "props": {
+        "ground": "ember",
+        "groundB": "copper",
+        "accent": "#f5a35c",
+        "fontFamily": "Manrope",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-cut",
+      "label": "Quick Cut",
+      "description": "A snappy, compact hand-off that plays at double speed with tight word timing for fast edits.",
+      "askedAs": [
+        "make it faster",
+        "snappy quick transition",
+        "short version for reels",
+        "сделай быстрее",
+        "быстрый резкий переход"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 1,
+        "scale": 0.85,
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "graphite-studio",
+      "label": "Graphite Studio",
+      "description": "A restrained monochrome look on flat graphite with off-white text and a delayed, unhurried entrance.",
+      "askedAs": [
+        "minimal monochrome gray",
+        "plain dark background no gradient",
+        "subtle and understated",
+        "минималистичный серый",
+        "спокойный монохром"
+      ],
+      "props": {
+        "background": "#1c1d20",
+        "ink": "#ecebe6",
+        "accent": "#a9adb5",
+        "ground": "charcoal-satin",
+        "delay": 20,
+        "stagger": 5
+      }
+    }
+  ]
+}

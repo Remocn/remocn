@@ -1,0 +1,123 @@
+{
+  "component": "contribution-heatmap",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "github-green",
+      "label": "Classic Green",
+      "description": "A familiar contribution-graph look with green cells and rounded squares on a near-black canvas.",
+      "askedAs": [
+        "make it look like github contributions",
+        "green activity grid",
+        "classic commit graph style",
+        "как график коммитов на гитхабе",
+        "зелёная сетка активности"
+      ],
+      "props": {
+        "accent": "#2ea043",
+        "background": "#0d1117",
+        "ink": "#e6edf3",
+        "radius": 0.2
+      }
+    },
+    {
+      "id": "paper-ledger",
+      "label": "Paper Ledger",
+      "description": "A light, editorial take with warm off-white paper, ink-blue cells and a refined serif counter.",
+      "askedAs": [
+        "light editorial version",
+        "serif number on cream background",
+        "print magazine data look",
+        "светлый журнальный стиль",
+        "кремовый фон с серифным шрифтом"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f5f1e8",
+        "ink": "#1c1b19",
+        "accent": "#1e3a8a",
+        "fontFamily": "Instrument Serif",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Sharp square pixels in amber with a monospace counter for a raw, developer-console feel.",
+      "askedAs": [
+        "terminal style heatmap",
+        "square pixels monospace",
+        "retro console look",
+        "стиль терминала",
+        "моноширинный шрифт и квадратные пиксели"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "radius": 0,
+        "accent": "#f5a524",
+        "background": "#111111",
+        "ink": "#f2e9d8",
+        "grain": false
+      }
+    },
+    {
+      "id": "quick-pulse",
+      "label": "Quick Pulse",
+      "description": "A fast, punchy fill with bold type and round dots in coral for snappy social cuts.",
+      "askedAs": [
+        "make it faster and punchier",
+        "quick version for reels",
+        "bold round dots",
+        "быстрее и энергичнее",
+        "короткая динамичная версия"
+      ],
+      "props": {
+        "speed": 2,
+        "fontWeight": 500,
+        "radius": 0.5,
+        "accent": "#ff6b5b",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "quiet-quarter",
+      "label": "Quiet Quarter",
+      "description": "A slow, airy reveal with a shorter grid, light type and soft violet cells on a clean white page.",
+      "askedAs": [
+        "calm minimal version",
+        "slow and light",
+        "fewer weeks, soft colors",
+        "спокойный минималистичный вариант",
+        "медленно и светло"
+      ],
+      "props": {
+        "theme": "light",
+        "weeks": 26,
+        "speed": 0.5,
+        "fontWeight": 300,
+        "accent": "#7c6cf2",
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "three-year-wall",
+      "label": "Three-Year Wall",
+      "description": "A dense three-year wall of tiny teal cells, scaled down for a sweeping long-view panorama.",
+      "askedAs": [
+        "show three years of activity",
+        "dense wide grid",
+        "zoomed out long history",
+        "показать три года активности",
+        "плотная широкая сетка"
+      ],
+      "props": {
+        "weeks": 156,
+        "scale": 0.75,
+        "accent": "#14b8a6",
+        "radius": 0.15,
+        "delay": 10
+      }
+    }
+  ]
+}

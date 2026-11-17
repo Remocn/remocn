@@ -1,0 +1,103 @@
+{
+  "component": "lights-out",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "grand-prix-red",
+      "label": "Grand Prix",
+      "description": "Classic race-start red on near-black with a fast beat and hard slant.",
+      "askedAs": [
+        "f1 race start red lights",
+        "fast racing countdown",
+        "red and black motorsport title",
+        "гоночный старт красный",
+        "как старт формулы 1"
+      ],
+      "props": {
+        "accent": "#e10600",
+        "background": "#0b0b0c",
+        "ink": "#f5f5f2",
+        "beat": 6,
+        "slant": 16,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "paddock-paper",
+      "label": "Paddock Paper",
+      "description": "Light, editorial take with an upright serif headline and no glow.",
+      "askedAs": [
+        "clean light version no glow",
+        "elegant serif launch title",
+        "minimal white countdown",
+        "светлый минималистичный вариант",
+        "элегантный заголовок с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "glow": false,
+        "fontFamily": "Instrument Serif",
+        "slant": 0,
+        "accent": "#1f3a93"
+      }
+    },
+    {
+      "id": "slow-tension",
+      "label": "Slow Tension",
+      "description": "Long, suspenseful light sequence with an extended hold before the headline lands.",
+      "askedAs": [
+        "slow dramatic countdown",
+        "build suspense before reveal",
+        "long pause before title",
+        "медленный драматичный отсчёт",
+        "долгая пауза перед заголовком"
+      ],
+      "props": {
+        "beat": 22,
+        "hold": 60,
+        "speed": 0.75,
+        "accent": "#f2a93b"
+      }
+    },
+    {
+      "id": "arcade-mono",
+      "label": "Arcade Mono",
+      "description": "Gamer-flavored monospace headline in teal on deep navy with a snappy pace.",
+      "askedAs": [
+        "gaming style title",
+        "retro arcade countdown",
+        "monospace esports intro",
+        "игровой стиль заставки",
+        "киберспорт заголовок"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0e1424",
+        "ink": "#e6f1f5",
+        "accent": "#2ec4b6",
+        "slant": 4,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "big-slam",
+      "label": "Big Slam",
+      "description": "Oversized, heavily slanted headline that hits instantly with almost no wait.",
+      "askedAs": [
+        "huge punchy title",
+        "instant slam big text",
+        "maximum energy reveal",
+        "огромный заголовок сразу",
+        "максимально резкое появление"
+      ],
+      "props": {
+        "scale": 1.4,
+        "slant": 20,
+        "beat": 3,
+        "hold": 8,
+        "speed": 2
+      }
+    }
+  ]
+}

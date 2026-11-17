@@ -1,0 +1,125 @@
+{
+  "component": "card-swipe-cover",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "ember-launch",
+      "label": "Ember Launch",
+      "description": "A warm dark swipe from glowing ember into copper, with chunky Bricolage type and a tangerine accent.",
+      "askedAs": [
+        "warm orange dark launch",
+        "fiery cozy card reveal",
+        "bold warm grotesque look",
+        "тёплый оранжевый тёмный вариант",
+        "огненный запуск карточек"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "ember",
+        "groundB": "copper",
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#f2994a"
+      }
+    },
+    {
+      "id": "paper-studio",
+      "label": "Paper Studio",
+      "description": "A calm light editorial look on creased paper with Instrument Serif headlines and a deep ink-blue accent.",
+      "askedAs": [
+        "light editorial paper style",
+        "clean serif magazine reveal",
+        "soft white minimal swipe",
+        "светлый журнальный стиль",
+        "бумажный минимализм с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "groundB": "polar",
+        "fontFamily": "Instrument Serif",
+        "accent": "#1f3a8a",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "snap-cascade",
+      "label": "Snap Cascade",
+      "description": "A fast, punchy swipe where the cards tumble in with a wide, bouncy stagger.",
+      "askedAs": [
+        "fast energetic card swipe",
+        "quick playful cascade",
+        "snappy social media reveal",
+        "быстрый энергичный свайп",
+        "резкая игривая подача карточек"
+      ],
+      "props": {
+        "speed": 1.75,
+        "stagger": 8,
+        "fontFamily": "Space Grotesk",
+        "accent": "#7c5cff",
+        "ground": "cobalt-rise"
+      }
+    },
+    {
+      "id": "slow-velvet",
+      "label": "Slow Velvet",
+      "description": "A slow, cinematic dark reveal moving from velvet hour into nightfold, with Fraunces type and a soft rose accent.",
+      "askedAs": [
+        "slow cinematic luxury reveal",
+        "elegant moody dark swipe",
+        "premium calm gallery intro",
+        "медленное кинематографичное появление",
+        "элегантный тёмный премиум"
+      ],
+      "props": {
+        "speed": 0.5,
+        "ground": "velvet-hour",
+        "groundB": "nightfold",
+        "fontFamily": "Fraunces",
+        "accent": "#e8a0b4",
+        "delay": 12
+      }
+    },
+    {
+      "id": "dev-terminal",
+      "label": "Dev Terminal",
+      "description": "A tight, technical look in JetBrains Mono on a charcoal ground with mint-green accents and a compact grid.",
+      "askedAs": [
+        "developer tool launch look",
+        "monospace code style reveal",
+        "techy dark minimal cards",
+        "стиль для разработчиков моноширинный",
+        "технический тёмный вариант"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "ground": "charcoal-satin",
+        "groundB": "low-orbit",
+        "accent": "#3ddc97",
+        "scale": 0.85,
+        "stagger": 2
+      }
+    },
+    {
+      "id": "big-greenhouse",
+      "label": "Big Greenhouse",
+      "description": "An oversized, fresh light layout on a greenhouse ground with Manrope type and a forest-green accent.",
+      "askedAs": [
+        "big fresh green light style",
+        "large friendly eco look",
+        "bright natural card gallery",
+        "крупный светлый зелёный стиль",
+        "свежий природный вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "greenhouse",
+        "fontFamily": "Manrope",
+        "accent": "#2f7d4f",
+        "scale": 1.25,
+        "stagger": 5
+      }
+    }
+  ]
+}

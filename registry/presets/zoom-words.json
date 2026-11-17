@@ -1,0 +1,123 @@
+{
+  "component": "zoom-words",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "cold-open",
+      "label": "Cold Open",
+      "description": "Extreme close-up with heavy initial blur that slowly pulls into focus as pale words creep in.",
+      "askedAs": [
+        "very blurry start that slowly sharpens",
+        "slow dramatic cold open close-up",
+        "foggy intro text that comes into focus",
+        "размытое начало с медленной фокусировкой",
+        "медленный драматичный холодный старт"
+      ],
+      "props": {
+        "zoom": 3.2,
+        "blur": 0.18,
+        "blurFrames": 110,
+        "wordGap": 18,
+        "color": "#e8e4dc"
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Bold words snap in quickly with a short, crisp focus pull for energetic cuts.",
+      "askedAs": [
+        "fast punchy word reveal",
+        "quick bold text for a hype intro",
+        "snappy words appearing rapidly",
+        "быстрые жирные слова",
+        "энергичное быстрое появление текста"
+      ],
+      "props": {
+        "wordGap": 5,
+        "speed": 1.5,
+        "fontWeight": "700",
+        "blur": 0.02,
+        "blurFrames": 20,
+        "color": "#ffffff"
+      }
+    },
+    {
+      "id": "wide-calm",
+      "label": "Wide Calm",
+      "description": "A gentler, wider framing with medium-weight sage text that reads almost fully in frame.",
+      "askedAs": [
+        "less zoomed in, calmer reveal",
+        "wider shot of the text line",
+        "relaxed readable word reveal",
+        "более широкий план, спокойный текст",
+        "меньше зума, читаемо"
+      ],
+      "props": {
+        "zoom": 1.3,
+        "wordGap": 14,
+        "fontWeight": "500",
+        "color": "#b8d4c0",
+        "blur": 0.01
+      }
+    },
+    {
+      "id": "golden-trail",
+      "label": "Golden Trail",
+      "description": "Warm amber type with the camera anchored left so the line streams far ahead off-frame.",
+      "askedAs": [
+        "warm gold text running off screen",
+        "camera leaning left following the words",
+        "luxury amber word reveal",
+        "золотой текст уходит за кадр",
+        "тёплый премиальный янтарный текст"
+      ],
+      "props": {
+        "color": "#e6b980",
+        "anchor": 0.3,
+        "fontSize": 88,
+        "fontWeight": "600",
+        "zoom": 2.6
+      }
+    },
+    {
+      "id": "monolith",
+      "label": "Monolith",
+      "description": "Giant heavy words at maximum scale in cool steel blue, filling the frame one at a time.",
+      "askedAs": [
+        "huge giant words filling the screen",
+        "massive heavy title close-up",
+        "biggest possible text reveal",
+        "огромные слова на весь экран",
+        "гигантский тяжёлый текст"
+      ],
+      "props": {
+        "fontSize": 150,
+        "zoom": 3.8,
+        "fontWeight": "700",
+        "anchor": 0.65,
+        "color": "#9fb7d9",
+        "wordGap": 16
+      }
+    },
+    {
+      "id": "slow-whisper",
+      "label": "Slow Whisper",
+      "description": "Thin, small rose-tinted words drift in at half speed with a soft lingering focus.",
+      "askedAs": [
+        "slow soft thin text reveal",
+        "delicate whispered words intro",
+        "gentle slow-motion typography",
+        "медленный нежный тонкий текст",
+        "мягкое плавное появление слов"
+      ],
+      "props": {
+        "speed": 0.5,
+        "fontSize": 44,
+        "color": "#e9c6cf",
+        "blur": 0.08,
+        "blurFrames": 90
+      }
+    }
+  ]
+}

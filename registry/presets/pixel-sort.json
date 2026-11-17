@@ -1,0 +1,96 @@
+{
+  "component": "pixel-sort",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "chunky-slow-melt",
+      "label": "Chunky Melt",
+      "description": "A few wide columns drip down slowly with warm amber streaks, like a deliberate datamosh.",
+      "askedAs": [
+        "slow wide glitch melt",
+        "big blocky pixel drip",
+        "warm slow data melt",
+        "медленное плавление пикселей крупными полосами",
+        "широкие тёплые глитч полосы"
+      ],
+      "props": {
+        "columns": 14,
+        "speed": 0.5,
+        "streakColor": "#f2a65a",
+        "seed": 12
+      }
+    },
+    {
+      "id": "fine-rain",
+      "label": "Fine Rain",
+      "description": "Dense hairline columns cascade quickly with cool blue streaks for a crisp digital-rain feel.",
+      "askedAs": [
+        "fast thin pixel rain",
+        "dense digital rain transition",
+        "many narrow glitch streaks",
+        "быстрый цифровой дождь из пикселей",
+        "много тонких полос глитча"
+      ],
+      "props": {
+        "columns": 88,
+        "speed": 1.75,
+        "streakColor": "#7cc4fa",
+        "seed": 27
+      }
+    },
+    {
+      "id": "terminal-green",
+      "label": "Terminal Green",
+      "description": "Medium columns sort with muted phosphor-green streaks, evoking an old terminal processing the frame.",
+      "askedAs": [
+        "green hacker glitch cut",
+        "matrix style pixel sort",
+        "retro terminal transition",
+        "зелёный хакерский глитч переход",
+        "как в старом терминале"
+      ],
+      "props": {
+        "columns": 48,
+        "streakColor": "#5fd38d",
+        "seed": 33
+      }
+    },
+    {
+      "id": "ai-violet",
+      "label": "AI Violet",
+      "description": "Soft lavender streaks on moderately dense columns at an easy pace for a polished AI-product look.",
+      "askedAs": [
+        "purple ai product transition",
+        "soft violet glitch",
+        "modern ai pixel sort",
+        "фиолетовый переход для ии продукта",
+        "мягкий сиреневый глитч"
+      ],
+      "props": {
+        "columns": 60,
+        "speed": 0.75,
+        "streakColor": "#a99bf5",
+        "seed": 18
+      }
+    },
+    {
+      "id": "snap-cut",
+      "label": "Snap Cut",
+      "description": "A punchy, very fast sort with neutral grey streaks that reads as a quick processing hiccup.",
+      "askedAs": [
+        "quick glitch snap",
+        "very fast pixel sort cut",
+        "short digital hiccup",
+        "очень быстрый глитч переход",
+        "резкая короткая склейка пикселями"
+      ],
+      "props": {
+        "speed": 3,
+        "columns": 32,
+        "streakColor": "#b8bec6",
+        "seed": 41
+      }
+    }
+  ]
+}

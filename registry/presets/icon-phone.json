@@ -1,0 +1,100 @@
+{
+  "component": "icon-phone",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "incoming-call",
+      "label": "Incoming Call",
+      "description": "A large, looping ringing phone in confident blue that shakes quickly like a live call.",
+      "askedAs": [
+        "ringing phone loop",
+        "phone that keeps vibrating",
+        "incoming call animation",
+        "звонящий телефон",
+        "телефон вибрирует постоянно"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "size": 96,
+        "color": "#1f6feb",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "slow-sketch",
+      "label": "Slow Sketch",
+      "description": "A thin graphite line slowly draws the phone outline like a pencil sketch.",
+      "askedAs": [
+        "slowly drawn phone outline",
+        "hand drawn phone line",
+        "thin elegant phone icon",
+        "медленно рисуется телефон",
+        "тонкий контур телефона"
+      ],
+      "props": {
+        "animation": "draw",
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "size": 120,
+        "color": "#525252"
+      }
+    },
+    {
+      "id": "bold-hotline",
+      "label": "Bold Hotline",
+      "description": "A heavy, oversized phone in deep red that draws in and rings with urgency.",
+      "askedAs": [
+        "big bold red phone",
+        "urgent hotline icon",
+        "thick emergency call icon",
+        "большой красный телефон",
+        "экстренный звонок иконка"
+      ],
+      "props": {
+        "size": 160,
+        "strokeWidth": 3,
+        "color": "#c2410c",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "quiet-contact",
+      "label": "Quiet Contact",
+      "description": "A small, soft green phone that gently loops its ring at a relaxed pace.",
+      "askedAs": [
+        "subtle small phone icon",
+        "calm contact us icon",
+        "gentle green phone",
+        "спокойная иконка контактов",
+        "маленький зеленый телефон"
+      ],
+      "props": {
+        "size": 32,
+        "color": "#15803d",
+        "loop": true,
+        "speed": 0.75,
+        "strokeWidth": 1.75
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "A mid-size slate phone that draws and rings in a fast, punchy burst.",
+      "askedAs": [
+        "fast phone animation",
+        "quick snappy call icon",
+        "phone icon pops in quickly",
+        "быстрая анимация телефона",
+        "резкое появление телефона"
+      ],
+      "props": {
+        "speed": 2.5,
+        "size": 72,
+        "color": "#334155",
+        "strokeWidth": 2.5
+      }
+    }
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "component": "launch-date",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-ivory",
+      "label": "Editorial Ivory",
+      "description": "A warm ivory page with a deep oxblood ring and refined serif numerals, like a printed invitation.",
+      "askedAs": [
+        "elegant serif save the date",
+        "cream paper invitation look",
+        "classy printed calendar style",
+        "элегантный календарь с засечками",
+        "как печатное приглашение"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1e1b18",
+        "accent": "#8c2f2b",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "A slow, luxurious reveal on near-black navy with a muted gold ring and light Fraunces type.",
+      "askedAs": [
+        "luxury gold on dark",
+        "slow premium launch reveal",
+        "black and gold date announcement",
+        "роскошный тёмный с золотом",
+        "медленный премиальный анонс даты"
+      ],
+      "props": {
+        "background": "#0c1220",
+        "ink": "#ede6d6",
+        "accent": "#c9a45c",
+        "fontFamily": "Fraunces",
+        "fontWeight": 300,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "swiss-bold",
+      "label": "Swiss Bold",
+      "description": "A clean white grid with heavy Inter numerals, a signal-red ring and no grain, day-first.",
+      "askedAs": [
+        "bold minimal white calendar",
+        "swiss style date",
+        "clean red and white launch",
+        "жирный минималистичный календарь",
+        "швейцарский стиль дата"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#ffffff",
+        "ink": "#111111",
+        "accent": "#e5322d",
+        "fontWeight": 700,
+        "grain": false
+      }
+    },
+    {
+      "id": "dev-terminal",
+      "label": "Dev Terminal",
+      "description": "A fast, monospaced calendar on graphite with a mint ring, made for product and developer launches.",
+      "askedAs": [
+        "techy monospace date",
+        "developer launch countdown look",
+        "quick code style calendar",
+        "календарь в стиле терминала",
+        "быстрый техно анонс запуска"
+      ],
+      "props": {
+        "background": "#15171a",
+        "ink": "#d8dee4",
+        "accent": "#3dd68c",
+        "fontFamily": "JetBrains Mono",
+        "speed": 1.5,
+        "grain": false
+      }
+    },
+    {
+      "id": "soft-sage",
+      "label": "Soft Sage",
+      "description": "A calm, compact sage-green layout with rounded Manrope type and a forest ring, day-first.",
+      "askedAs": [
+        "calm green save the date",
+        "soft muted pastel calendar",
+        "gentle smaller date reveal",
+        "спокойный зелёный календарь",
+        "мягкий пастельный анонс"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#e6ebe2",
+        "ink": "#26322a",
+        "accent": "#4f6f52",
+        "fontFamily": "Manrope",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "big-stage",
+      "label": "Big Stage",
+      "description": "An oversized, punchy calendar in Space Grotesk with a violet ring that fills the frame quickly.",
+      "askedAs": [
+        "huge bold launch date",
+        "big keynote date reveal",
+        "energetic large calendar",
+        "крупная дата на весь экран",
+        "энергичный анонс запуска"
+      ],
+      "props": {
+        "scale": 1.35,
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 600,
+        "accent": "#7c5cff",
+        "speed": 1.25
+      }
+    }
+  ]
+}

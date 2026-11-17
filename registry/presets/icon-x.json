@@ -1,0 +1,97 @@
+{
+  "component": "icon-x",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-bold",
+      "label": "Hero Bold",
+      "description": "A large, heavy-stroked X that draws in slowly for a confident centrepiece moment.",
+      "askedAs": [
+        "big thick close icon",
+        "large bold x animation",
+        "slow dramatic cross mark",
+        "большой жирный крестик",
+        "крупная иконка закрытия медленно"
+      ],
+      "props": {
+        "size": 160,
+        "strokeWidth": 3,
+        "speed": 0.75,
+        "animation": "draw"
+      }
+    },
+    {
+      "id": "error-red",
+      "label": "Error Red",
+      "description": "A muted brick-red X that snaps in quickly to signal a failed or rejected state.",
+      "askedAs": [
+        "red x for error",
+        "wrong answer cross",
+        "failed status icon",
+        "красный крестик ошибки",
+        "иконка неверного ответа"
+      ],
+      "props": {
+        "color": "#c2410c",
+        "speed": 1.5,
+        "size": 64,
+        "animation": "both"
+      }
+    },
+    {
+      "id": "hairline-mono",
+      "label": "Hairline Mono",
+      "description": "A fine, slate-grey line X that draws gently for minimal editorial layouts.",
+      "askedAs": [
+        "thin minimal x icon",
+        "light delicate close mark",
+        "subtle grey cross",
+        "тонкий минималистичный крестик",
+        "лёгкая серая иконка закрытия"
+      ],
+      "props": {
+        "strokeWidth": 1,
+        "color": "#64748b",
+        "animation": "draw",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "looping-pulse",
+      "label": "Looping Pulse",
+      "description": "A compact X that repeats its action motion continuously as a fast attention cue.",
+      "askedAs": [
+        "repeating x animation",
+        "looping close button wiggle",
+        "x that keeps moving",
+        "зацикленный анимированный крестик",
+        "повторяющаяся анимация закрытия"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "speed": 2,
+        "size": 40
+      }
+    },
+    {
+      "id": "ocean-ui",
+      "label": "Ocean UI",
+      "description": "A medium-weight X in calm deep blue, tuned for product interface walkthroughs.",
+      "askedAs": [
+        "blue close icon for app",
+        "calm ui dismiss button",
+        "blue x interface",
+        "синий крестик для интерфейса",
+        "спокойная синяя иконка закрытия"
+      ],
+      "props": {
+        "color": "#1d4ed8",
+        "strokeWidth": 2.5,
+        "size": 72,
+        "speed": 1.25
+      }
+    }
+  ]
+}

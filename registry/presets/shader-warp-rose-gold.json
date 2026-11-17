@@ -1,0 +1,93 @@
+{
+  "component": "shader-warp-rose-gold",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "still-silk",
+      "label": "Still Silk",
+      "description": "Slow, barely moving satin folds with gentle swirl for a calm luxury backdrop.",
+      "askedAs": [
+        "very slow calm satin background",
+        "subtle barely moving silk",
+        "quiet luxury backdrop",
+        "медленный спокойный шёлк",
+        "едва движущийся атласный фон"
+      ],
+      "props": {
+        "speed": 0.25,
+        "swirl": 0.5,
+        "distortion": 0.05
+      }
+    },
+    {
+      "id": "liquid-pour",
+      "label": "Liquid Pour",
+      "description": "Fast, heavily swirled folds that read like molten rose-gold metal flowing across the frame.",
+      "askedAs": [
+        "molten metal flowing fast",
+        "liquid gold swirling quickly",
+        "energetic flowing rose gold",
+        "жидкий металл быстро течёт",
+        "бурлящее розовое золото"
+      ],
+      "props": {
+        "speed": 2.5,
+        "swirl": 1,
+        "distortion": 0.45
+      }
+    },
+    {
+      "id": "crisp-pleats",
+      "label": "Crisp Pleats",
+      "description": "Sharp-edged, defined folds with low softness for a structured, tailored fabric feel.",
+      "askedAs": [
+        "sharp defined fabric folds",
+        "crisp pleated satin",
+        "harder edges less blur",
+        "чёткие складки ткани",
+        "резкие плиссированные складки"
+      ],
+      "props": {
+        "softness": 0.2,
+        "swirl": 0.3,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "blush-haze",
+      "label": "Blush Haze",
+      "description": "Pale, diffused wash dominated by the lighter tones with soft drifting motion.",
+      "askedAs": [
+        "lighter softer pink haze",
+        "pale dreamy blush background",
+        "mostly light airy satin",
+        "светлая нежная дымка",
+        "бледно-розовый воздушный фон"
+      ],
+      "props": {
+        "proportion": 0.8,
+        "softness": 1,
+        "swirl": 0.6,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "deep-copper",
+      "label": "Deep Copper",
+      "description": "Richer, darker-weighted folds with warped ripples for a moodier evening look.",
+      "askedAs": [
+        "darker richer rose gold",
+        "moody copper satin",
+        "more contrast warped folds",
+        "тёмная медная волна",
+        "насыщенное вечернее золото"
+      ],
+      "props": {
+        "proportion": 0.25,
+        "distortion": 0.3,
+        "speed": 1.25
+      }
+    }
+  ]
+}

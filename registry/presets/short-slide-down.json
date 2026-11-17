@@ -1,0 +1,98 @@
+{
+  "component": "short-slide-down",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gentle-drift",
+      "label": "Gentle Drift",
+      "description": "Light, slow words that settle softly from a short distance in a muted slate tone.",
+      "askedAs": [
+        "slow soft word drop",
+        "calm gentle headline stacking",
+        "subtle relaxed text entrance",
+        "мягкое медленное появление слов",
+        "спокойный плавный заголовок"
+      ],
+      "props": {
+        "speed": 0.5,
+        "entryOffset": 12,
+        "fontWeight": "400",
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "hard-drop",
+      "label": "Hard Drop",
+      "description": "Heavy bold words slam in quickly from far above for a punchy, energetic build.",
+      "askedAs": [
+        "fast punchy word drop",
+        "bold aggressive headline",
+        "words slamming down quickly",
+        "быстрый жирный заголовок",
+        "резкое падение слов сверху"
+      ],
+      "props": {
+        "speed": 2,
+        "entryOffset": 72,
+        "fontWeight": "700",
+        "fontSize": 96
+      }
+    },
+    {
+      "id": "poster-stack",
+      "label": "Poster Stack",
+      "description": "Oversized bold type in deep navy builds a commanding poster-like block.",
+      "askedAs": [
+        "huge poster headline",
+        "big bold stacked title",
+        "large dramatic text block",
+        "огромный заголовок как постер",
+        "крупный жирный текст блоком"
+      ],
+      "props": {
+        "fontSize": 140,
+        "fontWeight": "700",
+        "color": "#1e293b",
+        "entryOffset": 48,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "editorial-small",
+      "label": "Editorial Small",
+      "description": "Compact medium-weight type in warm brown that stacks with quiet editorial restraint.",
+      "askedAs": [
+        "small elegant caption stack",
+        "refined editorial text",
+        "compact understated headline",
+        "небольшой аккуратный текст",
+        "сдержанный редакционный стиль"
+      ],
+      "props": {
+        "fontSize": 44,
+        "fontWeight": "500",
+        "color": "#7c4a2d",
+        "entryOffset": 18
+      }
+    },
+    {
+      "id": "accent-blue",
+      "label": "Accent Blue",
+      "description": "Brisk semibold words in a confident cobalt blue for a modern product feel.",
+      "askedAs": [
+        "blue brand headline",
+        "modern tech title drop",
+        "quick colored word stack",
+        "синий современный заголовок",
+        "быстрые слова в фирменном цвете"
+      ],
+      "props": {
+        "color": "#1d4ed8",
+        "speed": 1.5,
+        "entryOffset": 36,
+        "fontSize": 84
+      }
+    }
+  ]
+}

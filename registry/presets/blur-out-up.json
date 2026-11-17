@@ -1,0 +1,101 @@
+{
+  "component": "blur-out-up",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-drift",
+      "label": "Slow Drift",
+      "description": "Light warm-charcoal words that float away slowly with a gentle, unhurried stagger.",
+      "askedAs": [
+        "slow dreamy text exit",
+        "words float away gently",
+        "calm airy title fade up",
+        "медленный уход текста вверх",
+        "плавное воздушное исчезновение слов"
+      ],
+      "props": {
+        "speed": 0.5,
+        "staggerDelay": 3,
+        "fontWeight": "400",
+        "fontSize": 64,
+        "color": "#3f3a36"
+      }
+    },
+    {
+      "id": "quick-lift",
+      "label": "Quick Lift",
+      "description": "Bold text that leaves all at once in a fast, crisp upward blur.",
+      "askedAs": [
+        "fast text exit upward",
+        "snappy title blur out",
+        "all words leave at once",
+        "быстрый уход заголовка вверх",
+        "резкое исчезновение текста с размытием"
+      ],
+      "props": {
+        "speed": 2,
+        "staggerDelay": 0,
+        "fontWeight": "700",
+        "fontSize": 80
+      }
+    },
+    {
+      "id": "editorial-cascade",
+      "label": "Editorial Cascade",
+      "description": "Mid-size navy type that peels away word by word in a long, magazine-style cascade.",
+      "askedAs": [
+        "word by word exit with long delay",
+        "magazine style text cascade",
+        "staggered tagline drift up",
+        "текст уходит по одному слову",
+        "журнальный каскад слов вверх"
+      ],
+      "props": {
+        "staggerDelay": 6,
+        "speed": 0.75,
+        "fontSize": 56,
+        "fontWeight": "500",
+        "color": "#1e2a3a"
+      }
+    },
+    {
+      "id": "hero-statement",
+      "label": "Hero Statement",
+      "description": "Oversized heavy black headline that lifts off with a confident, slightly brisk stagger.",
+      "askedAs": [
+        "huge bold headline exit",
+        "big title blurs away up",
+        "massive statement text outro",
+        "огромный жирный заголовок уходит вверх",
+        "крупный текст с размытием на выходе"
+      ],
+      "props": {
+        "fontSize": 140,
+        "fontWeight": "700",
+        "speed": 1.25,
+        "staggerDelay": 2,
+        "color": "#0b0b0b"
+      }
+    },
+    {
+      "id": "soft-whisper",
+      "label": "Soft Whisper",
+      "description": "Small muted-grey caption text that quietly drifts upward and dissolves.",
+      "askedAs": [
+        "subtle small caption fade",
+        "quiet grey text exit",
+        "understated subtitle blur away",
+        "тихое исчезновение подписи",
+        "мелкий серый текст плавно уходит"
+      ],
+      "props": {
+        "fontSize": 36,
+        "fontWeight": "400",
+        "color": "#6b6b6b",
+        "speed": 0.75,
+        "staggerDelay": 2
+      }
+    }
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "component": "res-climb",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "cinema-slow-focus",
+      "label": "Cinema Focus",
+      "description": "A slow, deliberate sharpening in a refined serif on deep black with a warm amber glow.",
+      "askedAs": [
+        "slow cinematic number reveal",
+        "warm serif stat on black",
+        "film-like focus pull number",
+        "медленное кинематографичное появление числа",
+        "тёплая цифра с засечками на чёрном"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "accent": "#e0a458",
+        "background": "#0b0a09",
+        "ink": "#f3ede4",
+        "speed": 0.5,
+        "build": 28
+      }
+    },
+    {
+      "id": "snap-quick",
+      "label": "Quick Snap",
+      "description": "An early, punchy resolution jump in a tight grotesk with a crisp cobalt glow.",
+      "askedAs": [
+        "fast number snap",
+        "quick punchy stat",
+        "energetic resolution jump",
+        "быстрое появление цифры",
+        "резкий скачок числа"
+      ],
+      "props": {
+        "snapAt": 10,
+        "build": 4,
+        "speed": 1.75,
+        "fontFamily": "Space Grotesk",
+        "scale": 1.2
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "A clean light version on warm off-white with near-black type and an ink-blue accent, no grain.",
+      "askedAs": [
+        "light background version",
+        "clean white stat",
+        "minimal bright number",
+        "светлая версия",
+        "чистое число на белом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f6f4ef",
+        "ink": "#16181d",
+        "accent": "#2a4bd7",
+        "grain": false,
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "terminal-mint",
+      "label": "Terminal Mint",
+      "description": "A technical monospace readout on graphite with a muted mint glow, like a render resolving on screen.",
+      "askedAs": [
+        "techy monospace number",
+        "code style stat",
+        "render output look",
+        "моноширинная техническая цифра",
+        "как в терминале"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accent": "#5fd4a8",
+        "background": "#0e1312",
+        "ink": "#dcefe7",
+        "build": 20,
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "violet-hero",
+      "label": "Violet Hero",
+      "description": "An oversized, delayed hero figure in a bold display face with a soft violet glow on midnight.",
+      "askedAs": [
+        "big dramatic hero number",
+        "purple glowing stat",
+        "large premium figure",
+        "крупная эффектная цифра",
+        "фиолетовое свечение числа"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#8b6cf6",
+        "background": "#0c0a1a",
+        "ink": "#eeeafb",
+        "scale": 1.4,
+        "delay": 20
+      }
+    }
+  ]
+}

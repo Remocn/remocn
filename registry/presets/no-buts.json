@@ -1,0 +1,120 @@
+{
+  "component": "no-buts",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snappy-comeback",
+      "label": "Snappy Comeback",
+      "description": "A quick, punchy exchange with a short pause and words that land almost at once.",
+      "askedAs": [
+        "make it faster and punchier",
+        "quick reply with no wait",
+        "snappy fast comeback",
+        "быстрее и резче",
+        "короткая пауза, быстрый ответ"
+      ],
+      "props": {
+        "speed": 1.75,
+        "pause": 10,
+        "stagger": 1,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "patient-beat",
+      "label": "Patient Beat",
+      "description": "A slow, deliberate exchange with a long awkward pause before each word of the reply arrives.",
+      "askedAs": [
+        "longer awkward pause",
+        "slow dramatic reply",
+        "let the hesitation breathe",
+        "медленно с долгой паузой",
+        "драматичная пауза перед ответом"
+      ],
+      "props": {
+        "speed": 0.75,
+        "pause": 50,
+        "stagger": 5
+      }
+    },
+    {
+      "id": "paper-note",
+      "label": "Paper Note",
+      "description": "A warm light cream page with dark ink, an elegant serif and a soft terracotta reply.",
+      "askedAs": [
+        "light version with serif font",
+        "elegant warm paper look",
+        "editorial style",
+        "светлая тема с засечками",
+        "тёплый бумажный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f5efe4",
+        "ink": "#2a2420",
+        "accent": "#c4572e",
+        "fontFamily": "Instrument Serif",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "terminal-reply",
+      "label": "Terminal Reply",
+      "description": "A dark navy console look in monospace with a mint green answer typed out word by word.",
+      "askedAs": [
+        "code terminal style",
+        "monospace developer look",
+        "green text on dark",
+        "в стиле терминала",
+        "моноширинный шрифт для разработчиков"
+      ],
+      "props": {
+        "background": "#0d1117",
+        "ink": "#c9d1d9",
+        "accent": "#7ee2a8",
+        "fontFamily": "JetBrains Mono",
+        "stagger": 4,
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "big-and-bold",
+      "label": "Big And Bold",
+      "description": "An oversized, chunky grotesque on deep plum with a coral reply that fills the frame.",
+      "askedAs": [
+        "make the text huge",
+        "bold loud poster style",
+        "bigger and more playful",
+        "крупный жирный текст",
+        "сделай ярче и больше"
+      ],
+      "props": {
+        "scale": 1.4,
+        "fontFamily": "Bricolage Grotesque",
+        "background": "#2b1838",
+        "ink": "#f6eef8",
+        "accent": "#ff8a6b"
+      }
+    },
+    {
+      "id": "clean-light",
+      "label": "Clean Light",
+      "description": "A crisp white minimal layout in Inter with a calm blue reply and a short lead-in delay.",
+      "askedAs": [
+        "clean minimal white version",
+        "corporate light theme",
+        "simple blue accent",
+        "минималистичная светлая версия",
+        "чистый деловой стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#1f6feb",
+        "delay": 12,
+        "scale": 0.9
+      }
+    }
+  ]
+}

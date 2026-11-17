@@ -1,0 +1,102 @@
+{
+  "component": "truchet-flip",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "fine-line-loop",
+      "label": "Fine Line Loop",
+      "description": "A dense grid of hairline arcs drifting slowly in a seamless diagonal loop.",
+      "askedAs": [
+        "thin lines slow seamless background",
+        "subtle looping pattern bed",
+        "delicate geometric loop",
+        "тонкие линии бесшовный фон",
+        "медленный зацикленный узор"
+      ],
+      "props": {
+        "tiles": 18,
+        "weight": 0.07,
+        "waveMode": "diagonal",
+        "loop": true,
+        "speed": 0.5,
+        "color": "#cbd5e1"
+      }
+    },
+    {
+      "id": "bold-rings",
+      "label": "Bold Rings",
+      "description": "Big chunky tiles in thick strokes that snap quickly into concentric rings.",
+      "askedAs": [
+        "chunky bold rings intro",
+        "thick lines fast title card",
+        "big tiles settle into circles",
+        "жирные кольца для заставки",
+        "крупные плитки быстро в круги"
+      ],
+      "props": {
+        "tiles": 6,
+        "weight": 0.32,
+        "speed": 1.5,
+        "passes": 1
+      }
+    },
+    {
+      "id": "ring-circle",
+      "label": "Ring Circle",
+      "description": "A two-tone warm pattern that resolves into a centered circle of small rings.",
+      "askedAs": [
+        "circle made of small rings",
+        "two color logo-like reveal",
+        "warm emblem settle",
+        "круг из маленьких колец",
+        "двухцветная эмблема в центре"
+      ],
+      "props": {
+        "resolve": "silhouette",
+        "color": "#f4a261",
+        "secondaryColor": "#e9c46a",
+        "tiles": 14,
+        "weight": 0.14
+      }
+    },
+    {
+      "id": "filled-mosaic",
+      "label": "Filled Mosaic",
+      "description": "Solid filled tiles in muted teal and slate flipping randomly before settling into a calm field.",
+      "askedAs": [
+        "solid filled tile mosaic",
+        "random flipping blocks pattern",
+        "calm filled geometric field",
+        "заливка плиток мозаика",
+        "случайно переворачивающиеся плитки"
+      ],
+      "props": {
+        "variant": "filled",
+        "waveMode": "random",
+        "resolve": "field",
+        "color": "#2a9d8f",
+        "secondaryColor": "#457b9d",
+        "seed": 7
+      }
+    },
+    {
+      "id": "restless-ripple",
+      "label": "Restless Ripple",
+      "description": "Many fast radial passes ripple through a medium grid in cool blue before landing on rings.",
+      "askedAs": [
+        "energetic ripple waves",
+        "fast repeated wave pattern",
+        "busy radial pulse",
+        "быстрые волны по сетке",
+        "энергичная пульсация от центра"
+      ],
+      "props": {
+        "passes": 4,
+        "speed": 2.5,
+        "color": "#7aa2f7",
+        "tiles": 12
+      }
+    }
+  ]
+}

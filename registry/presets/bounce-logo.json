@@ -1,0 +1,122 @@
+{
+  "component": "bounce-logo",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "retro-vhs",
+      "label": "Retro VHS",
+      "description": "Classic late-night DVD player look with a monospace wordmark, grain and colour flips on every wall hit.",
+      "askedAs": [
+        "old dvd screensaver look",
+        "retro vhs bouncing logo",
+        "nostalgic tv standby style",
+        "ретро заставка dvd",
+        "как старый видеоплеер"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0b12",
+        "ink": "#e8e6f0",
+        "accent": "#7c5cff",
+        "grain": true,
+        "flip": true
+      }
+    },
+    {
+      "id": "quick-hit",
+      "label": "Quick Hit",
+      "description": "A fast, compact bounce that nails the corner early for a short punchy sting.",
+      "askedAs": [
+        "fast short logo bounce",
+        "quick corner hit",
+        "snappy meme sting",
+        "быстрый отскок логотипа",
+        "короткая заставка с попаданием в угол"
+      ],
+      "props": {
+        "cornerAt": 56,
+        "speed": 2,
+        "scale": 0.8,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "slow-suspense",
+      "label": "Slow Suspense",
+      "description": "A large, unhurried wordmark that drifts for ages before the satisfying corner payoff.",
+      "askedAs": [
+        "slow build up to corner",
+        "long suspenseful bounce",
+        "make them wait for the corner",
+        "медленный долгий отскок",
+        "долгое ожидание попадания в угол"
+      ],
+      "props": {
+        "cornerAt": 140,
+        "speed": 0.5,
+        "scale": 1.3,
+        "delay": 20
+      }
+    },
+    {
+      "id": "clean-paper",
+      "label": "Clean Paper",
+      "description": "Light, grain-free editorial version in warm off-white with a steady ink-coloured serif mark.",
+      "askedAs": [
+        "light minimal bouncing logo",
+        "clean white version",
+        "editorial calm style",
+        "светлая чистая версия",
+        "минималистичный светлый логотип"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f1ea",
+        "ink": "#1c1b19",
+        "fontFamily": "Fraunces",
+        "grain": false,
+        "flip": false
+      }
+    },
+    {
+      "id": "sunset-pop",
+      "label": "Sunset Pop",
+      "description": "Warm terracotta backdrop with cream type and a bold rounded grotesque for a friendly community feel.",
+      "askedAs": [
+        "warm friendly bounce",
+        "orange playful logo",
+        "cozy community sting",
+        "тёплый оранжевый вариант",
+        "дружелюбная яркая заставка"
+      ],
+      "props": {
+        "background": "#c2522d",
+        "ink": "#fff3e6",
+        "accent": "#f2c14e",
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "forest-tech",
+      "label": "Forest Tech",
+      "description": "Deep green dark mode with a crisp sans wordmark and mint accents, no colour flipping.",
+      "askedAs": [
+        "dark green tech style",
+        "modern product bounce logo",
+        "sleek startup sting",
+        "тёмно-зелёный стиль",
+        "современная техно заставка"
+      ],
+      "props": {
+        "background": "#0f1f1a",
+        "ink": "#e4f2ec",
+        "accent": "#4fd1a5",
+        "fontFamily": "Geist",
+        "flip": false,
+        "speed": 1.5
+      }
+    }
+  ]
+}

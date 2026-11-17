@@ -1,0 +1,125 @@
+{
+  "component": "play-of-the-game",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "arcade-heat",
+      "label": "Arcade Heat",
+      "description": "Hard-hitting orange accent on near-black with a heavy shake and snappy timing.",
+      "askedAs": [
+        "make it punchier with more shake",
+        "aggressive gaming highlight",
+        "fast hype banner in orange",
+        "больше тряски и энергии",
+        "агрессивный игровой стиль"
+      ],
+      "props": {
+        "accent": "#ff6a2b",
+        "background": "#0e0f12",
+        "ink": "#f4f4f5",
+        "impact": 30,
+        "speed": 1.5,
+        "scale": 1.1
+      }
+    },
+    {
+      "id": "clean-daylight",
+      "label": "Clean Daylight",
+      "description": "Light theme with a calm teal accent, gentle shake and a crisp sans for a polished launch post.",
+      "askedAs": [
+        "light version for a product launch",
+        "clean minimal banner",
+        "less shaky and more professional",
+        "светлая аккуратная версия",
+        "спокойный вариант для запуска"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#0f9d8a",
+        "fontFamily": "Inter",
+        "impact": 4,
+        "background": "#f7f7f5",
+        "ink": "#15171a"
+      }
+    },
+    {
+      "id": "slow-motion-replay",
+      "label": "Slow-Mo Replay",
+      "description": "Half-speed cinematic replay with a soft violet accent and a short held beat before it lands.",
+      "askedAs": [
+        "slow motion dramatic reveal",
+        "cinematic replay feel",
+        "make it slower with a pause first",
+        "медленный кинематографичный повтор",
+        "замедленное появление"
+      ],
+      "props": {
+        "speed": 0.5,
+        "delay": 20,
+        "accent": "#8b6cf6",
+        "impact": 8,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "terminal-mvp",
+      "label": "Terminal MVP",
+      "description": "Monospaced dev-console look with a muted green accent on deep slate and no role badge.",
+      "askedAs": [
+        "hacker terminal style",
+        "developer code look",
+        "monospace green banner",
+        "стиль терминала для разработчика",
+        "моноширинный шрифт и зелёный"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accent": "#3fb950",
+        "background": "#0d1117",
+        "ink": "#e6edf3",
+        "badge": false,
+        "impact": 10
+      }
+    },
+    {
+      "id": "editorial-credit",
+      "label": "Editorial Credit",
+      "description": "Elegant serif credit on warm cream with a burgundy accent and barely any shake, scaled down for subtlety.",
+      "askedAs": [
+        "elegant serif credit",
+        "magazine style tribute",
+        "classy warm banner",
+        "элегантный вариант с засечками",
+        "тёплый журнальный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#f3ece1",
+        "ink": "#2a1e1a",
+        "accent": "#9e2a3a",
+        "impact": 2
+      }
+    },
+    {
+      "id": "big-bounce",
+      "label": "Big Bounce",
+      "description": "Oversized, quick and bouncy with a sunny yellow accent and chunky grotesque type.",
+      "askedAs": [
+        "make it huge and fun",
+        "bigger playful version",
+        "bold yellow celebration",
+        "крупнее и веселее",
+        "яркий праздничный вариант"
+      ],
+      "props": {
+        "scale": 1.35,
+        "speed": 1.25,
+        "accent": "#f5b700",
+        "fontFamily": "Bricolage Grotesque",
+        "impact": 20
+      }
+    }
+  ]
+}

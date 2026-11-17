@@ -1,0 +1,92 @@
+{
+  "component": "cursor",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-walkthrough",
+      "label": "Slow Walkthrough",
+      "description": "A larger arrow glides at half speed with a calm slate ripple, ideal for step-by-step tutorials.",
+      "askedAs": [
+        "slow tutorial cursor",
+        "make the pointer move calmly and big",
+        "cursor for beginners walkthrough",
+        "медленный курсор для обучения",
+        "плавный крупный указатель"
+      ],
+      "props": {
+        "size": 36,
+        "speed": 0.5,
+        "rippleColor": "#475569"
+      }
+    },
+    {
+      "id": "snappy-demo",
+      "label": "Snappy Demo",
+      "description": "A compact arrow darts between targets at double speed with a crisp blue click ripple.",
+      "askedAs": [
+        "fast cursor for product demo",
+        "quick clicking pointer",
+        "speed up the mouse movement",
+        "быстрый курсор для демо",
+        "шустрая мышка с кликами"
+      ],
+      "props": {
+        "size": 22,
+        "speed": 2,
+        "rippleColor": "#2563eb"
+      }
+    },
+    {
+      "id": "link-hand",
+      "label": "Link Hand",
+      "description": "The hand pointer at a medium-large size with a soft violet ripple, suggesting clickable links and buttons.",
+      "askedAs": [
+        "hand cursor clicking a link",
+        "pointer finger instead of arrow",
+        "clickable button hand icon",
+        "курсор в виде руки",
+        "палец для клика по ссылке"
+      ],
+      "props": {
+        "variant": "pointer",
+        "size": 32,
+        "rippleColor": "#7c3aed"
+      }
+    },
+    {
+      "id": "presentation-xl",
+      "label": "Presentation XL",
+      "description": "An oversized arrow at relaxed pace with a warm amber ripple, readable on big screens and mobile crops.",
+      "askedAs": [
+        "huge cursor for slides",
+        "make the mouse really big",
+        "cursor visible on small phone video",
+        "огромный курсор для презентации",
+        "большой заметный указатель"
+      ],
+      "props": {
+        "size": 56,
+        "speed": 0.75,
+        "rippleColor": "#d97706"
+      }
+    },
+    {
+      "id": "confirm-tap",
+      "label": "Confirm Tap",
+      "description": "A brisk hand pointer with a muted green ripple that reads as a successful action.",
+      "askedAs": [
+        "green click for success",
+        "cursor confirming a checkout",
+        "tap that feels positive",
+        "курсор с зелёным кликом",
+        "нажатие подтверждения оплаты"
+      ],
+      "props": {
+        "variant": "pointer",
+        "speed": 1.5,
+        "rippleColor": "#16a34a"
+      }
+    }
+  ]
+}

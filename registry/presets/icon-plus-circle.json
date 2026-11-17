@@ -1,0 +1,99 @@
+{
+  "component": "icon-plus-circle",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-slow-draw",
+      "label": "Hero Draw",
+      "description": "A large, fine-lined plus circle that sketches itself in slowly for an elegant reveal.",
+      "askedAs": [
+        "big slow drawing plus icon",
+        "elegant thin add button reveal",
+        "large outline plus that draws in",
+        "большая плюс иконка медленно рисуется",
+        "тонкий элегантный плюс в круге"
+      ],
+      "props": {
+        "size": 144,
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "animation": "draw"
+      }
+    },
+    {
+      "id": "bold-pop",
+      "label": "Bold Pop",
+      "description": "A thick, brand-blue plus that snaps through its action quickly with punchy energy.",
+      "askedAs": [
+        "fast punchy add icon",
+        "bold blue plus button animation",
+        "quick snappy plus circle",
+        "быстрый жирный синий плюс",
+        "энергичная кнопка добавить"
+      ],
+      "props": {
+        "strokeWidth": 3,
+        "color": "#1f6feb",
+        "speed": 2,
+        "animation": "action",
+        "size": 96
+      }
+    },
+    {
+      "id": "ambient-loop",
+      "label": "Ambient Loop",
+      "description": "A soft slate plus that loops its full animation gently in the background.",
+      "askedAs": [
+        "looping calm plus icon",
+        "subtle repeating add symbol",
+        "background plus animation on loop",
+        "зацикленный спокойный плюс",
+        "мягкая повторяющаяся иконка добавления"
+      ],
+      "props": {
+        "loop": true,
+        "color": "#64748b",
+        "speed": 0.75,
+        "strokeWidth": 1.5
+      }
+    },
+    {
+      "id": "success-green",
+      "label": "Success Green",
+      "description": "A medium-size emerald plus that draws and acts at a lively pace, signalling a positive add.",
+      "askedAs": [
+        "green add item icon",
+        "positive plus confirmation animation",
+        "emerald plus circle",
+        "зелёный плюс в круге",
+        "иконка добавления успеха"
+      ],
+      "props": {
+        "color": "#059669",
+        "size": 72,
+        "speed": 1.5,
+        "strokeWidth": 2.5
+      }
+    },
+    {
+      "id": "warm-accent",
+      "label": "Warm Accent",
+      "description": "A burnt-orange plus that repeats a quick action pulse as an attention cue.",
+      "askedAs": [
+        "orange pulsing plus",
+        "attention grabbing add button loop",
+        "warm colored plus icon repeating",
+        "оранжевый пульсирующий плюс",
+        "привлекающая внимание кнопка плюс"
+      ],
+      "props": {
+        "color": "#ea580c",
+        "animation": "action",
+        "loop": true,
+        "speed": 1.25,
+        "size": 64
+      }
+    }
+  ]
+}

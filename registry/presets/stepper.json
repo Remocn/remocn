@@ -1,0 +1,101 @@
+{
+  "component": "stepper",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gentle-start",
+      "label": "Gentle Start",
+      "description": "A very slow, calm ease that settles on the first step, ideal for an unhurried onboarding intro.",
+      "askedAs": [
+        "slow calm first step",
+        "stepper just getting started slowly",
+        "relaxed onboarding beginning",
+        "медленный старт на первом шаге",
+        "спокойное начало онбординга"
+      ],
+      "props": {
+        "activeIndex": 0,
+        "speed": 0.25
+      }
+    },
+    {
+      "id": "slow-walkthrough",
+      "label": "Slow Walkthrough",
+      "description": "A deliberate half-speed progression that lets each circle fill and check mark draw in clearly.",
+      "askedAs": [
+        "slow step by step progress",
+        "let the check marks draw slowly",
+        "leisurely wizard progression",
+        "медленное прохождение шагов",
+        "плавный неторопливый прогресс"
+      ],
+      "props": {
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "snappy-advance",
+      "label": "Snappy Advance",
+      "description": "A brisk, punchy transition that jumps to the middle step with a quick, confident ease.",
+      "askedAs": [
+        "fast snappy stepper",
+        "quick step transition",
+        "energetic progress jump",
+        "быстрый резкий переход шага",
+        "энергичный степпер"
+      ],
+      "props": {
+        "speed": 2.5
+      }
+    },
+    {
+      "id": "all-done",
+      "label": "All Done",
+      "description": "Runs at a lively pace all the way to the final step so every connector fills and the flow reads complete.",
+      "askedAs": [
+        "finished checkout steps",
+        "show the final step completed",
+        "wizard all the way to the end",
+        "все шаги завершены",
+        "прогресс до последнего шага"
+      ],
+      "props": {
+        "activeIndex": 2,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "rapid-finish",
+      "label": "Rapid Finish",
+      "description": "A maximum-speed sprint to the last step for short cuts and fast-paced edits.",
+      "askedAs": [
+        "super fast completion",
+        "quickest run to the end",
+        "instant progress to final step",
+        "очень быстро до конца",
+        "мгновенное завершение шагов"
+      ],
+      "props": {
+        "activeIndex": 2,
+        "speed": 4
+      }
+    },
+    {
+      "id": "quick-first",
+      "label": "Quick First Step",
+      "description": "A crisp, double-speed reveal that lands right on the opening step for a tight intro beat.",
+      "askedAs": [
+        "fast intro on step one",
+        "quick first step highlight",
+        "snappy start of the flow",
+        "быстрый первый шаг",
+        "резкое начало мастера"
+      ],
+      "props": {
+        "activeIndex": 0,
+        "speed": 2
+      }
+    }
+  ]
+}

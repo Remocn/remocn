@@ -1,0 +1,104 @@
+{
+  "component": "flick-swap",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A calm light layout in Instrument Serif with a deep oxblood accent and longer holds between headlines.",
+      "askedAs": [
+        "elegant magazine style headline",
+        "slow serif text on white",
+        "classy editorial title swap",
+        "элегантный журнальный заголовок",
+        "медленная смена заголовков с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "accent": "#8c2f39",
+        "dwell": 48,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Short dwells and doubled speed with heavy motion blur so claims snap through in quick succession.",
+      "askedAs": [
+        "fast headline cycling",
+        "quick punchy feature list",
+        "speed up the text swaps",
+        "быстрая смена заголовков",
+        "динамичный список фич"
+      ],
+      "props": {
+        "speed": 2,
+        "dwell": 12,
+        "blur": 1.8,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Crisp JetBrains Mono on near-black with a muted green accent and no blur for a developer-tool feel.",
+      "askedAs": [
+        "code style headline",
+        "developer monospace text",
+        "techy terminal look",
+        "моноширинный шрифт как в терминале",
+        "заголовок в стиле кода"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0e1110",
+        "ink": "#e6ede8",
+        "accent": "#3fb68b",
+        "blur": 0,
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "warm-sand",
+      "label": "Warm Sand",
+      "description": "A soft sand background with espresso text and a terracotta accent set in Fraunces for a warm, crafted tone.",
+      "askedAs": [
+        "warm beige background headline",
+        "earthy cozy title",
+        "soft brown and cream look",
+        "тёплый бежевый фон",
+        "уютный землистый стиль"
+      ],
+      "props": {
+        "background": "#f3ebdd",
+        "ink": "#2b2118",
+        "accent": "#c0623b",
+        "fontFamily": "Fraunces",
+        "theme": "light"
+      }
+    },
+    {
+      "id": "big-statement",
+      "label": "Big Statement",
+      "description": "Oversized Inter headlines on deep navy with a violet accent and an unhurried, weighty entrance.",
+      "askedAs": [
+        "huge bold headline",
+        "large dramatic title",
+        "make the text bigger and slower",
+        "крупный заголовок на весь экран",
+        "большой акцентный текст"
+      ],
+      "props": {
+        "scale": 1.35,
+        "fontFamily": "Inter",
+        "background": "#0b1026",
+        "ink": "#f2f4fa",
+        "accent": "#7c6cf2",
+        "speed": 0.75
+      }
+    }
+  ]
+}

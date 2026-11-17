@@ -1,0 +1,104 @@
+{
+  "component": "command-menu",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snappy-open",
+      "label": "Snappy Open",
+      "description": "A brisk, power-user pace where the palette pops open and the first row is instantly highlighted.",
+      "askedAs": [
+        "fast command palette opening",
+        "quick cmd k popup",
+        "snappy spotlight search",
+        "быстрое открытие командной палитры",
+        "резкое появление меню команд"
+      ],
+      "props": {
+        "speed": 2,
+        "highlightedIndex": 0
+      }
+    },
+    {
+      "id": "calm-reveal",
+      "label": "Calm Reveal",
+      "description": "A slow, relaxed opening with no row highlighted so the panel and list settle in quietly.",
+      "askedAs": [
+        "slow gentle command menu",
+        "relaxed palette animation with no highlight",
+        "calm cmd k intro",
+        "медленное плавное меню команд",
+        "спокойное появление палитры без выделения"
+      ],
+      "props": {
+        "speed": 0.5,
+        "highlightedIndex": -1
+      }
+    },
+    {
+      "id": "keyboard-nav",
+      "label": "Keyboard Nav",
+      "description": "The highlight sits a few rows down at a lively pace, suggesting arrow-key navigation through the list.",
+      "askedAs": [
+        "arrow key navigation in palette",
+        "highlight moved down the list",
+        "keyboard browsing command menu",
+        "навигация стрелками по меню",
+        "выделение ниже по списку команд"
+      ],
+      "props": {
+        "highlightedIndex": 2,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "command-picked",
+      "label": "Command Picked",
+      "description": "The top command is both highlighted and pressed, showing the moment a choice is confirmed.",
+      "askedAs": [
+        "command being selected",
+        "pressed item in cmd k",
+        "confirm choice in palette",
+        "выбранная команда в палитре",
+        "нажатие на пункт меню"
+      ],
+      "props": {
+        "selectedIndex": 0,
+        "highlightedIndex": 0,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "cinematic-focus",
+      "label": "Cinematic Focus",
+      "description": "An ultra-slow, dramatic zoom and dim with the second row softly highlighted for hero shots.",
+      "askedAs": [
+        "slow motion command palette",
+        "dramatic cinematic cmd k",
+        "hero shot of search menu",
+        "кинематографичное медленное меню",
+        "драматичное появление палитры команд"
+      ],
+      "props": {
+        "speed": 0.25,
+        "highlightedIndex": 1
+      }
+    },
+    {
+      "id": "dismissed",
+      "label": "Dismissed",
+      "description": "The palette closes out with a quick zoom-down and the backdrop lifting away.",
+      "askedAs": [
+        "close the command menu",
+        "palette dismiss animation",
+        "hide cmd k dialog",
+        "закрытие командной палитры",
+        "скрыть меню команд"
+      ],
+      "props": {
+        "state": "closed",
+        "speed": 1.5
+      }
+    }
+  ]
+}

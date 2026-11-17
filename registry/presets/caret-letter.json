@@ -1,0 +1,124 @@
+{
+  "component": "caret-letter",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A warm cream page with an elegant serif and a deep oxblood caret, typed at an unhurried pace.",
+      "askedAs": [
+        "make it look like a magazine title",
+        "elegant serif typing reveal",
+        "slow classy book-style intro",
+        "как в журнале, с засечками",
+        "элегантный медленный набор текста"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "background": "#f4efe6",
+        "ink": "#2a2420",
+        "accent": "#8c2f39",
+        "typeLength": 72
+      }
+    },
+    {
+      "id": "terminal-night",
+      "label": "Terminal Night",
+      "description": "A dark monospace console look with a soft green caret and quick, mechanical typing.",
+      "askedAs": [
+        "code terminal style",
+        "dark monospace typing",
+        "hacker console look",
+        "как в терминале",
+        "тёмный моноширинный шрифт"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "fontWeight": 400,
+        "accent": "#4ade80",
+        "typeLength": 28
+      }
+    },
+    {
+      "id": "bold-poster",
+      "label": "Bold Poster",
+      "description": "Heavy grotesque lettering at large scale with a punchy vermilion caret on off-white.",
+      "askedAs": [
+        "big bold headline",
+        "make the word huge and heavy",
+        "poster style title",
+        "крупный жирный заголовок",
+        "как на плакате"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "fontWeight": 700,
+        "scale": 1.3,
+        "accent": "#e5482d",
+        "background": "#faf7f2",
+        "ink": "#141414"
+      }
+    },
+    {
+      "id": "hairline-calm",
+      "label": "Hairline Calm",
+      "description": "Ultra-thin type at a smaller scale with a muted slate caret, slowed down for a quiet, airy reveal.",
+      "askedAs": [
+        "minimal thin and calm",
+        "slow gentle reveal",
+        "light airy typography",
+        "тонкий минималистичный шрифт",
+        "спокойно и медленно"
+      ],
+      "props": {
+        "fontWeight": 100,
+        "scale": 0.85,
+        "accent": "#64748b",
+        "speed": 0.75,
+        "delay": 15
+      }
+    },
+    {
+      "id": "midnight-ink",
+      "label": "Midnight Ink",
+      "description": "Deep navy background with pale text and an amber caret in a soft rounded sans.",
+      "askedAs": [
+        "dark blue with warm accent",
+        "navy night title card",
+        "moody dark brand reveal",
+        "тёмно-синий фон",
+        "ночной вариант с тёплым акцентом"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#0f1a2e",
+        "ink": "#eae6dc",
+        "accent": "#f2a93b",
+        "fontFamily": "Manrope",
+        "fontWeight": 500
+      }
+    },
+    {
+      "id": "snap-quick",
+      "label": "Snap Quick",
+      "description": "A brisk tech-feel reveal in Space Grotesk that types and lands fast.",
+      "askedAs": [
+        "fast snappy intro",
+        "quick typing for social",
+        "speed it up",
+        "быстрая анимация",
+        "резкий быстрый набор"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 500,
+        "speed": 2,
+        "typeLength": 20,
+        "accent": "#0e7c66"
+      }
+    }
+  ]
+}

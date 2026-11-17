@@ -1,0 +1,123 @@
+{
+  "component": "post-script",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snappy-sign-off",
+      "label": "Snappy Sign-Off",
+      "description": "A fast, punchy flip with tight word timing and a bold grotesque face for upbeat endings.",
+      "askedAs": [
+        "make it quick and punchy",
+        "faster ending card",
+        "energetic thanks slide",
+        "быстрая концовка",
+        "сделай резче и энергичнее"
+      ],
+      "props": {
+        "speed": 1.75,
+        "flip": 16,
+        "stagger": 1,
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.1
+      }
+    },
+    {
+      "id": "handwritten-note",
+      "label": "Handwritten Note",
+      "description": "A slow, letter-like reveal in an elegant serif on warm cream paper with ink-dark text.",
+      "askedAs": [
+        "make it feel like a personal letter",
+        "elegant serif thank you",
+        "soft warm paper look",
+        "как личное письмо",
+        "элегантная концовка с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4ede1",
+        "ink": "#2b2420",
+        "accent": "#b4442c",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-ps",
+      "label": "Terminal P.S.",
+      "description": "A monospace end slate on near-black with a mint accent, made for install commands.",
+      "askedAs": [
+        "code style ending for a cli",
+        "show the install command",
+        "developer terminal look",
+        "концовка в стиле терминала",
+        "моноширинный шрифт для команды"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0e1116",
+        "ink": "#e6edf3",
+        "accent": "#3fb950",
+        "stagger": 5,
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A patient, cinematic close with a held beat before the words drift in one by one.",
+      "askedAs": [
+        "slower more dramatic ending",
+        "let it breathe before appearing",
+        "cinematic calm outro",
+        "медленное драматичное появление",
+        "спокойная концовка с паузой"
+      ],
+      "props": {
+        "delay": 30,
+        "stagger": 9,
+        "flip": 52,
+        "speed": 0.5,
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "cobalt-card",
+      "label": "Cobalt Card",
+      "description": "A deep cobalt card with crisp white Geist type and a soft peach accent for a modern product feel.",
+      "askedAs": [
+        "blue instead of red",
+        "modern tech brand colors",
+        "clean blue end card",
+        "синяя карточка вместо красной",
+        "современный технологичный стиль"
+      ],
+      "props": {
+        "background": "#1f3fbf",
+        "ink": "#ffffff",
+        "accent": "#ffb38a",
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "compact-corner",
+      "label": "Compact Corner",
+      "description": "A smaller, understated light card in Inter with a muted charcoal palette that stays out of the way.",
+      "askedAs": [
+        "smaller and more subtle",
+        "minimal light outro",
+        "understated end slate",
+        "сделай поменьше и скромнее",
+        "минималистичная светлая концовка"
+      ],
+      "props": {
+        "theme": "light",
+        "scale": 0.7,
+        "fontFamily": "Inter",
+        "background": "#f5f5f4",
+        "ink": "#1c1917",
+        "accent": "#57534e"
+      }
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "component": "icon-heart",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "soft-heartbeat",
+      "label": "Soft Heartbeat",
+      "description": "A large rose heart that gently pulses on a slow, endless loop.",
+      "askedAs": [
+        "slow pulsing heart",
+        "looping heartbeat icon",
+        "calm beating heart",
+        "медленно бьющееся сердце",
+        "пульсирующее сердечко по кругу"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "size": 120,
+        "color": "#e11d48",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "fine-line-draw",
+      "label": "Fine Line",
+      "description": "A thin, elegant outline that draws itself in slowly in muted charcoal.",
+      "askedAs": [
+        "thin line heart drawing",
+        "elegant outline heart",
+        "slow hand drawn heart",
+        "тонкое сердце рисуется линией",
+        "изящный контур сердца"
+      ],
+      "props": {
+        "animation": "draw",
+        "strokeWidth": 1,
+        "size": 96,
+        "color": "#44403c",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "quick-like",
+      "label": "Quick Like",
+      "description": "A small, bold red heart that pops fast like a social media like.",
+      "askedAs": [
+        "fast like button heart",
+        "instagram style like",
+        "quick heart pop",
+        "быстрый лайк сердечко",
+        "сердце как лайк в соцсетях"
+      ],
+      "props": {
+        "animation": "action",
+        "size": 40,
+        "color": "#ef4444",
+        "strokeWidth": 2.5,
+        "speed": 2
+      }
+    },
+    {
+      "id": "bold-statement",
+      "label": "Bold Statement",
+      "description": "An oversized heart with a heavy stroke in deep burgundy for hero moments.",
+      "askedAs": [
+        "big thick heart",
+        "huge bold heart icon",
+        "heavy heart for title card",
+        "большое жирное сердце",
+        "крупное сердце для заставки"
+      ],
+      "props": {
+        "size": 200,
+        "strokeWidth": 3,
+        "color": "#881337",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "blush-loop",
+      "label": "Blush Loop",
+      "description": "A medium dusty-pink heart that draws and beats repeatedly at a lively pace.",
+      "askedAs": [
+        "pink heart looping animation",
+        "cute repeating heart",
+        "romantic heart loop",
+        "розовое сердце в цикле",
+        "милое повторяющееся сердечко"
+      ],
+      "props": {
+        "loop": true,
+        "size": 72,
+        "color": "#db7093",
+        "strokeWidth": 1.75,
+        "speed": 1.5
+      }
+    }
+  ]
+}

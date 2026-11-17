@@ -1,0 +1,118 @@
+{
+  "component": "window-trail",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "A fast, tight swipe with no trail for a crisp, punchy swap.",
+      "askedAs": [
+        "make it faster and snappier",
+        "no trail, just a quick swipe",
+        "punchy fast transition",
+        "быстрая резкая смена",
+        "без шлейфа, быстро"
+      ],
+      "props": {
+        "slide": 10,
+        "tail": 0,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "paper-editorial",
+      "label": "Paper Editorial",
+      "description": "Light warm paper background with serif type and a deep ink-blue window for a calm magazine feel.",
+      "askedAs": [
+        "light editorial version with serif",
+        "magazine style on cream",
+        "elegant light theme",
+        "светлый журнальный стиль",
+        "элегантная версия с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f0e8",
+        "ink": "#1c1b19",
+        "accent": "#1f3a5f",
+        "fontFamily": "Instrument Serif",
+        "slide": 42
+      }
+    },
+    {
+      "id": "long-echo",
+      "label": "Long Echo",
+      "description": "A slow, drawn-out sweep that leaves a long cascade of trailing copies.",
+      "askedAs": [
+        "slower with a longer trail",
+        "more echo copies behind the window",
+        "dramatic slow sweep",
+        "медленно с длинным шлейфом",
+        "больше копий за окном"
+      ],
+      "props": {
+        "slide": 54,
+        "tail": 9,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-mint",
+      "label": "Terminal Mint",
+      "description": "Monospaced type on near-black with a muted mint window for a dev-tool look.",
+      "askedAs": [
+        "code style monospace version",
+        "developer terminal look",
+        "dark with green accent",
+        "стиль терминала",
+        "моноширинный шрифт на тёмном"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0e1110",
+        "ink": "#e6ede9",
+        "accent": "#3fb68b",
+        "tail": 6
+      }
+    },
+    {
+      "id": "big-statement",
+      "label": "Big Statement",
+      "description": "Oversized bold grotesk type with a strong red window that fills the frame.",
+      "askedAs": [
+        "make the text huge",
+        "bigger bolder title card",
+        "large poster style swap",
+        "крупный текст на весь экран",
+        "большой заголовок"
+      ],
+      "props": {
+        "scale": 1.4,
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#e5383b",
+        "tail": 2
+      }
+    },
+    {
+      "id": "soft-violet",
+      "label": "Soft Violet",
+      "description": "Light lavender-grey canvas with a muted violet window and gentle, unhurried motion.",
+      "askedAs": [
+        "soft pastel light version",
+        "calm purple accent",
+        "gentle light theme",
+        "мягкая светлая версия",
+        "спокойный фиолетовый"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#eeedf5",
+        "ink": "#23213a",
+        "accent": "#6c5ce7",
+        "fontFamily": "Manrope",
+        "delay": 12
+      }
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "component": "icon-message-circle",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-draw",
+      "label": "Hairline Draw",
+      "description": "A large, thin-stroked bubble that slowly sketches itself in a soft slate tone.",
+      "askedAs": [
+        "thin slow drawing chat icon",
+        "elegant line message bubble",
+        "big delicate comment icon",
+        "тонкая иконка сообщения рисуется медленно",
+        "изящный пузырь чата линией"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "new-message-ping",
+      "label": "Message Ping",
+      "description": "A bold blue bubble that wiggles on a quick loop like an incoming notification.",
+      "askedAs": [
+        "notification chat bubble looping",
+        "new message alert icon",
+        "bouncing blue comment icon",
+        "иконка нового сообщения с анимацией",
+        "уведомление о сообщении повторяется"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "speed": 1.5,
+        "color": "#2563eb",
+        "strokeWidth": 2.5
+      }
+    },
+    {
+      "id": "chunky-hero",
+      "label": "Chunky Hero",
+      "description": "An oversized, heavy-stroked bubble in near-black that draws and animates as a centerpiece.",
+      "askedAs": [
+        "huge bold chat icon",
+        "thick message bubble for title",
+        "big heavy comment symbol",
+        "большая жирная иконка чата",
+        "крупный толстый значок сообщения"
+      ],
+      "props": {
+        "size": 180,
+        "strokeWidth": 3,
+        "color": "#0f172a"
+      }
+    },
+    {
+      "id": "calm-teal-loop",
+      "label": "Calm Teal",
+      "description": "A medium teal bubble that gently draws and moves on a relaxed repeating cycle.",
+      "askedAs": [
+        "soft looping chat icon",
+        "calm green message animation",
+        "gentle repeating speech bubble",
+        "спокойная зацикленная иконка чата",
+        "мягкая бирюзовая иконка сообщения"
+      ],
+      "props": {
+        "loop": true,
+        "speed": 0.75,
+        "color": "#0f766e",
+        "size": 72
+      }
+    },
+    {
+      "id": "snappy-small",
+      "label": "Snappy Small",
+      "description": "A compact, warm terracotta bubble that pops in fast for inline UI moments.",
+      "askedAs": [
+        "small fast chat icon",
+        "quick tiny message bubble",
+        "snappy inline comment icon",
+        "маленькая быстрая иконка сообщения",
+        "быстрый значок чата"
+      ],
+      "props": {
+        "size": 32,
+        "speed": 2.5,
+        "color": "#c2410c",
+        "strokeWidth": 2.25
+      }
+    }
+  ]
+}

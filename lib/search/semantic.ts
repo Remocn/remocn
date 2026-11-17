@@ -10,6 +10,7 @@ import {
   MODEL_CACHE_DIR,
   MODEL_DTYPE,
   MODEL_ID,
+  PASSAGE_PREFIX,
   QUERY_PREFIX,
   SEARCH_DIR,
   type SearchIndexMeta,
@@ -89,7 +90,7 @@ function loadEmbedder(): Promise<Embed | null> {
         dtype: MODEL_DTYPE,
       });
       return async (text: string) => {
-        const output = await extractor(QUERY_PREFIX + text, {
+        const output = await extractor(text, {
           pooling: "mean",
           normalize: true,
         });
@@ -120,10 +121,36 @@ export async function semanticRank(
     setTimeout(() => resolve(null), EMBED_TIMEOUT_MS).unref();
   });
   const vector = await Promise.race([
-    loadEmbedder().then((embed) => (embed ? embed(query) : null)),
+    loadEmbedder().then((embed) =>
+      embed ? embed(QUERY_PREFIX + query) : null,
+    ),
     timeout,
   ]).catch(() => null);
   if (!vector) return null;
 
   return rankByVectors(vector, loaded.vectors, loaded.rows, loaded.dim);
+}
+
+/**
+ * Vectors for texts outside the component index (the describe field's
+ * presets and requests), or `null` when the model is unavailable or slower
+ * than `timeoutMs`. Requests are `query`s, what they are matched against are
+ * `passage`s, as e5 was trained.
+ */
+export async function embedTexts(
+  texts: string[],
+  kind: "query" | "passage",
+  timeoutMs = EMBED_TIMEOUT_MS,
+): Promise<Float32Array[] | null> {
+  const prefix = kind === "query" ? QUERY_PREFIX : PASSAGE_PREFIX;
+  const timeout = new Promise<null>((resolve) => {
+    setTimeout(() => resolve(null), timeoutMs).unref();
+  });
+  const work = loadEmbedder().then(async (embed) => {
+    if (!embed) return null;
+    const out: Float32Array[] = [];
+    for (const text of texts) out.push(await embed(prefix + text));
+    return out;
+  });
+  return Promise.race([work, timeout]).catch(() => null);
 }

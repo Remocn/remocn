@@ -1,0 +1,125 @@
+{
+  "component": "select-replace",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "code-editor",
+      "label": "Code Editor",
+      "description": "Monospaced text on a deep charcoal editor background with a green selection, like a live refactor in an IDE.",
+      "askedAs": [
+        "make it look like a code editor",
+        "monospace dev tool style",
+        "IDE text replace look",
+        "как в редакторе кода",
+        "моноширинный шрифт как в IDE"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "ink": "#e6edf3",
+        "accent": "#2ea043",
+        "fontWeight": 400
+      }
+    },
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "A warm off-white page with serif type and a muted terracotta selection, like a copy edit in a manuscript.",
+      "askedAs": [
+        "serif editorial look on paper",
+        "like editing a magazine article",
+        "warm light copywriting style",
+        "как правка текста в журнале",
+        "светлый фон с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#f5f0e8",
+        "ink": "#2b2622",
+        "accent": "#c2593a",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-swap",
+      "label": "Quick Swap",
+      "description": "Snappy, nearly instant selection and replace with bold type for fast-cut social edits.",
+      "askedAs": [
+        "make the replace really fast",
+        "snappy quick text swap",
+        "fast punchy edit",
+        "быстрая замена текста",
+        "сделай резче и быстрее"
+      ],
+      "props": {
+        "speed": 2,
+        "hold": 3,
+        "fontWeight": 700,
+        "fontFamily": "Space Grotesk",
+        "accent": "#7c5cff"
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A large, light-weight headline where the selection lingers before a calm, deliberate replacement.",
+      "askedAs": [
+        "slow dramatic text change",
+        "let the selection linger",
+        "big calm headline replace",
+        "медленная замена с паузой",
+        "крупный текст, неторопливо"
+      ],
+      "props": {
+        "speed": 0.5,
+        "hold": 30,
+        "scale": 1.35,
+        "fontWeight": 300,
+        "delay": 12
+      }
+    },
+    {
+      "id": "clean-docs",
+      "label": "Clean Docs",
+      "description": "A crisp white documentation look with Inter and a calm blue selection, like a modern writing app.",
+      "askedAs": [
+        "light clean docs style",
+        "like Notion or Google Docs",
+        "white minimal writing app",
+        "светлый как в документе",
+        "минималистичный белый редактор"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "background": "#ffffff",
+        "ink": "#1a1d23",
+        "accent": "#2563eb",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "midnight-amber",
+      "label": "Midnight Amber",
+      "description": "Deep navy backdrop with soft cream text and an amber selection for a warm, premium night look.",
+      "askedAs": [
+        "dark navy with warm highlight",
+        "premium dark amber style",
+        "night mode with gold accent",
+        "тёмно-синий с янтарным выделением",
+        "тёмная тема с тёплым акцентом"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#0f1626",
+        "ink": "#f2ead8",
+        "accent": "#e0a13a",
+        "fontFamily": "Manrope",
+        "fontWeight": 600
+      }
+    }
+  ]
+}

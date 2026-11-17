@@ -1,0 +1,106 @@
+{
+  "component": "depth-headline",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gallery-ivory",
+      "label": "Gallery Ivory",
+      "description": "Warm ivory backdrop with a light Instrument Serif headline and a terracotta sphere, slow and composed.",
+      "askedAs": [
+        "light elegant serif title with warm colors",
+        "museum style hero headline",
+        "slow cream background title",
+        "светлый элегантный заголовок с засечками",
+        "тёплый кремовый фон и медленная анимация"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1e1b17",
+        "accent": "#c2683f",
+        "fontFamily": "Instrument Serif",
+        "riseFrames": 70
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "Deep navy field with a heavy Fraunces headline and a muted gold sphere for a luxury feel.",
+      "askedAs": [
+        "luxury dark title with gold",
+        "premium navy and gold headline",
+        "bold serif on dark blue",
+        "люксовый тёмный заголовок с золотом",
+        "премиальный тёмно-синий титр"
+      ],
+      "props": {
+        "background": "#0e1424",
+        "ink": "#f2ebdd",
+        "accent": "#c9a45c",
+        "fontWeight": 700,
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "tech-launch",
+      "label": "Tech Launch",
+      "description": "Crisp Geist sans headline on near-black with an electric violet sphere and a snappy rise.",
+      "askedAs": [
+        "modern tech product reveal",
+        "fast sans serif launch title",
+        "startup hero word animation",
+        "быстрый современный заголовок для запуска продукта",
+        "технологичный титр без засечек"
+      ],
+      "props": {
+        "fontFamily": "Geist",
+        "fontWeight": 600,
+        "background": "#0a0a0c",
+        "ink": "#f5f5f7",
+        "accent": "#7c5cff",
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "quiet-whisper",
+      "label": "Quiet Whisper",
+      "description": "Thin, smaller serif on soft grey with a sage sphere drifting in after a gentle pause.",
+      "askedAs": [
+        "minimal calm thin title",
+        "soft understated headline with delay",
+        "delicate light font intro",
+        "минималистичный тонкий заголовок",
+        "спокойный мягкий титр с задержкой"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#e9eae6",
+        "ink": "#2b2e2a",
+        "accent": "#8fa58c",
+        "fontWeight": 200,
+        "delay": 24
+      }
+    },
+    {
+      "id": "bold-statement",
+      "label": "Bold Statement",
+      "description": "Oversized Bricolage Grotesque in black weight with a coral sphere and a punchy, quick rise.",
+      "askedAs": [
+        "huge bold punchy headline",
+        "big chunky title that pops",
+        "energetic oversized hero text",
+        "огромный жирный заголовок",
+        "энергичный крупный титр"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "fontWeight": 800,
+        "scale": 1.4,
+        "accent": "#ff6b4a",
+        "riseFrames": 18,
+        "showLogo": false
+      }
+    }
+  ]
+}

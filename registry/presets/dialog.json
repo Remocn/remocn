@@ -1,0 +1,103 @@
+{
+  "component": "dialog",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "The dialog eases open at a gentle, unhurried pace for calm walkthroughs.",
+      "askedAs": [
+        "open the modal slowly",
+        "gentle dialog popup",
+        "calm slow modal animation",
+        "медленное открытие диалога",
+        "плавное появление модального окна"
+      ],
+      "props": {
+        "state": "opened",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "snappy-open",
+      "label": "Snappy Open",
+      "description": "The dialog pops open quickly with a crisp, responsive zoom.",
+      "askedAs": [
+        "fast modal open",
+        "quick dialog pop in",
+        "snappy popup animation",
+        "быстрое открытие окна",
+        "резкое появление диалога"
+      ],
+      "props": {
+        "state": "opened",
+        "speed": 2
+      }
+    },
+    {
+      "id": "instant-flash",
+      "label": "Instant Flash",
+      "description": "The dialog appears almost instantly, like a real app with reduced motion.",
+      "askedAs": [
+        "modal appears instantly",
+        "no slow animation dialog",
+        "super fast popup",
+        "мгновенное появление модалки",
+        "диалог без задержки"
+      ],
+      "props": {
+        "state": "opened",
+        "speed": 4
+      }
+    },
+    {
+      "id": "soft-dismiss",
+      "label": "Soft Dismiss",
+      "description": "The dialog closes slowly, letting the backdrop fade away gracefully.",
+      "askedAs": [
+        "close the modal slowly",
+        "gentle dialog dismiss",
+        "fade out popup smoothly",
+        "плавное закрытие диалога",
+        "медленно скрыть модальное окно"
+      ],
+      "props": {
+        "state": "closed",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "quick-close",
+      "label": "Quick Close",
+      "description": "The dialog snaps shut briskly, as if the user just hit cancel.",
+      "askedAs": [
+        "fast modal close",
+        "dismiss dialog quickly",
+        "popup closes snappy",
+        "быстрое закрытие окна",
+        "резко закрыть диалог"
+      ],
+      "props": {
+        "state": "closed",
+        "speed": 2
+      }
+    },
+    {
+      "id": "cinematic-open",
+      "label": "Cinematic Open",
+      "description": "An extra-slow, dramatic zoom and dim for hero moments in a product video.",
+      "askedAs": [
+        "dramatic modal reveal",
+        "very slow dialog zoom",
+        "cinematic popup open",
+        "кинематографичное открытие диалога",
+        "очень медленное появление окна"
+      ],
+      "props": {
+        "state": "opened",
+        "speed": 0.25
+      }
+    }
+  ]
+}

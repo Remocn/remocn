@@ -1,0 +1,114 @@
+{
+  "component": "paper-tear",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gentle-peel",
+      "label": "Gentle Peel",
+      "description": "A soft, slow tear with a smooth edge and almost no shake, like carefully parting a page.",
+      "askedAs": [
+        "slow soft paper reveal",
+        "subtle tear without shake",
+        "calm gentle rip transition",
+        "мягкий медленный разрыв бумаги",
+        "спокойный переход без тряски"
+      ],
+      "props": {
+        "impact": 0.3,
+        "roughness": 0.2,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "hard-rip",
+      "label": "Hard Rip",
+      "description": "A violent, fast rip with a ragged edge and heavy shake for one big punch.",
+      "askedAs": [
+        "aggressive tear with big impact",
+        "fast violent paper rip",
+        "maximum shake reveal",
+        "резкий мощный разрыв",
+        "сильный удар с тряской"
+      ],
+      "props": {
+        "impact": 2,
+        "roughness": 0.9,
+        "speed": 2,
+        "seed": 23
+      }
+    },
+    {
+      "id": "kraft-paper",
+      "label": "Kraft Paper",
+      "description": "Warm brown fibrous edges like torn cardboard or kraft wrapping, at a steady pace.",
+      "askedAs": [
+        "brown cardboard tear",
+        "craft paper rip edge",
+        "warm torn packaging look",
+        "разрыв крафтовой бумаги",
+        "коричневый край как у картона"
+      ],
+      "props": {
+        "edgeColor": "#c8a578",
+        "roughness": 0.7,
+        "seed": 14
+      }
+    },
+    {
+      "id": "newsprint",
+      "label": "Newsprint",
+      "description": "Off-white grey edges with a crisp, clean tear like ripping a newspaper page.",
+      "askedAs": [
+        "newspaper tear effect",
+        "grey newsprint rip",
+        "clean editorial paper tear",
+        "разрыв газеты",
+        "серый край газетной бумаги"
+      ],
+      "props": {
+        "edgeColor": "#e4e1d8",
+        "roughness": 0.35,
+        "speed": 1.5,
+        "impact": 0.8,
+        "seed": 31
+      }
+    },
+    {
+      "id": "dramatic-slowmo",
+      "label": "Dramatic Slow-Mo",
+      "description": "A heavy, jagged tear played in slow motion so every fiber and fragment reads.",
+      "askedAs": [
+        "slow motion paper tear",
+        "cinematic dramatic rip",
+        "heavy slow reveal",
+        "замедленный драматичный разрыв",
+        "кинематографичный медленный разрыв"
+      ],
+      "props": {
+        "speed": 0.25,
+        "impact": 1.6,
+        "roughness": 0.8,
+        "seed": 42
+      }
+    },
+    {
+      "id": "ink-edge",
+      "label": "Ink Edge",
+      "description": "Dark charcoal torn edges for a graphic, high-contrast cut on light scenes.",
+      "askedAs": [
+        "black edge paper tear",
+        "dark torn edge",
+        "graphic contrast rip",
+        "тёмный край разрыва",
+        "чёрный рваный край"
+      ],
+      "props": {
+        "edgeColor": "#2b2b2e",
+        "roughness": 0.6,
+        "impact": 1.2,
+        "speed": 1.25
+      }
+    }
+  ]
+}

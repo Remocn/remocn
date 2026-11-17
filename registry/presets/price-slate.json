@@ -1,0 +1,124 @@
+{
+  "component": "price-slate",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A light, magazine-style slate in Instrument Serif with a deep oxblood accent and an unhurried reel.",
+      "askedAs": [
+        "elegant serif price reveal",
+        "magazine style pricing slate",
+        "slow classy price spin",
+        "элегантный ценник с засечками",
+        "журнальный стиль цены"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "accent": "#8c2f39",
+        "background": "#f6f1ea",
+        "ink": "#1e1a17",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "slot-machine",
+      "label": "Slot Machine",
+      "description": "A long, fast reel with many turns that whirs like a jackpot before snapping onto the price.",
+      "askedAs": [
+        "make the price spin a lot",
+        "jackpot style price reel",
+        "fast spinning numbers",
+        "цена крутится как слот-машина",
+        "быстрый барабан цифр"
+      ],
+      "props": {
+        "reelLength": 48,
+        "turns": 28,
+        "speed": 1.5,
+        "accent": "#e0a526"
+      }
+    },
+    {
+      "id": "quiet-drop",
+      "label": "Quiet Drop",
+      "description": "A minimal, near-instant landing with barely any spin, set small in Inter on a soft graphite ground.",
+      "askedAs": [
+        "subtle price reveal no spin",
+        "minimal understated price",
+        "calm small pricing slate",
+        "минималистичная подача цены",
+        "цена без вращения"
+      ],
+      "props": {
+        "turns": 2,
+        "reelLength": 10,
+        "fontFamily": "Inter",
+        "scale": 0.8,
+        "background": "#1c1d21",
+        "ink": "#e8e8ea"
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A developer-flavoured slate in JetBrains Mono with a mint accent on near-black and a crisp, quick reel.",
+      "askedAs": [
+        "code style price reveal",
+        "monospace pricing for dev tool",
+        "hacker look price slate",
+        "цена в стиле терминала",
+        "моноширинный шрифт для цены"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accent": "#3fd69a",
+        "background": "#0b0f0d",
+        "ink": "#d9f2e6",
+        "speed": 1.25,
+        "turns": 8
+      }
+    },
+    {
+      "id": "bold-launch",
+      "label": "Bold Launch",
+      "description": "An oversized Bricolage Grotesque slate with a warm coral accent, held for a beat before a big landing.",
+      "askedAs": [
+        "big loud launch price",
+        "huge price for launch day",
+        "punchy oversized pricing",
+        "крупная цена для запуска",
+        "яркий большой ценник"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.35,
+        "accent": "#ff6b4a",
+        "delay": 15,
+        "reelLength": 32
+      }
+    },
+    {
+      "id": "ivory-luxe",
+      "label": "Ivory Luxe",
+      "description": "A slow, refined Fraunces slate on ivory with a muted gold accent for high-end offers.",
+      "askedAs": [
+        "luxury price reveal",
+        "premium gold pricing",
+        "slow refined price slate",
+        "роскошная подача цены",
+        "премиальный ценник с золотом"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "accent": "#a88a4a",
+        "background": "#fbf8f2",
+        "ink": "#2a2620",
+        "speed": 0.5
+      }
+    }
+  ]
+}

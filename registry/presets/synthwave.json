@@ -1,0 +1,122 @@
+{
+  "component": "synthwave",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "miami-dusk",
+      "label": "Miami Dusk",
+      "description": "Classic pink and teal palette with a hot magenta grid and a peach-to-pink sun over a violet glow.",
+      "askedAs": [
+        "pink and teal retro sunset",
+        "miami vice style backdrop",
+        "classic 80s pink synthwave",
+        "розовый ретро закат майами",
+        "синтвейв в розовых тонах"
+      ],
+      "props": {
+        "grid": "#ff4fa3",
+        "sunTop": "#ffd38a",
+        "sunBottom": "#ff4fa3",
+        "skyHorizon": "#2a0e3f"
+      }
+    },
+    {
+      "id": "night-drive",
+      "label": "Night Drive",
+      "description": "Cool blue grid racing fast under a pale cyan sun against a deep navy horizon.",
+      "askedAs": [
+        "fast blue retro highway",
+        "outrun night driving loop",
+        "speedy cyan neon grid",
+        "быстрая синяя ретро сетка",
+        "ночная поездка в стиле 80х"
+      ],
+      "props": {
+        "grid": "#3aa0ff",
+        "sunTop": "#bdf3ff",
+        "sunBottom": "#3a6bff",
+        "skyHorizon": "#0a1433",
+        "gridSpeed": 4.5,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "slow-sunset",
+      "label": "Slow Sunset",
+      "description": "Unhurried amber sunset with a low horizon, gently drifting grid and still, solid sun.",
+      "askedAs": [
+        "calm slow retro sunset",
+        "chill lofi synthwave background",
+        "relaxed warm horizon loop",
+        "спокойный медленный закат",
+        "расслабленный ретро фон"
+      ],
+      "props": {
+        "gridSpeed": 0.75,
+        "speed": 0.5,
+        "horizon": 0.7,
+        "sunStripes": false,
+        "grid": "#f08a3c",
+        "skyHorizon": "#3a1a0c"
+      }
+    },
+    {
+      "id": "toxic-arcade",
+      "label": "Arcade Green",
+      "description": "Retro arcade look with a lime grid and a yellow-green sun rising over a dark forest glow.",
+      "askedAs": [
+        "green arcade retro grid",
+        "gaming neon green backdrop",
+        "matrix style synthwave",
+        "зелёный аркадный фон",
+        "ретро игровая сетка зелёная"
+      ],
+      "props": {
+        "grid": "#5be37d",
+        "sunTop": "#f4f7a1",
+        "sunBottom": "#2fbf71",
+        "skyHorizon": "#06231a",
+        "gridSpeed": 3
+      }
+    },
+    {
+      "id": "high-sky",
+      "label": "High Sky",
+      "description": "Horizon lowered for a big open sky in lavender and violet, leaving room for titles above.",
+      "askedAs": [
+        "more sky space for title",
+        "purple synthwave with low horizon",
+        "lavender retro backdrop for logo",
+        "много неба для заголовка",
+        "фиолетовый ретро фон с низким горизонтом"
+      ],
+      "props": {
+        "horizon": 0.78,
+        "grid": "#a86bff",
+        "sunTop": "#ffc7e8",
+        "sunBottom": "#8a4dff",
+        "skyHorizon": "#1c0b33",
+        "gridSpeed": 1.5
+      }
+    },
+    {
+      "id": "frozen-frame",
+      "label": "Frozen Frame",
+      "description": "Static grid and still sun with a high horizon, a poster-like backdrop with no motion distractions.",
+      "askedAs": [
+        "static retro poster background",
+        "synthwave without moving grid",
+        "still 80s backdrop",
+        "статичный ретро фон",
+        "синтвейв без движения"
+      ],
+      "props": {
+        "gridSpeed": 0,
+        "sunStripes": false,
+        "horizon": 0.45,
+        "speed": 0.75
+      }
+    }
+  ]
+}

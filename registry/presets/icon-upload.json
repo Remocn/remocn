@@ -1,0 +1,118 @@
+{
+  "component": "icon-upload",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-slow-draw",
+      "label": "Hero Draw",
+      "description": "A large, fine-lined upload icon that sketches itself in slowly and elegantly.",
+      "askedAs": [
+        "big icon that draws itself slowly",
+        "large thin line upload animation",
+        "elegant slow stroke reveal",
+        "большая иконка медленно рисуется",
+        "тонкая линия, плавная отрисовка"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 160,
+        "strokeWidth": 1.25,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "brand-blue-pulse",
+      "label": "Brand Pulse",
+      "description": "A blue upload arrow that keeps lifting in a steady loop, like an active upload state.",
+      "askedAs": [
+        "looping blue upload arrow",
+        "uploading in progress icon",
+        "repeating arrow going up",
+        "синяя стрелка загрузки по кругу",
+        "иконка загрузки в процессе"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "color": "#1f6feb",
+        "size": 72
+      }
+    },
+    {
+      "id": "bold-snap",
+      "label": "Bold Snap",
+      "description": "A chunky, heavy-stroked icon that draws and lifts quickly with punch.",
+      "askedAs": [
+        "thick fast upload icon",
+        "bold punchy upload animation",
+        "quick heavy stroke arrow",
+        "жирная быстрая иконка загрузки",
+        "толстые линии, резкая анимация"
+      ],
+      "props": {
+        "strokeWidth": 3,
+        "speed": 2,
+        "size": 96,
+        "color": "#0f172a"
+      }
+    },
+    {
+      "id": "success-green",
+      "label": "Upload Complete",
+      "description": "A calm green upload icon at a relaxed pace that reads as a finished, successful upload.",
+      "askedAs": [
+        "green upload success icon",
+        "upload done animation",
+        "calm green arrow up",
+        "зелёная иконка успешной загрузки",
+        "загрузка завершена анимация"
+      ],
+      "props": {
+        "color": "#16a34a",
+        "speed": 0.75,
+        "size": 64,
+        "strokeWidth": 2.25
+      }
+    },
+    {
+      "id": "tiny-inline",
+      "label": "Inline Mini",
+      "description": "A small, muted grey icon with a quick lift, sized to sit beside text or in a button.",
+      "askedAs": [
+        "small upload icon for a button",
+        "tiny grey upload arrow",
+        "subtle inline upload animation",
+        "маленькая серая иконка загрузки",
+        "иконка для кнопки загрузки"
+      ],
+      "props": {
+        "size": 24,
+        "color": "#64748b",
+        "animation": "action",
+        "speed": 1.5,
+        "strokeWidth": 1.75
+      }
+    },
+    {
+      "id": "warm-loop-draw",
+      "label": "Warm Sketch",
+      "description": "A terracotta icon that redraws itself in a gentle, continuous loop.",
+      "askedAs": [
+        "warm orange icon drawing on repeat",
+        "looping sketch upload icon",
+        "hand drawn feel upload arrow",
+        "оранжевая иконка рисуется по кругу",
+        "тёплый цвет, повторяющаяся отрисовка"
+      ],
+      "props": {
+        "color": "#c2410c",
+        "animation": "draw",
+        "loop": true,
+        "speed": 0.75,
+        "size": 120,
+        "strokeWidth": 1.5
+      }
+    }
+  ]
+}

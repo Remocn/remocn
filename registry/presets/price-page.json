@@ -1,0 +1,121 @@
+{
+  "component": "price-page",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A warm cream page with a deep green serif price that reads like a printed magazine ad.",
+      "askedAs": [
+        "make it look like a magazine ad",
+        "elegant serif pricing",
+        "cream paper background with serif type",
+        "элегантный журнальный стиль",
+        "серифный шрифт на светлом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1f1b16",
+        "accent": "#2f5d50",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "snap-cut",
+      "label": "Snap Cut",
+      "description": "Fast, punchy timing with almost no hold so the deletion lands like a comedic smash cut.",
+      "askedAs": [
+        "faster and punchier",
+        "quick comedic cut",
+        "no pause before the cut",
+        "быстрее и резче",
+        "резкая смешная склейка"
+      ],
+      "props": {
+        "speed": 2,
+        "hold": 8,
+        "scale": 1.15,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A patient, cinematic pace with a long hold and a short lead-in before the price appears.",
+      "askedAs": [
+        "slower and more dramatic",
+        "let it breathe",
+        "calm cinematic pacing",
+        "медленно и драматично",
+        "дать паузу перед ценой"
+      ],
+      "props": {
+        "speed": 0.5,
+        "hold": 90,
+        "delay": 20,
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "midnight-amber",
+      "label": "Midnight Amber",
+      "description": "Deep navy background with a soft amber price for a premium, late-night feel.",
+      "askedAs": [
+        "dark blue with gold",
+        "premium night look",
+        "warm accent on dark background",
+        "тёмно-синий с золотым",
+        "премиальный тёмный стиль"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#0e1626",
+        "ink": "#e8e4da",
+        "accent": "#e3a857",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Monospaced type in muted green on near-black for a developer, command-line look.",
+      "askedAs": [
+        "developer terminal style",
+        "monospace code look",
+        "hacker green on black",
+        "стиль терминала",
+        "моноширинный шрифт как в коде"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0c",
+        "ink": "#c9d6cc",
+        "accent": "#6fcf97",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "bold-coral",
+      "label": "Bold Coral",
+      "description": "Oversized chunky grotesque in coral on a clean white page for a loud, friendly statement.",
+      "askedAs": [
+        "bigger and bolder",
+        "bright playful light version",
+        "huge price on white",
+        "крупнее и ярче",
+        "светлый весёлый вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#ffffff",
+        "ink": "#1a1a1a",
+        "accent": "#e8604c",
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.35
+      }
+    }
+  ]
+}

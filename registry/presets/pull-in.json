@@ -1,0 +1,123 @@
+{
+  "component": "pull-in",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snap-arrivals",
+      "label": "Snap Arrivals",
+      "description": "Words land fast with a short brake and tight letter spacing for a punchy, product-launch beat.",
+      "askedAs": [
+        "make it faster and snappier",
+        "quick punchy arrivals",
+        "tight fast word pull in",
+        "сделай быстрее и резче",
+        "быстрое появление слов"
+      ],
+      "props": {
+        "speed": 1.75,
+        "brake": 10,
+        "stagger": 0.5,
+        "hold": 12
+      }
+    },
+    {
+      "id": "slow-glide",
+      "label": "Slow Glide",
+      "description": "A calm, unhurried pull with a long brake and generous letter stagger on a light page.",
+      "askedAs": [
+        "slow and calm version",
+        "gentle drifting words",
+        "relaxed light theme pull in",
+        "медленно и плавно",
+        "спокойная светлая версия"
+      ],
+      "props": {
+        "theme": "light",
+        "speed": 0.75,
+        "brake": 36,
+        "stagger": 2.5,
+        "hold": 48
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Large Instrument Serif type in warm ink on cream paper with a terracotta accent.",
+      "askedAs": [
+        "elegant serif magazine look",
+        "warm editorial style",
+        "classy cream background",
+        "элегантный шрифт с засечками",
+        "журнальный стиль"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#2a2420",
+        "accent": "#b5532f",
+        "scale": 1.25,
+        "brake": 28
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "JetBrains Mono on near-black with a soft green accent for a developer-tool feel.",
+      "askedAs": [
+        "code terminal style",
+        "monospace developer look",
+        "hacker green accent",
+        "стиль терминала",
+        "моноширинный шрифт для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "ink": "#e6edf3",
+        "accent": "#3fb950",
+        "scale": 0.85,
+        "stagger": 0.75
+      }
+    },
+    {
+      "id": "midnight-blue",
+      "label": "Midnight Blue",
+      "description": "Space Grotesk in pale ink on deep navy with a cool sky-blue accent and a short lead-in delay.",
+      "askedAs": [
+        "dark blue tech look",
+        "navy background with blue highlight",
+        "cool modern grotesk",
+        "тёмно-синий фон",
+        "современный технологичный стиль"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "background": "#0b1a33",
+        "ink": "#e8eef8",
+        "accent": "#6cb6ff",
+        "delay": 12
+      }
+    },
+    {
+      "id": "bold-poster",
+      "label": "Bold Poster",
+      "description": "Oversized Bricolage Grotesque in black on white with a vivid red accent and wide letter stagger.",
+      "askedAs": [
+        "big bold poster text",
+        "huge headline style",
+        "black and white with red",
+        "крупный жирный текст",
+        "плакатный стиль"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "theme": "light",
+        "background": "#ffffff",
+        "ink": "#111111",
+        "accent": "#e5402f",
+        "scale": 1.45
+      }
+    }
+  ]
+}

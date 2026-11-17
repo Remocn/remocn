@@ -1,0 +1,67 @@
+{
+  "component": "v0",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "brisk",
+      "label": "Brisk",
+      "description": "A slightly quicker typing pace that keeps the prompt natural but cuts dead air.",
+      "askedAs": [
+        "a bit faster typing",
+        "slightly quicker prompt",
+        "snappier but still natural",
+        "немного быстрее печатает",
+        "чуть бодрее набор текста"
+      ],
+      "props": {
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "double-time",
+      "label": "Double Time",
+      "description": "The prompt types at twice the normal rate for a confident, efficient demo beat.",
+      "askedAs": [
+        "twice as fast",
+        "quick prompt typing",
+        "speed it up for a short clip",
+        "в два раза быстрее",
+        "быстрый ввод запроса"
+      ],
+      "props": {
+        "speed": 2
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "A fast, punchy run where the prompt lands quickly and the send morph hits almost immediately.",
+      "askedAs": [
+        "very fast typing",
+        "punchy quick composer",
+        "for a fast-paced montage",
+        "очень быстро печатает",
+        "динамичный быстрый ввод"
+      ],
+      "props": {
+        "speed": 3
+      }
+    },
+    {
+      "id": "instant",
+      "label": "Instant",
+      "description": "Maximum speed so the prompt nearly snaps in and the mic-to-send morph reads as a quick flash.",
+      "askedAs": [
+        "as fast as possible",
+        "almost instant prompt",
+        "blink and it's typed",
+        "максимальная скорость",
+        "почти мгновенно"
+      ],
+      "props": {
+        "speed": 4
+      }
+    }
+  ]
+}

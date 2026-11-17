@@ -1,0 +1,122 @@
+{
+  "component": "beam-sweep",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-cinematic",
+      "label": "Slow Cinematic",
+      "description": "A long, unhurried beam pass over a warm amber horizon with an elegant serif headline.",
+      "askedAs": [
+        "slow movie-style light sweep",
+        "cinematic reveal with serif title",
+        "long dramatic beam transition",
+        "медленный кинематографичный переход",
+        "плавный луч света с заголовком"
+      ],
+      "props": {
+        "transition": 54,
+        "sceneB": 110,
+        "ground": "lantern",
+        "fontFamily": "Instrument Serif",
+        "speed": 0.75,
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "snap-cut",
+      "label": "Snap Cut",
+      "description": "A quick, punchy beam flash on a cool cobalt ground for fast-paced edits.",
+      "askedAs": [
+        "fast light wipe",
+        "quick punchy transition",
+        "snappy beam for short ads",
+        "быстрый переход лучом",
+        "резкая смена сцены"
+      ],
+      "props": {
+        "sceneA": 40,
+        "sceneB": 48,
+        "transition": 14,
+        "ground": "cobalt-rise",
+        "speed": 1.5,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "ember-glow",
+      "label": "Ember Glow",
+      "description": "A deep red-orange ember horizon with bold editorial Fraunces type in warm cream.",
+      "askedAs": [
+        "warm fiery glow transition",
+        "red orange horizon headline",
+        "bold warm light reveal",
+        "тёплое огненное свечение",
+        "красно-оранжевый горизонт с заголовком"
+      ],
+      "props": {
+        "ground": "ember",
+        "fontFamily": "Fraunces",
+        "ink": "#f6ead8",
+        "scale": 1.1
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "A soft, bright paper-toned ground with dark ink for a clean, minimal light-mode reveal.",
+      "askedAs": [
+        "light background beam sweep",
+        "minimal white version",
+        "clean bright tagline reveal",
+        "светлый минималистичный вариант",
+        "переход на светлом фоне"
+      ],
+      "props": {
+        "ground": "paper-crease",
+        "background": "#f3efe8",
+        "ink": "#1c1b19",
+        "fontFamily": "Inter",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "orbit-tech",
+      "label": "Orbit Tech",
+      "description": "A cold low-orbit blue horizon with monospaced type for a precise, technical feel.",
+      "askedAs": [
+        "techy space transition",
+        "developer product tagline",
+        "cool blue monospace reveal",
+        "технологичный космический переход",
+        "холодный синий с моноширинным шрифтом"
+      ],
+      "props": {
+        "ground": "low-orbit",
+        "fontFamily": "JetBrains Mono",
+        "ink": "#dce8f5",
+        "scale": 0.85,
+        "delay": 10
+      }
+    },
+    {
+      "id": "velvet-statement",
+      "label": "Velvet Statement",
+      "description": "A rich violet velvet ground with an oversized grotesk headline held on screen longer.",
+      "askedAs": [
+        "big bold closing statement",
+        "purple luxury tagline",
+        "large headline call to action",
+        "крупный финальный слоган",
+        "фиолетовый премиальный заголовок"
+      ],
+      "props": {
+        "ground": "velvet-hour",
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.35,
+        "sceneB": 130,
+        "transition": 40
+      }
+    }
+  ]
+}

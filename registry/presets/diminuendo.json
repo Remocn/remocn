@@ -1,0 +1,104 @@
+{
+  "component": "diminuendo",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "steep-fade",
+      "label": "Steep Fade",
+      "description": "A sharp decrescendo where trailing digits shrink fast, set in tight Geist on the dark stage.",
+      "askedAs": [
+        "make the trailing digits shrink much faster",
+        "dramatic size drop between digit groups",
+        "steep falloff number counter",
+        "резкое уменьшение последних цифр",
+        "крутой спад размера цифр"
+      ],
+      "props": {
+        "ratio": 0.55,
+        "fontFamily": "Geist",
+        "accent": "#7dd3fc"
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A calm light-paper look with Instrument Serif digits, a gentle falloff and a slow, measured count.",
+      "askedAs": [
+        "elegant serif big number on light background",
+        "magazine style counter",
+        "slow classy number count up",
+        "элегантный счётчик с засечками",
+        "светлый журнальный стиль цифр"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#b4532a",
+        "countDuration": 112
+      }
+    },
+    {
+      "id": "terminal-tally",
+      "label": "Terminal Tally",
+      "description": "A monospaced, fast-ticking readout in JetBrains Mono with amber accent on near-black.",
+      "askedAs": [
+        "code style monospace counter",
+        "fast terminal number tick",
+        "hacker dashboard big number",
+        "моноширинный счётчик как в терминале",
+        "быстрый счётчик в стиле кода"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d0f12",
+        "ink": "#e6e1d6",
+        "accent": "#f5a524",
+        "countDuration": 36,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "slow-swell",
+      "label": "Slow Swell",
+      "description": "An oversized figure that climbs slowly after a pause, with a soft, nearly even falloff.",
+      "askedAs": [
+        "slow cinematic number reveal",
+        "huge number that counts up slowly",
+        "gentle subtle digit fade",
+        "медленный кинематографичный счётчик",
+        "огромное число растёт медленно"
+      ],
+      "props": {
+        "scale": 1.3,
+        "ratio": 0.92,
+        "countDuration": 152,
+        "delay": 20,
+        "speed": 0.75,
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "midnight-indigo",
+      "label": "Midnight Indigo",
+      "description": "A deep navy stage with a lavender accent and compact Space Grotesk digits.",
+      "askedAs": [
+        "dark blue counter with purple accent",
+        "compact navy data stat",
+        "modern tech number on dark blue",
+        "счётчик на тёмно-синем фоне",
+        "компактная цифра в синих тонах"
+      ],
+      "props": {
+        "background": "#0f1530",
+        "ink": "#eef0ff",
+        "accent": "#a5b4fc",
+        "fontFamily": "Space Grotesk",
+        "scale": 0.8,
+        "ratio": 0.7
+      }
+    }
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "component": "chevron-run",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gilded-noir",
+      "label": "Gilded Noir",
+      "description": "A warm gold chevron on near-black with a light serif numeral and an unhurried, luxurious entrance.",
+      "askedAs": [
+        "gold on black luxury stat",
+        "elegant slow premium percentage",
+        "dark gold serif growth number",
+        "золотой премиальный рост на чёрном",
+        "элегантная медленная цифра с золотом"
+      ],
+      "props": {
+        "background": "#0e0d0b",
+        "ink": "#f3ebdd",
+        "accent": "#c9a24b",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 300,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "paper-editorial",
+      "label": "Paper Editorial",
+      "description": "A light, magazine-style frame with a deep forest chevron and a Fraunces numeral on warm paper.",
+      "askedAs": [
+        "light editorial growth stat",
+        "magazine style percentage on cream",
+        "green chevron on paper background",
+        "светлый журнальный стиль для процента",
+        "зелёная стрелка на кремовом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f5f1e8",
+        "ink": "#1c1b18",
+        "accent": "#2f5d50",
+        "fontFamily": "Fraunces",
+        "fontWeight": 600
+      }
+    },
+    {
+      "id": "rapid-surge",
+      "label": "Rapid Surge",
+      "description": "A fast, punchy run of many tight chevron columns with a heavy grotesk numeral in electric blue.",
+      "askedAs": [
+        "fast energetic growth number",
+        "punchy quick percentage reveal",
+        "bold rapid upward stat",
+        "быстрый энергичный рост",
+        "резкое появление процента"
+      ],
+      "props": {
+        "speed": 2,
+        "columns": 21,
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 800,
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "quiet-ledger",
+      "label": "Quiet Ledger",
+      "description": "A restrained, compact slate frame with sparse columns and a monospace figure for data-driven decks.",
+      "askedAs": [
+        "minimal technical stat",
+        "small monospace percentage",
+        "calm data report number",
+        "минималистичная цифра моноширинным",
+        "спокойный технический показатель"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "fontWeight": 400,
+        "columns": 7,
+        "accent": "#6b7c93",
+        "scale": 0.85,
+        "delay": 12
+      }
+    },
+    {
+      "id": "rose-dusk",
+      "label": "Rose Dusk",
+      "description": "A soft plum night with a dusty rose chevron and a slow, delayed Manrope reveal.",
+      "askedAs": [
+        "soft pink premium growth",
+        "plum and rose percentage",
+        "gentle delayed stat reveal",
+        "мягкий розовый премиальный рост",
+        "плавное появление цифры с задержкой"
+      ],
+      "props": {
+        "background": "#1e1420",
+        "ink": "#f4e6ea",
+        "accent": "#d98ba0",
+        "fontFamily": "Manrope",
+        "speed": 0.5,
+        "delay": 20
+      }
+    }
+  ]
+}

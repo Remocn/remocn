@@ -1,0 +1,112 @@
+{
+  "component": "scan-fix",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-review",
+      "label": "Midnight Review",
+      "description": "A deep navy canvas with a soft cyan scan, coral redlines and mint fixes for a calm dark-mode reveal.",
+      "askedAs": [
+        "dark mode version",
+        "night theme scan",
+        "scan on a dark background",
+        "тёмная тема",
+        "ночной вариант"
+      ],
+      "props": {
+        "background": "#0f172a",
+        "scanColor": "#38bdf8",
+        "beforeColor": "#f87171",
+        "afterColor": "#34d399"
+      }
+    },
+    {
+      "id": "quick-ship",
+      "label": "Quick Ship",
+      "description": "A brisk double-speed sweep with a crisp blue scan that lands the fix almost instantly.",
+      "askedAs": [
+        "make it faster",
+        "snappy release reveal",
+        "quick sweep",
+        "быстрее",
+        "быстрый скан"
+      ],
+      "props": {
+        "speed": 2,
+        "scanColor": "#1f6feb"
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A slow, deliberate sweep with a muted slate scan that lets viewers read every fixed redline.",
+      "askedAs": [
+        "slow it down",
+        "calm deliberate scan",
+        "let people see each fix",
+        "медленнее",
+        "плавный показ"
+      ],
+      "props": {
+        "speed": 0.5,
+        "scanColor": "#64748b"
+      }
+    },
+    {
+      "id": "paper-proof",
+      "label": "Paper Proof",
+      "description": "A warm off-white page with editorial rust redlines and ink-blue fixes, like a printed proof being corrected.",
+      "askedAs": [
+        "warm paper look",
+        "editorial proofreading style",
+        "print proof feel",
+        "как бумажная корректура",
+        "тёплый фон"
+      ],
+      "props": {
+        "background": "#f5f0e6",
+        "scanColor": "#b45309",
+        "beforeColor": "#c2410c",
+        "afterColor": "#1e3a8a"
+      }
+    },
+    {
+      "id": "mono-graphite",
+      "label": "Mono Graphite",
+      "description": "A near-monochrome graphite palette where only a restrained red and a cool teal mark the change.",
+      "askedAs": [
+        "minimal grey version",
+        "monochrome scan",
+        "subtle neutral colors",
+        "монохромный вариант",
+        "серый минимализм"
+      ],
+      "props": {
+        "background": "#e5e7eb",
+        "scanColor": "#111827",
+        "beforeColor": "#b91c1c",
+        "afterColor": "#0f766e",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "forest-green",
+      "label": "Green Light",
+      "description": "A soft sage background with an emerald scan and fixes, framing the release as an all-clear.",
+      "askedAs": [
+        "green success theme",
+        "all checks passed look",
+        "approved release style",
+        "зелёная тема",
+        "всё исправлено"
+      ],
+      "props": {
+        "background": "#ecf3ee",
+        "scanColor": "#059669",
+        "afterColor": "#047857",
+        "beforeColor": "#dc2626"
+      }
+    }
+  ]
+}

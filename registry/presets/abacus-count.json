@@ -1,0 +1,105 @@
+{
+  "component": "abacus-count",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "wooden-classroom",
+      "label": "Wooden Classroom",
+      "description": "Warm cream paper with walnut ink and a terracotta accent, set in a soft serif like an old schoolroom abacus.",
+      "askedAs": [
+        "warm vintage abacus look",
+        "old school wooden counting frame",
+        "cream paper with brown beads",
+        "тёплый винтажный стиль счёт",
+        "как старые деревянные счёты"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f3ebdd",
+        "ink": "#3a2a1e",
+        "accent": "#c0582f",
+        "fontFamily": "Fraunces",
+        "fontWeight": 500
+      }
+    },
+    {
+      "id": "quick-tally",
+      "label": "Quick Tally",
+      "description": "A fast, punchy count in bold grotesque type with a bright coral accent on dark.",
+      "askedAs": [
+        "make the count faster and punchier",
+        "snappy bold number count",
+        "quick energetic tally",
+        "быстрый энергичный подсчёт",
+        "сделай счёт быстрее и жирнее"
+      ],
+      "props": {
+        "speed": 2,
+        "fontFamily": "Bricolage Grotesque",
+        "fontWeight": 800,
+        "accent": "#ff6b4a",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "slow-bead",
+      "label": "Slow Bead",
+      "description": "An unhurried, deliberate count on deep navy with sage beads and light elegant serif numerals.",
+      "askedAs": [
+        "slow calm counting",
+        "relaxed elegant abacus",
+        "gentle slow beads on navy",
+        "медленный спокойный счёт",
+        "элегантный неторопливый вариант"
+      ],
+      "props": {
+        "speed": 0.5,
+        "background": "#14213d",
+        "ink": "#edeae2",
+        "accent": "#8fb9a8",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400
+      }
+    },
+    {
+      "id": "clean-ledger",
+      "label": "Clean Ledger",
+      "description": "Crisp white, grain-free and technical, with monospace digits and a cobalt accent.",
+      "askedAs": [
+        "clean minimal light version",
+        "technical monospace counter",
+        "no grain white background",
+        "чистый минималистичный светлый",
+        "моноширинный технический стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "grain": false,
+        "fontFamily": "JetBrains Mono",
+        "fontWeight": 500,
+        "accent": "#1f4fd8"
+      }
+    },
+    {
+      "id": "compact-pop",
+      "label": "Compact Pop",
+      "description": "A smaller, centered count with a short lead-in delay and a mustard accent on charcoal.",
+      "askedAs": [
+        "smaller abacus with a pause before",
+        "compact count with yellow beads",
+        "delayed start smaller size",
+        "компактный счёт с задержкой",
+        "поменьше и с жёлтыми бусинами"
+      ],
+      "props": {
+        "scale": 0.75,
+        "delay": 20,
+        "background": "#1e1e1e",
+        "ink": "#f5f2ea",
+        "accent": "#e3b23c",
+        "fontFamily": "Space Grotesk"
+      }
+    }
+  ]
+}

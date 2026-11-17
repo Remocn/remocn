@@ -1,0 +1,116 @@
+{
+  "component": "strikethrough-replace",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-red-pen",
+      "label": "Editorial Red Pen",
+      "description": "A classic proofreader's red strike over regular-weight dark ink, paced like a careful edit.",
+      "askedAs": [
+        "red pen correction",
+        "editor crossing out text",
+        "proofreading style strike",
+        "красная ручка редактора",
+        "зачёркивание как в корректуре"
+      ],
+      "props": {
+        "lineColor": "#c8102e",
+        "color": "#1c1c1c",
+        "fontWeight": "400",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "price-drop",
+      "label": "Price Drop",
+      "description": "Large heavy numerals with a quick crimson strike that snaps the old price away.",
+      "askedAs": [
+        "sale price crossed out",
+        "fast discount reveal",
+        "big bold price strike",
+        "зачёркнутая старая цена",
+        "быстрая скидка крупно"
+      ],
+      "props": {
+        "lineColor": "#e11d48",
+        "fontSize": 140,
+        "fontWeight": "700",
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "quiet-slate",
+      "label": "Quiet Slate",
+      "description": "Soft slate text with a muted grey-blue line for a calm, understated correction.",
+      "askedAs": [
+        "subtle muted strikethrough",
+        "calm minimal correction",
+        "grey low-key replace",
+        "спокойное серое зачёркивание",
+        "минималистичная замена текста"
+      ],
+      "props": {
+        "lineColor": "#64748b",
+        "color": "#334155",
+        "fontWeight": "500",
+        "fontSize": 72,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "ink-on-paper",
+      "label": "Ink On Paper",
+      "description": "Deep navy text struck with a warm ochre line, like a fountain-pen note.",
+      "askedAs": [
+        "navy and gold strike",
+        "fountain pen style",
+        "warm elegant crossing out",
+        "элегантное зачёркивание синим",
+        "стиль перьевой ручки"
+      ],
+      "props": {
+        "lineColor": "#c08a2b",
+        "color": "#1e2a44",
+        "fontWeight": "600",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "snappy-caption",
+      "label": "Snappy Caption",
+      "description": "Small semibold caption text with a bright green line that strikes and swaps in a blink.",
+      "askedAs": [
+        "quick small text swap",
+        "fast caption replace",
+        "green check strike",
+        "быстрая замена подписи",
+        "мелкий текст быстро"
+      ],
+      "props": {
+        "lineColor": "#16a34a",
+        "fontSize": 48,
+        "fontWeight": "600",
+        "speed": 2.5
+      }
+    },
+    {
+      "id": "dramatic-slow",
+      "label": "Dramatic Slow",
+      "description": "Oversized black type crossed by a thick-feeling charcoal line at a slow, deliberate pace.",
+      "askedAs": [
+        "slow dramatic strike",
+        "huge monochrome crossing out",
+        "cinematic replace text",
+        "медленное драматичное зачёркивание",
+        "огромный чёрно-белый текст"
+      ],
+      "props": {
+        "lineColor": "#404040",
+        "color": "#0a0a0a",
+        "fontSize": 160,
+        "speed": 0.25
+      }
+    }
+  ]
+}

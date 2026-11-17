@@ -1,0 +1,114 @@
+{
+  "component": "paper-sticker",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "kraft-tag",
+      "label": "Kraft Tag",
+      "description": "Warm brown kraft paper with a jaunty tilt and the classic choppy stop-motion beat.",
+      "askedAs": [
+        "brown cardboard label",
+        "kraft paper tag look",
+        "rustic craft sticker",
+        "крафтовая бумажная бирка",
+        "коричневый картонный ярлык"
+      ],
+      "props": {
+        "background": "#d8bf96",
+        "maxTilt": 4.2,
+        "step": 3
+      }
+    },
+    {
+      "id": "crisp-slap",
+      "label": "Crisp Slap",
+      "description": "Clean white chip that lands fast and nearly straight, with smooth single-frame motion.",
+      "askedAs": [
+        "quick neat sticker",
+        "fast straight label",
+        "clean snappy tag",
+        "быстрая ровная наклейка",
+        "аккуратный стикер без наклона"
+      ],
+      "props": {
+        "background": "#ffffff",
+        "maxTilt": 0.8,
+        "step": 1,
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "lazy-notecard",
+      "label": "Lazy Notecard",
+      "description": "Soft cream card that drifts in slowly on a heavy, jerky stop-motion cadence.",
+      "askedAs": [
+        "slow handmade note",
+        "choppy stop motion label",
+        "relaxed paper card",
+        "медленная бумажная заметка",
+        "дёрганая покадровая анимация"
+      ],
+      "props": {
+        "background": "#f3ead2",
+        "step": 6,
+        "speed": 0.5,
+        "maxTilt": 2
+      }
+    },
+    {
+      "id": "sticky-note",
+      "label": "Sticky Note",
+      "description": "Pale yellow memo paper slapped on at a careless angle with a delayed entrance.",
+      "askedAs": [
+        "yellow post-it",
+        "memo note sticker",
+        "office sticky label",
+        "жёлтый стикер для заметок",
+        "как пост-ит"
+      ],
+      "props": {
+        "background": "#f6e58d",
+        "maxTilt": 5.6,
+        "at": 12,
+        "step": 4
+      }
+    },
+    {
+      "id": "wild-scrapbook",
+      "label": "Wild Scrapbook",
+      "description": "Dusty pink scrap with maximum tilt and a brisk, energetic wobble.",
+      "askedAs": [
+        "messy scrapbook sticker",
+        "crooked tilted tag",
+        "playful collage label",
+        "кривая наклейка в стиле скрапбук",
+        "весёлый коллажный ярлык"
+      ],
+      "props": {
+        "background": "#efc9c0",
+        "maxTilt": 8,
+        "step": 2,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "blueprint-chip",
+      "label": "Blueprint Chip",
+      "description": "Muted sage-grey paper placed calmly with a subtle lean and measured timing.",
+      "askedAs": [
+        "muted grey green tag",
+        "calm technical label",
+        "subtle paper chip",
+        "спокойный серо-зелёный ярлык",
+        "сдержанная бумажная метка"
+      ],
+      "props": {
+        "background": "#dfe5dc",
+        "maxTilt": 1.4,
+        "speed": 0.75,
+        "step": 5
+      }
+    }
+  ]
+}

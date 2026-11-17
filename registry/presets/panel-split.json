@@ -1,0 +1,122 @@
+{
+  "component": "panel-split",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "A light, magazine-like layout with serif type on warm paper and a deep ink-red accent.",
+      "askedAs": [
+        "light editorial portfolio with serif font",
+        "magazine style about me page",
+        "warm paper look with classic typography",
+        "светлый журнальный стиль с засечками",
+        "портфолио как в журнале"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "ground": "paper-crease",
+        "accent": "#9e2b25",
+        "ink": "#1c1a17",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "midnight-studio",
+      "label": "Midnight Studio",
+      "description": "A slow, cinematic dark navy look with soft gold accents and calm, deliberate panel reveals.",
+      "askedAs": [
+        "slow luxury dark intro",
+        "navy and gold studio reveal",
+        "cinematic premium about section",
+        "медленный тёмный премиальный стиль",
+        "тёмно-синий с золотом"
+      ],
+      "props": {
+        "ground": "blue-hour",
+        "accent": "#c9a45c",
+        "panel": "#121a2b",
+        "fontFamily": "Fraunces",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "swiss-mono",
+      "label": "Swiss Mono",
+      "description": "A crisp, fast monochrome grid with Geist type and a single signal-orange accent.",
+      "askedAs": [
+        "minimal black and white portfolio",
+        "fast clean swiss style",
+        "monochrome with orange accent",
+        "минималистичный чёрно-белый стиль",
+        "быстрая чистая сетка"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Geist",
+        "background": "#f4f4f2",
+        "ink": "#111111",
+        "accent": "#e8590c",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "ember-glow",
+      "label": "Ember Glow",
+      "description": "A warm, smouldering dark look with copper panels and a terracotta accent.",
+      "askedAs": [
+        "warm dark copper tones",
+        "cozy amber portfolio intro",
+        "rust and terracotta studio look",
+        "тёплый тёмный медный стиль",
+        "терракотовые оттенки"
+      ],
+      "props": {
+        "ground": "ember",
+        "accent": "#d9734e",
+        "panel": "#2a1a14",
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "dev-terminal",
+      "label": "Dev Terminal",
+      "description": "A compact, quick monospaced look on charcoal with a muted green accent for engineers and technical studios.",
+      "askedAs": [
+        "developer portfolio in monospace",
+        "code style about me",
+        "techy compact layout",
+        "стиль терминала для разработчика",
+        "моноширинный шрифт портфолио"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "ground": "charcoal-satin",
+        "accent": "#4fb286",
+        "scale": 0.85,
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "bold-iris",
+      "label": "Bold Iris",
+      "description": "An oversized, expressive layout with Bricolage type over a violet iris ground.",
+      "askedAs": [
+        "big bold creative intro",
+        "large playful violet portfolio",
+        "expressive purple studio reveal",
+        "крупный яркий креативный стиль",
+        "фиолетовое смелое портфолио"
+      ],
+      "props": {
+        "ground": "iris",
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#8b6cf6",
+        "scale": 1.25,
+        "delay": 12
+      }
+    }
+  ]
+}

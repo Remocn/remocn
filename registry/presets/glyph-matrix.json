@@ -1,0 +1,120 @@
+{
+  "component": "glyph-matrix",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "amber-terminal",
+      "label": "Amber Terminal",
+      "description": "Warm amber LEDs on a near-black ground with monospace type, like an old hardware readout.",
+      "askedAs": [
+        "retro amber led countdown",
+        "old terminal style logo reveal",
+        "monospace hardware look",
+        "ретро янтарный дисплей",
+        "как старый терминал"
+      ],
+      "props": {
+        "theme": "dark",
+        "accent": "#f5a524",
+        "background": "#0e0b07",
+        "ink": "#f3e6d0",
+        "fontFamily": "JetBrains Mono",
+        "typeStep": 1
+      }
+    },
+    {
+      "id": "rapid-boot",
+      "label": "Rapid Boot",
+      "description": "A snappy, fast-ticking countdown with tight letter stagger for short social cuts.",
+      "askedAs": [
+        "faster countdown",
+        "quick snappy intro",
+        "short punchy sting",
+        "быстрый отсчёт",
+        "сделай короче и резче"
+      ],
+      "props": {
+        "countStep": 8,
+        "speed": 1.75,
+        "typeStep": 1
+      }
+    },
+    {
+      "id": "paper-lab",
+      "label": "Paper Lab",
+      "description": "Light, clean off-white canvas with graphite text and a deep teal accent.",
+      "askedAs": [
+        "light version",
+        "white background clean look",
+        "minimal bright tech reveal",
+        "светлая версия",
+        "на белом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f3ef",
+        "ink": "#1c1d1f",
+        "accent": "#0f766e",
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "slow-launch",
+      "label": "Slow Launch",
+      "description": "A deliberate, cinematic countdown with long beats, a brief hold and larger scale.",
+      "askedAs": [
+        "slow dramatic countdown",
+        "cinematic launch reveal",
+        "bigger and slower",
+        "медленный драматичный отсчёт",
+        "крупнее и медленнее"
+      ],
+      "props": {
+        "countStep": 26,
+        "speed": 0.75,
+        "typeStep": 4.5,
+        "scale": 1.2,
+        "delay": 12
+      }
+    },
+    {
+      "id": "phosphor-green",
+      "label": "Phosphor Green",
+      "description": "Muted phosphor green dots on a deep green-black screen with Space Grotesk type.",
+      "askedAs": [
+        "green led matrix",
+        "hacker style countdown",
+        "oscilloscope green look",
+        "зелёный светодиодный экран",
+        "в стиле хакера"
+      ],
+      "props": {
+        "accent": "#5bd68a",
+        "background": "#07120c",
+        "ink": "#ddefe3",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "editorial-signal",
+      "label": "Editorial Signal",
+      "description": "A compact, refined take with serif lettering and a soft coral accent on charcoal.",
+      "askedAs": [
+        "elegant serif logo reveal",
+        "smaller refined version",
+        "premium understated sting",
+        "элегантный вариант с засечками",
+        "поменьше и изящнее"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "accent": "#e8735a",
+        "background": "#18181b",
+        "ink": "#f2eee9",
+        "scale": 0.8,
+        "typeStep": 3.5
+      }
+    }
+  ]
+}

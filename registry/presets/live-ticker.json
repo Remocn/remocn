@@ -1,0 +1,105 @@
+{
+  "component": "live-ticker",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Monospaced figures in soft green on near-black, like a live server console.",
+      "askedAs": [
+        "make it look like a terminal",
+        "monospace hacker counter",
+        "green console numbers",
+        "как в терминале",
+        "моноширинный счётчик"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0c",
+        "ink": "#d7e8da",
+        "accent": "#3fb950",
+        "fontWeight": 400,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "A light, serif headline figure on warm paper with a burgundy accent, paced slowly.",
+      "askedAs": [
+        "elegant serif counter",
+        "magazine style number",
+        "light warm paper look",
+        "элегантный счётчик с засечками",
+        "светлый журнальный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1e1b18",
+        "accent": "#9b2c2c",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "clean-light",
+      "label": "Clean Light",
+      "description": "Crisp white product-UI look with Inter figures and a calm blue accent.",
+      "askedAs": [
+        "simple white version",
+        "clean light ticker",
+        "minimal SaaS counter",
+        "простой светлый вариант",
+        "чистый белый счётчик"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "grain": false,
+        "accent": "#2563eb"
+      }
+    },
+    {
+      "id": "hyper-rush",
+      "label": "Hyper Rush",
+      "description": "Oversized bold grotesque digits that race up fast against deep navy with an amber accent.",
+      "askedAs": [
+        "make the numbers huge and fast",
+        "energetic big counter",
+        "fast rolling digits",
+        "быстрый крупный счётчик",
+        "энергичные большие цифры"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 400,
+        "scale": 1.3,
+        "speed": 2.5,
+        "background": "#0d1326",
+        "accent": "#f5a524"
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A smaller, unhurried Fraunces figure in plum tones that waits a beat before ticking.",
+      "askedAs": [
+        "slow cinematic count",
+        "calm delayed reveal",
+        "understated counter",
+        "медленный плавный счётчик",
+        "спокойное появление с задержкой"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "speed": 0.5,
+        "delay": 30,
+        "scale": 0.85,
+        "background": "#1a1420",
+        "accent": "#c084fc"
+      }
+    }
+  ]
+}

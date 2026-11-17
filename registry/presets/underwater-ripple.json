@@ -1,0 +1,114 @@
+{
+  "component": "underwater-ripple",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "still-pool",
+      "label": "Still Pool",
+      "description": "A barely-there shimmer with slow, broad swells and almost no colour fringing, like looking through a calm pool.",
+      "askedAs": [
+        "very subtle water shimmer",
+        "calm gentle ripple background",
+        "slow soft underwater effect",
+        "едва заметная рябь воды",
+        "спокойная вода на фоне"
+      ],
+      "props": {
+        "amplitude": 3,
+        "scale": 1.8,
+        "speed": 0.5,
+        "dispersion": 0.3
+      }
+    },
+    {
+      "id": "deep-swell",
+      "label": "Deep Swell",
+      "description": "Large, slow, heavy waves that bend the whole frame in wide rolling distortions.",
+      "askedAs": [
+        "big slow waves over the image",
+        "heavy deep ocean distortion",
+        "wide rolling water warp",
+        "большие медленные волны",
+        "глубокая вода искажает картинку"
+      ],
+      "props": {
+        "amplitude": 22,
+        "scale": 3.2,
+        "speed": 0.5,
+        "dispersion": 0.8
+      }
+    },
+    {
+      "id": "shallow-sparkle",
+      "label": "Shallow Sparkle",
+      "description": "Fine, quick ripples like sunlit shallows, with a tight busy pattern and light fringing.",
+      "askedAs": [
+        "small fast ripples",
+        "shallow sunny water effect",
+        "busy fine water texture",
+        "мелкая быстрая рябь",
+        "мелководье с бликами"
+      ],
+      "props": {
+        "amplitude": 5,
+        "scale": 0.4,
+        "speed": 2,
+        "dispersion": 1.4
+      }
+    },
+    {
+      "id": "prism-tide",
+      "label": "Prism Tide",
+      "description": "Medium waves with strong chromatic splitting that paints rainbow edges wherever the water bends.",
+      "askedAs": [
+        "rainbow edges water effect",
+        "strong chromatic aberration ripple",
+        "colour fringing underwater look",
+        "радужные края при ряби",
+        "сильная хроматическая аберрация вода"
+      ],
+      "props": {
+        "amplitude": 12,
+        "scale": 1.4,
+        "dispersion": 3.5
+      }
+    },
+    {
+      "id": "storm-surface",
+      "label": "Storm Surface",
+      "description": "Fast, strong turbulence that churns the picture as if seen through choppy rough water.",
+      "askedAs": [
+        "rough choppy water distortion",
+        "intense fast underwater warp",
+        "stormy turbulent ripple",
+        "бурная вода сильное искажение",
+        "быстрая сильная рябь"
+      ],
+      "props": {
+        "amplitude": 30,
+        "scale": 0.8,
+        "speed": 3,
+        "dispersion": 2
+      }
+    },
+    {
+      "id": "clear-glass",
+      "label": "Clear Glass",
+      "description": "A clean, colour-true refraction with moderate waves and no fringing, like rippled glass.",
+      "askedAs": [
+        "water ripple without color fringe",
+        "clean refraction no rainbow",
+        "rippled glass look",
+        "рябь без цветных краёв",
+        "эффект волнистого стекла"
+      ],
+      "props": {
+        "amplitude": 10,
+        "scale": 2,
+        "speed": 0.75,
+        "dispersion": 0
+      }
+    }
+  ]
+}

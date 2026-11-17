@@ -1,0 +1,124 @@
+{
+  "component": "churn-count",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A monospaced green-tinted readout on near-black that counts up fast like a live system log.",
+      "askedAs": [
+        "make it look like a terminal",
+        "monospace counter code style",
+        "hacker console number",
+        "как в терминале",
+        "моноширинный шрифт счётчик"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "fontWeight": 500,
+        "accent": "#3fb950",
+        "background": "#0b0f0c",
+        "ink": "#e6edf3",
+        "duration": 48
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A light-weight serif figure on warm paper that climbs slowly, like a magazine statistic.",
+      "askedAs": [
+        "elegant serif number",
+        "magazine style stat",
+        "slow classy counter on cream",
+        "элегантный шрифт с засечками",
+        "журнальный стиль цифры"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#b4532a"
+      }
+    },
+    {
+      "id": "heavy-impact",
+      "label": "Heavy Impact",
+      "description": "An oversized black-weight number that slams up quickly for a punchy, monumental beat.",
+      "askedAs": [
+        "bigger and bolder number",
+        "fast punchy counter",
+        "huge heavy digits",
+        "огромные жирные цифры",
+        "быстрый мощный счётчик"
+      ],
+      "props": {
+        "fontWeight": 900,
+        "scale": 1.35,
+        "duration": 30,
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#ff5a36"
+      }
+    },
+    {
+      "id": "clean-light",
+      "label": "Clean Light",
+      "description": "A crisp Inter counter on white with a calm blue accent for product and report slides.",
+      "askedAs": [
+        "white background version",
+        "clean corporate light counter",
+        "minimal light mode number",
+        "светлая версия на белом",
+        "чистый минималистичный счётчик"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "fontWeight": 700,
+        "accent": "#1f6feb",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A thin, deliberate count on deep navy that starts after a pause and builds tension.",
+      "askedAs": [
+        "slow dramatic count up",
+        "thin elegant number delayed",
+        "suspenseful counter",
+        "медленный драматичный отсчёт",
+        "тонкие цифры с задержкой"
+      ],
+      "props": {
+        "fontWeight": 200,
+        "duration": 120,
+        "delay": 20,
+        "background": "#0d1424",
+        "ink": "#e8ecf5",
+        "accent": "#8fb4ff"
+      }
+    },
+    {
+      "id": "overlay-geist",
+      "label": "Overlay Geist",
+      "description": "A compact Geist counter with soft white type and amber accent, sized to sit over footage.",
+      "askedAs": [
+        "smaller counter for overlay",
+        "compact number over video",
+        "subtle stat with warm accent",
+        "компактный счётчик поверх видео",
+        "небольшие цифры для оверлея"
+      ],
+      "props": {
+        "fontFamily": "Geist",
+        "scale": 0.65,
+        "ink": "#f5f5f4",
+        "accent": "#f2a541",
+        "speed": 1.5
+      }
+    }
+  ]
+}

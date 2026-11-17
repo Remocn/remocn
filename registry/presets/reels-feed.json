@@ -1,0 +1,116 @@
+{
+  "component": "reels-feed",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "after-dark",
+      "label": "After Dark",
+      "description": "A dark phone feed on a moody night ground with a warm coral heart accent.",
+      "askedAs": [
+        "dark mode reels feed",
+        "night version of the stories feed",
+        "moody dark social feed",
+        "тёмная лента рилсов",
+        "ночной вариант ленты"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "afterhours",
+        "accent": "#ff5a6e"
+      }
+    },
+    {
+      "id": "quick-scroll",
+      "label": "Quick Scroll",
+      "description": "A snappy, fast-paced feed with tight framing and a punchy grotesque typeface.",
+      "askedAs": [
+        "make the feed faster",
+        "energetic quick reels demo",
+        "fast scrolling social clip",
+        "быстрая лента рилсов",
+        "динамичный скролл ленты"
+      ],
+      "props": {
+        "speed": 2,
+        "scale": 1.15,
+        "fontFamily": "Space Grotesk",
+        "ground": "cobalt-rise"
+      }
+    },
+    {
+      "id": "editorial-slow",
+      "label": "Editorial Slow",
+      "description": "A calm, unhurried feed in serif type on a soft paper ground with an ink-black accent.",
+      "askedAs": [
+        "slow elegant stories feed",
+        "magazine style reels",
+        "calm serif social clip",
+        "медленная элегантная лента",
+        "журнальный стиль сторис"
+      ],
+      "props": {
+        "speed": 0.5,
+        "fontFamily": "Instrument Serif",
+        "ground": "paper-crease",
+        "accent": "#1c1c1c",
+        "delay": 12
+      }
+    },
+    {
+      "id": "sunset-glow",
+      "label": "Sunset Glow",
+      "description": "A warm light feed on a glowing sunset ground with a terracotta accent.",
+      "askedAs": [
+        "warm sunset reels look",
+        "orange cozy social feed",
+        "golden hour stories",
+        "тёплая закатная лента",
+        "оранжевые сторис"
+      ],
+      "props": {
+        "ground": "static-sunset",
+        "accent": "#e2603b",
+        "fontFamily": "Bricolage Grotesque"
+      }
+    },
+    {
+      "id": "compact-mint",
+      "label": "Compact Mint",
+      "description": "A smaller phone on a pale mint background with deep green text and accent.",
+      "askedAs": [
+        "smaller phone mockup",
+        "fresh green reels feed",
+        "minimal light social clip",
+        "маленький телефон с лентой",
+        "свежая зелёная лента"
+      ],
+      "props": {
+        "scale": 0.8,
+        "background": "#eaf4ee",
+        "ink": "#173a2a",
+        "accent": "#1f8a5b",
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "neon-night-tech",
+      "label": "Tech Night",
+      "description": "A dark violet iris ground with mono type and a cool lilac accent for a techy launch.",
+      "askedAs": [
+        "techy dark reels launch",
+        "monospace social feed",
+        "purple night feed",
+        "техничная тёмная лента",
+        "фиолетовая лента рилсов"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "iris",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#a78bfa",
+        "speed": 1.25
+      }
+    }
+  ]
+}

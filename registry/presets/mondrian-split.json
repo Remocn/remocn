@@ -1,0 +1,120 @@
+{
+  "component": "mondrian-split",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "bold-classic",
+      "label": "Bold Classic",
+      "description": "Few large cells cut by heavy black bars, ending on a deep blue field.",
+      "askedAs": [
+        "chunky mondrian with thick lines",
+        "simple bold grid ending in blue",
+        "big blocks heavy black lines",
+        "крупная сетка мондриана с толстыми линиями",
+        "простая композиция с синим финалом"
+      ],
+      "props": {
+        "splits": 4,
+        "lineWeight": 28,
+        "fieldColor": "#1f4e9e",
+        "seed": 23
+      }
+    },
+    {
+      "id": "fine-lattice",
+      "label": "Fine Lattice",
+      "description": "A dense grid of hairline rules with many small cells that resolves into a sunny yellow field.",
+      "askedAs": [
+        "lots of small cells thin lines",
+        "detailed busy mondrian grid",
+        "fine grid ending on yellow",
+        "много мелких ячеек и тонкие линии",
+        "детальная сетка с жёлтым фоном в конце"
+      ],
+      "props": {
+        "splits": 12,
+        "lineWeight": 5,
+        "fieldColor": "#f4c20d",
+        "seed": 41
+      }
+    },
+    {
+      "id": "muted-studio",
+      "label": "Muted Studio",
+      "description": "Softened terracotta, ochre and slate primaries with charcoal lines for a calm editorial feel.",
+      "askedAs": [
+        "muted earthy mondrian",
+        "calm editorial color grid",
+        "desaturated de stijl palette",
+        "приглушённые цвета мондриан",
+        "спокойная редакционная палитра"
+      ],
+      "props": {
+        "lineColor": "#2b2a28",
+        "redColor": "#c0583f",
+        "yellowColor": "#d9a441",
+        "blueColor": "#4a6278",
+        "fieldColor": "#c0583f",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-cut",
+      "label": "Quick Cut",
+      "description": "Fast, snappy splits and reflow that punch through to the red field in a beat.",
+      "askedAs": [
+        "fast mondrian transition",
+        "quick snappy grid wipe",
+        "speed up the de stijl opener",
+        "быстрый переход мондриан",
+        "резкая короткая анимация сетки"
+      ],
+      "props": {
+        "speed": 2,
+        "splits": 6,
+        "lineWeight": 18,
+        "seed": 63
+      }
+    },
+    {
+      "id": "night-grid",
+      "label": "Night Grid",
+      "description": "Off-white lines on rich jewel-toned cells, expanding a smaller cell into a deep navy field.",
+      "askedAs": [
+        "dark mondrian with light lines",
+        "inverted de stijl grid",
+        "night version navy ending",
+        "тёмный мондриан со светлыми линиями",
+        "инвертированная сетка с тёмно-синим фоном"
+      ],
+      "props": {
+        "lineColor": "#f2efe6",
+        "redColor": "#9e2a2b",
+        "yellowColor": "#c99a2e",
+        "blueColor": "#14213d",
+        "fieldColor": "#14213d",
+        "expandCell": 3
+      }
+    },
+    {
+      "id": "slow-gallery",
+      "label": "Slow Gallery",
+      "description": "A leisurely, museum-paced build with medium lines that settles on a bright yellow field from a minor cell.",
+      "askedAs": [
+        "slow elegant mondrian",
+        "gallery paced grid animation",
+        "calm slow de stijl reveal",
+        "медленная плавная сетка мондриана",
+        "неспешное раскрытие как в галерее"
+      ],
+      "props": {
+        "speed": 0.5,
+        "seed": 88,
+        "expandCell": 5,
+        "fieldColor": "#f4c20d",
+        "lineWeight": 10
+      }
+    }
+  ]
+}

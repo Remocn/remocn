@@ -1,0 +1,120 @@
+{
+  "component": "camera-lens",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "clean-prime",
+      "label": "Clean Prime",
+      "description": "A sharp modern prime lens with barely-there softness and fringing, subtle enough to run under an entire demo.",
+      "askedAs": [
+        "very subtle lens effect",
+        "barely noticeable camera look",
+        "clean sharp glass",
+        "едва заметный эффект объектива",
+        "чистый резкий объектив"
+      ],
+      "props": {
+        "softness": 0.2,
+        "bloom": 0.2,
+        "aberration": 0.2,
+        "vignette": 0.25,
+        "distortion": 0.02
+      }
+    },
+    {
+      "id": "vintage-glass",
+      "label": "Vintage Glass",
+      "description": "Old uncoated optics with glowing highlights, soft corners and a heavy darkened edge.",
+      "askedAs": [
+        "old film lens look",
+        "retro dreamy glow",
+        "vintage camera feel",
+        "винтажный объектив",
+        "старая плёночная оптика"
+      ],
+      "props": {
+        "softness": 1.2,
+        "bloom": 1.4,
+        "aberration": 1.2,
+        "vignette": 1,
+        "distortion": 0.12,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "wide-fisheye",
+      "label": "Wide Angle",
+      "description": "A bowed wide-angle lens with strong barrel distortion and colour fringing toward the edges.",
+      "askedAs": [
+        "fisheye lens effect",
+        "wide angle barrel distortion",
+        "curved edges like action cam",
+        "эффект рыбьего глаза",
+        "широкоугольный объектив"
+      ],
+      "props": {
+        "distortion": 0.4,
+        "aberration": 1.6,
+        "softness": 0.9,
+        "vignette": 0.7
+      }
+    },
+    {
+      "id": "soft-dream",
+      "label": "Soft Dream",
+      "description": "A hazy, luminous treatment where highlights bloom generously and everything moves slowly.",
+      "askedAs": [
+        "dreamy glowing look",
+        "soft hazy highlights",
+        "make it feel ethereal",
+        "мечтательное свечение",
+        "мягкая дымка"
+      ],
+      "props": {
+        "bloom": 1.8,
+        "softness": 0.8,
+        "aberration": 0.3,
+        "vignette": 0.35,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "cinema-anamorphic",
+      "label": "Cinema Frame",
+      "description": "A moody cinematic lens with deep vignette, restrained bloom and a measured camera pace.",
+      "askedAs": [
+        "cinematic movie look",
+        "dark moody edges",
+        "feel like a film trailer",
+        "кинематографичный вид",
+        "как в кино"
+      ],
+      "props": {
+        "vignette": 1.3,
+        "bloom": 0.8,
+        "aberration": 0.8,
+        "softness": 0.6,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "handheld-fast",
+      "label": "Quick Handheld",
+      "description": "An energetic lens pass with crisp centre, punchy fringes and a brisk camera move.",
+      "askedAs": [
+        "faster camera movement",
+        "energetic handheld feel",
+        "snappy lens motion",
+        "быстрое движение камеры",
+        "динамичная съёмка с рук"
+      ],
+      "props": {
+        "speed": 2.5,
+        "aberration": 1,
+        "softness": 0.4,
+        "distortion": 0.08
+      }
+    }
+  ]
+}

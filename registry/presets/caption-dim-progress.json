@@ -1,0 +1,114 @@
+{
+  "component": "caption-dim-progress",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "soft-reader",
+      "label": "Soft Reader",
+      "description": "Medium-weight warm white text with a gentle dim that keeps the whole line easy to read ahead.",
+      "askedAs": [
+        "easy to read captions with light dimming",
+        "calm readable subtitles for tutorials",
+        "softer captions not too bold",
+        "спокойные читаемые субтитры",
+        "мягкие субтитры для обучающего видео"
+      ],
+      "props": {
+        "fontWeight": 500,
+        "color": "#f5f1e8",
+        "dimOpacity": 0.55,
+        "fontSize": 56
+      }
+    },
+    {
+      "id": "high-contrast-focus",
+      "label": "High Contrast",
+      "description": "Heavy black-weight text where upcoming words nearly vanish, so the spoken word stands out sharply.",
+      "askedAs": [
+        "strong contrast between spoken and upcoming words",
+        "make the current word really pop",
+        "barely visible upcoming text",
+        "высокий контраст текущего слова",
+        "почти невидимые следующие слова"
+      ],
+      "props": {
+        "fontWeight": 900,
+        "dimOpacity": 0.15,
+        "fontSize": 72
+      }
+    },
+    {
+      "id": "long-page",
+      "label": "Long Page",
+      "description": "Smaller text grouped into long pages that linger, so viewers can read full sentences at once.",
+      "askedAs": [
+        "show whole sentences at once",
+        "longer caption lines that stay on screen",
+        "captions for reading ahead",
+        "длинные строки субтитров целиком",
+        "субтитры дольше остаются на экране"
+      ],
+      "props": {
+        "fontSize": 44,
+        "fontWeight": 600,
+        "combineTokensWithinMilliseconds": 2800,
+        "holdMs": 1200
+      }
+    },
+    {
+      "id": "quick-beats",
+      "label": "Quick Beats",
+      "description": "Large bold words in short, snappy pages that clear quickly for fast-paced speech.",
+      "askedAs": [
+        "fast captions a few words at a time",
+        "short punchy caption chunks",
+        "big words for quick speech",
+        "короткие быстрые субтитры",
+        "крупные слова по несколько штук"
+      ],
+      "props": {
+        "fontSize": 96,
+        "combineTokensWithinMilliseconds": 500,
+        "holdMs": 200,
+        "dimOpacity": 0.3
+      }
+    },
+    {
+      "id": "ink-on-light",
+      "label": "Ink On Light",
+      "description": "Deep charcoal text without shadow, made for bright or white footage and clean slide backgrounds.",
+      "askedAs": [
+        "dark captions for light background",
+        "black text subtitles without shadow",
+        "captions on white slides",
+        "тёмные субтитры для светлого фона",
+        "чёрный текст без тени"
+      ],
+      "props": {
+        "color": "#1c1f24",
+        "shadow": false,
+        "dimOpacity": 0.25,
+        "fontWeight": 700
+      }
+    },
+    {
+      "id": "amber-subtle",
+      "label": "Amber Subtle",
+      "description": "Muted amber text with a light shadow-free finish that warms the frame without fighting the footage.",
+      "askedAs": [
+        "warm yellow captions",
+        "subtle gold subtitle color",
+        "cinematic warm caption text",
+        "тёплые жёлтые субтитры",
+        "янтарный цвет текста"
+      ],
+      "props": {
+        "color": "#f2c46d",
+        "fontWeight": 600,
+        "dimOpacity": 0.4,
+        "fontSize": 60
+      }
+    }
+  ]
+}

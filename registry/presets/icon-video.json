@@ -1,0 +1,117 @@
+{
+  "component": "icon-video",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-slow-draw",
+      "label": "Hero Draw",
+      "description": "A large, fine-lined icon that slowly sketches itself in like a pen drawing.",
+      "askedAs": [
+        "big icon that draws itself slowly",
+        "large line icon with slow stroke reveal",
+        "elegant thin icon drawing in",
+        "большая иконка медленно рисуется",
+        "крупная тонкая иконка с анимацией прорисовки"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 160,
+        "strokeWidth": 1.25,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "bold-snappy",
+      "label": "Bold Snap",
+      "description": "A chunky, heavy-stroked icon that plays its action quickly and punchily.",
+      "askedAs": [
+        "thick icon with fast animation",
+        "punchy bold icon pop",
+        "heavy stroke quick action icon",
+        "жирная иконка с быстрой анимацией",
+        "толстая иконка резкое движение"
+      ],
+      "props": {
+        "animation": "action",
+        "size": 96,
+        "strokeWidth": 3,
+        "speed": 2
+      }
+    },
+    {
+      "id": "ambient-loop",
+      "label": "Ambient Loop",
+      "description": "A muted slate icon that gently repeats its motion at a relaxed pace.",
+      "askedAs": [
+        "looping icon in the background",
+        "calm repeating icon animation",
+        "soft grey icon that keeps moving",
+        "зацикленная спокойная иконка",
+        "иконка повторяется по кругу медленно"
+      ],
+      "props": {
+        "loop": true,
+        "speed": 0.75,
+        "color": "#64748b",
+        "size": 72
+      }
+    },
+    {
+      "id": "brand-blue",
+      "label": "Brand Blue",
+      "description": "A medium blue icon that draws and acts at a brisk, confident tempo.",
+      "askedAs": [
+        "blue icon animation",
+        "icon in brand color",
+        "colored product icon reveal",
+        "синяя анимированная иконка",
+        "иконка в фирменном цвете"
+      ],
+      "props": {
+        "color": "#1f6feb",
+        "size": 120,
+        "strokeWidth": 2.25,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "tiny-ui",
+      "label": "Tiny UI",
+      "description": "A small, crisp interface-sized icon with a quick looping action.",
+      "askedAs": [
+        "small icon for UI",
+        "tiny looping button icon",
+        "compact icon fast loop",
+        "маленькая иконка для интерфейса",
+        "мини иконка с повторяющейся анимацией"
+      ],
+      "props": {
+        "size": 32,
+        "strokeWidth": 1.5,
+        "animation": "action",
+        "loop": true,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "warm-sketch",
+      "label": "Warm Sketch",
+      "description": "A terracotta-toned icon drawn in steadily with a soft, editorial feel.",
+      "askedAs": [
+        "warm colored icon drawing",
+        "orange-brown sketch icon",
+        "earthy tone line icon reveal",
+        "тёплая иконка рисуется",
+        "иконка терракотового цвета"
+      ],
+      "props": {
+        "color": "#c2410c",
+        "animation": "draw",
+        "size": 104,
+        "strokeWidth": 1.75,
+        "speed": 0.75
+      }
+    }
+  ]
+}

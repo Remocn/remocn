@@ -1,0 +1,100 @@
+{
+  "component": "icon-clock",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-slow-draw",
+      "label": "Hero Slow Draw",
+      "description": "A large, thin-lined clock that draws itself in slowly, once, for an elegant title moment.",
+      "askedAs": [
+        "big clock that draws in slowly",
+        "elegant thin clock intro",
+        "large clock outline animation once",
+        "большие часы медленно рисуются",
+        "элегантная тонкая иконка часов"
+      ],
+      "props": {
+        "animation": "draw",
+        "loop": false,
+        "size": 160,
+        "strokeWidth": 1.25,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "ticking-urgent",
+      "label": "Ticking Urgent",
+      "description": "A bold red clock with fast-spinning hands that signals a deadline or time pressure.",
+      "askedAs": [
+        "fast ticking clock for deadline",
+        "red clock time running out",
+        "urgent spinning clock hands",
+        "часы быстро тикают, дедлайн",
+        "красные часы время уходит"
+      ],
+      "props": {
+        "animation": "action",
+        "color": "#c2410c",
+        "strokeWidth": 2.75,
+        "speed": 2.5,
+        "size": 96
+      }
+    },
+    {
+      "id": "calm-blue",
+      "label": "Calm Blue",
+      "description": "A medium slate-blue clock with gently moving hands for relaxed, informational scenes.",
+      "askedAs": [
+        "calm slow blue clock",
+        "gentle clock animation for schedule",
+        "soft blue time icon",
+        "спокойные синие часы",
+        "медленная анимация часов"
+      ],
+      "props": {
+        "color": "#1e40af",
+        "speed": 0.5,
+        "size": 72,
+        "strokeWidth": 1.75
+      }
+    },
+    {
+      "id": "tiny-inline",
+      "label": "Tiny Inline",
+      "description": "A small, crisp clock that draws in once to sit beside text or a timestamp.",
+      "askedAs": [
+        "small clock icon next to text",
+        "inline timestamp icon",
+        "tiny clock that appears once",
+        "маленькая иконка часов рядом с текстом",
+        "крошечные часы для времени"
+      ],
+      "props": {
+        "size": 28,
+        "loop": false,
+        "animation": "draw",
+        "speed": 1.5,
+        "color": "#525252"
+      }
+    },
+    {
+      "id": "forest-bold",
+      "label": "Forest Bold",
+      "description": "A chunky deep-green clock with steady motion for friendly productivity visuals.",
+      "askedAs": [
+        "thick green clock icon",
+        "bold clock for productivity",
+        "chunky stroke time icon",
+        "толстые зелёные часы",
+        "жирная иконка часов"
+      ],
+      "props": {
+        "color": "#166534",
+        "strokeWidth": 3,
+        "size": 120,
+        "speed": 1.25
+      }
+    }
+  ]
+}

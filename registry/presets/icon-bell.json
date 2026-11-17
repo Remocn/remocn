@@ -1,0 +1,100 @@
+{
+  "component": "icon-bell",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gentle-chime",
+      "label": "Gentle Chime",
+      "description": "A thin, slow-drawn bell in soft slate that sketches itself in calmly without ringing.",
+      "askedAs": [
+        "slow subtle bell drawing",
+        "calm thin notification icon",
+        "minimal bell that draws in",
+        "медленный тонкий колокольчик",
+        "спокойная иконка уведомления"
+      ],
+      "props": {
+        "animation": "draw",
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#64748b"
+      }
+    },
+    {
+      "id": "urgent-alert",
+      "label": "Urgent Alert",
+      "description": "A bold, oversized red bell that rings fast and keeps ringing on loop.",
+      "askedAs": [
+        "fast ringing red bell",
+        "urgent alarm notification",
+        "bell shaking nonstop",
+        "срочное уведомление красный колокол",
+        "быстро звенящий колокольчик"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "speed": 2,
+        "color": "#dc2626",
+        "strokeWidth": 2.5,
+        "size": 96
+      }
+    },
+    {
+      "id": "hero-bell",
+      "label": "Hero Bell",
+      "description": "A large deep-indigo bell with a heavy stroke that draws and rings at a measured pace.",
+      "askedAs": [
+        "big bell for title screen",
+        "large bold notification icon",
+        "huge bell drawing and ringing",
+        "большой жирный колокольчик",
+        "крупная иконка звонка"
+      ],
+      "props": {
+        "size": 160,
+        "strokeWidth": 2.75,
+        "color": "#3730a3",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "soft-reminder",
+      "label": "Soft Reminder",
+      "description": "A small teal bell that gently rings on a relaxed, looping rhythm.",
+      "askedAs": [
+        "gentle looping reminder bell",
+        "small teal bell ringing",
+        "quiet repeating notification",
+        "мягкое напоминание колокольчик",
+        "тихий повторяющийся звонок"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "speed": 0.75,
+        "color": "#0f766e",
+        "size": 36
+      }
+    },
+    {
+      "id": "golden-ping",
+      "label": "Golden Ping",
+      "description": "A medium amber bell with a fine line that draws and rings quickly for a crisp, warm ping.",
+      "askedAs": [
+        "quick gold bell ping",
+        "warm snappy notification",
+        "fast amber bell icon",
+        "быстрый золотой колокольчик",
+        "тёплое короткое уведомление"
+      ],
+      "props": {
+        "color": "#b45309",
+        "speed": 1.75,
+        "strokeWidth": 1.5,
+        "size": 72
+      }
+    }
+  ]
+}

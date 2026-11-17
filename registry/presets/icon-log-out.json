@@ -1,0 +1,100 @@
+{
+  "component": "icon-log-out",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-slow-draw",
+      "label": "Hairline Draw",
+      "description": "A large, thin-stroked icon that slowly traces itself in soft slate grey.",
+      "askedAs": [
+        "thin slow drawing logout icon",
+        "elegant line art sign out",
+        "big delicate outline exit icon",
+        "тонкая иконка выхода медленно рисуется",
+        "элегантная линейная иконка выхода"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "bold-quick-exit",
+      "label": "Bold Exit",
+      "description": "A chunky, heavy-stroked icon that snaps through its exit motion quickly.",
+      "askedAs": [
+        "thick fast logout animation",
+        "punchy sign out icon",
+        "heavy bold exit arrow",
+        "жирная быстрая иконка выхода",
+        "резкая анимация кнопки выйти"
+      ],
+      "props": {
+        "animation": "action",
+        "strokeWidth": 3,
+        "speed": 2,
+        "size": 72
+      }
+    },
+    {
+      "id": "danger-loop",
+      "label": "Danger Pulse",
+      "description": "A muted brick-red icon that loops its exit motion as a steady warning cue.",
+      "askedAs": [
+        "red looping logout icon",
+        "warning sign out animation",
+        "repeating red exit button icon",
+        "красная повторяющаяся иконка выхода",
+        "зацикленная иконка выхода красным"
+      ],
+      "props": {
+        "color": "#b42318",
+        "loop": true,
+        "animation": "action",
+        "strokeWidth": 2.25
+      }
+    },
+    {
+      "id": "ocean-showcase",
+      "label": "Ocean Showcase",
+      "description": "An oversized deep-blue icon that draws in and plays its action on a calm continuous loop.",
+      "askedAs": [
+        "big blue animated logout icon",
+        "hero size sign out icon looping",
+        "large calm exit icon animation",
+        "большая синяя иконка выхода",
+        "крупная анимированная иконка выхода по кругу"
+      ],
+      "props": {
+        "size": 180,
+        "color": "#1e40af",
+        "loop": true,
+        "speed": 0.75,
+        "strokeWidth": 1.75
+      }
+    },
+    {
+      "id": "tiny-ui-ticker",
+      "label": "Tiny UI",
+      "description": "A small, crisp toolbar-sized icon in neutral grey that draws in briskly.",
+      "askedAs": [
+        "small logout icon for toolbar",
+        "compact sign out icon quick",
+        "mini exit icon for menu",
+        "маленькая иконка выхода для меню",
+        "компактная иконка выйти быстро"
+      ],
+      "props": {
+        "size": 24,
+        "color": "#525252",
+        "animation": "draw",
+        "speed": 1.5,
+        "strokeWidth": 1.5
+      }
+    }
+  ]
+}

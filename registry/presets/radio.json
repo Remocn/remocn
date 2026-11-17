@@ -1,0 +1,89 @@
+{
+  "component": "radio",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "ocean-select",
+      "label": "Ocean Select",
+      "description": "A calm cobalt blue ring and dot that pop in at a relaxed, natural pace.",
+      "askedAs": [
+        "blue radio button",
+        "calm blue selection",
+        "soft blue checked option",
+        "синяя радиокнопка",
+        "спокойный синий выбор"
+      ],
+      "props": {
+        "primary": "#2563eb",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "snappy-large",
+      "label": "Snappy Large",
+      "description": "An oversized near-black radio that snaps into its checked state quickly for emphasis.",
+      "askedAs": [
+        "big fast radio click",
+        "large quick selection",
+        "punchy radio pop",
+        "большая быстрая радиокнопка",
+        "резкий выбор крупным планом"
+      ],
+      "props": {
+        "size": "lg",
+        "speed": 2
+      }
+    },
+    {
+      "id": "slow-emerald",
+      "label": "Slow Emerald",
+      "description": "A deep emerald radio that fills in slowly, giving the selection a deliberate, confirming feel.",
+      "askedAs": [
+        "green radio slow motion",
+        "gentle green confirm",
+        "slow checked radio",
+        "зелёная радиокнопка медленно",
+        "плавный зелёный выбор"
+      ],
+      "props": {
+        "primary": "#047857",
+        "speed": 0.5,
+        "size": "lg"
+      }
+    },
+    {
+      "id": "compact-violet",
+      "label": "Compact Violet",
+      "description": "A small muted violet radio with brisk timing, suited to dense form layouts.",
+      "askedAs": [
+        "small purple radio",
+        "compact form option",
+        "tiny violet radio button",
+        "маленькая фиолетовая радиокнопка",
+        "компактный выбор в форме"
+      ],
+      "props": {
+        "size": "sm",
+        "primary": "#6d28d9",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "empty-ring",
+      "label": "Empty Ring",
+      "description": "A warm terracotta outline left unchecked, showing an option still waiting to be chosen.",
+      "askedAs": [
+        "unselected radio",
+        "empty option circle",
+        "radio before click",
+        "пустая радиокнопка",
+        "невыбранный вариант"
+      ],
+      "props": {
+        "state": "unchecked",
+        "primary": "#c2410c"
+      }
+    }
+  ]
+}

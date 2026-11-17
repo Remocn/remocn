@@ -1,0 +1,124 @@
+{
+  "component": "turntable",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "black-metal-card",
+      "label": "Black Metal",
+      "description": "A slim matte-black card with a graphite edge turning slowly on a deep charcoal stage.",
+      "askedAs": [
+        "black credit card spinning slowly",
+        "premium dark metal card",
+        "luxury black card rotation",
+        "чёрная металлическая карта",
+        "премиальная тёмная карта вращается"
+      ],
+      "props": {
+        "frontColor": "#1c1c1e",
+        "edgeColor": "#5a5a5e",
+        "backColor": "#2a2a2d",
+        "backgroundColor": "#0a0a0b",
+        "thickness": 6,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "gold-membership",
+      "label": "Gold Pass",
+      "description": "A warm champagne-gold pass with a bronze edge and ivory back, seen from a gentle overhead tilt.",
+      "askedAs": [
+        "gold membership card",
+        "vip pass turning around",
+        "champagne gold card reveal",
+        "золотая карта участника",
+        "вип пропуск вращается"
+      ],
+      "props": {
+        "frontColor": "#c9a45c",
+        "edgeColor": "#8a6a2e",
+        "backColor": "#f5efe3",
+        "backgroundColor": "#1a1612",
+        "tilt": 16,
+        "thickness": 10
+      }
+    },
+    {
+      "id": "ticket-showcase",
+      "label": "Paper Ticket",
+      "description": "A thin cream ticket with a navy face doing two quick flips on a light stone background.",
+      "askedAs": [
+        "event ticket flipping",
+        "show front and back of a ticket fast",
+        "light background ticket spin",
+        "билет переворачивается",
+        "показать билет с двух сторон"
+      ],
+      "props": {
+        "frontColor": "#1f3a5f",
+        "edgeColor": "#d9cfbf",
+        "backColor": "#f4eee2",
+        "backgroundColor": "#e7e3dc",
+        "thickness": 3,
+        "turns": 2
+      }
+    },
+    {
+      "id": "chunky-block",
+      "label": "Chunky Block",
+      "description": "A thick slab-like object with a pronounced edge, rotating heavily under a dramatic low angle.",
+      "askedAs": [
+        "thick block rotating",
+        "chunky 3d object spin",
+        "heavy product turning from below",
+        "толстый блок вращается",
+        "массивный объект крутится снизу"
+      ],
+      "props": {
+        "thickness": 52,
+        "tilt": -14,
+        "speed": 0.75,
+        "frontColor": "#2f6f5e",
+        "edgeColor": "#1d4a3e",
+        "backColor": "#e9efec"
+      }
+    },
+    {
+      "id": "hero-whirl",
+      "label": "Hero Whirl",
+      "description": "A fast triple spin that whips around and settles facing the camera for a launch moment.",
+      "askedAs": [
+        "fast spinning launch reveal",
+        "card spins multiple times quickly",
+        "energetic hero product spin",
+        "быстрое вращение карты",
+        "эффектный запуск продукта"
+      ],
+      "props": {
+        "turns": 3,
+        "speed": 2,
+        "tilt": 4
+      }
+    },
+    {
+      "id": "frost-glass",
+      "label": "Frost Blue",
+      "description": "A cool ice-blue card with a steel edge and white back drifting slowly against midnight navy.",
+      "askedAs": [
+        "cool blue card slow spin",
+        "calm fintech card rotation",
+        "icy blue product turn",
+        "голубая карта медленно вращается",
+        "холодная синяя карта"
+      ],
+      "props": {
+        "frontColor": "#8fb8de",
+        "edgeColor": "#4f6f8f",
+        "backColor": "#f7fafc",
+        "backgroundColor": "#0e1726",
+        "speed": 0.5,
+        "turns": 0.5
+      }
+    }
+  ]
+}

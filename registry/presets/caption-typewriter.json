@@ -1,0 +1,114 @@
+{
+  "component": "caption-typewriter",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-green",
+      "label": "Terminal Green",
+      "description": "Medium-weight phosphor green text with a blinking caret, like a classic shell session.",
+      "askedAs": [
+        "make it look like a terminal",
+        "green hacker console captions",
+        "retro command line text",
+        "как в терминале",
+        "зелёный текст как в консоли"
+      ],
+      "props": {
+        "color": "#4ade80",
+        "fontWeight": 500,
+        "fontSize": 56,
+        "shadow": false
+      }
+    },
+    {
+      "id": "editor-quiet",
+      "label": "Quiet Editor",
+      "description": "Small, regular-weight soft grey text with no shadow, like code in a calm editor pane.",
+      "askedAs": [
+        "subtle code editor style",
+        "smaller lighter captions",
+        "minimal typed text",
+        "как в редакторе кода",
+        "тихие маленькие субтитры"
+      ],
+      "props": {
+        "fontSize": 40,
+        "fontWeight": 400,
+        "color": "#c9d1d9",
+        "shadow": false,
+        "holdMs": 900
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Short pages that turn over quickly with almost no hold, for fast-paced walkthroughs.",
+      "askedAs": [
+        "faster caption pages",
+        "quick snappy typing",
+        "fewer words per screen",
+        "быстрые субтитры",
+        "короче страницы текста"
+      ],
+      "props": {
+        "combineTokensWithinMilliseconds": 400,
+        "holdMs": 150,
+        "fontSize": 72
+      }
+    },
+    {
+      "id": "slow-statement",
+      "label": "Slow Statement",
+      "description": "Huge black-weight lines that gather long phrases and linger on screen for dramatic pauses.",
+      "askedAs": [
+        "big dramatic typed headline",
+        "let the text stay longer",
+        "large bold slow captions",
+        "крупный медленный текст",
+        "драматичные паузы в субтитрах"
+      ],
+      "props": {
+        "fontSize": 112,
+        "fontWeight": 900,
+        "combineTokensWithinMilliseconds": 2400,
+        "holdMs": 1500
+      }
+    },
+    {
+      "id": "amber-mono",
+      "label": "Amber Readout",
+      "description": "Warm amber text on a soft shadow evoking vintage monochrome monitors.",
+      "askedAs": [
+        "orange retro monitor text",
+        "warm amber terminal look",
+        "vintage computer captions",
+        "янтарный текст как на старом мониторе",
+        "ретро оранжевые субтитры"
+      ],
+      "props": {
+        "color": "#f5b041",
+        "fontWeight": 600,
+        "fontSize": 60
+      }
+    },
+    {
+      "id": "clean-print",
+      "label": "Clean Print",
+      "description": "Caret hidden and shadow off for a crisp, flat typed reveal in cool blue-white.",
+      "askedAs": [
+        "no cursor typing",
+        "flat clean captions without shadow",
+        "remove the blinking caret",
+        "без курсора",
+        "чистый текст без тени"
+      ],
+      "props": {
+        "caret": false,
+        "shadow": false,
+        "color": "#e0ecff",
+        "fontWeight": 700
+      }
+    }
+  ]
+}

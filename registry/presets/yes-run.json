@@ -1,0 +1,102 @@
+{
+  "component": "yes-run",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "A fast, punchy run where every yes snaps in with barely a breath between questions.",
+      "askedAs": [
+        "make it faster and snappier",
+        "quick rapid yes answers",
+        "speed up the questions",
+        "сделай быстрее и резче",
+        "быстрые ответы да"
+      ],
+      "props": {
+        "speed": 2,
+        "dwell": 14,
+        "hold": 16,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "paper-calm",
+      "label": "Paper Calm",
+      "description": "A slow, airy light version on warm off-white with an editorial serif and a terracotta tag.",
+      "askedAs": [
+        "calm light version with serif",
+        "slower elegant editorial look",
+        "warm paper background",
+        "спокойный светлый вариант",
+        "медленно и элегантно с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f5f0e6",
+        "ink": "#1c1a17",
+        "accent": "#c4552d",
+        "fontFamily": "Fraunces",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-yes",
+      "label": "Terminal Yes",
+      "description": "A developer-style dark scene in monospace with a soft green tag on near-black.",
+      "askedAs": [
+        "code terminal style",
+        "monospace dev look",
+        "green on black hacker vibe",
+        "стиль терминала",
+        "моноширинный шрифт для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "ink": "#e6edf3",
+        "accent": "#3fb950",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "big-cobalt",
+      "label": "Big Cobalt",
+      "description": "Oversized chunky type on deep cobalt with a sunny yellow answer tag for a loud, playful hit.",
+      "askedAs": [
+        "bigger bolder text",
+        "loud blue and yellow",
+        "huge playful yes",
+        "крупнее и ярче",
+        "синий фон с жёлтым"
+      ],
+      "props": {
+        "scale": 1.3,
+        "background": "#1e3a8a",
+        "ink": "#ffffff",
+        "accent": "#facc15",
+        "fontFamily": "Bricolage Grotesque"
+      }
+    },
+    {
+      "id": "clean-saas",
+      "label": "Clean SaaS",
+      "description": "A neutral light product look in Inter with a crisp blue tag and a short lead-in delay.",
+      "askedAs": [
+        "clean minimal product style",
+        "light corporate saas look",
+        "simple white with blue",
+        "чистый минималистичный стиль",
+        "светлый деловой вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#2563eb",
+        "delay": 12,
+        "hold": 60
+      }
+    }
+  ]
+}

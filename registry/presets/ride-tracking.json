@@ -1,0 +1,100 @@
+{
+  "component": "ride-tracking",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "night-ride",
+      "label": "Night Ride",
+      "description": "Dark map on a deep blue-hour ground with a cool teal accent for late-night trips.",
+      "askedAs": [
+        "dark mode ride tracking",
+        "night taxi arriving map",
+        "moody evening driver approach",
+        "тёмная тема такси ночью",
+        "ночная поездка на карте"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "blue-hour",
+        "accent": "#2bb3a3",
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "express-dash",
+      "label": "Express Dash",
+      "description": "A quick, punchy arrival with a short drive and warm orange accent for fast delivery promos.",
+      "askedAs": [
+        "fast delivery arriving quickly",
+        "speedy courier map animation",
+        "quick driver arrival energetic",
+        "быстрая доставка курьер",
+        "ускоренная анимация прибытия"
+      ],
+      "props": {
+        "drive": 84,
+        "speed": 1.5,
+        "accent": "#e8590c",
+        "fontFamily": "Space Grotesk",
+        "ground": "ember"
+      }
+    },
+    {
+      "id": "calm-arrival",
+      "label": "Calm Arrival",
+      "description": "A slow, unhurried approach on soft paper tones with an elegant serif and muted green accent.",
+      "askedAs": [
+        "slow relaxed driver approach",
+        "calm premium ride animation",
+        "soft elegant map arrival",
+        "спокойное медленное прибытие",
+        "премиальная поездка мягкие тона"
+      ],
+      "props": {
+        "drive": 234,
+        "speed": 0.75,
+        "ground": "paper-crease",
+        "accent": "#3f7d5c",
+        "fontFamily": "Fraunces",
+        "delay": 12
+      }
+    },
+    {
+      "id": "logistics-console",
+      "label": "Logistics Console",
+      "description": "A technical dispatch look with monospace type, charcoal ground and a crisp amber accent.",
+      "askedAs": [
+        "fleet tracking dashboard style",
+        "technical logistics map look",
+        "dispatch console monospace",
+        "логистика диспетчерский стиль",
+        "трекинг автопарка моноширинный"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "charcoal-satin",
+        "accent": "#f2a93b",
+        "fontFamily": "JetBrains Mono"
+      }
+    },
+    {
+      "id": "hero-close-up",
+      "label": "Hero Close-Up",
+      "description": "An enlarged phone on a polar ground with a violet accent for vertical hero shots.",
+      "askedAs": [
+        "big phone close up vertical",
+        "large map for stories",
+        "zoomed in ride app hero",
+        "крупный план телефона",
+        "большой экран для вертикального видео"
+      ],
+      "props": {
+        "scale": 1.3,
+        "ground": "polar",
+        "accent": "#6a4ce0",
+        "fontFamily": "Manrope"
+      }
+    }
+  ]
+}

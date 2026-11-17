@@ -1,0 +1,86 @@
+{
+  "component": "live-code-compilation",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "vercel-mono",
+      "label": "Mono Ink",
+      "description": "Near-white monochrome accent at normal pace for a stark, minimal editor look.",
+      "askedAs": [
+        "black and white code demo",
+        "minimal monochrome editor",
+        "no color accent",
+        "монохромный редактор кода",
+        "минималистичный чёрно-белый стиль"
+      ],
+      "props": {
+        "accentColor": "#e5e7eb"
+      }
+    },
+    {
+      "id": "emerald-fast",
+      "label": "Rapid Emerald",
+      "description": "Fresh emerald accent with doubled typing speed for a snappy hot-reload beat.",
+      "askedAs": [
+        "fast green code typing",
+        "quick hot reload demo",
+        "speed up the coding",
+        "быстрый зелёный код",
+        "ускоренная печать кода"
+      ],
+      "props": {
+        "accentColor": "#10b981",
+        "speed": 2
+      }
+    },
+    {
+      "id": "violet-walkthrough",
+      "label": "Slow Walkthrough",
+      "description": "Soft violet accent at half speed so every keystroke and snap is easy to follow.",
+      "askedAs": [
+        "slow tutorial pace",
+        "let viewers read the code",
+        "purple slow demo",
+        "медленный разбор кода",
+        "фиолетовый неспешный показ"
+      ],
+      "props": {
+        "accentColor": "#8b5cf6",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "amber-warm",
+      "label": "Warm Amber",
+      "description": "Warm amber accent at a slightly brisk pace for a friendly, approachable dev vibe.",
+      "askedAs": [
+        "orange accent code preview",
+        "warm colored editor",
+        "friendly dev tool look",
+        "оранжевый акцент",
+        "тёплая палитра для кода"
+      ],
+      "props": {
+        "accentColor": "#f59e0b",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "rose-blitz",
+      "label": "Rose Blitz",
+      "description": "Muted rose accent at triple speed for a punchy, montage-ready flash of live coding.",
+      "askedAs": [
+        "super fast code montage",
+        "pink accent quick edit",
+        "blink and miss it coding",
+        "очень быстрая сборка кода",
+        "розовый быстрый монтаж"
+      ],
+      "props": {
+        "accentColor": "#e11d48",
+        "speed": 3
+      }
+    }
+  ]
+}

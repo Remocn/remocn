@@ -1,0 +1,106 @@
+{
+  "component": "caption-highlight-box",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hormozi-green",
+      "label": "Hype Green",
+      "description": "Oversized heavy captions with a punchy green block and fast one-to-two-word pages for high-energy talking heads.",
+      "askedAs": [
+        "big bold captions with green highlight",
+        "fast hype captions like podcast clips",
+        "one word at a time green box",
+        "крупные субтитры с зелёной плашкой",
+        "быстрые энергичные субтитры по одному слову"
+      ],
+      "props": {
+        "fontSize": 96,
+        "fontWeight": 900,
+        "boxColor": "#22c55e",
+        "activeColor": "#052e16",
+        "combineTokensWithinMilliseconds": 400,
+        "holdMs": 250
+      }
+    },
+    {
+      "id": "soft-pill",
+      "label": "Soft Pill",
+      "description": "Rounded lavender pill with generous padding and medium-weight type for a friendly, calm lifestyle feel.",
+      "askedAs": [
+        "rounded pill highlight captions",
+        "soft pastel caption box",
+        "gentle friendly subtitles",
+        "субтитры с округлой пастельной плашкой",
+        "мягкие спокойные субтитры"
+      ],
+      "props": {
+        "boxColor": "#c4b5fd",
+        "activeColor": "#1e1b4b",
+        "boxRadius": 0.5,
+        "boxPadding": 0.24,
+        "fontWeight": 600,
+        "combineTokensWithinMilliseconds": 1800
+      }
+    },
+    {
+      "id": "editorial-ink",
+      "label": "Editorial Ink",
+      "description": "Sharp square black box under crisp white text with no shadow, reading like a magazine pull quote.",
+      "askedAs": [
+        "minimal black box captions",
+        "clean editorial subtitles square corners",
+        "no shadow sharp caption highlight",
+        "минималистичные субтитры с чёрной плашкой",
+        "строгие субтитры в стиле журнала"
+      ],
+      "props": {
+        "boxColor": "#111111",
+        "activeColor": "#ffffff",
+        "boxRadius": 0,
+        "fontWeight": 700,
+        "shadow": false,
+        "fontSize": 56
+      }
+    },
+    {
+      "id": "coral-pop",
+      "label": "Coral Pop",
+      "description": "Warm coral block with white active text and slightly tighter padding for a playful creator look.",
+      "askedAs": [
+        "pink orange caption highlight",
+        "warm colorful word box",
+        "playful tiktok captions",
+        "субтитры с коралловой подсветкой",
+        "яркие тёплые субтитры для тиктока"
+      ],
+      "props": {
+        "boxColor": "#f9735b",
+        "activeColor": "#ffffff",
+        "boxRadius": 0.24,
+        "boxPadding": 0.1,
+        "combineTokensWithinMilliseconds": 800
+      }
+    },
+    {
+      "id": "slow-read",
+      "label": "Slow Read",
+      "description": "Smaller, lighter text in long pages with an extended hold and a cool blue box for explainers and tutorials.",
+      "askedAs": [
+        "full sentence captions with highlight",
+        "calm captions for tutorials",
+        "longer subtitle lines blue box",
+        "субтитры целыми фразами с подсветкой",
+        "спокойные субтитры для обучающих видео"
+      ],
+      "props": {
+        "fontSize": 44,
+        "fontWeight": 600,
+        "boxColor": "#3b82f6",
+        "activeColor": "#ffffff",
+        "combineTokensWithinMilliseconds": 2800,
+        "holdMs": 1200
+      }
+    }
+  ]
+}

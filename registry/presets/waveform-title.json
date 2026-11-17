@@ -1,0 +1,125 @@
+{
+  "component": "waveform-title",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "studio-light",
+      "label": "Studio Light",
+      "description": "A bright paper-white card with near-black type and a calm cobalt waveform.",
+      "askedAs": [
+        "light version with white background",
+        "clean bright title over audio wave",
+        "white podcast title card",
+        "светлая версия заголовка с волной",
+        "белый фон для титра"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f6f5f1",
+        "ink": "#141414",
+        "accent": "#2f4bd8",
+        "grain": false
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A slow, literary title in Fraunces on deep ink with a warm amber underline wave.",
+      "askedAs": [
+        "elegant serif headline with waveform",
+        "slow magazine style title",
+        "classy audiobook intro",
+        "элегантный заголовок с засечками",
+        "медленный редакционный титр"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#14110f",
+        "ink": "#f2ebdd",
+        "accent": "#d9a35b",
+        "speed": 0.75,
+        "stagger": 7
+      }
+    },
+    {
+      "id": "signal-mono",
+      "label": "Signal Mono",
+      "description": "A fast, technical monospace title with tight stagger and a mint signal line on graphite.",
+      "askedAs": [
+        "techy monospace audio title",
+        "quick developer style waveform",
+        "code look for voice api",
+        "моноширинный технический заголовок",
+        "быстрый титр в стиле кода"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#101214",
+        "ink": "#e6ede9",
+        "accent": "#4fd1a5",
+        "speed": 1.75,
+        "stagger": 2
+      }
+    },
+    {
+      "id": "big-statement",
+      "label": "Big Statement",
+      "description": "An oversized Bricolage headline with a bold coral wave and two accented words.",
+      "askedAs": [
+        "make the title huge and bold",
+        "large punchy headline over wave",
+        "big hero text for product launch",
+        "крупный жирный заголовок",
+        "большой акцентный титр"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.35,
+        "accent": "#f2674a",
+        "accentWords": 2,
+        "grain": false
+      }
+    },
+    {
+      "id": "quiet-caption",
+      "label": "Quiet Caption",
+      "description": "A small, unhurried Inter title on soft sand with a muted sage waveform and a gentle delay.",
+      "askedAs": [
+        "subtle small caption title",
+        "soft calm muted waveform",
+        "minimal understated intro",
+        "тихий минималистичный титр",
+        "мягкий спокойный заголовок"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "background": "#efeae2",
+        "ink": "#2a2a27",
+        "accent": "#7c9a86",
+        "scale": 0.75
+      }
+    },
+    {
+      "id": "night-violet",
+      "label": "Night Violet",
+      "description": "A moody Geist title on midnight navy with a violet aurora line and a slow, delayed rise.",
+      "askedAs": [
+        "dark moody purple waveform",
+        "night time voice assistant title",
+        "cinematic violet audio intro",
+        "тёмный фиолетовый титр с волной",
+        "ночной атмосферный заголовок"
+      ],
+      "props": {
+        "fontFamily": "Geist",
+        "background": "#0c0e1f",
+        "ink": "#eceaf7",
+        "accent": "#8b7cf6",
+        "speed": 0.5,
+        "delay": 12
+      }
+    }
+  ]
+}

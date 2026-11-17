@@ -1,0 +1,97 @@
+{
+  "component": "icon-star",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gold-rating",
+      "label": "Gold Rating",
+      "description": "A warm amber star that draws in and pops at a comfortable mid size.",
+      "askedAs": [
+        "gold star for reviews",
+        "yellow rating star",
+        "favorite star warm color",
+        "золотая звезда рейтинга",
+        "жёлтая звёздочка для отзывов"
+      ],
+      "props": {
+        "color": "#d4a017",
+        "size": 64,
+        "strokeWidth": 2.25
+      }
+    },
+    {
+      "id": "hairline-draw",
+      "label": "Hairline Draw",
+      "description": "A large, thin slate outline that slowly traces itself on screen.",
+      "askedAs": [
+        "slow elegant star outline",
+        "thin line star drawing",
+        "minimal star sketch",
+        "тонкая звезда рисуется медленно",
+        "минималистичный контур звезды"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1,
+        "speed": 0.5,
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "quick-pop",
+      "label": "Quick Pop",
+      "description": "A small, bold star that snaps through its action at double speed.",
+      "askedAs": [
+        "fast star bounce",
+        "snappy favorite icon",
+        "quick star click effect",
+        "быстрая анимация звезды",
+        "звезда резко подпрыгивает"
+      ],
+      "props": {
+        "animation": "action",
+        "speed": 2,
+        "size": 32,
+        "strokeWidth": 2.5
+      }
+    },
+    {
+      "id": "twinkle-loop",
+      "label": "Twinkle Loop",
+      "description": "A soft indigo star that gently repeats its motion like a slow twinkle.",
+      "askedAs": [
+        "looping twinkling star",
+        "star that keeps animating",
+        "calm repeating star",
+        "мерцающая звезда по кругу",
+        "звезда в бесконечном цикле"
+      ],
+      "props": {
+        "loop": true,
+        "speed": 0.75,
+        "color": "#4f46e5",
+        "size": 80
+      }
+    },
+    {
+      "id": "hero-statement",
+      "label": "Hero Statement",
+      "description": "An oversized heavy-stroke coral star made for full-frame title moments.",
+      "askedAs": [
+        "huge bold star",
+        "big star for intro screen",
+        "thick star centerpiece",
+        "огромная жирная звезда",
+        "большая звезда на весь экран"
+      ],
+      "props": {
+        "size": 180,
+        "strokeWidth": 3,
+        "color": "#e2553f",
+        "speed": 1.25
+      }
+    }
+  ]
+}

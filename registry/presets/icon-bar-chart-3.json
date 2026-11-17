@@ -1,0 +1,98 @@
+{
+  "component": "icon-bar-chart-3",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-slow-draw",
+      "label": "Hero Draw",
+      "description": "A large, fine-lined chart icon that sketches itself in slowly and calmly.",
+      "askedAs": [
+        "big icon drawing in slowly",
+        "large thin line chart reveal",
+        "slow elegant stroke animation",
+        "большая иконка медленно рисуется",
+        "тонкие линии плавное появление"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 160,
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#1e293b"
+      }
+    },
+    {
+      "id": "live-pulse",
+      "label": "Live Pulse",
+      "description": "A looping, quick bar motion in confident blue that reads like live data.",
+      "askedAs": [
+        "looping animated bar chart",
+        "live data icon that keeps moving",
+        "fast repeating chart animation",
+        "зацикленная анимация графика",
+        "живые данные иконка в движении"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "speed": 1.5,
+        "color": "#1f6feb"
+      }
+    },
+    {
+      "id": "bold-growth",
+      "label": "Bold Growth",
+      "description": "A chunky, heavy-stroked chart in deep green that feels solid and positive.",
+      "askedAs": [
+        "thick green chart icon",
+        "bold growth bars",
+        "heavy stroke bar chart",
+        "жирная зелёная иконка графика",
+        "толстые линии рост"
+      ],
+      "props": {
+        "strokeWidth": 3,
+        "size": 96,
+        "color": "#15803d"
+      }
+    },
+    {
+      "id": "subtle-inline",
+      "label": "Subtle Inline",
+      "description": "A small, muted grey icon with a light stroke that sits quietly beside text.",
+      "askedAs": [
+        "small quiet chart icon",
+        "muted grey inline icon",
+        "tiny subtle bar chart",
+        "маленькая серая иконка",
+        "незаметная иконка рядом с текстом"
+      ],
+      "props": {
+        "size": 28,
+        "strokeWidth": 1.5,
+        "color": "#6b7280",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "snappy-accent",
+      "label": "Snappy Accent",
+      "description": "A medium-sized amber chart that draws and animates in a quick, punchy burst.",
+      "askedAs": [
+        "fast punchy chart animation",
+        "quick orange icon pop",
+        "energetic bar chart reveal",
+        "быстрая яркая анимация графика",
+        "резкое появление иконки"
+      ],
+      "props": {
+        "animation": "both",
+        "speed": 2.5,
+        "size": 72,
+        "color": "#d97706",
+        "strokeWidth": 2.5
+      }
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "component": "speed-lines",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "manga-impact",
+      "label": "Manga Impact",
+      "description": "Dense, bold radial lines snap onto the center for a punchy comic-book impact frame.",
+      "askedAs": [
+        "comic book impact lines",
+        "anime focus lines on center",
+        "radial lines converging hit",
+        "манга линии удара",
+        "радиальные линии к центру"
+      ],
+      "props": {
+        "mode": "focus",
+        "count": 28,
+        "weight": 3.5,
+        "duration": 8,
+        "color": "#111111"
+      }
+    },
+    {
+      "id": "rocket-entry",
+      "label": "Rocket Entry",
+      "description": "A very fast, heavy entrance with long thick streaks and a big squash and overshoot on landing.",
+      "askedAs": [
+        "super fast fly in with big bounce",
+        "heavy cartoon landing",
+        "element slams in with streaks",
+        "быстрый влёт с отскоком",
+        "тяжёлое приземление с полосами"
+      ],
+      "props": {
+        "duration": 8,
+        "spread": 200,
+        "weight": 4,
+        "bounce": 0.85,
+        "squash": 0.8
+      }
+    },
+    {
+      "id": "gentle-glide",
+      "label": "Gentle Glide",
+      "description": "A slow, airy glide with a few thin warm-grey streaks and a soft, barely-bouncing settle.",
+      "askedAs": [
+        "subtle slide in with light trails",
+        "calm soft entrance",
+        "minimal motion lines",
+        "мягкое плавное появление",
+        "тонкие линии движения"
+      ],
+      "props": {
+        "count": 5,
+        "weight": 1,
+        "duration": 32,
+        "bounce": 0.1,
+        "squash": 0.15,
+        "color": "#d6d3cc"
+      }
+    },
+    {
+      "id": "corner-focus",
+      "label": "Corner Focus",
+      "description": "Sparse coral lines rush in and converge on the lower-right corner to spotlight a detail.",
+      "askedAs": [
+        "focus lines pointing at corner",
+        "highlight a spot off center",
+        "draw attention to bottom right",
+        "линии фокуса в угол",
+        "выделить точку в углу"
+      ],
+      "props": {
+        "mode": "focus",
+        "count": 14,
+        "x": 0.75,
+        "y": 0.7,
+        "weight": 2.5,
+        "color": "#ff6b5a"
+      }
+    },
+    {
+      "id": "swarm-trail",
+      "label": "Swarm Trail",
+      "description": "A tight, dense bundle of hairline cobalt streaks trails a quick, crisp landing with no wobble.",
+      "askedAs": [
+        "many thin speed streaks",
+        "dense motion blur lines",
+        "fast entrance no bounce",
+        "много тонких линий скорости",
+        "быстрый влёт без отскока"
+      ],
+      "props": {
+        "count": 30,
+        "weight": 1,
+        "spread": 48,
+        "bounce": 0,
+        "color": "#1f6feb",
+        "speed": 1.5
+      }
+    }
+  ]
+}

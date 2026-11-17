@@ -1,0 +1,125 @@
+{
+  "component": "glass-lens",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gallery-light",
+      "label": "Gallery Light",
+      "description": "A bright, airy editorial look with warm paper tones, a deep ink headline and a calm, slower glide.",
+      "askedAs": [
+        "light editorial version",
+        "clean white magazine style",
+        "slower bright elegant look",
+        "светлый журнальный стиль",
+        "спокойный светлый вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f1ea",
+        "ink": "#1c1b19",
+        "accent": "#b5532e",
+        "fontFamily": "Instrument Serif",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "tech-launch",
+      "label": "Tech Launch",
+      "description": "A crisp grotesk keynote look on near-black with a cool cyan accent, no italics and a snappier pace.",
+      "askedAs": [
+        "apple keynote style",
+        "modern tech product launch",
+        "fast clean sans serif",
+        "стиль презентации техпродукта",
+        "быстрый современный гротеск"
+      ],
+      "props": {
+        "fontFamily": "Geist",
+        "italicLast": false,
+        "background": "#0a0b0d",
+        "ink": "#f2f4f7",
+        "accent": "#4fb3d9",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "deep-zoom",
+      "label": "Deep Zoom",
+      "description": "An oversized lens with strong magnification and a large headline for a dramatic, cinematic reveal.",
+      "askedAs": [
+        "make the magnifier much stronger",
+        "big dramatic zoom on the word",
+        "cinematic large lens",
+        "сильное увеличение линзы",
+        "крупный драматичный зум"
+      ],
+      "props": {
+        "magnify": 2.2,
+        "scale": 1.25,
+        "fontFamily": "Fraunces",
+        "speed": 0.75,
+        "accent": "#c9a45c"
+      }
+    },
+    {
+      "id": "midnight-luxe",
+      "label": "Midnight Luxe",
+      "description": "A deep navy, gold-accented luxury palette with soft serif type and a delayed, unhurried entrance.",
+      "askedAs": [
+        "luxury gold and navy",
+        "premium brand dark blue",
+        "elegant slow reveal",
+        "люксовый тёмно-синий с золотом",
+        "премиальный медленный вход"
+      ],
+      "props": {
+        "background": "#0e1626",
+        "ink": "#ede6d6",
+        "accent": "#d4af6a",
+        "speed": 0.5,
+        "delay": 20
+      }
+    },
+    {
+      "id": "dev-terminal",
+      "label": "Dev Terminal",
+      "description": "A clean monospace developer look with a subtle lens, no grain and a green accent on charcoal.",
+      "askedAs": [
+        "code style for developer tool",
+        "monospace terminal look",
+        "minimal no grain version",
+        "стиль для разработчиков моноширинный",
+        "терминальный вариант без шума"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "italicLast": false,
+        "grain": false,
+        "background": "#15171a",
+        "ink": "#d8dee4",
+        "accent": "#3fb950"
+      }
+    },
+    {
+      "id": "quick-social",
+      "label": "Quick Social",
+      "description": "A compact, fast-paced light version with a bold grotesk and vivid coral pill made for short social cuts.",
+      "askedAs": [
+        "fast version for reels",
+        "short punchy social ad",
+        "bold quick light style",
+        "быстрая версия для рилс",
+        "энергичный короткий ролик"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Bricolage Grotesque",
+        "speed": 2,
+        "scale": 0.85,
+        "accent": "#e8553d",
+        "grain": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "component": "wave-wipe",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "calm-tide",
+      "label": "Calm Tide",
+      "description": "A slow, gentle swell with very soft edges and light grain over a deep ink-blue base.",
+      "askedAs": [
+        "slow gentle wave transition",
+        "soft calm tide wipe",
+        "relaxed smooth ocean swell",
+        "медленная мягкая волна",
+        "спокойный прилив переход"
+      ],
+      "props": {
+        "speed": 0.5,
+        "softness": 0.9,
+        "intensity": 0.1,
+        "noise": 0.2,
+        "colorBack": "#0f1a2b"
+      }
+    },
+    {
+      "id": "crashing-surf",
+      "label": "Crashing Surf",
+      "description": "A fast, forceful wave with a crisp leading edge and pronounced motion.",
+      "askedAs": [
+        "fast energetic wave wipe",
+        "strong crashing wave transition",
+        "punchy quick swell",
+        "быстрая резкая волна",
+        "энергичный переход волной"
+      ],
+      "props": {
+        "speed": 2.5,
+        "intensity": 0.6,
+        "softness": 0.3,
+        "noise": 0.35
+      }
+    },
+    {
+      "id": "film-grain",
+      "label": "Film Grain",
+      "description": "A heavily textured, analog-feeling wave in warm sepia brown with thick grain.",
+      "askedAs": [
+        "grainy analog wave",
+        "vintage film texture wipe",
+        "retro noisy transition",
+        "зернистая плёночная волна",
+        "винтажный переход с шумом"
+      ],
+      "props": {
+        "noise": 0.85,
+        "colorBack": "#2a1f17",
+        "softness": 0.6,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "paper-page",
+      "label": "Paper Page",
+      "description": "A clean, nearly grainless off-white sheet that slides over like turning a page.",
+      "askedAs": [
+        "light paper page wipe",
+        "clean white page over transition",
+        "minimal bright wave",
+        "светлый переход как страница",
+        "чистая белая волна"
+      ],
+      "props": {
+        "colorBack": "#ece8e1",
+        "noise": 0.1,
+        "intensity": 0.15,
+        "softness": 0.5,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "deep-swell",
+      "label": "Deep Swell",
+      "description": "A towering, dramatic wave in dark forest green with soft edges and medium grain.",
+      "askedAs": [
+        "dramatic big wave transition",
+        "deep green rolling swell",
+        "moody heavy wave wipe",
+        "драматичная большая волна",
+        "тёмно-зелёная глубокая волна"
+      ],
+      "props": {
+        "intensity": 0.85,
+        "softness": 0.8,
+        "colorBack": "#122420",
+        "speed": 0.75,
+        "noise": 0.5
+      }
+    }
+  ]
+}

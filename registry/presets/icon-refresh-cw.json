@@ -1,0 +1,118 @@
+{
+  "component": "icon-refresh-cw",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-slow-draw",
+      "label": "Hairline Draw",
+      "description": "A large, thin-stroked icon that slowly sketches itself in once and stays put.",
+      "askedAs": [
+        "thin slow drawing refresh icon",
+        "elegant line draw once",
+        "big delicate outline sync icon",
+        "тонкая иконка медленно рисуется",
+        "элегантная линия обновления"
+      ],
+      "props": {
+        "animation": "draw",
+        "loop": false,
+        "size": 120,
+        "strokeWidth": 1.25,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "bold-fast-spin",
+      "label": "Quick Spin",
+      "description": "A heavy, compact icon that spins briskly on repeat like an active loader.",
+      "askedAs": [
+        "fast spinning reload icon",
+        "bold loading spinner",
+        "quick refresh rotation",
+        "быстро крутящаяся иконка",
+        "жирный спиннер загрузки"
+      ],
+      "props": {
+        "animation": "action",
+        "strokeWidth": 2.75,
+        "speed": 2.5,
+        "size": 40
+      }
+    },
+    {
+      "id": "calm-blue-sync",
+      "label": "Calm Sync",
+      "description": "A medium blue icon that draws and rotates at an unhurried, relaxed pace.",
+      "askedAs": [
+        "blue sync icon slow",
+        "calm syncing animation",
+        "gentle refresh loop",
+        "спокойная синяя синхронизация",
+        "медленное обновление синим"
+      ],
+      "props": {
+        "color": "#1f6feb",
+        "speed": 0.75,
+        "size": 72,
+        "strokeWidth": 1.75
+      }
+    },
+    {
+      "id": "hero-forest",
+      "label": "Hero Green",
+      "description": "An oversized deep-green icon with a confident stroke that plays its rotation once as a statement.",
+      "askedAs": [
+        "huge green refresh icon",
+        "big one time rotate",
+        "large eco reload symbol",
+        "большая зелёная иконка обновления",
+        "крупная иконка один раз"
+      ],
+      "props": {
+        "size": 180,
+        "color": "#2f6b4f",
+        "strokeWidth": 2.25,
+        "loop": false,
+        "animation": "both"
+      }
+    },
+    {
+      "id": "muted-slate-pulse",
+      "label": "Muted Slate",
+      "description": "A small slate-grey icon that quietly spins at a steady medium pace for subtle UI hints.",
+      "askedAs": [
+        "subtle grey refresh icon",
+        "small quiet reload loop",
+        "muted spinning arrows",
+        "серая незаметная иконка",
+        "маленький тихий спиннер"
+      ],
+      "props": {
+        "color": "#64748b",
+        "size": 28,
+        "animation": "action",
+        "strokeWidth": 1.5,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "warm-amber-draw",
+      "label": "Amber Sketch",
+      "description": "A warm amber icon that repeatedly draws itself in a lively, hand-sketched rhythm.",
+      "askedAs": [
+        "orange drawing refresh icon",
+        "warm sketch loop",
+        "amber line animation",
+        "оранжевая рисующаяся иконка",
+        "тёплый скетч обновления"
+      ],
+      "props": {
+        "color": "#c2410c",
+        "animation": "draw",
+        "speed": 1.75,
+        "size": 96
+      }
+    }
+  ]
+}

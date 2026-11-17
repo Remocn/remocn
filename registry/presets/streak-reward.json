@@ -1,0 +1,119 @@
+{
+  "component": "streak-reward",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "night-owl",
+      "label": "Night Owl",
+      "description": "Dark theme on a deep blue-hour ground with a warm amber accent and a calm, slightly slower roll-up.",
+      "askedAs": [
+        "dark mode streak celebration",
+        "evening study session look",
+        "moody night version with warm highlight",
+        "тёмная версия для вечерних занятий",
+        "ночной стрик с тёплым акцентом"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "blue-hour",
+        "accent": "#f5a524",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "fitness-burst",
+      "label": "Fitness Burst",
+      "description": "Punchy coral accent on an ember ground with chunky Bricolage type and a fast, energetic pace.",
+      "askedAs": [
+        "energetic workout reward",
+        "fast sporty streak screen",
+        "bold orange gym vibe",
+        "энергичный экран для фитнеса",
+        "быстрая яркая награда за тренировку"
+      ],
+      "props": {
+        "accent": "#ff5a3c",
+        "ground": "ember",
+        "fontFamily": "Bricolage Grotesque",
+        "speed": 1.5,
+        "scale": 1.1
+      }
+    },
+    {
+      "id": "paper-journal",
+      "label": "Paper Journal",
+      "description": "Soft cream paper background with deep ink text, a forest green accent and editorial Fraunces type.",
+      "askedAs": [
+        "calm habit journal style",
+        "warm paper notebook look",
+        "serif cozy reading app",
+        "спокойный стиль дневника привычек",
+        "бумажный уютный вид с засечками"
+      ],
+      "props": {
+        "background": "#f6f1e7",
+        "ink": "#2b2620",
+        "accent": "#2f7d5b",
+        "fontFamily": "Fraunces",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "code-streak",
+      "label": "Code Streak",
+      "description": "Terminal-inspired dark charcoal look with mint accent and JetBrains Mono for a developer learning app.",
+      "askedAs": [
+        "coding course streak",
+        "developer terminal style reward",
+        "monospace dark tech look",
+        "стиль для курса программирования",
+        "моноширинный тёмный терминал"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "charcoal-satin",
+        "accent": "#3dd68c",
+        "fontFamily": "JetBrains Mono"
+      }
+    },
+    {
+      "id": "petal-pop",
+      "label": "Petal Pop",
+      "description": "Light, friendly petal-arc ground with a raspberry accent, Manrope type and a delayed, gentle entrance.",
+      "askedAs": [
+        "soft pink playful reward",
+        "cute pastel lesson complete",
+        "gentle friendly celebration",
+        "мягкий розовый игривый стиль",
+        "пастельный экран завершения урока"
+      ],
+      "props": {
+        "ground": "petal-arc",
+        "accent": "#d6336c",
+        "fontFamily": "Manrope",
+        "delay": 15,
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "cobalt-hero",
+      "label": "Cobalt Hero",
+      "description": "Oversized hero framing on a cobalt-rise ground with Space Grotesk and a brisk reveal for launch trailers.",
+      "askedAs": [
+        "big bold app launch shot",
+        "large zoomed reward for trailer",
+        "blue hero promo look",
+        "крупный план для промо запуска",
+        "большой синий геройский кадр"
+      ],
+      "props": {
+        "ground": "cobalt-rise",
+        "fontFamily": "Space Grotesk",
+        "scale": 1.35,
+        "speed": 1.25,
+        "accent": "#2747e0"
+      }
+    }
+  ]
+}

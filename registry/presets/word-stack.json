@@ -1,0 +1,117 @@
+{
+  "component": "word-stack",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gallery-ivory",
+      "label": "Gallery Ivory",
+      "description": "Warm ivory paper with near-black type and a deep oxblood accent on the final serif word, built at an unhurried pace.",
+      "askedAs": [
+        "cream background elegant poster",
+        "light editorial word stack",
+        "slow classy manifesto on paper",
+        "светлый элегантный постер",
+        "кремовый фон медленно"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1a1714",
+        "accent": "#7a1f2b",
+        "beat": 24
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "Deep navy field with soft cream caps and a burnished gold sheen on the closing word.",
+      "askedAs": [
+        "dark luxury gold ending",
+        "navy and gold tagline",
+        "premium night poster",
+        "тёмно-синий с золотом",
+        "люкс тёмный постер"
+      ],
+      "props": {
+        "background": "#0b1426",
+        "ink": "#ede6d6",
+        "accent": "#c9a24a",
+        "grain": true
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Words slam in on a tight beat at double speed for a punchy, energetic manifesto.",
+      "askedAs": [
+        "fast punchy word stack",
+        "quick energetic tagline",
+        "words appear rapidly",
+        "быстрые слова один за другим",
+        "энергичный быстрый слоган"
+      ],
+      "props": {
+        "beat": 8,
+        "speed": 2,
+        "accent": "#ff5a36",
+        "grain": false
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A patient, cinematic build with a long beat, a short lead-in pause and slightly smaller type for breathing room.",
+      "askedAs": [
+        "slow cinematic reveal",
+        "calm dramatic closing statement",
+        "give the words more time",
+        "медленное кинематографичное появление",
+        "спокойный драматичный финал"
+      ],
+      "props": {
+        "beat": 34,
+        "speed": 0.75,
+        "delay": 20,
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "clean-mono",
+      "label": "Clean Mono",
+      "description": "Crisp white ground, graphite type and a cool slate accent with no grain for a minimal tech look.",
+      "askedAs": [
+        "minimal clean white",
+        "no grain modern stack",
+        "simple monochrome tagline",
+        "минималистичный белый фон",
+        "чистый стиль без шума"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#ffffff",
+        "ink": "#1f2328",
+        "accent": "#4a5d73",
+        "grain": false
+      }
+    },
+    {
+      "id": "forest-poster",
+      "label": "Forest Poster",
+      "description": "Oversized caps on deep forest green with pale sage text and a warm copper finale filling the frame.",
+      "askedAs": [
+        "big bold green poster",
+        "huge headline filling the screen",
+        "earthy dark green tagline",
+        "крупный зелёный постер",
+        "большие слова на весь экран"
+      ],
+      "props": {
+        "background": "#12261e",
+        "ink": "#e3eadf",
+        "accent": "#c7794a",
+        "scale": 1.3
+      }
+    }
+  ]
+}

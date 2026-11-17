@@ -1,0 +1,105 @@
+{
+  "component": "ruler-scrub",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-editorial",
+      "label": "Slow Editorial",
+      "description": "A long, unhurried scrub on warm paper with a serif numeral and deep rust accent.",
+      "askedAs": [
+        "slow elegant serif year reveal",
+        "warm paper ruler with serif numbers",
+        "editorial magazine style countdown",
+        "медленный элегантный показ года с засечками",
+        "тёплый бумажный стиль линейки"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1f1a14",
+        "accent": "#b4532a",
+        "fontFamily": "Instrument Serif",
+        "scrubLength": 120
+      }
+    },
+    {
+      "id": "snap-launch",
+      "label": "Snap Launch",
+      "description": "A fast, punchy scrub with a bold grotesk numeral and electric violet accent on near-black.",
+      "askedAs": [
+        "fast punchy year reveal",
+        "quick snappy ruler animation",
+        "energetic launch number",
+        "быстрая резкая анимация года",
+        "энергичный показ числа для запуска"
+      ],
+      "props": {
+        "scrubLength": 32,
+        "speed": 1.5,
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#7c5cff",
+        "scale": 1.2
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A clean, grain-free monospace readout in mint green on a dark graphite ground.",
+      "askedAs": [
+        "code style monospace year",
+        "developer terminal ruler",
+        "techy version number reveal",
+        "моноширинный стиль как в терминале",
+        "техничный показ версии"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0e1116",
+        "ink": "#d6e2dc",
+        "accent": "#3fd69a",
+        "grain": false
+      }
+    },
+    {
+      "id": "swiss-light",
+      "label": "Swiss Light",
+      "description": "A crisp white, grain-free layout with Inter type and a confident signal-red accent.",
+      "askedAs": [
+        "minimal white clean ruler",
+        "swiss design year reveal",
+        "bright light version with red",
+        "минималистичный белый вариант",
+        "светлый швейцарский стиль с красным"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#ffffff",
+        "ink": "#111111",
+        "accent": "#e5322d",
+        "fontFamily": "Inter",
+        "grain": false
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "A luxurious navy backdrop with a Fraunces numeral glowing in soft gold, slightly smaller and delayed.",
+      "askedAs": [
+        "luxury gold year reveal",
+        "dark navy and gold premium look",
+        "anniversary style elegant number",
+        "роскошный золотой показ года",
+        "тёмно-синий с золотом премиум"
+      ],
+      "props": {
+        "background": "#0b1530",
+        "ink": "#ede6d3",
+        "accent": "#d4a853",
+        "fontFamily": "Fraunces",
+        "scale": 0.85,
+        "delay": 20
+      }
+    }
+  ]
+}

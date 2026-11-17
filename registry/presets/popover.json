@@ -1,0 +1,91 @@
+{
+  "component": "popover",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "compact-snap",
+      "label": "Compact Snap",
+      "description": "A narrow card that pops in quickly from above for brisk, tooltip-like reveals.",
+      "askedAs": [
+        "small fast popover from top",
+        "quick narrow hover card",
+        "snappy compact popup",
+        "маленький быстрый поповер сверху",
+        "компактная всплывашка быстро"
+      ],
+      "props": {
+        "side": "top",
+        "width": 192,
+        "speed": 2
+      }
+    },
+    {
+      "id": "wide-drift",
+      "label": "Wide Drift",
+      "description": "A broad card that eases in slowly from below for calm, roomy explanations.",
+      "askedAs": [
+        "slow wide popover",
+        "large card gently sliding up",
+        "relaxed big hover card",
+        "широкий медленный поповер",
+        "большая карточка плавно появляется"
+      ],
+      "props": {
+        "width": 432,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "side-panel-left",
+      "label": "Side Slide",
+      "description": "A medium card gliding in horizontally from the left at a steady, unhurried pace.",
+      "askedAs": [
+        "popover sliding from the left",
+        "horizontal enter hover card",
+        "card comes in from side",
+        "поповер выезжает слева",
+        "карточка появляется сбоку"
+      ],
+      "props": {
+        "side": "left",
+        "width": 320,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "right-flick",
+      "label": "Right Flick",
+      "description": "A slim card that flicks in sharply from the right with an energetic tempo.",
+      "askedAs": [
+        "fast popover from right",
+        "quick slide in from right side",
+        "energetic slim hover card",
+        "быстрый поповер справа",
+        "резкое появление карточки справа"
+      ],
+      "props": {
+        "side": "right",
+        "width": 240,
+        "speed": 3
+      }
+    },
+    {
+      "id": "slow-dismiss",
+      "label": "Slow Dismiss",
+      "description": "A standard card shown in its closed state, letting it fade away gracefully from above.",
+      "askedAs": [
+        "popover closing animation",
+        "hide the hover card slowly",
+        "dismissed popover fade out",
+        "поповер закрывается плавно",
+        "скрыть карточку медленно"
+      ],
+      "props": {
+        "state": "closed",
+        "side": "top",
+        "speed": 0.5
+      }
+    }
+  ]
+}

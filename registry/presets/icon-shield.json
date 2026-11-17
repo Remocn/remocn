@@ -1,0 +1,99 @@
+{
+  "component": "icon-shield",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-shield",
+      "label": "Hero Shield",
+      "description": "A large, bold shield in deep navy that draws in and acts at a calm, deliberate pace.",
+      "askedAs": [
+        "big shield icon for a hero section",
+        "large slow security badge",
+        "bold navy shield animation",
+        "большой щит для главного экрана",
+        "крупная иконка защиты медленно"
+      ],
+      "props": {
+        "size": 160,
+        "color": "#1e3a8a",
+        "strokeWidth": 2.5,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "fine-line",
+      "label": "Fine Line",
+      "description": "A thin, elegant slate stroke that simply draws itself on slowly.",
+      "askedAs": [
+        "thin minimal shield outline",
+        "elegant line drawing shield",
+        "delicate shield that draws in",
+        "тонкий минималистичный щит",
+        "изящная линия щита"
+      ],
+      "props": {
+        "animation": "draw",
+        "strokeWidth": 1,
+        "color": "#475569",
+        "size": 96,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "secure-pulse",
+      "label": "Secure Pulse",
+      "description": "A green shield looping its action quickly like a live protection indicator.",
+      "askedAs": [
+        "looping green protected status icon",
+        "shield that keeps pulsing",
+        "active security indicator",
+        "зелёный щит в цикле",
+        "индикатор защиты анимация повтор"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "color": "#15803d",
+        "speed": 1.5,
+        "size": 64
+      }
+    },
+    {
+      "id": "alert-guard",
+      "label": "Alert Guard",
+      "description": "A heavy-stroked crimson shield that snaps in fast for warning moments.",
+      "askedAs": [
+        "red warning shield fast",
+        "urgent security alert icon",
+        "thick red shield quick animation",
+        "красный щит предупреждение",
+        "быстрая тревожная иконка щита"
+      ],
+      "props": {
+        "color": "#b91c1c",
+        "strokeWidth": 3,
+        "speed": 2,
+        "size": 80
+      }
+    },
+    {
+      "id": "compact-badge",
+      "label": "Compact Badge",
+      "description": "A small, crisp blue shield that runs through its animation briskly, sized for inline UI.",
+      "askedAs": [
+        "small shield for a button",
+        "tiny blue security icon",
+        "inline shield badge animation",
+        "маленький синий щит",
+        "иконка щита для кнопки"
+      ],
+      "props": {
+        "size": 32,
+        "color": "#1f6feb",
+        "strokeWidth": 1.75,
+        "speed": 1.25
+      }
+    }
+  ]
+}

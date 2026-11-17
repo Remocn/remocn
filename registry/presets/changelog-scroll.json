@@ -1,0 +1,104 @@
+{
+  "component": "changelog-scroll",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-log",
+      "label": "Terminal Log",
+      "description": "Monospaced green-on-black log that scrolls quickly through a long release history.",
+      "askedAs": [
+        "make it look like a terminal",
+        "hacker style changelog with monospace",
+        "green text on black console look",
+        "как в терминале",
+        "моноширинный шрифт на чёрном фоне"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0c",
+        "ink": "#c8e6c9",
+        "accent": "#3fb950",
+        "scrollRows": 48,
+        "scrollLength": 44
+      }
+    },
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "Warm off-white page with a serif face and a slow, considered scroll.",
+      "askedAs": [
+        "elegant serif release notes",
+        "light paper magazine style",
+        "calm editorial changelog",
+        "элегантный светлый стиль с засечками",
+        "как журнальная страница"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#f5f1e8",
+        "ink": "#1f1b16",
+        "accent": "#b4532a",
+        "scrollLength": 86
+      }
+    },
+    {
+      "id": "rapid-ship",
+      "label": "Rapid Ship",
+      "description": "Fast, long scroll through dozens of rows to sell how often the product ships.",
+      "askedAs": [
+        "show we ship constantly",
+        "fast scrolling momentum shot",
+        "quick whoosh through many releases",
+        "быстрая прокрутка релизов",
+        "показать, как часто мы выпускаем обновления"
+      ],
+      "props": {
+        "scrollRows": 60,
+        "scrollLength": 32,
+        "speed": 1.5,
+        "accent": "#f59e0b",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "clean-light",
+      "label": "Clean Light",
+      "description": "Crisp light theme with Inter, no grain and a modern blue accent.",
+      "askedAs": [
+        "clean minimal light version",
+        "white background product style",
+        "simple bright changelog without noise",
+        "чистый светлый минимализм",
+        "светлая тема без зерна"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "grain": false,
+        "accent": "#2563eb"
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "Large, unhurried scroll with a held pause before settling on the headline entry.",
+      "askedAs": [
+        "slow dramatic reveal of the latest release",
+        "big text slow scroll",
+        "cinematic what's new moment",
+        "медленное драматичное появление",
+        "крупно и неспешно"
+      ],
+      "props": {
+        "scale": 1.25,
+        "speed": 0.75,
+        "delay": 20,
+        "scrollRows": 16,
+        "accent": "#8b5cf6",
+        "fontFamily": "Geist"
+      }
+    }
+  ]
+}

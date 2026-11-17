@@ -1,0 +1,100 @@
+{
+  "component": "impact-shake",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "sledgehammer",
+      "label": "Sledgehammer",
+      "description": "Maximum shake on a late, heavy drop with warm off-white type on deep charcoal.",
+      "askedAs": [
+        "make it hit really hard",
+        "biggest possible shake",
+        "heavy dramatic slam",
+        "очень сильный удар",
+        "максимальная тряска"
+      ],
+      "props": {
+        "intensity": 2,
+        "impact": 14,
+        "foregroundColor": "#f5f1e8",
+        "backgroundColor": "#0b0b0c",
+        "seed": 7
+      }
+    },
+    {
+      "id": "soft-thud",
+      "label": "Soft Thud",
+      "description": "A gentle, slower landing with a light jolt in ink on a pale paper background.",
+      "askedAs": [
+        "subtle drop without much shake",
+        "calm landing on light background",
+        "softer impact",
+        "мягкое приземление",
+        "лёгкая тряска на светлом фоне"
+      ],
+      "props": {
+        "intensity": 0.4,
+        "speed": 0.75,
+        "foregroundColor": "#1a1a1a",
+        "backgroundColor": "#edeae3"
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "An instant, fast-paced hit that lands almost immediately for rapid-fire edits.",
+      "askedAs": [
+        "fast punchy hit",
+        "drop right at the start",
+        "snappy shake for reels",
+        "быстрый резкий удар",
+        "мгновенное появление"
+      ],
+      "props": {
+        "impact": 3,
+        "speed": 2,
+        "intensity": 1.3,
+        "seed": 12
+      }
+    },
+    {
+      "id": "brick-red",
+      "label": "Brick Red",
+      "description": "Bold cream type slamming onto a deep brick-red field for sale and launch beats.",
+      "askedAs": [
+        "red background slam",
+        "price drop announcement look",
+        "bold sale impact",
+        "красный фон с ударом",
+        "яркий удар для распродажи"
+      ],
+      "props": {
+        "backgroundColor": "#9e2a20",
+        "foregroundColor": "#fff4e2",
+        "intensity": 1.4,
+        "seed": 4
+      }
+    },
+    {
+      "id": "slow-quake",
+      "label": "Slow Quake",
+      "description": "A slow-motion, long-anticipated drop with heavy shake in pale blue on midnight navy.",
+      "askedAs": [
+        "slow motion heavy landing",
+        "cinematic delayed drop",
+        "dark blue trailer impact",
+        "замедленный тяжёлый удар",
+        "кинематографичное падение"
+      ],
+      "props": {
+        "speed": 0.5,
+        "impact": 22,
+        "intensity": 1.6,
+        "backgroundColor": "#0e1a2b",
+        "foregroundColor": "#cfe3f7",
+        "seed": 19
+      }
+    }
+  ]
+}

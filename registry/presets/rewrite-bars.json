@@ -1,0 +1,107 @@
+{
+  "component": "rewrite-bars",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A warm light page with large Instrument Serif type and a deep oxblood bar sweeping slowly across.",
+      "askedAs": [
+        "magazine style headline swap",
+        "elegant serif text rewrite",
+        "slow classy editorial look",
+        "журнальный стиль с засечками",
+        "элегантная смена заголовка"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#7a2e2a"
+      }
+    },
+    {
+      "id": "terminal-snap",
+      "label": "Terminal Snap",
+      "description": "Fast monospace rewrites on near-black with a muted green bar and tight line stagger.",
+      "askedAs": [
+        "code style fast text swap",
+        "developer terminal headline",
+        "quick monospace rewrite",
+        "быстрый текст как в терминале",
+        "моноширинный шрифт для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1110",
+        "ink": "#e3ede6",
+        "accent": "#3fa772",
+        "speed": 2,
+        "stagger": 1
+      }
+    },
+    {
+      "id": "bold-left-keynote",
+      "label": "Bold Keynote",
+      "description": "Heavy left-aligned Space Grotesk at larger scale with a bright orange bar and wide stagger.",
+      "askedAs": [
+        "big bold left aligned title",
+        "keynote style statement",
+        "punchy launch headline",
+        "крупный жирный заголовок слева",
+        "как на презентации эпл"
+      ],
+      "props": {
+        "align": "left",
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 700,
+        "scale": 1.25,
+        "accent": "#f2622e",
+        "stagger": 6
+      }
+    },
+    {
+      "id": "calm-minimal",
+      "label": "Calm Minimal",
+      "description": "Light, thin Inter on clean white with a soft slate bar, slow sweeps and long holds.",
+      "askedAs": [
+        "slow minimal white text",
+        "calm light headline change",
+        "clean airy rewrite",
+        "спокойный минималистичный текст",
+        "медленная смена на белом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "fontWeight": 300,
+        "accent": "#5b6b82",
+        "speed": 0.75,
+        "hold": 40
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "Fraunces on deep navy with a muted gold bar for a luxurious, measured reveal.",
+      "askedAs": [
+        "luxury dark gold text",
+        "premium navy and gold headline",
+        "fancy serif on dark",
+        "роскошный текст с золотом",
+        "тёмно-синий фон с золотым"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#0f1a2e",
+        "ink": "#f3ebdc",
+        "accent": "#c9a45c",
+        "speed": 0.75,
+        "delay": 10
+      }
+    }
+  ]
+}

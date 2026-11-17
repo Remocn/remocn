@@ -1,0 +1,121 @@
+{
+  "component": "typo-fix",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-proof",
+      "label": "Paper Proof",
+      "description": "Warm off-white paper with dark serif type and a muted red squiggle, like an editor's proof.",
+      "askedAs": [
+        "editorial proofreading look",
+        "serif text on cream paper",
+        "classic copy editor style",
+        "как корректура на бумаге",
+        "светлый редакторский стиль с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f5f0e6",
+        "ink": "#2a2622",
+        "fontFamily": "Fraunces",
+        "errorColor": "#c2412d",
+        "accent": "#2f6b4f"
+      }
+    },
+    {
+      "id": "code-editor",
+      "label": "Code Editor",
+      "description": "Monospace text on a deep slate background with a teal accent, like fixing a typo in an IDE.",
+      "askedAs": [
+        "make it look like a code editor",
+        "monospace dev style",
+        "typo fix in an IDE",
+        "как в редакторе кода",
+        "моноширинный шрифт на тёмном фоне"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0f1720",
+        "ink": "#d6dee6",
+        "accent": "#2bb3a3",
+        "errorColor": "#e5a33b",
+        "grain": false
+      }
+    },
+    {
+      "id": "quick-fix",
+      "label": "Quick Fix",
+      "description": "A fast, snappy correction that lands early for punchy social cuts.",
+      "askedAs": [
+        "faster typo correction",
+        "snappy quick edit",
+        "fix it right away",
+        "быстрое исправление опечатки",
+        "сделай динамичнее"
+      ],
+      "props": {
+        "speed": 2,
+        "fixAt": 24,
+        "grain": false
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A lingering, oversized line that lets the typo sit before a calm, deliberate fix.",
+      "askedAs": [
+        "let the typo linger",
+        "slow dramatic correction",
+        "big text slow fix",
+        "медленное исправление крупным текстом",
+        "пусть ошибка повисит подольше"
+      ],
+      "props": {
+        "speed": 0.5,
+        "fixAt": 80,
+        "scale": 1.3,
+        "delay": 15,
+        "fontFamily": "Instrument Serif"
+      }
+    },
+    {
+      "id": "clean-light",
+      "label": "Clean Light",
+      "description": "Crisp white minimal look with Inter type and a cobalt accent, no grain.",
+      "askedAs": [
+        "minimal white version",
+        "clean light product style",
+        "simple bright UI look",
+        "минималистичный светлый вариант",
+        "чистый белый стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "grain": false,
+        "accent": "#2747d9"
+      }
+    },
+    {
+      "id": "midnight-violet",
+      "label": "Midnight Violet",
+      "description": "Compact grotesk type on deep indigo with a soft violet accent and coral squiggle.",
+      "askedAs": [
+        "dark purple mood",
+        "moody indigo style",
+        "smaller text on dark violet",
+        "тёмно-фиолетовый стиль",
+        "ночная тема с фиолетовым акцентом"
+      ],
+      "props": {
+        "background": "#14122b",
+        "ink": "#ece9fa",
+        "accent": "#9b8cff",
+        "errorColor": "#ff7a6b",
+        "fontFamily": "Space Grotesk",
+        "scale": 0.85
+      }
+    }
+  ]
+}

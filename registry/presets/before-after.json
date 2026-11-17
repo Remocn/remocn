@@ -1,0 +1,124 @@
+{
+  "component": "before-after",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gallery-light",
+      "label": "Gallery Light",
+      "description": "A bright, airy gallery frame with serif labels, soft corners and an unhurried sweep.",
+      "askedAs": [
+        "clean white before after",
+        "elegant light comparison slider",
+        "museum style photo reveal",
+        "светлый вариант до и после",
+        "элегантное сравнение фото на белом"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "fontFamily": "Instrument Serif",
+        "accent": "#1c1c1c",
+        "radius": 24,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "colorist-suite",
+      "label": "Colorist Suite",
+      "description": "A dark grading-room look with a warm amber divider, monospace labels and sharp corners.",
+      "askedAs": [
+        "color grading suite look",
+        "dark film grade comparison",
+        "technical before after with mono font",
+        "как в программе цветокоррекции",
+        "тёмное сравнение грейдинга"
+      ],
+      "props": {
+        "ground": "charcoal-satin",
+        "accent": "#e0a458",
+        "fontFamily": "JetBrains Mono",
+        "radius": 4,
+        "hold": 72
+      }
+    },
+    {
+      "id": "quick-flip",
+      "label": "Quick Flip",
+      "description": "A fast, punchy sweep with a short hold for snappy social cuts.",
+      "askedAs": [
+        "fast before after reveal",
+        "quick comparison for reels",
+        "snappy slider wipe",
+        "быстрое до и после",
+        "короткий динамичный слайдер"
+      ],
+      "props": {
+        "speed": 2,
+        "hold": 20,
+        "ground": "cobalt-rise",
+        "fontFamily": "Space Grotesk",
+        "accent": "#7fa7ff"
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A cinematic, slow sweep that lingers past centre to favour the graded side.",
+      "askedAs": [
+        "slow cinematic reveal",
+        "dramatic before after",
+        "show more of the after image",
+        "медленное кинематографичное раскрытие",
+        "плавное сравнение с акцентом на после"
+      ],
+      "props": {
+        "speed": 0.5,
+        "pauseAt": 0.7,
+        "hold": 90,
+        "delay": 15,
+        "ground": "velvet-hour",
+        "accent": "#d9b8c4"
+      }
+    },
+    {
+      "id": "framed-print",
+      "label": "Framed Print",
+      "description": "The full photo shown contained and smaller on a warm cream backdrop, like a matted print.",
+      "askedAs": [
+        "show whole photo without crop",
+        "matted print look",
+        "small framed comparison on beige",
+        "показать фото целиком без обрезки",
+        "до и после в рамке на бежевом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "fit": "contain",
+        "scale": 0.8,
+        "background": "#f3ede3",
+        "ink": "#2a2622",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "edge-to-edge",
+      "label": "Edge To Edge",
+      "description": "A large, square-cornered full-bleed comparison with a crisp white divider on a deep night ground.",
+      "askedAs": [
+        "big full screen before after",
+        "no rounded corners comparison",
+        "bold large slider reveal",
+        "большое сравнение на весь экран",
+        "без скруглений крупно"
+      ],
+      "props": {
+        "scale": 1.3,
+        "radius": 0,
+        "ground": "nightfold",
+        "accent": "#f5f5f2",
+        "fontFamily": "Geist"
+      }
+    }
+  ]
+}

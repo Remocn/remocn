@@ -1,0 +1,121 @@
+{
+  "component": "dot-field-morph",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "quick-tour",
+      "label": "Quick Tour",
+      "description": "Brisk morphs and short holds give a punchy, energetic feature walkthrough.",
+      "askedAs": [
+        "make it faster and snappier",
+        "quick punchy icon transitions",
+        "shorter holds between shapes",
+        "быстрее и динамичнее",
+        "короткие резкие переходы"
+      ],
+      "props": {
+        "speed": 1.5,
+        "hold": 12,
+        "morph": 18,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "paper-serif",
+      "label": "Paper Serif",
+      "description": "Warm off-white paper ground with dark ink, an elegant serif and a deep blue accent.",
+      "askedAs": [
+        "light editorial look",
+        "cream background with serif font",
+        "elegant light version",
+        "светлая версия с засечками",
+        "бежевый фон и элегантный шрифт"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f1ea",
+        "ink": "#1a1a1a",
+        "accent": "#2b4bdb",
+        "fontFamily": "Instrument Serif"
+      }
+    },
+    {
+      "id": "dense-drift",
+      "label": "Dense Drift",
+      "description": "A thick cloud of violet dots that swirls slowly and lingers on each shape.",
+      "askedAs": [
+        "more dots, slower and dreamier",
+        "cinematic slow logo build",
+        "dense particle cloud",
+        "больше точек и медленнее",
+        "плавная кинематографичная сборка"
+      ],
+      "props": {
+        "count": 4500,
+        "morph": 60,
+        "hold": 40,
+        "speed": 0.75,
+        "accent": "#7c5cff"
+      }
+    },
+    {
+      "id": "terminal",
+      "label": "Terminal",
+      "description": "Near-black green-tinted ground, monospace labels and a calm mint accent without grain.",
+      "askedAs": [
+        "hacker terminal style",
+        "monospace developer look",
+        "green on black code vibe",
+        "стиль терминала",
+        "моноширинный шрифт как в коде"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accent": "#3fb68b",
+        "background": "#0b0f0e",
+        "ink": "#e6ede9",
+        "grain": false
+      }
+    },
+    {
+      "id": "sparse-minimal",
+      "label": "Sparse Minimal",
+      "description": "A light, airy field of fewer, smaller dots in graphite with a clean grain-free finish.",
+      "askedAs": [
+        "minimal clean light version",
+        "fewer dots, more whitespace",
+        "simple monochrome look",
+        "минималистично и светло",
+        "меньше точек, больше воздуха"
+      ],
+      "props": {
+        "theme": "light",
+        "count": 800,
+        "scale": 0.8,
+        "grain": false,
+        "accent": "#111827",
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "ember",
+      "label": "Ember",
+      "description": "Warm charcoal ground with glowing copper dots, cream type and a larger, bolder composition.",
+      "askedAs": [
+        "warm orange on dark",
+        "cozy copper tones",
+        "bigger and warmer reveal",
+        "тёплые оранжевые тона",
+        "тёмный фон с медным акцентом"
+      ],
+      "props": {
+        "background": "#14100d",
+        "accent": "#e0703a",
+        "ink": "#f3e9df",
+        "fontFamily": "Fraunces",
+        "scale": 1.15
+      }
+    }
+  ]
+}

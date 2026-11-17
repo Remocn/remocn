@@ -1,0 +1,122 @@
+{
+  "component": "prompt-restyle",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-light",
+      "label": "Editorial Light",
+      "description": "A warm paper background with deep ink, a Fraunces accent and a burgundy gradient for a magazine feel.",
+      "askedAs": [
+        "make it look like a magazine",
+        "light editorial style",
+        "serif print look",
+        "светлый журнальный стиль",
+        "как в глянцевом журнале"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#8c2f39",
+        "accentFont": "Fraunces",
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "snappy-demo",
+      "label": "Snappy Demo",
+      "description": "Fast, tight restyle steps with a bright blue accent for quick product cuts.",
+      "askedAs": [
+        "faster version",
+        "quick punchy demo",
+        "speed it up for social",
+        "быстрее и динамичнее",
+        "короткая быстрая версия"
+      ],
+      "props": {
+        "speed": 2,
+        "stepGap": 8,
+        "accent": "#2f6bff"
+      }
+    },
+    {
+      "id": "slow-luxe",
+      "label": "Slow Luxe",
+      "description": "Unhurried pacing on near-black with a muted gold accent and generous scale.",
+      "askedAs": [
+        "slow and luxurious",
+        "premium gold look",
+        "cinematic calm pace",
+        "медленно и роскошно",
+        "золотой премиальный вариант"
+      ],
+      "props": {
+        "speed": 0.75,
+        "stepGap": 36,
+        "background": "#0e0d0b",
+        "ink": "#ede6d8",
+        "accent": "#c9a45c",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A developer-flavoured look in JetBrains Mono on dark slate with a soft green accent.",
+      "askedAs": [
+        "code editor style",
+        "monospace developer look",
+        "make it techy",
+        "в стиле терминала",
+        "моноширинный шрифт для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accentFont": "JetBrains Mono",
+        "background": "#0f1417",
+        "ink": "#d7e0e5",
+        "accent": "#4fbf8a",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "bold-grotesk",
+      "label": "Bold Grotesk",
+      "description": "Chunky Bricolage Grotesque headline with a Space Grotesk accent and a coral highlight on light grey.",
+      "askedAs": [
+        "bold modern startup look",
+        "bigger chunky type",
+        "playful but clean",
+        "крупный смелый шрифт",
+        "современный стартап стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Bricolage Grotesque",
+        "accentFont": "Space Grotesk",
+        "accent": "#e2553f",
+        "scale": 1.25
+      }
+    },
+    {
+      "id": "midnight-violet",
+      "label": "Midnight Violet",
+      "description": "Deep indigo background with lavender text and a violet Instrument Serif gradient, entering after a short pause.",
+      "askedAs": [
+        "purple night theme",
+        "dark violet mood",
+        "calm late start",
+        "тёмно-фиолетовая тема",
+        "ночной фиолетовый стиль"
+      ],
+      "props": {
+        "background": "#14112b",
+        "ink": "#e6e1fa",
+        "accent": "#8b6cf6",
+        "delay": 15,
+        "fontFamily": "Manrope"
+      }
+    }
+  ]
+}

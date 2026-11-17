@@ -1,0 +1,99 @@
+{
+  "component": "icon-mic",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "podcast-pulse",
+      "label": "Podcast Pulse",
+      "description": "A large, warm terracotta mic that keeps gently pulsing on a loop like a live recording.",
+      "askedAs": [
+        "looping mic for a podcast intro",
+        "recording live indicator icon",
+        "warm animated microphone that repeats",
+        "микрофон для подкаста с повтором",
+        "анимация записи в эфире"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "size": 96,
+        "color": "#c2410c",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "fine-sketch",
+      "label": "Fine Sketch",
+      "description": "A thin slate line slowly drawing itself in at a generous size for an elegant, editorial reveal.",
+      "askedAs": [
+        "thin line mic drawing slowly",
+        "elegant hand-drawn microphone",
+        "minimal outline mic reveal",
+        "тонкий микрофон рисуется медленно",
+        "изящная линия микрофона"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 128,
+        "strokeWidth": 1.25,
+        "color": "#475569",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "bold-cue",
+      "label": "Bold Cue",
+      "description": "A chunky, heavy-stroked black mic that snaps into motion quickly for punchy call-outs.",
+      "askedAs": [
+        "thick bold mic icon fast",
+        "punchy microphone for social video",
+        "quick heavy stroke mic",
+        "жирный микрофон быстро",
+        "яркая быстрая иконка микрофона"
+      ],
+      "props": {
+        "size": 160,
+        "strokeWidth": 3,
+        "speed": 2
+      }
+    },
+    {
+      "id": "voice-blue",
+      "label": "Voice Blue",
+      "description": "A medium indigo mic that draws and animates on a steady loop, suited to voice assistant UI.",
+      "askedAs": [
+        "blue mic for voice assistant",
+        "looping microphone listening state",
+        "calm blue speaking icon",
+        "синий микрофон голосового помощника",
+        "микрофон слушает по кругу"
+      ],
+      "props": {
+        "color": "#4f46e5",
+        "loop": true,
+        "size": 72,
+        "strokeWidth": 1.75
+      }
+    },
+    {
+      "id": "tiny-badge",
+      "label": "Tiny Badge",
+      "description": "A small, crisp forest-green mic that plays its action briskly, made for compact badges and captions.",
+      "askedAs": [
+        "small mic icon for captions",
+        "compact microphone badge",
+        "little green mic quick",
+        "маленький значок микрофона",
+        "компактная иконка микрофона"
+      ],
+      "props": {
+        "animation": "action",
+        "size": 32,
+        "color": "#166534",
+        "strokeWidth": 2.25,
+        "speed": 1.5
+      }
+    }
+  ]
+}

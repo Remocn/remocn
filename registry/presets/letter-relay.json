@@ -1,0 +1,125 @@
+{
+  "component": "letter-relay",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "bouncy-pop",
+      "label": "Bouncy Pop",
+      "description": "Quick, high hops in a chunky grotesque with a warm coral accent for an energetic launch reveal.",
+      "askedAs": [
+        "playful bouncy letters",
+        "fast high jumping logo",
+        "energetic fun wordmark reveal",
+        "прыгающие буквы весело",
+        "быстрое энергичное появление логотипа"
+      ],
+      "props": {
+        "lift": 0.46,
+        "hop": 6,
+        "speed": 1.5,
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#f2643d"
+      }
+    },
+    {
+      "id": "editorial-light",
+      "label": "Editorial Light",
+      "description": "Slow, gentle hops in an elegant serif on warm paper with dark ink and no floor glow.",
+      "askedAs": [
+        "elegant serif logo on light background",
+        "calm editorial wordmark",
+        "soft magazine style reveal",
+        "элегантный шрифт с засечками на светлом фоне",
+        "спокойное редакционное появление"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f5f1ea",
+        "ink": "#1c1a17",
+        "lift": 0.12,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Small, crisp monospace letters on near-black with a mint accent and tight, low hops.",
+      "askedAs": [
+        "developer monospace logo",
+        "code style wordmark",
+        "tech terminal look",
+        "моноширинный шрифт как в терминале",
+        "логотип в стиле кода"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0e",
+        "ink": "#e6f2ec",
+        "accent": "#3fcb8e",
+        "lift": 0.08,
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "grand-outro",
+      "label": "Grand Outro",
+      "description": "Oversized letters hop slowly and deliberately onto a glowing floor, landing after a short pause.",
+      "askedAs": [
+        "big slow logo outro",
+        "dramatic ending wordmark",
+        "large cinematic sign-off",
+        "большой медленный логотип в конце",
+        "кинематографичная концовка с названием"
+      ],
+      "props": {
+        "scale": 1.35,
+        "speed": 0.5,
+        "hop": 18,
+        "delay": 20,
+        "accent": "#c9a45c"
+      }
+    },
+    {
+      "id": "clean-minimal",
+      "label": "Clean Minimal",
+      "description": "Plain Inter wordmark on white without mark, glow or grain, with subtle restrained hops.",
+      "askedAs": [
+        "minimal clean logo animation",
+        "simple white background name",
+        "no effects plain wordmark",
+        "минималистичное появление названия",
+        "простой логотип на белом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "mark": false,
+        "floor": false,
+        "grain": false,
+        "lift": 0.16
+      }
+    },
+    {
+      "id": "midnight-violet",
+      "label": "Midnight Violet",
+      "description": "Space Grotesk letters on deep navy with a soft violet accent and brisk relay timing.",
+      "askedAs": [
+        "dark purple tech brand reveal",
+        "navy background modern logo",
+        "sleek startup wordmark",
+        "тёмно-синий фон с фиолетовым акцентом",
+        "современный логотип стартапа"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "background": "#0e1226",
+        "ink": "#eef0fa",
+        "accent": "#8b7cf6",
+        "speed": 1.25,
+        "hop": 8
+      }
+    }
+  ]
+}

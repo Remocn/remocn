@@ -1,0 +1,112 @@
+{
+  "component": "shader-warp-storm",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-nebula",
+      "label": "Slow Nebula",
+      "description": "A languid, softly blended violet drift that barely churns behind the frame.",
+      "askedAs": [
+        "slow calm purple background",
+        "gentle drifting violet fluid",
+        "subtle moving backdrop for text",
+        "медленный фиолетовый фон",
+        "спокойная плавная туманность"
+      ],
+      "props": {
+        "speed": 0.25,
+        "distortion": 0.1,
+        "swirl": 0.4
+      }
+    },
+    {
+      "id": "tempest",
+      "label": "Tempest",
+      "description": "A fast, heavily distorted storm with tight swirls and turbulent marbling.",
+      "askedAs": [
+        "intense chaotic purple storm",
+        "fast turbulent swirling intro",
+        "aggressive energetic warp",
+        "бурный быстрый фиолетовый шторм",
+        "хаотичный вихрь для интро"
+      ],
+      "props": {
+        "speed": 2.5,
+        "distortion": 0.85,
+        "swirl": 1,
+        "softness": 0.6
+      }
+    },
+    {
+      "id": "crisp-marble",
+      "label": "Crisp Marble",
+      "description": "Sharp-edged violet and lavender veins like polished stone in slow motion.",
+      "askedAs": [
+        "sharp marble texture purple",
+        "crisp edges liquid marble",
+        "defined veins violet stone",
+        "мраморная текстура с чёткими краями",
+        "фиолетовый мрамор"
+      ],
+      "props": {
+        "softness": 0.1,
+        "distortion": 0.45,
+        "swirl": 0.6,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "midnight-depth",
+      "label": "Midnight Depth",
+      "description": "A mostly deep violet field with only faint lavender wisps for maximum text contrast.",
+      "askedAs": [
+        "darker purple background for white text",
+        "mostly dark violet with hints of light",
+        "moody deep backdrop",
+        "тёмный фиолетовый фон под текст",
+        "глубокий тёмный фон"
+      ],
+      "props": {
+        "proportion": 0.2,
+        "speed": 0.75,
+        "swirl": 0.7
+      }
+    },
+    {
+      "id": "lavender-haze",
+      "label": "Lavender Haze",
+      "description": "A lighter, lavender-dominant wash with broad smooth folds and a steady pace.",
+      "askedAs": [
+        "lighter lavender fluid background",
+        "airy soft purple haze",
+        "bright pastel violet motion",
+        "светлая лавандовая дымка",
+        "мягкий светлый фиолетовый фон"
+      ],
+      "props": {
+        "proportion": 0.8,
+        "swirl": 0.3,
+        "distortion": 0.2,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "straight-flow",
+      "label": "Straight Flow",
+      "description": "Swirl turned off so the violet bands stream in clean, warped ribbons.",
+      "askedAs": [
+        "flowing purple ribbons no swirl",
+        "clean wavy bands background",
+        "smooth streaming violet lines",
+        "фиолетовые ленты без завихрений",
+        "плавные волнистые полосы"
+      ],
+      "props": {
+        "swirl": 0,
+        "distortion": 0.6,
+        "speed": 1.25
+      }
+    }
+  ]
+}

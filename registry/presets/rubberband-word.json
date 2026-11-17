@@ -1,0 +1,116 @@
+{
+  "component": "rubberband-word",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "taut-snap",
+      "label": "Taut Snap",
+      "description": "A long, exaggerated pull held tight before a fast, punchy release.",
+      "askedAs": [
+        "stretch it really far before it snaps",
+        "big elastic pull with a quick snap",
+        "maximum tension then release",
+        "сильно растянуть слово перед щелчком",
+        "долгое натяжение и резкий щелчок"
+      ],
+      "props": {
+        "stretch": 1.6,
+        "hold": 24,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "Warm off-white paper with charcoal type and a terracotta cursor accent.",
+      "askedAs": [
+        "light warm background version",
+        "cream paper look with dark text",
+        "editorial light style",
+        "светлый тёплый фон с тёмным текстом",
+        "бумажный светлый вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1f1c19",
+        "accent": "#c4572e"
+      }
+    },
+    {
+      "id": "gentle-tug",
+      "label": "Gentle Tug",
+      "description": "A soft, slow stretch with a subtle pull and a relaxed landing.",
+      "askedAs": [
+        "subtle slow stretch",
+        "calm gentle version",
+        "less bouncy and slower",
+        "мягкое медленное растягивание",
+        "спокойный вариант без резкости"
+      ],
+      "props": {
+        "stretch": 0.6,
+        "speed": 0.5,
+        "hold": 14,
+        "period": false
+      }
+    },
+    {
+      "id": "midnight-mint",
+      "label": "Midnight Mint",
+      "description": "Deep navy backdrop with pale text and a cool mint cursor, scaled up for impact.",
+      "askedAs": [
+        "dark blue with mint accent",
+        "big bold night look",
+        "navy background larger text",
+        "тёмно-синий фон с мятным акцентом",
+        "крупный ночной стиль"
+      ],
+      "props": {
+        "background": "#0e1626",
+        "ink": "#e8eef6",
+        "accent": "#5fd3b0",
+        "scale": 1.3
+      }
+    },
+    {
+      "id": "quick-flick",
+      "label": "Quick Flick",
+      "description": "A small, brisk flick that stretches briefly and snaps almost instantly.",
+      "askedAs": [
+        "fast short snap",
+        "quick tiny stretch",
+        "speedy version for social",
+        "быстрый короткий щелчок",
+        "ускоренный вариант"
+      ],
+      "props": {
+        "speed": 2.5,
+        "hold": 3,
+        "stretch": 0.8,
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "rose-delayed",
+      "label": "Rose Reveal",
+      "description": "Muted blush background with plum type and a delayed, deliberate stretch.",
+      "askedAs": [
+        "pink soft background",
+        "wait a moment before it starts",
+        "pastel rose look",
+        "розовый пастельный фон",
+        "начать с задержкой"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f3e1e1",
+        "ink": "#3a1e2c",
+        "accent": "#9b3d5e",
+        "delay": 30,
+        "stretch": 1.2
+      }
+    }
+  ]
+}

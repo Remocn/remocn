@@ -1,0 +1,119 @@
+{
+  "component": "dot-globe",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "rapid-expansion",
+      "label": "Rapid Expansion",
+      "description": "Routes fire in quick succession with short flights for an energetic, high-growth feel.",
+      "askedAs": [
+        "make the arcs fly faster",
+        "quick energetic globe animation",
+        "fast-paced global growth",
+        "быстрые дуги по глобусу",
+        "ускорить анимацию маршрутов"
+      ],
+      "props": {
+        "stagger": 6,
+        "flight": 16,
+        "speed": 1.5,
+        "accent": "#22c3a6"
+      }
+    },
+    {
+      "id": "slow-orbit",
+      "label": "Slow Orbit",
+      "description": "Long, lazy arcs drift across a calm globe with an elegant serif counter.",
+      "askedAs": [
+        "slow cinematic globe",
+        "calm relaxed world animation",
+        "elegant slow version with serif font",
+        "медленный спокойный глобус",
+        "плавная элегантная анимация"
+      ],
+      "props": {
+        "stagger": 36,
+        "flight": 56,
+        "speed": 0.75,
+        "fontFamily": "Instrument Serif",
+        "accent": "#c9a86a"
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "A clean light theme on warm off-white with a deep ink-blue accent and no grain.",
+      "askedAs": [
+        "light background version",
+        "clean white globe for a deck",
+        "minimal bright look",
+        "светлая версия глобуса",
+        "белый фон без шума"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f5f3ee",
+        "ink": "#1a1d24",
+        "accent": "#1f3fd1",
+        "grain": false
+      }
+    },
+    {
+      "id": "terminal",
+      "label": "Terminal",
+      "description": "A monospaced, near-black console look with a soft green accent.",
+      "askedAs": [
+        "hacker terminal style",
+        "monospace developer look",
+        "green on black globe",
+        "стиль терминала",
+        "моноширинный шрифт и зелёный"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0c",
+        "ink": "#d7e8dc",
+        "accent": "#4ade80",
+        "grain": false
+      }
+    },
+    {
+      "id": "hero-scale",
+      "label": "Hero Scale",
+      "description": "An oversized globe and bold grotesque type with a warm coral accent for a launch moment.",
+      "askedAs": [
+        "make the globe bigger",
+        "bold hero stat for launch",
+        "large dramatic version",
+        "крупный глобус на весь экран",
+        "большой акцентный вариант"
+      ],
+      "props": {
+        "scale": 1.35,
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#ff6b4a",
+        "delay": 10
+      }
+    },
+    {
+      "id": "midnight-violet",
+      "label": "Midnight Violet",
+      "description": "A compact globe on deep indigo with a lavender accent and modern geometric type.",
+      "askedAs": [
+        "purple dark theme",
+        "small globe in a corner layout",
+        "night violet palette",
+        "фиолетовая тёмная тема",
+        "компактный глобус"
+      ],
+      "props": {
+        "scale": 0.75,
+        "background": "#14112b",
+        "ink": "#ece8ff",
+        "accent": "#a78bfa",
+        "fontFamily": "Space Grotesk"
+      }
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "component": "stretch-in",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snap-punch",
+      "label": "Snap Punch",
+      "description": "Letters slam in almost at once with a short, sharp smear and a crisp landing.",
+      "askedAs": [
+        "fast punchy letter entrance",
+        "quick snappy text slam",
+        "letters hit hard all at once",
+        "быстрое резкое появление букв",
+        "текст влетает одним ударом"
+      ],
+      "props": {
+        "entryStagger": 1,
+        "travelFrames": 10,
+        "vertexLagFrames": 1.5,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "taffy-pull",
+      "label": "Taffy Pull",
+      "description": "Letters stretch out like pulled taffy, smearing long before they settle in a warm candy tone.",
+      "askedAs": [
+        "extra stretchy gooey letters",
+        "long smear rubbery text",
+        "letters stretch like taffy",
+        "тянущиеся как ириска буквы",
+        "сильное растяжение букв при появлении"
+      ],
+      "props": {
+        "fill": "#f4a6b8",
+        "vertexLagFrames": 7.5,
+        "travelFrames": 38,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "domino-cascade",
+      "label": "Domino Cascade",
+      "description": "A wide stagger makes each letter arrive on its own distinct beat in a cascading rhythm.",
+      "askedAs": [
+        "letters one by one rhythm",
+        "staggered cascading word entrance",
+        "each letter on its own beat",
+        "буквы появляются по очереди",
+        "каскадное появление текста"
+      ],
+      "props": {
+        "entryStagger": 10,
+        "travelFrames": 18,
+        "vertexLagFrames": 3,
+        "fill": "#ffd166"
+      }
+    },
+    {
+      "id": "slow-glide",
+      "label": "Slow Glide",
+      "description": "A calm, unhurried glide with a gentle smear and softer stone-grey type at a smaller size.",
+      "askedAs": [
+        "slow elegant text slide in",
+        "gentle smooth letter entrance",
+        "calm subtle stretch title",
+        "медленное плавное появление текста",
+        "спокойный влет букв"
+      ],
+      "props": {
+        "speed": 0.5,
+        "vertexLagFrames": 2,
+        "fontSize": 320,
+        "fill": "#d9d4cc"
+      }
+    },
+    {
+      "id": "rigid-mono",
+      "label": "Rigid Slide",
+      "description": "No smear at all: compact letters slide in cleanly like solid blocks in a cool blue.",
+      "askedAs": [
+        "letters slide without stretching",
+        "clean slide in no distortion",
+        "rigid text fly in",
+        "буквы въезжают без растяжения",
+        "чистый слайд текста"
+      ],
+      "props": {
+        "vertexLagFrames": 0,
+        "travelFrames": 20,
+        "fontSize": 260,
+        "fill": "#8ecae6"
+      }
+    },
+    {
+      "id": "jumbo-blast",
+      "label": "Jumbo Blast",
+      "description": "Oversized letters rocket in at double speed with a heavy smear in bold tangerine.",
+      "askedAs": [
+        "huge fast smeared title",
+        "giant letters blasting in",
+        "max size explosive word",
+        "огромные буквы влетают быстро",
+        "крупный взрывной заголовок"
+      ],
+      "props": {
+        "fontSize": 680,
+        "speed": 2,
+        "vertexLagFrames": 6,
+        "fill": "#ff8c42"
+      }
+    }
+  ]
+}

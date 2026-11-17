@@ -1,0 +1,100 @@
+{
+  "component": "icon-user",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-slow-draw",
+      "label": "Hairline Draw",
+      "description": "A large, thin-stroked user outline that sketches itself in slowly and calmly.",
+      "askedAs": [
+        "slow thin line user icon",
+        "elegant outline drawing of a person",
+        "delicate user icon draw-on",
+        "тонкая линия иконка пользователя медленно",
+        "плавная отрисовка иконки профиля"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1,
+        "speed": 0.5,
+        "color": "#3f3f46"
+      }
+    },
+    {
+      "id": "bold-pop",
+      "label": "Bold Pop",
+      "description": "A heavy-stroked, cobalt blue user icon that snaps through its action quickly.",
+      "askedAs": [
+        "thick bold user icon fast",
+        "punchy blue profile icon",
+        "quick user icon bounce",
+        "жирная синяя иконка пользователя",
+        "быстрая анимация иконки профиля"
+      ],
+      "props": {
+        "animation": "action",
+        "strokeWidth": 3,
+        "speed": 2,
+        "color": "#1d4ed8",
+        "size": 72
+      }
+    },
+    {
+      "id": "ambient-loop",
+      "label": "Ambient Loop",
+      "description": "A muted sage user icon that gently repeats its full animation as a background accent.",
+      "askedAs": [
+        "looping user icon in background",
+        "soft green person icon repeating",
+        "calm endless profile animation",
+        "зацикленная иконка пользователя",
+        "спокойная повторяющаяся иконка профиля"
+      ],
+      "props": {
+        "loop": true,
+        "speed": 0.75,
+        "color": "#5f7a6a",
+        "strokeWidth": 1.5
+      }
+    },
+    {
+      "id": "hero-terracotta",
+      "label": "Hero Terracotta",
+      "description": "An oversized warm terracotta user icon with a medium stroke for title-card moments.",
+      "askedAs": [
+        "huge user icon for intro",
+        "big warm orange profile icon",
+        "large person icon hero shot",
+        "большая иконка пользователя для заставки",
+        "крупная тёплая иконка профиля"
+      ],
+      "props": {
+        "size": 200,
+        "color": "#c2410c",
+        "strokeWidth": 2.5,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "compact-ui",
+      "label": "Compact UI",
+      "description": "A small slate-gray user glyph with a crisp quick action, sized like an interface icon.",
+      "askedAs": [
+        "small user icon for UI",
+        "tiny avatar icon quick",
+        "minimal gray profile glyph",
+        "маленькая иконка пользователя для интерфейса",
+        "компактная серая иконка аккаунта"
+      ],
+      "props": {
+        "size": 28,
+        "color": "#64748b",
+        "strokeWidth": 1.75,
+        "speed": 1.5,
+        "animation": "action"
+      }
+    }
+  ]
+}

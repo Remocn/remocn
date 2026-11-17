@@ -1,0 +1,100 @@
+{
+  "component": "icon-user-plus",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "fine-line-draw",
+      "label": "Fine Line",
+      "description": "A large, hairline icon in soft slate that slowly draws itself in.",
+      "askedAs": [
+        "thin slow drawing user icon",
+        "elegant line add user icon",
+        "minimal outline sketch animation",
+        "тонкая линия иконка добавить пользователя",
+        "медленная отрисовка иконки"
+      ],
+      "props": {
+        "animation": "draw",
+        "strokeWidth": 1.25,
+        "size": 120,
+        "color": "#475569",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "bold-invite",
+      "label": "Bold Invite",
+      "description": "A chunky cobalt-blue icon with a quick, punchy add gesture.",
+      "askedAs": [
+        "thick blue add user button",
+        "bold fast invite icon",
+        "strong brand blue user plus",
+        "жирная синяя иконка пригласить",
+        "быстрая яркая иконка добавления"
+      ],
+      "props": {
+        "animation": "action",
+        "strokeWidth": 2.75,
+        "color": "#1f6feb",
+        "speed": 1.75,
+        "size": 72
+      }
+    },
+    {
+      "id": "gentle-pulse",
+      "label": "Gentle Pulse",
+      "description": "A muted sage icon that loops its action at a calm, unhurried pace.",
+      "askedAs": [
+        "looping calm add friend icon",
+        "soft green repeating user icon",
+        "slow loop invite animation",
+        "зацикленная спокойная иконка",
+        "мягкая зеленая иконка пользователя"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "color": "#4d7c5f",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "hero-showcase",
+      "label": "Hero Showcase",
+      "description": "An oversized deep-indigo icon that draws and animates at full scale for title cards.",
+      "askedAs": [
+        "huge user plus icon for intro",
+        "big centered add user animation",
+        "large hero icon full sequence",
+        "огромная иконка для заставки",
+        "крупная анимированная иконка пользователя"
+      ],
+      "props": {
+        "size": 200,
+        "color": "#3730a3",
+        "strokeWidth": 1.75,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "tiny-ui-loop",
+      "label": "Tiny UI",
+      "description": "A small, crisp terracotta icon that loops rapidly like an interface hint.",
+      "askedAs": [
+        "small looping notification icon",
+        "tiny fast add user hint",
+        "compact ui icon repeating",
+        "маленькая иконка интерфейса",
+        "быстрая зацикленная мини иконка"
+      ],
+      "props": {
+        "size": 32,
+        "loop": true,
+        "speed": 2,
+        "color": "#c2410c",
+        "strokeWidth": 2.25
+      }
+    }
+  ]
+}

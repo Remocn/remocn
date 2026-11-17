@@ -1,0 +1,123 @@
+{
+  "component": "shader-liquid-metal",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "molten-gold",
+      "label": "Molten Gold",
+      "description": "Slow, heavy liquid gold flowing over a deep warm brown base.",
+      "askedAs": [
+        "liquid gold background",
+        "luxury gold metal surface",
+        "warm golden molten flow",
+        "жидкое золото фон",
+        "золотой металл люкс"
+      ],
+      "props": {
+        "speed": 0.5,
+        "distortion": 0.2,
+        "colorBack": "#2b1d0e",
+        "colorTint": "#c9a24a",
+        "contour": 0.5
+      }
+    },
+    {
+      "id": "brushed-steel",
+      "label": "Brushed Steel",
+      "description": "Tight, finely repeated cool steel bands with crisp contours and calm motion.",
+      "askedAs": [
+        "brushed steel texture",
+        "industrial metal background",
+        "cool silver stripes",
+        "шлифованная сталь",
+        "индустриальный металл фон"
+      ],
+      "props": {
+        "repetition": 4.5,
+        "distortion": 0.03,
+        "contour": 0.8,
+        "speed": 0.75,
+        "colorBack": "#1c2026",
+        "colorTint": "#b4bcc8"
+      }
+    },
+    {
+      "id": "rose-copper",
+      "label": "Rose Copper",
+      "description": "Soft rose-copper metal with gentle waves on a muted plum ground.",
+      "askedAs": [
+        "rose gold liquid metal",
+        "copper flowing surface",
+        "soft pink metallic",
+        "розовое золото металл",
+        "медная жидкая поверхность"
+      ],
+      "props": {
+        "colorBack": "#2e1f24",
+        "colorTint": "#c98a72",
+        "contour": 0.25,
+        "distortion": 0.15,
+        "repetition": 2
+      }
+    },
+    {
+      "id": "mercury-rush",
+      "label": "Mercury Rush",
+      "description": "Fast, turbulent chrome-like mercury with strong warping and bright highlights.",
+      "askedAs": [
+        "fast chrome liquid",
+        "energetic mercury flow",
+        "turbulent silver metal",
+        "быстрый жидкий хром",
+        "ртуть в движении"
+      ],
+      "props": {
+        "speed": 2.5,
+        "distortion": 0.4,
+        "repetition": 3,
+        "colorBack": "#121316",
+        "colorTint": "#e2e5ea"
+      }
+    },
+    {
+      "id": "obsidian-calm",
+      "label": "Obsidian Calm",
+      "description": "Near-black glassy surface with broad, barely moving dim highlights.",
+      "askedAs": [
+        "dark minimal metal background",
+        "subtle black liquid surface",
+        "slow dark premium backdrop",
+        "тёмный минималистичный металл",
+        "чёрная гладкая поверхность"
+      ],
+      "props": {
+        "speed": 0.25,
+        "repetition": 1,
+        "contour": 0.1,
+        "distortion": 0.05,
+        "colorBack": "#0d0d10",
+        "colorTint": "#4a4d58"
+      }
+    },
+    {
+      "id": "titanium-blue",
+      "label": "Titanium Blue",
+      "description": "Anodized titanium sheen in cool slate blue with medium flowing ripples.",
+      "askedAs": [
+        "blue titanium metal",
+        "cool blue metallic flow",
+        "anodized metal background",
+        "синий титан металл",
+        "холодный синий металлик"
+      ],
+      "props": {
+        "colorBack": "#161d2a",
+        "colorTint": "#6f8fb8",
+        "repetition": 2.5,
+        "contour": 0.6,
+        "speed": 1.25
+      }
+    }
+  ]
+}

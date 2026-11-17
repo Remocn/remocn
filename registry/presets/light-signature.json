@@ -1,0 +1,106 @@
+{
+  "component": "light-signature",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "golden-hour",
+      "label": "Golden Hour",
+      "description": "A warm amber streak flares slowly across deep espresso black under an elegant serif wordmark.",
+      "askedAs": [
+        "warm gold light streak",
+        "slow luxurious serif reveal",
+        "amber glow on dark brown",
+        "тёплая золотая вспышка",
+        "медленное премиальное появление с засечками"
+      ],
+      "props": {
+        "lightColor": "#e8a84a",
+        "background": "#14100c",
+        "ink": "#f3e9dc",
+        "fontFamily": "Instrument Serif",
+        "sweep": 64,
+        "glow": 10
+      }
+    },
+    {
+      "id": "ice-blue",
+      "label": "Ice Blue",
+      "description": "A crisp cold-blue streak cuts fast across navy, with tight grotesk type and a sharp, clean glow.",
+      "askedAs": [
+        "cool blue light flare",
+        "fast tech logo sting",
+        "icy streak on navy",
+        "холодная синяя вспышка",
+        "быстрый технологичный логотип"
+      ],
+      "props": {
+        "lightColor": "#6fb6ff",
+        "background": "#0a1220",
+        "ink": "#e6f0ff",
+        "fontFamily": "Space Grotesk",
+        "sweep": 22,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "gallery-white",
+      "label": "Gallery White",
+      "description": "A light, grain-free gallery look where a soft crimson line draws quietly beneath dark ink.",
+      "askedAs": [
+        "clean white minimal reveal",
+        "light theme logo sting",
+        "no grain bright version",
+        "светлая минималистичная версия",
+        "белый фон без зерна"
+      ],
+      "props": {
+        "theme": "light",
+        "grain": false,
+        "glow": 3,
+        "lightColor": "#c8323c",
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "blockbuster",
+      "label": "Blockbuster",
+      "description": "An oversized wordmark ignites under an intense, wide-blooming red flare for a trailer-style finale.",
+      "askedAs": [
+        "big dramatic trailer ending",
+        "huge glowing movie title",
+        "intense red flare cinematic",
+        "эпичная концовка трейлера",
+        "крупный логотип с сильным свечением"
+      ],
+      "props": {
+        "scale": 1.35,
+        "glow": 18,
+        "lightColor": "#ff2a1f",
+        "fontFamily": "Bricolage Grotesque",
+        "sweep": 50,
+        "delay": 12
+      }
+    },
+    {
+      "id": "terminal-mint",
+      "label": "Terminal Mint",
+      "description": "A compact monospace wordmark with a muted mint streak on graphite, brisk and developer-flavoured.",
+      "askedAs": [
+        "developer monospace logo",
+        "mint green code style reveal",
+        "small quick terminal look",
+        "моноширинный шрифт для разработчиков",
+        "мятный акцент в стиле терминала"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "lightColor": "#5fd4a8",
+        "background": "#111413",
+        "ink": "#dfe8e3",
+        "scale": 0.8,
+        "speed": 1.25
+      }
+    }
+  ]
+}

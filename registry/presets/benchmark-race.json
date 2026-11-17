@@ -1,0 +1,122 @@
+{
+  "component": "benchmark-race",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-sprint",
+      "label": "Terminal Sprint",
+      "description": "A fast, monospaced dark race with a green accent and three-decimal clocks, like a CLI benchmark readout.",
+      "askedAs": [
+        "make it look like a terminal benchmark",
+        "monospace fast race with green",
+        "hacker style speed test",
+        "как в терминале, моноширинный шрифт",
+        "быстрая гонка в стиле консоли"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accent": "#3fb950",
+        "background": "#0d1117",
+        "ink": "#e6edf3",
+        "decimals": 3,
+        "race": 28
+      }
+    },
+    {
+      "id": "clean-paper",
+      "label": "Clean Paper",
+      "description": "A light, grain-free layout in Inter with a calm blue accent for docs and product pages.",
+      "askedAs": [
+        "light version for a website",
+        "clean white benchmark",
+        "minimal bright speed comparison",
+        "светлая чистая версия",
+        "белый фон без шума"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "grain": false,
+        "accent": "#2563eb"
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A long, dramatic race at half speed with a short lead-in so the winner lands with weight.",
+      "askedAs": [
+        "slow dramatic race",
+        "let the clocks run longer",
+        "cinematic build up to the result",
+        "медленная драматичная гонка",
+        "растянуть анимацию подольше"
+      ],
+      "props": {
+        "race": 96,
+        "speed": 0.5,
+        "delay": 18,
+        "decimals": 1
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A warm cream backdrop with Fraunces type and a burnt orange accent, like a magazine data spread.",
+      "askedAs": [
+        "magazine style benchmark",
+        "serif font warm colors",
+        "editorial look for a blog post",
+        "журнальный стиль с засечками",
+        "тёплые цвета и красивый шрифт"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#f5efe4",
+        "ink": "#2a2118",
+        "accent": "#c2541b",
+        "decimals": 1
+      }
+    },
+    {
+      "id": "keynote-punch",
+      "label": "Keynote Punch",
+      "description": "Oversized whole-number clocks in Space Grotesk with a violet accent and a snappy double-speed finish.",
+      "askedAs": [
+        "big bold keynote slide",
+        "huge numbers fast punchy",
+        "launch event speed claim",
+        "крупно и быстро для презентации",
+        "большие цифры как на кейноуте"
+      ],
+      "props": {
+        "scale": 1.35,
+        "fontFamily": "Space Grotesk",
+        "decimals": 0,
+        "speed": 2,
+        "accent": "#8b5cf6",
+        "grain": false
+      }
+    },
+    {
+      "id": "midnight-ember",
+      "label": "Midnight Ember",
+      "description": "A deep navy canvas with an amber accent and Manrope type for a quiet, premium dark look.",
+      "askedAs": [
+        "dark blue with gold accent",
+        "premium night look",
+        "elegant dark benchmark",
+        "тёмно-синий с золотым акцентом",
+        "премиальная тёмная версия"
+      ],
+      "props": {
+        "background": "#0b1426",
+        "ink": "#e8ecf4",
+        "accent": "#f5a524",
+        "fontFamily": "Manrope",
+        "scale": 0.9
+      }
+    }
+  ]
+}

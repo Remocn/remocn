@@ -1,0 +1,107 @@
+{
+  "component": "compact-stat",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A light, airy Instrument Serif figure on warm paper with a deep ink-blue suffix and an unhurried reveal.",
+      "askedAs": [
+        "elegant serif number on light background",
+        "magazine style big stat",
+        "slow classy stat reveal",
+        "элегантная цифра с засечками на светлом фоне",
+        "статистика в журнальном стиле"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 300,
+        "background": "#f4f0e8",
+        "ink": "#1c1a17",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A monospaced readout in pale green-grey on near-black with a muted teal suffix and a tight, quick digit cascade.",
+      "askedAs": [
+        "code style stat counter",
+        "monospace number on black",
+        "developer dashboard metric",
+        "моноширинный счётчик как в терминале",
+        "цифра в стиле кода"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0e",
+        "ink": "#d6e2dc",
+        "accent": "#2fa88a",
+        "stagger": 5,
+        "grain": false
+      }
+    },
+    {
+      "id": "bold-impact",
+      "label": "Bold Impact",
+      "description": "An oversized heavy Space Grotesk number punches in fast with a warm coral suffix.",
+      "askedAs": [
+        "huge bold number fast",
+        "punchy stat for social video",
+        "big heavy headline figure",
+        "огромная жирная цифра быстро",
+        "мощная статистика для соцсетей"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 700,
+        "scale": 1.4,
+        "accent": "#f2643d",
+        "speed": 1.75,
+        "stagger": 1
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "A small, thin Inter figure on clean white with a slate suffix, no grain, and a calm delayed entrance.",
+      "askedAs": [
+        "minimal clean stat on white",
+        "subtle understated number",
+        "small calm metric",
+        "минималистичная цифра на белом",
+        "спокойная аккуратная статистика"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "fontWeight": 300,
+        "scale": 0.75,
+        "accent": "#5b6b82",
+        "grain": false
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "A Fraunces figure in soft ivory on deep navy with a brushed-gold suffix and a slow, luxurious build.",
+      "askedAs": [
+        "luxury gold number on navy",
+        "premium stat with gold accent",
+        "slow elegant dark stat",
+        "люксовая цифра с золотом",
+        "премиальная статистика на тёмно-синем"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#0e1424",
+        "ink": "#f3eee2",
+        "accent": "#c9a45c",
+        "speed": 0.5,
+        "delay": 12
+      }
+    }
+  ]
+}

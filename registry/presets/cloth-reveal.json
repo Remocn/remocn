@@ -1,0 +1,104 @@
+{
+  "component": "cloth-reveal",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-velvet",
+      "label": "Midnight Velvet",
+      "description": "A deep navy satin drawn slowly to the left over a near-black stage for a hushed, luxurious unveil.",
+      "askedAs": [
+        "slow dark blue cloth reveal",
+        "luxury navy curtain pull",
+        "elegant slow unveiling in dark tones",
+        "медленное раскрытие тёмно-синей тканью",
+        "роскошная тёмная ткань открывает логотип"
+      ],
+      "props": {
+        "clothColor": "#1e2a4a",
+        "undersideColor": "#0f1628",
+        "background": "#0a0b10",
+        "direction": "left",
+        "speed": 0.5,
+        "delay": 14
+      }
+    },
+    {
+      "id": "champagne-gala",
+      "label": "Champagne Gala",
+      "description": "A warm champagne-gold sheet lifts upward off a dark espresso backdrop like an awards-night reveal.",
+      "askedAs": [
+        "gold cloth lifted up",
+        "award ceremony style reveal",
+        "champagne colored fabric unveil",
+        "золотая ткань поднимается вверх",
+        "раскрытие как на церемонии награждения"
+      ],
+      "props": {
+        "clothColor": "#d8b87a",
+        "undersideColor": "#9c7c45",
+        "background": "#1a1512",
+        "direction": "up",
+        "seed": 9
+      }
+    },
+    {
+      "id": "gallery-ivory",
+      "label": "Gallery Ivory",
+      "description": "An ivory linen drape slides away to reveal content on a soft light-grey wall, clean and museum-like.",
+      "askedAs": [
+        "white sheet reveal on light background",
+        "minimal gallery unveiling",
+        "bright clean fabric pull",
+        "белая ткань на светлом фоне",
+        "минималистичное раскрытие как в галерее"
+      ],
+      "props": {
+        "clothColor": "#f2eee6",
+        "undersideColor": "#cfc8ba",
+        "background": "#e4e2de",
+        "speed": 0.75,
+        "seed": 15
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "A charcoal cloth is whipped downward almost instantly for a punchy, no-wait reveal.",
+      "askedAs": [
+        "fast cloth yank",
+        "instant snappy reveal",
+        "quick dramatic sheet pull down",
+        "быстро сдернуть ткань",
+        "резкое мгновенное раскрытие"
+      ],
+      "props": {
+        "clothColor": "#2e2e30",
+        "undersideColor": "#18181a",
+        "background": "#050505",
+        "direction": "down",
+        "speed": 2.5,
+        "delay": 0
+      }
+    },
+    {
+      "id": "emerald-silk",
+      "label": "Emerald Silk",
+      "description": "A rich emerald satin with a deep forest underside flutters off to the right over a dark green-black ground.",
+      "askedAs": [
+        "green silk reveal",
+        "emerald fabric unveil",
+        "rich jewel tone cloth pull",
+        "изумрудный шёлк открывает продукт",
+        "зелёная ткань раскрытие"
+      ],
+      "props": {
+        "clothColor": "#1f6b4f",
+        "undersideColor": "#0e3a2a",
+        "background": "#0b1310",
+        "seed": 20,
+        "speed": 1.25
+      }
+    }
+  ]
+}

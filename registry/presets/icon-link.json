@@ -1,0 +1,119 @@
+{
+  "component": "icon-link",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-slow-draw",
+      "label": "Hero Draw",
+      "description": "A large, fine-lined link icon that slowly sketches itself in like a title card.",
+      "askedAs": [
+        "big icon drawing slowly",
+        "large thin link icon reveal",
+        "slow elegant line draw",
+        "большая иконка медленно рисуется",
+        "тонкая крупная иконка ссылки"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 160,
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#1e293b"
+      }
+    },
+    {
+      "id": "snappy-blue-action",
+      "label": "Snappy Blue",
+      "description": "A compact, bold blue link that snaps through its action motion quickly.",
+      "askedAs": [
+        "quick blue link animation",
+        "fast clicky link icon",
+        "small bold link bounce",
+        "быстрая синяя иконка ссылки",
+        "резкая анимация ссылки"
+      ],
+      "props": {
+        "animation": "action",
+        "color": "#1f6feb",
+        "strokeWidth": 2.5,
+        "speed": 2,
+        "size": 40
+      }
+    },
+    {
+      "id": "looping-chain",
+      "label": "Looping Chain",
+      "description": "A medium teal link that keeps drawing and moving on a steady loop.",
+      "askedAs": [
+        "link icon on repeat",
+        "looping chain animation",
+        "endless link loader",
+        "зацикленная иконка ссылки",
+        "бесконечная анимация цепочки"
+      ],
+      "props": {
+        "loop": true,
+        "color": "#0f766e",
+        "size": 72,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "heavy-terracotta",
+      "label": "Heavy Terracotta",
+      "description": "A chunky, thick-stroked link in warm terracotta with a relaxed pace.",
+      "askedAs": [
+        "thick warm link icon",
+        "bold orange chain icon",
+        "chunky link slow motion",
+        "толстая тёплая иконка ссылки",
+        "жирная оранжевая цепочка"
+      ],
+      "props": {
+        "strokeWidth": 3,
+        "color": "#c2410c",
+        "size": 120,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "subtle-gray-hint",
+      "label": "Subtle Hint",
+      "description": "A small, light gray link that quietly draws in as an understated inline cue.",
+      "askedAs": [
+        "small subtle link icon",
+        "quiet gray link hint",
+        "minimal inline link animation",
+        "маленькая серая иконка ссылки",
+        "едва заметная ссылка"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 28,
+        "color": "#9ca3af",
+        "strokeWidth": 1.5,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "violet-pulse",
+      "label": "Violet Pulse",
+      "description": "A muted violet link that repeats its action motion slowly like a gentle pulse.",
+      "askedAs": [
+        "purple link pulsing",
+        "slow repeating link motion",
+        "gentle looping link icon",
+        "фиолетовая пульсирующая ссылка",
+        "медленная повторяющаяся ссылка"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "color": "#6d28d9",
+        "speed": 0.5,
+        "size": 88
+      }
+    }
+  ]
+}

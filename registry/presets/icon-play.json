@@ -1,0 +1,114 @@
+{
+  "component": "icon-play",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-slow-draw",
+      "label": "Hero Draw",
+      "description": "A large, fine-lined play icon that slowly traces itself in like a title card reveal.",
+      "askedAs": [
+        "big play icon drawing slowly",
+        "large thin play button intro",
+        "elegant slow play reveal",
+        "большая кнопка плей медленно рисуется",
+        "тонкая крупная иконка плей"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 160,
+        "strokeWidth": 1.25,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "pulse-loop",
+      "label": "Pulse Loop",
+      "description": "A bold blue play button that keeps nudging forward in a steady, inviting loop.",
+      "askedAs": [
+        "looping play button animation",
+        "play icon that keeps moving",
+        "blue bouncing play button",
+        "зацикленная кнопка плей",
+        "синяя пульсирующая иконка плей"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "color": "#1f6feb",
+        "size": 96,
+        "strokeWidth": 2.5
+      }
+    },
+    {
+      "id": "snappy-small",
+      "label": "Snappy Mini",
+      "description": "A compact, heavy-stroked play glyph that pops in fast for UI-style cuts.",
+      "askedAs": [
+        "quick small play icon",
+        "fast thick play button",
+        "snappy ui play glyph",
+        "маленькая быстрая иконка плей",
+        "толстая кнопка плей быстро"
+      ],
+      "props": {
+        "size": 32,
+        "strokeWidth": 3,
+        "speed": 2.5
+      }
+    },
+    {
+      "id": "warm-coral",
+      "label": "Warm Coral",
+      "description": "A medium coral play icon drawn and animated at a relaxed, friendly pace.",
+      "askedAs": [
+        "orange play icon",
+        "warm colored play button",
+        "soft coral play animation",
+        "оранжевая кнопка плей",
+        "тёплая иконка воспроизведения"
+      ],
+      "props": {
+        "color": "#e8664a",
+        "size": 80,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "muted-outline",
+      "label": "Muted Outline",
+      "description": "A quiet slate-grey outline that draws once with a hairline stroke for minimal layouts.",
+      "askedAs": [
+        "subtle grey play icon",
+        "minimal thin play outline",
+        "understated play button",
+        "серая минималистичная иконка плей",
+        "тонкий контур кнопки плей"
+      ],
+      "props": {
+        "animation": "draw",
+        "color": "#64748b",
+        "strokeWidth": 1,
+        "size": 64
+      }
+    },
+    {
+      "id": "forest-loop",
+      "label": "Forest Loop",
+      "description": "A deep green play icon that redraws and moves in a calm continuous cycle.",
+      "askedAs": [
+        "green play icon looping",
+        "calm repeating play animation",
+        "dark green play button loop",
+        "зелёная иконка плей по кругу",
+        "спокойная повторяющаяся кнопка плей"
+      ],
+      "props": {
+        "loop": true,
+        "color": "#2f6f4f",
+        "speed": 0.75,
+        "size": 72
+      }
+    }
+  ]
+}

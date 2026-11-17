@@ -81,6 +81,37 @@ function build(prune: boolean): Promise<BuildResult | null> {
   });
 }
 
+// The describe endpoint reads every component's controls from a file
+// (scripts/describe/build-controls.mts). Written after each build, in the
+// background: the site doesn't wait for it.
+let controlsRunning = false;
+let controlsAgain = false;
+function writeControls() {
+  if (controlsRunning) {
+    controlsAgain = true;
+    return;
+  }
+  controlsRunning = true;
+  const [bin, ...args] = [
+    ...NICE,
+    "bun",
+    "scripts/describe/build-controls.mts",
+  ];
+  const child = spawn(bin, args, {
+    cwd: ROOT,
+    stdio: ["ignore", "ignore", "inherit"],
+  });
+  const finish = () => {
+    controlsRunning = false;
+    if (controlsAgain) {
+      controlsAgain = false;
+      writeControls();
+    }
+  };
+  child.on("error", finish);
+  child.on("close", finish);
+}
+
 // Rebuild when a source of the bundle is saved. A save of another file in
 // the same folders is the site's business, not the previews'.
 let inputs = new Set<string>();
@@ -133,6 +164,7 @@ async function rebuild() {
   building = false;
   if (result) {
     took(result);
+    writeControls();
     if (result.version !== version) {
       version = result.version;
       server.publish(CHANNEL, JSON.stringify({ type: "built", version }));
@@ -153,6 +185,7 @@ for (const folder of FOLDERS) watchFolder(folder);
 const first = await build(true);
 if (first) {
   took(first);
+  writeControls();
   version = first.version;
   console.log(` ✓ Previews built in ${first.elapsed}ms`);
 } else {

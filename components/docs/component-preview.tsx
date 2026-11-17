@@ -106,10 +106,8 @@ function Preview({
   // Suspends until this component's config chunk resolves, then returns
   // synchronously from the cached promise. No other config is fetched.
   const config = useComponentConfig(name);
-  const { values, isDefault, change, reset, ...history } = useCustomizer(
-    name,
-    config.controls,
-  );
+  const { values, isDefault, change, reset, apply, batch, ...history } =
+    useCustomizer(name, config.controls);
   const code = useMemo(
     () => generateCode(config, toProps(config.controls, values)),
     [config, values],
@@ -174,6 +172,8 @@ function Preview({
           isDefault={isDefault}
           onChange={change}
           onReset={reset}
+          onApply={apply}
+          batch={batch}
           history={history}
         />
       ) : null}

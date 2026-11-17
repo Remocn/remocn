@@ -1,0 +1,96 @@
+{
+  "component": "animated-line-chart",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A thick indigo line draws on slowly over a soft slate grid for a deliberate, dramatic build.",
+      "askedAs": [
+        "slow dramatic line draw",
+        "make the chart reveal slowly",
+        "thick line that builds tension",
+        "медленная отрисовка графика",
+        "плавное драматичное появление линии"
+      ],
+      "props": {
+        "strokeColor": "#6366f1",
+        "strokeWidth": 8,
+        "gridColor": "#1e293b",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "hairline-minimal",
+      "label": "Hairline Minimal",
+      "description": "A thin neutral line with no leading dot and a barely visible grid for an editorial, understated feel.",
+      "askedAs": [
+        "thin minimal line chart",
+        "clean chart without the dot",
+        "subtle elegant trend line",
+        "тонкая минималистичная линия",
+        "график без точки, очень чистый"
+      ],
+      "props": {
+        "strokeColor": "#e4e4e7",
+        "strokeWidth": 2,
+        "gridColor": "#18181b",
+        "showDot": false
+      }
+    },
+    {
+      "id": "quick-pulse",
+      "label": "Quick Pulse",
+      "description": "A brisk sky-blue line snaps across the frame in a fraction of the default time.",
+      "askedAs": [
+        "fast line chart animation",
+        "quick snappy graph draw",
+        "speed up the trend line",
+        "быстрая анимация графика",
+        "резкая отрисовка линии"
+      ],
+      "props": {
+        "strokeColor": "#38bdf8",
+        "strokeWidth": 5,
+        "speed": 2.5
+      }
+    },
+    {
+      "id": "error-drop",
+      "label": "Alert Red",
+      "description": "A warm coral-red line on a muted brown grid suited to showing a decline or error-rate story.",
+      "askedAs": [
+        "red line for errors",
+        "chart showing a drop",
+        "warning colored trend line",
+        "красный график падения",
+        "линия ошибок красным цветом"
+      ],
+      "props": {
+        "strokeColor": "#f87171",
+        "strokeWidth": 4,
+        "gridColor": "#292524",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "gold-premium",
+      "label": "Gold Premium",
+      "description": "A bold amber stroke over a warm dark grid gives revenue curves a premium, investor-deck finish.",
+      "askedAs": [
+        "gold revenue chart",
+        "premium looking growth line",
+        "amber line for investor deck",
+        "золотой график выручки",
+        "премиальная линия роста"
+      ],
+      "props": {
+        "strokeColor": "#f59e0b",
+        "strokeWidth": 6,
+        "gridColor": "#2a2418",
+        "speed": 1.25
+      }
+    }
+  ]
+}

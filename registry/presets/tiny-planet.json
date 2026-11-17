@@ -1,0 +1,106 @@
+{
+  "component": "tiny-planet",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "dawn-village",
+      "label": "Dawn Village",
+      "description": "A sparse, soft-peach world of few buildings turning gently under a warm morning sun.",
+      "askedAs": [
+        "warm sunrise small town planet",
+        "pastel calm tiny world",
+        "slow cozy village globe",
+        "рассветная маленькая деревня",
+        "тёплая пастельная планета"
+      ],
+      "props": {
+        "buildings": 12,
+        "spin": 0.4,
+        "skyColor": "#f6e3d4",
+        "sunColor": "#e8835a",
+        "buildingColor": "#5b4a44",
+        "groundColor": "#d9bfae"
+      }
+    },
+    {
+      "id": "megacity-rush",
+      "label": "Megacity Rush",
+      "description": "A dense, packed skyline spinning fast and snappy against a deep navy night.",
+      "askedAs": [
+        "busy crowded city spinning fast",
+        "dense skyline quick rotation",
+        "energetic metropolis globe",
+        "быстрый плотный мегаполис",
+        "много зданий быстро крутится"
+      ],
+      "props": {
+        "buildings": 46,
+        "spin": 2.2,
+        "speed": 1.75,
+        "seed": 11,
+        "skyColor": "#0e1a2e",
+        "sunColor": "#f2b33d"
+      }
+    },
+    {
+      "id": "mint-paper",
+      "label": "Mint Paper",
+      "description": "A light, print-like mint palette with charcoal buildings and a coral sun for a friendly editorial feel.",
+      "askedAs": [
+        "light minimal tiny planet",
+        "clean editorial mint world",
+        "friendly bright globe for product",
+        "светлая мятная планета",
+        "минималистичный светлый мир"
+      ],
+      "props": {
+        "skyColor": "#e4f1ec",
+        "sunColor": "#f0735a",
+        "buildingColor": "#22302b",
+        "groundColor": "#9fc7b8",
+        "seed": 7
+      }
+    },
+    {
+      "id": "still-moon",
+      "label": "Still Moon",
+      "description": "A near-motionless monochrome world under a pale moon, slowed down to hold quietly behind a title.",
+      "askedAs": [
+        "slow calm backdrop for title",
+        "barely moving night planet",
+        "quiet monochrome moon world",
+        "медленный спокойный фон",
+        "ночная планета с луной"
+      ],
+      "props": {
+        "spin": 0.1,
+        "speed": 0.5,
+        "sunColor": "#d8d4c8",
+        "buildingColor": "#8a8f99",
+        "groundColor": "#1b1d22",
+        "skyColor": "#07080b"
+      }
+    },
+    {
+      "id": "desert-outpost",
+      "label": "Desert Outpost",
+      "description": "A handful of sandy towers on an ochre ground rotating steadily beneath a dusty terracotta sky.",
+      "askedAs": [
+        "desert sand tiny planet",
+        "warm earthy small outpost",
+        "ochre terracotta world",
+        "пустынная планета",
+        "тёплый песочный мир"
+      ],
+      "props": {
+        "buildings": 9,
+        "seed": 19,
+        "skyColor": "#b5654a",
+        "sunColor": "#f4d9a6",
+        "buildingColor": "#f1e4cc",
+        "groundColor": "#7a4b2e"
+      }
+    }
+  ]
+}

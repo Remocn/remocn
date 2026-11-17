@@ -1,0 +1,112 @@
+{
+  "component": "light-leak",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "golden-hour",
+      "label": "Golden Hour",
+      "description": "A slow, honey-gold leak from the right that melts into a creamy warm white.",
+      "askedAs": [
+        "warm golden sunset transition",
+        "slow amber film burn",
+        "soft sunlight flare between shots",
+        "золотой час переход",
+        "тёплая засветка заката"
+      ],
+      "props": {
+        "origin": "right",
+        "leakColor": "#f2a93b",
+        "blowoutColor": "#fff6e3",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "rose-film",
+      "label": "Rose Film",
+      "description": "A dusty rose-pink leak drifting down from the top into a blush-tinted white, gentle and romantic.",
+      "askedAs": [
+        "pink film light leak",
+        "romantic pastel transition",
+        "blush wedding video flare",
+        "розовая засветка плёнки",
+        "нежный пастельный переход"
+      ],
+      "props": {
+        "origin": "top",
+        "leakColor": "#e07a8b",
+        "blowoutColor": "#fff0f2",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "cool-dawn",
+      "label": "Cool Dawn",
+      "description": "A muted steel-blue leak rising from the bottom into a pale icy white for a calm, cinematic cut.",
+      "askedAs": [
+        "blue light leak transition",
+        "cold morning flare",
+        "cool cinematic fade to white",
+        "холодная синяя засветка",
+        "утренний голубой переход"
+      ],
+      "props": {
+        "origin": "bottom",
+        "leakColor": "#5b8db8",
+        "blowoutColor": "#f0f6fb",
+        "intensity": 0.85
+      }
+    },
+    {
+      "id": "quick-flash",
+      "label": "Quick Flash",
+      "description": "A fast, punchy red-orange burn that snaps the frame to white for rapid montage cuts.",
+      "askedAs": [
+        "fast flash transition",
+        "quick film burn cut",
+        "snappy light leak for montage",
+        "быстрая вспышка между кадрами",
+        "резкая засветка для монтажа"
+      ],
+      "props": {
+        "leakColor": "#e8461e",
+        "speed": 2.5
+      }
+    },
+    {
+      "id": "subtle-glow",
+      "label": "Subtle Glow",
+      "description": "A faint peach glow that barely washes the frame, keeping both shots visible through the cut.",
+      "askedAs": [
+        "subtle light leak",
+        "soft gentle glow transition",
+        "barely visible warm flare",
+        "лёгкая едва заметная засветка",
+        "мягкое свечение между сценами"
+      ],
+      "props": {
+        "intensity": 0.45,
+        "leakColor": "#f4a582",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "vintage-sepia",
+      "label": "Vintage Sepia",
+      "description": "An aged brown-amber leak from the left that blows out to a parchment tone like old film stock.",
+      "askedAs": [
+        "old film sepia transition",
+        "retro vintage light leak",
+        "nostalgic brown film burn",
+        "винтажная сепия засветка",
+        "старая плёнка переход"
+      ],
+      "props": {
+        "leakColor": "#a8622d",
+        "blowoutColor": "#f3e6cc",
+        "intensity": 0.9,
+        "speed": 0.75
+      }
+    }
+  ]
+}

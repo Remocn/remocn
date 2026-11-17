@@ -1,0 +1,104 @@
+{
+  "component": "long-shadow",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-teal",
+      "label": "Midnight Teal",
+      "description": "A teal badge on deep navy with a dark shadow that slowly fades as it sweeps.",
+      "askedAs": [
+        "dark mode long shadow",
+        "teal icon on navy background",
+        "moody night version",
+        "тёмная тема с длинной тенью",
+        "бирюзовый значок на тёмно-синем"
+      ],
+      "props": {
+        "background": "#14213d",
+        "shadowColor": "#0b1426",
+        "iconColor": "#2a9d8f",
+        "checkColor": "#f4f1ea",
+        "fade": 0.4,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "retro-mustard",
+      "label": "Retro Mustard",
+      "description": "A warm mustard badge on cream with a terracotta shadow swinging across in a wide arc.",
+      "askedAs": [
+        "vintage flat design shadow",
+        "warm retro colors",
+        "seventies style icon",
+        "винтажная плоская тень",
+        "тёплые ретро цвета"
+      ],
+      "props": {
+        "background": "#f3e9d2",
+        "shadowColor": "#c8553d",
+        "iconColor": "#e0a526",
+        "checkColor": "#3a2e26",
+        "angleFrom": 20,
+        "angleTo": 200
+      }
+    },
+    {
+      "id": "quick-flick",
+      "label": "Quick Flick",
+      "description": "The default red badge with a snappy, short shadow swing for fast-paced edits.",
+      "askedAs": [
+        "faster shadow motion",
+        "snappy success check",
+        "quick icon accent",
+        "быстрое движение тени",
+        "резкая анимация галочки"
+      ],
+      "props": {
+        "speed": 2,
+        "angleFrom": 90,
+        "angleTo": 135
+      }
+    },
+    {
+      "id": "forest-calm",
+      "label": "Forest Calm",
+      "description": "A forest-green badge on soft sage with a gentle, slow and faded shadow drift.",
+      "askedAs": [
+        "calm green success icon",
+        "slow gentle shadow",
+        "soft natural palette",
+        "спокойная зелёная галочка",
+        "медленная мягкая тень"
+      ],
+      "props": {
+        "background": "#e3eadf",
+        "shadowColor": "#c5d1bf",
+        "iconColor": "#2f5d3a",
+        "checkColor": "#f7f7f2",
+        "fade": 0.6,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "mono-ink",
+      "label": "Mono Ink",
+      "description": "A monochrome black badge on light grey with a full-circle shadow rotation.",
+      "askedAs": [
+        "black and white long shadow",
+        "minimal monochrome icon",
+        "shadow spins all the way around",
+        "чёрно-белая длинная тень",
+        "тень делает полный оборот"
+      ],
+      "props": {
+        "background": "#f2f2f2",
+        "shadowColor": "#d6d6d6",
+        "iconColor": "#1a1a1a",
+        "checkColor": "#ffffff",
+        "angleFrom": 0,
+        "angleTo": 360
+      }
+    }
+  ]
+}

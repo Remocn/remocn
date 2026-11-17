@@ -1,0 +1,125 @@
+{
+  "component": "glass-capsule",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Warm ivory page with a serif headline and a deep oxblood lens that magnifies strongly.",
+      "askedAs": [
+        "magazine style headline with serif font",
+        "elegant editorial title on cream",
+        "classic print look with big lens",
+        "редакционный заголовок с засечками",
+        "элегантный журнальный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1e1a16",
+        "accent": "#7a2e2a",
+        "magnify": 1.3
+      }
+    },
+    {
+      "id": "slow-luxe",
+      "label": "Slow Luxe",
+      "description": "Near-black stage with a champagne gold lens gliding slowly in Fraunces.",
+      "askedAs": [
+        "slow luxury gold headline",
+        "premium dark title with gold accent",
+        "calm elegant reveal",
+        "медленный люксовый заголовок",
+        "золото на черном премиум"
+      ],
+      "props": {
+        "background": "#0e0d0b",
+        "ink": "#f2ebdd",
+        "accent": "#c8a96a",
+        "fontFamily": "Fraunces",
+        "speed": 0.5,
+        "magnify": 1.2
+      }
+    },
+    {
+      "id": "clean-swiss",
+      "label": "Clean Swiss",
+      "description": "Crisp white, grain-free layout with Inter type and a subtle cobalt lens.",
+      "askedAs": [
+        "minimal clean white headline",
+        "no grain simple corporate title",
+        "swiss style crisp text",
+        "минималистичный белый заголовок",
+        "чистый стиль без зерна"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "grain": false,
+        "magnify": 1.05,
+        "accent": "#1f4fd8"
+      }
+    },
+    {
+      "id": "tech-snap",
+      "label": "Tech Snap",
+      "description": "Fast, compact monospace headline on graphite with a cool teal lens.",
+      "askedAs": [
+        "quick techy headline",
+        "developer monospace title",
+        "fast snappy code style text",
+        "быстрый технологичный заголовок",
+        "моноширинный шрифт как в коде"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#14171c",
+        "ink": "#e6eaf0",
+        "accent": "#2ba59a",
+        "speed": 2,
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "bold-statement",
+      "label": "Bold Statement",
+      "description": "Oversized Bricolage headline with a big lens and a deep violet accent after a short pause.",
+      "askedAs": [
+        "huge bold headline",
+        "big dramatic word zoom",
+        "large statement title with pause",
+        "огромный жирный заголовок",
+        "крупное увеличение слова"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.3,
+        "magnify": 1.45,
+        "accent": "#5b3fd9",
+        "delay": 15
+      }
+    },
+    {
+      "id": "sage-calm",
+      "label": "Sage Calm",
+      "description": "Soft sage background with forest-green text and a muted green lens in Manrope.",
+      "askedAs": [
+        "soft natural green headline",
+        "calm wellness title",
+        "muted earthy look",
+        "спокойный зеленый заголовок",
+        "мягкий природный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#e3e8df",
+        "ink": "#1f2a22",
+        "accent": "#4f6b57",
+        "fontFamily": "Manrope",
+        "speed": 0.75
+      }
+    }
+  ]
+}

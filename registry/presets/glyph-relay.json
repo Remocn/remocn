@@ -1,0 +1,123 @@
+{
+  "component": "glyph-relay",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Warm paper-light ground with an elegant serif and a slow, considered handoff.",
+      "askedAs": [
+        "magazine style serif question",
+        "elegant light version slow",
+        "classy editorial look",
+        "светлый журнальный стиль с засечками",
+        "элегантно и медленно"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "fontFamily": "Instrument Serif",
+        "accent": "#b4532a",
+        "speed": 0.75,
+        "push": 0.03
+      }
+    },
+    {
+      "id": "midnight-keynote",
+      "label": "Midnight Keynote",
+      "description": "Deep navy stage with a cool blue accent and a strong push-in like a launch keynote.",
+      "askedAs": [
+        "apple keynote style launch",
+        "dark blue dramatic reveal",
+        "big stage product launch",
+        "как презентация apple",
+        "тёмно-синий драматичный запуск"
+      ],
+      "props": {
+        "ground": "blue-hour",
+        "fontFamily": "Geist",
+        "accent": "#7aa2ff",
+        "push": 0.09,
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "ember-glow",
+      "label": "Ember Glow",
+      "description": "Smoldering warm dark ground with a copper accent and a confident Fraunces headline.",
+      "askedAs": [
+        "warm orange dark version",
+        "cozy fiery premium look",
+        "copper and black",
+        "тёплый огненный вариант",
+        "медь на тёмном фоне"
+      ],
+      "props": {
+        "ground": "ember",
+        "fontFamily": "Fraunces",
+        "accent": "#e08a4f",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "terminal-snap",
+      "label": "Terminal Snap",
+      "description": "Monospaced type on flat charcoal with a mint accent and a fast, punchy relay.",
+      "askedAs": [
+        "developer code style",
+        "fast techy monospace",
+        "hacker terminal look",
+        "в стиле кода для разработчиков",
+        "быстро и моноширинным шрифтом"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#111315",
+        "ink": "#e6e8ea",
+        "accent": "#3ddc97",
+        "speed": 1.75,
+        "push": 0
+      }
+    },
+    {
+      "id": "gallery-white",
+      "label": "Gallery White",
+      "description": "Crisp white minimal canvas with ink-black type, compact scale and a gentle delayed start.",
+      "askedAs": [
+        "clean white minimal",
+        "simple black on white",
+        "quiet gallery style",
+        "минимализм на белом фоне",
+        "чистый белый вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#fafaf7",
+        "ink": "#111111",
+        "accent": "#111111",
+        "scale": 0.85,
+        "delay": 12
+      }
+    },
+    {
+      "id": "velvet-night",
+      "label": "Velvet Night",
+      "description": "Plush violet evening ground with a soft rose accent and a dreamy slow pace.",
+      "askedAs": [
+        "purple luxurious mood",
+        "soft dreamy slow reveal",
+        "velvet evening vibe",
+        "фиолетовый роскошный стиль",
+        "мягко и мечтательно"
+      ],
+      "props": {
+        "ground": "velvet-hour",
+        "fontFamily": "Manrope",
+        "accent": "#e7a6c4",
+        "speed": 0.5,
+        "push": 0.06
+      }
+    }
+  ]
+}

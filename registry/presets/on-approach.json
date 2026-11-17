@@ -1,0 +1,104 @@
+{
+  "component": "on-approach",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Warm cream paper with dark ink set in Instrument Serif and an unhurried rhythm.",
+      "askedAs": [
+        "elegant serif countdown on cream",
+        "magazine style launch reveal",
+        "slow classy text swap",
+        "элегантный шрифт с засечками на светлом фоне",
+        "журнальный стиль отсчёта"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1f1b16",
+        "accent": "#b5532e",
+        "interval": 42
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Tight, fast swaps in bold Space Grotesk that rush toward launch day.",
+      "askedAs": [
+        "fast countdown swaps",
+        "quick punchy launch text",
+        "snappy time phrase change",
+        "быстрая смена фраз",
+        "динамичный отсчёт до запуска"
+      ],
+      "props": {
+        "interval": 14,
+        "swapAt": 18,
+        "speed": 1.5,
+        "fontFamily": "Space Grotesk",
+        "accent": "#7dd3fc"
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Monospaced green-on-charcoal type that reads like a mission control readout.",
+      "askedAs": [
+        "mission control style countdown",
+        "monospace terminal text",
+        "code look launch timer",
+        "моноширинный шрифт как в терминале",
+        "стиль центра управления полётом"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0f1412",
+        "ink": "#d7e4dc",
+        "accent": "#4ade80",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "big-statement",
+      "label": "Big Statement",
+      "description": "Oversized Bricolage Grotesque on deep navy with a warm amber accent for a hero moment.",
+      "askedAs": [
+        "huge bold launch text",
+        "big headline countdown",
+        "hero size reveal",
+        "крупный жирный текст",
+        "большой заголовок для запуска"
+      ],
+      "props": {
+        "scale": 1.35,
+        "fontFamily": "Bricolage Grotesque",
+        "background": "#0e1a2b",
+        "ink": "#f5f2ea",
+        "accent": "#f2b544"
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "Small Inter type on soft white with a muted slate accent and a gentle, delayed start.",
+      "askedAs": [
+        "minimal light countdown",
+        "subtle clean text swap",
+        "calm understated reveal",
+        "минималистичный светлый вариант",
+        "спокойная сдержанная анимация"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "scale": 0.75,
+        "accent": "#64748b",
+        "delay": 15,
+        "speed": 0.75
+      }
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "component": "week-shipped",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Days snap past on a tight beat with a short hold, for a punchy, energetic recap.",
+      "askedAs": [
+        "make it faster and punchier",
+        "quick snappy week recap",
+        "speed through the days",
+        "быстрее и энергичнее",
+        "резкий быстрый ритм"
+      ],
+      "props": {
+        "beat": 6,
+        "hold": 14,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "slow-sunday",
+      "label": "Slow Sunday",
+      "description": "A relaxed serif take on cream paper with a long, lingering hold on each day.",
+      "askedAs": [
+        "calm slow elegant version",
+        "serif font on a light background",
+        "let each day breathe",
+        "спокойный медленный вариант",
+        "элегантный шрифт с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#2a2420",
+        "beat": 24,
+        "hold": 70
+      }
+    },
+    {
+      "id": "terminal-log",
+      "label": "Terminal Log",
+      "description": "Monospace green-on-charcoal type that reads like a commit log for a developer audience.",
+      "askedAs": [
+        "make it look like a terminal",
+        "dev changelog style",
+        "monospace code look",
+        "как в терминале",
+        "стиль консоли для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#14171c",
+        "ink": "#e6edf3",
+        "accent": "#3fb950",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "cobalt-pop",
+      "label": "Cobalt Pop",
+      "description": "Big chunky grotesque type in white on deep cobalt blue for a bold, upbeat recap.",
+      "askedAs": [
+        "blue version instead of orange",
+        "bigger bolder text",
+        "bright blue playful style",
+        "синий фон вместо оранжевого",
+        "крупный жирный текст"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "background": "#2448d8",
+        "ink": "#ffffff",
+        "accent": "#ffd23f",
+        "scale": 1.25
+      }
+    },
+    {
+      "id": "mint-paper",
+      "label": "Mint Paper",
+      "description": "Soft mint background with forest-green Manrope text, gentle and friendly at a medium pace.",
+      "askedAs": [
+        "soft pastel look",
+        "light green friendly style",
+        "gentle minimal recap",
+        "мягкие пастельные цвета",
+        "светло-зелёный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Manrope",
+        "background": "#dff3e8",
+        "ink": "#1d3b2f",
+        "accent": "#2f8f5b",
+        "beat": 18
+      }
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "component": "caption-marker",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "pink-highlighter",
+      "label": "Pink Highlighter",
+      "description": "Soft pink marker swipes with deep plum marked text over clean white captions.",
+      "askedAs": [
+        "pink highlighter captions",
+        "soft pink marker on key words",
+        "girly pastel highlight subtitles",
+        "розовый маркер в субтитрах",
+        "субтитры с розовым выделением"
+      ],
+      "props": {
+        "markerColor": "#f9a8d4",
+        "markerTextColor": "#3b0a2a",
+        "fontWeight": 700
+      }
+    },
+    {
+      "id": "mint-study-notes",
+      "label": "Mint Notes",
+      "description": "Calm mint marker on lighter-weight text, like neat study notes.",
+      "askedAs": [
+        "green highlighter study notes look",
+        "calm mint highlight captions",
+        "lighter text with green marker",
+        "мятный маркер как в конспекте",
+        "спокойные субтитры с зелёным выделением"
+      ],
+      "props": {
+        "markerColor": "#86efac",
+        "markerTextColor": "#052e16",
+        "fontWeight": 600,
+        "fontSize": 56
+      }
+    },
+    {
+      "id": "punchy-one-word",
+      "label": "Punchy Words",
+      "description": "Huge black-weight captions shown a word or two at a time with quick turnover.",
+      "askedAs": [
+        "big bold fast captions",
+        "one word at a time subtitles",
+        "punchy tiktok style highlight",
+        "крупные быстрые субтитры по одному слову",
+        "жирные динамичные субтитры"
+      ],
+      "props": {
+        "fontSize": 110,
+        "fontWeight": 900,
+        "combineTokensWithinMilliseconds": 300,
+        "holdMs": 250
+      }
+    },
+    {
+      "id": "paper-ink",
+      "label": "Paper Ink",
+      "description": "Dark ink text with a warm orange marker and no shadow, for light paper backgrounds.",
+      "askedAs": [
+        "captions for white background",
+        "dark text with orange highlight",
+        "flat captions no shadow on paper",
+        "тёмные субтитры для светлого фона",
+        "субтитры как чернила на бумаге"
+      ],
+      "props": {
+        "color": "#1c1917",
+        "markerColor": "#fdba74",
+        "markerTextColor": "#1c1917",
+        "shadow": false
+      }
+    },
+    {
+      "id": "slow-lecture",
+      "label": "Slow Lecture",
+      "description": "Smaller, medium-weight captions holding long full sentences with a sky-blue marker.",
+      "askedAs": [
+        "long sentence captions for lectures",
+        "calm slow subtitles blue highlight",
+        "small readable explainer captions",
+        "медленные субтитры для лекции",
+        "длинные строки с голубым маркером"
+      ],
+      "props": {
+        "fontSize": 44,
+        "fontWeight": 500,
+        "markerColor": "#7dd3fc",
+        "markerTextColor": "#082f49",
+        "combineTokensWithinMilliseconds": 2600,
+        "holdMs": 1200
+      }
+    }
+  ]
+}

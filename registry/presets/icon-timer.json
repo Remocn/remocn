@@ -1,0 +1,98 @@
+{
+  "component": "icon-timer",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-countdown",
+      "label": "Hero Countdown",
+      "description": "A large, bold timer that draws in and ticks at a deliberate, cinematic pace.",
+      "askedAs": [
+        "big timer for intro",
+        "large bold stopwatch",
+        "slow dramatic timer icon",
+        "большой таймер крупно",
+        "медленный жирный секундомер"
+      ],
+      "props": {
+        "size": 160,
+        "strokeWidth": 2.75,
+        "speed": 0.5,
+        "animation": "both"
+      }
+    },
+    {
+      "id": "fine-line",
+      "label": "Fine Line",
+      "description": "A thin, slate-grey outline that simply draws itself on, quiet and editorial.",
+      "askedAs": [
+        "thin minimal timer",
+        "elegant line drawing stopwatch",
+        "subtle outline clock icon",
+        "тонкий минималистичный таймер",
+        "изящная иконка секундомера"
+      ],
+      "props": {
+        "animation": "draw",
+        "strokeWidth": 1.25,
+        "color": "#475569",
+        "size": 96
+      }
+    },
+    {
+      "id": "urgent-tick",
+      "label": "Urgent Tick",
+      "description": "A fast, looping red timer that conveys deadlines and time pressure.",
+      "askedAs": [
+        "hurry up timer",
+        "fast ticking red clock",
+        "deadline urgency icon",
+        "срочный красный таймер",
+        "быстро тикающие часы"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "speed": 2.5,
+        "color": "#dc2626",
+        "strokeWidth": 2.25
+      }
+    },
+    {
+      "id": "calm-loop",
+      "label": "Calm Loop",
+      "description": "A soft teal timer gently cycling in a slow, endless loop for waiting states.",
+      "askedAs": [
+        "relaxed waiting timer",
+        "slow looping loader clock",
+        "gentle background timer",
+        "спокойный зацикленный таймер",
+        "медленная анимация ожидания"
+      ],
+      "props": {
+        "loop": true,
+        "speed": 0.5,
+        "color": "#0f766e",
+        "size": 64
+      }
+    },
+    {
+      "id": "brand-badge",
+      "label": "Brand Badge",
+      "description": "A compact, punchy blue timer that snaps into place quickly for UI callouts.",
+      "askedAs": [
+        "small quick timer icon",
+        "blue stopwatch for ui",
+        "snappy compact clock",
+        "маленький синий таймер",
+        "быстрая иконка часов"
+      ],
+      "props": {
+        "size": 32,
+        "color": "#1f6feb",
+        "speed": 1.75,
+        "strokeWidth": 2.5
+      }
+    }
+  ]
+}

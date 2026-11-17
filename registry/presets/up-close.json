@@ -1,0 +1,119 @@
+{
+  "component": "up-close",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "Light paper ground with a serif caption and a slow, deliberate pull back.",
+      "askedAs": [
+        "light version with serif font",
+        "calm editorial look on paper",
+        "slower elegant zoom out",
+        "светлый вариант с засечками",
+        "спокойный журнальный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "fontFamily": "Instrument Serif",
+        "speed": 0.75,
+        "pullAt": 60
+      }
+    },
+    {
+      "id": "terminal-macro",
+      "label": "Terminal Macro",
+      "description": "Deep zoom on a dark charcoal ground with monospaced type and a mint accent.",
+      "askedAs": [
+        "code style with mono font",
+        "zoom in really close on the code",
+        "developer terminal look",
+        "моноширинный шрифт как в терминале",
+        "сильный зум на код"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "zoom": 7,
+        "ground": "charcoal-satin",
+        "accent": "#5fd4a8"
+      }
+    },
+    {
+      "id": "quick-reveal",
+      "label": "Quick Reveal",
+      "description": "A snappy, gentle zoom that pulls back early for fast-paced edits.",
+      "askedAs": [
+        "make it faster",
+        "quick zoom out for a short clip",
+        "snappy reveal",
+        "быстрее и короче",
+        "резкое отдаление"
+      ],
+      "props": {
+        "speed": 1.75,
+        "pullAt": 22,
+        "zoom": 2,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "blue-hour-launch",
+      "label": "Blue Hour",
+      "description": "Cool blue-hour ground with a soft sky accent and a slightly larger caption.",
+      "askedAs": [
+        "blue evening gradient",
+        "cool calm launch mood",
+        "bigger text on blue background",
+        "синий вечерний фон",
+        "холодные спокойные тона"
+      ],
+      "props": {
+        "ground": "blue-hour",
+        "accent": "#8ab4f8",
+        "fontFamily": "Manrope",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "warm-kiln",
+      "label": "Warm Kiln",
+      "description": "Warm clay-toned ground with Fraunces type and an unhurried, delayed start.",
+      "askedAs": [
+        "warm cozy colors",
+        "terracotta look with serif",
+        "start after a pause",
+        "тёплые оттенки глины",
+        "начать с задержкой"
+      ],
+      "props": {
+        "ground": "kiln",
+        "fontFamily": "Fraunces",
+        "accent": "#e8a87c",
+        "delay": 18,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "clean-mono-light",
+      "label": "Clean White",
+      "description": "Flat off-white background with near-black Geist text and a compact frame.",
+      "askedAs": [
+        "plain white minimal",
+        "clean light background no gradient",
+        "smaller minimalist layout",
+        "минималистичный белый фон",
+        "чистый светлый стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f6f6f3",
+        "ink": "#151515",
+        "fontFamily": "Geist",
+        "accent": "#1f6feb",
+        "scale": 0.85
+      }
+    }
+  ]
+}

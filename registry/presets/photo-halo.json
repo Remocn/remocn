@@ -1,0 +1,119 @@
+{
+  "component": "photo-halo",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-ivory",
+      "label": "Editorial Ivory",
+      "description": "A light, magazine-like lockup with a serif headline on warm paper and an unhurried reveal.",
+      "askedAs": [
+        "elegant light serif version",
+        "magazine style with faces",
+        "calm cream background lockup",
+        "светлый журнальный стиль с засечками",
+        "спокойная элегантная версия на бежевом"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f5f1e8",
+        "ink": "#1c1a17",
+        "accent": "#9a4b2f",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "midnight-cobalt",
+      "label": "Midnight Cobalt",
+      "description": "A deep blue glowing ground with crisp Geist type and a cool icy accent.",
+      "askedAs": [
+        "dark blue tech look",
+        "cool night launch recap",
+        "premium blue glow background",
+        "тёмно-синий технологичный фон",
+        "холодная ночная версия"
+      ],
+      "props": {
+        "ground": "cobalt-rise",
+        "fontFamily": "Geist",
+        "accent": "#8ab4ff"
+      }
+    },
+    {
+      "id": "quick-social-proof",
+      "label": "Quick Proof",
+      "description": "A fast, tight cut where words snap in with almost no stagger for punchy social-proof beats.",
+      "askedAs": [
+        "make it snappy and fast",
+        "quick customer logos beat",
+        "short punchy reveal",
+        "быстрая резкая анимация",
+        "сделай побыстрее и динамичнее"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 1,
+        "fontFamily": "Space Grotesk",
+        "ground": "charcoal-satin"
+      }
+    },
+    {
+      "id": "warm-hearth",
+      "label": "Warm Hearth",
+      "description": "An ember-toned community moment with a soft Fraunces headline and a gentle cascading entrance.",
+      "askedAs": [
+        "warm cozy community feel",
+        "orange glow with people photos",
+        "friendly warm closing shot",
+        "тёплая уютная версия",
+        "оранжевый фон для сообщества"
+      ],
+      "props": {
+        "ground": "hearth",
+        "fontFamily": "Fraunces",
+        "accent": "#f2b880",
+        "stagger": 6,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "grand-closer",
+      "label": "Grand Closer",
+      "description": "An oversized, slow closing lockup on a velvet dusk ground with a delayed, deliberate entrance.",
+      "askedAs": [
+        "big dramatic ending",
+        "large slow final lockup",
+        "cinematic outro with logo",
+        "большая финальная заставка",
+        "медленная кинематографичная концовка"
+      ],
+      "props": {
+        "scale": 1.3,
+        "speed": 0.5,
+        "delay": 20,
+        "ground": "velvet-hour",
+        "stagger": 5
+      }
+    },
+    {
+      "id": "mono-minimal",
+      "label": "Mono Minimal",
+      "description": "A compact light-grey lockup in JetBrains Mono with a muted graphite accent for developer audiences.",
+      "askedAs": [
+        "minimal developer style",
+        "monospace clean light version",
+        "small understated lockup",
+        "минималистичный моноширинный стиль",
+        "для разработчиков, светлый и сдержанный"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "JetBrains Mono",
+        "ground": "paper-crease",
+        "accent": "#4a5563",
+        "scale": 0.85
+      }
+    }
+  ]
+}

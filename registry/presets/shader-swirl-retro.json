@@ -1,0 +1,112 @@
+{
+  "component": "shader-swirl-retro",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "lazy-sunday",
+      "label": "Lazy Sunday",
+      "description": "A slow, soft-edged spiral with few wide bands that drifts gently like a warm afternoon.",
+      "askedAs": [
+        "slow soft retro swirl",
+        "calm blurry seventies spiral",
+        "gentle background swirl",
+        "медленная мягкая ретро спираль",
+        "спокойный размытый фон в стиле 70-х"
+      ],
+      "props": {
+        "speed": 0.5,
+        "bandCount": 2,
+        "softness": 0.6,
+        "twist": 0.1
+      }
+    },
+    {
+      "id": "disco-whirl",
+      "label": "Disco Whirl",
+      "description": "A fast, tightly wound spiral with many crisp bands for an energetic dance-floor feel.",
+      "askedAs": [
+        "fast hypnotic retro spiral",
+        "energetic disco swirl",
+        "tight spinning seventies pattern",
+        "быстрая гипнотическая спираль",
+        "энергичный диско вихрь"
+      ],
+      "props": {
+        "speed": 2.5,
+        "bandCount": 10,
+        "twist": 0.8
+      }
+    },
+    {
+      "id": "psychedelic-coil",
+      "label": "Psychedelic Coil",
+      "description": "A heavily twisted mid-tempo coil with sharp stripes that pulls the eye toward the centre.",
+      "askedAs": [
+        "trippy twisted spiral",
+        "psychedelic seventies coil",
+        "strong twist swirl",
+        "психоделическая закрученная спираль",
+        "сильно скрученный ретро вихрь"
+      ],
+      "props": {
+        "twist": 1,
+        "bandCount": 7,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "faded-poster",
+      "label": "Faded Poster",
+      "description": "Broad, washed-out bands on an aged paper tone, like a sun-bleached vintage print.",
+      "askedAs": [
+        "faded vintage poster swirl",
+        "old paper retro spiral",
+        "washed out seventies look",
+        "выцветший винтажный постер",
+        "ретро спираль на старой бумаге"
+      ],
+      "props": {
+        "colorBack": "#e8d6b8",
+        "softness": 0.35,
+        "bandCount": 3,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "midnight-groove",
+      "label": "Midnight Groove",
+      "description": "The retro spiral set on a deep brown-black ground for a moody, after-hours lounge look.",
+      "askedAs": [
+        "dark retro swirl background",
+        "moody seventies spiral at night",
+        "brown dark vintage swirl",
+        "тёмная ретро спираль",
+        "ночной винтажный вихрь"
+      ],
+      "props": {
+        "colorBack": "#2a1f1a",
+        "bandCount": 5,
+        "twist": 0.4,
+        "softness": 0.15
+      }
+    },
+    {
+      "id": "bold-sunburst",
+      "label": "Bold Sunburst",
+      "description": "A single wide, nearly untwisted band rotating steadily for a bold graphic statement.",
+      "askedAs": [
+        "simple bold retro spin",
+        "minimal seventies sunburst",
+        "one band big swirl",
+        "простая крупная ретро спираль",
+        "минималистичный солнечный вихрь"
+      ],
+      "props": {
+        "bandCount": 1,
+        "twist": 0,
+        "speed": 1.25
+      }
+    }
+  ]
+}

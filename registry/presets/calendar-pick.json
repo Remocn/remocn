@@ -1,0 +1,121 @@
+{
+  "component": "calendar-pick",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-planner",
+      "label": "Paper Planner",
+      "description": "A light, airy calendar on a soft paper ground with a calm blue accent and editorial serif type.",
+      "askedAs": [
+        "light calendar with serif font",
+        "clean paper style date picker",
+        "bright minimal planner look",
+        "светлый календарь с засечками",
+        "календарь в стиле бумажного ежедневника"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "accent": "#2f5bd3",
+        "fontFamily": "Instrument Serif",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "midnight-dev",
+      "label": "Midnight Dev",
+      "description": "A dark, technical calendar in monospace type with a cool cyan accent over a deep night ground.",
+      "askedAs": [
+        "dark developer style calendar",
+        "monospace calendar for tech launch",
+        "cool blue night date picker",
+        "тёмный календарь с моноширинным шрифтом",
+        "техничный календарь для запуска"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "nightfold",
+        "accent": "#4fc3d9",
+        "fontFamily": "JetBrains Mono"
+      }
+    },
+    {
+      "id": "quick-booking",
+      "label": "Quick Booking",
+      "description": "A brisk, punchy pick with a larger grid, warm copper ground and a confident red-orange accent.",
+      "askedAs": [
+        "fast snappy calendar animation",
+        "big bold booking moment",
+        "energetic launch date pick",
+        "быстрая анимация выбора даты",
+        "крупный энергичный календарь"
+      ],
+      "props": {
+        "speed": 1.75,
+        "scale": 1.2,
+        "ground": "copper",
+        "accent": "#e5482b",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "soft-bloom",
+      "label": "Soft Bloom",
+      "description": "A gentle light calendar on a pastel petal gradient with a rose accent and rounded modern type, eased in slowly.",
+      "askedAs": [
+        "pastel pink calendar",
+        "soft gentle date picker",
+        "slow elegant booking scene",
+        "нежный розовый календарь",
+        "мягкий пастельный выбор даты"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "petal-arc",
+        "accent": "#d9577a",
+        "fontFamily": "Manrope",
+        "speed": 0.5,
+        "delay": 12
+      }
+    },
+    {
+      "id": "forest-ledger",
+      "label": "Forest Ledger",
+      "description": "A grounded dark look with a greenhouse gradient, sage green accent and warm Fraunces headings.",
+      "askedAs": [
+        "green calendar dark theme",
+        "earthy natural date picker",
+        "calm green scheduling scene",
+        "зелёный календарь на тёмном фоне",
+        "природный спокойный календарь"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "greenhouse",
+        "accent": "#7fb685",
+        "fontFamily": "Fraunces",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "mono-slate",
+      "label": "Mono Slate",
+      "description": "A restrained monochrome calendar on a flat charcoal background with off-white text and a pale grey accent.",
+      "askedAs": [
+        "black and white calendar",
+        "minimal grayscale date picker",
+        "flat charcoal calendar no gradient",
+        "чёрно-белый календарь",
+        "минималистичный серый календарь"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#1b1d21",
+        "ink": "#ededea",
+        "accent": "#c9ccd1",
+        "fontFamily": "Geist"
+      }
+    }
+  ]
+}

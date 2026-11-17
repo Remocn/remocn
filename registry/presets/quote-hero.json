@@ -1,0 +1,125 @@
+{
+  "component": "quote-hero",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-light",
+      "label": "Editorial Light",
+      "description": "A warm paper-white page with deep ink and a terracotta underline, like a magazine pull quote.",
+      "askedAs": [
+        "light magazine style quote",
+        "warm editorial testimonial on cream",
+        "print look pull quote",
+        "светлая цитата в журнальном стиле",
+        "цитата на кремовом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1e1b17",
+        "accent": "#b5562e",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "swiss-mono",
+      "label": "Swiss Minimal",
+      "description": "Clean grotesk type on pure white with a crisp black underline and no grain, set slightly smaller.",
+      "askedAs": [
+        "minimal clean quote no texture",
+        "swiss style testimonial",
+        "simple black and white quote",
+        "минималистичная цитата без шума",
+        "чистая черно-белая цитата"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#ffffff",
+        "ink": "#111111",
+        "accent": "#111111",
+        "fontFamily": "Inter",
+        "grain": false
+      }
+    },
+    {
+      "id": "slow-luxe",
+      "label": "Slow Luxe",
+      "description": "A near-black stage with champagne gold accent, long holds and a slow, deliberate highlight sweep.",
+      "askedAs": [
+        "slow luxury quote",
+        "elegant gold testimonial dark",
+        "cinematic slow pull quote",
+        "медленная премиальная цитата",
+        "золотой акцент на темном"
+      ],
+      "props": {
+        "background": "#0e0d0b",
+        "ink": "#ede6d6",
+        "accent": "#c9a961",
+        "sweep": 40,
+        "stagger": 10,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "snappy-tech",
+      "label": "Snappy Tech",
+      "description": "Fast, tight reveals in Space Grotesk on deep navy with an electric teal mark for product launches.",
+      "askedAs": [
+        "fast tech testimonial",
+        "quick punchy quote animation",
+        "startup launch quote",
+        "быстрая техно цитата",
+        "динамичный отзыв для запуска"
+      ],
+      "props": {
+        "background": "#0b1220",
+        "ink": "#e6edf7",
+        "accent": "#2bc4b4",
+        "fontFamily": "Space Grotesk",
+        "speed": 1.75,
+        "stagger": 2
+      }
+    },
+    {
+      "id": "forest-statement",
+      "label": "Forest Statement",
+      "description": "Oversized Bricolage type on a deep forest green with a soft sage underline for a bold trust beat.",
+      "askedAs": [
+        "big bold quote green",
+        "large statement testimonial",
+        "oversized quote text",
+        "крупная цитата на зеленом",
+        "большой жирный отзыв"
+      ],
+      "props": {
+        "background": "#14261e",
+        "ink": "#f1f4ee",
+        "accent": "#9dbf8a",
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.3
+      }
+    },
+    {
+      "id": "terminal-quote",
+      "label": "Terminal",
+      "description": "Monospaced quote on charcoal with an amber highlight, compact scale and no grain for developer audiences.",
+      "askedAs": [
+        "code style quote",
+        "developer testimonial monospace",
+        "terminal look quote",
+        "цитата моноширинным шрифтом",
+        "отзыв в стиле терминала"
+      ],
+      "props": {
+        "background": "#17181a",
+        "ink": "#d8d8d2",
+        "accent": "#e0a43a",
+        "fontFamily": "JetBrains Mono",
+        "scale": 0.85,
+        "grain": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "component": "speedrun-timer",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "arcade-mono",
+      "label": "Arcade Mono",
+      "description": "A fast, monospaced split table on near-black with a sharp green accent, like a classic speedrun overlay.",
+      "askedAs": [
+        "retro speedrun overlay look",
+        "monospace timer on black",
+        "make it feel like a gaming stream",
+        "как оверлей спидрана",
+        "моноширинный таймер на тёмном фоне"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accent": "#3fb950",
+        "background": "#0d1117",
+        "ink": "#e6edf3",
+        "radius": 4,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "paper-race",
+      "label": "Paper Race",
+      "description": "A light, airy table on warm paper with a terracotta accent and soft rounded corners.",
+      "askedAs": [
+        "light version of the speedrun table",
+        "warm paper style timer",
+        "clean bright split table",
+        "светлая версия таймера",
+        "тёплый бумажный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "accent": "#c2562e",
+        "fontFamily": "Manrope",
+        "radius": 26
+      }
+    },
+    {
+      "id": "turbo-ember",
+      "label": "Turbo Ember",
+      "description": "Double-speed splits over a fiery ember ground with a bold grotesk and orange accent.",
+      "askedAs": [
+        "make it really fast and hot",
+        "energetic fiery speedrun",
+        "quick punchy timer with orange",
+        "сделай быстрее и ярче",
+        "огненный быстрый таймер"
+      ],
+      "props": {
+        "speed": 2.5,
+        "ground": "ember",
+        "accent": "#ff7a2f",
+        "fontFamily": "Space Grotesk",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "slow-replay",
+      "label": "Slow Replay",
+      "description": "An unhurried, slightly delayed reveal in elegant serif over a deep velvet ground with a soft lilac accent.",
+      "askedAs": [
+        "slow cinematic version",
+        "elegant serif timer",
+        "dramatic slow reveal of splits",
+        "медленный кинематографичный вариант",
+        "элегантный таймер с засечками"
+      ],
+      "props": {
+        "speed": 0.5,
+        "delay": 20,
+        "fontFamily": "Instrument Serif",
+        "ground": "velvet-hour",
+        "accent": "#b8a4f5",
+        "scale": 1.1
+      }
+    },
+    {
+      "id": "compact-ice",
+      "label": "Compact Ice",
+      "description": "A smaller, crisp panel on a cool polar ground with a teal accent and tight corners.",
+      "askedAs": [
+        "smaller cooler timer",
+        "icy blue split table",
+        "compact version for a corner",
+        "уменьшенный холодный таймер",
+        "компактная голубая таблица"
+      ],
+      "props": {
+        "scale": 0.8,
+        "ground": "polar",
+        "accent": "#14b8a6",
+        "radius": 10,
+        "fontFamily": "Inter"
+      }
+    }
+  ]
+}

@@ -1,0 +1,121 @@
+{
+  "component": "caption-timeline",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "studio-slow",
+      "label": "Studio Slow",
+      "description": "Large, light type drifting slowly past a centered soft-blue playhead, like a calm voiceover track.",
+      "askedAs": [
+        "slow calm captions with big text",
+        "relaxed podcast transcript scroll",
+        "centered playhead gentle pace",
+        "медленные спокойные субтитры",
+        "плавная лента текста по центру"
+      ],
+      "props": {
+        "fontSize": 88,
+        "fontWeight": 500,
+        "pxPerSecond": 160,
+        "playheadPosition": 0.5,
+        "playheadColor": "#7dd3fc"
+      }
+    },
+    {
+      "id": "rapid-edit",
+      "label": "Rapid Edit",
+      "description": "Compact heavy type racing across a wide strip with a red playhead, so every pause becomes a wide gap.",
+      "askedAs": [
+        "fast scrolling caption track",
+        "stretched timeline with big gaps",
+        "editor style red playhead",
+        "быстрая лента субтитров",
+        "таймлайн как в монтажке с красной линией"
+      ],
+      "props": {
+        "fontSize": 48,
+        "fontWeight": 900,
+        "pxPerSecond": 520,
+        "width": 1600,
+        "playheadColor": "#ef4444",
+        "playheadPosition": 0.25
+      }
+    },
+    {
+      "id": "focus-mode",
+      "label": "Focus Mode",
+      "description": "Upcoming words are nearly hidden so only the spoken line reads, marked by a crisp white playhead.",
+      "askedAs": [
+        "hide upcoming words",
+        "only show current spoken text",
+        "minimal focused captions",
+        "скрыть будущие слова",
+        "показывать только произнесённое"
+      ],
+      "props": {
+        "upcomingOpacity": 0.1,
+        "playheadColor": "#ffffff",
+        "fontWeight": 700,
+        "shadow": false
+      }
+    },
+    {
+      "id": "ink-on-paper",
+      "label": "Ink On Paper",
+      "description": "Dark charcoal text with a deep teal playhead and no shadow, made for light backgrounds.",
+      "askedAs": [
+        "dark text for light background",
+        "clean flat caption timeline",
+        "black captions no shadow",
+        "тёмный текст на светлом фоне",
+        "субтитры без тени"
+      ],
+      "props": {
+        "color": "#1f2937",
+        "playheadColor": "#0f766e",
+        "shadow": false,
+        "upcomingOpacity": 0.3,
+        "fontWeight": 600
+      }
+    },
+    {
+      "id": "preview-ahead",
+      "label": "Preview Ahead",
+      "description": "Small type with the playhead far left and bright upcoming words, showing lots of the script ahead.",
+      "askedAs": [
+        "see more upcoming words",
+        "read ahead caption strip",
+        "playhead on the left small text",
+        "видно больше следующих слов",
+        "маленький текст с плейхедом слева"
+      ],
+      "props": {
+        "fontSize": 40,
+        "playheadPosition": 0.15,
+        "upcomingOpacity": 0.7,
+        "pxPerSecond": 200,
+        "playheadColor": "#a78bfa"
+      }
+    },
+    {
+      "id": "headline-track",
+      "label": "Headline Track",
+      "description": "Huge bold words on a narrow strip with a warm amber playhead for punchy social clips.",
+      "askedAs": [
+        "huge bold captions on timeline",
+        "big text for vertical video",
+        "punchy podcast clip captions",
+        "огромные жирные субтитры",
+        "крупный текст для вертикального видео"
+      ],
+      "props": {
+        "fontSize": 124,
+        "fontWeight": 900,
+        "width": 800,
+        "pxPerSecond": 380,
+        "playheadColor": "#f59e0b"
+      }
+    }
+  ]
+}

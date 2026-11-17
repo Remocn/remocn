@@ -1,0 +1,95 @@
+{
+  "component": "tv-power-off",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snap-off",
+      "label": "Snap Off",
+      "description": "A fast, dry shutdown with a faint flash and almost no lingering dot.",
+      "askedAs": [
+        "quick tv switch off",
+        "instant screen cut to black",
+        "short sharp power down",
+        "быстрое выключение телевизора",
+        "резкое отключение экрана"
+      ],
+      "props": {
+        "durationInFrames": 10,
+        "speed": 1.75,
+        "gain": 0.6,
+        "afterglow": 0.25
+      }
+    },
+    {
+      "id": "slow-fade-tube",
+      "label": "Slow Tube",
+      "description": "A long, lazy collapse where the warm dot lingers and decays slowly.",
+      "askedAs": [
+        "slow old tv turning off",
+        "lingering dot after shutdown",
+        "nostalgic crt power down",
+        "медленное выключение старого телевизора",
+        "точка долго гаснет на экране"
+      ],
+      "props": {
+        "durationInFrames": 30,
+        "speed": 0.5,
+        "afterglow": 1.8,
+        "phosphor": "#ffe2b8"
+      }
+    },
+    {
+      "id": "green-terminal",
+      "label": "Green Terminal",
+      "description": "A classic green phosphor monitor powering down with a moderate glow.",
+      "askedAs": [
+        "green terminal screen off",
+        "hacker monitor shutdown",
+        "retro computer turning off",
+        "зелёный терминал выключается",
+        "выключение старого монитора"
+      ],
+      "props": {
+        "phosphor": "#7dffa8",
+        "afterglow": 1.3,
+        "durationInFrames": 22
+      }
+    },
+    {
+      "id": "amber-monitor",
+      "label": "Amber Monitor",
+      "description": "A warm amber display that shuts off with a gentle, low-energy surge.",
+      "askedAs": [
+        "amber screen power off",
+        "orange monochrome monitor off",
+        "warm retro display shutdown",
+        "янтарный монитор выключается",
+        "тёплое ретро выключение экрана"
+      ],
+      "props": {
+        "phosphor": "#ffb347",
+        "gain": 0.7,
+        "afterglow": 1.1
+      }
+    },
+    {
+      "id": "power-surge",
+      "label": "Power Surge",
+      "description": "A bright, blown-out flash of cold white light before the frame dies.",
+      "askedAs": [
+        "bright flash tv shutdown",
+        "intense screen collapse",
+        "dramatic power off glow",
+        "яркая вспышка при выключении",
+        "мощное выключение экрана"
+      ],
+      "props": {
+        "gain": 1.9,
+        "phosphor": "#f4f8ff",
+        "afterglow": 1.5,
+        "speed": 1.25
+      }
+    }
+  ]
+}

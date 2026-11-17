@@ -1,0 +1,86 @@
+{
+  "component": "message-bubble",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snappy-reply",
+      "label": "Snappy Reply",
+      "description": "An outgoing bubble that rises in briskly, like a quick sent reply.",
+      "askedAs": [
+        "fast sent message",
+        "quick outgoing bubble",
+        "my reply pops in fast",
+        "быстрое исходящее сообщение",
+        "ответ появляется быстро"
+      ],
+      "props": {
+        "variant": "outgoing",
+        "speed": 2
+      }
+    },
+    {
+      "id": "slow-arrival",
+      "label": "Slow Arrival",
+      "description": "An incoming bubble that eases up gently at half speed for a calm, considered entrance.",
+      "askedAs": [
+        "slow incoming message",
+        "gentle message arrival",
+        "calm chat bubble entrance",
+        "медленное входящее сообщение",
+        "плавное появление пузыря"
+      ],
+      "props": {
+        "variant": "incoming",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "instant-pop",
+      "label": "Instant Pop",
+      "description": "A near-instant rise-in that lands the message almost on the frame it starts.",
+      "askedAs": [
+        "message appears instantly",
+        "super fast bubble",
+        "no slow animation chat",
+        "мгновенное появление сообщения",
+        "очень быстрый пузырь"
+      ],
+      "props": {
+        "speed": 4
+      }
+    },
+    {
+      "id": "drift-in-sent",
+      "label": "Drift In Sent",
+      "description": "An outgoing bubble that floats up very slowly for a dreamy, cinematic beat.",
+      "askedAs": [
+        "slow motion sent message",
+        "dreamy outgoing bubble",
+        "cinematic message rise",
+        "медленно всплывающее сообщение",
+        "кинематографичный исходящий пузырь"
+      ],
+      "props": {
+        "variant": "outgoing",
+        "speed": 0.25
+      }
+    },
+    {
+      "id": "lively-incoming",
+      "label": "Lively Incoming",
+      "description": "An incoming bubble with a slightly quickened, conversational rhythm.",
+      "askedAs": [
+        "natural chat pace",
+        "incoming message a bit faster",
+        "lively conversation bubble",
+        "живой темп входящего",
+        "чуть быстрее входящее сообщение"
+      ],
+      "props": {
+        "variant": "incoming",
+        "speed": 1.5
+      }
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "component": "theme-flip",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-reveal",
+      "label": "Midnight Reveal",
+      "description": "Starts in dark mode and floods to light under a deep indigo ground with a soft violet accent.",
+      "askedAs": [
+        "start dark then switch to light",
+        "night mode to day mode reveal",
+        "dark first theme switch",
+        "начать с тёмной темы",
+        "переход из тёмной в светлую"
+      ],
+      "props": {
+        "startTheme": "dark",
+        "ground": "nightfold",
+        "accent": "#7c6cf2",
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "slow-close-up",
+      "label": "Slow Close-Up",
+      "description": "A tight, unhurried camera push on the toggle with a late click for a cinematic beat.",
+      "askedAs": [
+        "zoom in close on the toggle slowly",
+        "cinematic slow theme switch",
+        "dramatic close up dark mode",
+        "медленный крупный план переключателя",
+        "кинематографичное переключение темы"
+      ],
+      "props": {
+        "zoom": 2.8,
+        "speed": 0.5,
+        "clickAt": 60,
+        "ground": "spotlight"
+      }
+    },
+    {
+      "id": "quick-flip",
+      "label": "Quick Flip",
+      "description": "A snappy wide-shot switch with an early click, no zoom push and a crisp green accent.",
+      "askedAs": [
+        "fast theme toggle",
+        "quick dark mode switch no zoom",
+        "short snappy theme change",
+        "быстрое переключение темы",
+        "короткая смена темы без зума"
+      ],
+      "props": {
+        "zoom": 1,
+        "speed": 1.75,
+        "clickAt": 20,
+        "accent": "#16a34a",
+        "ground": "coldlight"
+      }
+    },
+    {
+      "id": "warm-editorial",
+      "label": "Warm Editorial",
+      "description": "Serif type on a warm paper ground with a terracotta accent for a calm, magazine-like feel.",
+      "askedAs": [
+        "warm elegant theme switch",
+        "serif font cozy look",
+        "editorial style dark mode demo",
+        "тёплый редакционный стиль",
+        "элегантное переключение с засечками"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "ground": "paper-crease",
+        "accent": "#c2562f",
+        "background": "#f5efe6",
+        "ink": "#2b2420"
+      }
+    },
+    {
+      "id": "dev-console",
+      "label": "Dev Console",
+      "description": "Monospace type on a charcoal ground with a teal accent and a reversed flip for developer tooling.",
+      "askedAs": [
+        "developer tool theme switch",
+        "monospace code editor dark mode",
+        "terminal style toggle",
+        "стиль для разработчиков",
+        "моноширинный шрифт тёмная тема"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "ground": "charcoal-satin",
+        "accent": "#14b8a6",
+        "reverse": true,
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "hands-free",
+      "label": "Hands Free",
+      "description": "A clean, cursor-free switch at a larger scale where the reveal plays on its own.",
+      "askedAs": [
+        "theme switch without cursor",
+        "automatic dark mode reveal",
+        "no mouse pointer theme change",
+        "без курсора",
+        "автоматическая смена темы"
+      ],
+      "props": {
+        "showCursor": false,
+        "scale": 1.2,
+        "zoom": 1.5,
+        "ground": "polar",
+        "fontFamily": "Manrope"
+      }
+    }
+  ]
+}

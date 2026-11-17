@@ -1,0 +1,98 @@
+{
+  "component": "icon-key",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-slow-draw",
+      "label": "Hero Reveal",
+      "description": "A large, fine-lined key that draws itself in slowly for a calm, cinematic intro.",
+      "askedAs": [
+        "big key slowly drawing in",
+        "elegant slow key reveal",
+        "large thin line key animation",
+        "большой ключ медленно рисуется",
+        "плавное появление ключа крупно"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 160,
+        "strokeWidth": 1.25,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "bold-unlock-loop",
+      "label": "Bold Unlock",
+      "description": "A chunky, heavy-stroked key that turns repeatedly at a brisk pace.",
+      "askedAs": [
+        "thick key turning on repeat",
+        "looping unlock icon bold",
+        "heavy key twist animation loop",
+        "толстый ключ поворачивается по кругу",
+        "жирная иконка ключа в цикле"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "strokeWidth": 3,
+        "size": 96,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "brass-key",
+      "label": "Brass Key",
+      "description": "A warm antique-gold key drawn and turned at a relaxed tempo.",
+      "askedAs": [
+        "gold key icon",
+        "vintage brass colored key",
+        "warm golden key animation",
+        "золотой ключ",
+        "ключ цвета латуни"
+      ],
+      "props": {
+        "color": "#b08d3c",
+        "size": 120,
+        "strokeWidth": 2.25,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "secure-blue",
+      "label": "Secure Blue",
+      "description": "A trustworthy product-blue key that loops its full draw-and-turn cycle for security UIs.",
+      "askedAs": [
+        "blue key for login screen",
+        "security key icon looping",
+        "blue unlock animation for app",
+        "синий ключ для экрана входа",
+        "иконка безопасности ключ синяя"
+      ],
+      "props": {
+        "color": "#1f6feb",
+        "loop": true,
+        "size": 72
+      }
+    },
+    {
+      "id": "quick-tick",
+      "label": "Quick Tick",
+      "description": "A small, slim muted-gray key that snaps through its turn at high speed.",
+      "askedAs": [
+        "fast small key turn",
+        "tiny quick unlock icon",
+        "snappy key micro animation",
+        "маленький быстрый ключ",
+        "быстрая анимация ключа мини"
+      ],
+      "props": {
+        "animation": "action",
+        "size": 32,
+        "strokeWidth": 1.5,
+        "color": "#525252",
+        "speed": 2.5
+      }
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+{
+  "component": "pill-morph",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gallery-light",
+      "label": "Gallery Light",
+      "description": "A bright, airy take with soft corners, a graphite accent and an elegant serif at an unhurried pace.",
+      "askedAs": [
+        "clean white minimal version",
+        "light elegant serif look",
+        "slow calm bright product intro",
+        "светлая минималистичная версия",
+        "элегантный светлый стиль с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "accent": "#2b2b2e",
+        "fontFamily": "Instrument Serif",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "midnight-cobalt",
+      "label": "Midnight Cobalt",
+      "description": "A deep blue night ground with a cool cobalt accent and crisp Geist type for a polished keynote feel.",
+      "askedAs": [
+        "dark blue keynote style",
+        "apple event night look",
+        "premium deep blue launch",
+        "тёмно-синий премиальный стиль",
+        "как презентация apple ночью"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "blue-hour",
+        "accent": "#5b8cff",
+        "fontFamily": "Geist",
+        "radius": 36
+      }
+    },
+    {
+      "id": "swift-mono",
+      "label": "Swift Mono",
+      "description": "A fast, sharp-cornered developer look with monospace type and a mint accent on charcoal.",
+      "askedAs": [
+        "quick techy dev tool intro",
+        "monospace square corners fast",
+        "terminal style product reveal",
+        "быстрый технический стиль",
+        "моноширинный шрифт и острые углы"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "radius": 8,
+        "speed": 1.75,
+        "accent": "#3dd9a4",
+        "ground": "charcoal-satin"
+      }
+    },
+    {
+      "id": "ember-glow",
+      "label": "Ember Glow",
+      "description": "Warm copper tones and rounded Fraunces type give the morph a cozy, crafted richness.",
+      "askedAs": [
+        "warm orange cozy version",
+        "copper luxury feel",
+        "rich warm brand intro",
+        "тёплый медный стиль",
+        "уютная оранжевая версия"
+      ],
+      "props": {
+        "ground": "ember",
+        "accent": "#e07a3f",
+        "fontFamily": "Fraunces",
+        "radius": 44,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "liquid-bold",
+      "label": "Liquid Bold",
+      "description": "Oversized, fully rounded pills in a violet iris ground with playful grotesque type for a gooey, bold statement.",
+      "askedAs": [
+        "big round bubbly pills",
+        "playful purple liquid look",
+        "larger bolder morph",
+        "большие круглые пилюли",
+        "яркий фиолетовый игривый стиль"
+      ],
+      "props": {
+        "scale": 1.25,
+        "radius": 60,
+        "ground": "iris",
+        "accent": "#8b6cff",
+        "fontFamily": "Bricolage Grotesque"
+      }
+    },
+    {
+      "id": "quiet-sage",
+      "label": "Quiet Sage",
+      "description": "A compact, muted sage-on-cream palette with a delayed, slow start for understated sophistication.",
+      "askedAs": [
+        "soft green muted palette",
+        "small subtle calm intro",
+        "understated cream background",
+        "спокойная зелёная палитра",
+        "сдержанный маленький вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f3f1ea",
+        "ink": "#1f2a22",
+        "accent": "#5e7f66",
+        "scale": 0.85,
+        "delay": 20
+      }
+    }
+  ]
+}

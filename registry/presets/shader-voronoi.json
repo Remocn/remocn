@@ -1,0 +1,114 @@
+{
+  "component": "shader-voronoi",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-crystal",
+      "label": "Slow Crystal",
+      "description": "Calm, barely drifting cells with crisp thin seams like cut quartz.",
+      "askedAs": [
+        "slow crystalline background",
+        "calm cells with thin lines",
+        "subtle shifting crystal texture",
+        "медленные кристаллы на фоне",
+        "спокойные ячейки с тонкими линиями"
+      ],
+      "props": {
+        "speed": 0.25,
+        "distortion": 0.1,
+        "gap": 0.02
+      }
+    },
+    {
+      "id": "neural-glow",
+      "label": "Neural Glow",
+      "description": "Cells pulse quickly with a soft glow bleeding through deep navy seams.",
+      "askedAs": [
+        "glowing tech cells",
+        "fast glowing voronoi",
+        "sci-fi network backdrop",
+        "светящиеся ячейки в стиле техно",
+        "быстрый светящийся фон из ячеек"
+      ],
+      "props": {
+        "speed": 2,
+        "glow": 0.6,
+        "colorGap": "#0b1a33",
+        "gap": 0.03
+      }
+    },
+    {
+      "id": "stained-glass",
+      "label": "Stained Glass",
+      "description": "Thick dark leading between gently warped cells, like a cathedral window.",
+      "askedAs": [
+        "stained glass look",
+        "thick borders between cells",
+        "mosaic window effect",
+        "эффект витража",
+        "толстые границы между ячейками"
+      ],
+      "props": {
+        "gap": 0.14,
+        "colorGap": "#1a1410",
+        "distortion": 0.25,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "liquid-cells",
+      "label": "Liquid Cells",
+      "description": "Heavily distorted, wobbling cells that flow like organic tissue.",
+      "askedAs": [
+        "organic wobbly cells",
+        "liquid cell animation",
+        "biological membrane look",
+        "жидкие органические ячейки",
+        "текучие клетки как под микроскопом"
+      ],
+      "props": {
+        "distortion": 1,
+        "speed": 1.5,
+        "gap": 0.06,
+        "colorGap": "#14241f"
+      }
+    },
+    {
+      "id": "seamless-shards",
+      "label": "Seamless Shards",
+      "description": "Gapless faceted shards re-tessellating at a brisk, energetic pace.",
+      "askedAs": [
+        "no gaps between cells",
+        "fast shattering shards",
+        "energetic faceted background",
+        "осколки без зазоров",
+        "быстрые грани без линий"
+      ],
+      "props": {
+        "gap": 0,
+        "speed": 3,
+        "distortion": 0.6
+      }
+    },
+    {
+      "id": "blueprint-grid",
+      "label": "Blueprint Grid",
+      "description": "Steady cells outlined in pale blueprint-blue seams with a faint glow.",
+      "askedAs": [
+        "blueprint style cells",
+        "light lines between cells",
+        "technical drawing voronoi",
+        "ячейки в стиле чертежа",
+        "светлые линии между ячейками"
+      ],
+      "props": {
+        "colorGap": "#9cc3e6",
+        "gap": 0.03,
+        "glow": 0.25,
+        "distortion": 0.15,
+        "speed": 0.75
+      }
+    }
+  ]
+}

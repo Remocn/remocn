@@ -1,0 +1,103 @@
+{
+  "component": "candle-rally",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-green",
+      "label": "Terminal Green",
+      "description": "A trading-terminal look with monospaced type and a calm green accent on near-black.",
+      "askedAs": [
+        "make it look like a bloomberg terminal",
+        "green monospace trading screen",
+        "hacker style stock chart",
+        "как терминал биржи",
+        "зелёный моноширинный шрифт"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accent": "#2fbf71",
+        "background": "#0b0f0d",
+        "ink": "#d7e4dc",
+        "fontWeight": 400
+      }
+    },
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "A light, newspaper-like finance page with a serif headline and a deep ink-red accent.",
+      "askedAs": [
+        "financial newspaper style",
+        "light serif version",
+        "like the FT front page",
+        "светлый газетный стиль",
+        "с засечками как в журнале"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#b23a2e",
+        "fontWeight": 400
+      }
+    },
+    {
+      "id": "hype-launch",
+      "label": "Hype Launch",
+      "description": "A big, heavy, fast-cut breakout with bold condensed type and a hot orange accent.",
+      "askedAs": [
+        "make it punchy and fast",
+        "bold hype teaser",
+        "bigger and more aggressive",
+        "быстрее и мощнее",
+        "для хайпового анонса"
+      ],
+      "props": {
+        "fontWeight": 800,
+        "scale": 1.25,
+        "speed": 1.75,
+        "accent": "#ff5a1f"
+      }
+    },
+    {
+      "id": "slow-gold",
+      "label": "Slow Gold",
+      "description": "An unhurried, premium reveal in warm gold on deep charcoal with refined serif type.",
+      "askedAs": [
+        "luxury slow reveal",
+        "gold premium milestone",
+        "elegant and calm",
+        "медленно и дорого",
+        "золотой премиальный вариант"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "accent": "#c9a45c",
+        "background": "#15130f",
+        "ink": "#f2ebdd",
+        "speed": 0.5,
+        "fontWeight": 300
+      }
+    },
+    {
+      "id": "clean-saas",
+      "label": "Clean SaaS",
+      "description": "A crisp light dashboard look with geometric sans type and an indigo accent, sized down for a tidy frame.",
+      "askedAs": [
+        "clean product dashboard look",
+        "minimal light startup style",
+        "for a SaaS metrics update",
+        "минималистичный светлый дашборд",
+        "как в стартап-презентации"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#4f46e5",
+        "fontWeight": 600,
+        "scale": 0.9
+      }
+    }
+  ]
+}

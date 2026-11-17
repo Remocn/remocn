@@ -1,0 +1,108 @@
+{
+  "component": "number-wheel",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-stat",
+      "label": "Hero Stat",
+      "description": "An oversized, deliberate roll in near-black that fills the frame as the headline number.",
+      "askedAs": [
+        "make the number huge and slow",
+        "big dramatic counter",
+        "giant stat reveal",
+        "огромное число крупным планом",
+        "медленный большой счётчик"
+      ],
+      "props": {
+        "fontSize": 240,
+        "color": "#111111",
+        "speed": 1
+      }
+    },
+    {
+      "id": "quick-tick",
+      "label": "Quick Tick",
+      "description": "A compact, fast-snapping odometer that lands its value almost instantly.",
+      "askedAs": [
+        "fast small counter",
+        "quick number tick up",
+        "snappy compact digits",
+        "быстрый маленький счётчик",
+        "число быстро докручивается"
+      ],
+      "props": {
+        "fontSize": 72,
+        "speed": 3
+      }
+    },
+    {
+      "id": "growth-green",
+      "label": "Growth Green",
+      "description": "A calm forest-green roll at a brisk pace that reads as positive gains.",
+      "askedAs": [
+        "green number for growth",
+        "positive metric counter",
+        "revenue going up look",
+        "зелёный счётчик роста",
+        "цифры роста зелёным"
+      ],
+      "props": {
+        "color": "#1a7f4b",
+        "fontSize": 160,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "alert-red",
+      "label": "Alert Red",
+      "description": "A muted brick-red counter rolling quickly to flag a drop or warning figure.",
+      "askedAs": [
+        "red number for decline",
+        "warning stat counter",
+        "losses counting animation",
+        "красный счётчик падения",
+        "цифры убытков красным"
+      ],
+      "props": {
+        "color": "#b4362f",
+        "fontSize": 136,
+        "speed": 2
+      }
+    },
+    {
+      "id": "slate-dashboard",
+      "label": "Slate Dashboard",
+      "description": "A mid-size slate-blue figure with a steady pace suited to dashboard panels.",
+      "askedAs": [
+        "blue dashboard number",
+        "clean analytics counter",
+        "corporate kpi style",
+        "синий счётчик для дашборда",
+        "цифра как в аналитике"
+      ],
+      "props": {
+        "color": "#2f4a6d",
+        "fontSize": 96,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "amber-turbo",
+      "label": "Amber Turbo",
+      "description": "A warm amber odometer spinning at full speed for energetic, punchy reveals.",
+      "askedAs": [
+        "fastest spinning counter",
+        "energetic orange number",
+        "punchy quick stat",
+        "очень быстрый счётчик",
+        "оранжевые быстрые цифры"
+      ],
+      "props": {
+        "color": "#c7771a",
+        "fontSize": 180,
+        "speed": 4
+      }
+    }
+  ]
+}

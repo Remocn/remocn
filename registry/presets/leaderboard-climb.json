@@ -1,0 +1,120 @@
+{
+  "component": "leaderboard-climb",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-ledger",
+      "label": "Paper Ledger",
+      "description": "A light editorial table on warm paper with serif type and a deep green accent, climbing at an unhurried pace.",
+      "askedAs": [
+        "light leaderboard with serif font",
+        "calm editorial ranking on paper",
+        "slow elegant leaderboard climb",
+        "светлая таблица рейтинга с засечками",
+        "спокойный рейтинг в газетном стиле"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "fontFamily": "Fraunces",
+        "accent": "#1f7a5a",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-rank",
+      "label": "Terminal Rank",
+      "description": "A monospace, near-black terminal look with a muted amber highlight and brisk motion.",
+      "askedAs": [
+        "hacker style leaderboard",
+        "monospace ranking table dark",
+        "fast terminal leaderboard",
+        "рейтинг в стиле терминала",
+        "моноширинная тёмная таблица лидеров"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0e0f11",
+        "ink": "#e6e2d6",
+        "accent": "#e0a23b",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "launch-night",
+      "label": "Launch Night",
+      "description": "A moody after-hours gradient with a soft violet accent and grotesk type for a premium launch recap.",
+      "askedAs": [
+        "moody purple launch leaderboard",
+        "premium dark ranking video",
+        "night launch recap chart",
+        "тёмный фиолетовый рейтинг запуска",
+        "премиальная таблица для запуска продукта"
+      ],
+      "props": {
+        "ground": "afterhours",
+        "accent": "#8b7bff",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "straight-to-top",
+      "label": "Straight To Top",
+      "description": "An oversized, fast race all the way to first place on a cobalt ground for maximum punch.",
+      "askedAs": [
+        "climb to number one fast",
+        "big bold leaderboard to first place",
+        "energetic rank up to top",
+        "быстрый подъём на первое место",
+        "крупный энергичный рейтинг"
+      ],
+      "props": {
+        "toRank": 1,
+        "ground": "cobalt-rise",
+        "scale": 1.25,
+        "speed": 2,
+        "fontFamily": "Bricolage Grotesque"
+      }
+    },
+    {
+      "id": "clean-light",
+      "label": "Clean Light",
+      "description": "A crisp, minimal light table in Inter with a coral highlight, slightly smaller and delayed for a calm entrance.",
+      "askedAs": [
+        "minimal white leaderboard",
+        "clean light product ranking",
+        "subtle startup ranking slide",
+        "минималистичный светлый рейтинг",
+        "чистая белая таблица лидеров"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f7f7f5",
+        "ink": "#1a1b1e",
+        "accent": "#e8603c",
+        "fontFamily": "Inter",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "ember-glow",
+      "label": "Ember Glow",
+      "description": "A warm ember backdrop with a copper-gold accent and a slow, dramatic climb.",
+      "askedAs": [
+        "warm orange leaderboard",
+        "dramatic slow rank climb",
+        "cozy glowing ranking",
+        "тёплый оранжевый рейтинг",
+        "медленный драматичный подъём в рейтинге"
+      ],
+      "props": {
+        "ground": "ember",
+        "accent": "#f2b45a",
+        "fontFamily": "Manrope",
+        "speed": 0.5,
+        "delay": 15
+      }
+    }
+  ]
+}

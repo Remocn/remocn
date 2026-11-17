@@ -1,0 +1,123 @@
+{
+  "component": "card-push-line",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A dark developer-console look with monospaced type, a mint accent and quick, tight typing.",
+      "askedAs": [
+        "make it look like a terminal",
+        "monospace dev console style",
+        "hacker code vibe",
+        "в стиле терминала",
+        "моноширинный шрифт как в консоли"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#3ddc97",
+        "ground": "nightfold",
+        "stagger": 1,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "paper-studio",
+      "label": "Paper Studio",
+      "description": "A light editorial card on warm paper with a serif headline and an unhurried, gentle push.",
+      "askedAs": [
+        "light editorial version",
+        "elegant serif on paper",
+        "calm magazine look",
+        "светлый редакционный стиль",
+        "элегантно с засечками на бумаге"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "ground": "paper-crease",
+        "accent": "#c2410c",
+        "speed": 0.75,
+        "stagger": 5
+      }
+    },
+    {
+      "id": "cobalt-launch",
+      "label": "Cobalt Launch",
+      "description": "A bold product-launch frame on a cobalt glow with grotesk type and a slightly larger card.",
+      "askedAs": [
+        "big launch announcement",
+        "bold blue keynote style",
+        "product reveal look",
+        "яркий запуск продукта",
+        "синий стиль как на презентации"
+      ],
+      "props": {
+        "ground": "cobalt-rise",
+        "fontFamily": "Space Grotesk",
+        "accent": "#7aa2ff",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A contemplative, slowed-down push with a held start and wide word spacing on a velvet dusk ground.",
+      "askedAs": [
+        "slow cinematic version",
+        "make it calm and dramatic",
+        "take its time before starting",
+        "медленно и кинематографично",
+        "спокойная версия с паузой"
+      ],
+      "props": {
+        "ground": "velvet-hour",
+        "speed": 0.5,
+        "delay": 24,
+        "stagger": 8,
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "snappy-social",
+      "label": "Snappy Social",
+      "description": "A fast, compact cut for social feeds with instant word pops and a coral accent on ember.",
+      "askedAs": [
+        "quick version for reels",
+        "fast punchy social clip",
+        "speed it up a lot",
+        "быстро для соцсетей",
+        "короткая динамичная версия"
+      ],
+      "props": {
+        "speed": 2.5,
+        "stagger": 0,
+        "ground": "ember",
+        "accent": "#ff7a59",
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "clean-slate",
+      "label": "Clean Slate",
+      "description": "A minimal flat light slate with graphite text and a quiet indigo accent, no gradient ground.",
+      "askedAs": [
+        "plain white minimal",
+        "clean flat background",
+        "simple corporate look",
+        "минималистично на светлом фоне",
+        "чистый простой стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f5f7",
+        "ink": "#1c1f26",
+        "accent": "#4f46e5",
+        "fontFamily": "Inter"
+      }
+    }
+  ]
+}

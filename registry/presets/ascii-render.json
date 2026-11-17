@@ -1,0 +1,108 @@
+{
+  "component": "ascii-render",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "fine-terminal",
+      "label": "Fine Terminal",
+      "description": "Dense, small green glyphs that read like a high-resolution terminal dump.",
+      "askedAs": [
+        "small dense ascii text",
+        "fine terminal ascii look",
+        "high detail character render",
+        "мелкий плотный ascii",
+        "терминал с мелкими символами"
+      ],
+      "props": {
+        "glyphSize": 12,
+        "ink": "#7ee787",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "chunky-amber",
+      "label": "Chunky Amber",
+      "description": "Large amber characters on a slow cadence, like an old phosphor monitor.",
+      "askedAs": [
+        "big retro amber ascii",
+        "old monitor orange text",
+        "large blocky characters",
+        "крупный янтарный ascii",
+        "ретро монитор оранжевый"
+      ],
+      "props": {
+        "glyphSize": 44,
+        "ink": "#ffb454",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "true-color",
+      "label": "True Color",
+      "description": "Each glyph takes the colour of the picture beneath it for a full-colour text mosaic.",
+      "askedAs": [
+        "colored ascii art",
+        "keep original colors in ascii",
+        "full color character mosaic",
+        "цветной ascii",
+        "ascii в цветах исходника"
+      ],
+      "props": {
+        "colored": true,
+        "glyphSize": 18
+      }
+    },
+    {
+      "id": "ice-blue",
+      "label": "Ice Blue",
+      "description": "Cool pale-blue glyphs at medium size for a calm, modern developer aesthetic.",
+      "askedAs": [
+        "blue ascii code look",
+        "cool calm developer ascii",
+        "pale blue text render",
+        "голубой ascii",
+        "спокойный синий терминал"
+      ],
+      "props": {
+        "ink": "#8ab4f8",
+        "glyphSize": 22,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "ghost-overlay",
+      "label": "Ghost Overlay",
+      "description": "A half-strength white ASCII layer that lets the original scene show through.",
+      "askedAs": [
+        "subtle ascii overlay",
+        "faint text texture over video",
+        "partial ascii blend",
+        "лёгкий ascii поверх",
+        "полупрозрачный ascii эффект"
+      ],
+      "props": {
+        "intensity": 0.5,
+        "ink": "#e6edf3",
+        "glyphSize": 16
+      }
+    },
+    {
+      "id": "rapid-glitch",
+      "label": "Rapid Glitch",
+      "description": "Fast-flickering mid-size glyphs in hot coral for an urgent, hacker-style beat.",
+      "askedAs": [
+        "fast flickering ascii",
+        "hacker glitch text",
+        "energetic red ascii",
+        "быстрый хакерский ascii",
+        "мерцающий красный текст"
+      ],
+      "props": {
+        "speed": 3,
+        "ink": "#ff7b72",
+        "glyphSize": 20
+      }
+    }
+  ]
+}

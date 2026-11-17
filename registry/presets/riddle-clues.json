@@ -1,0 +1,123 @@
+{
+  "component": "riddle-clues",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "whispered-serif",
+      "label": "Whispered Serif",
+      "description": "A slow, airy serif line that unfolds word by word like a quiet secret.",
+      "askedAs": [
+        "slow elegant serif teaser",
+        "mysterious soft text reveal",
+        "quiet whisper style",
+        "медленный элегантный шрифт с засечками",
+        "тихий загадочный текст"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 300,
+        "stagger": 8,
+        "speed": 0.75,
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "paper-note",
+      "label": "Paper Note",
+      "description": "Light warm paper background with dark ink and a terracotta accent, like a handwritten clue.",
+      "askedAs": [
+        "light background riddle",
+        "warm paper look",
+        "beige note with dark text",
+        "светлый фон как бумага",
+        "тёплая записка"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f3ece0",
+        "ink": "#2a2420",
+        "accent": "#c4572e",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "terminal-hint",
+      "label": "Terminal Hint",
+      "description": "Monospaced green-tinted text on near-black that types out fast like a system message.",
+      "askedAs": [
+        "hacker terminal style",
+        "monospace code teaser",
+        "typed out computer text",
+        "текст как в терминале",
+        "моноширинный шрифт быстро"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0c",
+        "ink": "#b8e0c2",
+        "accent": "#5fd38a",
+        "stagger": 1,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "bold-punchline",
+      "label": "Bold Punchline",
+      "description": "Big heavy grotesque type that snaps in quickly for a cheeky, confident payoff.",
+      "askedAs": [
+        "big bold punchy text",
+        "loud confident teaser",
+        "fast heavy reveal",
+        "крупный жирный текст",
+        "быстрый дерзкий тизер"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "fontWeight": 700,
+        "scale": 1.4,
+        "stagger": 2,
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "midnight-violet",
+      "label": "Midnight Violet",
+      "description": "Deep indigo backdrop with pale lavender text and a soft violet accent after a short pause.",
+      "askedAs": [
+        "purple night mood",
+        "dark blue mysterious teaser",
+        "violet accent riddle",
+        "тёмно-фиолетовый фон",
+        "ночная загадка"
+      ],
+      "props": {
+        "background": "#14122b",
+        "ink": "#e6e1fa",
+        "accent": "#9b8cf0",
+        "fontFamily": "Space Grotesk",
+        "delay": 20,
+        "stagger": 5
+      }
+    },
+    {
+      "id": "tiny-aside",
+      "label": "Tiny Aside",
+      "description": "A small, light-weight Inter line that drifts in late like an offhand remark.",
+      "askedAs": [
+        "small subtle footnote text",
+        "minimal understated line",
+        "delayed little hint",
+        "маленький незаметный текст",
+        "минималистичная подсказка"
+      ],
+      "props": {
+        "fontFamily": "Inter",
+        "fontWeight": 300,
+        "scale": 0.7,
+        "delay": 40,
+        "speed": 0.5
+      }
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "component": "period-drop",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "bold-wordmark",
+      "label": "Bold Wordmark",
+      "description": "Huge black-weight type with an oversized coral dot that lands like a logo stamp.",
+      "askedAs": [
+        "big heavy logo with a fat dot",
+        "make the period huge and bold",
+        "chunky wordmark ending",
+        "огромный жирный логотип с точкой",
+        "крупная точка как в логотипе"
+      ],
+      "props": {
+        "fontSize": 240,
+        "fontWeight": 900,
+        "dotSize": 0.32,
+        "dotColor": "#ff5a36"
+      }
+    },
+    {
+      "id": "quiet-editorial",
+      "label": "Quiet Editorial",
+      "description": "Light, mid-sized type in soft ivory with a small muted sage dot settling slowly.",
+      "askedAs": [
+        "thin elegant text with a small dot",
+        "calm minimal end card",
+        "slow refined period drop",
+        "тонкий элегантный шрифт с маленькой точкой",
+        "спокойная минималистичная концовка"
+      ],
+      "props": {
+        "fontWeight": 300,
+        "fontSize": 120,
+        "dotSize": 0.12,
+        "color": "#ece6da",
+        "dotColor": "#8fa98a",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "snappy-pop",
+      "label": "Snappy Pop",
+      "description": "Fast, punchy drop with a bright cobalt dot for quick social cuts.",
+      "askedAs": [
+        "quick bouncy dot animation",
+        "fast punchy ending",
+        "make it snappier with a blue dot",
+        "быстрая анимация с синей точкой",
+        "резкая энергичная концовка"
+      ],
+      "props": {
+        "speed": 2,
+        "dotColor": "#2f6bff",
+        "dotSize": 0.24
+      }
+    },
+    {
+      "id": "ink-on-paper",
+      "label": "Ink On Paper",
+      "description": "Near-black type with a deep red dot, made for light backgrounds.",
+      "askedAs": [
+        "dark text for a white background",
+        "black word with red period",
+        "print style wordmark",
+        "тёмный текст для светлого фона",
+        "чёрное слово с красной точкой"
+      ],
+      "props": {
+        "color": "#1a1a1a",
+        "dotColor": "#c8102e",
+        "fontWeight": 700
+      }
+    },
+    {
+      "id": "golden-hour",
+      "label": "Golden Hour",
+      "description": "Warm cream lettering with a mustard-gold dot dropping at a relaxed pace.",
+      "askedAs": [
+        "warm cozy colors",
+        "gold dot on cream text",
+        "soft warm ending card",
+        "тёплые уютные цвета",
+        "золотая точка и кремовый текст"
+      ],
+      "props": {
+        "color": "#f5ead2",
+        "dotColor": "#e0a526",
+        "speed": 0.75,
+        "fontWeight": 600
+      }
+    },
+    {
+      "id": "tiny-caption",
+      "label": "Tiny Caption",
+      "description": "Compact small-scale type with a proportionally chunky teal dot for corner lockups.",
+      "askedAs": [
+        "small text with the dot",
+        "compact logo in the corner",
+        "smaller word, bigger dot",
+        "маленький текст с точкой",
+        "компактный логотип в углу"
+      ],
+      "props": {
+        "fontSize": 80,
+        "dotSize": 0.3,
+        "dotColor": "#14a38b",
+        "speed": 1.5
+      }
+    }
+  ]
+}

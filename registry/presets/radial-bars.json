@@ -1,0 +1,104 @@
+{
+  "component": "radial-bars",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-report",
+      "label": "Paper Report",
+      "description": "A calm light dial in serif type with an ink-blue accent, like a page from an annual report.",
+      "askedAs": [
+        "light editorial radial chart",
+        "clean print style dial",
+        "make it look like a report page",
+        "светлый стиль как в отчёте",
+        "радиальный график в журнальном стиле"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "accent": "#1e3a8a",
+        "grain": false,
+        "sweep": 80
+      }
+    },
+    {
+      "id": "terminal-pulse",
+      "label": "Terminal Pulse",
+      "description": "A fast, mono-typed dial in muted green on near-black that reads like a live ops console.",
+      "askedAs": [
+        "monitoring dashboard look",
+        "fast console style dial",
+        "hacker terminal green",
+        "как консоль мониторинга",
+        "быстрый зелёный терминал"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accent": "#3fb950",
+        "background": "#0b0f0c",
+        "ink": "#d7e4da",
+        "speed": 1.75,
+        "sweep": 28
+      }
+    },
+    {
+      "id": "slow-amber",
+      "label": "Slow Amber",
+      "description": "A warm amber dial on deep brown that sweeps slowly and lands with weight.",
+      "askedAs": [
+        "warm slow cinematic dial",
+        "amber gold radial bars",
+        "slower dramatic reveal",
+        "тёплый медленный вариант",
+        "янтарный цвет и плавная анимация"
+      ],
+      "props": {
+        "accent": "#e0a54b",
+        "background": "#1a1410",
+        "ink": "#f3e9dc",
+        "fontFamily": "Fraunces",
+        "sweep": 110,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "fine-grain",
+      "label": "Fine Grain",
+      "description": "Single-bar resolution at a smaller scale for a precise, finely detailed dial.",
+      "askedAs": [
+        "more detailed thinner bars",
+        "precise fine radial chart",
+        "smaller dial with lots of bars",
+        "больше тонких столбиков",
+        "детальный мелкий график"
+      ],
+      "props": {
+        "group": 1,
+        "scale": 0.85,
+        "accent": "#7c8cff",
+        "grain": false
+      }
+    },
+    {
+      "id": "bold-blocks",
+      "label": "Bold Blocks",
+      "description": "Chunky grouped bars at large scale in coral on white for a punchy, poster-like hit.",
+      "askedAs": [
+        "big bold chunky dial",
+        "poster style bright chart",
+        "larger blocks fill the frame",
+        "крупный жирный циферблат",
+        "яркий постерный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "group": 13,
+        "scale": 1.3,
+        "accent": "#e5533d",
+        "fontFamily": "Bricolage Grotesque",
+        "delay": 10
+      }
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "component": "speed-trap",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "pit-wall-mono",
+      "label": "Pit Wall",
+      "description": "Dark telemetry screen in JetBrains Mono with a signal-orange accent and six tight sectors.",
+      "askedAs": [
+        "make it look like F1 telemetry",
+        "monospace racing data screen",
+        "orange timing display"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accent": "#ff6a1a",
+        "sectors": 6,
+        "background": "#0b0d10",
+        "ink": "#e8eaed"
+      }
+    },
+    {
+      "id": "paper-report",
+      "label": "Paper Report",
+      "description": "Light editorial look with Fraunces numerals, warm paper background and a deep green accent.",
+      "askedAs": [
+        "light print style speed chart",
+        "editorial magazine version",
+        "classy serif look on white"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#f5f1e8",
+        "ink": "#1c1b18",
+        "accent": "#1f6b4f"
+      }
+    },
+    {
+      "id": "quick-lock",
+      "label": "Quick Lock",
+      "description": "Snappy readout that locks fast at double speed with a crisp red accent.",
+      "askedAs": [
+        "faster lock on the number",
+        "make it snappy and quick",
+        "short punchy speed reveal"
+      ],
+      "props": {
+        "speed": 2,
+        "lockAt": 18,
+        "accent": "#e5383b",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "slow-build",
+      "label": "Slow Build",
+      "description": "Patient, dramatic climb with a delayed start, late lock and a single unbroken bar.",
+      "askedAs": [
+        "slow dramatic buildup",
+        "let the number climb longer",
+        "cinematic slow reveal"
+      ],
+      "props": {
+        "speed": 0.5,
+        "lockAt": 80,
+        "delay": 20,
+        "sectors": 1,
+        "accent": "#8b7cf6"
+      }
+    },
+    {
+      "id": "hero-big",
+      "label": "Hero Scale",
+      "description": "Oversized headline readout in Bricolage Grotesque on deep navy with an amber accent.",
+      "askedAs": [
+        "make the speed huge",
+        "big bold hero number",
+        "fill the frame with the readout"
+      ],
+      "props": {
+        "scale": 1.35,
+        "fontFamily": "Bricolage Grotesque",
+        "background": "#0e1a2b",
+        "ink": "#f4f6fa",
+        "accent": "#f2a93b"
+      }
+    },
+    {
+      "id": "clean-light",
+      "label": "Clean Light",
+      "description": "Minimal light dashboard in Inter with a calm teal accent and four sectors, slightly smaller.",
+      "askedAs": [
+        "simple light dashboard",
+        "minimal clean white version",
+        "subtle product stat look"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#0f9d8a",
+        "sectors": 4,
+        "scale": 0.85
+      }
+    }
+  ]
+}

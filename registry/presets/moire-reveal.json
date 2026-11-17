@@ -1,0 +1,121 @@
+{
+  "component": "moire-reveal",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "blueprint-fine",
+      "label": "Blueprint Fine",
+      "description": "Tight hairline moire on deep navy with a cool cyan accent and monospaced type.",
+      "askedAs": [
+        "fine blue technical lines",
+        "blueprint style reveal",
+        "engineering mono look",
+        "синий чертёж с тонкими линиями",
+        "техничный моноширинный стиль"
+      ],
+      "props": {
+        "background": "#0b1a2e",
+        "ink": "#e6f0fa",
+        "accent": "#5cc8e6",
+        "lineSpacing": 4.5,
+        "fontFamily": "JetBrains Mono"
+      }
+    },
+    {
+      "id": "paper-editorial",
+      "label": "Paper Editorial",
+      "description": "Warm off-white paper with dark serif type and a slow, calm resolve.",
+      "askedAs": [
+        "light elegant serif version",
+        "slow magazine style reveal",
+        "warm paper background",
+        "светлый журнальный стиль",
+        "медленное появление с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#b5532e",
+        "fontFamily": "Fraunces",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "hypnotic-slow",
+      "label": "Hypnotic Slow",
+      "description": "Wide, steeply angled lines that drift slowly into focus for a trance-like build.",
+      "askedAs": [
+        "slow hypnotic build",
+        "wide lines dramatic reveal",
+        "longer suspense before the number",
+        "гипнотическое медленное появление",
+        "широкие линии и долгая интрига"
+      ],
+      "props": {
+        "lineSpacing": 12,
+        "angle": 38,
+        "speed": 0.5,
+        "delay": 20
+      }
+    },
+    {
+      "id": "snap-punch",
+      "label": "Snap Punch",
+      "description": "Oversized type that snaps out of the pattern fast with a bold grotesk and violet accent.",
+      "askedAs": [
+        "fast punchy reveal",
+        "big quick number",
+        "energetic short version",
+        "быстрое резкое появление",
+        "крупная цифра быстро"
+      ],
+      "props": {
+        "speed": 2,
+        "scale": 1.35,
+        "angle": 4,
+        "fontFamily": "Space Grotesk",
+        "accent": "#8b5cf6"
+      }
+    },
+    {
+      "id": "clean-mark",
+      "label": "Clean Mark",
+      "description": "A grain-free light logo reveal with a crisp green accent and compact scale.",
+      "askedAs": [
+        "clean logo reveal",
+        "brand mark on white",
+        "minimal light no grain",
+        "чистое появление логотипа",
+        "минималистичный светлый знак"
+      ],
+      "props": {
+        "shape": "mark",
+        "theme": "light",
+        "grain": false,
+        "accent": "#10b981",
+        "scale": 0.8
+      }
+    },
+    {
+      "id": "graphite-ember",
+      "label": "Graphite Ember",
+      "description": "Charcoal background with soft ivory type and a muted amber accent in Manrope.",
+      "askedAs": [
+        "dark warm orange accent",
+        "graphite and amber look",
+        "moody premium dark",
+        "тёмный с янтарным акцентом",
+        "графитовый премиальный вид"
+      ],
+      "props": {
+        "background": "#18181b",
+        "ink": "#f5f0e6",
+        "accent": "#e0a045",
+        "fontFamily": "Manrope",
+        "lineSpacing": 9
+      }
+    }
+  ]
+}

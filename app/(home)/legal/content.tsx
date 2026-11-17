@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { GITHUB_URL, SUPPORT_EMAIL } from "@/config/site";
 
-export const LAST_UPDATED = "November 14, 2026";
+export const LAST_UPDATED = "November 17, 2026";
 
 export type LegalItem = { title: ReactNode; body: ReactNode };
 
@@ -133,12 +133,35 @@ export const LEGAL_PARTS: LegalPart[] = [
         ],
       },
       {
+        id: "describe-field",
+        title: "The describe field",
+        body: "The customizer on each component page has a field where you describe a look in words, like “slower, dark background”. What you type is sent to our server together with the component’s current settings.",
+        items: [
+          {
+            title: "How it is answered.",
+            body: "Most descriptions are read on our server without any AI model. When they aren’t, and your browser has a built-in AI model ready, that model answers on your device. Otherwise the text and the settings go to Anthropic’s Claude API, which answers with new settings. Anthropic processes them under its commercial terms and does not use them to train its models.",
+          },
+          {
+            title: "What we keep.",
+            body: "Descriptions answered by Claude are stored with the component name and the answer, so the same description is answered again without a new call and so we can turn common ones into presets. They are not tied to an account or an IP address. Keep personal details out of the field.",
+          },
+          {
+            title: "Abuse protection.",
+            body: "To stop the field being used for anything but animations, we count requests per visitor by a salted hash of the IP address, never the address itself. A description that asks for something else (code, essays, instructions to the model) is a strike, stored with its text for 30 days. Three strikes within 30 days turn off AI answers for that network for 30 days; presets and the rest of the site keep working.",
+          },
+        ],
+      },
+      {
         id: "third-party-services",
         title: "Third-party services",
         rows: [
           {
             title: <A href="https://openpanel.dev">OpenPanel</A>,
             body: "Anonymous usage analytics.",
+          },
+          {
+            title: <A href="https://www.anthropic.com">Anthropic</A>,
+            body: "The Claude API answers descriptions typed into the customizer’s describe field.",
           },
           {
             title: <A href="https://creem.io">Creem</A>,

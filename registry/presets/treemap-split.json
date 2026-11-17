@@ -1,0 +1,122 @@
+{
+  "component": "treemap-split",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "A warm light page with a serif face, terracotta accent and soft rounded tiles, like a printed annual report.",
+      "askedAs": [
+        "make it look like a magazine chart",
+        "light serif treemap with warm colors",
+        "print report style breakdown",
+        "светлый журнальный стиль",
+        "как в печатном отчёте"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#2a2420",
+        "accent": "#c2562f",
+        "fontFamily": "Fraunces",
+        "radius": 10
+      }
+    },
+    {
+      "id": "terminal-grid",
+      "label": "Terminal Grid",
+      "description": "Sharp square tiles in monospace on near-black with a muted green accent and a fast, snappy split.",
+      "askedAs": [
+        "hacker style data chart",
+        "monospace dark treemap",
+        "square tiles quick split",
+        "в стиле терминала",
+        "моноширинный шрифт и острые углы"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "radius": 0,
+        "background": "#0b0f0c",
+        "ink": "#d6e4d9",
+        "accent": "#3fa772",
+        "split": 12
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A calm, unhurried split with a short lead-in and a deep violet accent for thoughtful storytelling beats.",
+      "askedAs": [
+        "slower calmer animation",
+        "let the tiles split slowly",
+        "gentle cinematic breakdown",
+        "медленное плавное разделение",
+        "спокойная анимация"
+      ],
+      "props": {
+        "split": 44,
+        "speed": 0.5,
+        "delay": 18,
+        "accent": "#6d4ae0"
+      }
+    },
+    {
+      "id": "clean-saas",
+      "label": "Clean SaaS",
+      "description": "Crisp white dashboard look with Inter, a confident blue accent, no grain and gently rounded tiles.",
+      "askedAs": [
+        "clean product dashboard look",
+        "white minimal treemap",
+        "no grain light ui chart",
+        "чистый светлый дашборд",
+        "минималистично без шума"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "grain": false,
+        "accent": "#2563eb",
+        "radius": 8
+      }
+    },
+    {
+      "id": "bold-close-up",
+      "label": "Bold Close Up",
+      "description": "Oversized, very rounded tiles in Bricolage Grotesque with a coral accent that punch in quickly.",
+      "askedAs": [
+        "bigger bolder treemap",
+        "zoomed in punchy chart",
+        "fast energetic split for social",
+        "крупно и энергично",
+        "сделай больше и быстрее"
+      ],
+      "props": {
+        "scale": 1.3,
+        "radius": 20,
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#e8644a",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "midnight-teal",
+      "label": "Midnight Teal",
+      "description": "Deep navy backdrop with a cool teal accent and Space Grotesk for a composed, technical tone.",
+      "askedAs": [
+        "dark blue and teal chart",
+        "navy background data breakdown",
+        "cool tech palette treemap",
+        "тёмно-синий с бирюзой",
+        "холодная техничная палитра"
+      ],
+      "props": {
+        "background": "#0e1626",
+        "ink": "#e3ecf5",
+        "accent": "#1fa3a0",
+        "fontFamily": "Space Grotesk",
+        "scale": 0.9
+      }
+    }
+  ]
+}

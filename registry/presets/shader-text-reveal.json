@@ -1,0 +1,94 @@
+{
+  "component": "shader-text-reveal",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-cinematic",
+      "label": "Slow Cinematic",
+      "description": "Large words linger with a full-strength shader that drifts slowly before settling into white.",
+      "askedAs": [
+        "slow dramatic word reveal",
+        "cinematic trailer title",
+        "make each word hold longer",
+        "медленное кинематографичное появление",
+        "драматичный заголовок как в трейлере"
+      ],
+      "props": {
+        "wordDuration": 60,
+        "speed": 0.5,
+        "intensity": 1
+      }
+    },
+    {
+      "id": "quick-punch",
+      "label": "Quick Punch",
+      "description": "Words snap in rapidly with a fast-moving shader for an energetic, punchy headline.",
+      "askedAs": [
+        "fast punchy text",
+        "quick energetic word reveal",
+        "snappy promo headline",
+        "быстрый энергичный текст",
+        "резкое появление слов"
+      ],
+      "props": {
+        "wordDuration": 14,
+        "speed": 2.5,
+        "fontSize": 440
+      }
+    },
+    {
+      "id": "subtle-whisper",
+      "label": "Subtle Whisper",
+      "description": "A soft, low-strength shader glints through mid-sized type for a quiet, understated reveal.",
+      "askedAs": [
+        "subtle elegant text reveal",
+        "faint shader minimal look",
+        "quiet understated headline",
+        "едва заметный эффект шейдера",
+        "спокойный минималистичный текст"
+      ],
+      "props": {
+        "intensity": 0.35,
+        "fontSize": 220,
+        "speed": 0.75,
+        "wordDuration": 40
+      }
+    },
+    {
+      "id": "compact-caption",
+      "label": "Compact Caption",
+      "description": "Smaller type with a brisk cadence suited to lower thirds and supporting lines.",
+      "askedAs": [
+        "small caption text reveal",
+        "subtitle sized words",
+        "smaller text for a lower third",
+        "маленький текст как подпись",
+        "компактная надпись"
+      ],
+      "props": {
+        "fontSize": 96,
+        "wordDuration": 22,
+        "intensity": 0.7
+      }
+    },
+    {
+      "id": "molten-hero",
+      "label": "Molten Hero",
+      "description": "Oversized letters hold the swirling shader at full strength with a fluid, lively flow.",
+      "askedAs": [
+        "huge glowing hero title",
+        "giant letters full shader",
+        "bold liquid text effect",
+        "огромный яркий заголовок",
+        "крупные буквы с жидким эффектом"
+      ],
+      "props": {
+        "fontSize": 500,
+        "intensity": 1,
+        "speed": 1.75,
+        "wordDuration": 45
+      }
+    }
+  ]
+}

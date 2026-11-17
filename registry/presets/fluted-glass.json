@@ -1,0 +1,127 @@
+{
+  "component": "fluted-glass",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gallery-light",
+      "label": "Gallery Light",
+      "description": "A bright, airy reveal with fine flutes, a soft terracotta orb and an elegant serif on warm paper.",
+      "askedAs": [
+        "light elegant glass reveal",
+        "bright minimal fluted title",
+        "clean white premium headline",
+        "светлый элегантный заголовок за стеклом",
+        "минималистичное светлое стекло"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f1ec",
+        "ink": "#1c1a17",
+        "accent": "#c8643b",
+        "fontFamily": "Instrument Serif",
+        "fluteWidth": 14
+      }
+    },
+    {
+      "id": "slow-bloom",
+      "label": "Slow Bloom",
+      "description": "Wide, heavy flutes clear slowly over a deep plum orb for a cinematic, patient reveal.",
+      "askedAs": [
+        "slow cinematic glass reveal",
+        "dramatic blurry title that slowly sharpens",
+        "moody luxury headline intro",
+        "медленное кинематографичное появление",
+        "плавное раскрытие заголовка за стеклом"
+      ],
+      "props": {
+        "fluteWidth": 60,
+        "sweep": 104,
+        "accent": "#7a3e8e",
+        "background": "#0e0b12",
+        "ink": "#f2ecf5",
+        "delay": 12
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "A fast, crisp sweep through narrow flutes with a clean grotesk and teal orb, no grain.",
+      "askedAs": [
+        "fast glass transition",
+        "quick snappy title reveal",
+        "short punchy tech headline",
+        "быстрый резкий переход через стекло",
+        "динамичное появление текста"
+      ],
+      "props": {
+        "sweep": 22,
+        "speed": 1.5,
+        "fluteWidth": 18,
+        "fontFamily": "Space Grotesk",
+        "accent": "#14a39a",
+        "grain": false
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "A navy backdrop with a muted gold orb and refined serif type for a luxury brand moment.",
+      "askedAs": [
+        "gold luxury brand reveal",
+        "dark navy and gold title",
+        "premium jewelry style intro",
+        "золотой премиальный заголовок",
+        "тёмно-синий фон с золотом"
+      ],
+      "props": {
+        "background": "#0b1424",
+        "ink": "#f3ead7",
+        "accent": "#c9a45c",
+        "fontFamily": "Fraunces",
+        "fluteWidth": 34,
+        "sweep": 64
+      }
+    },
+    {
+      "id": "mono-lab",
+      "label": "Mono Lab",
+      "description": "A compact, technical look with monospace type, a cool slate orb and tight flutes on graphite.",
+      "askedAs": [
+        "developer style glass title",
+        "monospace tech reveal",
+        "small technical headline intro",
+        "технический заголовок моноширинным шрифтом",
+        "стекло в стиле для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#16181c",
+        "ink": "#e4e7eb",
+        "accent": "#5b7a99",
+        "fluteWidth": 10,
+        "scale": 0.8
+      }
+    },
+    {
+      "id": "bold-statement",
+      "label": "Bold Statement",
+      "description": "An oversized grotesk headline on a light ground with a vivid coral orb behind wide flutes.",
+      "askedAs": [
+        "big bold glass headline",
+        "large statement title reveal",
+        "oversized text behind fluted glass",
+        "крупный жирный заголовок",
+        "большой акцентный текст за стеклом"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.35,
+        "accent": "#e8664f",
+        "fluteWidth": 44,
+        "ink": "#141414"
+      }
+    }
+  ]
+}

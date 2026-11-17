@@ -1,0 +1,103 @@
+{
+  "component": "sheen-slide-in",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gilded-luxe",
+      "label": "Gilded Luxe",
+      "description": "A slow, heavy entrance in near-black type with a warm champagne-gold sheen for a luxury brand feel.",
+      "askedAs": [
+        "gold shimmer luxury title",
+        "slow elegant premium intro",
+        "black text with gold sweep",
+        "золотой блик на заголовке",
+        "медленный роскошный заголовок"
+      ],
+      "props": {
+        "baseColor": "#1c1917",
+        "sheenColor": "#c9a24a",
+        "fontWeight": "600",
+        "speed": 0.5,
+        "exitAt": 120
+      }
+    },
+    {
+      "id": "snappy-tech",
+      "label": "Snappy Tech",
+      "description": "A quick, compact arrival in bold slate type with a crisp electric-violet sheen and an early exit.",
+      "askedAs": [
+        "fast punchy tech title",
+        "quick bold slide in",
+        "short snappy intro",
+        "быстрый техно заголовок",
+        "резкий короткий заголовок"
+      ],
+      "props": {
+        "speed": 2,
+        "fontWeight": "700",
+        "baseColor": "#0f172a",
+        "sheenColor": "#7c3aed",
+        "exitAt": 40
+      }
+    },
+    {
+      "id": "editorial-hero",
+      "label": "Editorial Hero",
+      "description": "Oversized light-weight type in deep ink with a soft rose sheen, unhurried like a magazine cover.",
+      "askedAs": [
+        "huge thin headline",
+        "big elegant magazine title",
+        "large light font with pink shine",
+        "огромный тонкий заголовок",
+        "журнальный крупный заголовок"
+      ],
+      "props": {
+        "fontSize": 140,
+        "fontWeight": "400",
+        "baseColor": "#1e1b2e",
+        "sheenColor": "#e11d74",
+        "speed": 0.75,
+        "exitAt": 90
+      }
+    },
+    {
+      "id": "forest-calm",
+      "label": "Forest Calm",
+      "description": "Medium-weight deep green type with a gentle emerald sheen gliding in at a relaxed pace.",
+      "askedAs": [
+        "green natural title",
+        "calm eco intro text",
+        "soft green shimmer heading",
+        "зелёный спокойный заголовок",
+        "эко заголовок с бликом"
+      ],
+      "props": {
+        "baseColor": "#14532d",
+        "sheenColor": "#34d399",
+        "fontWeight": "500",
+        "speed": 0.75,
+        "exitAt": 100
+      }
+    },
+    {
+      "id": "subtle-caption",
+      "label": "Subtle Caption",
+      "description": "Small graphite text with a quiet steel-grey sheen for understated lower-third style labels.",
+      "askedAs": [
+        "small subtle title",
+        "minimal caption slide",
+        "quiet grey shimmer text",
+        "маленькая подпись с бликом",
+        "минималистичный мелкий текст"
+      ],
+      "props": {
+        "fontSize": 36,
+        "fontWeight": "500",
+        "baseColor": "#3f3f46",
+        "sheenColor": "#a1a1aa",
+        "speed": 1.25
+      }
+    }
+  ]
+}

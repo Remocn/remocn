@@ -1,0 +1,115 @@
+{
+  "component": "icon-pause",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-slow-draw",
+      "label": "Hero Draw",
+      "description": "A large, fine-lined pause icon that slowly draws itself in like a title card.",
+      "askedAs": [
+        "big slow pause icon drawing in",
+        "large thin pause sign for intro",
+        "elegant slow pause outline",
+        "большая медленная иконка паузы",
+        "тонкая пауза крупно с прорисовкой"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 160,
+        "strokeWidth": 1.25,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "bold-snap",
+      "label": "Bold Snap",
+      "description": "A chunky, heavy-stroked pause that snaps through its action quickly.",
+      "askedAs": [
+        "thick fast pause icon",
+        "punchy bold pause button",
+        "quick heavy pause animation",
+        "жирная быстрая пауза",
+        "резкая толстая иконка паузы"
+      ],
+      "props": {
+        "animation": "action",
+        "strokeWidth": 3,
+        "size": 96,
+        "speed": 2
+      }
+    },
+    {
+      "id": "calm-loop",
+      "label": "Calm Loop",
+      "description": "A muted slate-blue pause that gently repeats its motion at a relaxed pace.",
+      "askedAs": [
+        "looping soft pause icon",
+        "calm repeating pause animation",
+        "blue pause that loops slowly",
+        "зацикленная спокойная пауза",
+        "синяя пауза по кругу медленно"
+      ],
+      "props": {
+        "loop": true,
+        "color": "#4a6fa5",
+        "speed": 0.75,
+        "size": 72
+      }
+    },
+    {
+      "id": "accent-red",
+      "label": "Accent Red",
+      "description": "A medium-sized pause in a warm brick red, drawn and animated at standard pace.",
+      "askedAs": [
+        "red pause icon",
+        "warm colored pause button",
+        "pause sign in brick red",
+        "красная иконка паузы",
+        "пауза тёплого цвета"
+      ],
+      "props": {
+        "color": "#c2410c",
+        "size": 80,
+        "strokeWidth": 2.5
+      }
+    },
+    {
+      "id": "tiny-ui",
+      "label": "Tiny UI",
+      "description": "A small, crisp grey pause icon sized for interface overlays with a brisk action.",
+      "askedAs": [
+        "small pause icon for UI",
+        "tiny grey pause button",
+        "compact player pause sign",
+        "маленькая иконка паузы для интерфейса",
+        "крошечная серая пауза"
+      ],
+      "props": {
+        "size": 28,
+        "color": "#525252",
+        "strokeWidth": 1.5,
+        "speed": 1.5,
+        "animation": "action"
+      }
+    },
+    {
+      "id": "forest-pulse",
+      "label": "Forest Pulse",
+      "description": "A deep green pause that continuously draws and acts in a steady loop.",
+      "askedAs": [
+        "green pause icon looping",
+        "continuous pause animation dark green",
+        "pause icon on repeat",
+        "зелёная пауза в цикле",
+        "бесконечная анимация паузы"
+      ],
+      "props": {
+        "color": "#166534",
+        "loop": true,
+        "size": 120,
+        "speed": 1.25
+      }
+    }
+  ]
+}

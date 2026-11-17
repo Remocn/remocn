@@ -1,0 +1,126 @@
+{
+  "component": "stat-rail",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-editorial",
+      "label": "Paper Editorial",
+      "description": "A light, serif-led layout on warm paper with an ink-blue accent and an unhurried pace.",
+      "askedAs": [
+        "light editorial stats with serif font",
+        "magazine style stat beat",
+        "calm paper look for numbers",
+        "светлый журнальный стиль с засечками",
+        "спокойная статистика на бумажном фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "fontFamily": "Instrument Serif",
+        "accent": "#1f4e8c",
+        "ink": "#1a1a1a",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "night-terminal",
+      "label": "Night Terminal",
+      "description": "A dark monospace treatment over a deep night ground with a cool cyan accent and quick, snappy timing.",
+      "askedAs": [
+        "developer terminal style stats",
+        "dark mono font numbers",
+        "fast techy stat rail",
+        "тёмный стиль терминала для цифр",
+        "моноширинный шрифт и быстрая анимация"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "nightfold",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#5cc8d6",
+        "speed": 1.5,
+        "stagger": 1
+      }
+    },
+    {
+      "id": "ember-keynote",
+      "label": "Ember Keynote",
+      "description": "Oversized type on a warm ember ground with a copper accent and a long, dramatic tagline hold.",
+      "askedAs": [
+        "big bold keynote stats",
+        "warm orange launch recap",
+        "dramatic stage numbers",
+        "крупные цифры как на презентации",
+        "тёплый оранжевый фон для статистики"
+      ],
+      "props": {
+        "ground": "ember",
+        "accent": "#e08a4f",
+        "scale": 1.3,
+        "hold": 60,
+        "fontFamily": "Bricolage Grotesque"
+      }
+    },
+    {
+      "id": "polar-minimal",
+      "label": "Polar Minimal",
+      "description": "A cool, airy light look on a polar ground with a slate card and softly faded secondary stats.",
+      "askedAs": [
+        "clean minimal icy stats",
+        "cool light blue stat slide",
+        "quiet understated numbers",
+        "минималистичный холодный светлый стиль",
+        "спокойные цифры в голубых тонах"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "polar",
+        "fontFamily": "Geist",
+        "accent": "#2f6f9f",
+        "faded": "#9aa7b4",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "velvet-slow",
+      "label": "Velvet Slow",
+      "description": "A plush dusk palette with a muted rose accent, gentle word stagger and a slowed, cinematic entrance.",
+      "askedAs": [
+        "slow cinematic stats reveal",
+        "moody purple evening look",
+        "elegant soft closing numbers",
+        "медленное кинематографичное появление цифр",
+        "вечерний фиолетовый стиль"
+      ],
+      "props": {
+        "ground": "velvet-hour",
+        "accent": "#d99aa8",
+        "fontFamily": "Fraunces",
+        "stagger": 6,
+        "speed": 0.5,
+        "delay": 15
+      }
+    },
+    {
+      "id": "greenhouse-punch",
+      "label": "Greenhouse Punch",
+      "description": "A fresh green ground with a sage accent, tight grotesk type and fast, punchy stepping.",
+      "askedAs": [
+        "fresh green energetic stats",
+        "quick punchy proof beat",
+        "nature toned fast numbers",
+        "свежий зелёный стиль статистики",
+        "быстрые энергичные цифры"
+      ],
+      "props": {
+        "ground": "greenhouse",
+        "accent": "#8fd19e",
+        "fontFamily": "Space Grotesk",
+        "speed": 2,
+        "hold": 15,
+        "stagger": 0
+      }
+    }
+  ]
+}

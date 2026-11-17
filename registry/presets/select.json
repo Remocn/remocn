@@ -1,0 +1,106 @@
+{
+  "component": "select",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hover-preview",
+      "label": "Hover Preview",
+      "description": "Open panel with a different row highlighted to suggest the cursor gliding over options.",
+      "askedAs": [
+        "dropdown with hovered option",
+        "show hover on a menu item",
+        "open select with highlight",
+        "выпадающий список с наведением",
+        "подсветка пункта в меню"
+      ],
+      "props": {
+        "state": "opened",
+        "highlightedIndex": 2
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "Panel eases open at a leisurely quarter-pace for calm, cinematic walkthroughs.",
+      "askedAs": [
+        "slow dropdown opening",
+        "calm select animation",
+        "gentle menu reveal",
+        "медленное открытие списка",
+        "плавный выпадающий список"
+      ],
+      "props": {
+        "state": "opened",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "snappy-open",
+      "label": "Snappy Open",
+      "description": "A brisk, near-instant open with a highlighted top row for energetic product demos.",
+      "askedAs": [
+        "fast dropdown",
+        "quick snappy select",
+        "instant menu open",
+        "быстрое открытие меню",
+        "резкий выпадающий список"
+      ],
+      "props": {
+        "state": "opened",
+        "speed": 2.5,
+        "highlightedIndex": 0
+      }
+    },
+    {
+      "id": "closed-field",
+      "label": "Closed Field",
+      "description": "The select rests closed as a quiet form field showing its chosen value.",
+      "askedAs": [
+        "closed select field",
+        "dropdown not open",
+        "collapsed form select",
+        "закрытый выпадающий список",
+        "поле выбора в форме"
+      ],
+      "props": {
+        "state": "closed",
+        "selectedIndex": 2
+      }
+    },
+    {
+      "id": "empty-choice",
+      "label": "Empty Choice",
+      "description": "An open panel with nothing selected yet, framing the moment before a decision.",
+      "askedAs": [
+        "dropdown with no selection",
+        "empty select open",
+        "nothing chosen yet menu",
+        "список без выбранного пункта",
+        "пустой выбор в меню"
+      ],
+      "props": {
+        "state": "opened",
+        "selectedIndex": -1,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-close",
+      "label": "Quick Close",
+      "description": "Panel snaps shut quickly after the last option is picked, wrapping up the interaction.",
+      "askedAs": [
+        "dropdown closing fast",
+        "select closes after pick",
+        "menu collapse animation",
+        "быстрое закрытие списка",
+        "меню закрывается после выбора"
+      ],
+      "props": {
+        "state": "closed",
+        "selectedIndex": 3,
+        "speed": 2
+      }
+    }
+  ]
+}

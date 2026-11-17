@@ -1,0 +1,107 @@
+{
+  "component": "column-reflow",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "cream-broadsheet",
+      "label": "Cream Broadsheet",
+      "description": "Warm newsprint paper with deep brown serif text widening slowly into a generous column.",
+      "askedAs": [
+        "newspaper look on cream paper",
+        "warm editorial serif paragraph",
+        "slow classic print column",
+        "кремовая бумага как в газете",
+        "тёплый газетный текст с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f3ecdd",
+        "ink": "#2b2118",
+        "fontFamily": "Fraunces",
+        "measure": 12,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "swiss-narrow",
+      "label": "Swiss Narrow",
+      "description": "Clean white page with crisp grotesk type squeezing into a tight column at a brisk pace.",
+      "askedAs": [
+        "minimal swiss typography narrowing",
+        "clean sans serif column shrinking",
+        "fast responsive text squeeze",
+        "минималистичный швейцарский стиль",
+        "текст сужается быстро без засечек"
+      ],
+      "props": {
+        "theme": "light",
+        "direction": "narrow",
+        "fontFamily": "Inter",
+        "grain": false,
+        "measure": 7,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "midnight-journal",
+      "label": "Midnight Journal",
+      "description": "Ink-blue night page with soft ivory italic serif drifting gently wider.",
+      "askedAs": [
+        "dark blue literary paragraph",
+        "elegant serif on night background",
+        "calm slow dark reading mood",
+        "тёмно-синий литературный текст",
+        "спокойный ночной абзац с засечками"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#141b2d",
+        "ink": "#ece4d4",
+        "fontFamily": "Instrument Serif",
+        "scale": 1.2,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "terminal-spec",
+      "label": "Terminal Spec",
+      "description": "Graphite background with pale green monospace text reflowing quickly like a code document.",
+      "askedAs": [
+        "monospace code style paragraph",
+        "developer docs text reflow",
+        "technical dark terminal look",
+        "моноширинный шрифт как в терминале",
+        "текст в стиле документации для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#1a1d1b",
+        "ink": "#c9e4c5",
+        "grain": false,
+        "scale": 0.85,
+        "speed": 2
+      }
+    },
+    {
+      "id": "gallery-wall",
+      "label": "Gallery Wall",
+      "description": "Large bold grotesque on warm stone grey, narrowing slowly after a short pause.",
+      "askedAs": [
+        "big museum wall text",
+        "large modern typography slow narrow",
+        "gallery caption style paragraph",
+        "крупный текст как в галерее",
+        "большой современный шрифт медленно сужается"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#d9d4cc",
+        "ink": "#1c1c1a",
+        "fontFamily": "Bricolage Grotesque",
+        "direction": "narrow",
+        "delay": 20
+      }
+    }
+  ]
+}

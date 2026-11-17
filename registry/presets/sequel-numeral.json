@@ -1,0 +1,125 @@
+{
+  "component": "sequel-numeral",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A warm cream page with an oxblood serif numeral, paced slowly like a magazine cover reveal.",
+      "askedAs": [
+        "elegant serif sequel card",
+        "slow magazine style part two",
+        "classy light announcement",
+        "элегантная заставка с засечками",
+        "медленный журнальный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#8c1c13",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "Deep navy backdrop with a brass-gold numeral and a long, luxurious hold.",
+      "askedAs": [
+        "luxury gold version two",
+        "dark blue and gold sequel",
+        "premium night launch card",
+        "тёмно-синий с золотом",
+        "люксовый анонс второй части"
+      ],
+      "props": {
+        "background": "#0b1220",
+        "ink": "#ede6d6",
+        "accent": "#c9a44c",
+        "fontFamily": "Instrument Serif",
+        "hold": 56,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "swiss-punch",
+      "label": "Swiss Punch",
+      "description": "Clean white Swiss layout with a bold signal-red numeral that snaps in fast.",
+      "askedAs": [
+        "fast minimal white v2",
+        "punchy swiss red numeral",
+        "quick clean release card",
+        "быстрый минималистичный белый",
+        "швейцарский стиль красная цифра"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#e63312",
+        "speed": 1.75,
+        "hold": 18
+      }
+    },
+    {
+      "id": "terminal-release",
+      "label": "Terminal Release",
+      "description": "Monospaced type on near-black with a mint numeral for a developer-tool changelog feel.",
+      "askedAs": [
+        "dev tool version 2 card",
+        "monospace release announcement",
+        "hacker style out now",
+        "моноширинный анонс релиза",
+        "для разработчиков вторая версия"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d0f0e",
+        "ink": "#d8e0dc",
+        "accent": "#4ade9b",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "monumental",
+      "label": "Monumental",
+      "description": "Oversized grotesk composition in charcoal and tangerine that lands with a measured delay.",
+      "askedAs": [
+        "huge numeral sequel",
+        "big bold season two",
+        "giant orange version number",
+        "огромная цифра два",
+        "крупный смелый анонс"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.35,
+        "background": "#17171a",
+        "ink": "#f2f2f0",
+        "accent": "#ff6a2b",
+        "delay": 12
+      }
+    },
+    {
+      "id": "soft-studio",
+      "label": "Soft Studio",
+      "description": "Muted sage paper with a forest-green numeral in Manrope for a calm, modern product drop.",
+      "askedAs": [
+        "calm green out now card",
+        "soft pastel second edition",
+        "gentle modern launch",
+        "спокойный зелёный анонс",
+        "мягкий пастельный релиз"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#e6ebe3",
+        "ink": "#1e2a22",
+        "accent": "#2f6b4f",
+        "fontFamily": "Manrope",
+        "speed": 0.5
+      }
+    }
+  ]
+}

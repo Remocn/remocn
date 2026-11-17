@@ -1,0 +1,125 @@
+{
+  "component": "split-word",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gallery-light",
+      "label": "Gallery Light",
+      "description": "Calm ivory canvas with charcoal type and a slow, deliberate split.",
+      "askedAs": [
+        "light minimal version",
+        "clean white slow reveal",
+        "elegant bright gallery look",
+        "светлый минималистичный вариант",
+        "медленное раскрытие на белом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f1ea",
+        "ink": "#1c1c1e",
+        "accent": "#b08d57",
+        "speed": 0.75,
+        "hold": 24
+      }
+    },
+    {
+      "id": "midnight-ember",
+      "label": "Midnight Ember",
+      "description": "Deep navy backdrop with warm ember gradient and long, cinematic hold.",
+      "askedAs": [
+        "dark cinematic warm glow",
+        "navy and orange premium reveal",
+        "moody film title split",
+        "тёмный кинематографичный вариант",
+        "тёплое свечение на тёмно-синем"
+      ],
+      "props": {
+        "background": "#0b1220",
+        "ink": "#f2ede4",
+        "accent": "#e0763a",
+        "hold": 32,
+        "speed": 0.75,
+        "stagger": 5
+      }
+    },
+    {
+      "id": "snap-launch",
+      "label": "Snap Launch",
+      "description": "Fast, punchy split with no letter stagger and a brief hold for quick social cuts.",
+      "askedAs": [
+        "fast punchy announcement",
+        "quick snappy reveal for reels",
+        "energetic short split",
+        "быстрый резкий анонс",
+        "динамичный вариант для соцсетей"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 0,
+        "hold": 6,
+        "grain": false,
+        "accent": "#ff4d5e"
+      }
+    },
+    {
+      "id": "emerald-quiet",
+      "label": "Emerald Quiet",
+      "description": "Smaller, restrained type on forest green with a soft mint band and gentle cascade.",
+      "askedAs": [
+        "subtle green understated reveal",
+        "smaller calm headline",
+        "soft luxury green look",
+        "спокойный зелёный вариант",
+        "сдержанный мелкий заголовок"
+      ],
+      "props": {
+        "background": "#0f2a22",
+        "ink": "#e8f0ea",
+        "accent": "#6fcf9f",
+        "scale": 0.75,
+        "stagger": 7,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "monolith",
+      "label": "Monolith",
+      "description": "Oversized stark black-and-white type with a cool silver band and clean, grain-free finish.",
+      "askedAs": [
+        "huge bold monochrome word",
+        "big black and white statement",
+        "oversized minimal headline",
+        "огромный чёрно-белый заголовок",
+        "крупный монохромный вариант"
+      ],
+      "props": {
+        "background": "#000000",
+        "ink": "#ffffff",
+        "accent": "#9aa3ad",
+        "scale": 1.35,
+        "grain": false
+      }
+    },
+    {
+      "id": "lilac-dawn",
+      "label": "Lilac Dawn",
+      "description": "Pale lilac light theme with plum type and a violet gradient that opens after a short beat.",
+      "askedAs": [
+        "soft pastel purple reveal",
+        "delayed gentle lavender intro",
+        "light violet premium split",
+        "пастельный сиреневый вариант",
+        "нежное раскрытие с задержкой"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f1ecf7",
+        "ink": "#2e1a47",
+        "accent": "#7b5cd6",
+        "delay": 15,
+        "stagger": 4
+      }
+    }
+  ]
+}

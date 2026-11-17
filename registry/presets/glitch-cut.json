@@ -1,0 +1,115 @@
+{
+  "component": "glitch-cut",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "subtle-tick",
+      "label": "Subtle Tick",
+      "description": "A light, quick tear with faint channel offset and almost no block corruption, for clean product demos.",
+      "askedAs": [
+        "gentle glitch transition",
+        "barely noticeable glitch cut",
+        "clean minimal glitch",
+        "лёгкий глитч переход",
+        "едва заметный глитч"
+      ],
+      "props": {
+        "intensity": 0.4,
+        "rgbSplit": 0.3,
+        "blockNoise": 0.1,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "signal-loss",
+      "label": "Signal Loss",
+      "description": "A heavy broadcast failure with violent displacement, wide channel split and dense corrupted blocks.",
+      "askedAs": [
+        "extreme glitch cut",
+        "heavy broken signal transition",
+        "corrupted tv glitch",
+        "сильный глитч",
+        "потеря сигнала эффект"
+      ],
+      "props": {
+        "intensity": 1.8,
+        "rgbSplit": 1.8,
+        "blockNoise": 0.95,
+        "slices": 40
+      }
+    },
+    {
+      "id": "scanline-shred",
+      "label": "Scanline Shred",
+      "description": "Many thin slices shred the frame like interlaced scanlines with a fast, fine-grained tear.",
+      "askedAs": [
+        "thin line glitch",
+        "scanline tear transition",
+        "fine slice glitch",
+        "глитч тонкими полосами",
+        "эффект строчной развёртки"
+      ],
+      "props": {
+        "slices": 64,
+        "intensity": 0.8,
+        "blockNoise": 0.3,
+        "speed": 2
+      }
+    },
+    {
+      "id": "chunky-datamosh",
+      "label": "Chunky Datamosh",
+      "description": "Few wide bands slide apart slowly with blocky compression artifacts and little colour fringing.",
+      "askedAs": [
+        "datamosh transition",
+        "big blocky glitch",
+        "slow chunky glitch cut",
+        "датамош переход",
+        "крупные блоки глитч"
+      ],
+      "props": {
+        "slices": 8,
+        "blockNoise": 0.85,
+        "rgbSplit": 0.4,
+        "speed": 0.5,
+        "intensity": 1.3
+      }
+    },
+    {
+      "id": "chroma-burst",
+      "label": "Chroma Burst",
+      "description": "A colour-driven glitch where strong RGB channel separation dominates over clean slices and sparse blocks.",
+      "askedAs": [
+        "rgb split glitch",
+        "chromatic aberration cut",
+        "color fringe transition",
+        "глитч с разделением цветов",
+        "хроматическая аберрация переход"
+      ],
+      "props": {
+        "rgbSplit": 2,
+        "blockNoise": 0.2,
+        "slices": 16,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "snap-cut",
+      "label": "Snap Cut",
+      "description": "An ultra-fast, punchy glitch that hits and resolves in a blink for rapid edit rhythms.",
+      "askedAs": [
+        "very fast glitch cut",
+        "quick snap glitch",
+        "fast punchy transition",
+        "быстрый глитч",
+        "резкая склейка с глитчем"
+      ],
+      "props": {
+        "speed": 3.5,
+        "intensity": 1.2,
+        "slices": 20
+      }
+    }
+  ]
+}

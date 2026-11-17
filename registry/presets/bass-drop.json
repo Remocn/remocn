@@ -1,0 +1,102 @@
+{
+  "component": "bass-drop",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "long-tension",
+      "label": "Long Tension",
+      "description": "An extended, slow build that holds its breath before a big serif drop in deep crimson.",
+      "askedAs": [
+        "slow dramatic build before the logo",
+        "long suspense trailer intro",
+        "epic cinematic tension reveal",
+        "медленное нарастание перед логотипом",
+        "долгая напряжённая заставка"
+      ],
+      "props": {
+        "buildLength": 110,
+        "speed": 0.75,
+        "accent": "#b3261e",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "beat-slam",
+      "label": "Beat Slam",
+      "description": "A short, fast build that slams the logo in on the beat with a bold grotesque face.",
+      "askedAs": [
+        "quick punchy logo hit",
+        "fast logo slam on the beat",
+        "short aggressive drop",
+        "быстрый удар логотипа в бит",
+        "резкое короткое появление логотипа"
+      ],
+      "props": {
+        "buildLength": 34,
+        "speed": 1.5,
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.3,
+        "accent": "#ff5a1f"
+      }
+    },
+    {
+      "id": "gallery-light",
+      "label": "Gallery Light",
+      "description": "A calm light version on warm paper with a soft drop and no flash frame.",
+      "askedAs": [
+        "light elegant logo reveal",
+        "bright minimal teaser without flash",
+        "clean white premium opener",
+        "светлая элегантная заставка",
+        "минималистичный светлый тизер без вспышки"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f1ea",
+        "ink": "#1c1a17",
+        "accent": "#8a6a3b",
+        "flash": false,
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "midnight-tech",
+      "label": "Midnight Tech",
+      "description": "A deep navy, monospaced drop with a cool cyan accent for product and dev launches.",
+      "askedAs": [
+        "techy logo reveal for a software launch",
+        "dark blue developer teaser",
+        "monospace product drop",
+        "технологичная заставка для запуска продукта",
+        "тёмно-синий тизер с моноширинным шрифтом"
+      ],
+      "props": {
+        "background": "#0a1020",
+        "ink": "#e6edf7",
+        "accent": "#3fb7c9",
+        "fontFamily": "JetBrains Mono",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "emerald-noir",
+      "label": "Emerald Noir",
+      "description": "A near-black stage with a rich emerald accent and a clean sans, delayed for a breath of silence.",
+      "askedAs": [
+        "dark green luxury reveal",
+        "moody premium brand opener",
+        "logo reveal with a pause first",
+        "тёмная люксовая заставка с зелёным",
+        "премиальное появление бренда с паузой"
+      ],
+      "props": {
+        "background": "#0b0f0d",
+        "ink": "#eef3ef",
+        "accent": "#1f8a5b",
+        "fontFamily": "Manrope",
+        "delay": 20
+      }
+    }
+  ]
+}

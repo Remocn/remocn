@@ -1,0 +1,105 @@
+{
+  "component": "crunch",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "newsprint-serif",
+      "label": "Newsprint",
+      "description": "Warm off-white paper with dark ink set in a literary serif, unhurried and calm.",
+      "askedAs": [
+        "light paper look with serif text",
+        "make it look like a printed page",
+        "cream background editorial style",
+        "светлая бумага с засечками",
+        "как газетная страница"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f3ede1",
+        "ink": "#2a2118",
+        "accent": "#a4472b",
+        "fontFamily": "Instrument Serif",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-log",
+      "label": "Terminal Log",
+      "description": "Monospaced lines on near-black with a muted green accent, ticking in quickly like a build log.",
+      "askedAs": [
+        "make it look like a console log",
+        "monospace fast timestamps",
+        "developer terminal style",
+        "как лог в терминале",
+        "моноширинный шрифт быстро"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#111412",
+        "ink": "#d6dbd4",
+        "accent": "#7fb38a",
+        "speed": 1.75,
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "deadline-pressure",
+      "label": "Deadline Rush",
+      "description": "Heavy, oversized grotesque type with a burnt orange accent that hits fast and tight.",
+      "askedAs": [
+        "bold urgent big text",
+        "make it feel stressful and fast",
+        "high pressure crunch time look",
+        "жирный крупный текст срочно",
+        "быстрее и напряжённее"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "fontWeight": 700,
+        "scale": 1.3,
+        "speed": 2,
+        "accent": "#e0662f"
+      }
+    },
+    {
+      "id": "quiet-memoir",
+      "label": "Quiet Memoir",
+      "description": "Light-weight Fraunces on deep espresso brown, slow and small like a whispered recollection.",
+      "askedAs": [
+        "slow soft storytelling",
+        "thin elegant serif on brown",
+        "calm reflective intro",
+        "медленно и спокойно",
+        "тонкий шрифт как воспоминание"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "fontWeight": 300,
+        "background": "#2b1d14",
+        "ink": "#eadccb",
+        "speed": 0.5,
+        "delay": 20
+      }
+    },
+    {
+      "id": "slate-clean",
+      "label": "Slate Clean",
+      "description": "Neutral cool slate ground with crisp Inter text and a steady blue accent for a product feel.",
+      "askedAs": [
+        "clean modern product style",
+        "neutral grey with blue accent",
+        "corporate minimal look",
+        "чистый современный стиль",
+        "серый фон синий акцент"
+      ],
+      "props": {
+        "fontFamily": "Inter",
+        "fontWeight": 500,
+        "background": "#1c2128",
+        "ink": "#e6e9ee",
+        "accent": "#5b8def"
+      }
+    }
+  ]
+}

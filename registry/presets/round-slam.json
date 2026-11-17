@@ -1,0 +1,105 @@
+{
+  "component": "round-slam",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "arcade-max",
+      "label": "Arcade Max",
+      "description": "Heavy, oversized type with doubled shake and a fast, punchy slam on a deep night background.",
+      "askedAs": [
+        "make it hit harder like an arcade game",
+        "more shake and bigger text",
+        "fighting game round intro",
+        "сделай удар сильнее, как в аркаде",
+        "больше тряски и крупнее текст"
+      ],
+      "props": {
+        "fontWeight": 700,
+        "shake": 2,
+        "scale": 1.3,
+        "speed": 1.5,
+        "accent": "#e5383b"
+      }
+    },
+    {
+      "id": "paper-pop",
+      "label": "Paper Pop",
+      "description": "Light cream backdrop with near-black ink and a warm tomato accent for a friendly print-poster feel.",
+      "askedAs": [
+        "light version with warm colors",
+        "poster style on cream background",
+        "bright playful look for daytime",
+        "светлая версия с тёплыми цветами",
+        "как постер на кремовом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1a1a1a",
+        "accent": "#e4572e",
+        "fontFamily": "Bricolage Grotesque",
+        "fontWeight": 700
+      }
+    },
+    {
+      "id": "slow-mo-hit",
+      "label": "Slow-Mo Hit",
+      "description": "Half-speed cinematic slam with gentle shake and elegant serif type in muted gold.",
+      "askedAs": [
+        "slow motion dramatic version",
+        "cinematic and less shaky",
+        "elegant slow reveal",
+        "замедленная кинематографичная версия",
+        "медленно и драматично"
+      ],
+      "props": {
+        "speed": 0.5,
+        "shake": 0.4,
+        "fontFamily": "Fraunces",
+        "fontWeight": 600,
+        "accent": "#c9a227"
+      }
+    },
+    {
+      "id": "terminal-boot",
+      "label": "Terminal Boot",
+      "description": "Monospace type in mint on a dark green-black screen, quick and lightly jittery like a console launch.",
+      "askedAs": [
+        "hacker terminal style",
+        "code or developer launch look",
+        "monospace green on black",
+        "в стиле терминала для разработчиков",
+        "моноширинный шрифт на тёмном фоне"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b1410",
+        "ink": "#d8f3e4",
+        "accent": "#3ddc97",
+        "shake": 0.6,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "quiet-launch",
+      "label": "Quiet Launch",
+      "description": "Smaller, lighter Inter type with almost no shake and a slight delay for a calm, product-like announcement.",
+      "askedAs": [
+        "subtle minimal version",
+        "less aggressive, more corporate",
+        "calm clean announcement",
+        "спокойная минималистичная версия",
+        "без тряски, аккуратно"
+      ],
+      "props": {
+        "fontFamily": "Inter",
+        "fontWeight": 400,
+        "shake": 0.1,
+        "scale": 0.8,
+        "delay": 12,
+        "accent": "#6b7cff"
+      }
+    }
+  ]
+}

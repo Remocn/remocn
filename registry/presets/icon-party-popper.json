@@ -1,0 +1,99 @@
+{
+  "component": "icon-party-popper",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "festive-burst",
+      "label": "Festive Burst",
+      "description": "A large coral popper that draws in and pops on a quick, repeating loop.",
+      "askedAs": [
+        "big looping party popper",
+        "celebration icon that keeps popping",
+        "bright confetti popper animation",
+        "большая хлопушка в цикле",
+        "яркая анимация хлопушки"
+      ],
+      "props": {
+        "size": 120,
+        "color": "#e5484d",
+        "loop": true,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "fine-line-draw",
+      "label": "Fine Line",
+      "description": "A thin indigo outline that slowly sketches itself in without the pop.",
+      "askedAs": [
+        "slow line drawing popper",
+        "thin elegant outline icon",
+        "just draw the popper stroke",
+        "тонкий контур рисуется медленно",
+        "элегантная линия хлопушки"
+      ],
+      "props": {
+        "animation": "draw",
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#4f46e5",
+        "size": 96
+      }
+    },
+    {
+      "id": "bold-pop",
+      "label": "Bold Pop",
+      "description": "A heavy-stroked charcoal popper that skips the draw and snaps straight into its burst.",
+      "askedAs": [
+        "thick popper that just pops",
+        "bold icon quick action",
+        "punchy confetti burst only",
+        "жирная хлопушка только взрыв",
+        "быстрый хлопок без отрисовки"
+      ],
+      "props": {
+        "animation": "action",
+        "strokeWidth": 3,
+        "speed": 2,
+        "size": 80
+      }
+    },
+    {
+      "id": "golden-ambient",
+      "label": "Golden Ambient",
+      "description": "A warm amber popper looping gently at a relaxed pace for background flair.",
+      "askedAs": [
+        "gold party icon slow loop",
+        "calm looping celebration icon",
+        "subtle background popper",
+        "золотая хлопушка медленно",
+        "спокойная анимация праздника"
+      ],
+      "props": {
+        "color": "#d97706",
+        "loop": true,
+        "speed": 0.75,
+        "strokeWidth": 1.75,
+        "size": 64
+      }
+    },
+    {
+      "id": "tiny-accent",
+      "label": "Tiny Accent",
+      "description": "A small teal popper with a crisp quick draw-and-pop, sized for inline badges.",
+      "askedAs": [
+        "small popper icon for a badge",
+        "tiny celebration accent",
+        "mini fast party icon",
+        "маленькая иконка хлопушки",
+        "мини значок праздника"
+      ],
+      "props": {
+        "size": 28,
+        "color": "#0f766e",
+        "speed": 1.75,
+        "strokeWidth": 2.25
+      }
+    }
+  ]
+}

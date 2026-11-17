@@ -1,0 +1,85 @@
+{
+  "component": "pixelate-region",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "fine-grain",
+      "label": "Fine Grain",
+      "description": "Small, tight mosaic cells that hide detail while keeping the redaction subtle and tidy.",
+      "askedAs": [
+        "smaller pixels on the blur",
+        "subtle fine mosaic redaction",
+        "light pixelation that still hides text",
+        "мелкая пикселизация",
+        "аккуратная мозаика с мелкими клетками"
+      ],
+      "props": {
+        "cellSize": 10
+      }
+    },
+    {
+      "id": "chunky-block",
+      "label": "Chunky Blocks",
+      "description": "Large, bold mosaic tiles that make it unmistakable something was deliberately hidden.",
+      "askedAs": [
+        "big obvious pixel blocks",
+        "heavy censor mosaic",
+        "make the redaction very visible",
+        "крупные пиксели",
+        "жирная цензура квадратами"
+      ],
+      "props": {
+        "cellSize": 56
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "Medium-coarse cells that animate in at a calm, unhurried pace for a deliberate reveal.",
+      "askedAs": [
+        "slow pixelate animation",
+        "gentle gradual redaction",
+        "calm reveal of hidden area",
+        "медленная пикселизация",
+        "плавное появление мозаики"
+      ],
+      "props": {
+        "cellSize": 32,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "snap-redact",
+      "label": "Snap Redact",
+      "description": "Fine-to-medium cells that snap into place quickly for crisp, no-fuss redaction.",
+      "askedAs": [
+        "fast pixel censor",
+        "quick snappy redaction",
+        "instant blur on sensitive data",
+        "быстрая пикселизация",
+        "резкое скрытие данных"
+      ],
+      "props": {
+        "cellSize": 16,
+        "speed": 2.5
+      }
+    },
+    {
+      "id": "retro-mosaic",
+      "label": "Retro Mosaic",
+      "description": "Oversized blocks with a brisk tempo that feel playful and old-school 8-bit.",
+      "askedAs": [
+        "8-bit style pixel censor",
+        "retro game pixelation",
+        "huge blocky fast mosaic",
+        "ретро пиксели",
+        "восьмибитная мозаика"
+      ],
+      "props": {
+        "cellSize": 72,
+        "speed": 1.75
+      }
+    }
+  ]
+}

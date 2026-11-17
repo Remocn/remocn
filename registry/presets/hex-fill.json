@@ -1,0 +1,107 @@
+{
+  "component": "hex-fill",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A dense, small-cell grid in green on near-black with monospace numerals and a quick fill.",
+      "askedAs": [
+        "make it look like a terminal",
+        "monospace hacker style stat",
+        "green on black tech look",
+        "стиль терминала",
+        "моноширинный шрифт и зелёный цвет"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accent": "#3fb950",
+        "background": "#0b0f0c",
+        "ink": "#d7e4da",
+        "rings": 12,
+        "fillLength": 45
+      }
+    },
+    {
+      "id": "editorial-light",
+      "label": "Editorial Light",
+      "description": "A calm light layout with serif numerals and a warm terracotta fill that eases in slowly.",
+      "askedAs": [
+        "light magazine style",
+        "elegant serif version on white",
+        "warm print look for a report",
+        "светлый журнальный стиль",
+        "элегантный вариант с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "accent": "#c2562f",
+        "fillLength": 100,
+        "grain": false
+      }
+    },
+    {
+      "id": "bold-punch",
+      "label": "Bold Punch",
+      "description": "An oversized grid with heavy grotesk numerals and a fast, punchy fill.",
+      "askedAs": [
+        "make it big and bold",
+        "fast energetic stat reveal",
+        "heavy font quick animation",
+        "крупно и жирно",
+        "быстрая энергичная анимация"
+      ],
+      "props": {
+        "scale": 1.3,
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 700,
+        "rings": 4,
+        "fillLength": 25,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "slow-amber",
+      "label": "Slow Amber",
+      "description": "A deep navy canvas where a fine amber grid fills gradually after a short pause.",
+      "askedAs": [
+        "slow cinematic fill",
+        "amber on dark blue",
+        "calm delayed reveal",
+        "медленное плавное заполнение",
+        "янтарный на тёмно-синем"
+      ],
+      "props": {
+        "background": "#0e1626",
+        "ink": "#f3ebdd",
+        "accent": "#e3a43b",
+        "rings": 16,
+        "delay": 20,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "clean-dashboard",
+      "label": "Clean Dashboard",
+      "description": "A crisp, compact light dashboard tile with Inter numerals and a teal fill, no grain.",
+      "askedAs": [
+        "clean SaaS dashboard look",
+        "minimal light stat card",
+        "compact teal version",
+        "чистый стиль дашборда",
+        "минималистичная светлая карточка"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "fontWeight": 500,
+        "accent": "#0f9d8a",
+        "scale": 0.85,
+        "grain": false
+      }
+    }
+  ]
+}

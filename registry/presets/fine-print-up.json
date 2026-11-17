@@ -1,0 +1,125 @@
+{
+  "component": "fine-print-up",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "ivory-editorial",
+      "label": "Ivory Editorial",
+      "description": "Warm ivory paper with deep ink and an Instrument Serif headline that settles in slowly.",
+      "askedAs": [
+        "cream paper magazine look",
+        "elegant light serif version",
+        "slow classy print style",
+        "светлый журнальный стиль",
+        "элегантный шрифт на бежевом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#8a6a3b",
+        "fontFamily": "Instrument Serif",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "legal-mono",
+      "label": "Legal Mono",
+      "description": "Compact monospaced type on graphite with a short, brisk travel like a contract printout.",
+      "askedAs": [
+        "typewriter terms of service",
+        "monospace contract style",
+        "fast technical fine print",
+        "моноширинный юридический текст",
+        "как договор на печатной машинке"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#16181b",
+        "ink": "#d8dbe0",
+        "travel": 10,
+        "speed": 1.5,
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "Deep navy with soft gold accents and a large Fraunces headline that drifts up gracefully.",
+      "askedAs": [
+        "luxury dark blue and gold",
+        "premium navy with gold text",
+        "big slow luxurious serif",
+        "тёмно-синий с золотом",
+        "роскошный медленный заголовок"
+      ],
+      "props": {
+        "background": "#0e1626",
+        "ink": "#f1ead8",
+        "accent": "#c9a45c",
+        "fontFamily": "Fraunces",
+        "scale": 1.2,
+        "travel": 44
+      }
+    },
+    {
+      "id": "clean-product",
+      "label": "Clean Product",
+      "description": "Crisp white with Inter type and a cobalt accent for a modern, snappy SaaS feel.",
+      "askedAs": [
+        "modern startup sans serif",
+        "clean white app style",
+        "quick minimal product look",
+        "современный минималистичный стиль",
+        "белый фон и синий акцент"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#2f5bea",
+        "speed": 1.25,
+        "travel": 18
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A held pause then a long, unhurried rise in Gloock on near-black for a cinematic closing beat.",
+      "askedAs": [
+        "cinematic dramatic ending",
+        "slow delayed reveal",
+        "moody film closing line",
+        "медленное кинематографичное появление",
+        "драматичная финальная фраза"
+      ],
+      "props": {
+        "background": "#0a0a0a",
+        "ink": "#ebe7e0",
+        "delay": 24,
+        "speed": 0.5,
+        "travel": 60
+      }
+    },
+    {
+      "id": "sage-calm",
+      "label": "Sage Calm",
+      "description": "Muted sage background with forest-green ink and Manrope type for a gentle, reassuring tone.",
+      "askedAs": [
+        "calm soft green style",
+        "gentle reassuring look",
+        "natural muted palette",
+        "спокойный зелёный стиль",
+        "мягкие природные цвета"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#e3e8de",
+        "ink": "#1f2e24",
+        "accent": "#4f6b52",
+        "fontFamily": "Manrope",
+        "scale": 0.9
+      }
+    }
+  ]
+}
