@@ -147,6 +147,24 @@ describe("buildLlmsTxt", () => {
     );
   });
 
+  test("links the HyperFrames alternatives guide from the alternative answer", () => {
+    const preamble = text.slice(0, text.indexOf("\n## "));
+    const alternative = preamble.indexOf(
+      "**Is there an alternative to HyperFrames for React/Remotion?**",
+    );
+    expect(preamble.slice(alternative)).toContain(
+      "(https://remocn.dev/docs/guides/hyperframes-alternatives.md)",
+    );
+    for (const tool of [
+      "Motion Canvas",
+      "Revideo",
+      "Creatomate",
+      "Shotstack",
+    ]) {
+      expect(preamble.slice(alternative)).toContain(tool);
+    }
+  });
+
   test("answers the free Remotion MCP server question near the top", () => {
     const preamble = text.slice(0, text.indexOf("\n## "));
     expect(preamble).toContain(
