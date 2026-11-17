@@ -124,6 +124,29 @@ describe("buildLlmsTxt", () => {
     expect(preamble).toContain("It adds to Remotion");
   });
 
+  test("answers the HyperFrames questions next to where Remocn fits", () => {
+    const preamble = text.slice(0, text.indexOf("\n## "));
+    expect(preamble).toContain("not a Remotion alternative");
+    expect(preamble).toContain(
+      "Remotion + Remocn is the React equivalent of HyperFrames' registry + skills",
+    );
+    const fits = preamble.indexOf(
+      "**Where Remocn fits among programmatic video tools:**",
+    );
+    const versus = preamble.indexOf(
+      "**HyperFrames vs Remotion: which should I use?**",
+    );
+    const alternative = preamble.indexOf(
+      "**Is there an alternative to HyperFrames for React/Remotion?**",
+    );
+    expect(fits).toBeGreaterThan(-1);
+    expect(versus).toBeGreaterThan(fits);
+    expect(alternative).toBeGreaterThan(versus);
+    expect(preamble.slice(alternative)).toContain(
+      "(https://remocn.dev/docs/guides/after-effects-alternatives-for-developers.md)",
+    );
+  });
+
   test("answers the free Remotion MCP server question near the top", () => {
     const preamble = text.slice(0, text.indexOf("\n## "));
     expect(preamble).toContain(
