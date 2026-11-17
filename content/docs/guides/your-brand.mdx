@@ -51,6 +51,40 @@ From then on, start every new video prompt with one line: **"Use the brand brief
 
 </GuideDefinitions>
 
+## Where the brief lands
+
+The launch-video pieces (typography, numbers, product scenes, logo stings, social and the rest of the Launch Pack) take the brief as the same props wherever they apply, so your agent sets them the same way on every scene:
+
+| Brief | Prop | Notes |
+|---|---|---|
+| Background | `background` | A hex, or `"transparent"`. On a scene with a gradient ground it replaces the ground. |
+| Text color | `ink` | The main copy. Muted lines keep the theme's tone. |
+| Accent color | `accent` | |
+| Font | `fontFamily` | Load the font first, for example with `@remotion/google-fonts`. |
+| Logo | `logo` | Any element, usually your SVG. Replaces the remocn mark where a scene draws one. |
+| Dark or light | `theme` | Picks the palette the other colors start from. |
+
+Two more help scenes sit together in one video: `scale` sizes a scene's content without touching its background, and `delay` holds the first frame for a number of frames before anything moves.
+
+```tsx
+import { loadFont } from "@remotion/google-fonts/Inter";
+import { NotYet } from "@/components/remocn/not-yet";
+
+const { fontFamily } = loadFont();
+
+<NotYet
+  theme="light"
+  background="#F6F4EF"
+  ink="#1B1B1F"
+  accent="#E5484D"
+  fontFamily={fontFamily}
+  scale={0.9}
+  delay={10}
+/>;
+```
+
+Each page's props table lists what the piece takes, and the **Customize** panel on the page lets you try the values before you write them down.
+
 ## Staying on brand
 
 - Open every new video prompt with "Use the brand brief."

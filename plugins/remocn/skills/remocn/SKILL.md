@@ -133,6 +133,14 @@ Stings and Social share these extra conventions — the page's props table says 
   only exist in the remocn repo. Always pass the user's own images, or put files with those names in `public/`.
 - Copy and data are props (`title`, `words`, `items`, `value`, `rows`…); defaults are placeholder
   launch copy, so replace them.
+- Brand props, the same on every piece where they apply: `fontFamily` (main copy; load the font
+  first, e.g. `@remotion/google-fonts`), `ink` (main text color), `background` (a solid fill, or
+  `"transparent"`; on a ground scene it replaces the ground), `accent`, and `logo` (a
+  `ReactNode` that replaces the remocn mark). Set them from the user's brand on every scene of a
+  video so the scenes match.
+- Layout and timing props: `scale` (sizes the content, not the background, default `1`) and
+  `delay` (frames to hold the first frame before anything moves, default `0`), next to `speed`.
+- `grain?: boolean` turns off the film grain on the pieces that draw it.
 - `Length` is for the default props. Where it scales with content (word count, item count, number of
   rows), the page says how.
 - Transitions come in two shapes. Some export a lowercase presentation factory for
