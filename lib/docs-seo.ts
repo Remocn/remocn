@@ -43,6 +43,11 @@ export const DOCS_SEO_SECTIONS: Record<string, DocsSection> = {
 
 const SHADER_PRESET_DEPTH = 4;
 const MENTIONS_REMOTION = /remotion/i;
+// A title this long is already a full question or claim ("How to turn app
+// screenshots into a video"). The section suffix is there to qualify short
+// nav-style titles like "Teaser"; on a problem page it buries the reader's
+// words under a category name they may not know yet.
+const FULL_SENTENCE_TITLE = 40;
 
 type DocsSeoPage = {
   slug: string[];
@@ -70,7 +75,9 @@ export function docsSeoTitle(page: DocsSeoPage): string {
   if (page.slug.length === 1) {
     return section.hubTitle ?? `${page.title} for Remotion`;
   }
-  if (section.pageSuffix) return `${page.title}: ${section.pageSuffix}`;
+  if (section.pageSuffix && page.title.length < FULL_SENTENCE_TITLE) {
+    return `${page.title}: ${section.pageSuffix}`;
+  }
   return page.title;
 }
 

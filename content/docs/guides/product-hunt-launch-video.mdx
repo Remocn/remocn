@@ -1,0 +1,85 @@
+---
+title: "How to make a Product Hunt launch video without a video editor"
+navTitle: "I need a Product Hunt video"
+description: "Launching on Product Hunt and need a gallery video by Tuesday? Have a coding agent build a 30–45 second launch video from ready-made scenes, render it to MP4 and upload it to YouTube for the gallery."
+---
+
+_Last updated: November 18, 2026_
+
+To make a Product Hunt launch video without hiring an editor, ask a coding agent (Claude Code or
+Codex) to build a 30–45 second launch video from Remocn's ready-made scenes: a hook, your product,
+three features and your URL. It renders an MP4 on your machine. Upload that to YouTube, because
+Product Hunt's gallery takes video as a YouTube link (per its
+[help center](https://help.producthunt.com/posting/how-to-post-a-product)), and paste the link into
+your launch.
+
+## What makes a launch video work on Product Hunt
+
+- **It's watched muted, in a gallery.** Words on screen carry the story; sound is a bonus.
+- **The first two seconds decide.** Open with the problem or the result, not a logo animation.
+- **It's short.** 30–45 seconds holds attention; a two-minute tour belongs on your site.
+- **It shows the product.** People upvote what they understand, so one clear flow beats five
+  features.
+
+## The fix: a launch video from tuned scenes
+
+<GuideVideo
+  src="https://cdn.remocn.dev/videos/remocn-v3.mp4"
+  poster="https://cdn.remocn.dev/posters/remocn-v3.png"
+  label="The Remocn 3 release film, built from Remocn components and rendered to MP4"
+  duration={175}
+/>
+
+[Download the MP4](https://cdn.remocn.dev/videos/remocn-v3.mp4) · [Poster image](https://cdn.remocn.dev/posters/remocn-v3.png)
+
+This is the film we released Remocn 3 with: a countdown, counters, charts, a tournament bracket and
+product screens, every scene a Remocn component. It runs about three minutes, which suits a launch
+page. For the Product Hunt gallery, cut it down to the hook, the product and the URL in 30–45
+seconds. The [Launch video](/docs/guides/launch-video) guide is a 35-second recipe with the prompt.
+
+If your launch is a teaser before the real day, here is a full template, playing live:
+
+<ComponentPreview name="release-teaser" />
+
+[Release Teaser](/docs/templates/release-teaser) is a cinematic release announcement with quiet
+kinetic type and a moving edge light. Install it with `npx shadcn@latest add @remocn/release-teaser`
+and swap in your words.
+
+## Do it before launch day
+
+1. **Set up once.** In Claude Code, `/plugin install remocn --marketplace Remocn/remocn`
+   ([Setup](/docs/guides/setup) has Codex and the rest).
+2. **Ask for it** from your product's repo:
+
+   ```text
+   /remocn:video 35-second Product Hunt launch video for Tasklane: the problem in one line, the product, three features, the URL
+   ```
+
+3. **Direct it** in plain sentences ("hold the URL longer", "make the hook bigger"), then ask it to
+   "Render the video."
+4. **Upload to YouTube** as Public or Unlisted, check the link opens while signed out, and add it to
+   your Product Hunt gallery.
+
+## Also make the square cut
+
+The same video renders square for X and LinkedIn launch posts and vertical for Shorts, from the same
+code: [One video, three formats](/docs/guides/one-video-three-formats).
+
+## When this isn't the fix
+
+- **Your launch is a founder story** told to camera. Film yourself; add Remocn titles on top if you
+  like.
+- **You have no time for any setup today.** A screen recorder with auto-zoom will get you a decent
+  video in an hour.
+
+<Faq>
+
+**Can I upload the MP4 directly to Product Hunt?**
+Product Hunt's help center asks for a YouTube link for gallery video, so upload the MP4 to YouTube
+first.
+
+**Does it need music?**
+Not for the gallery, where it plays muted. If you want a track, see
+[Music and sound](/docs/guides/music-and-sound).
+
+</Faq>

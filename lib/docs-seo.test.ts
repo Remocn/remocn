@@ -98,6 +98,13 @@ describe("docsSeoTitle", () => {
       title,
     );
   });
+
+  it("keeps a guide title that is already a full question", () => {
+    const title = "How to turn app screenshots into a video";
+    expect(
+      docsSeoTitle({ slug: ["guides", "screenshots-to-video"], title }),
+    ).toBe(title);
+  });
 });
 
 describe("docsSeoDescription", () => {

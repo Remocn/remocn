@@ -1,0 +1,83 @@
+---
+title: "Your product demo video is out of date again: how to keep it in sync with your UI"
+navTitle: "My demo video is out of date"
+description: "Every UI change leaves your demo video showing an old button, an old price or an old name. Keep the video as code in your repo, so an update is a one-line change and a re-render, not a re-shoot."
+---
+
+_Last updated: November 18, 2026_
+
+A demo video goes out of date because it is a finished file: once rendered, a renamed button or a
+new price means re-recording or paying the editor again. The fix is to keep the video as source code
+next to your product, so the label in the video is a string you can change and the MP4 is something
+you re-render in a minute. Remocn gives your coding agent the building blocks to write the video that
+way, with Remotion, and it lives in git like the rest of your code.
+
+## Why your video keeps going stale
+
+- **A renamed feature** means the video now says something your product doesn't.
+- **A redesign** makes every frame show the old UI. A landing-page video showing a two-year-old
+  interface quietly tells buyers the product isn't moving.
+- **A price change** turns the pricing beat into a liability.
+- **The person who made it is gone,** and so is the project file.
+
+Re-recording means redoing the takes, the zooms and the cuts. Hiring means a new brief and a new
+invoice. So the video stays wrong.
+
+## The fix: the video is a file in your repo
+
+<ComponentPreview name="table-filter" />
+
+[Table Filter](/docs/product-scenes/table-filter) is a CRM table that filters by a stage, sorts,
+selects rows and slides up a bulk-action bar. Every label, row and color is a prop. When your product
+renames "Pipeline" to "Deals", the change in the video is the same change:
+
+```diff
+- <TableFilter stage="Pipeline" … />
++ <TableFilter stage="Deals" … />
+```
+
+Then render again:
+
+```bash
+npx remotion render <slug> out/<slug>.mp4
+```
+
+Because the video is ordinary React and TypeScript in your project, it goes through code review, and
+`git log` shows when the video last matched the product.
+
+## Ask the agent to keep it current
+
+When the UI changes, point your agent at the diff and the video:
+
+<GuidePrompt>
+
+```text
+Our UI changed in <PR OR COMMIT>. Update the demo video in src/videos/<slug>
+so its labels, prices and screens match the product again. Read the changed
+components for the new copy. Don't change the timing or the storyboard,
+only what's on screen. Then render it.
+```
+
+</GuidePrompt>
+
+To build the first version, follow [Product demo](/docs/guides/product-demo). It reads your repo, so
+the video starts in sync.
+
+## When this isn't the fix
+
+- **The video is camera footage** of you or the product in use. Footage can't be re-rendered; plan a
+  short re-shoot instead.
+- **You need the exact pixels of your running app.** Remocn rebuilds screens as scripted components.
+  If you must show the live app, use a tool that re-records it automatically.
+
+<Faq>
+
+**Can a CI job re-render the video?**
+Yes. `npx remotion render` runs headless, so you can render on a release tag and upload the MP4. Large
+renders can also go to [Remotion Lambda](https://www.remotion.dev/docs/lambda).
+
+**Do I need the same video in vertical and square too?**
+Write it once and render each format from the same code: see
+[One video, three formats](/docs/guides/one-video-three-formats).
+
+</Faq>
