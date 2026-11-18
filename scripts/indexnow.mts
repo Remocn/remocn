@@ -14,6 +14,7 @@ import {
   buildIdOf,
   INDEXNOW_ENDPOINT,
   INDEXNOW_KEY,
+  isSitemapIndex,
   KEY_LOCATION,
   SITE_HOST,
   sitemapUrls,
@@ -67,7 +68,17 @@ function changedFiles(base: string, head: string): string[] {
 async function main() {
   let urls: string[];
   if (args.includes("--all")) {
-    urls = sitemapUrls(await fetchText(`${SITE_URL}/sitemap.xml`));
+    const root = await fetchText(`${SITE_URL}/sitemap.xml`);
+    // /sitemap.xml is an index of per-section sitemaps (lib/sitemap.ts).
+    urls = isSitemapIndex(root)
+      ? (
+          await Promise.all(
+            sitemapUrls(root).map(async (child) =>
+              sitemapUrls(await fetchText(child)),
+            ),
+          )
+        ).flat()
+      : sitemapUrls(root);
   } else {
     const at = args.indexOf("--changed");
     const [base, head] = [args[at + 1], args[at + 2]];

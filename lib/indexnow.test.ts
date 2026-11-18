@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import {
   buildIdOf,
   INDEXNOW_KEY,
+  isSitemapIndex,
   KEY_LOCATION,
   MAX_URLS_PER_REQUEST,
   sitemapUrls,
@@ -76,6 +77,15 @@ describe("submission", () => {
         "<urlset><url><loc>https://remocn.dev</loc></url><url><loc>https://remocn.dev/blog</loc></url></urlset>",
       ),
     ).toEqual(["https://remocn.dev", "https://remocn.dev/blog"]);
+  });
+
+  test("tells a sitemap index from a sitemap", () => {
+    expect(
+      isSitemapIndex(
+        "<sitemapindex><sitemap><loc>https://remocn.dev/sitemap/blog.xml</loc></sitemap></sitemapindex>",
+      ),
+    ).toBe(true);
+    expect(isSitemapIndex("<urlset></urlset>")).toBe(false);
   });
 });
 
