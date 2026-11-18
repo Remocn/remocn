@@ -1,11 +1,19 @@
-import { type NextRequest, NextResponse } from "next/server";
+import {
+  type NextFetchEvent,
+  type NextRequest,
+  NextResponse,
+} from "next/server";
 import { negotiate, notAcceptableBody } from "@/lib/accept";
 import {
   DOCS_HOME,
   FETCHER_USER_AGENT,
+  type MarkdownVia,
+  markdownLinkFor,
   markdownPathFor,
+  markdownUrlPage,
   VARIANT_HEADER,
 } from "@/lib/agent-routing";
+import { trackMarkdownRead } from "@/lib/server/markdown-reads";
 
 const VARY = "Accept, User-Agent";
 
@@ -15,23 +23,32 @@ const VARY = "Accept, User-Agent";
  * HTML or 406. Elsewhere the negotiated variant is passed on as a request
  * header, so a 404 comes back as Markdown to a client that asked for it (see
  * the fallback rewrite in lib/agent-routing.ts).
+ *
+ * Every Markdown read is counted here (`markdown_read`), whichever way it came.
  */
-export function proxy(request: NextRequest) {
+export function proxy(request: NextRequest, event?: NextFetchEvent) {
   // Only reads negotiate. Server Actions POST with their own Accept.
   if (request.method !== "GET" && request.method !== "HEAD") {
     return NextResponse.next();
   }
 
   const accept = request.headers.get("accept");
+  const userAgent = request.headers.get("user-agent") ?? "";
   const variant = negotiate(accept, {
-    preferMarkdown: FETCHER_USER_AGENT.test(
-      request.headers.get("user-agent") ?? "",
-    ),
+    preferMarkdown: FETCHER_USER_AGENT.test(userAgent),
   });
   const { pathname } = request.nextUrl;
   const markdownPath = markdownPathFor(pathname);
+  const countRead = (page: string, via: MarkdownVia) => {
+    const sent = trackMarkdownRead({ page, path: pathname, via, userAgent });
+    event?.waitUntil(sent);
+  };
 
-  if (!markdownPath) return tagVariant(request, variant);
+  if (!markdownPath) {
+    const page = markdownUrlPage(pathname);
+    if (page) countRead(page, "url");
+    return tagVariant(request, variant);
+  }
 
   if (variant === "none") {
     return new NextResponse(notAcceptableBody(accept ?? ""), {
@@ -45,6 +62,11 @@ export function proxy(request: NextRequest) {
   }
 
   if (variant === "markdown") {
+    // Markdown without the fetcher preference means the Accept header chose it.
+    countRead(
+      pathname.replace(/(.)\/+$/, "$1"),
+      negotiate(accept) === "markdown" ? "accept" : "user_agent",
+    );
     const response = NextResponse.rewrite(new URL(markdownPath, request.url));
     response.headers.set("Vary", VARY);
     return response;
@@ -56,6 +78,8 @@ export function proxy(request: NextRequest) {
       ? NextResponse.redirect(new URL(DOCS_HOME, request.url), 308)
       : NextResponse.next();
   response.headers.set("Vary", VARY);
+  const link = markdownLinkFor(pathname);
+  if (link) response.headers.set("Link", link);
   return response;
 }
 

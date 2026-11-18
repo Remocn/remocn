@@ -5,7 +5,9 @@ import {
   agentHeaders,
   FETCHER_USER_AGENT,
   HOME_MARKDOWN,
+  markdownLinkFor,
   markdownPathFor,
+  markdownUrlPage,
   NOT_FOUND_MARKDOWN,
   VARIANT_HEADER,
 } from "./agent-routing";
@@ -72,5 +74,51 @@ describe("headers", () => {
       .flatMap((h) => (h.source === "/" ? h.headers : []))
       .find((x) => x.key === "Link");
     expect(link?.value).toContain('</openapi.json>; rel="service-desc"');
+    expect(link?.value).toContain(
+      '</index.md>; rel="alternate"; type="text/markdown"',
+    );
+  });
+});
+
+describe("markdownUrlPage", () => {
+  test("a .md URL counts as a read of its HTML page", () => {
+    expect(markdownUrlPage("/docs/transitions/zoom-blur.md")).toBe(
+      "/docs/transitions/zoom-blur",
+    );
+    expect(markdownUrlPage("/llms.md/transitions/zoom-blur")).toBe(
+      "/docs/transitions/zoom-blur",
+    );
+    expect(markdownUrlPage("/docs.md")).toBe("/docs");
+    expect(markdownUrlPage(HOME_MARKDOWN)).toBe("/");
+  });
+
+  test("the llms*.txt indexes stand for themselves", () => {
+    expect(markdownUrlPage("/llms.txt")).toBe("/llms.txt");
+    expect(markdownUrlPage("/llms-components.txt")).toBe(
+      "/llms-components.txt",
+    );
+    expect(markdownUrlPage("/llms-full/remocn.txt")).toBe(
+      "/llms-full/remocn.txt",
+    );
+  });
+
+  test("HTML URLs are not Markdown reads", () => {
+    expect(markdownUrlPage("/docs/transitions/zoom-blur")).toBeNull();
+    expect(markdownUrlPage("/changelog")).toBeNull();
+    expect(markdownUrlPage("/blog/post.md")).toBeNull();
+  });
+});
+
+describe("markdownLinkFor", () => {
+  test("a docs page points at its .md copy", () => {
+    expect(markdownLinkFor("/docs/transitions/zoom-blur/")).toBe(
+      '</docs/transitions/zoom-blur.md>; rel="alternate"; type="text/markdown"',
+    );
+  });
+
+  test("no link off the docs pages or on the Markdown itself", () => {
+    expect(markdownLinkFor("/docs")).toBeNull();
+    expect(markdownLinkFor("/changelog")).toBeNull();
+    expect(markdownLinkFor("/docs/transitions/zoom-blur.md")).toBeNull();
   });
 });

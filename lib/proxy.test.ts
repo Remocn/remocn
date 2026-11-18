@@ -4,9 +4,21 @@
  * headers show what the proxy decided: `x-middleware-rewrite` for a rewrite,
  * `x-middleware-override-headers` + `x-middleware-request-*` for a tag.
  */
-import { describe, expect, test } from "bun:test";
-import { NextRequest } from "next/server";
-import { proxy } from "../proxy";
+import { beforeEach, describe, expect, mock, test } from "bun:test";
+import { type NextFetchEvent, NextRequest } from "next/server";
+
+// The read counter is replaced at its module, so nothing reaches OpenPanel.
+const mockRead = mock(
+  (_read: { page: string; path: string; via: string; userAgent: string }) =>
+    Promise.resolve(),
+);
+mock.module("@/lib/server/markdown-reads", () => ({
+  trackMarkdownRead: mockRead,
+}));
+
+const { proxy } = await import("../proxy");
+
+beforeEach(() => mockRead.mockClear());
 
 function call(
   path: string,
@@ -16,6 +28,20 @@ function call(
   return proxy(
     new NextRequest(`https://remocn.dev${path}`, { headers, method }),
   );
+}
+
+/** Calls the proxy and waits for the read it counted, if any. */
+async function reads(path: string, headers: Record<string, string> = {}) {
+  const request = new NextRequest(`https://remocn.dev${path}`, { headers });
+  const pending: Promise<unknown>[] = [];
+  // Only waitUntil is used; the real class isn't exported at runtime.
+  const event = {
+    waitUntil: (p: Promise<unknown>) => pending.push(p),
+  } as unknown as NextFetchEvent;
+  proxy(request, event);
+  await Promise.all(pending);
+  expect(pending).toHaveLength(mockRead.mock.calls.length);
+  return mockRead.mock.calls.map(([read]) => read);
 }
 
 const rewrittenTo = (res: Response) => {
@@ -97,5 +123,59 @@ describe("other pages", () => {
     expect(res.headers.get("x-middleware-override-headers")).not.toContain(
       "x-remocn-variant",
     );
+  });
+});
+
+describe("Markdown reads", () => {
+  test("an Accept-negotiated docs page counts as via accept", async () => {
+    const [read] = await reads("/docs/transitions/zoom-blur/", {
+      accept: "text/markdown",
+      "user-agent": "curl/8.7.1",
+    });
+    expect(read).toEqual({
+      page: "/docs/transitions/zoom-blur",
+      path: "/docs/transitions/zoom-blur/",
+      via: "accept",
+      userAgent: "curl/8.7.1",
+    });
+  });
+
+  test("a fetcher with a wildcard Accept counts as via user_agent", async () => {
+    const [read] = await reads("/", {
+      accept: "*/*",
+      "user-agent": "Mozilla/5.0 Claude-User/1.0",
+    });
+    expect(read).toMatchObject({ page: "/", via: "user_agent" });
+  });
+
+  test(".md URLs and llms.txt count as via url", async () => {
+    const [md] = await reads("/docs/transitions/zoom-blur.md");
+    expect(md).toMatchObject({
+      page: "/docs/transitions/zoom-blur",
+      path: "/docs/transitions/zoom-blur.md",
+      via: "url",
+    });
+    mockRead.mockClear();
+    const [index] = await reads("/llms.txt");
+    expect(index).toMatchObject({ page: "/llms.txt", via: "url" });
+  });
+
+  test("HTML pages are not counted", async () => {
+    expect(
+      await reads("/docs/transitions/zoom-blur", { accept: "text/html" }),
+    ).toEqual([]);
+    expect(await reads("/changelog", { accept: "text/markdown" })).toEqual([]);
+  });
+
+  test("a docs HTML response links its Markdown copy", () => {
+    const res = call("/docs/transitions/zoom-blur", { accept: "text/html" });
+    expect(res.headers.get("link")).toBe(
+      '</docs/transitions/zoom-blur.md>; rel="alternate"; type="text/markdown"',
+    );
+    expect(
+      call("/docs/transitions/zoom-blur", {
+        accept: "text/markdown",
+      }).headers.get("link"),
+    ).toBeNull();
   });
 });

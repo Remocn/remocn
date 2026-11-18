@@ -51,12 +51,19 @@ export async function trackRegistryInstall(
   }
 }
 
-function send(event: string, properties: Record<string, unknown>): void {
-  // Never awaited: analytics must not add to a response time, and a metrics
-  // outage must never reach the caller.
-  void Promise.resolve()
+export function sendEvent(
+  event: string,
+  properties: Record<string, unknown>,
+): Promise<void> {
+  // Callers don't await this: analytics must not add to a response time, and a
+  // metrics outage must never reach the caller. The promise is returned only so
+  // proxy.ts can hand it to `waitUntil` (via markdown-reads.ts).
+  return Promise.resolve()
     .then(() => openPanel()?.track(event, properties))
-    .catch(() => {});
+    .then(
+      () => {},
+      () => {},
+    );
 }
 
 export interface AgentSearch {
@@ -84,7 +91,7 @@ export interface AgentSearch {
  */
 export function trackAgentSearch(search: AgentSearch): void {
   if (isCrawler(search.userAgent)) return;
-  send("search_performed", {
+  void sendEvent("search_performed", {
     actor: "agent",
     surface: search.surface,
     client: classifyAgentClient(search.userAgent),
@@ -116,7 +123,7 @@ export function trackAgentComponentFetch(fetch: {
   found: boolean;
 }): void {
   if (isCrawler(fetch.userAgent)) return;
-  send("component_fetched", {
+  void sendEvent("component_fetched", {
     actor: "agent",
     surface: "mcp",
     client: classifyAgentClient(fetch.userAgent),

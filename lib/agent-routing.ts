@@ -53,6 +53,50 @@ export function markdownPathFor(pathname: string): string | null {
   return null;
 }
 
+/**
+ * How a Markdown read reached us: a URL that is Markdown by itself (`.md`,
+ * llms*.txt), an Accept header that asked for it, or a fetcher User-Agent
+ * whose Accept only allowed it.
+ */
+export type MarkdownVia = "url" | "accept" | "user_agent";
+
+const AGENT_INDEX_FILES = new Set([
+  "/llms.txt",
+  "/llms-full.txt",
+  "/llms-components.txt",
+]);
+
+/**
+ * The page a Markdown-only URL is a copy of, or null when the URL is not one.
+ * Lets analytics count `/docs/x.md` and an Accept-negotiated `/docs/x` as reads
+ * of the same page. The llms*.txt indexes stand for themselves.
+ */
+export function markdownUrlPage(pathname: string): string | null {
+  if (AGENT_INDEX_FILES.has(pathname) || pathname.startsWith("/llms-full/")) {
+    return pathname;
+  }
+  if (pathname === HOME_MARKDOWN) return "/";
+  if (pathname === "/docs.md") return "/docs";
+  if (pathname.startsWith("/docs/") && pathname.endsWith(".md")) {
+    return pathname.slice(0, -".md".length);
+  }
+  if (pathname.startsWith("/llms.md/")) {
+    return `/docs/${pathname.slice("/llms.md/".length)}`;
+  }
+  return null;
+}
+
+/**
+ * RFC 8288 `Link` to the Markdown copy of a docs page, for clients that read
+ * headers (a HEAD request, a fetcher that skips `<head>`). The HTML carries the
+ * same pointer as `<link rel="alternate">`.
+ */
+export function markdownLinkFor(pathname: string): string | null {
+  const path = pathname.replace(/\/+$/, "");
+  if (!path.startsWith("/docs/") || path.endsWith(".md")) return null;
+  return `<${path}.md>; rel="alternate"; type="text/markdown"`;
+}
+
 export function agentBeforeFilesRewrites(): Rewrite[] {
   // Explicit Markdown URLs. The same URLs with an Accept header are
   // negotiated in proxy.ts, which can read q-values; a `has` regex can't.
@@ -84,14 +128,14 @@ export function agentHeaders() {
     source,
     headers: [{ key: "Vary", value: "Accept, User-Agent" }],
   }));
-  // RFC 8631: point API clients from the home page at the OpenAPI document.
+  // RFC 8631: point API clients from the home page at the OpenAPI document,
+  // and header readers at the Markdown copy (docs pages get theirs in proxy.ts).
   const home = {
     source: "/",
     headers: [
       {
         key: "Link",
-        value:
-          '</openapi.json>; rel="service-desc"; type="application/openapi+json"',
+        value: `</openapi.json>; rel="service-desc"; type="application/openapi+json", <${HOME_MARKDOWN}>; rel="alternate"; type="text/markdown"`,
       },
     ],
   };
