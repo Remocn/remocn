@@ -2,9 +2,60 @@ import type { MetadataRoute } from "next";
 import { blog, changelog } from "@/.source/server";
 import { blogSlug } from "@/lib/blog";
 import { getShowcases } from "@/lib/showcases";
+import { docsSectionId, latest, SITE_URL } from "@/lib/sitemap-index";
 import { source } from "@/source";
 
-const SITE_URL = "https://remocn.dev";
+/**
+ * The site's URLs, one sitemap per section. Search Console reports submitted
+ * and indexed counts per sitemap, so a section Google skips (hundreds of new
+ * typography pages, say) shows up as its own number instead of vanishing
+ * into one total for the whole site.
+ *
+ * Ids are stable: they are the URLs submitted to Search Console. Docs pages
+ * at the top of /docs share `docs`; a docs folder gets `docs-<folder>`.
+ */
+export async function sitemapSections(): Promise<
+  Map<string, MetadataRoute.Sitemap>
+> {
+  const sections = new Map<string, MetadataRoute.Sitemap>();
+  const add = (id: string, entry: MetadataRoute.Sitemap[number]) => {
+    const list = sections.get(id);
+    if (list) list.push(entry);
+    else sections.set(id, [entry]);
+  };
+
+  const showcases = await getShowcases();
+
+  for (const entry of await pageRoutes(showcases)) add("pages", entry);
+
+  for (const page of source.getPages()) {
+    add(docsSectionId(page.slugs), {
+      url: `${SITE_URL}${page.url}`,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    });
+  }
+
+  for (const showcase of showcases) {
+    add("showcases", {
+      url: `${SITE_URL}/showcases/${showcase.slug}`,
+      lastModified: new Date(showcase.createdAt),
+      changeFrequency: "monthly",
+      priority: 0.5,
+    });
+  }
+
+  for (const post of blog) {
+    add("blog", {
+      url: `${SITE_URL}/blog/${blogSlug(post)}`,
+      lastModified: post.date,
+      changeFrequency: "monthly",
+      priority: 0.5,
+    });
+  }
+
+  return sections;
+}
 
 /**
  * `lastModified` is set only where the date is real: a post, a showcase, or a
@@ -13,16 +64,16 @@ const SITE_URL = "https://remocn.dev";
  * build-time "now" on every URL teaches Google and Bing to ignore lastmod for
  * the whole site.
  */
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const showcases = await getShowcases();
-
+async function pageRoutes(
+  showcases: Awaited<ReturnType<typeof getShowcases>>,
+): Promise<MetadataRoute.Sitemap> {
   const newestPost = latest(blog.map((post) => post.date));
   const newestEntry = latest(changelog.map((entry) => entry.date));
   const newestShowcase = latest(
     showcases.map((showcase) => new Date(showcase.createdAt)),
   );
 
-  const staticRoutes: MetadataRoute.Sitemap = [
+  return [
     { url: SITE_URL, changeFrequency: "weekly", priority: 1 },
     {
       url: `${SITE_URL}/sponsors`,
@@ -65,32 +116,4 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/contact`, changeFrequency: "yearly", priority: 0.4 },
     { url: `${SITE_URL}/legal`, changeFrequency: "yearly", priority: 0.3 },
   ];
-
-  const docRoutes: MetadataRoute.Sitemap = source.getPages().map((page) => ({
-    url: `${SITE_URL}${page.url}`,
-    changeFrequency: "weekly",
-    priority: 0.7,
-  }));
-
-  const showcaseRoutes: MetadataRoute.Sitemap = showcases.map((showcase) => ({
-    url: `${SITE_URL}/showcases/${showcase.slug}`,
-    lastModified: new Date(showcase.createdAt),
-    changeFrequency: "monthly",
-    priority: 0.5,
-  }));
-
-  const blogRoutes: MetadataRoute.Sitemap = blog.map((post) => ({
-    url: `${SITE_URL}/blog/${blogSlug(post)}`,
-    lastModified: post.date,
-    changeFrequency: "monthly",
-    priority: 0.5,
-  }));
-
-  return [...staticRoutes, ...docRoutes, ...showcaseRoutes, ...blogRoutes];
-}
-
-/** The newest of the dates, or undefined for an empty list. */
-function latest(dates: Date[]): Date | undefined {
-  if (dates.length === 0) return undefined;
-  return new Date(Math.max(...dates.map((date) => date.getTime())));
 }

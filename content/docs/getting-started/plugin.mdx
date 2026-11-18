@@ -4,7 +4,7 @@ navTitle: Plugin
 description: "Install the Remocn plugin in Claude Code or Codex, run /remocn:video with a brief, and get a Remotion video built from MIT-licensed components in your repo."
 ---
 
-_Last updated: November 10, 2026_
+_Last updated: November 18, 2026_
 
 To make Remotion videos with Claude Code, install the Remocn plugin
 (`/plugin install remocn --marketplace Remocn/remocn`) and run `/remocn:video <brief>`: Claude Code
@@ -113,12 +113,28 @@ first two are made to be used together.
 | Needs | Node.js, a Remotion project | Node.js, React, a Remotion project | Often ffmpeg, sometimes paid model APIs |
 | Cost | Free; Remotion itself may need a company license | Free, MIT; Remotion's license still applies | Varies |
 
-Remotion's own plugin is installed with
-`claude plugin marketplace add remotion-dev/claude-code-plugin` and
-`claude plugin install remotion@remotion`; see
-[Remotion's Claude Code plugin docs](https://www.remotion.dev/docs/ai/claude-code-plugin) and
+### Install Remotion's official Claude Code plugin
+
+Remotion's own plugin lives in
+[remotion-dev/claude-code-plugin](https://github.com/remotion-dev/claude-code-plugin). Install it
+from a terminal, then restart Claude Code:
+
+```bash
+claude plugin marketplace add remotion-dev/claude-code-plugin
+claude plugin install remotion@remotion
+```
+
+In the Claude desktop app, open Customize, then Plugins → Discover, search for "remotion" and
+click Add. The plugin brings Remotion's Agent Skills and a `/remotion:remotion-create` command:
+
+```text
+/remotion:remotion-create Make a promo video for a record store
+```
+
+See [Remotion's Claude Code plugin docs](https://www.remotion.dev/docs/ai/claude-code-plugin) and
 [Agent Skills](https://www.remotion.dev/docs/ai/skills). Install it next to Remocn if you like:
-Remocn doesn't replace it.
+Remocn doesn't replace it, and the two don't conflict. Remotion's plugin teaches the agent
+Remotion's API; Remocn gives it finished components to build the video from.
 
 ## Test: the same 15-second promo with and without Remocn
 
@@ -282,6 +298,14 @@ Claude Code plugin (`claude plugin install remotion@remotion`) that teach Claude
 Remotion code. The Remocn plugin (`/plugin install remocn --marketplace Remocn/remocn`) adds a
 video workflow and a catalog of more than 430 ready-made Remotion components, and the Remocn agent
 skill (`npx skills add Remocn/remocn`) adds the catalog alone.
+
+### How do I install Remotion's official Claude Code plugin?
+
+Run `claude plugin marketplace add remotion-dev/claude-code-plugin`, then
+`claude plugin install remotion@remotion`, and restart Claude Code. Start a video with
+`/remotion:remotion-create <brief>`. It is a separate plugin from Remocn, made by Remotion, and the
+two can be installed together. [Install Remotion's official Claude Code plugin](#install-remotions-official-claude-code-plugin)
+has the desktop-app steps.
 
 ### Do I need Remotion's official skills if I install Remocn?
 

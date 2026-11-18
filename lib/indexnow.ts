@@ -51,9 +51,16 @@ function urlsFor(path: string): string[] {
   return [];
 }
 
-/** The <loc> entries of a sitemap.xml. */
+/**
+ * The <loc> entries of a sitemap.xml. For a sitemap index they are the
+ * child sitemaps' URLs, not pages; see isSitemapIndex.
+ */
 export function sitemapUrls(xml: string): string[] {
   return [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
+}
+
+export function isSitemapIndex(xml: string): boolean {
+  return xml.includes("<sitemapindex");
 }
 
 /** Request bodies for the IndexNow API, split at the per-request limit. */
