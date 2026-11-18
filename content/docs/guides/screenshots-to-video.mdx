@@ -1,0 +1,73 @@
+---
+title: "How to turn app screenshots into a video"
+navTitle: "I only have screenshots"
+description: "You have screenshots of your app and need a video for your landing page, App Store or launch post. Put them in a phone that scrolls or a camera that tours the screen, instead of a slideshow."
+---
+
+_Last updated: November 18, 2026_
+
+To turn app screenshots into a video that doesn't look like a slideshow, give each screenshot motion
+that matches how the app is used: a phone that scrolls a tall screenshot, or a camera that pushes in
+on one region at a time with a label. Remocn has both as components that take your image as a prop,
+and a coding agent can build the whole video around them and render it to MP4.
+
+## Why a slideshow falls flat
+
+- **Fade, fade, fade** between static images reads as "we didn't have a video".
+- **Nothing tells the eye where to look.** A full screenshot at video size is a wall of UI.
+- **A desktop screenshot is unreadable in a phone feed** unless the camera moves in.
+- **Ken Burns pans** add motion but no meaning.
+
+## The fix: give the screenshot a job
+
+For a mobile app, put a tall screenshot inside a phone and let it scroll:
+
+<ComponentPreview name="phone-scroll" />
+
+[Phone Scroll](/docs/product-scenes/phone-scroll) raises a phone beside a headline and flicks the
+screen to each scroll stop with momentum and a touch dot. Pass your screenshot as `src`:
+
+```tsx
+<PhoneScroll
+  src="/screens/feed-tall.png"
+  stops={[930, 1840]}
+  label="Find your next stay in"
+  labelAccent="two taps."
+/>
+```
+
+For a web app, tour one screenshot instead of showing many:
+
+<ComponentPreview name="screenshot-tour" />
+
+[Screenshot Tour](/docs/media/screenshot-tour) pushes in on each region you list, dims the rest and
+labels the stop, so one screenshot carries three points.
+
+## Do it
+
+Put your screenshots in the Remotion project's `public/` folder (export at 2× for sharp close-ups),
+set up Remocn once ([Setup](/docs/guides/setup)) and ask:
+
+<GuidePrompt>
+
+```text
+Make a ~30-second video for <PRODUCT NAME> from the screenshots in public/screens/
+with remocn components (remocn.dev). Use phone-scroll for the mobile screenshots
+and screenshot-tour for the desktop ones. For each, pick the one region that
+matters and label it in a few words: <POINT 1>, <POINT 2>, <POINT 3>.
+Open with "<HOOK LINE>", close on <URL>. 1920×1080, 30fps.
+```
+
+</GuidePrompt>
+
+## Going further
+
+When screenshots aren't enough to show a flow (a click, a result appearing), the agent can rebuild
+the screen as a scripted scene: see
+[Make a screen recording not look like one](/docs/guides/screen-recording-looks-amateur).
+
+## When this isn't the fix
+
+- **An App Store preview** must show footage captured from the app itself under Apple's guidelines.
+  Check their current rules before using rebuilt or animated screens there.
+- **You only need a GIF for a README.** A short screen capture is quicker.
