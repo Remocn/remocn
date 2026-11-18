@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { GITHUB_URL, SUPPORT_EMAIL } from "@/config/site";
 
-export const LAST_UPDATED = "November 17, 2026";
+export const LAST_UPDATED = "November 18, 2026";
 
 export type LegalItem = { title: ReactNode; body: ReactNode };
 
@@ -69,9 +69,10 @@ export const LEGAL_PARTS: LegalPart[] = [
                 which components people actually use. When you use the docs
                 search, we also record what you searched for, how many results
                 came back and which one you opened, so we can tell whether the
-                search finds what people look for. We do not use advertising
-                trackers, we do not build cross-site profiles, and we never sell
-                data.
+                search finds what people look for. When an AI agent or crawler
+                reads the Markdown copy of a page, we record the page and the
+                agent’s user agent string. We do not use advertising trackers,
+                we do not build cross-site profiles, and we never sell data.
               </>
             ),
           },
