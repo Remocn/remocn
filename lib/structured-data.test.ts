@@ -106,6 +106,20 @@ describe("docs page JSON-LD", () => {
     expect(items.map((item) => item.position)).toEqual([1, 2, 3]);
   });
 
+  test("states dateModified only when the page gives one", () => {
+    expect(find("TechArticle")?.dateModified).toBeUndefined();
+    const dated = docsPageJsonLd({
+      url: "/docs/x",
+      title: "X",
+      crumbs: [],
+      image: "/hero.png",
+      dateModified: "2026-11-19",
+    })["@graph"] as Node[];
+    expect(dated.find((n) => n["@type"] === "TechArticle")?.dateModified).toBe(
+      "2026-11-19",
+    );
+  });
+
   test("adds an FAQPage only when the page has questions", () => {
     expect(find("FAQPage")).toBeUndefined();
     const withFaq = docsPageJsonLd({

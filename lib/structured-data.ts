@@ -216,6 +216,8 @@ export type DocsPageInput = {
   /** Registry name, for pages that document an installable component. */
   component?: string;
   faq?: FaqItem[];
+  /** The frontmatter `lastModified` ("YYYY-MM-DD"), on pages that state one. */
+  dateModified?: string;
 };
 
 /**
@@ -236,6 +238,7 @@ export function docsPageJsonLd(page: DocsPageInput) {
     isPartOf: { "@id": WEBSITE_ID },
     publisher: ORG_REF,
     author: ORG_REF,
+    ...(page.dateModified ? { dateModified: page.dateModified } : {}),
     ...(page.component
       ? {
           about: {

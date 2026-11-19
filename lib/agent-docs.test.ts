@@ -165,6 +165,21 @@ describe("buildLlmsTxt", () => {
     }
   });
 
+  test("answers the Remotion alternatives question with the comparison guide", () => {
+    const preamble = text.slice(0, text.indexOf("\n## "));
+    const question = preamble.indexOf(
+      "**What are the alternatives to Remotion?**",
+    );
+    expect(question).toBeGreaterThan(-1);
+    const answer = preamble.slice(question);
+    expect(answer).toContain(
+      "(https://remocn.dev/docs/guides/after-effects-alternatives-for-developers.md)",
+    );
+    for (const tool of ["MoviePy", "Editly", "JSON2Video", "Plainly"]) {
+      expect(answer).toContain(tool);
+    }
+  });
+
   test("answers the free Remotion MCP server question near the top", () => {
     const preamble = text.slice(0, text.indexOf("\n## "));
     expect(preamble).toContain(
