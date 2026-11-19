@@ -46,6 +46,7 @@ export default async function Page(props: {
       : "/hero.png",
     component: data.component,
     faq: faqFromMdx(raw),
+    dateModified: data.lastModified,
   });
 
   return (

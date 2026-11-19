@@ -31,6 +31,7 @@ export async function sitemapSections(): Promise<
   for (const page of source.getPages()) {
     add(docsSectionId(page.slugs), {
       url: `${SITE_URL}${page.url}`,
+      lastModified: page.data.lastModified,
       changeFrequency: "weekly",
       priority: 0.7,
     });
@@ -58,11 +59,12 @@ export async function sitemapSections(): Promise<
 }
 
 /**
- * `lastModified` is set only where the date is real: a post, a showcase, or a
- * feed page whose newest entry dates it. Docs and static pages leave it out.
- * The image is built without `.git`, so their edit dates are unknown, and a
- * build-time "now" on every URL teaches Google and Bing to ignore lastmod for
- * the whole site.
+ * `lastModified` is set only where the date is real: a post, a showcase, a
+ * feed page whose newest entry dates it, or a docs page whose frontmatter
+ * states `lastModified` (dated comparisons). Other docs and static pages
+ * leave it out. The image is built without `.git`, so their edit dates are
+ * unknown, and a build-time "now" on every URL teaches Google and Bing to
+ * ignore lastmod for the whole site.
  */
 async function pageRoutes(
   showcases: Awaited<ReturnType<typeof getShowcases>>,

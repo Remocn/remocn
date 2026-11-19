@@ -445,6 +445,28 @@ describe("stated text effect counts match the docs", () => {
   });
 });
 
+describe("lastModified matches the page's own date", () => {
+  // The sitemap's lastmod and the article's dateModified come from the
+  // frontmatter; the reader sees the "Last updated" line. Edit one, edit both.
+  it("agrees with the _Last updated_ line", () => {
+    const wrong: string[] = [];
+    for (const page of pages) {
+      const stated = page.frontmatter.lastModified;
+      if (stated === undefined) continue;
+      const iso = new Date(stated as string | Date).toISOString().slice(0, 10);
+      const line = /_Last updated: ([A-Z][a-z]+ \d{1,2}, \d{4})\./.exec(
+        readFileSync(page.file, "utf8"),
+      );
+      if (!line) continue;
+      const shown = new Date(`${line[1]} UTC`).toISOString().slice(0, 10);
+      if (shown !== iso)
+        wrong.push(`${page.file}: lastModified ${iso}, page says ${shown}`);
+    }
+
+    expect(wrong).toEqual([]);
+  });
+});
+
 describe("stated catalog size matches the registry", () => {
   const STATED = [
     "content/docs/getting-started/introduction.mdx",
