@@ -35,6 +35,18 @@ export const COMPONENT_COUNT =
   remocnIconsRegistry.items.length;
 
 /**
+ * Registry items built on `@remotion/transitions`. In the Transitions section
+ * these are the `TransitionSeries` presentations; the rest are scenes.
+ */
+export const TRANSITION_PRESENTATIONS: string[] = remocnRegistry.items
+  .filter((item) =>
+    ("dependencies" in item ? item.dependencies : [])?.includes(
+      "@remotion/transitions",
+    ),
+  )
+  .map((item) => item.name);
+
+/**
  * The site's meta description; the home page's JSON-LD reuses it. It opens
  * with the "shadcn/ui for video" answer in the words people search with.
  */

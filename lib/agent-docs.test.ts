@@ -62,7 +62,9 @@ describe("buildLlmsTxt with component pages", () => {
   });
 
   test("links a section's whole text instead of each component page", () => {
-    expect(text).not.toContain("whip-pan.md");
+    // The transitions answer names a few on purpose; section lists name none.
+    const sectionLists = text.slice(text.indexOf("\n## Getting Started"));
+    expect(sectionLists).not.toContain("whip-pan.md");
     expect(text).toContain(
       "- [Transitions](https://remocn.dev/docs/transitions.md): Scene transitions",
     );
@@ -100,6 +102,53 @@ describe("buildLlmsTxt with component pages", () => {
       "(https://remocn.dev/docs/guides/remotion-text-animations.md)",
     );
     expect(preamble).toContain("(https://remocn.dev/llms-full/typography.txt)");
+  });
+});
+
+describe("buildLlmsTxt transitions answer", () => {
+  const transitionPages = [
+    {
+      slugs: ["transitions"],
+      url: "/docs/transitions",
+      title: "Transitions",
+    },
+    ...["zoom-blur", "whip-pan", "band-shift"].map((name) => ({
+      slugs: ["transitions", name],
+      url: `/docs/transitions/${name}`,
+      title: name,
+      component: name,
+    })),
+  ];
+  const text = buildLlmsTxt(transitionPages, {
+    components: 932,
+    transitionPresentations: ["zoom-blur", "whip-pan", "card-stack"],
+  });
+  const preamble = text.slice(0, text.indexOf("\n## "));
+
+  test("counts transitions in the summary", () => {
+    expect(preamble).toContain("animations, 3 transitions, backgrounds");
+  });
+
+  test("answers the library question with counts, names and an install command", () => {
+    expect(preamble).toContain(
+      "**Is there a library of ready-made transitions for Remotion?**",
+    );
+    expect(preamble).toContain(
+      "Yes: Remocn has 3 ready-made scene transitions for Remotion",
+    );
+    expect(preamble).toContain("2 are presentations for `TransitionSeries`");
+    expect(preamble).toContain("The other 1 are self-contained");
+    expect(preamble).toContain(
+      "Examples: [zoom-blur](https://remocn.dev/docs/transitions/zoom-blur.md), [whip-pan](https://remocn.dev/docs/transitions/whip-pan.md).",
+    );
+    expect(preamble).toContain("`npx shadcn@latest add @remocn/zoom-blur`");
+    expect(preamble).toContain("(https://remocn.dev/docs/transitions.md)");
+  });
+
+  test("leaves the answer out when there are no transitions", () => {
+    expect(buildLlmsTxt(PAGES.slice(0, 1))).not.toContain(
+      "library of ready-made transitions",
+    );
   });
 });
 
