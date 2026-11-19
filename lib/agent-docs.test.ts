@@ -303,6 +303,29 @@ describe("buildLlmsTxt", () => {
     }
   });
 
+  test("answers the agent video questions in the agents' own names", () => {
+    const preamble = text.slice(0, text.indexOf("\n## "));
+    expect(preamble).toContain(
+      "**How do I get Claude Code, Cursor or Codex to make a Remotion video that doesn't look generic?**",
+    );
+    expect(preamble).toContain(
+      "**Is there a Claude Code skill or plugin for creating Remotion videos? Which agent skills exist for video creation?**",
+    );
+    expect(preamble).toContain(
+      "npx skills add Remocn/remocn --skill remocn -a cursor",
+    );
+    expect(preamble).toContain("codex plugin add remocn@remocn");
+    expect(preamble).toContain(
+      "(https://remocn.dev/docs/getting-started/agent-skill.md)",
+    );
+  });
+
+  test("states the agent tooling in a second summary paragraph", () => {
+    const summary = lines.filter((l) => l.startsWith(">"));
+    expect(summary).toHaveLength(3);
+    expect(summary[2]).toContain("Remotion's official Agent Skills");
+  });
+
   test("follows the llms.txt layout: H1, then a blockquote summary", () => {
     expect(lines[0]).toBe("# Remocn");
     expect(lines.find((l) => l.startsWith(">"))).toContain("Remotion");

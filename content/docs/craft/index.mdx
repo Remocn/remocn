@@ -1,21 +1,62 @@
 ---
-title: Craft
-description: The house rules behind a Remocn video — restraint in design, intent in motion, and the mistakes that give a generated video away
+title: "Craft: design rules so AI-made Remotion videos don't look generic"
+navTitle: Craft
+description: "The design rules Claude Code, Cursor and Codex follow when they build Remotion videos with Remocn: the eight mistakes that make an AI video look generic, the fix for each, and the design defaults and motion principles behind them."
 ---
+
+_Last updated: November 19, 2026_
+
+Remotion videos made by Claude Code, Cursor or Codex look generic when the agent falls back on its
+defaults: glow behind every heading, gradient text, ALL-CAPS, and every panel popping in on the same
+frame. The Craft pages are the rules that replace those defaults. The
+[Remocn agent skill](/docs/getting-started/agent-skill) points your agent here, and you can paste
+the same rules into any prompt.
 
 The component pages tell you what each block does. This section tells you how to put them together
 without the result reading as machine-made.
 
+## The eight mistakes that make an AI video look generic
+
+| # | Mistake | Fix |
+|---|---|---|
+| 1 | **Glow halos and heavy shadows** behind headings and cards | No colored glows, no blur over ~24px. A solid fill or a slow, muted shader. [Rule](/docs/craft/design-defaults#no-glow-or-heavy-shadows) |
+| 2 | **Gradient-filled text** standing in for emphasis | Solid text. Mark the one word that matters with weight, the accent color or a highlight. [Rule](/docs/craft/design-defaults#no-gradient-text-fills-or-decorative-washes) |
+| 3 | **ALL-CAPS with wide letter-spacing** on text the agent adds | Sentence case, default tracking. [Rule](/docs/craft/design-defaults#no-decorative-letter-spacing) |
+| 4 | **Everything enters on one frame** | Stagger sibling entrances by 3–6 frames, one focal action per beat. [Rule](/docs/craft/anti-patterns#everything-enters-on-one-frame) |
+| 5 | **Animations cut off mid-motion** because the `Sequence` is shorter than the component | Budget each `Sequence` at least the component's natural length, listed in [`/llms-components.txt`](https://remocn.dev/llms-components.txt). [Rule](/docs/craft/anti-patterns#clipping-a-component-by-under-budgeting-its-sequence) |
+| 6 | **A transition mounted as a component** | Pass it to `TransitionSeries.Transition` as a presentation. [Rule](/docs/craft/anti-patterns#mounting-a-transition-as-a-component) |
+| 7 | **Animating `top`, `left`, `width` or `height`** | Animate `transform`, `translate` and `scale` only. [Rule](/docs/craft/anti-patterns#animating-layout-properties) |
+| 8 | **`Math.random()`, `Date.now()` or timers in render code**, which flicker between frames | Seeded `random()` from `@remotion/random`, everything derived from the frame. [Rule](/docs/craft/anti-patterns#non-deterministic-code) |
+
+Remocn's own components are exempt where the effect *is* the point:
+[`tracking-in`](/docs/typography/tracking-in) animates letter-spacing on purpose, and the shader
+backgrounds are gradients by design. The rules apply to what your agent writes by hand.
+
+## The three Craft pages
+
 Three pages, in the order they bite:
 
 - [Design defaults](/docs/craft/design-defaults) — what your **own** additions should look like.
-  Sentence case, default tracking, solid text, no glow. The library's components are exempt where
-  the effect *is* the point.
+  Sentence case, default tracking, solid text, no glow, and a fixed palette and font set. The library's
+  components are exempt where the effect *is* the point.
 - [Motion principles](/docs/craft/motion-principles) — the classic animation principles reduced to
   the eight that matter when you assemble scenes from prebuilt blocks, each mapped to a Remotion
   mechanic and a component that demonstrates it.
-- [Anti-patterns](/docs/craft/anti-patterns) — the dozen mistakes that recur, with the fix beside
-  each one. Clipped sequences, transitions mounted as components, `speed` on a primitive.
+- [Anti-patterns](/docs/craft/anti-patterns) — the full list of a dozen mistakes that recur, with
+  the fix beside each one. Beyond the eight above: animation props on a UI primitive, the wrong
+  canvas size, loading fonts mid-render, and promoting the wrong layer under a slow zoom.
+
+## Give these rules to your agent
+
+| Agent | Setup |
+|---|---|
+| Claude Code | `/plugin install remocn --marketplace Remocn/remocn`, or `npx skills add Remocn/remocn --skill remocn -a claude-code` |
+| Codex | `codex plugin marketplace add Remocn/remocn` then `codex plugin add remocn@remocn`, or `npx skills add Remocn/remocn --skill remocn -a codex` |
+| Cursor | `npx skills add Remocn/remocn --skill remocn -a cursor` |
+| Any agent | Paste `https://remocn.dev/docs/craft/anti-patterns.md` into the prompt |
+
+For the full walkthrough with paste-ready prompts, see
+[Why Claude Code launch videos look generic, and how to fix it](/docs/guides/non-generic-ai-video).
 
 <Note title="Writing for an agent">
   These pages are written to be read by coding agents as much as by people. Each is served as raw

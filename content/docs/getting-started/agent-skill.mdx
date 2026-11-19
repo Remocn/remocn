@@ -1,15 +1,42 @@
 ---
-title: "Remocn agent skill: better Remotion videos from your AI agent"
+title: "Remotion agent skill for Claude Code, Cursor and Codex: videos that don't look generic"
 navTitle: Agent Skill
-description: Install the Remocn agent skill with skills.sh so your AI generates better Remotion videos
+description: "An open-source agent skill for video creation. Install it in Claude Code, Cursor, Codex or GitHub Copilot with npx skills add Remocn/remocn, and your agent builds Remotion videos from ready-made components instead of generic hand-rolled animation."
 ---
 
-Remocn ships an **agent skill** — a knowledge pack that teaches AI coding agents (Claude Code and
-friends) how to build videos with Remocn: how the two component tiers differ, how to budget a
-timeline, how to compose a video out of beats, and where to read the rest.
+_Last updated: November 19, 2026_
 
-Once installed, your agent picks the right components, budgets the timeline correctly, and styles
-your additions to match the library — without you pasting context every time.
+The Remocn agent skill lets Claude Code, Cursor, Codex, GitHub Copilot and other coding agents
+make Remotion videos that don't look generic. Install it with `npx skills add Remocn/remocn`, and
+your agent builds each scene from Remocn's ready-made Remotion components and follows its design
+rules, instead of hand-rolling every animation with glow, gradient text and panels that pop in on
+the same frame.
+
+It is free, MIT licensed and open source, in
+[`plugins/remocn/skills/`](https://github.com/Remocn/remocn/tree/main/plugins/remocn/skills) of the
+Remocn repo. It works alongside Remotion's official Agent Skills (`npx skills add remotion-dev/skills`):
+those teach your agent how to write correct Remotion code, and Remocn decides what goes on screen.
+
+```bash
+npx skills add Remocn/remocn --skill remocn --yes
+```
+
+## What does the skill teach your agent?
+
+- **Which component plays each beat.** Text effects, transitions, backgrounds, shaders, app-screen
+  simulations and full templates, picked from a catalog of more than 430 components.
+- **How long each beat runs.** Every component states its natural length in frames, so the agent
+  budgets each `Sequence` around it instead of clipping the motion or leaving dead air.
+- **How the two kinds of component differ.** Animations take `speed` and play on their own; UI
+  primitives (button, dialog, input) are driven by a `state` prop and have no `speed`.
+- **How to structure a whole video.** Recipes for a product demo, changelog, feature announcement,
+  open-source showcase, CLI demo, testimonial reel, year in review, pricing reveal and logo bumper.
+- **What its own additions should look like.** The [Craft](/docs/craft) rules: sentence case, solid
+  text, no glow, staggered entrances.
+
+Once installed, your agent picks the components, installs them with
+`npx shadcn@latest add @remocn/<name>` and composes the video, without you pasting context every
+time.
 
 <Note title="The catalog is not bundled">
   The skill does not carry a copy of the component reference. It reads these docs live, starting
@@ -19,23 +46,79 @@ your additions to match the library — without you pasting context every time.
   needs network access to remocn.dev; without it, it will tell you rather than guess.
 </Note>
 
-## Install with skills.sh
+## Install in Claude Code, Cursor, Codex or GitHub Copilot
 
-The skill lives in the [remocn plugin](/docs/getting-started/plugin), in
-[`plugins/remocn/skills/`](https://github.com/Remocn/remocn/tree/main/plugins/remocn/skills) of the
-Remocn repo. In Claude Code or Codex, installing the plugin gets you the skill plus the video
-workflow. For any other agent, install the skill on its own with the [`skills`](https://skills.sh)
-CLI:
+| Agent | Install the skill | Where it lands | Then |
+|---|---|---|---|
+| **Claude Code** | `npx skills add Remocn/remocn --skill remocn -a claude-code` | `.claude/skills/remocn/` | Ask for the video in plain words |
+| **Cursor** | `npx skills add Remocn/remocn --skill remocn -a cursor` | `.agents/skills/remocn/` | Ask for the video in plain words |
+| **Codex** | `npx skills add Remocn/remocn --skill remocn -a codex` | `.agents/skills/remocn/` | Ask for the video in plain words |
+| **GitHub Copilot** | `npx skills add Remocn/remocn --skill remocn -a github-copilot` | `.agents/skills/remocn/` | Ask for the video in plain words |
+| **Any other agent** | `npx skills add Remocn/remocn` | Chosen when prompted | Ask for the video in plain words |
+
+In Claude Code and Codex you can install the [Remocn plugin](/docs/getting-started/plugin) instead.
+It includes this skill plus the `/remocn:video <brief>` workflow and the
+[MCP server](/docs/getting-started/mcp-server).
+
+### Claude Code
 
 ```bash
-npx skills add Remocn/remocn
+npx skills add Remocn/remocn --skill remocn -a claude-code
 ```
 
-This lists the `remocn` skill next to the plugin's workflow skills (`video`, `changelog`, `add`,
-`studio`) and installs your pick into your agent (for Claude Code:
-`.claude/skills/remocn/`). The CLI is interactive — pick the skill and target agent when prompted.
+Or install the plugin, which bundles the skill:
 
-### Common flags
+```text
+/plugin install remocn --marketplace Remocn/remocn
+```
+
+### Cursor
+
+```bash
+npx skills add Remocn/remocn --skill remocn -a cursor
+```
+
+For component search and video plans inside Cursor, also add the hosted
+[MCP server](/docs/getting-started/mcp-server) to `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "remocn": {
+      "url": "https://remocn.dev/mcp"
+    }
+  }
+}
+```
+
+### Codex
+
+```bash
+npx skills add Remocn/remocn --skill remocn -a codex
+```
+
+Or install the plugin, which bundles the skill and adds `/remocn:video`:
+
+```bash
+codex plugin marketplace add Remocn/remocn
+codex plugin add remocn@remocn
+```
+
+### Then ask for the video
+
+```text
+Make a 35-second, 1280×720, 30fps launch video for Tasklane, a shared task inbox for small teams,
+in this Remotion project. Use the remocn skill.
+```
+
+The [launch video](/docs/guides/launch-video) and
+[non-generic AI video](/docs/guides/non-generic-ai-video) guides have longer, paste-ready prompts.
+
+## All install options
+
+Running `npx skills add Remocn/remocn` with no flags lists the `remocn` skill next to the plugin's
+workflow skills (`video`, `changelog`, `add`, `setup`) and installs your pick into the agent you
+choose. The CLI is interactive unless you pass `--yes`.
 
 ```bash
 # Install straight to the remocn skill, no prompts
@@ -44,8 +127,8 @@ npx skills add Remocn/remocn --skill remocn --yes
 # Install globally (available in every project)
 npx skills add Remocn/remocn --skill remocn -g
 
-# Target a specific agent
-npx skills add Remocn/remocn -a claude-code
+# Target one agent
+npx skills add Remocn/remocn -a cursor
 
 # Just list what's available in the repo
 npx skills add Remocn/remocn --list
@@ -53,18 +136,37 @@ npx skills add Remocn/remocn --list
 
 ### Use without installing
 
-To try it for a single session without writing files:
+To try it for a single Claude Code session without writing files:
 
 ```bash
 npx skills use Remocn/remocn@remocn | claude
 ```
 
+## Agent skills for video creation compared
+
+Agent skills for video split by what they teach. Remotion's and Remocn's are made to be installed
+together.
+
+| | Remotion Agent Skills | Remocn agent skill | HyperFrames skills |
+|---|---|---|---|
+| What it teaches | How to write correct Remotion code: compositions, timing, fonts, rendering, captions | What goes on screen: which component for each beat, how many frames, design rules | Writing video as HTML and CSS with HyperFrames |
+| Install | `npx skills add remotion-dev/skills` | `npx skills add Remocn/remocn` | See the HyperFrames docs |
+| Framework | Remotion (React) | Remotion (React) | HyperFrames (HTML) |
+| Ready-made scenes | No; the agent writes each animation | More than 430 components and full video templates | HyperFrames' own block registry |
+| Design rules | None; the visual direction is left to your brief | [Design defaults, motion principles, anti-patterns](/docs/craft) | — |
+| Cost | Free; Remotion itself may need a company license | Free, MIT; Remotion's license still applies | Free, Apache 2.0 |
+
+If your agent's Remotion videos look generic, the gap is usually the middle column: Remotion's
+skills cover the API, not the look. [Why Claude Code launch videos look generic, and how to fix it](/docs/guides/non-generic-ai-video)
+walks through the tells and fixes. For HyperFrames and other frameworks, see
+[HyperFrames alternatives](/docs/guides/hyperframes-alternatives).
+
 ## What's inside
 
 | File | Contents |
 |---|---|
-| `SKILL.md` | Install flow, the two tiers and their differing APIs, canvas and timing rules, remocn-specific gotchas, and where to fetch everything else |
-| `references/anatomy.md` | Composing a full video — template vs compose vs build, the product-demo beats, the good-vs-slop bar |
+| `SKILL.md` | The install flow, the two kinds of component and their APIs, canvas and timing rules, Remocn-specific gotchas, and where to fetch everything else |
+| `references/anatomy.md` | Composing a full video: template vs compose vs build, the product-demo beats, the line between good and generic |
 | `references/archetypes/` | Per-archetype recipes: product demo, changelog, feature announcement, OSS showcase, CLI demo, testimonial reel, year in review, pricing reveal, logo bumper |
 
 What the skill reads from this site instead of bundling:
@@ -72,7 +174,7 @@ What the skill reads from this site instead of bundling:
 | URL | Contents |
 |---|---|
 | [`/llms-components.txt`](https://remocn.dev/llms-components.txt) | Every installable component with its use / avoid signal, natural length, vibe, tier and dependencies |
-| `/docs/<section>/<name>.md` | One component's full reference — props, examples, all use / don't-use notes |
+| `/docs/<section>/<name>.md` | One component's full reference: props, examples, all use / don't-use notes |
 | [`/docs/craft/`](/docs/craft) | Design defaults, motion principles, anti-patterns |
 
 Any docs URL serves raw Markdown when you append `.md`, so you can read the same pages your agent
@@ -80,5 +182,32 @@ does.
 
 ## Prerequisites
 
-- An AI agent that loads skills (e.g. Claude Code).
-- A Remotion project with Remocn — see [Installation](/docs/getting-started/installation).
+- A coding agent that loads skills: Claude Code, Cursor, Codex, GitHub Copilot or another agent
+  the [`skills`](https://skills.sh) CLI supports.
+- A Remotion project with Remocn. See [Installation](/docs/getting-started/installation). In Claude
+  Code and Codex, the plugin creates a Remotion project for you when the folder is empty.
+- Node.js, and network access to remocn.dev for the live catalog.
+
+## FAQ
+
+<Faq>
+
+**Is there a Claude Code skill for creating Remotion videos?**
+Yes. Remotion's official Agent Skills (`npx skills add remotion-dev/skills`) teach Claude Code the Remotion API. The Remocn skill (`npx skills add Remocn/remocn`) adds ready-made components and design rules, so the result doesn't look generic. Install both. For a full brief-to-video workflow, use the [Remocn plugin](/docs/getting-started/plugin) and `/remocn:video <brief>`.
+
+**How do I get Cursor or Codex to make a Remotion video that doesn't look generic?**
+Install Remotion's skills and the Remocn skill for your agent (`-a cursor` or `-a codex`), then ask for the video in plain words. The Remocn skill has the agent build scenes from tuned components and follow the [Craft](/docs/craft) rules instead of defaulting to glow, gradient text and simultaneous pop-ins.
+
+**Does the Remocn skill replace Remotion's skills?**
+No. Keep Remotion's skills for how Remotion works. The Remocn skill defers Remotion API questions to them and covers what they leave out.
+
+**Is it free?**
+Yes. The skill and every component are MIT licensed, with no account and no usage limits. Remotion has [its own license](https://www.remotion.dev/docs/license), which can require a company license for larger teams.
+
+**Does the skill render the video?**
+No. Your agent writes Remotion code in your project, and you preview and render it with Remotion as usual, for example `npx remotion render`.
+
+**Is Remocn part of Remotion?**
+No. Remocn is an independent, open-source community project, not affiliated with Remotion or shadcn. It is listed on Remotion's resources page.
+
+</Faq>
