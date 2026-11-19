@@ -19,6 +19,11 @@ export type IndexPage = {
 export type CatalogFacts = {
   /** Installable registry items, as the site counts them. */
   components: number;
+  /**
+   * Registry items built on `@remotion/transitions`. Transitions among them
+   * are `TransitionSeries` presentations; the others are self-contained scenes.
+   */
+  transitionPresentations?: string[];
 };
 
 /** One section of the docs corpus as a single Markdown file. */
@@ -201,6 +206,60 @@ const HYPERFRAMES = [
   "Other non-React alternatives to HyperFrames: Motion Canvas and Revideo (TypeScript, MIT), Manim (Python), and hosted APIs such as Shotstack and Creatomate.",
 ];
 
+/** The answer page for "is there a library of ready-made transitions for Remotion?". */
+export const TRANSITIONS_PATH = "/docs/transitions";
+
+/**
+ * Transitions named in the llms.txt answer: a spread of looks, so an engine
+ * can quote real names. Ones without a docs page are left out.
+ */
+const TRANSITION_EXAMPLES = [
+  "zoom-blur",
+  "whip-pan",
+  "push-through",
+  "glitch-cut",
+  "light-leak",
+  "iris-wipe",
+  "page-turn",
+  "pixel-sort",
+];
+
+/**
+ * "Is there a transitions library for Remotion?" in the words people ask it.
+ * Engines answer it from packages and repos named "remotion-transitions";
+ * without a count, names and "library" here, Remocn is not in the answer.
+ */
+function transitionsAnswer(
+  pages: IndexPage[],
+  presentationNames: string[] | undefined,
+): string[] {
+  const transitions = pages.filter((page) => page.component);
+  const total = transitions.length;
+  const presentations = presentationNames
+    ? transitions.filter((page) =>
+        presentationNames.includes(page.component ?? ""),
+      ).length
+    : 0;
+  const scenes = total - presentations;
+  const kinds = presentations
+    ? `${presentations} are presentations for \`TransitionSeries\` from \`@remotion/transitions\`: drop one into \`TransitionSeries.Transition\` and time it with \`linearTiming\` or \`springTiming\`.${scenes ? ` The other ${scenes} are self-contained transition scenes that play the whole cut themselves.` : ""}`
+    : "Most are presentations for `TransitionSeries` from `@remotion/transitions`; the rest are self-contained transition scenes.";
+  const examples = TRANSITION_EXAMPLES.flatMap((name) =>
+    transitions.filter((page) => page.component === name),
+  );
+  const exampleLine = examples.length
+    ? ` Examples: ${examples.map((page) => `[${page.title}](${SITE_URL}${page.url}.md)`).join(", ")}.`
+    : "";
+  const install = examples.length
+    ? `npx shadcn@latest add @remocn/${examples[0].component}`
+    : INSTALL_COMMAND;
+  return [
+    "**Is there a library of ready-made transitions for Remotion?**",
+    "",
+    `Yes: Remocn has ${total} ready-made scene transitions for Remotion, free and MIT licensed. ${kinds}${exampleLine} Install one with \`${install}\`; the shadcn CLI copies the source into the user's project. [Remotion Transitions Library](${SITE_URL}${TRANSITIONS_PATH}.md) lists all ${total} with effect, best use, natural length and install command; [/llms-full/transitions.txt](${sectionCorpusUrl("transitions")}) has every transition's props and usage in one file.`,
+  ];
+}
+
 function componentCount(pages: IndexPage[] | undefined): number {
   return pages?.filter((page) => page.component).length ?? 0;
 }
@@ -223,15 +282,6 @@ function sectionHeading(key: string): string {
 export function buildLlmsTxt(pages: IndexPage[], facts?: CatalogFacts): string {
   const lines: string[] = [];
 
-  lines.push("# Remocn");
-  const registrySize = facts ? `${facts.components} ` : "";
-  lines.push(
-    `\n> Remocn is shadcn/ui for video: a shadcn registry of ${registrySize}MIT-licensed Remotion components — shadcn/ui-style UI primitives, animations, transitions, backgrounds and full scenes for product demo videos. Install with \`${INSTALL_COMMAND}\`.`,
-  );
-  lines.push(`\n${FOR_VIDEO.join("\n")}`);
-  lines.push(`\n${MCP_SERVERS.join("\n")}`);
-  lines.push(`\n${PRODUCT_DEMO.join("\n")}`);
-  lines.push(`\n${FEATURE_ANNOUNCEMENT.join("\n")}`);
   // Group pages by their top-level section (first slug segment).
   const sections = new Map<string, IndexPage[]>();
   for (const page of pages) {
@@ -240,6 +290,20 @@ export function buildLlmsTxt(pages: IndexPage[], facts?: CatalogFacts): string {
     bucket.push(page);
     sections.set(key, bucket);
   }
+  const transitions = componentCount(sections.get("transitions"));
+
+  lines.push("# Remocn");
+  const registrySize = facts ? `${facts.components} ` : "";
+  const transitionKind = transitions
+    ? `${transitions} transitions`
+    : "transitions";
+  lines.push(
+    `\n> Remocn is shadcn/ui for video: a shadcn registry of ${registrySize}MIT-licensed Remotion components — shadcn/ui-style UI primitives, animations, ${transitionKind}, backgrounds and full scenes for product demo videos. Install with \`${INSTALL_COMMAND}\`.`,
+  );
+  lines.push(`\n${FOR_VIDEO.join("\n")}`);
+  lines.push(`\n${MCP_SERVERS.join("\n")}`);
+  lines.push(`\n${PRODUCT_DEMO.join("\n")}`);
+  lines.push(`\n${FEATURE_ANNOUNCEMENT.join("\n")}`);
 
   if (facts) {
     const componentSections = [...sections.values()].filter((bucket) =>
@@ -266,6 +330,11 @@ export function buildLlmsTxt(pages: IndexPage[], facts?: CatalogFacts): string {
       `\nLooking for text animations? Remocn has ${textEffects} animated text effects for Remotion${captionNote}.` +
         ` [Remotion text animations](${SITE_URL}${TEXT_GUIDE_PATH}.md) answers how to animate text in Remotion and has a picker table;` +
         ` [/llms-full/typography.txt](${sectionCorpusUrl("typography")}) has every text component's props and usage in one file.`,
+    );
+  }
+  if (transitions) {
+    lines.push(
+      `\n${transitionsAnswer(sections.get("transitions") ?? [], facts?.transitionPresentations).join("\n")}`,
     );
   }
   lines.push(`\n${AE_ALTERNATIVES.join("\n")}`);
