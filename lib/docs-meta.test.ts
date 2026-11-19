@@ -473,6 +473,7 @@ describe("stated catalog size matches the registry", () => {
     "content/docs/guides/after-effects-alternatives-for-developers.mdx",
     "content/docs/guides/remotion-mcp-servers.mdx",
     "content/docs/guides/hyperframes-alternatives.mdx",
+    "content/docs/guides/remotion-component-libraries.mdx",
     "README.md",
   ];
 
