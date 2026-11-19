@@ -84,3 +84,38 @@ export function submissionBodies(urls: string[]) {
 export function buildIdOf(html: string): string | null {
   return /\\?"b\\?":\\?"([A-Za-z0-9_-]+)/.exec(html)?.[1] ?? null;
 }
+
+/**
+ * fetch, retried on a 5xx answer or a network error. Right after a deploy
+ * the proxy answers 502 for a short while as Coolify swaps containers, even
+ * though the new build already serves some pages; three runs in a row failed
+ * on the key file that way. A 4xx is the real answer and is returned at once.
+ */
+export async function fetchWithRetry(
+  url: string,
+  init: RequestInit = {},
+  {
+    attempts = 6,
+    delayMs = 10_000,
+    fetchImpl = fetch,
+  }: {
+    attempts?: number;
+    delayMs?: number;
+    fetchImpl?: (url: string, init: RequestInit) => Promise<Response>;
+  } = {},
+): Promise<Response> {
+  for (let attempt = 1; ; attempt++) {
+    const last = attempt >= attempts;
+    try {
+      const res = await fetchImpl(url, init);
+      if (res.status < 500 || last) return res;
+      console.warn(
+        `${url}: HTTP ${res.status}, retrying (${attempt}/${attempts})`,
+      );
+    } catch (error) {
+      if (last) throw error;
+      console.warn(`${url}: ${error}, retrying (${attempt}/${attempts})`);
+    }
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+  }
+}
