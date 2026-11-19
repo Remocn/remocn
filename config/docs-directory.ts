@@ -30,6 +30,7 @@ export const COMPARE = [
   "/docs/guides/after-effects-alternatives-for-developers",
   "/docs/guides/hyperframes-alternatives",
   "/docs/guides/remotion-mcp-servers",
+  "/docs/guides/remotion-component-libraries",
 ];
 
 export const GUIDES = {

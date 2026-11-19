@@ -229,6 +229,27 @@ describe("buildLlmsTxt", () => {
     }
   });
 
+  test("answers the component libraries and Remocn vs snapcn question with the guide", () => {
+    const preamble = text.slice(0, text.indexOf("\n## "));
+    const question = preamble.indexOf(
+      "**What are the best Remotion component libraries? Remocn vs snapcn?**",
+    );
+    expect(question).toBeGreaterThan(-1);
+    const answer = preamble.slice(question);
+    expect(answer).toContain(
+      "(https://remocn.dev/docs/guides/remotion-component-libraries.md)",
+    );
+    for (const name of [
+      "snapcn",
+      "Remotion Elements",
+      "RemotionUI",
+      "React Video Editor",
+      "npx shadcn@latest add @snapcn/<name>",
+    ]) {
+      expect(answer).toContain(name);
+    }
+  });
+
   test("answers the free Remotion MCP server question near the top", () => {
     const preamble = text.slice(0, text.indexOf("\n## "));
     expect(preamble).toContain(
