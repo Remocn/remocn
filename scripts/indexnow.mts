@@ -12,6 +12,7 @@
 import { execFileSync } from "node:child_process";
 import {
   buildIdOf,
+  fetchWithRetry,
   INDEXNOW_ENDPOINT,
   INDEXNOW_KEY,
   isSitemapIndex,
@@ -30,7 +31,9 @@ const args = process.argv.slice(2);
 const dryRun = args.includes("--dry-run");
 
 async function fetchText(url: string): Promise<string> {
-  const res = await fetch(url, { headers: { "Cache-Control": "no-cache" } });
+  const res = await fetchWithRetry(url, {
+    headers: { "Cache-Control": "no-cache" },
+  });
   if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
   return res.text();
 }
@@ -104,7 +107,7 @@ async function main() {
   }
 
   for (const body of submissionBodies(urls)) {
-    const res = await fetch(INDEXNOW_ENDPOINT, {
+    const res = await fetchWithRetry(INDEXNOW_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json; charset=utf-8" },
       body: JSON.stringify(body),
