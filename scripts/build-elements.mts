@@ -34,6 +34,10 @@ const INLINABLE_LIBS: Record<string, { artifact: string; importPath: string }> =
       artifact: "audit-core",
       importPath: "@/lib/remocn/audit-core",
     },
+    "@remocn/glide": {
+      artifact: "glide",
+      importPath: "@/lib/remocn/glide",
+    },
   };
 
 interface RegistryItem {

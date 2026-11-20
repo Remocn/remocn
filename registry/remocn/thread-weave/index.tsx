@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadSpace("normal", {
   weights: ["400", "500"],
@@ -217,6 +218,8 @@ function ScaleLayer({
 
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const WARP_IN = [-6, 22] as const;
 const WEAVE_START = 22;
 const PAD = { value: [3, 2], mark: [2, 1] } as const;
@@ -238,6 +241,7 @@ export function ThreadWeave({
   speed = 1,
   theme = "dark",
 }: ThreadWeaveProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - wait) * speed;
   const { width, height } = useVideoConfig();
   const u = height / 720;
@@ -458,14 +462,22 @@ export function ThreadWeave({
     }
   }
 
-  const scale = lerp(1.025, 1, EASE_IO(Math.min(1, t / (weaveEnd + 16))));
+  const scaleAt = (f: number) =>
+    lerp(1.025, 1, EASE_IO(Math.max(0, Math.min(1, f / (weaveEnd + 16)))));
+  const scale = scaleAt(t);
+  // Weighed at the frame's corner, the furthest the caption can sit from the
+  // camera's origin.
+  const reach = Math.hypot(width, height) / 2;
+  const cameraMoving =
+    Math.abs(scaleAt(t + speed) - scale) * reach > 1e-3 ||
+    Math.abs(scale - scaleAt(t - speed)) * reach > 1e-3;
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <ScaleLayer scale={zoom}>
         <AbsoluteFill
           style={{
-            transform: `scale(${scale})`,
+            transform: `scale(${scale})${glide(cameraMoving)}`,
             transformOrigin: "50% 46%",
           }}
         >
@@ -500,7 +512,7 @@ export function ThreadWeave({
                 letterSpacing: "-0.015em",
                 color: fg,
                 opacity: capA,
-                transform: `translateY(${(1 - capA) * 8 * u}px)`,
+                transform: `translateY(${(1 - capA) * 8 * u}px)${glide(midway(capA) && !cameraMoving)}`,
               }}
             >
               {caption === "remocn"

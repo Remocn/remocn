@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const SANS = loadSans("normal", { weights: ["500"], subsets: ["latin"] });
 const SERIF = loadSerif("italic", { weights: ["400"], subsets: ["latin"] });
@@ -63,6 +64,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const THEMES = {
   dark: {
@@ -245,7 +248,9 @@ function Capsule({
   lineH,
   offset,
   mag,
+  magMoving,
   disp,
+  margin,
   wordStyle,
   wordNode,
   textStyle,
@@ -269,17 +274,20 @@ function Capsule({
   lineH: number;
   offset: number;
   mag: number;
+  magMoving: boolean;
   disp: number;
+  margin: number;
   wordStyle: React.CSSProperties;
   textStyle: React.CSSProperties;
   p: Palette;
   u: number;
   enter: number;
 }) {
+  const glide = useGlide();
   const fid = `cap${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const radius = lh / 2;
   const edge = lh * 0.26;
-  const M = Math.ceil(disp + 8 * u);
+  const M = margin;
   const map = lensMap(Math.round(lw), Math.round(lh), edge);
   const rimX = 24 + interpolate(t, [10, 80], [0, 14], CLAMP);
   return (
@@ -387,15 +395,22 @@ function Capsule({
             style={{
               position: "absolute",
               inset: 0,
-              transform: `scale(${mag})`,
+              transform: `scale(${mag})${glide(magMoving)}`,
               transformOrigin: "50% 50%",
             }}
           >
             <div
               style={{
                 position: "absolute",
-                left: M + lw / 2 - offset,
+                // The line holds still while the capsule slides over it; that
+                // counter-travel is a transform, since a box eased by `left`
+                // steps whole pixels.
+                left: M + lw / 2,
                 top: M + (lh - lineH) / 2,
+                transform:
+                  Math.abs(offset) < 1e-3
+                    ? undefined
+                    : `translateX(${-offset}px)`,
               }}
             >
               <AnchoredLine
@@ -487,6 +502,7 @@ export function GlassCapsule({
   speed = 1,
   theme = "dark",
 }: GlassCapsuleProps) {
+  const tilt = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, durationInFrames } = useVideoConfig();
   const p = THEMES[theme];
@@ -579,6 +595,14 @@ export function GlassCapsule({
   const mag =
     1.05 + (restMag - 1.05) * EASE_IO(interpolate(t, [52, 80], [0, 1], CLAMP));
   const disp = (18 + 16 * travel) * u;
+  // Sized for the strongest displacement, not the live one: a margin that
+  // steps with `Math.ceil` as the lens calms shifted the lens box by a pixel.
+  const margin = Math.ceil((18 + 16) * u + 8 * u);
+  const magAt = (f: number) =>
+    1.05 + (restMag - 1.05) * EASE_IO(interpolate(f, [52, 80], [0, 1], CLAMP));
+  const magMoving =
+    Math.abs(magAt(t + speed) - mag) * lw > 1e-3 ||
+    Math.abs(mag - magAt(t - speed)) * lw > 1e-3;
   const enter = interpolate(t, [8, 14], [0, 1], CLAMP);
   const lit = interpolate(t, [72, 90], [0, 1], { ...CLAMP, easing: EASE_OUT });
   const sheen = interpolate(
@@ -665,7 +689,7 @@ export function GlassCapsule({
                   justifyContent: "center",
                   color: fg,
                   opacity: r,
-                  transform: `translateY(${(1 - r) * 26 * u}px)`,
+                  transform: `translateY(${(1 - r) * 26 * u}px)${tilt(midway(r))}`,
                 }}
               >
                 {isFocus ? (
@@ -697,7 +721,9 @@ export function GlassCapsule({
                         lineH={lineH}
                         offset={offset}
                         mag={mag}
+                        magMoving={magMoving}
                         disp={disp}
+                        margin={margin}
                         wordStyle={wordStyle}
                         wordNode={wordNode}
                         textStyle={textStyle}

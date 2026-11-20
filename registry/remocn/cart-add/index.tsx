@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -110,6 +111,7 @@ const B = {
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 const tw = (f: number, a: number, b: number, e = ENTER) =>
   interpolate(f, [a, b], [0, 1], { ...CL, easing: e });
 
@@ -206,7 +208,20 @@ function Icon({
   );
 }
 
-function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
+function Cursor({
+  x,
+  y,
+  at,
+  press,
+}: {
+  x: number;
+  y: number;
+  /** Where the cursor comes to rest; its travel there is a transform. */
+  at: { x: number; y: number };
+  press: number;
+}) {
+  // Layout rounds a box to whole pixels, so a cursor glided by `left`/`top`
+  // steps pixel by pixel; it is laid out at rest and travels by transform.
   return (
     <svg
       width={26}
@@ -214,10 +229,10 @@ function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
       viewBox="0 0 20 24"
       style={{
         position: "absolute",
-        left: x - 2,
-        top: y - 2,
+        left: at.x - 2,
+        top: at.y - 2,
         transformOrigin: "2px 2px",
-        transform: `scale(${1 - 0.04 * press})`,
+        transform: `translate(${x - at.x}px, ${y - at.y}px) scale(${1 - 0.04 * press})`,
         filter:
           "drop-shadow(0 1px 1px rgba(0,0,0,0.25)) drop-shadow(0 6px 10px rgba(0,0,0,0.2))",
         overflow: "visible",
@@ -468,6 +483,7 @@ export function CartAdd({
   ground,
   groundParams,
 }: CartAddProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const portrait = H > W;
@@ -518,8 +534,22 @@ export function CartAdd({
   const winY = L.winShift.y * shift;
   const winS = lerp(1, L.winShift.s, shift);
   const D = L.drawer;
-  const dX = D.x + L.drawerFrom.x * (1 - drawerIn);
-  const dY = D.y + L.drawerFrom.y * (1 - drawerIn);
+  // The drawer is laid out where it lands and slides in by transform; the
+  // spring never quite reaches 1, so the leftover is dropped below 1e-3px.
+  // The transform itself stays to the end: it carries the drawer's mark.
+  const drawerAt = (f: number) =>
+    1 - spring({ frame: f - B.drawer, fps, config: HEAVY });
+  const dTx = L.drawerFrom.x * (1 - drawerIn);
+  const dTy = L.drawerFrom.y * (1 - drawerIn);
+  const drawerMoving =
+    Math.abs(drawerAt(frame + 1) - drawerAt(frame)) *
+      Math.hypot(L.drawerFrom.x, L.drawerFrom.y) >
+      1e-3 ||
+    Math.abs(drawerAt(frame) - drawerAt(frame - 1)) *
+      Math.hypot(L.drawerFrom.x, L.drawerFrom.y) >
+      1e-3;
+  const settled = Math.abs(dTx) < 1e-3 && Math.abs(dTy) < 1e-3;
+  const drawerT = `translate(${settled ? 0 : dTx}px, ${settled ? 0 : dTy}px)${glide(drawerMoving)}`;
   const checkoutPt = { x: D.x + D.w * 0.62, y: D.y + D.h - 28 - 32 + 6 };
 
   const arc = (
@@ -595,7 +625,12 @@ export function CartAdd({
     s: lerp(1, 0.16, clamp01(flyP)),
   };
   const bump = 1 + 0.16 * Math.max(0, click(B.land + 2));
-  const badge = sp(B.land, CHIP);
+  const badgeAt = (f: number) =>
+    spring({ frame: f - B.land, fps, config: CHIP });
+  const badge = badgeAt(frame);
+  const badgeMoving =
+    Math.abs(badgeAt(frame + 1) - badge) > 1e-4 ||
+    Math.abs(badge - badgeAt(frame - 1)) > 1e-4;
 
   const item = (k: number) =>
     tw(frame, B.drawer + 6 + k * 3, B.drawer + 18 + k * 3);
@@ -680,7 +715,9 @@ export function CartAdd({
               position: "absolute",
               inset: 0,
               transformOrigin: "50% 50%",
-              transform: `translate(${winX}px, ${winY}px) scale(${winS * (1 + 0.015 * (frame / 200))})`,
+              // The slow push never stops, so this layer carries the tilt
+              // throughout; it covers every line of text in the window.
+              transform: `translate(${winX}px, ${winY}px) scale(${winS * (1 + 0.015 * (frame / 200))})${glide(true)}`,
             }}
           >
             <div
@@ -741,7 +778,7 @@ export function CartAdd({
                         justifyContent: "center",
                         fontVariantNumeric: "tabular-nums",
                         boxShadow: `0 0 0 2px ${pal.win}`,
-                        transform: `scale(${Math.max(0, badge)})`,
+                        transform: `scale(${Math.max(0, badge)})${glide(badgeMoving)}`,
                       }}
                     >
                       1
@@ -1065,14 +1102,16 @@ export function CartAdd({
               <div
                 style={{
                   position: "absolute",
-                  left: fly.x - 90,
-                  top: fly.y - 90,
+                  // Flies by transform, not `left`/`top`, which would step
+                  // the photo pixel by pixel.
+                  left: fromPt.x - 90,
+                  top: fromPt.y - 90,
                   width: 180,
                   height: 180,
                   borderRadius: 20,
                   overflow: "hidden",
                   opacity: flyO,
-                  transform: `scale(${fly.s})`,
+                  transform: `translate(${fly.x - fromPt.x}px, ${fly.y - fromPt.y}px) scale(${fly.s})${glide(true)}`,
                   boxShadow:
                     "0 18px 40px -10px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,0,0,0.06)",
                 }}
@@ -1086,8 +1125,9 @@ export function CartAdd({
             <div
               style={{
                 position: "absolute",
-                left: dX,
-                top: dY,
+                left: D.x,
+                top: D.y,
+                transform: drawerT,
                 width: D.w,
                 height: D.h,
                 borderRadius: 28,
@@ -1120,7 +1160,7 @@ export function CartAdd({
                 style={{
                   marginTop: 26,
                   opacity: item(0),
-                  transform: `translateY(${(1 - item(0)) * 12}px)`,
+                  transform: `translateY(${(1 - item(0)) * 12}px)${glide(midway(item(0)))}`,
                 }}
               >
                 <div style={{ ...label16, fontVariantNumeric: "tabular-nums" }}>
@@ -1165,7 +1205,7 @@ export function CartAdd({
                   paddingTop: 24,
                   borderTop: `1px solid ${pal.line}`,
                   opacity: item(1),
-                  transform: `translateY(${(1 - item(1)) * 12}px)`,
+                  transform: `translateY(${(1 - item(1)) * 12}px)${glide(midway(item(1)))}`,
                 }}
               >
                 <div
@@ -1228,7 +1268,7 @@ export function CartAdd({
                 style={{
                   marginTop: "auto",
                   opacity: item(2),
-                  transform: `translateY(${(1 - item(2)) * 12}px)`,
+                  transform: `translateY(${(1 - item(2)) * 12}px)${glide(midway(item(2)))}`,
                 }}
               >
                 <div style={{ display: "flex", fontSize: 18 }}>
@@ -1268,7 +1308,7 @@ export function CartAdd({
           ) : null}
 
           <div style={{ opacity: cursorO }}>
-            <Cursor x={cur.x} y={cur.y} press={press} />
+            <Cursor x={cur.x} y={cur.y} at={checkoutPt} press={press} />
           </div>
         </div>
       </ScaleLayer>

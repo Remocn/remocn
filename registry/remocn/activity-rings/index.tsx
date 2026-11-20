@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["300", "400", "500"],
@@ -276,6 +277,7 @@ export function ActivityRings({
   speed = 1,
   theme = "dark",
 }: ActivityRingsProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { width, height, fps } = useVideoConfig();
   const t = frame * speed;
@@ -350,8 +352,18 @@ export function ActivityRings({
   const rowX = width * 0.6;
   const rowH = 108 * u;
   const rowsTop = cy - (list.length * rowH) / 2 + 18 * u;
-  const row = (k: number, d = 0) =>
-    interpolate(t, [8 + k * 4 + d, 26 + k * 4 + d], [0, 1], {
+  const rowAt = (tt: number, k: number, d = 0) =>
+    interpolate(tt, [8 + k * 4 + d, 26 + k * 4 + d], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  const row = (k: number, d = 0) => rowAt(t, k, d);
+  // Whether a travel of `px` at full stroke is still moving at this frame.
+  const stirs = (at: (tt: number) => number, px: number) =>
+    Math.abs(at(t + 1) - at(t)) * px > 1e-3 ||
+    Math.abs(at(t) - at(t - 1)) * px > 1e-3;
+  const overInAt = (tt: number, i: number) =>
+    interpolate(tt, [HIT + 4 + i * 3, HIT + 16 + i * 3], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -471,7 +483,7 @@ export function ActivityRings({
               alignItems: "center",
               gap: 12 * u,
               opacity: row(0, -6),
-              transform: `translateY(${(1 - row(0, -6)) * 10 * u}px)`,
+              transform: `translateY(${(1 - row(0, -6)) * 10 * u}px)${glide(stirs((tt) => rowAt(tt, 0, -6), 10 * u))}`,
             }}
           >
             <span
@@ -496,16 +508,9 @@ export function ActivityRings({
             const p = progress(i);
             const v = ring.value * Math.min(1, p);
             const over = Math.round((p - 1) * 100);
-            const overIn = interpolate(
-              t,
-              [HIT + 4 + i * 3, HIT + 16 + i * 3],
-              [0, 1],
-              {
-                ...CLAMP,
-                easing: EASE_OUT,
-              },
-            );
+            const overIn = overInAt(t, i);
             const r = row(i + 1);
+            const rising = stirs((tt) => rowAt(tt, i + 1), 80 * u);
             return (
               <div
                 key={ring.label}
@@ -525,7 +530,7 @@ export function ActivityRings({
                     display: "flex",
                     alignItems: "center",
                     gap: 10 * u,
-                    transform: `translateY(${(1 - r) * 120}%)`,
+                    transform: `translateY(${(1 - r) * 120}%)${glide(rising)}`,
                   }}
                 >
                   <span
@@ -552,7 +557,7 @@ export function ActivityRings({
                     display: "flex",
                     alignItems: "baseline",
                     gap: 12 * u,
-                    transform: `translateY(${(1 - r) * 110}%)`,
+                    transform: `translateY(${(1 - r) * 110}%)${glide(rising)}`,
                   }}
                 >
                   <span
@@ -580,7 +585,7 @@ export function ActivityRings({
                         color: c.muted,
                         fontVariantNumeric: "tabular-nums",
                         opacity: overIn,
-                        transform: `translateY(${(1 - overIn) * 8 * u}px)`,
+                        transform: `translateY(${(1 - overIn) * 8 * u}px)${glide(stirs((tt) => overInAt(tt, i), 8 * u))}`,
                       }}
                     >
                       +{over}% {goalLabel}

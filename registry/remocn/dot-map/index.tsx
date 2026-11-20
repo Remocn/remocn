@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: manrope } = loadManrope("normal", {
   weights: ["400", "500"],
@@ -466,6 +467,7 @@ export function DotMap({
   theme = "dark",
   speed = 1,
 }: DotMapProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = Math.min(W / 1280, H / 720);
@@ -509,11 +511,18 @@ export function DotMap({
   const drift = interpolate(t, [0, 135], [0, 1.2]);
   const liftTo = rgb(theme === "dark" ? "#FFFFFF" : p.bg);
 
-  const push = interpolate(t, [0, done + 40], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const zoom = 0.975 + 0.03 * push;
+  const zoomAt = (tt: number) =>
+    0.975 +
+    0.03 *
+      interpolate(tt, [0, done + 40], [0, 1], { ...CLAMP, easing: EASE_IO });
+  const zoom = zoomAt(t);
+  // The push is a slow in-out ease, so it is weighed in px at the frame edge
+  // rather than by progress: the tilt stays on while the counter under it
+  // still creeps.
+  const zoomStep = (a: number, b: number) =>
+    Math.abs(zoomAt(a) - zoomAt(b)) * (H / 2);
+  const zooming =
+    zoomStep(t + speed, t) > 1e-3 || zoomStep(t, t - speed) > 1e-3;
 
   const dots: React.ReactNode[] = [];
   const accents: React.ReactNode[] = [];
@@ -606,7 +615,10 @@ export function DotMap({
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
       <ScaleLayer scale={scale}>
         <AbsoluteFill
-          style={{ transform: `scale(${zoom})`, transformOrigin: "50% 50%" }}
+          style={{
+            transform: `scale(${zoom})${glide(zooming)}`,
+            transformOrigin: "50% 50%",
+          }}
         >
           <svg
             width={W}

@@ -1,5 +1,7 @@
 import { Easing, interpolate } from "remotion";
 
+export { useGlide } from "@/lib/remocn/glide";
+
 export const LAUNCH_FPS = 60;
 export const LAUNCH_FRAMES = 1600;
 export const LAUNCH_WIDTH = 1920;
@@ -35,6 +37,8 @@ export const smooth = Easing.bezier(0.65, 0, 0.25, 1);
 export const ramp = (t: number, a: number, b: number) =>
   clamp((t - a) / (b - a));
 
+export const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** Shared geometry: the clicked button becomes the portal frame without a cut. */
 export function actionFrame(t: number) {
   const enter = tween(t, 4.65, 5.05, 0, 1, smooth);
@@ -50,6 +54,7 @@ export function actionFrame(t: number) {
     height: 60 + 180 * morph,
     radius: 13 + 43 * morph,
     press: tween(t, 5.35, 5.47) - tween(t, 5.48, 5.65),
+    pressing: midway(tween(t, 5.35, 5.47)) || midway(tween(t, 5.48, 5.65)),
   };
 }
 export function tween(
@@ -86,5 +91,7 @@ export function deskCamera(t: number) {
     ),
     x: key(t, [7.333, 15.117], [0, -10]),
     y: key(t, [7.333, 15.117], [0, -22]),
+    // The push-in runs from the first key to the last without a hold.
+    moving: midway(ramp(t, 7.333, 15.117)),
   };
 }

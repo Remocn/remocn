@@ -27,6 +27,10 @@ export const ease = (frame: number, from: number, to: number) =>
     extrapolateRight: "clamp",
   });
 
+export { useGlide } from "@/lib/remocn/glide";
+
+export const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const segmenter = new Intl.Segmenter("en", { granularity: "grapheme" });
 export const graphemes = (text: string) =>
   Array.from(segmenter.segment(text), (part) => part.segment);

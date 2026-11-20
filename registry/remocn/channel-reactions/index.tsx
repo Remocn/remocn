@@ -2,8 +2,11 @@
 
 import { loadFont as loadOnest } from "@remotion/google-fonts/Onest";
 import type React from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
+  continueRender,
+  delayRender,
   Easing,
   Img,
   interpolate,
@@ -12,6 +15,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -127,6 +131,8 @@ const CAMERA = Easing.bezier(0.87, 0, 0.13, 1);
 const CL = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 const clamp = (v: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v));
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function withAlpha(color: string, alpha: number) {
   const hex = color.replace("#", "");
   const full = hex.length === 3 ? hex.replace(/(.)/g, "$1$1") : hex;
@@ -195,16 +201,52 @@ function Count({ value }: { value: number }) {
   );
 }
 
-function Grow({ p, children }: { p: number; children: React.ReactNode }) {
+/**
+ * A row that opens from 0 to its content's height. With `cut` it is laid out
+ * fully open and that much of its bottom is clipped off instead, so nothing
+ * around it is pushed by layout while it opens.
+ */
+function Grow({
+  p,
+  cut,
+  children,
+}: {
+  p: number;
+  cut?: number;
+  children: React.ReactNode;
+}) {
+  const open = p >= 0.999;
   return (
-    <div style={{ display: "grid", gridTemplateRows: `${clamp(p, 0, 1)}fr` }}>
+    <div
+      style={{
+        display: "grid",
+        gridTemplateRows: cut === undefined ? `${clamp(p, 0, 1)}fr` : "1fr",
+      }}
+    >
       <div
-        style={{ minHeight: 0, overflow: p >= 0.999 ? "visible" : "hidden" }}
+        style={{
+          minHeight: 0,
+          overflow: open ? "visible" : "hidden",
+          clipPath:
+            cut === undefined || open ? undefined : `inset(0 0 ${cut}px 0)`,
+        }}
       >
         {children}
       </div>
     </div>
   );
+}
+
+/** Height layout gives an element: unrounded, and blind to transforms. */
+function layoutHeight(el: Element | null | undefined) {
+  if (!el) return 0;
+  const style = getComputedStyle(el);
+  const height = Number.parseFloat(style.height) || 0;
+  return style.boxSizing === "border-box"
+    ? height
+    : height +
+        Number.parseFloat(style.paddingTop) +
+        Number.parseFloat(style.paddingBottom);
 }
 
 function Message({
@@ -215,6 +257,7 @@ function Message({
   context,
   bg,
   pad,
+  cut,
 }: {
   person: ChannelAuthor;
   time: string;
@@ -223,6 +266,8 @@ function Message({
   context?: string;
   bg?: string;
   pad: number;
+  /** Px clipped off the bottom while a block inside is laid out ahead. */
+  cut?: number;
 }) {
   return (
     <div
@@ -232,6 +277,7 @@ function Message({
         padding: `10px ${pad}px`,
         background: bg,
         position: "relative",
+        clipPath: cut ? `inset(0 0 ${cut}px 0)` : undefined,
       }}
     >
       <Avatar person={person} size={38} />
@@ -423,7 +469,9 @@ export function ChannelReactions({
   ground,
   groundParams,
 }: ChannelReactionsProps) {
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
+  const rawFrame = useCurrentFrame();
+  const frame = Math.max(0, rawFrame - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width;
   const SW = tall ? 720 : 1280;
@@ -432,8 +480,21 @@ export function ChannelReactions({
   const base = palette(theme, accent);
   const pal: Pal =
     ink === undefined ? base : { ...base, text: ink, strong: ink };
+  const spAt = (
+    f: number,
+    at: number,
+    config: Partial<typeof CARD>,
+    dur?: number,
+  ) => spring({ frame: f - at, fps, config, durationInFrames: dur });
   const sp = (at: number, config: Partial<typeof CARD>, dur?: number) =>
-    spring({ frame: frame - at, fps, config, durationInFrames: dur });
+    spAt(frame, at, config, dur);
+  // Whether a value of the frame is moving right now: springs overshoot and
+  // trail off, so it is read against the neighbouring frames instead of a
+  // progress. Nothing moves while `delay` holds the first frame.
+  const stirs = (at: (f: number) => number, eps = 1e-5) =>
+    rawFrame >= delay &&
+    (Math.abs(at(frame + speed) - at(frame)) > eps ||
+      Math.abs(at(frame) - at(frame - speed)) > eps);
   const ease = (a: number, b: number, easing = ENTER) =>
     interpolate(frame, [a, b], [0, 1], { ...CL, easing });
 
@@ -446,10 +507,18 @@ export function ChannelReactions({
 
   const win = sp(0, HEAVY);
   const winFade = ease(0, 12);
-  const cam = interpolate(frame, [0, 220], [1, 1.03], {
-    ...CL,
-    easing: CAMERA,
-  });
+  const camAt = (f: number) =>
+    interpolate(f, [0, 220], [1, 1.03], {
+      ...CL,
+      easing: CAMERA,
+    });
+  const cam = camAt(frame);
+  // The camera eases in and out over the whole scene, so the window counts
+  // as moving while its furthest line still travels a thousandth of a pixel
+  // a frame; below that it is at rest and gets no tilt.
+  const winMoving =
+    stirs((f) => spAt(f, 0, HEAVY) * 60, 5e-4) ||
+    stirs((f) => (0.96 + 0.04 * spAt(f, 0, HEAVY)) * camAt(f), 2e-6);
   const headIn = ease(4, 20);
 
   const msgIn = sp(16, MORPH, 16);
@@ -490,6 +559,103 @@ export function ChannelReactions({
   const rowIn = sp(78, MORPH, 12);
   const threadIn = sp(104, MORPH, 14);
   const replyAt = replies.map((_, i) => 120 + i * 24);
+
+  // The channel sticks to its bottom edge, so a block that opens pushes every
+  // line above it up by layout, and layout rounds each baseline and box edge
+  // on the way: the lines click up pixel by pixel, each on its own frame.
+  // While a block opens, the column is laid out with that block already open
+  // and the height still to come sits on one translate of the whole column,
+  // with the block clipped down to what it showed. The blocks open strictly
+  // from the top down, so nothing visible sits below one that moves and
+  // nothing needs a translate of its own. At rest the markup is the plain
+  // `Grow`.
+  const messageRef = useRef<HTMLDivElement>(null);
+  const blockRefs = useRef<(HTMLDivElement | null)[]>([]);
+  // Natural heights: the message without its blocks, then each block in
+  // order (unfurl, reactions, thread line, replies).
+  const [heights, setHeights] = useState<number[]>([]);
+  // A font that arrives after the first render changes the heights with no
+  // render to follow (a still, a paused player), so the frame is held until
+  // the fonts are in and the heights have been read once more.
+  const [handle] = useState(() => delayRender("channel-reactions: measuring"));
+  const [fontsIn, setFontsIn] = useState(false);
+  useEffect(() => {
+    let live = true;
+    onest
+      .waitUntilDone()
+      .then(() => document.fonts.ready)
+      .catch(() => undefined)
+      .then(() => {
+        if (live) setFontsIn(true);
+        else continueRender(handle);
+      });
+    return () => {
+      live = false;
+    };
+  }, [handle]);
+  useLayoutEffect(() => {
+    if (fontsIn) continueRender(handle);
+  }, [fontsIn, handle]);
+  // No dependency list: the copy and the font can change on any render, and
+  // this runs before the frame is painted.
+  useLayoutEffect(() => {
+    const blocks = blockRefs.current.slice(0, 3 + replies.length);
+    const next = [
+      // Less the rows of its three blocks, whatever state they are laid out
+      // in right now.
+      blocks
+        .slice(0, 3)
+        .reduce(
+          (h, el) => h - layoutHeight(el?.parentElement?.parentElement),
+          layoutHeight(messageRef.current),
+        ),
+      ...blocks.map(layoutHeight),
+    ];
+    if (
+      next.length !== heights.length ||
+      next.some((h, i) => Math.abs(h - heights[i]) > 0.01)
+    )
+      setHeights(next);
+  });
+  // Progress of each row, the message first, then its blocks and the replies.
+  const openAt = [
+    (f: number) => clamp(spAt(f, 16, MORPH, 16)),
+    (f: number) => clamp(spAt(f, 30, MORPH, 16)),
+    (f: number) => clamp(spAt(f, 78, MORPH, 12)),
+    (f: number) => clamp(spAt(f, 104, MORPH, 14)),
+    ...replyAt.map((at) => (f: number) => clamp(spAt(f, at, MORPH, 14))),
+  ];
+  // Px of its height each row still holds back. The message holds back a
+  // share of what it contains at that moment, its blocks as far as they are
+  // open.
+  const hiddenAt = openAt.map((at, i) => (f: number) => {
+    const full =
+      i === 0
+        ? openAt
+            .slice(1, 4)
+            .reduce(
+              (h, inner, k) => h + inner(f) * (heights[k + 1] ?? 0),
+              heights[0] ?? 0,
+            )
+        : (heights[i] ?? 0);
+    return (1 - at(f)) * full;
+  });
+  const opening = hiddenAt.map((at) => stirs(at, 1e-3));
+  const hidden = hiddenAt.map((at, i) => (opening[i] ? at(frame) : 0));
+  const columnMoving = opening.some(Boolean);
+  const lift = hidden.reduce((sum, h) => sum + h, 0);
+  const insideHidden = hidden[1] + hidden[2] + hidden[3];
+  // A `p`fr track in an auto-height grid makes the row p of its content tall,
+  // and the track is then resolved against that height once more: the content
+  // shows through a window of p * p of its height, at the top of the row. So
+  // the clip takes off more than the row holds back.
+  const cut = (i: number) =>
+    opening[i]
+      ? hidden[i] * (1 + openAt[i](frame)) + (i === 0 ? insideHidden : 0)
+      : undefined;
+  // One tilt per chain: a block that fades in while the window or the column
+  // above it already carries the tilt gets none of its own.
+  const carried = winMoving || columnMoving;
   const threadAvatars = [PEOPLE.leo, PEOPLE.priya, PEOPLE.sam, PEOPLE.maya];
   const typing = 1 - ease(12, 18, EXIT);
 
@@ -548,7 +714,7 @@ export function ChannelReactions({
                 lineHeight: 1.04,
                 color: ink ?? (pal.dark ? "#F6F2EE" : "#1E1A16"),
                 opacity: headIn,
-                transform: `translateY(${(1 - headIn) * 18}px)`,
+                transform: `translateY(${(1 - headIn) * 18}px)${glide(midway(headIn))}`,
               }}
             >
               {headline}
@@ -568,7 +734,7 @@ export function ChannelReactions({
               boxShadow: pal.depth,
               opacity: winFade,
               transformOrigin: "50% 50%",
-              transform: `translateY(${(1 - win) * 60}px) scale(${(0.96 + 0.04 * win) * cam})`,
+              transform: `translateY(${(1 - win) * 60}px) scale(${(0.96 + 0.04 * win) * cam})${glide(winMoving)}`,
             }}
           >
             {SIDE ? (
@@ -646,6 +812,9 @@ export function ChannelReactions({
                     bottom: 6,
                     display: "flex",
                     flexDirection: "column",
+                    transform: columnMoving
+                      ? `translateY(${lift}px)${glide(!winMoving)}`
+                      : undefined,
                   }}
                 >
                   {HISTORY.map((h) => (
@@ -659,13 +828,14 @@ export function ChannelReactions({
                       {h.text}
                     </Message>
                   ))}
-                  <Grow p={msgIn}>
+                  <Grow p={msgIn} cut={cut(0)}>
                     <div
+                      ref={messageRef}
                       style={{
                         position: "relative",
                         zIndex: 2,
                         opacity: msgFade,
-                        transform: `translateY(${(1 - msgFade) * 16}px)`,
+                        transform: `translateY(${(1 - msgFade) * 16}px)${glide(midway(msgFade) && !carried)}`,
                       }}
                     >
                       <Message
@@ -673,6 +843,7 @@ export function ChannelReactions({
                         time={time}
                         pal={pal}
                         pad={PAD}
+                        cut={insideHidden}
                         bg={
                           hover > 0
                             ? withAlpha(
@@ -684,8 +855,13 @@ export function ChannelReactions({
                       >
                         {message}{" "}
                         <span style={{ color: pal.link }}>{link.url}</span>
-                        <Grow p={unfurl}>
-                          <div style={{ opacity: unfurlFade, paddingTop: 10 }}>
+                        <Grow p={unfurl} cut={cut(1)}>
+                          <div
+                            ref={(el) => {
+                              blockRefs.current[0] = el;
+                            }}
+                            style={{ opacity: unfurlFade, paddingTop: 10 }}
+                          >
                             <div
                               style={{
                                 display: "flex",
@@ -755,8 +931,11 @@ export function ChannelReactions({
                             </div>
                           </div>
                         </Grow>
-                        <Grow p={rowIn}>
+                        <Grow p={rowIn} cut={cut(2)}>
                           <div
+                            ref={(el) => {
+                              blockRefs.current[1] = el;
+                            }}
                             style={{
                               display: "flex",
                               flexWrap: "wrap",
@@ -794,7 +973,7 @@ export function ChannelReactions({
                                       : undefined,
                                     color: self ? pal.link : pal.text,
                                     fontSize: 15,
-                                    transform: `scale(${s})`,
+                                    transform: `scale(${s})${glide(stirs((f) => spAt(f, popAt[i], CHIP)))}`,
                                     transformOrigin: "30% 60%",
                                   }}
                                 >
@@ -826,8 +1005,11 @@ export function ChannelReactions({
                             </div>
                           </div>
                         </Grow>
-                        <Grow p={threadIn}>
+                        <Grow p={threadIn} cut={cut(3)}>
                           <div
+                            ref={(el) => {
+                              blockRefs.current[2] = el;
+                            }}
                             style={{
                               display: "flex",
                               alignItems: "center",
@@ -844,7 +1026,7 @@ export function ChannelReactions({
                                     key={p.name}
                                     style={{
                                       width: 24 * clamp(s),
-                                      transform: `scale(${s})`,
+                                      transform: `scale(${s})${glide(stirs((f) => spAt(f, 104 + i * 6, CHIP)))}`,
                                     }}
                                   >
                                     <Avatar person={p} size={24} />
@@ -893,7 +1075,7 @@ export function ChannelReactions({
                           background: pal.panel,
                           boxShadow: pal.raised,
                           opacity: frame >= 58 ? clamp(barIn) * barOut : 0,
-                          transform: `translateY(${(1 - barIn) * 6}px)`,
+                          transform: `translateY(${(1 - barIn) * 6}px)${glide(stirs((f) => spAt(f, 58, CARD)))}`,
                           fontSize: 15,
                           color: pal.text,
                         }}
@@ -955,8 +1137,13 @@ export function ChannelReactions({
                       <div
                         style={{
                           position: "absolute",
-                          left: cx,
-                          top: cy,
+                          // Laid out on the button it presses and led
+                          // around by a transform: layout rounds a box to
+                          // whole pixels, so a pointer moved by `left`/`top`
+                          // steps instead of gliding.
+                          left: target.x,
+                          top: target.y,
+                          transform: `translate(${cx - target.x}px, ${cy - target.y}px)`,
                           opacity: cursorOpacity,
                           zIndex: 5,
                         }}
@@ -969,11 +1156,14 @@ export function ChannelReactions({
                     const p = sp(replyAt[i], MORPH, 14);
                     const o = ease(replyAt[i], replyAt[i] + 10);
                     return (
-                      <Grow key={r.text} p={p}>
+                      <Grow key={r.text} p={p} cut={cut(4 + i)}>
                         <div
+                          ref={(el) => {
+                            blockRefs.current[3 + i] = el;
+                          }}
                           style={{
                             opacity: o,
-                            transform: `translateY(${(1 - o) * 12}px)`,
+                            transform: `translateY(${(1 - o) * 12}px)${glide(midway(o) && !carried)}`,
                           }}
                         >
                           <Message

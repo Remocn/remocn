@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const plex = loadPlexSans("normal", {
   weights: ["400", "500"],
@@ -138,6 +139,7 @@ export function SpineTurn({
   theme = "dark",
 }: SpineTurnProps) {
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
   const list = useMemo(() => {
@@ -206,10 +208,23 @@ export function SpineTurn({
           easing: EASE_TURN,
         });
     const spine = spineOf(k);
-    const ox = hero.x + (spine.x - hero.x) * turn;
-    const oy = hero.baseline + (spine.y - hero.baseline) * turn;
     const size = hero.F + (S - hero.F) * turn;
     const track = TRACK + (SPINE_TRACK - TRACK) * turn;
+    const turning = turn > 0 && turn < 1;
+    const settled = !isLast && turn === 1;
+    // Layout rounds a box and a baseline to whole pixels, so the title is laid
+    // out once, where it finally rests (on its spine, or the last one as a
+    // hero), and carried from there by a transform all its life: its travel
+    // is a translate and its size a scale of that layout.
+    const anchor = isLast
+      ? { x: hero.x, y: hero.baseline, dx: 0, dy: 0 }
+      : {
+          x: spine.x,
+          y: spine.y,
+          dx: (hero.x - spine.x) * (1 - turn),
+          dy: (hero.baseline - spine.y) * (1 - turn),
+        };
+    const laidSize = isLast ? hero.F : S;
     const rot = -90 * turn;
 
     const glyphs = (
@@ -218,14 +233,18 @@ export function SpineTurn({
         style={{
           position: "absolute",
           left: 0,
-          top: -BASE * size,
-          height: BOX * size,
-          lineHeight: `${BOX * size}px`,
+          top: -BASE * laidSize,
+          height: BOX * laidSize,
+          lineHeight: `${BOX * laidSize}px`,
           whiteSpace: "pre",
           fontFamily,
           fontWeight,
-          fontSize: size,
+          fontSize: laidSize,
           letterSpacing: `${track}em`,
+          transform:
+            settled || isLast ? undefined : `scale(${size / laidSize})`,
+          transformOrigin:
+            settled || isLast ? undefined : `0 ${BASE * laidSize}px`,
           color:
             turn > 0
               ? `color-mix(in oklab, ${c.spine} ${(Math.min(1, turn * 1.4) * 100).toFixed(1)}%, ${accent ?? c.accent})`
@@ -242,11 +261,14 @@ export function SpineTurn({
         key={`t${k}`}
         style={{
           position: "absolute",
-          left: ox,
-          top: oy,
+          left: anchor.x,
+          top: anchor.y,
           width: 0,
           height: 0,
-          transform: `rotate(${rot.toFixed(3)}deg)`,
+          // On its spine the title rests turned square, as it always did.
+          transform: settled
+            ? `rotate(${rot.toFixed(3)}deg)`
+            : `translate(${anchor.dx}px, ${anchor.dy}px) rotate(${rot.toFixed(3)}deg)${glide(turning)}`,
           transformOrigin: "0 0",
         }}
       >
@@ -265,7 +287,10 @@ export function SpineTurn({
               style={{
                 position: "absolute",
                 left: size * 0.2,
-                top: BASE * size + size * 0.1 + (1 - enter) * BOX * size * 1.05,
+                // The rise is a transform: layout would round the baseline to
+                // whole pixels.
+                top: BASE * size + size * 0.1,
+                transform: `translateY(${(1 - enter) * BOX * size * 1.05}px)${glide(enter > 0 && enter < 1)}`,
               }}
             >
               {glyphs}

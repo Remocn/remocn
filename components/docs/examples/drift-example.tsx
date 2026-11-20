@@ -43,7 +43,7 @@ function ReportCard() {
         maxWidth: 720,
       }}
     >
-      <div style={{ willChange: "transform" }}>
+      <div>
         <div
           style={{
             fontFamily: FONT_FAMILY,

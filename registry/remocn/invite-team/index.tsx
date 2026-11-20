@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -73,6 +74,10 @@ const tween = (
   len: number,
   easing: (t: number) => number,
 ) => interpolate(f, [from, from + len], [0, 1], { ...CL, easing });
+
+/** Whether `px(f)`, a value in pixels, moves at frame `f`. */
+const stirs = (px: (f: number) => number, f: number, eps = 1e-3) =>
+  Math.abs(px(f + 1) - px(f)) > eps || Math.abs(px(f) - px(f - 1)) > eps;
 
 const BEAT = { window: 0, modal: 6, cursor: 8, focus: 24, type: 28 };
 
@@ -276,6 +281,7 @@ export function InviteTeam({
   ground,
   groundParams,
 }: InviteTeamProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width;
@@ -285,8 +291,10 @@ export function InviteTeam({
   const dark = theme === "dark";
   const pal = palette(dark);
   const fg = ink ?? pal.text;
+  const spAt = (f: number, at: number, config: Record<string, number>) =>
+    spring({ frame: f - at, fps, config });
   const sp = (at: number, config: Record<string, number>) =>
-    spring({ frame: frame - at, fps, config });
+    spAt(frame, at, config);
 
   const WIN = tall
     ? { x: 20, y: 72, w: SW - 40, h: SH }
@@ -343,21 +351,38 @@ export function InviteTeam({
   const focus =
     tween(frame, BEAT.focus, 4, EASE.enter) *
     (1 - tween(frame, selClick - 2, 4, EASE.enter));
-  const dropIn =
-    clamp01(sp(selClick + 1, SPR.card)) *
-    (1 - tween(frame, optClick + 1, 6, EASE.exit));
+  const dropInAt = (f: number) =>
+    clamp01(spAt(f, selClick + 1, SPR.card)) *
+    (1 - tween(f, optClick + 1, 6, EASE.exit));
+  const dropIn = dropInAt(frame);
   const roleNow = frame >= optClick + 1 ? role : "Member";
   const loading = frame >= btnClick + 2 && frame < doneAt;
   const done = frame >= doneAt;
   const shownChips = chipAt.filter((c) => frame >= c).length;
-  const pressOf = (at: number) =>
-    clamp01(sp(at - 2, SPR.chip) - sp(at + 3, SPR.chip));
+  const pressAt = (f: number, at: number) =>
+    clamp01(spAt(f, at - 2, SPR.chip) - spAt(f, at + 3, SPR.chip));
+  const pressOf = (at: number) => pressAt(frame, at);
   const toast = sp(toastAt, SPR.card);
   const toastOp = tween(frame, toastAt, 6, EASE.enter);
-  const cam =
+  const camAt = (f: number) =>
     1 +
-    0.03 * tween(frame, 8, 70, EASE.camera) -
-    0.03 * tween(frame, outAt - 4, 28, EASE.camera);
+    0.03 * tween(f, 8, 70, EASE.camera) -
+    0.03 * tween(f, outAt - 4, 28, EASE.camera);
+  const cam = camAt(frame);
+  // The camera carries every piece below, so its tilt covers their text; an
+  // inner mover tilts only while the camera holds still.
+  const camMoving = stirs((f) => camAt(f) * 1000, frame);
+  const inner = (px: (f: number) => number, eps?: number) =>
+    !camMoving && stirs(px, frame, eps);
+  const winMoving = inner((f) => spAt(f, BEAT.window, SPR.heavy) * 40);
+  const modalTy = (f: number) =>
+    spAt(f, BEAT.modal, SPR.card) * 18 + tween(f, outAt, 7, EASE.exit) * 10;
+  const modalK = (f: number) =>
+    (0.97 + 0.03 * spAt(f, BEAT.modal, SPR.card)) *
+    (1 - 0.03 * tween(f, outAt, 7, EASE.exit));
+  const modalMoving = inner(modalTy) || inner((f) => (modalK(f) * MW) / 2);
+  // Pieces inside the modal leave the tilt to it while it moves.
+  const inModal = (px: (f: number) => number) => !modalMoving && inner(px);
 
   const field = { x: MX + INPUT.x + INPUT.w * 0.62, y: MY + INPUT.y + 50 };
   const sel = { x: MX + SELECT.x + 120, y: MY + SELECT.y + 26 };
@@ -390,6 +415,11 @@ export function InviteTeam({
     curX += dx * p + (-dy / len) * bend * leg.arc;
     curY += dy * p + (dx / len) * bend * leg.arc;
   }
+  // Layout rounds a box to whole pixels, so a cursor eased by left/top clicks
+  // along; it is laid out where it comes to rest and travels by transform.
+  const curRest = legs[legs.length - 1].to;
+  const curDx = Math.abs(curX - curRest.x) < 1e-3 ? 0 : curX - curRest.x;
+  const curDy = Math.abs(curY - curRest.y) < 1e-3 ? 0 : curY - curRest.y;
   const curPress = Math.max(
     pressOf(BEAT.focus),
     pressOf(selClick),
@@ -467,7 +497,7 @@ export function InviteTeam({
             style={{
               position: "absolute",
               inset: 0,
-              transform: `scale(${cam})`,
+              transform: `scale(${cam})${glide(camMoving)}`,
               transformOrigin: `${SW / 2}px ${MY + MODAL_H / 2}px`,
             }}
           >
@@ -483,7 +513,7 @@ export function InviteTeam({
                 background: pal.win,
                 boxShadow: pal.winShadow,
                 opacity: winOp,
-                transform: `translateY(${(1 - winIn) * 40}px)`,
+                transform: `translateY(${(1 - winIn) * 40}px)${glide(winMoving)}`,
               }}
             >
               <div
@@ -666,7 +696,7 @@ export function InviteTeam({
                 background: pal.modal,
                 boxShadow: pal.modalShadow,
                 opacity: modalOp * (1 - modalOut),
-                transform: `translateY(${(1 - modalIn) * 18 + modalOut * 10}px) scale(${(0.97 + 0.03 * modalIn) * (1 - 0.03 * modalOut)})`,
+                transform: `translateY(${(1 - modalIn) * 18 + modalOut * 10}px) scale(${(0.97 + 0.03 * modalIn) * (1 - 0.03 * modalOut)})${glide(modalMoving)}`,
               }}
             >
               <div
@@ -773,7 +803,7 @@ export function InviteTeam({
                             gap: 8,
                             padding: "0 10px 0 5px",
                             boxSizing: "border-box",
-                            transform: `scale(${0.85 + 0.15 * pop})`,
+                            transform: `scale(${0.85 + 0.15 * pop})${glide(inModal((f) => spAt(f, chipAt[i], SPR.chip) * 0.15 * cs.w))}`,
                             transformOrigin: "15% 50%",
                             opacity: clamp01(pop * 2),
                           }}
@@ -836,7 +866,7 @@ export function InviteTeam({
                   padding: "0 12px 0 14px",
                   fontSize: 17,
                   color: fg,
-                  transform: `scale(${1 - 0.04 * pressOf(selClick)})`,
+                  transform: `scale(${1 - 0.04 * pressOf(selClick)})${glide(inModal((f) => pressAt(f, selClick) * 0.04 * SELECT.w))}`,
                 }}
               >
                 {roleNow}
@@ -888,7 +918,7 @@ export function InviteTeam({
                   fontSize: 16,
                   color: "#FFFFFF",
                   opacity: shownChips === 0 ? 0.5 : 1,
-                  transform: `scale(${1 - 0.04 * pressOf(btnClick)})`,
+                  transform: `scale(${1 - 0.04 * pressOf(btnClick)})${glide(inModal((f) => pressAt(f, btnClick) * 0.04 * BUTTON.w))}`,
                 }}
               >
                 {loading ? (
@@ -937,7 +967,7 @@ export function InviteTeam({
                     background: pal.modal,
                     boxShadow: pal.pop,
                     opacity: clamp01(dropIn * 1.6),
-                    transform: `translateY(${(1 - dropIn) * -8}px) scale(${0.96 + 0.04 * dropIn})`,
+                    transform: `translateY(${(1 - dropIn) * -8}px) scale(${0.96 + 0.04 * dropIn})${glide(inModal((f) => dropInAt(f) * 16))}`,
                     transformOrigin: "70% 0",
                   }}
                 >
@@ -992,22 +1022,41 @@ export function InviteTeam({
                   ? 1.12 - 0.12 * land
                   : 1 + 0.1 * Math.sin(clamp01(t) * Math.PI);
               const lift = Math.sin(clamp01(t) * Math.PI);
+              // Laid out on its seat in the pile at its landed size; the flight
+              // and the growth there are a transform, since layout would round
+              // both to whole pixels. `shift` keeps the grown box where the
+              // smaller one sat.
+              const grow = size / AV;
+              const shift = (size - AV) / 2;
+              const dx =
+                Math.abs(x + shift - to.x) < 1e-3 ? 0 : x + shift - to.x;
+              const dy =
+                Math.abs(y + shift - to.y) < 1e-3 ? 0 : y + shift - to.y;
+              const flying = inner((f) => spAt(f, flyAt[j], SPR.card) * 400);
+              // The letter sits at the centre, so it moves far less than the
+              // rim this measures; a looser threshold drops the tilt as soon
+              // as the letter itself has stopped.
+              const settling = inner(
+                (f) =>
+                  f >= landAt[j] ? spAt(f, landAt[j], SPR.chip) * 0.12 * AV : 0,
+                4e-3,
+              );
               return (
                 <div
                   key={e}
                   style={{
                     position: "absolute",
-                    left: x,
-                    top: y,
+                    left: to.x,
+                    top: to.y,
                     zIndex: 20 - j,
-                    transform: `scale(${scale})`,
-                    filter: `drop-shadow(0 ${8 * lift}px ${10 * lift}px rgba(0,0,0,${0.25 * lift}))`,
+                    transform: `translate(${dx}px, ${dy}px) scale(${Math.abs(scale * grow - 1) < 1e-4 ? 1 : scale * grow})${glide(flying || settling)}`,
+                    filter: `drop-shadow(0 ${(8 * lift) / grow}px ${(10 * lift) / grow}px rgba(0,0,0,${0.25 * lift}))`,
                   }}
                 >
                   <Avatar
                     label={e[0].toUpperCase()}
                     tone={AV_TONES[j % AV_TONES.length]}
-                    size={size}
+                    size={AV}
                     ring={pal.win}
                   />
                 </div>
@@ -1034,7 +1083,11 @@ export function InviteTeam({
                   gap: 12,
                   alignItems: "center",
                   opacity: toastOp,
-                  transform: `translateY(${(1 - toast) * 28}px) scale(${0.97 + 0.03 * toast})`,
+                  transform: `translateY(${(1 - toast) * 28}px) scale(${0.97 + 0.03 * toast})${glide(
+                    // Its spring rings out below a pixel for a long while; the
+                    // looser bound leaves those near-still frames untilted.
+                    inner((f) => spAt(f, toastAt, SPR.card) * 28, 2e-3),
+                  )}`,
                 }}
               >
                 <Icon
@@ -1064,11 +1117,11 @@ export function InviteTeam({
               aria-hidden
               style={{
                 position: "absolute",
-                left: curX - 2,
-                top: curY - 2,
+                left: curRest.x - 2,
+                top: curRest.y - 2,
                 overflow: "visible",
                 opacity: clamp01(curOp),
-                transform: `scale(${1 - 0.04 * curPress})`,
+                transform: `translate(${curDx}px, ${curDy}px) scale(${1 - 0.04 * curPress})`,
                 transformOrigin: "2px 2px",
                 filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.3))",
                 zIndex: 30,

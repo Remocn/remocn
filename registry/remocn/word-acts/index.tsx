@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["100", "200", "300", "400", "500"],
@@ -110,6 +111,8 @@ interface ActProps {
   fontFamily: string;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const fitSize = (word: string, target: number, maxWidth: number) =>
   Math.min(target, maxWidth / Math.max(1, word.length * ADVANCE));
 
@@ -127,6 +130,7 @@ const wordStyle = (
 });
 
 function Stretch({ word, t, W, H, fg, fontFamily }: ActProps) {
+  const glide = useGlide();
   const size = fitSize(word, H * 0.3, W * 0.42);
   const p = interpolate(t, [2, 17], [0, 1], { ...CLAMP, easing: EASE_IO });
   const sx = 1 + p * 0.95;
@@ -141,7 +145,7 @@ function Stretch({ word, t, W, H, fg, fontFamily }: ActProps) {
           ...wordStyle(size, 500, fontFamily),
           fontVariationSettings: `"wght" ${wght}`,
           color: fg,
-          transform: `scale(${sx}, ${sy})`,
+          transform: `scale(${sx}, ${sy})${glide(midway(p))}`,
         }}
       >
         {word}
@@ -151,6 +155,7 @@ function Stretch({ word, t, W, H, fg, fontFamily }: ActProps) {
 }
 
 function Split({ word, t, W, H, fg, ink, fontFamily }: ActProps) {
+  const glide = useGlide();
   const size = fitSize(word, H * 0.4, W * 0.6);
   const draw = interpolate(t, [2, 8], [0, 1], { ...CLAMP, easing: EASE_OUT });
   const open = interpolate(t, [8, 19], [0, 1], { ...CLAMP, easing: EASE_OUT });
@@ -167,7 +172,7 @@ function Split({ word, t, W, H, fg, ink, fontFamily }: ActProps) {
         top: top ? 0 : X_MID * size,
         height: top ? X_MID * size : size * 0.6,
         overflow: "hidden",
-        transform: `translate(${top ? -dx : dx}px, ${top ? -dy : dy}px)`,
+        transform: `translate(${top ? -dx : dx}px, ${top ? -dy : dy}px)${glide(midway(open))}`,
       }}
     >
       <div
@@ -204,6 +209,7 @@ function Split({ word, t, W, H, fg, ink, fontFamily }: ActProps) {
 }
 
 function Heavy({ word, t, W, H, fg, ink, fps, fontFamily }: ActProps) {
+  const glide = useGlide();
   const size = fitSize(word, H * 0.36, W * 0.58);
   const LAND = 9;
   const fall = interpolate(t, [0, LAND], [0, 1], {
@@ -212,18 +218,33 @@ function Heavy({ word, t, W, H, fg, ink, fps, fontFamily }: ActProps) {
   });
   const restTop = H * 0.5 - size * 0.55;
   const startTop = -size * 0.62;
-  const impact = spring({
-    frame: t - LAND,
-    fps,
-    config: { damping: 9, stiffness: 260, mass: 0.7 },
-  });
   // impact: 0 → 1 with a small ring; squash peaks right at contact.
-  const ring = t < LAND ? 0 : 1 - impact;
-  const squash = Math.max(-0.05, ring) * 0.16;
+  const squashAt = (tt: number) => {
+    const impact = spring({
+      frame: tt - LAND,
+      fps,
+      config: { damping: 9, stiffness: 260, mass: 0.7 },
+    });
+    const r = tt < LAND ? 0 : 1 - impact;
+    return { ring: r, squash: Math.max(-0.05, r) * 0.16 };
+  };
+  const { squash } = squashAt(t);
+  // The ring is a spring with a long tail, so it counts as moving while the
+  // squash still shifts the word's top, not by its progress.
+  const ringing =
+    Math.abs(squashAt(t + 1).squash - squash) * size > 1e-3 ||
+    Math.abs(squash - squashAt(t - 1).squash) * size > 1e-3;
   const sy = 1 - squash;
   const sx = 1 + squash * 0.45;
   const top = startTop + (restTop - startTop) * fall;
-  const ruleDip = t < LAND ? 0 : ring * H * 0.018;
+  const dipAt = (tt: number) => (tt < LAND ? 0 : squashAt(tt).ring * H * 0.018);
+  const ruleDip = dipAt(t);
+  // Layout rounds a box edge to whole pixels, so a rule bounced by `top`
+  // steps unevenly; while it rings it sits at its rest and dips by transform.
+  // The faint tail keeps the plain layout, so resting frames are untouched.
+  const dipping =
+    Math.abs(dipAt(t + 1) - ruleDip) > 1e-3 ||
+    Math.abs(ruleDip - dipAt(t - 1)) > 1e-3;
   const ruleWidth = word.length * ADVANCE * size * 1.12;
   const baseline = restTop + BASELINE * size;
   return (
@@ -239,7 +260,7 @@ function Heavy({ word, t, W, H, fg, ink, fps, fontFamily }: ActProps) {
           // Weight builds with the fall, hairline to 500; the face is variable.
           fontVariationSettings: `"wght" ${Math.round(100 + fall * 400)}`,
           color: fg,
-          transform: `scale(${sx}, ${sy})`,
+          transform: `scale(${sx}, ${sy})${glide(ringing)}`,
           transformOrigin: `50% ${BASELINE * 100}%`,
         }}
       >
@@ -250,8 +271,9 @@ function Heavy({ word, t, W, H, fg, ink, fps, fontFamily }: ActProps) {
           position: "absolute",
           left: (W - ruleWidth) / 2,
           width: ruleWidth,
-          top: baseline + size * 0.27 + ruleDip,
+          top: baseline + size * 0.27 + (dipping ? 0 : ruleDip),
           height: Math.max(3, H * 0.006),
+          transform: dipping ? `translateY(${ruleDip}px)` : undefined,
           backgroundImage: `linear-gradient(90deg, ${ink.join(", ")})`,
         }}
       />

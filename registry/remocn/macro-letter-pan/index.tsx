@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -207,6 +208,7 @@ export function MacroLetterPan({
   delay = 0,
   speed = 1,
 }: MacroLetterPanProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -358,7 +360,6 @@ export function MacroLetterPan({
     const v = Math.abs(pull - pullPrev) * Math.log(s0);
     blur = Math.min(7 * u, v * 26 * u);
   }
-
   const dof = interpolate(frame, [pullStart, pullStart + 16], [1, 0], {
     ...CLAMP,
     easing: COLOR,
@@ -385,6 +386,7 @@ export function MacroLetterPan({
   const mutedFill = mix(inkC, c.muted, reveal);
 
   const fs = F * scale;
+  const dotK = 0.35 + 0.65 * dot;
   const toX = (x: number) => ox + x * scale;
   const toY = (y: number) => oy + y * scale;
   const periodX = charX(we + tail.length);
@@ -395,7 +397,14 @@ export function MacroLetterPan({
       width={W}
       height={H}
       viewBox={`0 0 ${W} ${H}`}
-      style={{ position: "absolute", inset: 0, overflow: "visible" }}
+      style={{
+        position: "absolute",
+        inset: 0,
+        overflow: "visible",
+        // This drawing is under the camera all its life and rests under the
+        // camera's last scale, off the pixel grid, so its mark never changes.
+        transform: glide(true),
+      }}
       aria-hidden
     >
       {rows.map((r, ri) => {
@@ -429,15 +438,19 @@ export function MacroLetterPan({
         );
       })}
       {period ? (
+        // The pop grows the glyph by its font size rather than by a scale
+        // on the group: the lean the drawing gets is measured at the
+        // drawing's own size, and a glyph shrunk by a transform would need
+        // more of it to leave the pixel grid.
         <g
-          transform={`translate(${toX(periodX + m.width(period) * F * 0.32)} ${toY(base)}) scale(${0.35 + 0.65 * dot}) translate(${-m.width(period) * fs * 0.32} 0)`}
+          transform={`translate(${toX(periodX + m.width(period) * F * 0.32)} ${toY(base)})`}
         >
           <text
-            x={0}
+            x={-m.width(period) * fs * 0.32 * dotK}
             y={0}
             fontFamily={fontFamily}
             fontWeight={400}
-            fontSize={fs}
+            fontSize={fs * dotK}
             fill={mix(inkC, hi, colorHit)}
             opacity={interpolate(dot, [0, 0.3], [0, 1], CLAMP)}
           >

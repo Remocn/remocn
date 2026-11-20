@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -198,6 +199,7 @@ export function GlowBornCard({
   delay = 0,
   speed = 1,
 }: GlowBornCardProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const dark = theme === "dark";
@@ -278,10 +280,16 @@ export function GlowBornCard({
   const doneIn = ramp(frame, B.done, 5);
   const metaIn = ramp(frame, B.type + value.length * 1.5 + 2, 10, LIGHT);
 
-  const push =
+  const pushAt = (f: number) =>
     1 +
-    (portrait ? 0.05 : 0.03) * ramp(frame, B.part, B.done - B.part, SWAY) +
-    0.02 * ramp(frame, B.done, B.end - B.done, SWAY);
+    (portrait ? 0.05 : 0.03) * ramp(f, B.part, B.done - B.part, SWAY) +
+    0.02 * ramp(f, B.done, B.end - B.done, SWAY);
+  const push = pushAt(frame);
+  // Two in-out pushes meet at B.done, so "moving" is read off the step
+  // against either neighbouring frame, weighed at the stage's edge.
+  const pushing =
+    Math.abs(pushAt(frame + speed) - push) * stageW * 0.5 > 1e-3 ||
+    Math.abs(push - pushAt(frame - speed)) * stageW * 0.5 > 1e-3;
   const settle = ramp(frame, -6, 30, MOVE);
   const tilt = mix(8, 0, settle);
 
@@ -570,7 +578,7 @@ export function GlowBornCard({
               fontWeight: 400,
               letterSpacing: "-0.03em",
               lineHeight: 1.1,
-              transform: `scale(${push}) rotateX(${portrait ? tilt : 0}deg) rotateY(${portrait ? 0 : -tilt}deg)`,
+              transform: `scale(${push}) rotateX(${portrait ? tilt : 0}deg) rotateY(${portrait ? 0 : -tilt}deg)${glide(pushing)}`,
               transformOrigin: "50% 50%",
             }}
           >

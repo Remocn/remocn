@@ -14,6 +14,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadBricolage("normal", {
   weights: ["400", "500"],
@@ -321,6 +322,7 @@ export function PosterCrop({
   theme = "dark",
   speed = 1,
 }: PosterCropProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -358,20 +360,36 @@ export function PosterCrop({
     y: (H / 2 - focus.y * s0) / (1 - s0),
   };
 
-  const pull = interpolate(t, [PULL_START, pullEnd], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const push = interpolate(t, [pullEnd, pullEnd + 60], [0, 1], CLAMP);
-  const s = Math.exp(Math.log(s0) * (1 - pull)) * (1 + push * 0.012);
-  const drift = interpolate(t, [0, PULL_START + 30], [1, 0], {
-    ...CLAMP,
-    easing: Easing.bezier(0.33, 0, 0.67, 1),
-  });
-  const dx = drift * 70 * u;
-  const dy = drift * -14 * u;
+  const camera = (tt: number) => {
+    const pull = interpolate(tt, [PULL_START, pullEnd], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+    const push = interpolate(tt, [pullEnd, pullEnd + 60], [0, 1], CLAMP);
+    const drift = interpolate(tt, [0, PULL_START + 30], [1, 0], {
+      ...CLAMP,
+      easing: Easing.bezier(0.33, 0, 0.67, 1),
+    });
+    return {
+      s: Math.exp(Math.log(s0) * (1 - pull)) * (1 + push * 0.012),
+      dx: drift * 70 * u,
+      dy: drift * -14 * u,
+    };
+  };
+  const { s, dx, dy } = camera(t);
   const sx = (x: number) => pivot.x + (x - pivot.x) * s + dx;
   const sy = (y: number) => pivot.y + (y - pivot.y) * s + dy;
+  // The poster used to be zoomed by recomputing every `left`, `top` and
+  // `fontSize`, and layout rounds each of them to whole pixels, so the
+  // title clicked as the camera pulled out. It is laid out once at s = 1
+  // and the camera is a transform about the same pivot. The camera eases
+  // slowly at both ends, so its motion is read off the neighbouring frames.
+  const cameraMoving = [camera(t - 1), camera(t + 1)].some(
+    (o) =>
+      Math.abs(o.s - s) * W > 1e-3 ||
+      Math.abs(o.dx - dx) > 1e-3 ||
+      Math.abs(o.dy - dy) > 1e-3,
+  );
 
   const hair = Math.max(1, u);
   const grid = (d: number) =>
@@ -396,10 +414,10 @@ export function PosterCrop({
 
   const labelStyle: React.CSSProperties = {
     position: "absolute",
-    top: sy(margin),
+    top: margin,
     fontFamily: mono,
     fontWeight: 400,
-    fontSize: 13.5 * u * s,
+    fontSize: 13.5 * u,
     lineHeight: 1,
     letterSpacing: "0.02em",
     textTransform: "uppercase",
@@ -407,7 +425,7 @@ export function PosterCrop({
     whiteSpace: "nowrap",
     display: "flex",
     alignItems: "baseline",
-    gap: 9 * u * s,
+    gap: 9 * u,
   };
 
   return (
@@ -419,110 +437,120 @@ export function PosterCrop({
       />
 
       <ScaleLayer scale={scale}>
-        {Array.from({ length: columns + 1 }, (_, i) => {
-          const x = margin + (contentW / columns) * i;
-          const p = grid(i * 2);
-          const top = sy(header);
-          const bottom = sy(H - margin);
-          return (
+        <AbsoluteFill
+          style={{
+            transformOrigin: `${pivot.x}px ${pivot.y}px`,
+            // The tilt sits before the zoom so it turns about the pivot,
+            // which is on screen.
+            transform: `translate(${dx}px, ${dy}px)${glide(cameraMoving)} scale(${s})`,
+          }}
+        >
+          {Array.from({ length: columns + 1 }, (_, i) => {
+            const x = margin + (contentW / columns) * i;
+            const p = grid(i * 2);
+            const top = header;
+            const bottom = H - margin;
+            // A hairline stays `hair` wide on screen whatever the zoom.
+            return (
+              <div
+                key={`c${i}`}
+                style={{
+                  position: "absolute",
+                  left: x - hair / s / 2,
+                  top,
+                  width: hair / s,
+                  height: Math.max(0, (bottom - top) * p),
+                  background: c.hair,
+                }}
+              />
+            );
+          })}
+          <div
+            style={{
+              position: "absolute",
+              left: margin,
+              top: header - hair / s / 2,
+              width: Math.max(0, (W - margin * 2) * grid(0)),
+              height: hair / s,
+              background: c.hair,
+            }}
+          />
+
+          {lines.map((line, i) => (
             <div
-              key={`c${i}`}
+              key={`${i}-${line}`}
               style={{
                 position: "absolute",
-                left: sx(x) - hair / 2,
-                top,
-                width: hair,
-                height: Math.max(0, (bottom - top) * p),
-                background: c.hair,
+                left: blockLeft,
+                top: baselines[i] - BASELINE * F,
+                fontFamily,
+                fontWeight: 500,
+                fontSize: F,
+                lineHeight: 1,
+                letterSpacing: `${TRACK}em`,
+                whiteSpace: "pre",
+                color: "transparent",
+                backgroundImage: fill,
+                backgroundSize: `${blockW}px ${blockH}px`,
+                backgroundPosition: `0px ${-(baselines[i] - BASELINE * F - blockTop)}px`,
+                backgroundRepeat: "no-repeat",
+                WebkitBackgroundClip: "text",
+                backgroundClip: "text",
               }}
-            />
-          );
-        })}
-        <div
-          style={{
-            position: "absolute",
-            left: sx(margin),
-            top: sy(header) - hair / 2,
-            width: Math.max(0, (sx(W - margin) - sx(margin)) * grid(0)),
-            height: hair,
-            background: c.hair,
-          }}
-        />
+            >
+              <Line text={line} accent={accent} />
+            </div>
+          ))}
 
-        {lines.map((line, i) => (
           <div
-            key={`${i}-${line}`}
             style={{
-              position: "absolute",
-              left: sx(blockLeft),
-              top: sy(baselines[i] - BASELINE * F),
-              fontFamily,
-              fontWeight: 500,
-              fontSize: F * s,
-              lineHeight: 1,
-              letterSpacing: `${TRACK}em`,
-              whiteSpace: "pre",
-              color: "transparent",
-              backgroundImage: fill,
-              backgroundSize: `${blockW * s}px ${blockH * s}px`,
-              backgroundPosition: `0px ${-(baselines[i] - BASELINE * F - blockTop) * s}px`,
-              backgroundRepeat: "no-repeat",
-              WebkitBackgroundClip: "text",
-              backgroundClip: "text",
+              ...labelStyle,
+              left: margin,
+              color: fg,
+              opacity: label(0),
+              transform: `translateY(${((1 - label(0)) * 8 * u) / s}px)`,
             }}
           >
-            <Line text={line} accent={accent} />
+            {logo ??
+              (kickerIsBrand ? (
+                <RemocnLogo fontSize={17 * u} color={fg} />
+              ) : null)}
+            <span>{kickerIsBrand && !logo ? kickerRest : kicker}</span>
           </div>
-        ))}
-
-        <div
-          style={{
-            ...labelStyle,
-            left: sx(margin),
-            color: fg,
-            opacity: label(0),
-            transform: `translateY(${(1 - label(0)) * 8 * u}px)`,
-          }}
-        >
-          {logo ??
-            (kickerIsBrand ? (
-              <RemocnLogo fontSize={17 * u * s} color={fg} />
-            ) : null)}
-          <span>{kickerIsBrand && !logo ? kickerRest : kicker}</span>
-        </div>
-        <div
-          style={{
-            ...labelStyle,
-            right: W - sx(W - margin),
-            color: c.muted,
-            opacity: label(4),
-            transform: `translateY(${(1 - label(4)) * 8 * u}px)`,
-          }}
-        >
-          {meta}
-        </div>
-
-        {note ? (
           <div
             style={{
-              position: "absolute",
-              left: sx(margin + (contentW / columns) * 3 + 12 * u),
-              top: sy(header + 14 * u),
-              width: (contentW / columns) * 2 * s,
-              fontFamily,
-              fontWeight: 400,
-              fontSize: 16 * u * s,
-              lineHeight: 1.32,
-              letterSpacing: "-0.005em",
+              ...labelStyle,
+              right: margin,
               color: c.muted,
-              textWrap: "balance",
-              opacity: label(8),
-              transform: `translateY(${(1 - label(8)) * 8 * u}px)`,
+              opacity: label(4),
+              transform: `translateY(${((1 - label(4)) * 8 * u) / s}px)`,
             }}
           >
-            {note}
+            {meta}
           </div>
-        ) : null}
+
+          {note ? (
+            <div
+              style={{
+                position: "absolute",
+                left: margin + (contentW / columns) * 3 + 12 * u,
+                top: header + 14 * u,
+                width: (contentW / columns) * 2,
+                fontFamily,
+                fontWeight: 400,
+                fontSize: 16 * u,
+                lineHeight: 1.32,
+                letterSpacing: "-0.005em",
+                color: c.muted,
+                textWrap: "balance",
+                opacity: label(8),
+                transform: `translateY(${((1 - label(8)) * 8 * u) / s}px)`,
+              }}
+            >
+              {note}
+            </div>
+          ) : null}
+        </AbsoluteFill>
       </ScaleLayer>
 
       {grain ? <Grain opacity={c.grain} /> : null}

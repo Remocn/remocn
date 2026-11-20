@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const lexend = loadFont("normal", {
   weights: ["300"],
@@ -133,6 +134,11 @@ function ScaleLayer({
   );
 }
 
+// The sway's own tilt fades to nothing on the last stretch of the fall, so
+// each word is marked while it falls and the shared lean keeps it off the
+// pixel grid until it lands.
+const midway = (k: number) => k > 5e-4 && k < 1 - 5e-4;
+
 export function FeatherSettle({
   text = "Your launch, landing softly.",
   highlight = "softly",
@@ -149,6 +155,7 @@ export function FeatherSettle({
   speed = 1,
   theme = "dark",
 }: FeatherSettleProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -229,7 +236,7 @@ export function FeatherSettle({
                 color: lit ? spot : fg,
                 opacity: seen,
                 transformOrigin: "50% 0%",
-                transform: `translate(${dx.toFixed(2)}px, ${y.toFixed(2)}px) rotate(${tilt.toFixed(3)}deg)`,
+                transform: `translate(${dx.toFixed(2)}px, ${y.toFixed(2)}px) rotate(${tilt.toFixed(3)}deg)${glide(midway(k))}`,
               }}
             >
               {p.w}

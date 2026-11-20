@@ -14,6 +14,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -173,6 +174,9 @@ const THEMES: Record<"dark" | "light", Palette> = {
   },
 };
 
+const changing = (at: (f: number) => number, f: number, eps: number) =>
+  Math.abs(at(f + 1) - at(f)) > eps || Math.abs(at(f) - at(f - 1)) > eps;
+
 function Icon({ d, size, color }: { d: string; size: number; color: string }) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden>
@@ -301,6 +305,7 @@ export function GiantMarkBackdrop({
   ground,
   groundParams,
 }: GiantMarkBackdropProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const base = THEMES[theme];
@@ -319,20 +324,33 @@ export function GiantMarkBackdrop({
   const s1 = { x: tall ? W * 0.5 : W / 2, y: tall ? H * 0.5 : H * 0.36 };
 
   const markIn = spring({ frame: frame - B.mark, fps, config: CHIP });
-  const balloon = spring({ frame: frame - B.balloon, fps, config: BALLOON });
-  const pushA = interpolate(frame, [0, B.balloon], [1, 1.04], CLAMP);
-  const pushB = interpolate(frame, [B.balloon + 12, B.end], [1, 1.07], {
-    ...CLAMP,
-    easing: Easing.bezier(0.33, 0, 0.4, 1),
-  });
-  const F = F0 * (F1 / F0) ** balloon * mix(pushA, 1, balloon) * pushB;
+  const balloonAt = (f: number) =>
+    spring({ frame: f - B.balloon, fps, config: BALLOON });
+  const pushBAt = (f: number) =>
+    interpolate(f, [B.balloon + 12, B.end], [1, 1.07], {
+      ...CLAMP,
+      easing: Easing.bezier(0.33, 0, 0.4, 1),
+    });
+  const sizeAt = (f: number) => {
+    const b = balloonAt(f);
+    const pushA = interpolate(f, [0, B.balloon], [1, 1.04], CLAMP);
+    return F0 * (F1 / F0) ** b * mix(pushA, 1, b) * pushBAt(f);
+  };
+  const balloon = balloonAt(frame);
+  const pushB = pushBAt(frame);
+  const F = sizeAt(frame);
+  // The wordmark is SVG text under this transform; it tilts for as long as
+  // the logo still grows or travels (the balloon spring and both pushes).
+  const logoMoving =
+    changing((f) => sizeAt(f) / F0, frame, 1e-6) ||
+    changing(balloonAt, frame, 1e-6);
   const ax = mix(a0.x, a1.x, balloon);
   const ay = mix(a0.y, a1.y, balloon);
   const sx = mix(s0.x, s1.x, balloon);
   const sy = mix(s0.y, s1.y, balloon);
   const markScale = 0.78 + 0.22 * markIn;
   const k = F / EM;
-  const rot = tall ? -90 * balloon : 0;
+  const rot = (tall ? -90 * balloon : 0) + (logoMoving ? 0.05 : 0);
   const logoTransform = `translate(${sx.toFixed(2)} ${sy.toFixed(2)}) rotate(${rot.toFixed(3)}) scale(${k.toFixed(5)}) translate(${(-ax * EM).toFixed(3)} ${(-ay * EM).toFixed(3)})`;
   const markTransform = `translate(${(R_WE * EM) / 2} ${-0.38 * EM}) scale(${markScale.toFixed(4)}) translate(${(-R_WE * EM) / 2} ${0.38 * EM})`;
 
@@ -359,6 +377,13 @@ export function GiantMarkBackdrop({
   const cardX = (W - cardW) / 2;
   const cardY = tall ? H * 0.53 : H * 0.49;
   const cardPush = pushB;
+  const cardMoving =
+    changing(pushBAt, frame, 1e-6) ||
+    changing(
+      (f) => (1 - spring({ frame: f - B.card, fps, config: CARD })) * H * 0.32,
+      frame,
+      1e-3,
+    );
   const fs = (tall ? 27 : 24) * u;
   const small = (tall ? 21 : 17) * u;
   const br = 20 * u;
@@ -479,7 +504,7 @@ export function GiantMarkBackdrop({
             color: fg,
             opacity: interpolate(card, [0, 0.25], [0, 1], CLAMP),
             transformOrigin: `${W / 2 - cardX}px ${s1.y - cardY}px`,
-            transform: `translateY(${((1 - card) * H * 0.32).toFixed(2)}px) scale(${cardPush.toFixed(4)})`,
+            transform: `translateY(${((1 - card) * H * 0.32).toFixed(2)}px) scale(${cardPush.toFixed(4)})${glide(cardMoving)}`,
           }}
         >
           <div

@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -237,6 +238,12 @@ function Tabular({ text }: { text: string }) {
   );
 }
 
+/** Whether `px(f)`, a value in pixels, moves at frame `f`. */
+const stirs = (px: (f: number) => number, f: number) =>
+  Math.abs(px(f + 1) - px(f)) > 1e-3 || Math.abs(px(f) - px(f - 1)) > 1e-3;
+/** A leftover offset under a thousandth of a pixel is rest. */
+const settle = (v: number) => (Math.abs(v) < 1e-3 ? 0 : v);
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -271,6 +278,7 @@ export function SpeedrunTimer({
   groundParams,
   speed = 1,
 }: SpeedrunTimerProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -297,12 +305,25 @@ export function SpeedrunTimer({
     CLAMP,
   );
 
-  let bump = 0;
-  frames.forEach((f, i) => {
-    bump = Math.max(bump, (i === n - 1 ? 1.3 : 0.3) * kick(t - f));
-  });
+  const bumpAt = (tt: number) => {
+    let b = 0;
+    frames.forEach((f, i) => {
+      b = Math.max(b, (i === n - 1 ? 1.3 : 0.3) * kick(tt - f));
+    });
+    return b;
+  };
+  const bump = bumpAt(t);
   const hit = shake(t - finishAt, 9 * u, 1.3);
   const camScale = 1 + 0.025 * bump;
+  // The camera carries the whole board, so its tilt covers the text on it;
+  // the pieces inside tilt only while it holds still.
+  const camMoving =
+    stirs((tt) => 0.025 * bumpAt(tt) * 700, t) ||
+    stirs((tt) => shake(tt - finishAt, 9 * u, 1.3).x, t) ||
+    stirs((tt) => shake(tt - finishAt, 9 * u, 1.3).y, t);
+  const springing = (at: number, px: number, config: typeof CARD) =>
+    !camMoving &&
+    stirs((tt) => spring({ frame: tt - at, fps, config }) * px, t);
   const flash = done ? Math.max(0, 1 - (t - finishAt) / 4) ** 2 : 0;
 
   let tint = 0;
@@ -369,6 +390,7 @@ export function SpeedrunTimer({
   frames.forEach((f, i) => {
     if (i < n - 1) bandIndex += spring({ frame: t - f, fps, config: CARD });
   });
+  const bandTravel = settle((bandIndex - Math.round(bandIndex)) * L.rowH);
   const bandOpacity =
     ramp(t, BEATS.run - 4, 6) * (1 - LIGHT(ramp(t, finishAt, 6)));
 
@@ -383,6 +405,7 @@ export function SpeedrunTimer({
   };
 
   const panelIn = spring({ frame: t - BEATS.rowIn, fps, config: HEAVY });
+  const panelMoving = springing(BEATS.rowIn, 0.05 * H, HEAVY);
   const pbParts = clockParts(splits[n - 1]?.pb ?? 0);
   const pbPop = spring({ frame: t - finishAt - 2, fps, config: CHIP });
   const timerText = clock(runTime);
@@ -414,7 +437,7 @@ export function SpeedrunTimer({
           style={{
             position: "absolute",
             inset: 0,
-            transform: `translate(${hit.x}px, ${hit.y}px) scale(${camScale})`,
+            transform: `translate(${hit.x}px, ${hit.y}px) scale(${camScale})${glide(camMoving)}`,
             transformOrigin: "60% 70%",
           }}
         >
@@ -447,7 +470,7 @@ export function SpeedrunTimer({
                 alignItems: "flex-end",
                 gap: 0.022 * H,
                 opacity: ENTER(ramp(t, 4, 12)),
-                transform: `translateY(${(1 - panelIn) * 0.04 * H}px)`,
+                transform: `translateY(${(1 - panelIn) * 0.04 * H}px)${glide(panelMoving)}`,
               }}
             >
               <span style={monoLabel}>{pbLabel}</span>
@@ -476,7 +499,7 @@ export function SpeedrunTimer({
                   fontVariantNumeric: "tabular-nums",
                   color: c.gold,
                   opacity: done ? ramp(t, finishAt + 2, 3) : 0,
-                  transform: `scale(${1.3 - 0.3 * pbPop})`,
+                  transform: `scale(${1.3 - 0.3 * pbPop})${glide(!panelMoving && springing(finishAt + 2, 0.3 * 0.036 * H, CHIP))}`,
                   transformOrigin: "100% 50%",
                 }}
               >
@@ -498,7 +521,7 @@ export function SpeedrunTimer({
               backdropFilter: "blur(18px)",
               WebkitBackdropFilter: "blur(18px)",
               opacity: ramp(t, 0, 4),
-              transform: `translateY(${(1 - panelIn) * 0.05 * H}px)`,
+              transform: `translateY(${(1 - panelIn) * 0.05 * H}px)${glide(panelMoving)}`,
             }}
           >
             <div style={{ position: "relative", height: n * L.rowH }}>
@@ -507,7 +530,13 @@ export function SpeedrunTimer({
                   position: "absolute",
                   left: 0,
                   right: 0,
-                  top: bandIndex * L.rowH,
+                  // Layout rounds a box to whole pixels, so a band eased by `top`
+                  // clicks down; it is laid out on the nearest row and the
+                  // travel is a transform.
+                  top: Math.round(bandIndex) * L.rowH,
+                  transform: bandTravel
+                    ? `translateY(${bandTravel}px)`
+                    : undefined,
                   height: L.rowH,
                   borderRadius: radius - inset,
                   background: c.band,
@@ -557,7 +586,14 @@ export function SpeedrunTimer({
                       padding: `0 ${22 * u}px 0 ${26 * u}px`,
                       borderTop: i === 0 ? undefined : `1px solid ${c.rule}`,
                       opacity: ramp(t, BEATS.rowIn + 2 + i * BEATS.rowGap, 4),
-                      transform: `translateY(${(1 - inK) * 0.4 * L.rowH}px)`,
+                      transform: `translateY(${(1 - inK) * 0.4 * L.rowH}px)${glide(
+                        !panelMoving &&
+                          springing(
+                            BEATS.rowIn + 2 + i * BEATS.rowGap,
+                            0.4 * L.rowH,
+                            CARD,
+                          ),
+                      )}`,
                     }}
                   >
                     <div
@@ -593,7 +629,7 @@ export function SpeedrunTimer({
                         color: deltaColor,
                         lineHeight: 1,
                         opacity: completed ? ramp(t, at, 2) : 0,
-                        transform: `scale(${1.3 - 0.3 * pop})`,
+                        transform: `scale(${1.3 - 0.3 * pop})${glide(springing(at, 0.3 * L.deltaFs, CHIP))}`,
                         transformOrigin: "100% 50%",
                       }}
                     >
@@ -636,7 +672,7 @@ export function SpeedrunTimer({
               whiteSpace: "nowrap",
               color: c.gold,
               opacity: wrOpacity,
-              transform: `scale(${1.35 - 0.35 * wr})`,
+              transform: `scale(${1.35 - 0.35 * wr})${glide(springing(BEATS.banner, 0.35 * L.bannerFs, CARD))}`,
               transformOrigin: "100% 100%",
               filter:
                 wr < 0.97

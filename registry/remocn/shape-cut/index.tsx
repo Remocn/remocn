@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["500"],
@@ -241,6 +242,7 @@ export function ShapeCut({
   theme = "dark",
   speed = 1,
 }: ShapeCutProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -345,11 +347,22 @@ export function ShapeCut({
 
   const drift = (f: number) =>
     1 + 0.018 * interpolate(f, [0, gp], [0, 1], CLAMP);
-  const q = interpolate(t, [tc, g1 - 6], [0, 1], CLAMP);
-  const pull = PATH(q);
-  const sA = drift(Math.min(t, tc)) * Math.min(1, (1.3 * geo.hh) / rPk);
-  const aX = W / 2 + (geo.cx - W / 2) * pull;
-  const aY = H / 2 + (geo.cy - H / 2) * pull;
+  const pulledAt = (f: number) => {
+    const g = geoAt(f);
+    const pull = PATH(interpolate(f, [tc, g1 - 6], [0, 1], CLAMP));
+    return {
+      s: drift(Math.min(f, tc)) * Math.min(1, (1.3 * g.hh) / rPk),
+      x: W / 2 + (g.cx - W / 2) * pull,
+      y: H / 2 + (g.cy - H / 2) * pull,
+    };
+  };
+  const { s: sA, x: aX, y: aY } = pulledAt(t);
+  const stirs = (a: { s: number; x: number; y: number }) =>
+    Math.abs(a.s - sA) * fsA * 4 > 1e-3 ||
+    Math.abs(a.x - aX) > 1e-3 ||
+    Math.abs(a.y - aY) > 1e-3;
+  const pulling = stirs(pulledAt(t - 1)) || stirs(pulledAt(t + 1));
+  const drifting = t > 0 && t < gp;
   const aOpacity = interpolate(sA, [0.26, 0.5], [0, 1], CLAMP);
   const inverse = fill === "transparent" ? stage.bg : fill;
   const ground = beamGround(
@@ -358,14 +371,20 @@ export function ShapeCut({
     interpolate(t, [0, 110], [0, 1], CLAMP),
   );
 
-  const titleA = (color: string, x: number, y: number, s: number) => (
+  const titleA = (
+    color: string,
+    x: number,
+    y: number,
+    s: number,
+    moving: boolean,
+  ) => (
     <div
       style={{
         ...type(fsA, fontFamily),
         left: 0,
         top: 0,
         color,
-        transform: `translate(${x}px, ${y}px) translate(-50%, -50%) scale(${s})`,
+        transform: `translate(${x}px, ${y}px) translate(-50%, -50%) scale(${s})${glide(moving)}`,
         paddingBottom: 0.08 * fsA,
       }}
     >
@@ -392,7 +411,7 @@ export function ShapeCut({
         {swapped ? (
           <AbsoluteFill
             style={{
-              transform: `translateX(${bShift}px) scale(${bScale})`,
+              transform: `translateX(${bShift}px) scale(${bScale})${glide(settle > 5e-4 && settle < 1 - 5e-4)}`,
             }}
           >
             {isLogo ? (
@@ -413,7 +432,7 @@ export function ShapeCut({
             )}
           </AbsoluteFill>
         ) : (
-          titleA(fg, W / 2, H / 2, drift(t))
+          titleA(fg, W / 2, H / 2, drift(t), drifting)
         )}
         {visible ? (
           <div
@@ -449,8 +468,8 @@ export function ShapeCut({
                 }}
               >
                 {t < tc
-                  ? titleA(inverse, W / 2, H / 2, drift(t))
-                  : titleA(inverse, aX, aY, sA)}
+                  ? titleA(inverse, W / 2, H / 2, drift(t), drifting)
+                  : titleA(inverse, aX, aY, sA, pulling)}
               </div>
             ) : null}
           </div>

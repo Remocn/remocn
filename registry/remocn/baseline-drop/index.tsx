@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["500"],
@@ -183,6 +184,7 @@ export function BaselineDrop({
   speed = 1,
 }: BaselineDropProps) {
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
@@ -270,7 +272,10 @@ export function BaselineDrop({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${1 + push * 0.02})`,
+            // The push carries every word and paints no frame-wide fill of
+            // its own (the ground is masked out at the edges), so one tilt
+            // here covers the falls too.
+            transform: `scale(${1 + push * 0.02})${glide(push > 0 && push < 1)}`,
             transformOrigin: `50% ${(baseY / H) * 100}%`,
           }}
         >

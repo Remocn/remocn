@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const figtree = loadFigtree("normal", {
   weights: ["500"],
@@ -203,6 +204,7 @@ export function PackedCount({
   speed = 1,
   theme = "dark",
 }: PackedCountProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -374,10 +376,20 @@ export function PackedCount({
     }
   });
 
-  const labelP = interpolate(t, [LABEL_AT, LABEL_AT + 18], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const labelRise = (f: number) =>
+    (1 -
+      interpolate(f, [LABEL_AT, LABEL_AT + 18], [0, 1], {
+        ...CLAMP,
+        easing: EASE_OUT,
+      })) *
+    labelSize *
+    1.3;
+  const labelY = labelRise(t);
+  // The ease-out tail crawls well under a pixel per frame, so the label
+  // counts as moving until it has really stopped.
+  const labelMoving =
+    Math.abs(labelRise(t + speed) - labelY) > 1e-3 ||
+    Math.abs(labelY - labelRise(t - speed)) > 1e-3;
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
@@ -401,7 +413,7 @@ export function PackedCount({
           >
             <div
               style={{
-                transform: `translateY(${((1 - labelP) * labelSize * 1.3).toFixed(2)}px)`,
+                transform: `translateY(${labelY}px)${glide(labelMoving)}`,
               }}
             >
               {label}

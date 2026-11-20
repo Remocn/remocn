@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: hanken } = loadHanken("normal", {
   weights: ["400", "500"],
@@ -317,6 +318,7 @@ export function IndexList({
   theme = "dark",
   speed = 1,
 }: IndexListProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -377,10 +379,17 @@ export function IndexList({
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const push = interpolate(t, [0, parkedAt + 40], [1.03, 1], {
-    ...CLAMP,
-    easing: Easing.bezier(0.33, 0, 0.2, 1),
-  });
+  const pushAt = (tt: number) =>
+    interpolate(tt, [0, parkedAt + 40], [1.03, 1], {
+      ...CLAMP,
+      easing: Easing.bezier(0.33, 0, 0.2, 1),
+    });
+  const push = pushAt(t);
+  // The push carries the whole list; a step of its scale is weighed by the
+  // half-width it moves the frame's edge through.
+  const pushMoving =
+    Math.abs(pushAt(t + speed) - push) * (W / 2) > 1e-3 ||
+    Math.abs(push - pushAt(Math.max(0, t - speed))) * (W / 2) > 1e-3;
 
   const rowsProps = {
     items,
@@ -410,7 +419,10 @@ export function IndexList({
       ) : null}
       <ScaleLayer scale={scale}>
         <AbsoluteFill
-          style={{ transform: `scale(${push})`, transformOrigin: "50% 45%" }}
+          style={{
+            transform: `scale(${push})${glide(pushMoving)}`,
+            transformOrigin: "50% 45%",
+          }}
         >
           <div
             style={{

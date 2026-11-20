@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const outfit = loadOutfit("normal", {
   weights: ["300", "400", "500"],
@@ -282,6 +283,7 @@ export function ZeroStretch({
   speed = 1,
   theme = "dark",
 }: ZeroStretchProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -383,9 +385,13 @@ export function ZeroStretch({
       easing: EASE_OUT,
     });
     const dy = (1 - p) * (maskBot - maskTop) * 1.05;
+    // Layout rounds a baseline to whole pixels, so a glyph risen by `top`
+    // clicks up pixel by pixel; the rise is a transform instead, kept at rest
+    // so the glyph is never handed back to layout.
     const glyphStyle: React.CSSProperties = {
       position: "absolute",
-      top: lineTop - maskTop + dy,
+      top: lineTop - maskTop,
+      transform: `translateY(${dy > 1e-3 ? dy : 0}px)${glide(p > 0 && p < 1)}`,
       fontFamily,
       fontWeight,
       fontSize: F,
@@ -474,7 +480,7 @@ export function ZeroStretch({
                 style={{
                   display: "inline-block",
                   opacity: lp,
-                  transform: `translateY(${((1 - lp) * labelSize * 0.7).toFixed(2)}px)`,
+                  transform: `translateY(${((1 - lp) * labelSize * 0.7).toFixed(2)}px)${glide(lp > 0 && (1 - lp) * labelSize > 1e-3)}`,
                 }}
               >
                 {w}
@@ -552,7 +558,7 @@ export function ZeroStretch({
               letterSpacing: "-0.005em",
               color: c.muted,
               opacity: capP,
-              transform: `translateY(${((1 - capP) * capSize * 0.6).toFixed(2)}px)`,
+              transform: `translateY(${((1 - capP) * capSize * 0.6).toFixed(2)}px)${glide(capP > 0 && (1 - capP) * capSize > 1e-3)}`,
             }}
           >
             {caption}

@@ -1,7 +1,7 @@
 import { useId } from "react";
 import type { SceneProps } from "../content";
-import { actionFrame, tween } from "../motion";
-import { Center, RevealCopy } from "../ui";
+import { actionFrame, midway, tween } from "../motion";
+import { Center, fitSize, RevealCopy } from "../ui";
 import { ActionFrame, actionBackground } from "./action-frame";
 
 export function Action({ scene, t }: SceneProps) {
@@ -27,9 +27,18 @@ export function Action({ scene, t }: SceneProps) {
         }}
       >
         <Center>
+          {/* The copy shrinks to make room for the button. A shrinking
+              font-size re-centres the line in layout, which rounds the
+              baseline to whole pixels, so the line stepped up as it shrank;
+              the type is laid out once at full size and scaled instead. */}
           <RevealCopy
             text={scene.content.next}
-            size={47 - 11 * travel}
+            size={47}
+            zoom={
+              fitSize(scene.content.next, 47 - 11 * travel) /
+              fitSize(scene.content.next, 47)
+            }
+            zooming={midway(travel)}
             t={t}
             start={3.8}
             dark
@@ -40,12 +49,16 @@ export function Action({ scene, t }: SceneProps) {
       <div
         style={{
           position: "absolute",
-          left: shape.x - 105,
+          // Laid out where the button waits for the click; the slide in and
+          // the move to the centre are a transform, because layout rounds a
+          // box to whole pixels and a slow `left` clicks along them.
+          left: 347 - 105,
           top: 105,
           width: 216,
           height: 61,
           opacity: travel,
           perspective: 600,
+          transform: `translateX(${shape.x - 347}px)`,
         }}
       >
         <svg
@@ -57,10 +70,11 @@ export function Action({ scene, t }: SceneProps) {
           style={{
             position: "absolute",
             left: 110,
-            top: tween(t, 5.02, 5.35, 92, 34) + press * 5,
+            // Rises to the button by a transform, for the same reason.
+            top: 34,
             opacity: tween(t, 5.02, 5.18) * (1 - tween(t, 5.48, 5.75)),
             filter: "drop-shadow(0 6px 4px #365a342a)",
-            transform: `scale(${1 - press * 0.12}) rotate(-12deg)`,
+            transform: `translateY(${tween(t, 5.02, 5.35, 58, 0) + press * 5}px) scale(${1 - press * 0.12}) rotate(-12deg)`,
           }}
         >
           <defs>

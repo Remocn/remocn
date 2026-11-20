@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -243,6 +244,8 @@ function Label({
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -281,6 +284,7 @@ export function DuetSplit({
   groundParams,
   speed = 1,
 }: DuetSplitProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -301,6 +305,13 @@ export function DuetSplit({
   const push = sp(pushAt, MORPH, PUSH_LEN);
   const logoAt = pushAt + PUSH_LEN - 4;
   const pLogo = sp(logoAt, CARD);
+  // The logo's spring overshoots and has a long tail, so it counts as moving
+  // while its lift still changes between neighbouring frames.
+  const logoLift = (f: number) =>
+    (1 - spring({ frame: f - logoAt, fps, config: CARD })) * 0.05 * H;
+  const logoMoving =
+    Math.abs(logoLift(t + speed) - logoLift(t)) > 1e-3 ||
+    Math.abs(logoLift(t) - logoLift(t - speed)) > 1e-3;
 
   const fs = tall ? 0.135 * W : 0.15 * H;
   const gap = fs * 1.18;
@@ -335,15 +346,30 @@ export function DuetSplit({
     x: afterStart.x + (afterEnd.x - afterStart.x) * push,
     y: afterStart.y + (afterEnd.y - afterStart.y) * push,
   };
+  // Layout rounds a box and a baseline to whole pixels, so the after rows
+  // stay laid out where they wait and the push carries them by transform;
+  // exactly nothing before the push starts.
+  const travel =
+    push > 0
+      ? `translate(${(afterEnd.x - afterStart.x) * push}px, ${(afterEnd.y - afterStart.y) * push}px)`
+      : undefined;
   const grow = 1 + (tall ? 0.16 : 0.2) * push;
   const rowY = (i: number) => (i - (rows.length - 1) / 2) * gap;
 
-  const bump = Math.max(
-    ...rows.map((_, i) => 0.6 * kick(t - ROW_AT - i * stagger - 3)),
-    kick(t - pushAt - PUSH_LEN + 4),
-  );
-  const camScale =
-    1 + 0.016 * bump + interpolate(t, [0, 160], [0, 0.02], CLAMP);
+  const camAt = (at: number) => {
+    const bump = Math.max(
+      ...rows.map((_, i) => 0.6 * kick(at - ROW_AT - i * stagger - 3)),
+      kick(at - pushAt - PUSH_LEN + 4),
+    );
+    return 1 + 0.016 * bump + interpolate(at, [0, 160], [0, 0.02], CLAMP);
+  };
+  const camScale = camAt(t);
+  const camStep = (at: number) =>
+    Math.abs(camAt(at) - camAt(at - speed)) * W * 0.5;
+  // The slab paints up to the frame edges, so the camera tilts only once it
+  // overhangs them by more than the tilt swings a corner.
+  const camTilt =
+    camScale > 1.0008 && Math.max(camStep(t), camStep(t + speed)) > 1e-3;
 
   const afterOpen = sp(2, HEAVY);
   const labelIn = ENTER(ramp(t, LABEL_AT, 12));
@@ -371,13 +397,20 @@ export function DuetSplit({
     );
   };
 
-  const place = (x: number, y: number, child: React.ReactNode, key: string) => (
+  const place = (
+    x: number,
+    y: number,
+    child: React.ReactNode,
+    key: string,
+    shift?: string,
+  ) => (
     <div
       key={key}
       style={{
         position: "absolute",
         left: x,
         top: y,
+        transform: shift,
         width: 0,
         height: 0,
         display: "flex",
@@ -427,7 +460,7 @@ export function DuetSplit({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${camScale})`,
+            transform: `scale(${camScale})${glide(camTilt)}`,
             transformOrigin: "50% 50%",
           }}
         >
@@ -436,7 +469,7 @@ export function DuetSplit({
               position: "absolute",
               ...afterLabelPos,
               opacity: labelIn * (1 - labelOut),
-              transform: `translateY(${(1 - labelIn) * labelFs * 0.6}px)`,
+              transform: `translateY(${(1 - labelIn) * labelFs * 0.6}px)${glide(midway(labelIn) && !camTilt)}`,
             }}
           >
             <Label
@@ -458,7 +491,13 @@ export function DuetSplit({
             {rows.map((r, i) => {
               const at = ROW_AT + i * stagger;
               return t >= at
-                ? place(ac.x, ac.y + rowY(i), crisp(r.after, at), `a-${i}`)
+                ? place(
+                    afterStart.x,
+                    afterStart.y + rowY(i),
+                    crisp(r.after, at),
+                    `a-${i}`,
+                    travel,
+                  )
                 : null;
             })}
           </div>
@@ -480,7 +519,7 @@ export function DuetSplit({
                 left: margin,
                 top: tall ? margin : margin * 1.2,
                 opacity: labelIn,
-                transform: `translateY(${(1 - labelIn) * labelFs * 0.6}px)`,
+                transform: `translateY(${(1 - labelIn) * labelFs * 0.6}px)${glide(midway(labelIn) && !camTilt)}`,
               }}
             >
               <Label
@@ -518,7 +557,7 @@ export function DuetSplit({
             display: "flex",
             justifyContent: "center",
             opacity: ENTER(ramp(t, logoAt, 6)),
-            transform: `translateY(${(1 - pLogo) * 0.05 * H}px)`,
+            transform: `translateY(${(1 - pLogo) * 0.05 * H}px)${glide(logoMoving)}`,
           }}
         >
           {logo ?? (

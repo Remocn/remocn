@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const afacad = loadFont("normal", {
   weights: ["400", "500"],
@@ -178,6 +179,8 @@ interface Block {
   slugWords: string[];
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -209,6 +212,7 @@ export function Crunch({
   speed = 1,
   theme = "dark",
 }: CrunchProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const t = frame * speed;
   const { width: W, height: H, durationInFrames: T } = useVideoConfig();
@@ -344,11 +348,11 @@ export function Crunch({
 
   const wideFor = (b: Block) => layout(b, wideCol);
 
-  const snagPts = (() => {
-    const start = Math.floor(squeezeA);
-    const end = Math.min(Math.floor(t), Math.floor(release));
-    let pos = layout(blocks[1], colAt(start));
-    for (let f = start + 1; f <= end; f++) {
+  const snagStart = Math.floor(squeezeA);
+  const snagAt = (tt: number) => {
+    const end = Math.min(Math.floor(tt), Math.floor(release));
+    let pos = layout(blocks[1], colAt(snagStart));
+    for (let f = snagStart + 1; f <= end; f++) {
       const target = layout(blocks[1], colAt(f));
       pos = pos.map((p, i) => ({
         x: p.x + (target[i].x - p.x) * 0.75,
@@ -356,7 +360,20 @@ export function Crunch({
       }));
     }
     return pos;
-  })();
+  };
+  const snagPts = snagAt(t);
+  // The snag words are laid out where the squeeze starts and ride to their
+  // live place by transform for as long as they are up: layout rounds a
+  // baseline to whole pixels, so words eased by `left`/`top` click along pixel
+  // by pixel, and a word handed back to layout between moves jumps by the
+  // rounding.
+  const snagHome = snagAt(snagStart);
+  const snagPrev = snagAt(t - speed);
+  const snagMoving = snagPts.map(
+    (p, i) =>
+      Math.abs(p.x - snagPrev[i].x) > 1e-3 ||
+      Math.abs(p.y - snagPrev[i].y) > 1e-3,
+  );
 
   const renderBlock = (
     b: Block,
@@ -366,6 +383,8 @@ export function Crunch({
     outAt: number | null,
     lineColor: string,
     slugColor: string,
+    home?: { x: number; y: number }[],
+    riding?: boolean[],
   ) => {
     const n = b.slugWords.length;
     const all = [...b.slugWords, ...b.lineWords];
@@ -378,6 +397,7 @@ export function Crunch({
       });
       let o = e;
       let dy = (1 - e) * (isSlug ? S : F) * 0.45;
+      let moving = midway(e);
       if (outAt !== null) {
         const x0 = outAt + i * 0.8;
         const x = interpolate(t, [x0, x0 + 9], [0, 1], {
@@ -386,16 +406,21 @@ export function Crunch({
         });
         o *= 1 - x;
         dy -= x * F * 0.35;
+        moving ||= midway(x);
       }
       if (o <= 0.001) return null;
       const size = isSlug ? S : F;
+      const ride = home ? home[i] : null;
+      const pos = ride ?? pts[i];
+      const rideX = ride ? `translateX(${pts[i].x - ride.x}px) ` : "";
+      const rideY = ride ? pts[i].y - ride.y : 0;
       return (
         <div
           key={`${key}${i}`}
           style={{
             position: "absolute",
-            left: pts[i].x,
-            top: pts[i].y,
+            left: pos.x,
+            top: pos.y,
             fontSize: size,
             lineHeight: `${isSlug ? size * 1.25 : size * LH}px`,
             whiteSpace: "pre",
@@ -403,7 +428,7 @@ export function Crunch({
             letterSpacing: `${isSlug ? SLUG_TRACK : LINE_TRACK}em`,
             color: isSlug ? slugColor : lineColor,
             opacity: o,
-            transform: `translateY(${dy.toFixed(2)}px)`,
+            transform: `${rideX}translateY(${(Number(dy.toFixed(2)) + rideY).toString()}px)${glide(moving || !!riding?.[i])}`,
           }}
         >
           {word}
@@ -444,7 +469,17 @@ export function Crunch({
           fg,
           hi,
         )}
-        {renderBlock(blocks[1], snagPts, "b", snagIn, release - 4, fg, hi)}
+        {renderBlock(
+          blocks[1],
+          snagPts,
+          "b",
+          snagIn,
+          release - 4,
+          fg,
+          hi,
+          snagHome,
+          snagMoving,
+        )}
       </ScaleLayer>
       <div style={wallStyle("left")} />
       <div style={wallStyle("right")} />

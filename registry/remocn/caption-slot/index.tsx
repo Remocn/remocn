@@ -10,6 +10,7 @@ import {
   groupCaptionWords,
   useCaptions,
 } from "@/lib/remocn/caption-core";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface CaptionSlotProps extends CaptionBaseProps {
   activeColor?: string;
@@ -26,6 +27,8 @@ const LEGIBILITY_SHADOW =
 
 const rollIn = Easing.bezier(0.16, 1, 0.3, 1);
 const rollOut = Easing.bezier(0.7, 0, 0.84, 0);
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 function SlotLine({
   tokens,
@@ -73,6 +76,7 @@ export function CaptionSlot({
   shadow = true,
   className,
 }: CaptionSlotProps) {
+  const glide = useGlide();
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
@@ -90,6 +94,7 @@ export function CaptionSlot({
     Math.max(0, 1 - state.untilEndMs / getExitWindowMs(state, EXIT_MS)),
   );
   const exit = state.endsInSilence ? rollOut(exitProgress) : 0;
+  const exiting = state.endsInSilence && midway(exitProgress);
 
   return (
     <div
@@ -115,7 +120,7 @@ export function CaptionSlot({
             position: "absolute",
             top: 0,
             left: "50%",
-            transform: `translate(-50%, ${-roll * TRAVEL_EM}em)`,
+            transform: `translate(-50%, ${-roll * TRAVEL_EM}em)${glide(midway(roll))}`,
           }}
         />
       ) : null}
@@ -125,7 +130,7 @@ export function CaptionSlot({
         activeIndex={state.activeIndex}
         activeColor={activeColor}
         style={{
-          transform: `translateY(${(1 - roll - exit) * TRAVEL_EM}em)`,
+          transform: `translateY(${(1 - roll - exit) * TRAVEL_EM}em)${glide(midway(roll) || exiting)}`,
         }}
       />
     </div>

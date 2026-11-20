@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["500"],
@@ -275,6 +276,7 @@ export function TypoFix({
   theme = "dark",
   speed = 1,
 }: TypoFixProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -348,16 +350,21 @@ export function TypoFix({
   const wordLeft = left + beforeW;
   const baseline = H / 2 + (CAP * F) / 2;
 
-  const enter = (k: number) =>
+  const enterAt = (k: number, tt: number) =>
     EASE_OUT(
       interpolate(
-        t,
+        tt,
         [k * ENTER_STAGGER, k * ENTER_STAGGER + ENTER_LEN],
         [0, 1],
         CLAMP,
       ),
     );
+  const enter = (k: number) => enterAt(k, t);
   const wordEnter = enter(before ? 1 : 0);
+  // Whether a value in px is still travelling, against the neighbouring frames.
+  const stirs = (at: (tt: number) => number) =>
+    Math.abs(at(t + 1) - at(t)) > 1e-3 || Math.abs(at(t) - at(t - 1)) > 1e-3;
+  const entering = (k: number) => stirs((tt) => enterAt(k, tt) * 0.2 * F);
 
   const ulY = baseline + 0.19 * F;
   const ulX0 = W / 2 + wordLeft * F;
@@ -386,12 +393,21 @@ export function TypoFix({
   const ruleT = Math.max(3, 0.045 * F);
   const ruleX0 = W / 2 + wordLeft * F;
   const ruleW = (lb.total - TRACK) * F;
-  const settle = spring({
-    frame: t - swapEnd,
-    fps,
-    config: { damping: 14, stiffness: 220, mass: 0.6 },
-  });
-  const tick = t >= swapEnd ? Math.sin(Math.PI * Math.min(1, settle)) : 0;
+  const tickAt = (tt: number) =>
+    tt >= swapEnd
+      ? Math.sin(
+          Math.PI *
+            Math.min(
+              1,
+              spring({
+                frame: tt - swapEnd,
+                fps,
+                config: { damping: 14, stiffness: 220, mass: 0.6 },
+              }),
+            ),
+        )
+      : 0;
+  const tick = tickAt(t);
 
   const textStyle = {
     position: "absolute" as const,
@@ -479,7 +495,7 @@ export function TypoFix({
                 left: `${left}em`,
                 fontKerning: "normal",
                 opacity: enter(0),
-                transform: `translateY(${(1 - enter(0)) * 0.2}em)`,
+                transform: `translateY(${(1 - enter(0)) * 0.2}em)${glide(entering(0))}`,
               }}
             >
               {before}
@@ -491,7 +507,30 @@ export function TypoFix({
               left: `${wordLeft}em`,
               top: 0,
               opacity: wordEnter,
-              transform: `translateY(${(1 - wordEnter) * 0.2 - tick * 0.035}em)`,
+              // The glyphs inside swap on arcs of their own; this one tilt
+              // covers them too.
+              transform: `translateY(${(1 - wordEnter) * 0.2 - tick * 0.035}em)${glide(
+                entering(before ? 1 : 0) ||
+                  stirs((tt) => tickAt(tt) * 0.035 * F) ||
+                  glyphs.some((g) =>
+                    stirs(
+                      (tt) =>
+                        Math.sin(
+                          Math.PI *
+                            EASE_IO(
+                              interpolate(
+                                tt,
+                                [g.start, g.start + TRAVEL],
+                                [0, 1],
+                                CLAMP,
+                              ),
+                            ),
+                        ) *
+                        g.lift *
+                        F,
+                    ),
+                  ),
+              )}`,
             }}
           >
             {glyphs.map((g) => {
@@ -537,7 +576,7 @@ export function TypoFix({
                 left: `${wordLeft + wordW + SPACE}em`,
                 fontKerning: "normal",
                 opacity: enter(before ? 2 : 1),
-                transform: `translateY(${(1 - enter(before ? 2 : 1)) * 0.2}em)`,
+                transform: `translateY(${(1 - enter(before ? 2 : 1)) * 0.2}em)${glide(entering(before ? 2 : 1))}`,
               }}
             >
               {after}

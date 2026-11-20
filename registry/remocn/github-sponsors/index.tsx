@@ -13,6 +13,7 @@ import {
 } from "remotion";
 import { BlurOutUp } from "@/components/remocn/blur-out-up";
 import { SoftBlurIn } from "@/components/remocn/soft-blur-in";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface Sponsor {
   login: string;
@@ -238,6 +239,8 @@ export function heartPulseScale(frame: number, speed = 1): number {
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function ramp(
   frame: number,
   speed: number,
@@ -311,12 +314,14 @@ const SponsorNode = memo(function SponsorNode({
   progress,
   size,
   theme,
+  glide,
 }: {
   sponsor: Sponsor;
   cell: Point;
   progress: number;
   size: number;
   theme: Theme;
+  glide: (moving: boolean) => string;
 }) {
   const y = (1 - progress) * 14;
   const blur = (1 - progress) * 10;
@@ -328,9 +333,11 @@ const SponsorNode = memo(function SponsorNode({
         left: cell.x,
         top: cell.y,
         translate: `-50% calc(-50% + ${y}px)`,
+        // The fallback initial is text and rides the rise.
+        transform: glide(midway(progress)) || undefined,
         opacity: progress,
         filter: `blur(${blur}px)`,
-        willChange: "transform, opacity, filter",
+        willChange: "opacity, filter",
       }}
     >
       <Avatar
@@ -386,6 +393,7 @@ export function GitHubSponsors({
   speed = 1,
   theme = "light",
 }: GitHubSponsorsProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame();
   const { width, height } = useVideoConfig();
   const t = THEMES[theme] ?? THEMES.light;
@@ -450,6 +458,7 @@ export function GitHubSponsors({
             )}
             size={avatarSize}
             theme={t}
+            glide={glide}
           />
         ))}
 
@@ -465,7 +474,6 @@ export function GitHubSponsors({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            willChange: "transform",
           }}
         >
           <HeartGlyph
@@ -531,6 +539,7 @@ export function GitHubSponsors({
           <div
             style={{
               translate: `0 ${ctaY}px`,
+              transform: glide(midway(ctaProgress)) || undefined,
               opacity: ctaProgress,
               filter: `blur(${ctaBlur}px)`,
               display: "flex",
@@ -543,7 +552,7 @@ export function GitHubSponsors({
               fontSize: 24,
               fontWeight: 600,
               fontFamily: FONT_FAMILY,
-              willChange: "transform, opacity, filter",
+              willChange: "opacity, filter",
             }}
           >
             <HeartGlyph size={22} accent="#ffffff" draw={1} fill={1} />

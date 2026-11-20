@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: serif } = loadFont("normal", {
   weights: ["400"],
@@ -290,6 +291,8 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -322,6 +325,7 @@ export function InkBloom({
   theme = "light",
   seed = 3,
 }: InkBloomProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = height / 720;
@@ -627,7 +631,7 @@ export function InkBloom({
             gap: 14 * u,
             opacity: interpolate(resolve, [0, 0.3, 1], [0, 0.75, 1]),
             filter: resolve < 1 ? `url(#${cond})` : undefined,
-            transform: `scale(${0.985 + resolve * 0.015})`,
+            transform: `scale(${0.985 + resolve * 0.015})${glide(midway(resolve))}`,
           }}
         >
           {logo ? (

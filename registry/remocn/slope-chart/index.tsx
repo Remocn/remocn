@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadSans("normal", {
   weights: ["400", "500"],
@@ -206,6 +207,7 @@ export function SlopeChart({
   speed = 1,
   theme = "dark",
 }: SlopeChartProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const u = Math.min(W / 1280, H / 720);
@@ -232,17 +234,27 @@ export function SlopeChart({
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const push = interpolate(t, [0, hitAt + 30], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const camScale = 0.975 + 0.025 * push;
   // The chart sits centred alone; the frame eases over as the number lands.
-  const slide = interpolate(t, [climbR[0] + 8, hitAt + 14], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const camX = W * 0.11 * (1 - slide);
+  const camera = (tt: number) => {
+    const push = interpolate(tt, [0, hitAt + 30], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+    const slide = interpolate(tt, [climbR[0] + 8, hitAt + 14], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+    return { s: 0.975 + 0.025 * push, x: W * 0.11 * (1 - slide) };
+  };
+  const { s: camScale, x: camX } = camera(t);
+  // The camera's scale is weighed by the half width, the furthest any text
+  // sits from its centre.
+  const camStep = (a: number, b: number) => {
+    const p0 = camera(a);
+    const p1 = camera(b);
+    return Math.abs(p1.x - p0.x) + Math.abs(p1.s - p0.s) * (W / 2) > 1e-3;
+  };
+  const camMoving = camStep(t - speed, t) || camStep(t, t + speed);
 
   const climb = interpolate(t, climbR, [0, 1], {
     ...CLAMP,
@@ -357,7 +369,7 @@ export function SlopeChart({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `translateX(${camX}px) scale(${camScale})`,
+            transform: `translateX(${camX}px) scale(${camScale})${glide(camMoving)}`,
             transformOrigin: "50% 50%",
           }}
         >

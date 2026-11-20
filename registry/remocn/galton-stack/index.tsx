@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -172,6 +173,8 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -205,6 +208,7 @@ export function GaltonStack({
   theme = "dark",
   speed = 1,
 }: GaltonStackProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
@@ -272,10 +276,21 @@ export function GaltonStack({
     easing: EASE_IO,
   });
   const field = fieldIn * (1 - fieldOut);
-  const cam = interpolate(t, [MARK - 6, MARK + 26], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const camAt = (f: number) =>
+    interpolate(f, [MARK - 6, MARK + 26], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const cam = camAt(t);
+  // The camera eases in and out, so its motion is tested in px against the
+  // neighbouring frames: the pan plus the zoom at the frame edge.
+  const camReach = Math.abs(shift) + 0.05 * Math.max(width, height);
+  const camMoving =
+    Math.abs(camAt(t + speed) - cam) * camReach > 1e-3 ||
+    Math.abs(cam - camAt(t - speed)) * camReach > 1e-3;
+  // One tilt per chain: the labels tilt themselves only once the camera
+  // that carries them has stopped.
+  const ownTilt = (p: number) => glide(midway(p) && !camMoving);
   const camScale = 1 + 0.05 * cam;
   const lineIn = interpolate(t, [MARK + 2, MARK + 20], [0, 1], {
     ...CLAMP,
@@ -372,7 +387,7 @@ export function GaltonStack({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `translateY(${shift * cam}px) scale(${camScale})`,
+            transform: `translateY(${shift * cam}px) scale(${camScale})${glide(camMoving)}`,
             transformOrigin: `50% ${finalCenter}px`,
           }}
         >
@@ -441,7 +456,7 @@ export function GaltonStack({
               position: "absolute",
               left: markerX,
               top: baseY + 14 * u,
-              transform: `translate(-50%, ${(1 - tickIn) * 6 * u}px)`,
+              transform: `translate(-50%, ${(1 - tickIn) * 6 * u}px)${ownTilt(tickIn)}`,
               fontFamily: mono,
               fontWeight: 500,
               fontSize: 17 * u,
@@ -484,7 +499,7 @@ export function GaltonStack({
                 opacity: land,
                 filter:
                   land < 0.99 ? `blur(${(1 - land) * 8 * u}px)` : undefined,
-                transform: `translateY(${(1 - land) * 18 * u}px)`,
+                transform: `translateY(${(1 - land) * 18 * u}px)${ownTilt(land)}`,
               }}
             >
               {hero}
@@ -502,7 +517,7 @@ export function GaltonStack({
                   letterSpacing: "-0.015em",
                   color: p.muted,
                   opacity: subIn,
-                  transform: `translateY(${(1 - subIn) * 8 * u}px)`,
+                  transform: `translateY(${(1 - subIn) * 8 * u}px)${ownTilt(subIn)}`,
                 }}
               >
                 <span

@@ -6,7 +6,7 @@
 
 # Remocn: Claude Code plugin & agent skill for making Remotion videos
 
-Remocn is a Claude Code plugin, agent skill and MCP server for making Remotion videos from 932 MIT-licensed Remotion components. Your agent plans a storyboard, installs the components into your Remotion project with the shadcn CLI and writes the video: a product demo, a launch video, a changelog video or a social clip.
+Remocn is a Claude Code plugin, agent skill and MCP server for making Remotion videos from 933 MIT-licensed Remotion components. Your agent plans a storyboard, installs the components into your Remotion project with the shadcn CLI and writes the video: a product demo, a launch video, a changelog video or a social clip.
 
 **Works with Claude Code, Codex, Cursor, GitHub Copilot and any agent that loads skills or connects to MCP.**
 
@@ -94,7 +94,7 @@ They answer different questions and work together.
 | Answers | How to write correct Remotion code | What goes on screen: which component for each beat, for how many frames |
 | Install | `npx skills add remotion-dev/skills` | `/plugin install remocn --marketplace Remocn/remocn` or `npx skills add Remocn/remocn` |
 | Output | Code the agent writes from scratch | Code built from installed component source files, in your repo |
-| Ready-made scenes | No | 932 components and full video templates |
+| Ready-made scenes | No | 933 components and full video templates |
 | Cost | Free; Remotion may need a company license | Free, MIT; Remotion's license still applies |
 
 We ran both setups on the same 15-second brief on November 10, 2026, with timings, costs and both MP4s: [the test](https://remocn.dev/docs/getting-started/plugin#test-the-same-15-second-promo-with-and-without-remocn).
@@ -158,7 +158,7 @@ Rather direct the video than write it? [Remocn Studio](https://remocn.studio) is
 
 ### Is there a Claude Code plugin or skill for creating Remotion videos?
 
-Yes. Remocn's plugin (`/plugin install remocn --marketplace Remocn/remocn`) adds the `/remocn:video` workflow and 932 ready-made components; the skill (`npx skills add Remocn/remocn`) adds the catalog alone. Remotion also maintains official skills that teach Claude its API, and the two work together.
+Yes. Remocn's plugin (`/plugin install remocn --marketplace Remocn/remocn`) adds the `/remocn:video` workflow and 933 ready-made components; the skill (`npx skills add Remocn/remocn`) adds the catalog alone. Remotion also maintains official skills that teach Claude its API, and the two work together.
 
 ### Does it work in Cursor or Codex?
 

@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadSans("normal", {
   weights: ["500"],
@@ -193,6 +194,7 @@ export function IntelligenceGlow({
   theme = "dark",
   speed = 1,
 }: IntelligenceGlowProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -324,16 +326,31 @@ export function IntelligenceGlow({
     90 * u,
     (W * 0.74) / Math.max(6, question.length * 0.3),
   );
-  const qOut = interpolate(t, [Q_OUT, Q_OUT + 16], [0, 1], {
-    ...CLAMP,
-    easing: Easing.bezier(0.5, 0, 0.75, 0),
-  });
+  const qOutAt = (tt: number) =>
+    interpolate(tt, [Q_OUT, Q_OUT + 16], [0, 1], {
+      ...CLAMP,
+      easing: Easing.bezier(0.5, 0, 0.75, 0),
+    });
+  const qOut = qOutAt(t);
   const shimmerPos = interpolate(t, [THINK, Q_OUT], [-2, qWords.length + 4]);
 
-  const logoIn = interpolate(t, [LOGO_IN, LOGO_IN + 16], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const logoAt = (tt: number) =>
+    interpolate(tt, [LOGO_IN, LOGO_IN + 16], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  const logoIn = logoAt(t);
+  // The eases have long tails that still cross pixels once a progress is all
+  // but settled, so a mover counts as moving while its travel in px changes
+  // against either neighbouring frame.
+  const stirs = (at: (tt: number) => number, reach: number) => {
+    const now = at(t);
+    return (
+      Math.abs(at(t + speed) - now) * reach > 1e-3 ||
+      Math.abs(now - at(t - speed)) * reach > 1e-3
+    );
+  };
+  const qMoving = stirs(qOutAt, Math.max(14 * u, W * 0.4 * 0.04));
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
@@ -405,7 +422,7 @@ export function IntelligenceGlow({
               justifyContent: "center",
               opacity: 1 - qOut,
               filter: qOut > 0 ? `blur(${qOut * 14 * u}px)` : undefined,
-              transform: `translateY(${-qOut * 14 * u}px) scale(${1 - qOut * 0.04})`,
+              transform: `translateY(${-qOut * 14 * u}px) scale(${1 - qOut * 0.04})${glide(qMoving)}`,
             }}
           >
             <div
@@ -422,15 +439,12 @@ export function IntelligenceGlow({
               }}
             >
               {qWords.map((w, i) => {
-                const k = interpolate(
-                  t,
-                  [Q_IN + i * 3, Q_IN + i * 3 + 14],
-                  [0, 1],
-                  {
+                const kAt = (tt: number) =>
+                  interpolate(tt, [Q_IN + i * 3, Q_IN + i * 3 + 14], [0, 1], {
                     ...CLAMP,
                     easing: EASE_OUT,
-                  },
-                );
+                  });
+                const k = kAt(t);
                 const d = i - shimmerPos;
                 const shimmer = thinking * (1 - Math.exp(-(d * d) / 2.2));
                 return (
@@ -440,7 +454,9 @@ export function IntelligenceGlow({
                       display: "inline-block",
                       marginRight: i < qWords.length - 1 ? "0.24em" : 0,
                       opacity: k * (1 - shimmer * 0.55),
-                      transform: `translateY(${(1 - k) * 0.28}em)`,
+                      transform: `translateY(${(1 - k) * 0.28}em)${glide(
+                        !qMoving && stirs(kAt, 0.28 * qSize),
+                      )}`,
                       filter: k < 1 ? `blur(${(1 - k) * 8 * u}px)` : undefined,
                     }}
                   >
@@ -471,10 +487,12 @@ export function IntelligenceGlow({
             {[answerLead, ...aWords].map((w, i) => {
               const lead = i === 0;
               const s = A_IN + i * stagger;
-              const k = interpolate(t, [s, s + 16], [0, 1], {
-                ...CLAMP,
-                easing: EASE_OUT,
-              });
+              const kAt = (tt: number) =>
+                interpolate(tt, [s, s + 16], [0, 1], {
+                  ...CLAMP,
+                  easing: EASE_OUT,
+                });
+              const k = kAt(t);
               return (
                 <span
                   key={`${i}-${w}`}
@@ -489,7 +507,9 @@ export function IntelligenceGlow({
                     marginRight:
                       i === aWords.length ? 0 : lead ? "0.26em" : "0.22em",
                     opacity: k,
-                    transform: `translateY(${(1 - k) * 0.3}em)`,
+                    transform: `translateY(${(1 - k) * 0.3}em)${glide(
+                      stirs(kAt, 0.3 * aSize * 1.14),
+                    )}`,
                     filter: k < 1 ? `blur(${(1 - k) * 10 * u}px)` : undefined,
                   }}
                 >
@@ -510,7 +530,9 @@ export function IntelligenceGlow({
               display: "flex",
               justifyContent: "center",
               opacity: logoIn,
-              transform: `translateY(${(1 - logoIn) * 10 * u}px)`,
+              transform: `translateY(${(1 - logoIn) * 10 * u}px)${glide(
+                stirs(logoAt, 10 * u),
+              )}`,
             }}
           >
             {logo ?? <RemocnLogo fontSize={26 * u} color={fg} />}

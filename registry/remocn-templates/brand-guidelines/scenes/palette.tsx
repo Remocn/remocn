@@ -9,9 +9,9 @@ export function Palette({ scene, frame }: SceneProps) {
     reducedMotion ? to : 960 + (to - 960) * slide(frame, start, end);
   const accentX = x(166, 201, 422);
   const panels = [
-    { color: theme.accent, left: accentX, text: theme.paper },
-    { color: theme.stone, left: x(211, 241, 566), text: theme.ink },
-    { color: theme.paper, left: x(249, 279, 744), text: theme.ink },
+    { color: theme.accent, left: accentX, rest: 422, text: theme.paper },
+    { color: theme.stone, left: x(211, 241, 566), rest: 566, text: theme.ink },
+    { color: theme.paper, left: x(249, 279, 744), rest: 744, text: theme.ink },
   ];
   return (
     <AbsoluteFill
@@ -41,7 +41,14 @@ export function Palette({ scene, frame }: SceneProps) {
             position: "absolute",
             top: 0,
             bottom: 0,
-            left: panel.left,
+            // Laid out where the panel settles; the slide in is a translate,
+            // because layout rounds a box edge to whole pixels and a panel
+            // eased by `left` lands with a click.
+            left: panel.rest,
+            translate:
+              panel.left === panel.rest
+                ? undefined
+                : `${panel.left - panel.rest}px 0`,
             width: 960,
             background: panel.color,
             color: panel.text,

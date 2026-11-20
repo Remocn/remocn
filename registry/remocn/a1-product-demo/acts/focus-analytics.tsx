@@ -14,6 +14,8 @@ import {
   FLOW_MUTED,
   FLOW_YELLOW,
   FONT,
+  stirring,
+  useGlide,
 } from "../foundation";
 
 const BAR_HEIGHTS = [
@@ -26,28 +28,29 @@ const YELLOW_BARS = new Set([17, 18]);
 export function FocusAnalytics({ speed = 1 }: { speed?: number }) {
   const f = useCurrentFrame() * speed;
   const { fps } = useVideoConfig();
+  const glide = useGlide();
+  const springAt =
+    (start: number, damping: number, stiffness: number) => (g: number) =>
+      spring({ frame: g - start, fps, config: { damping, stiffness } });
 
-  const pop = spring({
-    frame: f - 4,
-    fps,
-    config: { damping: 16, stiffness: 130 },
-  });
+  // The springs overshoot, so each test is on the scale itself, weighed at
+  // the far corner of what it scales: 14% of the card's ~430px half
+  // diagonal, a whole chip's ~60px.
+  const popAt = springAt(4, 16, 130);
+  const pop = popAt(f);
+  const cardMoving = stirring((g) => popAt(g) * 0.14 * 430, f, speed);
   const cardScale = interpolate(pop, [0, 1], [0.86, 1]);
   const cardOpacity = interpolate(f, [4, 14], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
 
-  const johnPop = spring({
-    frame: f - 16,
-    fps,
-    config: { damping: 15, stiffness: 160 },
-  });
-  const amyPop = spring({
-    frame: f - 24,
-    fps,
-    config: { damping: 15, stiffness: 160 },
-  });
+  const johnAt = springAt(16, 15, 160);
+  const amyAt = springAt(24, 15, 160);
+  const johnPop = johnAt(f);
+  const amyPop = amyAt(f);
+  const johnMoving = stirring((g) => johnAt(g) * 60, f, speed);
+  const amyMoving = stirring((g) => amyAt(g) * 60, f, speed);
 
   return (
     <AbsoluteFill
@@ -62,6 +65,7 @@ export function FocusAnalytics({ speed = 1 }: { speed?: number }) {
         style={{
           position: "relative",
           scale: `${cardScale}`,
+          transform: glide(cardMoving),
           opacity: cardOpacity,
         }}
       >
@@ -155,6 +159,7 @@ export function FocusAnalytics({ speed = 1 }: { speed?: number }) {
             top: -22,
             right: 70,
             scale: `${johnPop}`,
+            transform: glide(johnMoving),
             transformOrigin: "center",
           }}
         >
@@ -166,6 +171,7 @@ export function FocusAnalytics({ speed = 1 }: { speed?: number }) {
             bottom: -22,
             right: -34,
             scale: `${amyPop}`,
+            transform: glide(amyMoving),
             transformOrigin: "center",
           }}
         >

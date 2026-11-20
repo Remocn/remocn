@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -113,6 +114,10 @@ interface Cam {
 const clamp = (v: number, lo: number, hi: number) =>
   Math.min(hi, Math.max(lo, v));
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+/** A spring still on its way to 1, overshoot included. */
+const unsettled = (p: number) => p > 5e-4 && Math.abs(p - 1) > 5e-4;
+
 function travel(a: Cam, b: Cam, p: number, pull: number): Cam {
   const s =
     Math.exp(Math.log(a.s) + (Math.log(b.s) - Math.log(a.s)) * p) *
@@ -161,6 +166,7 @@ export function ScreenshotTour({
   ground,
   groundParams,
 }: ScreenshotTourProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const sw = screenshotWidth;
@@ -195,43 +201,49 @@ export function ScreenshotTour({
     s: keys[i].s * (1 + (i === 0 ? 0.012 : DRIFT)),
   });
 
-  let cam: Cam;
-  let spotRect: TourStop = stops[0] ?? {
-    x: 0,
-    y: 0,
-    width: sw,
-    height: sh,
-    label: "",
-  };
-  let spotAmount = 0;
   const tourEnd = ESTABLISH + n * F;
-  if (frame < ESTABLISH || n === 0) {
-    cam = { ...home, s: home.s * (1 + 0.012 * clamp(frame / ESTABLISH, 0, 1)) };
-  } else if (frame < tourEnd) {
-    const i = Math.floor((frame - ESTABLISH) / F);
-    const local = frame - ESTABLISH - i * F;
-    const p = MOVE(clamp(local / T, 0, 1));
-    cam = travel(drifted(i), keys[i + 1], p, i > 0 ? 0.12 : 0);
-    cam.s *= 1 + DRIFT * clamp((local - T) / (F - T), 0, 1);
-    const prev = stops[Math.max(0, i - 1)];
-    const next = stops[i];
-    spotRect = {
-      x: prev.x + (next.x - prev.x) * p,
-      y: prev.y + (next.y - prev.y) * p,
-      width: prev.width + (next.width - prev.width) * p,
-      height: prev.height + (next.height - prev.height) * p,
-      label: next.label,
+  // The shot as a function of the frame, so the camera can be compared with
+  // its neighbours to tell a move from a hold.
+  const shot = (f: number) => {
+    let cam: Cam;
+    let spotRect: TourStop = stops[0] ?? {
+      x: 0,
+      y: 0,
+      width: sw,
+      height: sh,
+      label: "",
     };
-    spotAmount =
-      i === 0
-        ? interpolate(p, [0.3, 1], [0, 1], { extrapolateLeft: "clamp" })
-        : 1;
-  } else {
-    const p = MOVE(clamp((frame - tourEnd) / RETURN, 0, 1));
-    spotRect = stops[n - 1];
-    cam = pullBack ? travel(drifted(n), home, p, 0) : drifted(n);
-    spotAmount = pullBack ? 1 - p : 1;
-  }
+    let spotAmount = 0;
+    if (f < ESTABLISH || n === 0) {
+      cam = { ...home, s: home.s * (1 + 0.012 * clamp(f / ESTABLISH, 0, 1)) };
+    } else if (f < tourEnd) {
+      const i = Math.floor((f - ESTABLISH) / F);
+      const local = f - ESTABLISH - i * F;
+      const p = MOVE(clamp(local / T, 0, 1));
+      cam = travel(drifted(i), keys[i + 1], p, i > 0 ? 0.12 : 0);
+      cam.s *= 1 + DRIFT * clamp((local - T) / (F - T), 0, 1);
+      const prev = stops[Math.max(0, i - 1)];
+      const next = stops[i];
+      spotRect = {
+        x: prev.x + (next.x - prev.x) * p,
+        y: prev.y + (next.y - prev.y) * p,
+        width: prev.width + (next.width - prev.width) * p,
+        height: prev.height + (next.height - prev.height) * p,
+        label: next.label,
+      };
+      spotAmount =
+        i === 0
+          ? interpolate(p, [0.3, 1], [0, 1], { extrapolateLeft: "clamp" })
+          : 1;
+    } else {
+      const p = MOVE(clamp((f - tourEnd) / RETURN, 0, 1));
+      spotRect = stops[n - 1];
+      cam = pullBack ? travel(drifted(n), home, p, 0) : drifted(n);
+      spotAmount = pullBack ? 1 - p : 1;
+    }
+    return { cam, spotRect, spotAmount };
+  };
+  const { cam, spotRect, spotAmount } = shot(frame);
 
   const enter = spring({ frame: frame + 2, fps, config: HEAVY });
   const enterScale = interpolate(enter, [0, 1], [0.94, 1]);
@@ -242,6 +254,18 @@ export function ScreenshotTour({
     x: (x - cam.x) * scale + W / 2,
     y: (y - cam.y) * scale + cy + lift,
   });
+
+  // Where the screenshot sits at a frame: its offset and its scale.
+  const placed = (f: number) => {
+    const c = shot(f).cam;
+    const e = spring({ frame: f + 2, fps, config: HEAVY });
+    const k = c.s * interpolate(e, [0, 1], [0.94, 1]);
+    return [W / 2 - c.x * k, cy + (1 - e) * 0.05 * H - c.y * k, k];
+  };
+  const here = placed(frame);
+  const apart = (other: number[]) =>
+    other.some((v, i) => Math.abs(v - here[i]) > 1e-5);
+  const camMoving = apart(placed(frame + 1)) || apart(placed(frame - 1));
 
   const content = src ? (
     <Img
@@ -335,7 +359,7 @@ export function ScreenshotTour({
             width: sw,
             height: sh,
             transformOrigin: "0 0",
-            transform: `translate(${W / 2 - cam.x * scale}px, ${cy + lift - cam.y * scale}px) scale(${scale})`,
+            transform: `translate(${W / 2 - cam.x * scale}px, ${cy + lift - cam.y * scale}px) scale(${scale})${glide(camMoving)}`,
             opacity: interpolate(enter, [0, 0.5], [0, 1], {
               extrapolateRight: "clamp",
             }),
@@ -419,7 +443,7 @@ export function ScreenshotTour({
                     right: 0,
                     top: 0,
                     opacity,
-                    transform: `translateY(${((1 - a) * 0.03 - e * 0.02) * H}px)`,
+                    transform: `translateY(${((1 - a) * 0.03 - e * 0.02) * H}px)${glide(unsettled(a) || midway(e))}`,
                   }}
                 >
                   <div
@@ -473,7 +497,7 @@ export function ScreenshotTour({
                         paddingBottom: 0.022 * H,
                         borderBottom: `1px solid ${dark ? "rgba(255,255,255,0.12)" : "rgba(20,21,24,0.12)"}`,
                         opacity: clamp(a, 0, 1),
-                        transform: `translateY(${(1 - a) * 0.025 * H}px)`,
+                        transform: `translateY(${(1 - a) * 0.025 * H}px)${glide(unsettled(a))}`,
                       }}
                     >
                       <span
@@ -533,17 +557,30 @@ export function ScreenshotTour({
               cardW / 2 + 24 * u,
               W - cardW / 2 - 24 * u,
             );
+            // The card is laid out where the settled camera puts it and
+            // follows the live camera by a transform: layout rounds a box and
+            // a baseline to whole pixels, so a card carried by `left`/`top`
+            // clicks along as the camera drifts.
+            const key = keys[i + 1];
+            const restY = below
+              ? (st.y + st.height + pad - key.y) * key.s + cy + gap
+              : (st.y - pad - key.y) * key.s + cy - gap - cardH;
+            const restX = clamp(
+              (st.x + st.width / 2 - key.x) * key.s + W / 2,
+              cardW / 2 + 24 * u,
+              W - cardW / 2 - 24 * u,
+            );
             return (
               <div
                 key={`${st.label}-${i}`}
                 style={{
                   position: "absolute",
-                  left: x,
-                  top: y,
+                  left: restX,
+                  top: restY,
                   height: cardH,
                   boxSizing: "border-box",
                   transformOrigin: below ? "50% 0%" : "50% 100%",
-                  transform: `translate(-50%, ${((1 - a) * 10 - e * 6) * u * (below ? 1 : -1)}px) scale(${interpolate(a, [0, 1], [0.94, 1])})`,
+                  transform: `translate(${x - restX}px, ${y - restY}px) translate(-50%, ${((1 - a) * 10 - e * 6) * u * (below ? 1 : -1)}px) scale(${interpolate(a, [0, 1], [0.94, 1])})${glide(camMoving || unsettled(a) || midway(e))}`,
                   opacity,
                   display: "flex",
                   alignItems: "center",

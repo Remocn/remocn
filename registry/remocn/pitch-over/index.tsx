@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const grotesk = loadSpaceGrotesk("normal", {
   weights: ["400"],
@@ -214,6 +215,7 @@ export function PitchOver({
   speed = 1,
   theme = "dark",
 }: PitchOverProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -302,8 +304,15 @@ export function PitchOver({
   const vy = H - marginY;
   const hx = marginX;
   const hy = H - marginY - below;
-  const px = vx + (hx - vx) * move;
-  const py = vy + (hy - vy) * move + (1 - enter) * H * 0.05;
+  // Layout rounds a box and a baseline to whole pixels, so a block eased by
+  // `left`/`top` clicks along pixel by pixel. It is laid out where it lands
+  // and the travel is a transform. Upright it sat on layout's whole pixels,
+  // so the start of the travel is the same whole-pixel distance.
+  const dx = (Math.round(vx) - Math.round(hx)) * (1 - move);
+  const dy =
+    (Math.round(vy) - Math.round(hy)) * (1 - move) + (1 - enter) * H * 0.05;
+  const travelling = Math.abs(dx) > 1e-3 || Math.abs(dy) > 1e-3;
+  const moving = enter < 1 || (t > pitchAt && t < pitchAt + PITCH_LEN);
 
   const minors = majors * 5;
   const reach = g * rulerLen;
@@ -326,12 +335,12 @@ export function PitchOver({
         <div
           style={{
             position: "absolute",
-            left: px,
-            top: py,
+            left: hx,
+            top: hy,
             width: 0,
             height: 0,
             transformOrigin: "0 0",
-            transform: `rotate(${angle.toFixed(3)}deg) scale(${k.toFixed(4)})`,
+            transform: `${travelling ? `translate(${dx}px, ${dy}px) ` : ""}rotate(${angle.toFixed(3)}deg) scale(${k.toFixed(4)})${glide(moving)}`,
             opacity: enter,
           }}
         >

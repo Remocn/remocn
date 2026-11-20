@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: mono } = loadFont("normal", {
   weights: ["400"],
@@ -252,6 +253,7 @@ export function RasterPaint({
   theme = "dark",
   speed = 1,
 }: RasterPaintProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -348,10 +350,18 @@ export function RasterPaint({
   const labelK = EASE_OUT(
     interpolate(t, [labelAt, labelAt + 16], [0, 1], CLAMP),
   );
-  const cam = interpolate(t, [0, labelAt + 30], [1.03, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const camAt = (f: number) =>
+    interpolate(f, [0, labelAt + 30], [1.03, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const cam = camAt(t);
+  // The label rides the slow camera, which counts as moving while it still
+  // moves the frame's far edge by a thousandth of a pixel.
+  const reach = Math.hypot(W, H) / 2;
+  const camMoving =
+    Math.abs(camAt(t + speed) - cam) * reach > 1e-3 ||
+    Math.abs(cam - camAt(t - speed)) * reach > 1e-3;
   const tick = 6 * u;
 
   return (
@@ -363,7 +373,10 @@ export function RasterPaint({
       />
       <ScaleLayer scale={scale}>
         <AbsoluteFill
-          style={{ transform: `scale(${cam})`, transformOrigin: "50% 50%" }}
+          style={{
+            transform: `scale(${cam})${glide(camMoving)}`,
+            transformOrigin: "50% 50%",
+          }}
         >
           <svg
             width={W}

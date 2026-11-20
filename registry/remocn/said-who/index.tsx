@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const serif = loadFont("normal", { weights: ["400"], subsets: ["latin"] });
 
@@ -226,6 +227,8 @@ function useWidths(strings: string[], fontFamily: string) {
   return state && state.key === key ? state.w : null;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -257,6 +260,7 @@ export function SaidWho({
   speed = 1,
   theme = "dark",
 }: SaidWhoProps) {
+  const mark = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames: T } = useVideoConfig();
   const c = THEMES[theme];
@@ -361,13 +365,36 @@ export function SaidWho({
   const gapQA = Fq * 0.62;
   const qH = qLay.lines * qLineH;
   const scaleOf = (k: number) => 1 + STEP_SCALE * k;
-  const scale = scaleOf(from) + (scaleOf(cur) - scaleOf(from)) * glide;
   const aH = (k: number) => aLays[k].lines * aLineH;
-  const attrH = aH(from) + (aH(cur) - aH(from)) * glide;
-  const blockH = qH * scale + gapQA + attrH;
-  const blockTop = H / 2 - blockH / 2;
-  const qTop = blockTop + (qH * scale - qH) / 2;
-  const aTop = blockTop + qH * scale + gapQA;
+  const geometry = (g: number) => {
+    const scale = scaleOf(from) + (scaleOf(cur) - scaleOf(from)) * g;
+    const attrH = aH(from) + (aH(cur) - aH(from)) * g;
+    const blockH = qH * scale + gapQA + attrH;
+    const blockTop = H / 2 - blockH / 2;
+    return {
+      scale,
+      qTop: blockTop + (qH * scale - qH) / 2,
+      aTop: blockTop + qH * scale + gapQA,
+    };
+  };
+  // Layout rounds a box and a baseline to whole pixels, so a block re-centred
+  // through `top` clicks pixel by pixel. Layout holds the last state, where
+  // the scene comes to rest, for the whole scene, and every glide between
+  // states is a transform: a block handed from one layout to another jumps
+  // by the difference in rounding.
+  const { scale, qTop, aTop } = geometry(glide);
+  const rest = (() => {
+    const blockH = qH * scaleOf(m) + gapQA + aH(m);
+    const blockTop = H / 2 - blockH / 2;
+    return {
+      qTop: blockTop + (qH * scaleOf(m) - qH) / 2,
+      aTop: blockTop + qH * scaleOf(m) + gapQA,
+    };
+  })();
+  const settled = (v: number) => (Math.abs(v) < 1e-3 ? 0 : v);
+  const qShift = settled(qTop - rest.qTop);
+  const aShift = settled(aTop - rest.aTop);
+  const gliding = cur > 0 && midway(glide);
 
   const hotAt = m > 0 ? startOf(m) + TR * 0.7 : intro;
   const hot = interpolate(t, [hotAt, hotAt + 16], [0, 1], {
@@ -379,7 +406,7 @@ export function SaidWho({
     const p = qLay.pos[i];
     const lineW = qLay.widths[p.line];
     const x = W / 2 + (p.x - lineW / 2) * Fq;
-    const y = qTop + p.line * qLineH;
+    const y = rest.qTop + p.line * qLineH;
     const e = interpolate(t, [2 + i * stagger, 20 + i * stagger], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
@@ -398,7 +425,7 @@ export function SaidWho({
           letterSpacing: `${TRACK}em`,
           color: tk.hot ? interpolateColors(hot, [0, 1], [fg, hi]) : fg,
           opacity: e,
-          transform: `translateY(${((1 - e) * Fq * 0.3).toFixed(2)}px)`,
+          transform: `translateY(${((1 - e) * Fq * 0.3).toFixed(2)}px)${mark(midway(e))}`,
         }}
       >
         {tk.text}
@@ -422,28 +449,40 @@ export function SaidWho({
   const attrNodes: React.ReactNode[] = [];
   const nTo = visibleLen(cur);
   const nFrom = visibleLen(from);
-  const placed: { x: number; y: number }[] = [];
+  const placeAt = (g: number) => {
+    const placed: { x: number; y: number }[] = [];
+    for (let i = 0; i < nTo; i++) {
+      const b = aXY(cur, i);
+      if (i < nFrom) {
+        const a = aXY(from, i);
+        placed.push({ x: a.x + (b.x - a.x) * g, y: a.y + (b.y - a.y) * g });
+      } else if (attrToks[i].attach && i > 0) {
+        const prev = placed[i - 1];
+        placed.push({ x: prev.x + adv(attrToks[i - 1].text) * Fa, y: prev.y });
+      } else {
+        placed.push(b);
+      }
+    }
+    return placed;
+  };
+  // Words glide between line layouts the same way: laid out where they come
+  // to rest in the last state, moved by a transform.
+  const placed = placeAt(glide);
   for (let i = 0; i < nTo; i++) {
     const tk = attrToks[i];
-    const b = aXY(cur, i);
-    let x = b.x;
-    let y = b.y;
+    const { x, y } = aXY(m, i);
+    const dx = settled(placed[i].x - x);
+    const gy = settled(placed[i].y - y);
     let opacity = nameIn;
     let dy = (1 - nameIn) * Fa * 0.5;
+    let rising = midway(nameIn);
     if (i < nFrom) {
-      const a = aXY(from, i);
-      x = a.x + (b.x - a.x) * glide;
-      y = a.y + (b.y - a.y) * glide;
-      placed.push({ x, y });
+      // Already on screen: only the glide moves it.
     } else if (tk.attach && i > 0) {
-      const prev = placed[i - 1];
-      x = prev.x + adv(attrToks[i - 1].text) * Fa;
-      y = prev.y;
-      placed.push({ x, y });
       opacity = interpolate(lt, [TR * 0.4, TR * 0.4 + 10], [0, 1], CLAMP);
       dy = 0;
+      rising = false;
     } else {
-      placed.push({ x, y });
       const order = i - nFrom;
       const s = TR * 0.55 + order * 2;
       const v = interpolate(lt, [s, s + 16], [0, 1], {
@@ -452,6 +491,7 @@ export function SaidWho({
       });
       opacity = v;
       dy = (1 - v) * Fa * 0.6;
+      rising = midway(v);
     }
     const strong = groupOf[i] === m && m > 0 && tk.text !== ",";
     attrNodes.push(
@@ -468,7 +508,10 @@ export function SaidWho({
           letterSpacing: "-0.005em",
           color: fg,
           opacity: opacity * (strong ? 1 : 0.7),
-          transform: `translateY(${dy.toFixed(2)}px)`,
+          transform:
+            dx === 0 && gy === 0
+              ? `translateY(${dy.toFixed(2)}px)${mark(rising)}`
+              : `translate(${dx}px, ${gy + Number(dy.toFixed(2))}px)${mark(rising)}`,
         }}
       >
         {tk.text}
@@ -490,13 +533,21 @@ export function SaidWho({
           style={{
             position: "absolute",
             inset: 0,
-            transform: `scale(${scale.toFixed(4)})`,
-            transformOrigin: `${W / 2}px ${(qTop + qH / 2).toFixed(2)}px`,
+            transform: `translateY(${qShift}px) scale(${scale.toFixed(4)})${mark(gliding)}`,
+            transformOrigin: `${W / 2}px ${(rest.qTop + qH / 2).toFixed(2)}px`,
           }}
         >
           {quoteNodes}
         </div>
-        <div style={{ position: "absolute", left: 0, right: 0, top: aTop }}>
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: rest.aTop,
+            transform: `translateY(${aShift}px)${mark(gliding)}`,
+          }}
+        >
           {attrNodes}
         </div>
       </ScaleLayer>

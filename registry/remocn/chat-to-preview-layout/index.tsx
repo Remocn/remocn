@@ -202,6 +202,13 @@ export function ChatToPreviewLayout({
 
   const chatBasis = `${ratio * 100}%`;
   const previewBasis = `${(1 - ratio) * 100}%`;
+  // Layout rounds a box edge to whole pixels, so a preview pushed by the
+  // shrinking chat column clicks left pixel by pixel. A negative margin holds
+  // its layout where the morph ends and the push is a translate instead;
+  // `cqw` is a percent of the row, the unit flex-basis resolves against.
+  const push = ratio - endChatRatio;
+  const previewShift =
+    push === 0 ? `${previewTx}px` : `calc(${previewTx}px + ${push * 100}cqw)`;
 
   // Inner content min-widths. These are the lever that prevents text from
   // re-flowing inside the columns as the parent flex-basis morphs — content
@@ -219,6 +226,7 @@ export function ChatToPreviewLayout({
         padding: 32,
         display: "flex",
         gap: 16,
+        containerType: "inline-size",
       }}
     >
       <div
@@ -251,8 +259,9 @@ export function ChatToPreviewLayout({
           overflow: "hidden",
           borderRadius: 16,
           border: "1px solid rgba(255,255,255,0.08)",
+          marginLeft: push === 0 ? undefined : `${-push * 100}%`,
           opacity: previewOpacity,
-          translate: `${previewTx}px`,
+          translate: previewShift,
         }}
       >
         <div

@@ -9,6 +9,7 @@ import {
   useVideoConfig,
 } from "remotion";
 import { Caret } from "@/components/remocn/caret";
+import { useGlide } from "@/lib/remocn/glide";
 import { useTypewriter } from "@/lib/remocn-ui";
 
 const { fontFamily: SANS_FAMILY } = loadFont();
@@ -105,6 +106,11 @@ function fadeUpAt(
     translateY: interpolate(frame, range, [12, 0], opts),
   };
 }
+
+// The springs here have long tails, so motion is read off the neighbouring
+// frames of the value itself, in pixels.
+const moves = (at: (f: number) => number, f: number) =>
+  Math.abs(at(f + 1) - at(f)) > 1e-3 || Math.abs(at(f) - at(f - 1)) > 1e-3;
 
 function PlusIcon({ size, color }: { size: number; color: string }) {
   return (
@@ -285,6 +291,7 @@ export function ChatGpt({
   accentColor = "#2F6FED",
   speed = 1,
 }: ChatGptProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame();
   const { width, height, fps } = useVideoConfig();
   const t = THEMES.light;
@@ -316,6 +323,23 @@ export function ChatGpt({
   const chipsOpacity = chipsFade.opacity * (1 - morph);
   const chipsShift = chipsFade.translateY + 8 * morph;
 
+  const headingAt = (f: number) =>
+    fadeUpAt(f * speed, [4, 20]).translateY +
+    introBounceIn(f * speed, fps).translateY * 0.4;
+  const pillAt = (f: number) =>
+    fadeUpAt(f * speed, [10, 26]).translateY +
+    introBounceIn(f * speed, fps).translateY * 0.6;
+  // The pill's scale is weighed by its half width, the furthest its text
+  // sits from the origin.
+  const pillScaleAt = (f: number) =>
+    introBounceIn(f * speed, fps).scale * (pillWidth / 2);
+  const chipsAt = (f: number) =>
+    fadeUpAt(f * speed, [16, 32]).translateY +
+    8 * morphProgressAt(f, { fps, speed });
+  const headingMoving = moves(headingAt, frame);
+  const pillMoving = moves(pillAt, frame) || moves(pillScaleAt, frame);
+  const chipsMoving = moves(chipsAt, frame);
+
   return (
     <AbsoluteFill style={{ background: "transparent" }}>
       <div
@@ -341,7 +365,7 @@ export function ChatGpt({
             fontWeight: 700,
             color: t.fg,
             opacity: headingFade.opacity,
-            translate: `0 ${headingFade.translateY + intro.translateY * 0.4}px`,
+            transform: `translateY(${headingFade.translateY + intro.translateY * 0.4}px)${glide(headingMoving)}`,
           }}
         >
           {greeting}
@@ -359,8 +383,7 @@ export function ChatGpt({
             borderRadius: 32,
             boxShadow: "0 8px 30px -14px rgba(13,13,13,0.14)",
             opacity: pillFade.opacity,
-            translate: `0 ${pillFade.translateY + intro.translateY * 0.6}px`,
-            scale: `${intro.scale}`,
+            transform: `translateY(${pillFade.translateY + intro.translateY * 0.6}px) scale(${intro.scale})${glide(pillMoving)}`,
             transformOrigin: "center top",
             display: "flex",
             alignItems: "center",
@@ -491,7 +514,7 @@ export function ChatGpt({
             justifyContent: "center",
             gap: 12,
             opacity: chipsOpacity,
-            translate: `0 ${chipsShift}px`,
+            transform: `translateY(${chipsShift}px)${glide(chipsMoving)}`,
           }}
         >
           <SuggestionChip

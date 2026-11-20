@@ -1,6 +1,7 @@
 "use client";
 
 import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface MicroScaleFadeProps {
   text: string;
@@ -21,6 +22,7 @@ export function MicroScaleFade({
   speed = 1,
   className,
 }: MicroScaleFadeProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame() * speed;
   const easing = Easing.bezier(0.32, 0.72, 0, 1);
 
@@ -35,6 +37,7 @@ export function MicroScaleFade({
     extrapolateRight: "clamp",
     easing,
   });
+  const moving = frame > 0 && frame < 18 && scale !== 1;
 
   return (
     <div
@@ -59,7 +62,7 @@ export function MicroScaleFade({
           display: "inline-block",
           transformOrigin: "50% 50%",
           opacity,
-          scale: `${scale}`,
+          transform: `scale(${scale})${glide(moving)}`,
         }}
       >
         {text}

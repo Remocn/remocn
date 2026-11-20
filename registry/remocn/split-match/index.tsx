@@ -20,6 +20,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const bricolage = loadFont("normal", {
   weights: ["500"],
@@ -301,6 +302,7 @@ export function SplitMatch({
   theme = "dark",
   speed = 1,
 }: SplitMatchProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -340,16 +342,23 @@ export function SplitMatch({
     { ...CLAMP, easing: EASE_IO },
   );
   const edge = seam * (1 - merge);
-  const push = interpolate(
-    t,
-    [lastLock, lastLock + MERGE + TAIL + 10],
-    [0, 1],
-    {
+  const pushAt = (f: number) =>
+    1 +
+    interpolate(f, [lastLock, lastLock + MERGE + TAIL + 10], [0, 1], {
       ...CLAMP,
       easing: Easing.bezier(0.33, 0, 0.2, 1),
-    },
+    }) *
+      0.035;
+  const pushScale = pushAt(t);
+  // Weighed by the distance from the centre to the far end of a word.
+  const pushing = [t - speed, t + speed].some(
+    (f) => Math.abs(pushAt(f) - pushScale) * W * 0.5 > 1e-3,
   );
-  const pushScale = 1 + push * 0.035;
+  // The reels move the words by SVG attribute, which parks a glyph on whole
+  // pixels just like a transform does, so the same tilt rides them.
+  const reeling = [t - speed, t + speed].some(
+    (f) => Math.abs(reelAt(f, n, hold, step) - p) * pitch > 1e-3,
+  );
 
   const reel = (dir: 1 | -1, color: string, dim: number) => {
     const nodes: ReactNode[] = [];
@@ -425,7 +434,9 @@ export function SplitMatch({
           style={{
             position: "absolute",
             inset: 0,
-            transform: `scale(${pushScale})`,
+            // The panel inside overhangs the frame by 5%, so the tilt shows
+            // no seam at its edges.
+            transform: `scale(${pushScale})${glide(pushing || reeling)}`,
             transformOrigin: "50% 50%",
           }}
         >

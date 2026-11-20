@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -155,6 +156,7 @@ export function BeforeAfter({
   speed = 1,
   theme = "dark",
 }: BeforeAfterProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const p = THEMES[theme];
@@ -211,6 +213,13 @@ export function BeforeAfter({
   const grip = Math.min(1, gripIn) * (1 - gripOut);
 
   const divX = Math.max(0, Math.min(1, pos)) * frameW;
+  // Layout rounds box edges to whole pixels, so a divider swept by `left`
+  // clicks across pixel by pixel. Everything riding the divider is laid out
+  // where the current leg comes to rest and travels there by a transform.
+  const restX =
+    Math.max(0, Math.min(1, frame >= leg2At ? 0 : pauseAt)) * frameW;
+  const dx = divX - restX;
+  const slide = Math.abs(dx) < 1e-3 ? undefined : `translateX(${dx}px)`;
   const capsIn = interpolate(frame, [BEAT.leg1, BEAT.leg1 + 12], [0, 1], {
     ...CLAMP,
     easing: ENTER,
@@ -295,7 +304,9 @@ export function BeforeAfter({
                 letterSpacing: "-0.03em",
                 color: fg,
                 whiteSpace: "nowrap",
-                transform: `translateY(${(1 - titleT) * 105}%)`,
+                // The ease lands so softly that its last frames still move the
+                // line by thousandths of a pixel: tilt until it is exactly home.
+                transform: `translateY(${(1 - titleT) * 105}%)${glide(titleT > 0 && titleT < 1)}`,
               }}
             >
               {title}
@@ -340,8 +351,9 @@ export function BeforeAfter({
               position: "absolute",
               top: 0,
               bottom: 0,
-              left: divX - 1 * s,
+              left: restX - 1 * s,
               width: 2 * s,
+              transform: slide,
               background: "rgba(255,255,255,0.95)",
               boxShadow:
                 "0 0 0 0.5px rgba(0,0,0,0.12), 0 0 12px rgba(0,0,0,0.25)",
@@ -351,7 +363,7 @@ export function BeforeAfter({
           <div
             style={{
               position: "absolute",
-              left: divX - gripD / 2,
+              left: restX - gripD / 2,
               top: frameH / 2 - gripD / 2,
               width: gripD,
               height: gripD,
@@ -363,7 +375,7 @@ export function BeforeAfter({
               alignItems: "center",
               justifyContent: "center",
               opacity: grip,
-              transform: `scale(${(0.6 + 0.4 * gripIn) * pressed})`,
+              transform: `${slide ? `${slide} ` : ""}scale(${(0.6 + 0.4 * gripIn) * pressed})`,
             }}
           >
             <Chevrons size={gripD * 0.56} color="#2A2A30" />
@@ -394,13 +406,21 @@ export function BeforeAfter({
           <div
             style={{
               ...label,
-              right: frameW - divX + capGap * 0.9,
+              right: frameW - restX + capGap * 0.9,
               color: p.dim,
+              transform: slide,
             }}
           >
             {beforeLabel} <span style={tick(p.dim)} />
           </div>
-          <div style={{ ...label, left: divX + capGap * 0.9, color: fg }}>
+          <div
+            style={{
+              ...label,
+              left: restX + capGap * 0.9,
+              color: fg,
+              transform: slide,
+            }}
+          >
             <span style={tick(accent)} /> {afterLabel}
           </div>
         </div>

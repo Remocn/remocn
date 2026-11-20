@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -193,6 +194,7 @@ export function BorderBeam({
   ground,
   groundParams,
 }: BorderBeamProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -282,7 +284,7 @@ export function BorderBeam({
     return {
       opacity: p,
       filter: `blur(${(1 - p) * 6}px)`,
-      transform: `translateY(${(1 - p) * H * 0.02}px)`,
+      transform: `translateY(${(1 - p) * H * 0.02}px)${glide(p > 5e-4 && p < 1 - 5e-4)}`,
     };
   };
 

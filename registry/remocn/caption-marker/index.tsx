@@ -11,6 +11,7 @@ import {
   groupCaptionWords,
   useCaptions,
 } from "@/lib/remocn/caption-core";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface CaptionMarkerProps extends CaptionBaseProps {
   keywords?: string[];
@@ -28,6 +29,8 @@ const RADIUS_EM = 0.18;
 const TILT_DEG = -1;
 const BAND_TOP = "12%";
 const BAND_BOTTOM = "2%";
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const enterEasing = Easing.bezier(0.2, 0.8, 0.2, 1);
 const drawEasing = Easing.bezier(0.25, 1, 0.5, 1);
@@ -55,6 +58,7 @@ export function CaptionMarker({
   shadow = true,
   className,
 }: CaptionMarkerProps) {
+  const glide = useGlide();
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
@@ -92,7 +96,7 @@ export function CaptionMarker({
         lineHeight: 1.2,
         textAlign: "center",
         opacity: Math.min(enter, exit),
-        transform: `translateY(${(1 - enter) * RISE_EM}em)`,
+        transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
       }}
     >
       {groupCaptionWords(state.tokens).map((word, w) => {

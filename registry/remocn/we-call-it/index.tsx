@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const bitter = loadFont("normal", {
   weights: ["400", "500"],
@@ -51,6 +52,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const BODY_TRACK = -0.02;
 const NAME_TRACK = -0.04;
@@ -226,6 +229,7 @@ export function WeCallIt({
   speed = 1,
   theme = "dark",
 }: WeCallItProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames: T } = useVideoConfig();
   const c = THEMES[theme];
@@ -318,8 +322,8 @@ export function WeCallIt({
     return midY - stageH(i) / 2;
   };
 
-  const ease = (a: number, b: number, e = EASE_OUT) =>
-    interpolate(t, [a, b], [0, 1], { ...CLAMP, easing: e });
+  const ease = (a: number, b: number, e = EASE_OUT, at = t) =>
+    interpolate(at, [a, b], [0, 1], { ...CLAMP, easing: e });
 
   const lineStyle = (size: number, lh: number) => ({
     height: lh,
@@ -344,8 +348,29 @@ export function WeCallIt({
           const m = a + HOLD;
           const mv = ease(m, m + MOVE, EASE_IO);
           const left = mx;
-          const top = stageTopOf(i) + (kickTops[i] - stageTopOf(i)) * mv;
+          // Layout rounds a baseline to whole pixels, so a description eased
+          // up by `top` clicks along, and one handed from a translate to
+          // layout jumps by the rounding. Layout holds it at the kicker slot
+          // all its life and the travel is a translate that ends at 0.
+          const top = kickTops[i];
+          const lift = (stageTopOf(i) - kickTops[i]) * (1 - mv);
           const shrink = 1 + (s - 1) * mv;
+          // The fold eases in and out, so its tail is read from the
+          // neighbouring frames, on the px it travels and on the far end of
+          // the widest line as it shrinks.
+          const foldAt = (tt: number) => {
+            const q = ease(m, m + MOVE, EASE_IO, tt);
+            return [(kickTops[i] - stageTopOf(i)) * q, (s - 1) * q * stageW];
+          };
+          const step = speed / pace;
+          const [y0, w0] = foldAt(t - step);
+          const [y1, w1] = foldAt(t);
+          const [y2, w2] = foldAt(t + step);
+          const moving =
+            Math.abs(y2 - y1) > 1e-3 ||
+            Math.abs(y1 - y0) > 1e-3 ||
+            Math.abs(w2 - w1) > 1e-3 ||
+            Math.abs(w1 - w0) > 1e-3;
           let wi = 0;
           return (
             <div
@@ -354,7 +379,9 @@ export function WeCallIt({
                 position: "absolute",
                 left,
                 top,
-                transform: `scale(${shrink.toFixed(4)})`,
+                // Rounded to 4 places the shrink steps a whole pixel across a
+                // line, so the rounding waits for the move to end.
+                transform: `translateY(${lift}px) scale(${moving ? shrink : shrink.toFixed(4)})${glide(moving)}`,
                 transformOrigin: "0 0",
                 opacity: 1 - (1 - KICK_DIM) * mv,
                 letterSpacing: `${BODY_TRACK}em`,
@@ -375,7 +402,7 @@ export function WeCallIt({
                           display: "inline-block",
                           whiteSpace: "pre",
                           opacity: p,
-                          transform: `translateY(${((1 - p) * Fb * 0.32).toFixed(2)}px)`,
+                          transform: `translateY(${((1 - p) * Fb * 0.32).toFixed(2)}px)${glide(midway(p))}`,
                         }}
                       >
                         {k < row.length - 1 ? `${word} ` : word}
@@ -398,7 +425,7 @@ export function WeCallIt({
               letterSpacing: `${BODY_TRACK}em`,
               color: hi,
               opacity: ease(leadAt, leadAt + 14),
-              transform: `translateY(${((1 - ease(leadAt, leadAt + 14)) * Fk * 0.5).toFixed(2)}px)`,
+              transform: `translateY(${((1 - ease(leadAt, leadAt + 14)) * Fk * 0.5).toFixed(2)}px)${glide(midway(ease(leadAt, leadAt + 14)))}`,
             }}
           >
             {lead.trim()}
@@ -432,7 +459,7 @@ export function WeCallIt({
                 fontWeight: 500,
                 letterSpacing: `${NAME_TRACK}em`,
                 color: hi,
-                transform: `translateY(${((1 - p) * (H - boxTop)).toFixed(2)}px)`,
+                transform: `translateY(${((1 - p) * (H - boxTop)).toFixed(2)}px)${glide(midway(p))}`,
               }}
             >
               {row.join(" ")}

@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const familjen = loadFamiljen("normal", {
   weights: ["400", "500"],
@@ -126,6 +127,13 @@ function useMetrics(label: string, fontFamily: string) {
   return state && state.key === `${fontFamily}|${label}` ? state.m : null;
 }
 
+// Chrome parks a glyph raster on a whole pixel vertically for as long as the
+// matrix is axis-aligned, so text under a slow transform (or SVG text moved by
+// its `y`) clicks along pixel by pixel. A tilt too small to see takes it off
+// that grid while it moves. SVG text can't carry the mark itself, so the
+// drawing does.
+const midway = (p: number) => p > 0 && p < 1;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -160,6 +168,7 @@ export function StripeCount({
   speed = 1,
   theme = "dark",
 }: StripeCountProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -208,14 +217,18 @@ export function StripeCount({
   const baseY = H - pad;
   const right = W - pad;
 
-  const rise = interpolate(t, [RISE_AT, RISE_AT + RISE_LEN], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
   const top = baseY - figH - F * 0.06;
   const bottom = Math.min(H, baseY + F * 0.16);
   const bandClipH = bottom - top;
-  const dy = (1 - rise) * bandClipH;
+  const dyAt = (f: number) =>
+    (1 -
+      interpolate(f, [RISE_AT, RISE_AT + RISE_LEN], [0, 1], {
+        ...CLAMP,
+        easing: EASE_OUT,
+      })) *
+    bandClipH;
+  const dy = dyAt(t);
+  const rising = [t - speed, t + speed].some((f) => dyAt(f) !== dy);
 
   const n = Math.max(4, Math.round(stripes));
   const pitch = (figH + F * 0.06) / n;
@@ -266,7 +279,7 @@ export function StripeCount({
         <svg
           width={W}
           height={H}
-          style={{ position: "absolute", inset: 0 }}
+          style={{ position: "absolute", inset: 0, transform: glide(rising) }}
           aria-hidden
         >
           <defs>
@@ -353,7 +366,7 @@ export function StripeCount({
                   style={{
                     display: "inline-block",
                     opacity: q,
-                    transform: `translateY(${((1 - q) * labelFs * 0.7).toFixed(2)}px)`,
+                    transform: `translateY(${((1 - q) * labelFs * 0.7).toFixed(2)}px)${glide(midway(q))}`,
                   }}
                 >
                   {w}

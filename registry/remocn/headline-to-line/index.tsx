@@ -19,6 +19,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -94,6 +95,7 @@ const BEAT = {
 const ENTER = Easing.bezier(0.22, 1, 0.36, 1);
 const LIGHT_IN = Easing.bezier(0.32, 0.72, 0, 1);
 const CAMERA = Easing.bezier(0.87, 0, 0.13, 1);
+
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -213,6 +215,7 @@ export function HeadlineToLine({
   ground,
   groundParams,
 }: HeadlineToLineProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -395,7 +398,7 @@ export function HeadlineToLine({
         fontWeight: 300,
         letterSpacing: `${TRACK_BIG + (TRACK_SMALL - TRACK_BIG) * p}em`,
         color,
-        transform: `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) translate(-50%, -50%) scale(${k.toFixed(5)})`,
+        transform: `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) translate(-50%, -50%) scale(${k.toFixed(5)})${glide(p > 5e-4 && p < 1 - 5e-4)}`,
         clipPath: "inset(-80% -30% -0.26em -30%)",
       };
       return (
@@ -479,7 +482,9 @@ export function HeadlineToLine({
         style={{
           position: "absolute",
           inset: 0,
-          transform: `scale(${push.toFixed(5)})`,
+          // The push never rests, so it marks every word and line inside it
+          // as moving from its first moving frame on.
+          transform: `scale(${push.toFixed(5)})${glide(push > 1 && push < 1.03)}`,
         }}
       >
         {wordNodes}

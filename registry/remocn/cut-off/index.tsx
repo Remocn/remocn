@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const syne = loadFont("normal", {
   weights: ["400", "500"],
@@ -159,6 +160,8 @@ function wrap(
 const bare = (w: string) =>
   w.toLowerCase().replace(/^[“"'‘(]+|[.,!?;:…”"'’)—–]+$/g, "");
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -190,6 +193,7 @@ export function CutOff({
   speed = 1,
   theme = "dark",
 }: CutOffProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -323,7 +327,8 @@ export function CutOff({
               top: aTop + li * LH_A * fA,
               color: fg,
               opacity: p,
-              transform: `translateY(${((1 - p) * fA * 0.35).toFixed(2)}px)`,
+              // Unrounded: a rise rounded to 0.01px parks the word as well.
+              transform: `translateY(${(1 - p) * fA * 0.35}px)${glide(midway(p))}`,
             }}
           >
             {content}
@@ -365,7 +370,8 @@ export function CutOff({
                 position: "relative",
                 top: fB * 0.1,
                 color: hlFlags[i] ? hi : c.replyInk,
-                transform: `translateY(${((1 - p) * fB * 0.22).toFixed(2)}px) scale(${(1 + (1 - p) * 0.05).toFixed(4)})`,
+                // The hit overshoots past 1, so the tilt follows its window.
+                transform: `translateY(${(1 - p) * fB * 0.22}px) scale(${(1 + (1 - p) * 0.05).toFixed(4)})${glide(t < at + HIT)}`,
                 transformOrigin: "0% 100%",
               }}
             >

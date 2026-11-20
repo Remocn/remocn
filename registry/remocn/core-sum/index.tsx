@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const saira = loadSaira("normal", {
   weights: ["400", "500"],
@@ -190,6 +191,7 @@ export function CoreSum({
   speed = 1,
   theme = "dark",
 }: CoreSumProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -268,6 +270,11 @@ export function CoreSum({
     { ...CLAMP, easing: EASE_IO },
   );
 
+  const topOf = (cy: number, F: number) => cy - m.base * F + (m.cap * F) / 2;
+  // Layout rounds a baseline to whole pixels, so a number eased by `top` and
+  // `fontSize` clicks along pixel by pixel. A number is laid out at `rest`,
+  // where it settles, and carried to the live place and size by a transform
+  // all its life: a hand-over to plain layout would jump by the rounding.
   const glyphs = (
     s: string,
     x: number,
@@ -275,28 +282,38 @@ export function CoreSum({
     F: number,
     key: string,
     style: React.CSSProperties,
-  ) => (
-    <div
-      key={key}
-      style={{
-        position: "absolute",
-        left: x,
-        top: cy - m.base * F + (m.cap * F) / 2,
-        height: F,
-        fontFamily,
-        fontWeight: 500,
-        fontSize: F,
-        lineHeight: `${F}px`,
-        letterSpacing: `${TRACK}em`,
-        fontFeatureSettings: '"tnum" 1, "lnum" 1',
-        fontKerning: "none",
-        whiteSpace: "pre",
-        ...style,
-      }}
-    >
-      {s}
-    </div>
-  );
+    rest: { cy: number; F: number },
+    moving: boolean,
+  ) => {
+    // Exactly the identity where it settles, whatever the float leftovers.
+    const rawDy = topOf(cy, F) - topOf(rest.cy, rest.F);
+    const dy = Math.abs(rawDy) < 1e-9 ? 0 : rawDy;
+    const k = Math.abs(F / rest.F - 1) < 1e-12 ? 1 : F / rest.F;
+    return (
+      <div
+        key={key}
+        style={{
+          position: "absolute",
+          left: x,
+          top: topOf(rest.cy, rest.F),
+          height: rest.F,
+          fontFamily,
+          fontWeight: 500,
+          fontSize: rest.F,
+          lineHeight: `${rest.F}px`,
+          letterSpacing: `${TRACK}em`,
+          fontFeatureSettings: '"tnum" 1, "lnum" 1',
+          fontKerning: "none",
+          whiteSpace: "pre",
+          transform: `translateY(${dy}px) scale(${k})${glide(moving)}`,
+          transformOrigin: "0 0",
+          ...style,
+        }}
+      >
+        {s}
+      </div>
+    );
+  };
 
   const rowLabel = (l: number, i: number) => {
     if (l === levels) return label;
@@ -375,6 +392,8 @@ export function CoreSum({
             F,
             "g",
             { color: c.small },
+            { cy: capH / 2 + F * 0.1, F },
+            rise > 0 && rise < 1,
           )}
         </div>,
       );
@@ -396,7 +415,13 @@ export function CoreSum({
       const by = byStart + (ay - byStart) * p;
       const capH = m.cap * F;
       const edge = ay + capH / 2 + F * 0.32;
+      const moving = p > 0 && p < 1;
+      const ay1 = rowY(l, i);
       if (p < 1) {
+        // The clip's edge rides the same way: laid out where it starts and
+        // carried by a transform.
+        const ay0 = rowY(l - 1, 2 * i);
+        const edge0 = ay0 + (m.cap * F0) / 2 + F0 * 0.32;
         nodes.push(
           <div
             key={`b${l}-${i}`}
@@ -404,25 +429,47 @@ export function CoreSum({
               position: "absolute",
               overflow: "hidden",
               left: 0,
-              top: edge,
+              top: edge0,
               width: W,
-              height: Math.max(0, H - edge),
+              height: Math.max(0, H - edge0),
               opacity: interpolate(p, [0.3, 0.6], [1, 0], CLAMP),
+              transform: `translateY(${edge - edge0}px)`,
             }}
           >
-            {glyphs(str(vb), valX, by - edge, F, "g", { color })}
+            {glyphs(
+              str(vb),
+              valX,
+              by - edge,
+              F,
+              "g",
+              { color },
+              { cy: byStart - edge0, F: F0 },
+              moving,
+            )}
           </div>,
         );
       }
+      const restA = { cy: ay1, F: F1 };
       const sa = str(va + vb * p);
       if (isFinal) {
         nodes.push(
-          glyphs(sa, valX, ay, F, `a${l}-${i}`, {
-            color: `color-mix(in oklab, ${hue} ${(fillP * 100).toFixed(1)}%, ${fg})`,
-          }),
+          glyphs(
+            sa,
+            valX,
+            ay,
+            F,
+            `a${l}-${i}`,
+            {
+              color: `color-mix(in oklab, ${hue} ${(fillP * 100).toFixed(1)}%, ${fg})`,
+            },
+            restA,
+            moving,
+          ),
         );
       } else {
-        nodes.push(glyphs(sa, valX, ay, F, `a${l}-${i}`, { color }));
+        nodes.push(
+          glyphs(sa, valX, ay, F, `a${l}-${i}`, { color }, restA, moving),
+        );
       }
       pushLabel(
         l - 1,

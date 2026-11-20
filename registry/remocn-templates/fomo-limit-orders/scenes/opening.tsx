@@ -1,8 +1,9 @@
 import type { SceneProps } from "../content";
-import { ramp, tween } from "../motion";
+import { midway, ramp, tween, useGlide } from "../motion";
 import { Layer } from "../ui";
 
 export function Opening({ t, content }: SceneProps) {
+  const glide = useGlide();
   const text =
     t < 0.7 ? content.intro : t < 1.9 ? content.feature : content.audience;
   const start = t < 0.7 ? 0 : t < 1.9 ? 0.7 : 1.9;
@@ -56,7 +57,7 @@ export function Opening({ t, content }: SceneProps) {
               style={{
                 opacity: enter,
                 filter: `blur(${(1 - enter) * 5}px)`,
-                transform: `translateY(${(1 - enter) * 9}px)`,
+                transform: `translateY(${(1 - enter) * 9}px)${glide(midway(enter))}`,
               }}
             >
               {word}

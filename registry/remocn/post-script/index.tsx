@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const lexend = loadFont("normal", {
   weights: ["300", "400", "500"],
@@ -56,6 +57,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 interface Spec {
   text: string;
@@ -185,6 +188,7 @@ export function PostScript({
   speed = 1,
   theme = "dark",
 }: PostScriptProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const Tt = (durationInFrames - delay) * speed;
@@ -290,6 +294,10 @@ export function PostScript({
   const soDim = lerp(1, 0.7);
   const psTop = lerp(psTopA, psTopB);
   const psScale = lerp(L.sA, 1);
+  const flipping = midway(p);
+  // Rounding the flip to 4 places steps the scale by whole pixels across the
+  // frame, so it is dropped while the flip runs; resting frames keep it.
+  const fix = (v: number, d: number) => (flipping ? `${v}` : v.toFixed(d));
 
   const rise = (start: number, dur = 18) =>
     interpolate(t, [start, start + dur], [0, 1], {
@@ -326,7 +334,7 @@ export function PostScript({
               style={{
                 display: "inline-block",
                 opacity: e,
-                transform: `translateY(${((1 - e) * fB * 0.32).toFixed(2)}px)`,
+                transform: `translateY(${((1 - e) * fB * 0.32).toFixed(2)}px)${glide(midway(e))}`,
               }}
             >
               {word}
@@ -399,7 +407,7 @@ export function PostScript({
             top: 0,
             width: W,
             height: L.blockH,
-            transform: `translateY(${soTop.toFixed(2)}px) scale(${soScale.toFixed(4)})`,
+            transform: `translateY(${fix(soTop, 2)}px) scale(${fix(soScale, 4)})${glide(flipping)}`,
             transformOrigin: `${W / 2}px 0px`,
             opacity: soDim,
           }}
@@ -421,7 +429,7 @@ export function PostScript({
                 letterSpacing: `${SMALL_TRACK}em`,
                 color: fg,
                 opacity: sigE,
-                transform: `translateY(${((1 - sigE) * fS * 0.5).toFixed(2)}px)`,
+                transform: `translateY(${((1 - sigE) * fS * 0.5).toFixed(2)}px)${glide(midway(sigE))}`,
               }}
             >
               {signature}
@@ -435,7 +443,7 @@ export function PostScript({
             top: 0,
             width: W,
             height: L.psH,
-            transform: `translateY(${(psTop + (1 - psE) * fS * 0.6).toFixed(2)}px) scale(${psScale.toFixed(4)})`,
+            transform: `translateY(${fix(psTop + (1 - psE) * fS * 0.6, 2)}px) scale(${fix(psScale, 4)})${glide(flipping || midway(psE))}`,
             transformOrigin: `${W / 2}px 0px`,
             opacity: psE,
           }}

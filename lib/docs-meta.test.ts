@@ -17,6 +17,7 @@ const UNDOCUMENTED: Record<string, string> = {
   "scene-motion": "shared motion vocabulary lib",
   "canvas-presentation": "shared html-in-canvas scaffolding lib",
   "caption-core": "shared caption paging and timing lib",
+  glide: "shared lib that keeps moving text off the pixel grid",
   brush: "ribbon primitive consumed by the ink marks, not used on its own",
   "select-item": "folds into the select page",
   "dropdown-menu-item": "folds into the dropdown-menu page",

@@ -1,9 +1,10 @@
 import { Img } from "remotion";
 import type { SceneProps } from "../content";
-import { deskCamera, getShowcase, tween } from "../motion";
+import { deskCamera, getShowcase, tween, useGlide } from "../motion";
 import { ShowcaseScreen } from "../screens";
 
 export function Showcase({ scene, t }: SceneProps) {
+  const glide = useGlide();
   const camera = deskCamera(t);
   const custom = scene.screenImages[getShowcase(t).id];
   return (
@@ -81,6 +82,10 @@ export function Showcase({ scene, t }: SceneProps) {
             clipPath: "polygon(0.8% 0, 99.2% 0, 100% 100%, 0 100%)",
             overflow: "hidden",
             background: "#fcfaf7",
+            // The camera's slow push-in is what moves the interface type. The
+            // tilt sits here and not on the camera layer, which paints the
+            // desk to the frame's edges and would show a seam there.
+            transform: glide(camera.moving) || undefined,
           }}
         >
           {custom ? (

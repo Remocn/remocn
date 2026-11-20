@@ -9,6 +9,7 @@ import {
   groupCaptionWords,
   useCaptions,
 } from "@/lib/remocn/caption-core";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface CaptionBounceInProps extends CaptionBaseProps {
   bounce?: number;
@@ -33,6 +34,7 @@ export function CaptionBounceIn({
   shadow = true,
   className,
 }: CaptionBounceInProps) {
+  const glide = useGlide();
   const { fps } = useVideoConfig();
   const state = useCaptions({
     captions,
@@ -76,13 +78,20 @@ export function CaptionBounceIn({
             {word.map(({ index, token }) => {
               const sinceMs = state.timeMs - token.fromMs;
               const arrived = sinceMs >= 0;
-              const p = arrived
-                ? spring({
-                    frame: (sinceMs / 1000) * fps,
-                    fps,
-                    config: { damping, stiffness: 220, mass: 0.6 },
-                  })
-                : 0;
+              const at = (df: number) =>
+                spring({
+                  frame: (sinceMs / 1000) * fps + df,
+                  fps,
+                  config: { damping, stiffness: 220, mass: 0.6 },
+                });
+              const p = arrived ? at(0) : 0;
+              // The spring overshoots and has a long tail, so "moving" is
+              // judged on the drop in px against the neighbouring frames.
+              const reach = DROP_EM * fontSize;
+              const moving =
+                arrived &&
+                (Math.abs(at(1) - p) * reach > 1e-3 ||
+                  Math.abs(p - at(-1)) * reach > 1e-3);
               const opacity = arrived
                 ? interpolate(sinceMs, [0, FADE_IN_MS], [0, 1], {
                     extrapolateLeft: "clamp",
@@ -97,7 +106,7 @@ export function CaptionBounceIn({
                     opacity,
                     transform: `translateY(${(1 - p) * DROP_EM}em) scale(${
                       START_SCALE + (1 - START_SCALE) * p
-                    })`,
+                    })${glide(moving)}`,
                     transformOrigin: "50% 80%",
                     textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
                   }}

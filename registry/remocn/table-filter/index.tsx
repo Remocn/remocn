@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -195,6 +196,8 @@ const clamp = (v: number, lo: number, hi: number) =>
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const CL = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function withAlpha(color: string, alpha: number) {
   const hex = color.replace("#", "");
   const full = hex.length === 3 ? hex.replace(/(.)/g, "$1$1") : hex;
@@ -236,7 +239,20 @@ function pathAt(keys: Key[], f: number): Pt {
   return keys[keys.length - 1];
 }
 
-function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
+// Laid out where the pointer ends up and carried there by a transform:
+// layout rounds the box to whole pixels, so a pointer eased by `left`/`top`
+// steps over them on its slow approaches.
+function Cursor({
+  x,
+  y,
+  rest,
+  press,
+}: {
+  x: number;
+  y: number;
+  rest: Pt;
+  press: number;
+}) {
   return (
     <svg
       width={22}
@@ -244,10 +260,10 @@ function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
       viewBox="0 0 20 24"
       style={{
         position: "absolute",
-        left: x - 2,
-        top: y - 2,
+        left: rest.x - 2,
+        top: rest.y - 2,
         transformOrigin: "2px 2px",
-        transform: `scale(${1 - 0.04 * press})`,
+        transform: `translate(${x - rest.x}px, ${y - rest.y}px) scale(${1 - 0.04 * press})`,
         filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.28))",
         overflow: "visible",
       }}
@@ -771,6 +787,7 @@ export function TableFilter({
   ground,
   groundParams,
 }: TableFilterProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const u = Math.min(W / 1280, H / 720);
@@ -781,6 +798,11 @@ export function TableFilter({
     config: { mass?: number; damping: number; stiffness?: number } = CARD,
     durationInFrames?: number,
   ) => spring({ frame: f, fps, config, durationInFrames });
+  // The springs here overshoot and several drivers share one element, so
+  // "is it moving" is read off the neighbouring frames, not off a progress.
+  const moves = (at: (f: number) => number) =>
+    Math.abs(at(frame + 1) - at(frame)) > 1e-5 ||
+    Math.abs(at(frame) - at(frame - 1)) > 1e-5;
 
   const matchIdx = rows
     .map((r, i) => (r.stage === filterValue ? i : -1))
@@ -843,11 +865,14 @@ export function TableFilter({
   );
   const cursorIn = interpolate(frame, [20, 28], [0, 1], CL);
 
-  const enter = sp(frame, HEAVY);
-  const popOpen = sp(frame - (T.filterClick + 1), CARD);
-  const popClose = tween(frame, T.optionClick + 2, T.optionClick + 6, EXIT);
-  const pop = popOpen * (1 - popClose);
-  const chip = sp(frame - (T.optionClick + 4), CHIP);
+  const enterAt = (f: number) => sp(f, HEAVY);
+  const enter = enterAt(frame);
+  const popAt = (f: number) =>
+    sp(f - (T.filterClick + 1), CARD) *
+    (1 - tween(f, T.optionClick + 2, T.optionClick + 6, EXIT));
+  const pop = popAt(frame);
+  const chipAt = (f: number) => sp(f - (T.optionClick + 4), CHIP);
+  const chip = chipAt(frame);
   const sortOn = frame >= T.sortClick + 1;
   const sortArrow = tween(frame, T.sortClick + 1, T.sortClick + 7);
   const filtered = frame >= T.collapse;
@@ -863,8 +888,9 @@ export function TableFilter({
     const at = T.collapse + nonMatch++ * 0.6;
     return tween(frame, at, at + 4);
   });
+  const collapseAt = (f: number) => sp(f - (T.collapse + 2), MORPH, 9);
   const collapse = rows.map((_, i) =>
-    matchIdx.includes(i) ? 0 : sp(frame - (T.collapse + 2), MORPH, 9),
+    matchIdx.includes(i) ? 0 : collapseAt(frame),
   );
   const ys: number[] = [];
   let acc = 0;
@@ -872,7 +898,9 @@ export function TableFilter({
     ys.push(acc);
     acc += ROW_H * (1 - collapse[i]);
   });
-  const flipT = sp(frame - T.flip, MORPH, FLIP_LEN + 3);
+  const flipAt = (f: number) => sp(f - T.flip, MORPH, FLIP_LEN + 3);
+  const flipT = flipAt(frame);
+  const reflowing = moves(collapseAt) || moves(flipAt);
   const flipArc = Math.sin(flipT * Math.PI);
   const rowY = rows.map((_, i) => {
     const s = sorted.indexOf(i);
@@ -888,7 +916,8 @@ export function TableFilter({
     return tween(frame, T.check[s], T.check[s] + 6);
   });
   const selected = T.check.filter((t) => frame >= t + 1).length;
-  const bar = sp(frame - (barStart + 2), CARD);
+  const barAt = (f: number) => sp(f - (barStart + 2), CARD);
+  const bar = barAt(frame);
   const selIn = tween(
     frame,
     (T.check[selected - 1] ?? 0) + 1,
@@ -899,12 +928,25 @@ export function TableFilter({
   const sortW = lerp(SORT_BTN.w, 134, sortArrow);
   const filterX = SORT_BTN.x + sortW + 8;
 
-  const camT = interpolate(
-    frame,
-    [T.collapse, T.check[0] ?? T.collapse + 60],
-    [0, 1],
-    { ...CL, easing: CAMERA },
-  );
+  const camAt = (f: number) =>
+    interpolate(f, [T.collapse, T.check[0] ?? T.collapse + 60], [0, 1], {
+      ...CL,
+      easing: CAMERA,
+    });
+  const camT = camAt(frame);
+  // One tilt in a chain is enough, so while the camera moves it carries the
+  // only one and the parts inside add none of their own.
+  const camMoving = moves(camAt) || moves(enterAt);
+  const part = (moving: boolean) => glide(moving && !camMoving);
+  // Rows and the footer are laid out where they come to rest and ride there
+  // on a transform: layout rounds a box and a baseline to whole pixels, so a
+  // row eased by `top` clicks along pixel by pixel. Rows that match end up
+  // sorted; the rest only ever show in their first slot.
+  const rowRest = (i: number) => {
+    const s = sorted.indexOf(i);
+    return (s < 0 ? i : s) * ROW_H;
+  };
+  const footRest = BODY_Y + matchIdx.length * ROW_H;
 
   const btn = (x: number, w: number, label: React.ReactNode, active = 0) => (
     <div
@@ -973,7 +1015,7 @@ export function TableFilter({
               top: H * 0.08,
               color: pal.text,
               opacity: readIn,
-              transform: `translateY(${(1 - readIn) * 30}px)`,
+              transform: `translateY(${(1 - readIn) * 30}px)${glide(midway(readIn))}`,
             }}
           >
             <div
@@ -1018,7 +1060,7 @@ export function TableFilter({
               position: "absolute",
               inset: 0,
               transformOrigin: `${MX + 400}px ${HEAD_Y}px`,
-              transform: `scale(${1 + 0.07 * camT}) translateY(${(1 - enter) * 34}px)`,
+              transform: `scale(${1 + 0.07 * camT}) translateY(${(1 - enter) * 34}px)${glide(camMoving)}`,
               opacity: clamp(enter * 1.6, 0, 1),
             }}
           >
@@ -1164,7 +1206,7 @@ export function TableFilter({
                   fontSize: 14,
                   color: pal.text,
                   transformOrigin: "0 50%",
-                  transform: `translateX(${(1 - chip) * -6}px) scale(${0.96 + 0.04 * chip})`,
+                  transform: `translateX(${(1 - chip) * -6}px) scale(${0.96 + 0.04 * chip})${part(moves(chipAt))}`,
                   opacity: chip,
                   whiteSpace: "nowrap",
                 }}
@@ -1256,7 +1298,9 @@ export function TableFilter({
               }}
             >
               {rows.map((r, i) => {
-                const a = sp(frame - (10 + i * 2.5), CARD);
+                const aAt = (f: number) => sp(f - (10 + i * 2.5), CARD);
+                const a = aAt(frame);
+                const top = rowY[i] + (1 - a) * 12;
                 const lift = climb[i] > 0 ? flipArc : 0;
                 const sink = climb[i] < 0 ? flipArc : 0;
                 return (
@@ -1266,7 +1310,8 @@ export function TableFilter({
                       position: "absolute",
                       left: 0,
                       right: 0,
-                      top: rowY[i] + (1 - a) * 12,
+                      top: rowRest(i),
+                      transform: `translateY(${top - rowRest(i)}px)${part(reflowing || moves(aAt))}`,
                       height: ROW_H * (1 - collapse[i]),
                       overflow: "hidden",
                       opacity:
@@ -1295,7 +1340,8 @@ export function TableFilter({
               style={{
                 position: "absolute",
                 left: MX,
-                top: tableBottom + (1 - enter) * 12,
+                top: footRest,
+                transform: `translateY(${tableBottom + (1 - enter) * 12 - footRest}px)${part(moves(collapseAt))}`,
                 width: WIN.w - SIDEBAR,
                 height: 36,
                 display: "flex",
@@ -1368,7 +1414,7 @@ export function TableFilter({
                     ? "0 0 0 1px rgba(255,255,255,0.1), 0 16px 40px rgba(0,0,0,0.55)"
                     : "0 0 0 1px rgba(17,19,24,0.08), 0 12px 32px -4px rgba(17,19,24,0.14), 0 2px 6px rgba(17,19,24,0.05)",
                   transformOrigin: "48px 0",
-                  transform: `scale(${0.96 + 0.04 * pop}) translateY(${(1 - pop) * -4}px)`,
+                  transform: `scale(${0.96 + 0.04 * pop}) translateY(${(1 - pop) * -4}px)${part(moves(popAt))}`,
                   opacity: clamp(pop * 1.4, 0, 1),
                   zIndex: 30,
                 }}
@@ -1464,7 +1510,7 @@ export function TableFilter({
                 style={{
                   position: "absolute",
                   left: barX,
-                  top: BAR.y + (1 - bar) * 24,
+                  top: BAR.y,
                   width: BAR.w,
                   height: BAR.h,
                   borderRadius: 12,
@@ -1472,7 +1518,8 @@ export function TableFilter({
                   boxShadow: pal.dark
                     ? "0 0 0 1px rgba(255,255,255,0.1), 0 16px 40px rgba(0,0,0,0.5)"
                     : "0 0 0 1px rgba(10,12,18,0.9), 0 16px 36px -6px rgba(10,12,18,0.32), 0 4px 10px rgba(10,12,18,0.12)",
-                  transform: `scale(${0.97 + 0.03 * clamp(bar, 0, 1)})`,
+                  // The rise is a transform for the same reason as the rows.
+                  transform: `translateY(${(1 - bar) * 24}px) scale(${0.97 + 0.03 * clamp(bar, 0, 1)})${part(moves(barAt))}`,
                   display: "flex",
                   alignItems: "center",
                   padding: "0 6px 0 14px",
@@ -1578,7 +1625,7 @@ export function TableFilter({
                 zIndex: 50,
               }}
             >
-              <Cursor x={cur.x} y={cur.y} press={press} />
+              <Cursor x={cur.x} y={cur.y} rest={actionPt} press={press} />
             </div>
           </div>
         </div>

@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -149,6 +150,7 @@ const LABEL = 15;
 const FIELD_TEXT = 15;
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
 function alpha(hex: string, a: number) {
@@ -574,9 +576,12 @@ function Cursor({
     <div
       style={{
         position: "absolute",
-        left: x,
-        top: y,
-        transform: `scale(${s})`,
+        // The pointer travels by transform, not `left`/`top`: layout rounds a
+        // box to whole pixels, so a cursor eased by layout clicks along its
+        // path pixel by pixel.
+        left: 0,
+        top: 0,
+        transform: `translate(${x}px, ${y}px) scale(${s})`,
         transformOrigin: "0 0",
         filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.25))",
       }}
@@ -652,6 +657,7 @@ export function GraphRelayout({
   ground,
   groundParams,
 }: GraphRelayoutProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const uid = useId().replace(/:/g, "");
@@ -664,7 +670,7 @@ export function GraphRelayout({
   const u = Math.min(W, H) / 720;
   const k = tall ? 1.42 * u : 1.34 * u;
   const labelU = tall ? 17 : LABEL;
-  const { starts } = graphRelayoutTimeline(layouts.length, hold);
+  const { starts, end } = graphRelayoutTimeline(layouts.length, hold);
 
   const rect = tall
     ? { x: 0.1 * W, y: 0.27 * H, w: 0.8 * W, h: 0.65 * H }
@@ -836,7 +842,12 @@ export function GraphRelayout({
   };
   const cursor = cursorAt(frame);
 
-  const push = 1 + 0.03 * clamp01(frame / (GRAPH_RELAYOUT_DURATION + 10));
+  const pushT = clamp01(frame / (GRAPH_RELAYOUT_DURATION + 10));
+  const push = 1 + 0.03 * pushT;
+  // The push-in runs under every relayout, so one tilt on its layer covers
+  // the labels, notes and titles riding inside; a longer set of layouts
+  // outlasts the push, hence the timeline's own end as well.
+  const moving = midway(pushT) || (frame > 0 && frame < end);
   const titleSize = tall ? 0.074 * W : 0.066 * H;
   const kickSize = (tall ? 18 : 16) * u;
 
@@ -855,7 +866,7 @@ export function GraphRelayout({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${push})`,
+            transform: `scale(${push})${glide(moving)}`,
             transformOrigin: "50% 60%",
           }}
         >
@@ -927,6 +938,11 @@ export function GraphRelayout({
             const sp = specs[id];
             const pw = sp.w * k;
             const ph = sp.h * k;
+            // Laid out where the last layout leaves the node; every relayout
+            // is a transform from there. Layout rounds a box and a baseline to
+            // whole pixels, so a node eased by `left`/`top` clicks along its
+            // path pixel by pixel.
+            const home = filled[id][filled[id].length - 1];
             const scale = 0.5 + 0.5 * st.vis;
             const isDrag = starts.some(
               (s, i) => dragged[i] === id && frame >= s - 3 && frame < s + 20,
@@ -976,12 +992,12 @@ export function GraphRelayout({
                 key={id}
                 style={{
                   position: "absolute",
-                  left: st.x - pw / 2,
-                  top: st.y - ph / 2,
+                  left: home.x - pw / 2,
+                  top: home.y - ph / 2,
                   width: pw,
                   height: ph,
                   opacity: clamp01(st.vis * 1.6),
-                  transform: `scale(${scale * (1 + 0.04 * (isDrag ? dragT : 0))})`,
+                  transform: `translate(${st.x - home.x}px, ${st.y - home.y}px) scale(${scale * (1 + 0.04 * (isDrag ? dragT : 0))})`,
                   zIndex: isDrag ? 2 : 1,
                 }}
               >
@@ -1143,18 +1159,24 @@ export function GraphRelayout({
             const sp = specs[l.note.node];
             const size = (tall ? 20 : 17) * u;
             const textW = l.note.text.length * 0.6 * size;
-            const pos: React.CSSProperties = tall
-              ? {
-                  left: Math.min(
-                    Math.max(st.x - textW / 2, rect.x),
-                    rect.x + rect.w - textW,
-                  ),
-                  top: st.y + (sp.h * k) / 2 + 22 * k,
-                }
-              : {
-                  left: st.x + (sp.w * k) / 2 + 22 * k,
-                  top: st.y - size / 2,
-                };
+            const place = (p: Pt) =>
+              tall
+                ? {
+                    left: Math.min(
+                      Math.max(p.x - textW / 2, rect.x),
+                      rect.x + rect.w - textW,
+                    ),
+                    top: p.y + (sp.h * k) / 2 + 22 * k,
+                  }
+                : {
+                    left: p.x + (sp.w * k) / 2 + 22 * k,
+                    top: p.y - size / 2,
+                  };
+            // Laid out beside its node's place in this layout; following the
+            // node there is a transform, for the same reason as the nodes.
+            const pos = place(filled[l.note.node][li]);
+            const live = place(st);
+            const slide = (1 - inT) * 14 * k;
             return (
               <div
                 key={`note-${l.title}`}
@@ -1171,7 +1193,7 @@ export function GraphRelayout({
                   color: fg,
                   whiteSpace: "nowrap",
                   opacity: v,
-                  transform: `translate${tall ? "Y" : "X"}(${(1 - inT) * 14 * k}px)`,
+                  transform: `translate(${live.left - pos.left + (tall ? 0 : slide)}px, ${live.top - pos.top + (tall ? slide : 0)}px)`,
                 }}
               >
                 {tall ? null : (

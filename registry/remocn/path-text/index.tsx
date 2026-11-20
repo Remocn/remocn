@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const serif = loadFont("normal", { weights: ["400"], subsets: ["latin"] });
 const serifItalic = loadFont("italic", {
@@ -179,6 +180,7 @@ export function PathText({
   theme = "dark",
   speed = 1,
 }: PathTextProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -250,6 +252,13 @@ export function PathText({
   const palette = STROKE[theme];
   const gradSpan = startSpan + (endSpan - startSpan) * thin;
   const writeStart = 14;
+  // Chrome parks a glyph raster on a whole pixel vertically for as long as
+  // its matrix is axis-aligned, and as the stroke pulls taut the glyphs riding
+  // it straighten and click down pixel by pixel. The drawing is marked so
+  // they lean off that grid for the pull. The mark counts as moving from the
+  // frame before the pull to the frame after it, so the lean comes and goes
+  // on a frame where the glyphs stand still rather than as they set off.
+  const pulling = t + speed > morphStart && t - speed < morphStart + morphLen;
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
@@ -258,7 +267,11 @@ export function PathText({
           width={W}
           height={H}
           viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: glide(pulling),
+          }}
           aria-hidden
         >
           <defs>

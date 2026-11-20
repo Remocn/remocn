@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400"],
@@ -184,6 +185,8 @@ function Tick({
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -214,6 +217,7 @@ export function KerningSnap({
   theme = "dark",
   speed = 1,
 }: KerningSnapProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -322,7 +326,7 @@ export function KerningSnap({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            transform: `scale(${1 + push * 0.02})`,
+            transform: `scale(${1 + push * 0.02})${glide(midway(push))}`,
           }}
         >
           <div

@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -244,17 +245,28 @@ function Icon({
   );
 }
 
+/** A spring's leftover under a thousandth of a pixel counts as arrived. */
+const near = (v: number) => (Math.abs(v) < 1e-3 ? 0 : v);
+const shift = (dx: number, dy: number) =>
+  near(dx) || near(dy) ? `translate(${near(dx)}px, ${near(dy)}px)` : "";
+
 function Cursor({
   x,
   y,
+  rest,
   press,
   opacity,
 }: {
   x: number;
   y: number;
+  rest: { x: number; y: number };
   press: number;
   opacity: number;
 }) {
+  // Laid out where the cursor comes to rest; the travel is a transform so its
+  // box edges don't step pixel by pixel.
+  const dx = near(x - rest.x);
+  const dy = near(y - rest.y);
   return (
     <svg
       width={24}
@@ -263,11 +275,11 @@ function Cursor({
       aria-hidden
       style={{
         position: "absolute",
-        left: x - 2.2,
-        top: y - 2.2,
+        left: rest.x - 2.2,
+        top: rest.y - 2.2,
         opacity,
         transformOrigin: "2px 2px",
-        transform: `scale(${1 - 0.04 * press})`,
+        transform: `${dx || dy ? `translate(${dx}px, ${dy}px) ` : ""}scale(${1 - 0.04 * press})`,
         filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.3))",
         overflow: "visible",
       }}
@@ -375,6 +387,7 @@ export function CalendarBooking({
   ground,
   groundParams,
 }: CalendarBookingProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width;
@@ -388,8 +401,14 @@ export function CalendarBooking({
   const days = event.daysInMonth ?? 30;
   const gridRows = Math.ceil((first + days) / 7);
   const G = geometry(tall, gridRows);
+  const spAt = (f: number, at: number, config: Record<string, number>) =>
+    spring({ frame: f - at, fps, config });
   const sp = (at: number, config: Record<string, number>) =>
-    spring({ frame: frame - at, fps, config });
+    spAt(frame, at, config);
+  // Whether a value built from the frame moves into or out of this frame.
+  const stirs = (at: (f: number) => number, eps: number) =>
+    Math.abs(at(frame + 1) - at(frame)) > eps ||
+    Math.abs(at(frame) - at(frame - 1)) > eps;
   const isOpen = (d: number) => {
     const wd = (first + d - 1) % 7;
     return d >= (event.firstAvailable ?? 1) && wd !== 0 && wd !== 6;
@@ -399,23 +418,57 @@ export function CalendarBooking({
   const pickIdx = wanted >= 0 ? wanted : Math.min(3, shown.length - 1);
   const pickLabel = shown[pickIdx] ?? "";
 
-  const cardIn = sp(BEAT.card, SPR.heavy);
   const cardOp = tween(frame, BEAT.card, 10, EASE.enter);
   const dayFill = sp(BEAT.day, SPR.chip);
   const widen = sp(BEAT.day + 2, SPR.heavy);
   const split = sp(BEAT.slot + 1, SPR.card);
   const morph = sp(BEAT.confirm + 2, SPR.morph);
-  const cam =
+  const camAt = (f: number) =>
     1 +
-    0.03 * tween(frame, 6, 80, EASE.camera) +
-    0.015 * tween(frame, BEAT.confirm + 10, 60, EASE.camera);
+    0.03 * tween(f, 6, 80, EASE.camera) +
+    0.015 * tween(f, BEAT.confirm + 10, 60, EASE.camera);
+  const cam = camAt(frame);
+  // The camera carries the whole scene, so its tilt covers everything under
+  // it; the movers below tilt themselves only while it holds still.
+  const camMoving = stirs(camAt, 1e-6);
 
   const bookW = G.narrow.w + (G.wide.w - G.narrow.w) * widen;
   const bookH = G.narrow.h + (G.wide.h - G.narrow.h) * widen;
   const cardW = bookW + (G.done.w - bookW) * morph;
   const cardH = bookH + (G.done.h - bookH) * morph;
-  const cardX = (SW - cardW) / 2;
-  const cardY = (SH - cardH) / 2 + (1 - cardIn) * 36;
+  // The card is laid out at its final size and place; its recentring as it
+  // widens and morphs, and its rise, are a transform, since layout rounds a
+  // box and a baseline to whole pixels.
+  const restX = (SW - G.done.w) / 2;
+  const restY = (SH - G.done.h) / 2;
+  const cardShiftAt = (f: number) => {
+    const wi = spAt(f, BEAT.day + 2, SPR.heavy);
+    const mo = spAt(f, BEAT.confirm + 2, SPR.morph);
+    const bw = G.narrow.w + (G.wide.w - G.narrow.w) * wi;
+    const bh = G.narrow.h + (G.wide.h - G.narrow.h) * wi;
+    const cw = bw + (G.done.w - bw) * mo;
+    const ch = bh + (G.done.h - bh) * mo;
+    return {
+      x: (G.done.w - cw) / 2,
+      y: (G.done.h - ch) / 2 + (1 - spAt(f, BEAT.card, SPR.heavy)) * 36,
+    };
+  };
+  const cardShift = cardShiftAt(frame);
+  const cardMoving =
+    !camMoving &&
+    (stirs((f) => cardShiftAt(f).x, 5e-4) ||
+      stirs((f) => cardShiftAt(f).y, 5e-4));
+  const confirmPressing =
+    !camMoving &&
+    !cardMoving &&
+    stirs(
+      (f) =>
+        clamp01(
+          spAt(f, BEAT.confirm - 2, SPR.chip) -
+            spAt(f, BEAT.confirm + 3, SPR.chip),
+        ),
+      1e-5,
+    );
 
   const cellPos = (d: number) => {
     const idx = first + d - 1;
@@ -523,17 +576,20 @@ export function CalendarBooking({
             style={{
               position: "absolute",
               inset: 0,
-              transform: `scale(${cam})`,
+              transform: `scale(${cam})${glide(camMoving)}`,
               transformOrigin: `${SW / 2}px ${SH / 2}px`,
             }}
           >
             <div
               style={{
                 position: "absolute",
-                left: cardX,
-                top: cardY,
+                left: restX,
+                top: restY,
                 width: cardW,
                 height: cardH,
+                transform:
+                  shift(cardShift.x, cardShift.y) + glide(cardMoving) ||
+                  undefined,
                 borderRadius: 22,
                 background: c.card,
                 boxShadow: c.shadow,
@@ -727,7 +783,7 @@ export function CalendarBooking({
                             color: "#FFFFFF",
                             opacity: clamp01(sv * 2),
                             boxShadow: "inset 0 1px 0 rgba(255,255,255,0.16)",
-                            transform: `scale(${1 - 0.04 * pressOf(BEAT.confirm)})`,
+                            transform: `scale(${1 - 0.04 * pressOf(BEAT.confirm)})${glide(confirmPressing)}`,
                           }}
                         >
                           {confirmLabel}
@@ -744,8 +800,8 @@ export function CalendarBooking({
                   c={c}
                   accent={accent}
                   opacity={doneOp}
-                  left={(cardW - G.done.w) / 2}
-                  top={(cardH - G.done.h) / 2}
+                  dx={(cardW - G.done.w) / 2}
+                  dy={(cardH - G.done.h) / 2}
                   w={G.done.w}
                   h={G.done.h}
                   host={host}
@@ -757,7 +813,13 @@ export function CalendarBooking({
                 />
               ) : null}
             </div>
-            <Cursor x={curX} y={curY} press={press} opacity={curOp} />
+            <Cursor
+              x={curX}
+              y={curY}
+              rest={legs[legs.length - 1].to}
+              press={press}
+              opacity={curOp}
+            />
           </div>
         </div>
       </ScaleLayer>
@@ -879,8 +941,8 @@ function SuccessView({
   c,
   accent,
   opacity,
-  left,
-  top,
+  dx,
+  dy,
   w,
   h,
   host,
@@ -895,8 +957,9 @@ function SuccessView({
   c: Palette;
   accent: string;
   opacity: number;
-  left: number;
-  top: number;
+  /** Offset from the card's top-left while the card is still resizing. */
+  dx: number;
+  dy: number;
   w: number;
   h: number;
   host: BookingHost;
@@ -935,8 +998,11 @@ function SuccessView({
     <div
       style={{
         position: "absolute",
-        left,
-        top,
+        // Pinned at the settled card's corner; the offset while the card
+        // resizes around it is a transform, not left/top.
+        left: 0,
+        top: 0,
+        transform: shift(dx, dy) || undefined,
         width: w,
         height: h,
         boxSizing: "border-box",

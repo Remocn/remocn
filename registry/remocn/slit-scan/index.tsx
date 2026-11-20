@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: bricolage } = loadBricolage("normal", {
   weights: ["400", "500"],
@@ -43,6 +44,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const MOVE_AT = -30;
 const MOVE_END = 28;
@@ -178,6 +181,7 @@ export function SlitScan({
   theme = "dark",
   speed = 1,
 }: SlitScanProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -341,7 +345,7 @@ export function SlitScan({
               fontVariantNumeric: "tabular-nums",
               color: stage.muted,
               opacity: capIn,
-              transform: `translateY(${(1 - capIn) * 10 * u}px)`,
+              transform: `translateY(${(1 - capIn) * 10 * u}px)${glide(midway(capIn))}`,
             }}
           >
             {caption}

@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: mono } = loadFont("normal", {
   weights: ["400", "500"],
@@ -103,6 +104,11 @@ function kick(d: number, len: number) {
   return k * k;
 }
 
+/** Whether a `kick` of this length is still moving `d` frames in. */
+const kicking = (d: number, len: number) => d > 0 && d < len + 1;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function hash(n: number) {
   const s = Math.sin(n * 127.1 + 311.7) * 43758.5453;
   return s - Math.floor(s);
@@ -155,12 +161,15 @@ function RollChar({
   prev,
   next,
   p,
+  glide,
 }: {
   prev: string;
   next: string;
   p: number;
+  glide: (moving: boolean) => string;
 }) {
   const rolling = prev !== next && p < 1;
+  const tilt = glide(rolling && p > 0);
   return (
     <span
       style={{
@@ -175,7 +184,9 @@ function RollChar({
       <span
         style={{
           display: "block",
-          transform: rolling ? `translateY(${(1 - p) * 100}%)` : undefined,
+          // Kept at rest as well: the lean rides on this transform, and a
+          // digit that lost it there would snap to the nearest pixel.
+          transform: `translateY(${rolling ? (1 - p) * 100 : 0}%)${tilt}`,
         }}
       >
         {next}
@@ -186,7 +197,7 @@ function RollChar({
             position: "absolute",
             left: 0,
             top: 0,
-            transform: `translateY(${-p * 100}%)`,
+            transform: `translateY(${-p * 100}%)${tilt}`,
           }}
         >
           {prev}
@@ -231,6 +242,7 @@ export function TMinus({
   theme = "dark",
   speed = 1,
 }: TMinusProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -287,13 +299,13 @@ export function TMinus({
   const titleFs = 210 * u;
   const titleCY = H / 2 - 4 * u;
   const clockFs = 34 * u;
-  const clockY = lifted
-    ? interpolate(
-        titleIn,
-        [0, 1],
-        [numCY - numFs * 0.5 - 70 * u, titleCY - titleFs * 0.5 - 62 * u],
-      )
-    : numCY - numFs * 0.5 - 70 * u;
+  // The clock is laid out where it ends up, above the title, and its climb
+  // there is a transform: carried by `top` its baseline stepped a whole pixel
+  // at a time, and jumped by the rounding when the climb ended.
+  const clockRest = titleCY - titleFs * 0.5 - 62 * u;
+  const clockShift =
+    (numCY - numFs * 0.5 - 70 * u - clockRest) * (lifted ? 1 - titleIn : 1);
+  const clockMoving = lifted && titleIn > 0 && titleIn < 1;
   const margin = 56 * u;
 
   // Telemetry values flicker in their last digit.
@@ -461,7 +473,8 @@ export function TMinus({
             position: "absolute",
             left: 0,
             right: 0,
-            top: clockY,
+            top: clockRest,
+            transform: `translateY(${clockShift}px)${glide(clockMoving)}`,
             display: "flex",
             justifyContent: "center",
             fontFamily: mono,
@@ -475,7 +488,13 @@ export function TMinus({
           }}
         >
           {clock.split("").map((ch, i) => (
-            <RollChar key={i} prev={prevClock[i] ?? ch} next={ch} p={rollP} />
+            <RollChar
+              key={i}
+              prev={prevClock[i] ?? ch}
+              next={ch}
+              p={rollP}
+              glide={glide}
+            />
           ))}
         </div>
 
@@ -498,7 +517,11 @@ export function TMinus({
               letterSpacing: "-0.05em",
               fontVariantNumeric: "tabular-nums",
               whiteSpace: "nowrap",
-              transform: `translateY(${(1 - intro) * 40 * u}px) scale(${numScale})`,
+              transform: `translateY(${(1 - intro) * 40 * u}px) scale(${numScale})${glide(
+                midway(intro) ||
+                  (ticks > 0 && kicking(t - tickAt, 5)) ||
+                  (n === 0 && kicking(t - zeroAt, 3)),
+              )}`,
               opacity: intro,
             }}
           >
@@ -527,7 +550,9 @@ export function TMinus({
             whiteSpace: "nowrap",
             color: ink ?? c.title,
             opacity: lifted ? ramp(titleIn, 0, 0.2) : 0,
-            transform: `scale(${(1.24 - 0.24 * titleIn) * (1 + 0.02 * titleHit)})`,
+            transform: `scale(${(1.24 - 0.24 * titleIn) * (1 + 0.02 * titleHit)})${glide(
+              midway(titleIn) || kicking(t - (liftAt + 4), 8),
+            )}`,
           }}
         >
           {title}
@@ -548,7 +573,7 @@ export function TMinus({
               color: fg,
               whiteSpace: "nowrap",
               opacity: subIn,
-              transform: `translateY(${(1 - subIn) * 24 * u}px)`,
+              transform: `translateY(${(1 - subIn) * 24 * u}px)${glide(midway(subIn))}`,
             }}
           >
             {subtitle}

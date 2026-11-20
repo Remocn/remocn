@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const afacad = loadFont("normal", {
   weights: ["400", "500"],
@@ -143,6 +144,8 @@ function balancedLines(ws: string[], adv: (s: string) => number, max: number) {
   return wrapLines(ws, adv, hi);
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -174,6 +177,7 @@ export function StoryDip({
   speed = 1,
   theme = "dark",
 }: StoryDipProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const t = frame * speed;
   const { width: W, height: H, durationInFrames: T } = useVideoConfig();
@@ -232,26 +236,36 @@ export function StoryDip({
   const climbA = at(108);
   const climbB = at(132);
 
-  const fall = interpolate(t, [fallA, fallB], [0, 1], {
-    ...CLAMP,
-    easing: EASE_FALL,
-  });
-  const settle = interpolate(t, [fallB, fallB + 5, fallB + 12], [0, 1, 0], {
-    ...CLAMP,
-    easing: Easing.bezier(0.45, 0, 0.55, 1),
-  });
-  const climb = interpolate(t, [climbA, climbB], [0, 1], {
-    ...CLAMP,
-    easing: EASE_CLIMB,
-  });
-
   const snagStart = portrait
     ? Math.min(lowTop, startTop + heights[0] + gapY)
     : startTop;
-  const snagTop =
-    snagStart + (lowTop - snagStart) * fall + unit * 0.012 * settle;
-  const resTop = lowTop + (highTop - lowTop) * climb;
-  const tops = [startTop, snagTop, resTop];
+  // Each beat is laid out where it ends up; the fall and the climb there are
+  // a transform, since layout rounds a box and a baseline to whole pixels and
+  // a block eased by `top` clicks down pixel by pixel.
+  const tops = [startTop, lowTop, highTop];
+  const travel = [
+    () => 0,
+    (tt: number) => {
+      const fall = interpolate(tt, [fallA, fallB], [0, 1], {
+        ...CLAMP,
+        easing: EASE_FALL,
+      });
+      const settle = interpolate(
+        tt,
+        [fallB, fallB + 5, fallB + 12],
+        [0, 1, 0],
+        { ...CLAMP, easing: Easing.bezier(0.45, 0, 0.55, 1) },
+      );
+      return (snagStart - lowTop) * (1 - fall) + unit * 0.012 * settle;
+    },
+    (tt: number) => {
+      const climb = interpolate(tt, [climbA, climbB], [0, 1], {
+        ...CLAMP,
+        easing: EASE_CLIMB,
+      });
+      return (lowTop - highTop) * (1 - climb);
+    },
+  ];
 
   const lowDim = interpolate(t, [fallA, fallB], [1, dim], CLAMP);
   const lift = interpolate(t, [climbA + 8, climbB], [0, 1], {
@@ -281,6 +295,10 @@ export function StoryDip({
           let idx = 0;
           const ink = i === 2 ? interpolateColors(lift, [0, 1], [fg, hi]) : fg;
           const inkOpacity = i === 1 ? lowDim : 1;
+          const dy = travel[i](t);
+          const travelling =
+            Math.abs(travel[i](t + speed) - dy) > 1e-3 ||
+            Math.abs(dy - travel[i](t - speed)) > 1e-3;
           return (
             <div
               key={`${b.slug}${String(i)}`}
@@ -289,6 +307,10 @@ export function StoryDip({
                 left: x,
                 top: tops[i],
                 width: colW,
+                transform:
+                  Math.abs(dy) > 1e-3 || travelling
+                    ? `translateY(${dy}px)${glide(travelling)}`
+                    : undefined,
               }}
             >
               <div
@@ -302,7 +324,7 @@ export function StoryDip({
                   marginBottom: S * 0.9,
                   whiteSpace: "nowrap",
                   opacity: slugE,
-                  transform: `translateY(${((1 - slugE) * S).toFixed(2)}px)`,
+                  transform: `translateY(${((1 - slugE) * S).toFixed(2)}px)${glide(midway(slugE) && !travelling)}`,
                 }}
               >
                 {b.slug}
@@ -333,7 +355,7 @@ export function StoryDip({
                           display: "inline-block",
                           color: ink,
                           opacity: e * inkOpacity,
-                          transform: `translateY(${((1 - e) * F * 0.4).toFixed(2)}px)`,
+                          transform: `translateY(${((1 - e) * F * 0.4).toFixed(2)}px)${glide(midway(e) && !travelling)}`,
                           marginRight:
                             wi < line.length - 1
                               ? `${adv(" ").toFixed(3)}em`

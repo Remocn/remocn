@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -117,6 +118,7 @@ function mix(a: string, b: string, t: number) {
   const m = (i: number) => Math.round(x[i] + (y[i] - x[i]) * t);
   return `rgb(${m(0)}, ${m(1)}, ${m(2)})`;
 }
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 const hash = (n: number) => {
   const s = Math.sin(n * 127.1 + 311.7) * 43758.5453;
   return s - Math.floor(s);
@@ -334,14 +336,16 @@ function Intro(c: Ctx) {
       {SHAPES.map((sh, i) => {
         const p = pop(c, 2 + i * 3, CHIP);
         const float = Math.sin((c.lf + i * 20) * 0.06) * 6;
+        // Layout rounds a box to whole pixels, so a shape flown in and bobbed
+        // by `left`/`top` steps; the flight and the bob are a transform.
         return (
           <div
             key={sh.kind + i}
             style={{
               position: "absolute",
-              left: sh.x + sh.from[0] * (1 - p),
-              top: sh.y + sh.from[1] * (1 - p) + float,
-              transform: `rotate(${sh.spin * (1 - p) + c.lf * (i % 2 ? 0.4 : -0.3)}deg) scale(${0.4 + 0.6 * p})`,
+              left: sh.x,
+              top: sh.y,
+              transform: `translate(${sh.from[0] * (1 - p)}px, ${sh.from[1] * (1 - p) + float}px) rotate(${sh.spin * (1 - p) + c.lf * (i % 2 ? 0.4 : -0.3)}deg) scale(${0.4 + 0.6 * p})`,
             }}
           >
             <Shape
@@ -633,6 +637,7 @@ function TopComponent(c: Ctx) {
 
 function Percentile(c: Ctx) {
   const big = pop(c, 3, CHIP);
+  const swing = (1 - big) * -8;
   const draw = interpolate(c.lf, [14, 64], [0, 1], { ...CL, easing: outCubic });
   const strip = interpolate(c.lf, [2, 28], [1, 0], { ...CL, easing: outCubic });
   return (
@@ -683,7 +688,7 @@ function Percentile(c: Ctx) {
             justifyContent: "center",
             marginTop: 14,
             opacity: clamp(big * 2),
-            transform: `scale(${0.6 + 0.4 * big}) rotate(${(1 - big) * -8}deg)`,
+            transform: `scale(${0.6 + 0.4 * big}) rotate(${swing}deg)`,
           }}
         >
           <Display
@@ -733,6 +738,7 @@ function Percentile(c: Ctx) {
       >
         {c.s.crew.slice(0, 6).map((m, i) => {
           const p = pop(c, 22 + i * 3, CARD);
+          const turn = (1 - p) * (i % 2 ? 14 : -14) + (i % 3 === 1 ? 2 : -1.5);
           return (
             <div
               key={m.name}
@@ -740,7 +746,7 @@ function Percentile(c: Ctx) {
                 background: CREAM,
                 padding: 4,
                 opacity: clamp(p * 2),
-                transform: `scale(${0.7 + 0.3 * p}) rotate(${(1 - p) * (i % 2 ? 14 : -14) + (i % 3 === 1 ? 2 : -1.5)}deg)`,
+                transform: `scale(${0.7 + 0.3 * p}) rotate(${turn}deg)`,
                 boxShadow: "0 6px 16px rgba(0,0,0,0.35)",
               }}
             >
@@ -913,20 +919,17 @@ function Share(c: Ctx) {
         ? Array.from({ length: 14 }, (_, i) => {
             const a = (i / 14) * Math.PI * 2 + hash(i) * 0.4;
             const d = 150 + hash(i + 7) * 130;
+            // The burst flies by transform for the same reason as the intro
+            // shapes: `left`/`top` would step it pixel by pixel.
             return (
               <div
                 key={`b${i}`}
                 style={{
                   position: "absolute",
-                  left: 196 + Math.cos(a) * d * outCubic(burst) - 9,
-                  top:
-                    c.top +
-                    330 +
-                    Math.sin(a) * d * outCubic(burst) -
-                    9 +
-                    burst * burst * 60,
+                  left: 196 - 9,
+                  top: c.top + 330 - 9,
                   opacity: 1 - burst,
-                  transform: `rotate(${burst * 300 * (i % 2 ? 1 : -1)}deg)`,
+                  transform: `translate(${Math.cos(a) * d * outCubic(burst)}px, ${Math.sin(a) * d * outCubic(burst) + burst * burst * 60}px) rotate(${burst * 300 * (i % 2 ? 1 : -1)}deg)`,
                 }}
               >
                 <Shape
@@ -1033,6 +1036,9 @@ function Screen({
           durationInFrames: TR,
         });
         const leaving = i < cur ? clamp((frame - STARTS[cur]) / TR) : 0;
+        const entering = i === cur && i === 3;
+        const slideK = entering ? 1.05 - 0.05 * e : 1 - leaving * 0.08;
+        const turn = entering ? 0 : leaving * (i % 2 ? 3 : -3);
         const Body = sl.body;
         const circles = i === 4 && lf < TR + 6;
         return (
@@ -1044,10 +1050,9 @@ function Screen({
               background: circles ? "transparent" : bg,
               overflow: "hidden",
               ...(i === cur && i > 0 ? enterClip(i, e) : {}),
-              transform:
-                i === cur && i === 3
-                  ? `scale(${1.05 - 0.05 * e})`
-                  : `scale(${1 - leaving * 0.08}) rotate(${leaving * (i % 2 ? 3 : -3)}deg)`,
+              transform: entering
+                ? `scale(${slideK})`
+                : `scale(${slideK}) rotate(${turn}deg)`,
             }}
           >
             {circles
@@ -1260,6 +1265,7 @@ export function YearInReview({
   ground,
   groundParams,
 }: YearInReviewProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const fg = ink ?? "#F4F1EA";
   const { width, height, fps } = useVideoConfig();
@@ -1358,7 +1364,7 @@ export function YearInReview({
                   lineHeight: 1,
                   letterSpacing: "-0.045em",
                   color: fg,
-                  transform: `translateY(${(1 - a) * 105}%)`,
+                  transform: `translateY(${(1 - a) * 105}%)${glide(midway(a))}`,
                 }}
               >
                 {ch}
@@ -1383,7 +1389,7 @@ export function YearInReview({
           color: "rgba(244,241,234,0.55)",
           marginBottom: 22 * u,
           opacity: railIn,
-          transform: `translateY(${(1 - railIn) * 10}px)`,
+          transform: `translateY(${(1 - railIn) * 10}px)${glide(midway(railIn))}`,
         }}
       >
         {s.year} in {s.product}
@@ -1466,7 +1472,9 @@ export function YearInReview({
             top: center.y - fh / 2,
             width: fw,
             height: fh,
-            transform: `translateY(${(1 - enter) * height * 0.7}px) scale(${k * push})`,
+            // `push` grows on every frame, so the device never rests and
+            // carries the tilt throughout; it covers all the screen text.
+            transform: `translateY(${(1 - enter) * height * 0.7}px) scale(${k * push})${glide(true)}`,
           }}
         >
           {phone ? (

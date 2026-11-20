@@ -1,8 +1,9 @@
 import type { SceneProps } from "../content";
-import { ramp, tween } from "../motion";
+import { midway, ramp, tween, useGlide } from "../motion";
 import { AssetIcon, Layer } from "../ui";
 
 export function Closing({ t, content, brandName, theme }: SceneProps) {
+  const glide = useGlide();
   const brand = tween(t, 18.15, 18.38);
   return (
     <>
@@ -31,7 +32,7 @@ export function Closing({ t, content, brandName, theme }: SceneProps) {
                 style={{
                   opacity: p,
                   filter: `blur(${(1 - p) * 4}px)`,
-                  transform: `translateY(${(1 - p) * 7}px)`,
+                  transform: `translateY(${(1 - p) * 7}px)${glide(midway(p))}`,
                 }}
               >
                 {word}
@@ -53,7 +54,7 @@ export function Closing({ t, content, brandName, theme }: SceneProps) {
             fontWeight: 600,
             letterSpacing: -1.2,
             opacity: brand,
-            transform: `scale(${0.95 + 0.05 * brand})`,
+            transform: `scale(${0.95 + 0.05 * brand})${glide(midway(brand))}`,
             filter: `blur(${(1 - brand) * 5}px)`,
           }}
         >

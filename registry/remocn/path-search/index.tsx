@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: mono } = loadFont("normal", {
   weights: ["400", "500"],
@@ -254,6 +255,7 @@ function Grain({ opacity }: { opacity: number }) {
 }
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+
 function ScaleLayer({
   scale,
   children,
@@ -288,6 +290,7 @@ export function PathSearch({
   theme = "dark",
   speed = 1,
 }: PathSearchProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const u = Math.min(W / 1280, H / 720);
@@ -489,7 +492,10 @@ export function PathSearch({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${0.985 + 0.025 * push})`,
+            // The layer has no fill of its own, so the tilt shows no edge.
+            transform: `scale(${0.985 + 0.025 * push})${glide(
+              push > 5e-4 && push < 1 - 5e-4,
+            )}`,
             transformOrigin: "50% 50%",
           }}
         >

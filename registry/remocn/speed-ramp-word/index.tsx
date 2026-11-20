@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["500"],
@@ -186,6 +187,8 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -218,6 +221,7 @@ export function SpeedRampWord({
   theme = "dark",
   speed = 1,
 }: SpeedRampWordProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -289,6 +293,11 @@ export function SpeedRampWord({
     ...CLAMP,
     easing: CAMERA,
   });
+  // The drift runs inside the push's window, so the push's progress covers
+  // both.
+  const pushing = midway(
+    interpolate(frame, [RUSH_END, T_HANG_END], [0, 1], CLAMP),
+  );
   const blur = Math.min(velocity * 0.3, 30 * u);
   const restDim = 1 - 0.62 * slow;
   const restDefocus = 1.6 * u * slow;
@@ -348,7 +357,10 @@ export function SpeedRampWord({
 
       <ScaleLayer scale={scale}>
         <AbsoluteFill
-          style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
+          style={{
+            transform: `scale(${push})${glide(pushing)}`,
+            transformOrigin: "50% 50%",
+          }}
         >
           {/* ghosts sit under the phrase */}
           {ghostX.map((gx, k) => {
@@ -362,9 +374,12 @@ export function SpeedRampWord({
                 key={k}
                 style={{
                   position: "absolute",
-                  left: gx,
-                  top: H / 2 + drift,
-                  transform: "translate(-50%, -52%)",
+                  // Moved by transform, not `left`/`top`: layout rounds a
+                  // box and a baseline to whole pixels, so a ghost eased by
+                  // them clicks along.
+                  left: 0,
+                  top: H / 2,
+                  transform: `translate(${gx}px, ${drift}px) translate(-50%, -52%)`,
                   opacity: o,
                   color: ghostColor,
                   filter: `url(#${ghostBlurId})`,
@@ -379,7 +394,15 @@ export function SpeedRampWord({
           <AbsoluteFill
             style={{ filter: sharp ? undefined : `url(#${blurId})` }}
           >
-            <div style={{ position: "absolute", left: anchor, top: H / 2 }}>
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                top: H / 2,
+                // Same reason as the ghosts: the travel is a transform.
+                transform: `translateX(${anchor}px)`,
+              }}
+            >
               <div
                 style={{
                   position: "absolute",

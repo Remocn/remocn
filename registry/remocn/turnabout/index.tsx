@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const dmSans = loadFont("normal", {
   weights: ["400", "500"],
@@ -253,6 +254,7 @@ export function Turnabout({
   speed = 1,
   theme = "dark",
 }: TurnaboutProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const k = Math.min(1, durationInFrames / BASE);
@@ -334,6 +336,11 @@ export function Turnabout({
     easing: EASE_OUT,
   });
 
+  const between = (p: number) => p > 0 && p < 1;
+  const liftMoving =
+    between(interpolate(t, [TURN, TURN + LIFT], [0, 1], CLAMP)) ||
+    between(interpolate(t, [dropAt, landed], [0, 1], CLAMP));
+
   const word = (
     key: string,
     text: string,
@@ -341,6 +348,7 @@ export function Turnabout({
     dy: number,
     opacity: number,
     color: string,
+    rising: boolean,
     suffix?: { text: string; opacity: number },
   ) => (
     <div
@@ -359,7 +367,7 @@ export function Turnabout({
         fontKerning: "normal",
         color,
         opacity,
-        transform: `translate(${x.toFixed(2)}px, ${dy.toFixed(2)}px)`,
+        transform: `translate(${x.toFixed(2)}px, ${dy.toFixed(2)}px)${glide(rising)}`,
       }}
     >
       {text}
@@ -392,6 +400,7 @@ export function Turnabout({
         F * 0.28 * (1 - enter) + F * 0.4 * out,
         enter * (1 - out),
         fg,
+        between(enter) || between(out),
       ),
     );
   });
@@ -407,29 +416,38 @@ export function Turnabout({
     );
     const x = mv.a0 + (mv.b0 - mv.a0) * travel;
     const dy = F * 0.28 * (1 - enter) + mv.lane * laneGap * lift;
+    const rising = between(enter) || (mv.lane !== 0 && liftMoving);
     const color =
       isHi(tb) && lit > 0
         ? `color-mix(in oklab, ${hi} ${(lit * 100).toFixed(1)}%, ${fg})`
         : fg;
     if (ta.text === tb.text) {
-      nodes.push(word(`m${mv.j}`, tb.text, x, dy, enter, color));
+      nodes.push(word(`m${mv.j}`, tb.text, x, dy, enter, color, rising));
     } else if (tb.text.startsWith(ta.text)) {
       nodes.push(
-        word(`m${mv.j}`, ta.text, x, dy, enter, color, {
+        word(`m${mv.j}`, ta.text, x, dy, enter, color, rising, {
           text: tb.text.slice(ta.text.length),
           opacity: suffixIn,
         }),
       );
     } else if (ta.text.startsWith(tb.text)) {
       nodes.push(
-        word(`m${mv.j}`, tb.text, x, dy, enter, color, {
+        word(`m${mv.j}`, tb.text, x, dy, enter, color, rising, {
           text: ta.text.slice(tb.text.length),
           opacity: 1 - suffixIn,
         }),
       );
     } else {
       nodes.push(
-        word(`m${mv.j}`, swapped ? tb.text : ta.text, x, dy, enter, color),
+        word(
+          `m${mv.j}`,
+          swapped ? tb.text : ta.text,
+          x,
+          dy,
+          enter,
+          color,
+          rising,
+        ),
       );
     }
   }
@@ -445,7 +463,15 @@ export function Turnabout({
       ? `color-mix(in oklab, ${hi} ${(lit * 100).toFixed(1)}%, ${fg})`
       : fg;
     nodes.push(
-      word(`b${j}`, tb.text, leftB + tb.x * F, F * 0.3 * (1 - inn), inn, color),
+      word(
+        `b${j}`,
+        tb.text,
+        leftB + tb.x * F,
+        F * 0.3 * (1 - inn),
+        inn,
+        color,
+        between(inn),
+      ),
     );
   });
 

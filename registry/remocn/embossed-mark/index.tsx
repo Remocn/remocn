@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 // Brand face: the remocn.dev logo is the R mark + "emocn" in Manrope 600.
 const manrope = loadManrope("normal", {
@@ -209,6 +210,7 @@ export function EmbossedMark({
   theme = "dark",
   speed = 1,
 }: EmbossedMarkProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const p = THEMES[theme];
@@ -239,7 +241,14 @@ export function EmbossedMark({
   // Camera: starts centred on the mark, eases out to centre the lockup.
   // translateX(%) resolves against the lockup's own width, so no text
   // measuring is needed.
-  const cam = EASE_IO(interpolate(t, [56, 100], [0, 1], CLAMP));
+  const camAt = (f: number) =>
+    EASE_IO(interpolate(f, [56, 100], [0, 1], CLAMP));
+  const cam = camAt(t);
+  // The camera carries the letters, so it is marked as moving on every frame
+  // where it changes at all.
+  const camMoving =
+    Math.abs(camAt(t + speed) - cam) > 1e-6 ||
+    Math.abs(cam - camAt(t - speed)) > 1e-6;
   const zoom = 1 + 0.1 * (1 - cam);
   const camX = `calc(${(1 - cam) * 50}% - ${((1 - cam) * markW) / 2}px)`;
 
@@ -339,7 +348,7 @@ export function EmbossedMark({
               letterSpacing: "-0.025em",
               color: fg,
               transformOrigin: `${markW / 2}px 50%`,
-              transform: `translateX(${camX}) scale(${zoom})`,
+              transform: `translateX(${camX}) scale(${zoom})${glide(camMoving)}`,
             }}
           >
             <div style={{ ...huge, background: paper }} />

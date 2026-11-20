@@ -1,6 +1,7 @@
 "use client";
 
 import { interpolate, Sequence, useCurrentFrame } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface GlassCodeBlockProps {
   code?: string;
@@ -232,6 +233,7 @@ function CodeLine({
   index: number;
   fontSize: number;
 }) {
+  const glide = useGlide();
   const frame = useCurrentFrame();
   const opacity = interpolate(frame, [0, 8], [0, 1], {
     extrapolateLeft: "clamp",
@@ -252,7 +254,7 @@ function CodeLine({
     <div
       style={{
         opacity,
-        translate: `0 ${ty}px`,
+        transform: `translateY(${ty}px)${glide(ty > 0)}`,
         whiteSpace: "pre",
         display: "flex",
         gap: 0,

@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -192,6 +193,7 @@ export function GotEm({
   theme = "dark",
   speed = 1,
 }: GotEmProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = Math.min(W / 1280, H / 720);
@@ -230,6 +232,22 @@ export function GotEm({
   const zoom = SLAM(ramp(t, boomAt, 8));
   const camScale = boomed ? 1.16 - 0.16 * zoom + 0.03 * kick(d - 5) : creep;
   const sh = shake(d - 5, 11 * u, 2.2);
+  // The camera eases, kicks and shakes; it moves while any of that does.
+  const camAt = (f: number) => {
+    const dd = f - boomAt;
+    const s = shake(dd - 5, 11 * u, 2.2);
+    const k =
+      f >= boomAt
+        ? 1.16 - 0.16 * SLAM(ramp(f, boomAt, 8)) + 0.03 * kick(dd - 5)
+        : interpolate(f, [PAUSE_AT, boomAt], [1, 1.035], {
+            ...CLAMP,
+            easing: Easing.bezier(0.33, 0, 0.67, 1),
+          });
+    return Math.abs(s.x) + Math.abs(s.y) + k * W;
+  };
+  const camMoving =
+    Math.abs(camAt(t + speed) - camAt(t)) > 1e-3 ||
+    Math.abs(camAt(t) - camAt(t - speed)) > 1e-3;
   const titleP = SLAM(ramp(t, boomAt, 6));
   const titleScale = 1.6 - 0.6 * titleP;
   const titleBlur = (1 - titleP) * 18;
@@ -283,7 +301,7 @@ export function GotEm({
           style={{
             position: "absolute",
             inset: 0,
-            transform: `translate(${boomed ? sh.x : 0}px, ${boomed ? sh.y : 0}px) scale(${camScale})`,
+            transform: `translate(${boomed ? sh.x : 0}px, ${boomed ? sh.y : 0}px) scale(${camScale})${glide(camMoving)}`,
             transformOrigin: `${cx}px ${cy}px`,
           }}
         >
@@ -382,7 +400,7 @@ export function GotEm({
                 lineHeight: 1.2,
                 color: fg,
                 opacity: intro,
-                transform: `translateY(${(1 - intro) * 12 * u}px)`,
+                transform: `translateY(${(1 - intro) * 12 * u}px)${glide(intro > 0 && (1 - intro) * 12 * u > 1e-3 && !camMoving)}`,
                 whiteSpace: "nowrap",
               }}
             >
@@ -426,7 +444,7 @@ export function GotEm({
                 color: fg,
                 whiteSpace: "pre",
                 opacity: rise,
-                transform: `translateY(${(1 - rise) * 14 * u}px)`,
+                transform: `translateY(${(1 - rise) * 14 * u}px)${glide(rise > 0 && (1 - rise) * 14 * u > 1e-3 && !camMoving)}`,
               }}
             >
               <div

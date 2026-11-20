@@ -1,7 +1,14 @@
 "use client";
 
 import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
-import { FLOW_BG, FLOW_INK, FLOW_YELLOW, FONT_SERIF } from "../foundation";
+import {
+  FLOW_BG,
+  FLOW_INK,
+  FLOW_YELLOW,
+  FONT_SERIF,
+  midway,
+  useGlide,
+} from "../foundation";
 
 const clamp = {
   extrapolateLeft: "clamp",
@@ -15,8 +22,10 @@ const FONT_SIZE = 56;
 
 export function FeaturesSwap({ speed = 1 }: { speed?: number }) {
   const f = useCurrentFrame() * speed;
+  const glide = useGlide();
 
   const lineReveal = interpolate(f, [0, 14], [0, 1], clamp);
+  const lineMoving = midway(lineReveal);
   const lineShift = interpolate(lineReveal, [0, 1], [18, 0]);
 
   return (
@@ -38,6 +47,7 @@ export function FeaturesSwap({ speed = 1 }: { speed?: number }) {
           color: FLOW_INK,
           opacity: lineReveal,
           translate: `0 ${lineShift}px`,
+          transform: glide(lineMoving),
         }}
       >
         <span>Features designed to&nbsp;</span>
@@ -71,8 +81,12 @@ export function FeaturesSwap({ speed = 1 }: { speed?: number }) {
                   color: FLOW_YELLOW,
                   opacity,
                   translate: `0 ${ty}px`,
+                  // One tilt in the chain is enough: the line's own covers
+                  // the verb while both move.
+                  transform: glide(
+                    (midway(inProg) || midway(outProg)) && !lineMoving,
+                  ),
                   filter: blur > 0.05 ? `blur(${blur}px)` : undefined,
-                  willChange: "transform, filter, opacity",
                 }}
               >
                 {verb}

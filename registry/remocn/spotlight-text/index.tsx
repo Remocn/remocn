@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const geist = loadGeist("normal", {
   weights: ["500"],
@@ -175,6 +176,8 @@ export function SpotlightText({
   speed = 1,
   theme = "dark",
 }: SpotlightTextProps) {
+  // `glide` names the spotlight's travel below.
+  const tilt = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -274,7 +277,7 @@ export function SpotlightText({
               color: c.muted,
               opacity: eyebrowIn,
               filter: `blur(${(1 - eyebrowIn) * 8 * s}px)`,
-              transform: `translateY(${(1 - eyebrowIn) * 10 * s}px)`,
+              transform: `translateY(${(1 - eyebrowIn) * 10 * s}px)${tilt(eyebrowIn > 0 && eyebrowIn < 1)}`,
             }}
           >
             <span
@@ -298,7 +301,7 @@ export function SpotlightText({
             height: boxH,
             opacity: enter,
             filter: `blur(${(1 - enter) * 10 * s}px)`,
-            transform: `translateY(${(1 - enter) * 18 * s}px)`,
+            transform: `translateY(${(1 - enter) * 18 * s}px)${tilt(enter > 0 && enter < 1)}`,
           }}
         >
           <div

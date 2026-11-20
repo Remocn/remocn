@@ -14,6 +14,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const flex = loadVariableFont("oblique 0deg 10deg", { subsets: ["latin"] });
 const instrument = loadInstrument("normal", {
@@ -241,6 +242,12 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+// Chrome parks a glyph raster on a whole pixel vertically for as long as the
+// matrix is axis-aligned, so text under a slow transform clicks along pixel by
+// pixel. The transforms that carry text are marked, so it leans off that grid
+// while they move.
+const midway = (p: number) => p > 0 && p < 1;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -276,6 +283,7 @@ export function TallCount({
   speed = 1,
   theme = "dark",
 }: TallCountProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -337,12 +345,25 @@ export function TallCount({
   const F = F0 + (F1 - F0) * g;
   const wdth = Math.min(WDTH[1], solveWdth(curve, measureW / F));
   const ytfi = YTFI[0] + (YTFI[1] - YTFI[0]) * g * g;
-  const lift = spring({
-    frame: t - (growEnd - (GROW_END - LIFT_AT)),
-    fps,
-    config: { damping: 11, stiffness: 110, mass: 0.9 },
-  });
-  const sy = 1 + STRETCH * lift;
+  const syAt = (f: number) =>
+    (
+      1 +
+      STRETCH *
+        spring({
+          frame: f - (growEnd - (GROW_END - LIFT_AT)),
+          fps,
+          config: { damping: 11, stiffness: 110, mass: 0.9 },
+        })
+    ).toFixed(4);
+  const sy = syAt(t);
+  // The lift overshoots, so it moves for as long as the stretch it renders
+  // differs from a neighbouring frame.
+  const lifting = sy !== syAt(t - 1) || sy !== syAt(t + 1);
+  // The number is laid out once at its full size and grows by transform:
+  // layout rounds a baseline to whole pixels, so a figure eased by `top` and
+  // `fontSize` clicks up pixel by pixel. Blur and the fill are drawn in the
+  // scaled space, so they're divided back by `k`.
+  const k = g === 1 ? 1 : F / F1;
   const numW = widthAt(curve, wdth) * F;
 
   const enter = interpolate(t, [0, 12], [0, 1], {
@@ -352,6 +373,7 @@ export function TallCount({
 
   const numLeft = portrait ? (W - numW) / 2 : marginX;
   const boxTop = baseY - m.baseline * F;
+  const restTop = baseY - m.baseline * F1;
   const fill = `linear-gradient(0deg, ${c.fill[0]} ${(100 - (baseY / H) * 100).toFixed(1)}%, ${c.fill[1]} ${(100 - ((baseY - maxInk * 0.35) / H) * 100).toFixed(1)}%, ${c.fill[2]} ${(100 - ((baseY - maxInk * 0.7) / H) * 100).toFixed(1)}%, ${c.fill[3]} ${(100 - ((baseY - maxInk * 1.02) / H) * 100).toFixed(1)}%, ${c.fill[4]} 100%)`;
 
   const labelP = interpolate(t, [LABEL_AT, LABEL_AT + 18], [0, 1], {
@@ -378,26 +400,26 @@ export function TallCount({
           style={{
             position: "absolute",
             left: numLeft,
-            top: boxTop,
-            height: F,
-            lineHeight: `${F}px`,
+            top: restTop,
+            height: F1,
+            lineHeight: `${F1}px`,
             whiteSpace: "pre",
             fontFamily: flex.fontFamily,
             fontStyle: "normal",
-            fontSize: F,
+            fontSize: F1,
             fontVariantNumeric: "tabular-nums",
             fontVariationSettings: fvs(wdth, ytfi),
             letterSpacing: `${TRACK}em`,
-            transformOrigin: `0 ${(m.baseline * F).toFixed(2)}px`,
-            transform: `scaleY(${sy.toFixed(4)})`,
+            transformOrigin: `0 ${(m.baseline * F1).toFixed(2)}px`,
+            transform: `${k === 1 ? "" : `scale(${k}) `}scaleY(${sy})${glide(midway(g) || lifting)}`,
             opacity: enter,
             filter:
               enter < 1
-                ? `blur(${((1 - enter) * 10 * s).toFixed(2)}px)`
+                ? `blur(${(((1 - enter) * 10 * s) / k).toFixed(2)}px)`
                 : undefined,
             backgroundImage: fill,
-            backgroundSize: `${W}px ${H}px`,
-            backgroundPosition: `${-numLeft}px ${-boxTop}px`,
+            backgroundSize: `${W / k}px ${H / k}px`,
+            backgroundPosition: `${-numLeft / k}px ${-boxTop / k}px`,
             WebkitBackgroundClip: "text",
             backgroundClip: "text",
             color: "transparent",
@@ -427,7 +449,7 @@ export function TallCount({
               textWrap: "balance",
               color: ink ?? c.muted,
               opacity: labelP,
-              transform: `translateY(${((1 - labelP) * labelFs * 0.6).toFixed(2)}px)`,
+              transform: `translateY(${((1 - labelP) * labelFs * 0.6).toFixed(2)}px)${glide(midway(labelP))}`,
             }}
           >
             {label}

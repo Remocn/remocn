@@ -15,6 +15,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -161,6 +162,8 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function popTime(order: number) {
   let t = beat("pops");
   let step = 6;
@@ -276,6 +279,7 @@ export function PhotoHalo({
   ground,
   groundParams,
 }: PhotoHaloProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const t = THEMES[theme];
@@ -345,14 +349,16 @@ export function PhotoHalo({
     config: SPRING_CHIP,
   });
   const punch = 1 + 0.05 * Math.sin(Math.min(1, landSpring) * Math.PI);
-  const lockPush = interpolate(frame, [beat("land"), beat("end")], [1, 1.03], {
+  const lockP = interpolate(frame, [beat("land"), beat("end")], [0, 1], {
     ...CLAMP,
     easing: EASE_CAMERA,
   });
-  const pushAll = interpolate(frame, [0, beat("converge")], [0, 0.08], {
+  const lockPush = 1 + 0.03 * lockP;
+  const pushP = interpolate(frame, [0, beat("converge")], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.65, 0, 0.35, 1),
   });
+  const pushAll = 0.08 * pushP;
 
   const convergeStart = (i: number) => {
     const k = rowPick.indexOf(i);
@@ -456,7 +462,7 @@ export function PhotoHalo({
               lineHeight: 1.04,
               letterSpacing: "-0.04em",
               color: fg,
-              transform: `scale(${(1 + pushAll * 0.4) * (1 - textOut * 0.1)})`,
+              transform: `scale(${(1 + pushAll * 0.4) * (1 - textOut * 0.1)})${glide(midway(pushP) || midway(textOut))}`,
               opacity: 1 - textOut,
               filter: `blur(${textOut * 10}px)`,
             }}
@@ -481,7 +487,7 @@ export function PhotoHalo({
                   <span
                     style={{
                       display: "inline-block",
-                      transform: `translateY(${(1 - p) * 140}%)`,
+                      transform: `translateY(${(1 - p) * 140}%)${glide(midway(p))}`,
                       filter: `blur(${(1 - p) * 6}px)`,
                       fontFamily: accent ? serif.fontFamily : undefined,
                       fontStyle: accent ? "italic" : undefined,
@@ -529,18 +535,24 @@ export function PhotoHalo({
             const lift = (18 + 30 * s.z) * unit * flat + 4 * unit;
             const [s1, s2, s3] = t.shadow;
             const src = srcs[i % srcs.length] as string;
+            // Layout rounds a box to whole pixels, so a photo drifting by
+            // `left`/`top` clicks along. It is laid out where it comes to
+            // rest (its seat in the row, or its slot in the halo) and the
+            // drift is a transform.
+            const restX = now.k >= 0 ? rowFinal + d / 2 + now.k * step : s.x;
+            const restY = now.k >= 0 ? rowY : s.y;
             return (
               <div
                 key={`ph-${i}`}
                 style={{
                   position: "absolute",
-                  left: now.x - now.w / 2,
-                  top: now.y - now.h / 2,
+                  left: restX - now.w / 2,
+                  top: restY - now.h / 2,
                   width: now.w,
                   height: now.h,
                   borderRadius: now.r,
                   opacity: Math.min(1, now.pop * 2.4) * fade,
-                  transform: `scale(${scale}) rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg)`,
+                  transform: `translate(${now.x - restX}px, ${now.y - restY}px) scale(${scale}) rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg)`,
                   transformOrigin: locked
                     ? `${cx - (now.x - now.w / 2)}px ${cy - (now.y - now.h / 2)}px`
                     : "50% 50%",
@@ -594,8 +606,8 @@ export function PhotoHalo({
               ? `inset(${(1 - logoP) * 100}% -10% -20% -10%)`
               : `inset(-20% ${(1 - logoP) * 100}% -20% 0)`,
             transform: portrait
-              ? `translateY(${(1 - logoP) * logoSize * 0.4}px) scale(${lockPush})`
-              : `translateX(${(1 - logoP) * logoSize * 0.5}px) scale(${lockPush})`,
+              ? `translateY(${(1 - logoP) * logoSize * 0.4}px) scale(${lockPush})${glide(midway(logoP) || midway(lockP))}`
+              : `translateX(${(1 - logoP) * logoSize * 0.5}px) scale(${lockPush})${glide(midway(lockP))}`,
             transformOrigin: portrait ? "50% 50%" : `${groupW / 2}px 50%`,
             opacity: logoP > 0 ? 1 : 0,
           }}

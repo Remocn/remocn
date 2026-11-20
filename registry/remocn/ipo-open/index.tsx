@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -225,6 +226,7 @@ export function IpoOpen({
   speed = 1,
   theme = "dark",
 }: IpoOpenProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -287,12 +289,18 @@ export function IpoOpen({
   const flash = t >= BELL && t < BELL + 2;
   const opened = t >= BELL;
   const landed = t >= LAND;
-  const rise = (a: number, len = 18) =>
-    interpolate(t, [a, a + len], [0, 1], { ...CLAMP, easing: EASE_OUT });
-  const kick = interpolate(t, [BELL, BELL + 14], [1.045, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const riseAt = (tt: number, a: number, len = 18) =>
+    interpolate(tt, [a, a + len], [0, 1], { ...CLAMP, easing: EASE_OUT });
+  const rise = (a: number, len = 18) => riseAt(t, a, len);
+  const kickAt = (tt: number) =>
+    interpolate(tt, [BELL, BELL + 14], [1.045, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  const kick = kickAt(t);
+  // Whether a value is still travelling: compared with the neighbouring frames.
+  const stirs = (at: (tt: number) => number, eps = 1e-3) =>
+    Math.abs(at(t + 1) - at(t)) > eps || Math.abs(at(t) - at(t - 1)) > eps;
   const shock = interpolate(t, [BELL, BELL + 16], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.05, 0.7, 0.1, 1),
@@ -301,10 +309,12 @@ export function IpoOpen({
     ...CLAMP,
     easing: Easing.bezier(0.05, 0.7, 0.1, 1),
   });
-  const pop = interpolate(t, [LAND - 2, LAND + 5, LAND + 14], [0, 1.09, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const popAt = (tt: number) =>
+    interpolate(tt, [LAND - 2, LAND + 5, LAND + 14], [0, 1.09, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  const pop = popAt(t);
   const fill = interpolate(t, [LAND - 2, LAND + 4], [0, 1], CLAMP);
   const groundK =
     0.12 * rise(BELL, 10) +
@@ -316,6 +326,20 @@ export function IpoOpen({
   const [hh, mm] = openTime.split(":").map((n) => Number(n));
   const clockMin = hh * 60 + mm + Math.floor(secs / 60);
   const clock = `${String(Math.floor(clockMin / 60) % 24).padStart(2, "0")}:${String(((clockMin % 60) + 60) % 60).padStart(2, "0")}:${String(((secs % 60) + 60) % 60).padStart(2, "0")}`;
+
+  // The letters rise by their `y` and kick by a scale; the price glyphs
+  // rise and roll. SVG text can't carry the mark, so the drawing leans while
+  // either group moves, and already while the letters wait below their window:
+  // a lean that came on as the first one starts would snap them all.
+  const symbolMoving =
+    t < 4 ||
+    stirs((tt) => kickAt(tt) * S) ||
+    letters.some((_, i) =>
+      stirs((tt) => riseAt(tt, 4 + i * 3, 16) * CAP * S * 1.05),
+    );
+  const priceMoving =
+    stirs((tt) => raceAt(tt) / 100) ||
+    glyphs.some((_, i) => stirs((tt) => riseAt(tt, 14 + i * 2, 16) * 0.3 * P));
 
   // ---- reels ------------------------------------------------------------------
   const step = (CAP + 0.3) * P;
@@ -401,7 +425,11 @@ export function IpoOpen({
           width={W}
           height={H}
           viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: glide(symbolMoving || priceMoving),
+          }}
           role="img"
           aria-label={`${symbol} opens at ${fmt(endC)}, IPO price ${fmt(startC)}`}
         >
@@ -534,7 +562,10 @@ export function IpoOpen({
             borderRadius: chipH / 2,
             boxShadow: `inset 0 0 0 ${1.5 * u}px ${p.hair}`,
             opacity: rise(18, 16),
-            transform: `translateY(${(1 - rise(18, 16)) * 0.2 * P}px) scale(${landed || t >= LAND - 2 ? pop : 1})`,
+            transform: `translateY(${(1 - rise(18, 16)) * 0.2 * P}px) scale(${landed || t >= LAND - 2 ? pop : 1})${glide(
+              stirs((tt) => riseAt(tt, 18, 16) * 0.2 * P) ||
+                (t >= LAND - 3 && stirs((tt) => popAt(tt) * chipW)),
+            )}`,
             overflow: "hidden",
           }}
         >
@@ -630,7 +661,7 @@ export function IpoOpen({
             textTransform: "uppercase",
             color: fg,
             opacity: rise(0, 14),
-            transform: `translateY(${(1 - rise(0, 14)) * 8 * u}px)`,
+            transform: `translateY(${(1 - rise(0, 14)) * 8 * u}px)${glide(stirs((tt) => riseAt(tt, 0, 14) * 8 * u))}`,
             lineHeight: 1,
           }}
         >

@@ -16,6 +16,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -215,6 +216,8 @@ function PlayGlyph({ size, color }: { size: number; color: string }) {
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -251,7 +254,9 @@ export function LooksLikeThis({
   ground,
   groundParams,
 }: LooksLikeThisProps) {
-  const frame = Math.max(0, useCurrentFrame() - delay);
+  const glide = useGlide();
+  const now = useCurrentFrame();
+  const frame = Math.max(0, now - delay);
   const { width: W, height: H, fps, durationInFrames: D } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
@@ -262,6 +267,15 @@ export function LooksLikeThis({
   const words = lead.split(/\s+/).filter(Boolean);
   const k = Math.min(1.6, Math.max(0.6, D / 150));
   const t = frame * speed;
+  const tAt = (n: number) => Math.max(0, n - delay) * speed;
+  /** Whether a value in px, as a function of time, moves on this frame. */
+  const stirs = (v: (t: number) => number) => {
+    const here = v(t);
+    return (
+      Math.abs(v(tAt(now + 1)) - here) > 1e-3 ||
+      Math.abs(here - v(tAt(now - 1))) > 1e-3
+    );
+  };
   const portrait = H > W * 1.1;
   const u = portrait ? W / 1080 : W / 1280;
   const sp = m.sans(" ");
@@ -315,16 +329,20 @@ export function LooksLikeThis({
   const GROW_AT = 48 * k;
   const GROW_LEN = 30 * k;
 
-  const p = interpolate(t, [GROW_AT, GROW_AT + GROW_LEN], [0, 1], {
-    ...CLAMP,
-    easing: MOVE,
-  });
-  const pChip = spring({
-    frame: t - GROW_AT - 4 * k,
-    fps,
-    config: MORPH,
-    durationInFrames: GROW_LEN + 2 * k,
-  });
+  const pAt = (t: number) =>
+    interpolate(t, [GROW_AT, GROW_AT + GROW_LEN], [0, 1], {
+      ...CLAMP,
+      easing: MOVE,
+    });
+  const p = pAt(t);
+  const pChipAt = (t: number) =>
+    spring({
+      frame: t - GROW_AT - 4 * k,
+      fps,
+      config: MORPH,
+      durationInFrames: GROW_LEN + 2 * k,
+    });
+  const pChip = pChipAt(t);
   const lerp = (a: number, b: number, q: number) => a + (b - a) * q;
   const size = lerp(sizeA, sizeB, p);
 
@@ -337,15 +355,19 @@ export function LooksLikeThis({
     h: CHIP_H * sizeA,
   };
   const chipOpen = spring({ frame: t - CHIP_AT, fps, config: CARD });
-  const chipY = lerp(chipRect0.y, hero.y, pChip);
-  const lineFloor = lerp(slotA.y, B.placed[words.length].y, p) + size * 1.14;
-  const leave = interpolate(pChip, [0, 0.14], [0, 1], CLAMP);
-  const chip = {
-    x: lerp(chipRect0.x, hero.x, pChip),
-    y: lerp(chipY, Math.max(chipY, lineFloor), leave),
-    w: lerp(chipRect0.w, hero.w, pChip),
-    h: lerp(chipRect0.h, hero.h, pChip),
+  const chipAt = (pChip: number, p: number) => {
+    const chipY = lerp(chipRect0.y, hero.y, pChip);
+    const lineFloor =
+      lerp(slotA.y, B.placed[words.length].y, p) + lerp(sizeA, sizeB, p) * 1.14;
+    const leave = interpolate(pChip, [0, 0.14], [0, 1], CLAMP);
+    return {
+      x: lerp(chipRect0.x, hero.x, pChip),
+      y: lerp(chipY, Math.max(chipY, lineFloor), leave),
+      w: lerp(chipRect0.w, hero.w, pChip),
+      h: lerp(chipRect0.h, hero.h, pChip),
+    };
   };
+  const chip = chipAt(pChip, p);
   const radius = lerp(sizeA * 0.12, radiusPx * u, pChip);
   const settle = interpolate(t, [GROW_AT + GROW_LEN, D], [1.04, 1], {
     ...CLAMP,
@@ -397,13 +419,20 @@ export function LooksLikeThis({
   const label = Math.max(17 * u, H * 0.024);
   const flat = background !== undefined;
 
+  // A font size that eases moves each baseline inside its own box by layout,
+  // which rounds it to whole pixels whatever transform sits on top. While it
+  // eases, the text is laid out at its final size and scaled to the live one;
+  // at rest it is the plain layout again.
+  const sizing = midway(p);
+  const fit = sizing ? ` scale(${size / sizeB})` : "";
   const textStyle = {
     position: "absolute" as const,
     left: 0,
     top: 0,
+    transformOrigin: "0 0",
     fontFamily,
     fontWeight: WGHT,
-    fontSize: size,
+    fontSize: sizing ? sizeB : size,
     lineHeight: 1,
     letterSpacing: `${TRACK}em`,
     whiteSpace: "pre" as const,
@@ -412,6 +441,32 @@ export function LooksLikeThis({
 
   const open = 0.12 + 0.88 * Math.min(1, chipOpen);
   const visW = chip.w * open;
+  // The chip flies to the hero by transform, laid out at the nearer of its two
+  // resting places: layout rounds a box and a baseline to whole pixels, so a
+  // chip eased by `left`/`top` clicks along pixel by pixel. Its size still
+  // animates by layout, so the control bar pinned to its bottom rides a layer
+  // of the resting height, moved by the height change.
+  const chipRest = chipAt(Math.round(pChip), Math.round(p));
+  const chipLeft = (q: { x: number; w: number }) =>
+    q.x + (q.w * (1 - open)) / 2;
+  const chipDx = chipLeft(chip) - chipLeft(chipRest);
+  const chipDy = chip.y - chipRest.y;
+  const chipMoving =
+    stirs((t) => chipAt(pChipAt(t), pAt(t)).y) ||
+    stirs((t) => chipAt(pChipAt(t), pAt(t)).x);
+  const chipShift =
+    Math.abs(chipDx) < 1e-3 && Math.abs(chipDy) < 1e-3
+      ? undefined
+      : `translate(${chipDx}px, ${chipDy}px)${glide(chipMoving)}`;
+  const barDy = chip.h - chipRest.h;
+  const chromeAt = (t: number) =>
+    interpolate(t, [GROW_AT + GROW_LEN, GROW_AT + GROW_LEN + 12 * k], [0, 1], {
+      ...CLAMP,
+      easing: TYPE_IN,
+    });
+  const barMoving =
+    stirs((t) => chipAt(pChipAt(t), pAt(t)).h) ||
+    stirs((t) => (1 - chromeAt(t)) * label * 0.6);
 
   return (
     <AbsoluteFill
@@ -441,12 +496,22 @@ export function LooksLikeThis({
           );
           const x = lerp(a.x, b.x, p);
           const y = lerp(a.y, b.y, p) + (1 - enter) * size * 0.32;
+          const yAt = (t: number) => {
+            const q = pAt(t);
+            const e = interpolate(
+              t,
+              [i * stagger * k, i * stagger * k + 12 * k],
+              [0, 1],
+              { ...CLAMP, easing: TYPE_IN },
+            );
+            return lerp(a.y, b.y, q) + (1 - e) * lerp(sizeA, sizeB, q) * 0.32;
+          };
           return (
             <span
               key={`${wd}-${i.toString()}`}
               style={{
                 ...textStyle,
-                transform: `translate(${x}px, ${y}px)`,
+                transform: `translate(${x}px, ${y}px)${fit}${glide(sizing || stirs(yAt))}`,
                 opacity: enter,
               }}
             >
@@ -457,7 +522,7 @@ export function LooksLikeThis({
         <span
           style={{
             ...textStyle,
-            transform: `translate(${endX}px, ${endY}px)`,
+            transform: `translate(${endX}px, ${endY}px)${fit}${glide(midway(p))}`,
             opacity: interpolate(t, [10 * k, 18 * k], [0, 1], {
               ...CLAMP,
               easing: TYPE_IN,
@@ -474,7 +539,7 @@ export function LooksLikeThis({
             fontWeight: 400,
             letterSpacing: `${SERIF_TRACK}em`,
             color: hi,
-            transform: `translate(${wordX}px, ${lerp(slotA.y, slotB.y, p) + (1 - wordIn) * size * 0.3}px)`,
+            transform: `translate(${wordX}px, ${lerp(slotA.y, slotB.y, p) + (1 - wordIn) * size * 0.3}px)${fit}${glide(midway(p) || midway(wordIn))}`,
             opacity: wordIn,
           }}
         >
@@ -483,8 +548,8 @@ export function LooksLikeThis({
         <div
           style={{
             position: "absolute",
-            left: chip.x + (chip.w - visW) / 2,
-            top: chip.y,
+            left: chipLeft(chipRest),
+            top: chipRest.y,
             width: visW,
             height: chip.h,
             borderRadius: radius,
@@ -492,6 +557,7 @@ export function LooksLikeThis({
             background: c.well,
             boxShadow: pChip > 0.3 ? c.lift : "none",
             opacity: interpolate(chipOpen, [0, 0.25], [0, 1], CLAMP),
+            transform: chipShift,
           }}
         >
           <Img
@@ -521,42 +587,56 @@ export function LooksLikeThis({
           <div
             style={{
               position: "absolute",
-              left: label * 1.1,
-              right: label * 1.1,
-              bottom: label * 0.95,
-              display: "flex",
-              alignItems: "center",
-              gap: label * 0.8,
-              opacity: chrome,
-              transform: `translateY(${(1 - chrome) * label * 0.6}px)`,
-              color: "#ffffff",
-              fontFamily: mono.fontFamily,
-              fontSize: label,
-              fontVariantNumeric: "tabular-nums",
-              whiteSpace: "nowrap",
+              left: 0,
+              right: 0,
+              top: 0,
+              height: chipRest.h,
+              transform:
+                Math.abs(barDy) < 1e-3
+                  ? undefined
+                  : `translateY(${barDy}px)${glide(barMoving && !chipMoving)}`,
             }}
           >
-            <PlayGlyph size={label * 1.05} color="#ffffff" />
             <div
               style={{
-                flex: 1,
-                height: Math.max(2, label * 0.14),
-                borderRadius: label,
-                background: "rgba(255,255,255,0.3)",
+                position: "absolute",
+                left: label * 1.1,
+                right: label * 1.1,
+                bottom: label * 0.95,
+                display: "flex",
+                alignItems: "center",
+                gap: label * 0.8,
+                opacity: chrome,
+                transform: `translateY(${(1 - chrome) * label * 0.6}px)${glide(barMoving && !chipMoving && Math.abs(barDy) < 1e-3)}`,
+                color: "#ffffff",
+                fontFamily: mono.fontFamily,
+                fontSize: label,
+                fontVariantNumeric: "tabular-nums",
+                whiteSpace: "nowrap",
               }}
             >
+              <PlayGlyph size={label * 1.05} color="#ffffff" />
               <div
                 style={{
-                  width: `${play * 100}%`,
-                  height: "100%",
-                  borderRadius: "inherit",
-                  background: "#ffffff",
+                  flex: 1,
+                  height: Math.max(2, label * 0.14),
+                  borderRadius: label,
+                  background: "rgba(255,255,255,0.3)",
                 }}
-              />
+              >
+                <div
+                  style={{
+                    width: `${play * 100}%`,
+                    height: "100%",
+                    borderRadius: "inherit",
+                    background: "#ffffff",
+                  }}
+                />
+              </div>
+              <span>
+                {stamp} / {duration}
+              </span>
             </div>
-            <span>
-              {stamp} / {duration}
-            </span>
           </div>
           <div
             style={{

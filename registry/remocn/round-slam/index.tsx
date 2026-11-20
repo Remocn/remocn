@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["400", "500"],
@@ -112,6 +113,8 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 // gradients.sh "chrome": bg #050203, [#e0202e, #ffd6b8, #4fe3f0].
 const CHROME = ["#E0202E", "#FFD6B8", "#4FE3F0"] as const;
 
@@ -198,6 +201,7 @@ export function RoundSlam({
   theme = "dark",
   speed = 1,
 }: RoundSlamProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -475,7 +479,7 @@ export function RoundSlam({
               display: "flex",
               justifyContent: "center",
               opacity: logoP,
-              transform: `translateY(${(1 - logoP) * 18 * u}px)`,
+              transform: `translateY(${(1 - logoP) * 18 * u}px)${glide(midway(logoP))}`,
             }}
           >
             {logo ?? <RemocnLogo fontSize={34 * u} color={c.logo} />}

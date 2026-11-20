@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -86,6 +87,8 @@ const EXIT = Easing.bezier(0.55, 0, 1, 0.45);
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const DARK = {
   copy: "#f4f4f6",
@@ -631,6 +634,7 @@ export function CardCreate({
   ground,
   groundParams,
 }: CardCreateProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { fps, width, height } = useVideoConfig();
   const f = frame * speed;
@@ -722,10 +726,11 @@ export function CardCreate({
   });
   const tool = f >= DETAILS_TAB + 1 ? 2 : f >= NAME_TAB + 1 ? 1 : 0;
   const toast = sp(WALLET + 26, CHIP);
-  const newY =
-    f < WALLET
-      ? CARD_Y - (1 - print) * (CHT + 18)
-      : CARD_Y + wal * (190 + 3 * 52 - CARD_Y);
+  // The new card is laid out at `CARD_Y` and travels by a transform: layout
+  // rounds a box and a baseline to whole pixels, so a card eased by `top`
+  // clicks along pixel by pixel.
+  const newDy =
+    f < WALLET ? -(1 - print) * (CHT + 18) : wal * (190 + 3 * 52 - CARD_Y);
   const toolX = (i: number) => SW / 2 + (i - 1) * 112;
   const path = [
     { t: 44, x: 300, y: 700 },
@@ -771,6 +776,7 @@ export function CardCreate({
   );
   const touchPress = Math.max(...path.slice(1).map((p) => bump(p.t)));
   const camS = interpolate(f, [0, 370], [1, 1.03], clamp);
+  const camMoving = f > 0 && f < 370;
   const rise = sp(0, HEAVY);
 
   const stackCard = (i: number, y: number, style: React.CSSProperties) => (
@@ -828,7 +834,7 @@ export function CardCreate({
           left: 0,
           right: 0,
           top: 0,
-          transform: `translateY(${(1 - pin) * 70 - pout * 50}%)`,
+          transform: `translateY(${(1 - pin) * 70 - pout * 50}%)${glide(midway(pin) || midway(pout))}`,
           opacity: pin * (1 - pout),
         }}
       >
@@ -893,7 +899,9 @@ export function CardCreate({
               top: phoneCy - BH / 2,
               width: BW,
               height: BH,
-              transform: `translateY(${(1 - rise) * H * 0.9}px) scale(${k * camS})`,
+              // The camera push runs the whole scene, so the mark here
+              // covers every label on the screen while it lasts.
+              transform: `translateY(${(1 - rise) * H * 0.9}px) scale(${k * camS})${glide(camMoving || midway(rise))}`,
             }}
           >
             <Phone c={c}>
@@ -926,8 +934,9 @@ export function CardCreate({
                 if (!walletPhase) {
                   const v = stackIn[i];
                   const o = sp(OUT + i * 3, HEAVY);
+                  const rot = (1 - v) * (i - 1) * 8;
                   return stackCard(i, 196 + i * 60, {
-                    transform: `translateY(${(1 - v) * 640 - o * 340}px) rotate(${(1 - v) * (i - 1) * 8}deg) scale(${1 - o * 0.08})`,
+                    transform: `translateY(${(1 - v) * 640 - o * 340}px) rotate(${rot}deg) scale(${1 - o * 0.08})`,
                     opacity: 1 - o,
                   });
                 }
@@ -1159,11 +1168,11 @@ export function CardCreate({
                     style={{
                       position: "absolute",
                       left: 20,
-                      top: newY - (f < WALLET ? SLOT_Y : 0),
+                      top: CARD_Y - (f < WALLET ? SLOT_Y : 0),
                       width: CW,
                       height: CHT,
                       transformStyle: "preserve-3d",
-                      transform: `rotateY(${angle}deg) scale(${1 + lift})`,
+                      transform: `translateY(${newDy}px) rotateY(${angle}deg) scale(${1 + lift})`,
                       boxShadow:
                         Math.cos((angle * Math.PI) / 180) > 0.2 ||
                         Math.cos((angle * Math.PI) / 180) < -0.2
@@ -1272,8 +1281,10 @@ export function CardCreate({
               <div
                 style={{
                   position: "absolute",
-                  left: touch.x - 22,
-                  top: touch.y - 22,
+                  // Parked on the first stop; the hops between taps are a
+                  // transform, for the same reason as the card above.
+                  left: path[0].x - 22,
+                  top: path[0].y - 22,
                   width: 44,
                   height: 44,
                   borderRadius: 22,
@@ -1282,7 +1293,7 @@ export function CardCreate({
                     ? "inset 0 0 0 1.5px rgba(255,255,255,0.7)"
                     : "inset 0 0 0 1.5px rgba(255,255,255,0.9), 0 4px 14px rgba(0,0,0,0.18)",
                   opacity: touchOpacity,
-                  transform: `scale(${1 - touchPress * 0.2})`,
+                  transform: `translate(${touch.x - path[0].x}px, ${touch.y - path[0].y}px) scale(${1 - touchPress * 0.2})`,
                   zIndex: 35,
                 }}
               />

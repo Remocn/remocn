@@ -11,6 +11,8 @@ import {
   useVideoConfig,
 } from "remotion";
 
+import { useGlide } from "@/lib/remocn/glide";
+
 const bricolage = loadBricolage("normal", {
   weights: ["400", "500"],
   subsets: ["latin"],
@@ -206,6 +208,7 @@ export function FlickSwap({
   speed = 1,
   theme = "dark",
 }: FlickSwapProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const p = PALETTES[theme];
@@ -228,6 +231,13 @@ export function FlickSwap({
     (scrollAt(frame + 0.5, n, period) - scrollAt(frame - 0.5, n, period)) *
     height;
   const speedPx = Math.abs(v);
+  // The scroll is a damped spring with no clean progress, and the words trail
+  // it by up to two frames, so look at the neighbouring frames instead.
+  const yAt = (f: number) => scrollAt(f, n, period) * height;
+  let scrolling = false;
+  for (let d = -2; d < 1 && !scrolling; d++) {
+    scrolling = Math.abs(yAt(frame + d + 1) - yAt(frame + d)) > 1e-3;
+  }
   const blur = Math.min(16 * s, speedPx * 0.13) * blurAmount;
   const lean = Math.max(-1.2, Math.min(1.2, (v / height) * 9));
   const sway = (v / height) * 26 * s;
@@ -251,7 +261,7 @@ export function FlickSwap({
   const railH = railGap * (n - 1);
   const railX = width - padX * (portrait ? 0.55 : 0.42);
   const railTop = height / 2 - railH / 2;
-  const railY = railTop + Math.max(-0.3, Math.min(n - 0.7, y)) * railGap;
+  const railShift = Math.max(-0.3, Math.min(n - 0.7, y)) * railGap;
   const railIn = interpolate(frame, [4, 16], [0, 1], CLAMP);
 
   return (
@@ -300,7 +310,7 @@ export function FlickSwap({
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "center",
-                  transform: `translateY(${off.toFixed(2)}px)`,
+                  transform: `translateY(${off.toFixed(2)}px)${glide(scrolling)}`,
                 }}
               >
                 {item.label ? (
@@ -392,7 +402,10 @@ export function FlickSwap({
               style={{
                 position: "absolute",
                 left: railX - 3 * s,
-                top: railY - 11 * s,
+                // Eased by `top`, the pill clicked down pixel by pixel; layout
+                // holds the first stop and the travel is a transform.
+                top: railTop - 11 * s,
+                transform: railShift ? `translateY(${railShift}px)` : undefined,
                 width: 6 * s,
                 height: 22 * s,
                 borderRadius: 9,

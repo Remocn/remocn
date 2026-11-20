@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const familjen = loadFamiljen("normal", {
   weights: ["400", "500"],
@@ -67,6 +68,7 @@ const CLAMP = {
 
 interface TrailState {
   front: number;
+  moving: boolean;
   stamps: { y: number; id: number }[];
 }
 
@@ -96,7 +98,11 @@ function trail(
   const clear = all.filter((s) => Math.abs(s.y - front) >= gap);
   const retract = f > len ? Math.floor((f - len) / RETRACT) + 1 : 0;
   const keep = Math.max(0, Math.min(clear.length, tail) - retract);
-  return { front, stamps: clear.slice(clear.length - keep) };
+  return {
+    front,
+    moving: f > 0 && f < len,
+    stamps: clear.slice(clear.length - keep),
+  };
 }
 
 interface Metrics {
@@ -190,6 +196,7 @@ export function WindowTrail({
   speed = 1,
   theme = "dark",
 }: WindowTrailProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = { ...THEMES[theme], ink: ink ?? THEMES[theme].ink };
@@ -317,6 +324,14 @@ export function WindowTrail({
   const local = (v: number, size: number) =>
     scale === 1 ? v : size / 2 + (v - size / 2) / scale;
 
+  // SVG text placed by `y` cannot carry the mark itself, so the drawing does,
+  // while either front line travels. It starts a frame before the line moves
+  // and ends a frame after, so the lean never comes or goes on the frame
+  // where `y` changes.
+  const near = (f: number, len: number) => f > -speed && f < len + speed;
+  const linesMoving =
+    (hasFrom && near(t - OUT_AT, OUT_LEN)) || near(t - inAt, slide);
+
   const nodes: React.ReactNode[] = paints.map((p) => (
     <g key={p.key} clipPath={`url(#${uid}${p.key})`}>
       {outTrail
@@ -349,7 +364,11 @@ export function WindowTrail({
         <svg
           width={W}
           height={H}
-          style={{ position: "absolute", inset: 0 }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: glide(linesMoving),
+          }}
           aria-hidden
         >
           <defs>
@@ -397,7 +416,7 @@ export function WindowTrail({
                     display: "inline-block",
                     marginRight: k < tagWords.length - 1 ? "0.26em" : 0,
                     opacity: q,
-                    transform: `translateY(${((1 - q) * tagFs * 0.7).toFixed(2)}px)`,
+                    transform: `translateY(${((1 - q) * tagFs * 0.7).toFixed(2)}px)${glide(q > 0 && (1 - q) * tagFs > 1e-3)}`,
                   }}
                 >
                   {w}

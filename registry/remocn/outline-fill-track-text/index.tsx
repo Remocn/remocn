@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { Easing, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface OutlineFillTrackTextProps {
   leadText?: string;
@@ -35,6 +36,8 @@ const clamp = {
   extrapolateLeft: "clamp" as const,
   extrapolateRight: "clamp" as const,
 };
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 function estimateTextWidth(
   text: string,
@@ -70,6 +73,7 @@ export function OutlineFillTrackText({
   speed = 1,
   className,
 }: OutlineFillTrackTextProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame() * Math.max(speed, 0);
   const { width: compositionWidth } = useVideoConfig();
   const safeFontSize = Math.max(fontSize, 1);
@@ -174,7 +178,7 @@ export function OutlineFillTrackText({
             maskImage: leadMask,
             maskRepeat: "no-repeat",
             opacity: 1,
-            transform: `translate3d(-50%, calc(-50% + ${leadY}px), 0)`,
+            transform: `translate3d(-50%, calc(-50% + ${leadY}px), 0)${glide(midway(enterProgress))}`,
             WebkitMaskImage: leadMask,
             WebkitMaskRepeat: "no-repeat",
             ...textStyle,

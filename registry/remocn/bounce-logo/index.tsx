@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const manrope = loadManrope("normal", {
   weights: ["500", "600"],
@@ -91,6 +92,8 @@ const CAP = 0.72;
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const BLOOM = Easing.bezier(0.12, 0.9, 0.25, 1);
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -298,6 +301,7 @@ export function BounceLogo({
   theme = "dark",
   speed = 1,
 }: BounceLogoProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -348,10 +352,32 @@ export function BounceLogo({
   const blockH = lh * finalScale + (line ? lineGap + lineSize * 0.75 : 0);
   const endX = (W - lw * finalScale) / 2;
   const endY = (H - blockH) / 2;
+  const lineY = endY + lh * finalScale + lineGap + lineSize * 0.75;
 
+  // The wordmark's place and size as a function of the frame, so it can be
+  // compared with its neighbours to tell motion from rest.
+  const placeAt = (f: number) => {
+    const r = interpolate(f, [resolveAt, resolveAt + RESOLVE], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+    const n = at(f);
+    return {
+      x: n.x + (endX - n.x) * r,
+      y: n.y + (endY - n.y) * r,
+      k: (fs * (1 + (finalScale - 1) * r)) / 100,
+    };
+  };
   const now = at(t);
   const x = now.x + (endX - now.x) * resolve;
   const y = now.y + (endY - now.y) * resolve;
+  const k = (fs * scale) / 100;
+  const markMoving = [placeAt(t - speed), placeAt(t + speed)].some(
+    (o) =>
+      Math.abs(o.x - x) > 1e-3 ||
+      Math.abs(o.y - y) > 1e-3 ||
+      Math.abs(o.k - k) * lw * finalScale > 1e-3,
+  );
 
   const settled = t >= corner;
   const color = settled ? fg : bounceColor;
@@ -387,7 +413,13 @@ export function BounceLogo({
           width={W}
           height={H}
           viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            // The wordmark and the line move by SVG attributes, which carry
+            // no mark; the drawing's own style carries it for both.
+            transform: glide(markMoving || midway(lineIn)),
+          }}
           aria-hidden
         >
           <g transform={`translate(${x} ${y}) scale(${(fs * scale) / 100})`}>
@@ -396,7 +428,7 @@ export function BounceLogo({
           {line ? (
             <text
               x={W / 2}
-              y={endY + lh * finalScale + lineGap + lineSize * 0.75}
+              y={lineY}
               textAnchor="middle"
               fill={c.line}
               opacity={lineIn}

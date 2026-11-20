@@ -1,6 +1,7 @@
 "use client";
 
 import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface PerCharacterRiseProps {
   text: string;
@@ -12,6 +13,11 @@ export interface PerCharacterRiseProps {
   className?: string;
 }
 
+// Chrome parks a glyph raster on a whole pixel vertically for as long as the
+// matrix is axis-aligned, so a rising letter lands on whole pixels and its
+// steps come out uneven. Each letter's transform is marked so it leans off
+// that grid while it rises.
+
 export function PerCharacterRise({
   text,
   distance = 32,
@@ -21,6 +27,7 @@ export function PerCharacterRise({
   speed = 1,
   className,
 }: PerCharacterRiseProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame() * speed;
 
   const chars = Array.from(text);
@@ -73,7 +80,9 @@ export function PerCharacterRise({
                 backfaceVisibility: "hidden",
                 transformOrigin: "50% 55%",
                 opacity,
-                translate: `0 ${y}px`,
+                transform: `translateY(${y}px)${glide(
+                  local >= 0 && local < charTravelFrames,
+                )}`,
               }}
             >
               {char}

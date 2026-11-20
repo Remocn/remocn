@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const manrope = loadManrope("normal", {
   weights: ["500", "600"],
@@ -200,6 +201,7 @@ export function LightSignature({
   speed = 1,
   theme = "dark",
 }: LightSignatureProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const shift = sweep - CHASE_LEN;
   const returnStart = RETURN_START + shift;
@@ -435,14 +437,28 @@ export function LightSignature({
     ...CLAMP,
     easing: EASE_OUT,
   });
+  // The eyebrow's tracking eases in, which widens the centred row; laid out
+  // that way the square's edges round to whole pixels and it clicks sideways.
+  // The row keeps its settled width in layout and the spread is a transform.
+  const eyeExtra = eyebrow
+    ? (interpolate(eyeIn, [0, 1], [0.5, 0.22]) - 0.22) * [...eyebrow].length
+    : 0;
+  const eyeSlide = eyeExtra * eyeFs > 1e-3 ? (-eyeExtra * eyeFs) / 2 : 0;
   const tagIn = interpolate(frame, [64 + shift, 90 + shift], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const settle = interpolate(frame, [0, 110], [1.04, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const settleAt = (f: number) =>
+    interpolate(f, [0, 110], [1.04, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  const settle = settleAt(frame);
+  // The ease is long and flat at the end, so the test is on the scale itself:
+  // 1e-6 of scale is about 1e-3px at the frame's far edge.
+  const settling =
+    Math.abs(settleAt(frame + 1) - settle) > 1e-6 ||
+    Math.abs(settle - settleAt(frame - 1)) > 1e-6;
 
   const hazeLevel = returning
     ? interpolate(frame, [returnStart, returnStart + RETURN_LEN], [0.55, 1], {
@@ -475,7 +491,7 @@ export function LightSignature({
           style={{
             position: "absolute",
             inset: 0,
-            transform: `scale(${settle})`,
+            transform: `scale(${settle})${glide(settling)}`,
             transformOrigin: `50% ${(lineY / height) * 100}%`,
           }}
         >
@@ -500,7 +516,7 @@ export function LightSignature({
                   height: eyeFs * 0.36,
                   borderRadius: 1,
                   background: accent,
-                  transform: `scale(${0.4 + 0.6 * eyeIn})`,
+                  transform: `${eyeSlide ? `translateX(${eyeSlide}px) ` : ""}scale(${0.4 + 0.6 * eyeIn})`,
                 }}
               />
               <span
@@ -511,7 +527,8 @@ export function LightSignature({
                   lineHeight: 1,
                   textTransform: "uppercase",
                   letterSpacing: `${interpolate(eyeIn, [0, 1], [0.5, 0.22])}em`,
-                  marginRight: "-0.22em",
+                  marginRight: eyeSlide ? `${-0.22 - eyeExtra}em` : "-0.22em",
+                  transform: eyeSlide ? `translateX(${eyeSlide}px)` : undefined,
                   color: p.muted,
                   whiteSpace: "nowrap",
                 }}

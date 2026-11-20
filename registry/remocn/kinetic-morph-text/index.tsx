@@ -2,6 +2,7 @@
 
 import { useId, useLayoutEffect, useMemo, useState } from "react";
 import { Easing, useCurrentFrame, useVideoConfig } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface KineticMorphTextProps {
   /** One phrase per line, or separate phrases with |. */
@@ -370,9 +371,11 @@ export function KineticMorphText({
   speed = 1,
   className,
 }: KineticMorphTextProps) {
+  const glide = useGlide();
   const currentFrame = useCurrentFrame();
   const { width, height, fps } = useVideoConfig();
-  const frame = currentFrame * (30 / fps) * Math.max(0, finite(speed, 1));
+  const rate = (30 / fps) * Math.max(0, finite(speed, 1));
+  const frame = currentFrame * rate;
   const size = Math.min(height * 0.28, Math.max(1, finite(fontSize, 100)));
   const weight = Math.min(900, Math.max(100, finite(Number(fontWeight), 600)));
   const layout = useGlyphLayout(text, size, weight, width);
@@ -384,6 +387,21 @@ export function KineticMorphText({
     holdFrames,
     loop,
   );
+  // Letters turn through level on their way, where the SVG would put them on
+  // whole pixels; the mark keeps them off that grid while any of them moves.
+  const progressAt = (f: number) =>
+    getKineticMorphTimeline(
+      f,
+      layout?.phrases.length ?? 0,
+      transition,
+      holdFrames,
+      loop,
+    );
+  const before = progressAt(frame - rate);
+  const after = progressAt(frame + rate);
+  const differs = (a: typeof timeline, b: typeof timeline) =>
+    a.from !== b.from || a.to !== b.to || a.progress !== b.progress;
+  const moving = differs(before, timeline) || differs(timeline, after);
   const pairs = useMemo(
     () =>
       matchKineticMorphGlyphs(
@@ -424,6 +442,7 @@ export function KineticMorphText({
           fontSize: layout?.size ?? size,
           fontWeight: weight,
           fontKerning: "none",
+          transform: glide(moving),
         }}
       >
         <g

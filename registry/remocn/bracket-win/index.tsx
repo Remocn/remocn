@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: tektur } = loadFont("normal", {
   weights: ["400", "500"],
@@ -217,6 +218,7 @@ export function BracketWin({
   theme = "dark",
   speed = 1,
 }: BracketWinProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed + 1;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -317,11 +319,20 @@ export function BracketWin({
   const titleIn = SLAM(ramp(t, burstAt + 2, 8));
   const logoIn = OUT(ramp(t, burstAt + 5, 10));
   const capIn = OUT(ramp(t, burstAt + 12, 10));
-  const push = 1 + 0.035 * INOUT(ramp(t, 0, burstAt + 20));
-  const hit = Math.max(
-    ...roundAt.map((r) => kick(t - r, 7) * 0.6),
-    kick(t - burstAt - 4, 10),
-  );
+  // The camera: a slow push with a kick on every round. The kicks overlap the
+  // push, so whether it moves is read off the neighbouring frames.
+  const camAt = (f: number) =>
+    (1 + 0.035 * INOUT(ramp(f, 0, burstAt + 20))) *
+    (1 +
+      0.01 *
+        Math.max(
+          ...roundAt.map((r) => kick(f - r, 7) * 0.6),
+          kick(f - burstAt - 4, 10),
+        ));
+  const cam = camAt(t);
+  const camMoving =
+    Math.abs(camAt(t + speed) - cam) > 1e-6 ||
+    Math.abs(cam - camAt(t - speed)) > 1e-6;
 
   // Final champion plate: grows out of the final node.
   const plateW0 = finalW;
@@ -486,7 +497,7 @@ export function BracketWin({
           style={{
             position: "absolute",
             inset: 0,
-            transform: `scale(${push * (1 + 0.01 * hit)})`,
+            transform: `scale(${cam})${glide(camMoving)}`,
             transformOrigin: `${cx}px ${cy}px`,
           }}
         >

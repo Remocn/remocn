@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const face = loadFont("normal", { weights: ["400"], subsets: ["latin"] });
 const mono = loadMono("normal", { weights: ["500"], subsets: ["latin"] });
@@ -66,6 +67,10 @@ const LINE_HEIGHT = 1.1;
 const WRAP_IN = 11;
 /** How far a wrapping word drifts out and slides in, in em. */
 const WRAP_SLIDE = 0.3;
+
+/** Moved more than a thousandth of a pixel to or from a neighbouring frame. */
+const stepping = (prev: number, now: number, next: number) =>
+  Math.abs(next - now) > 1e-3 || Math.abs(now - prev) > 1e-3;
 
 interface Metrics {
   words: number[];
@@ -182,6 +187,7 @@ export function CursorFrame({
   theme = "light",
   speed = 1,
 }: CursorFrameProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const t = THEMES[theme];
@@ -312,6 +318,27 @@ export function CursorFrame({
   const fw = boxW(frame);
   const fh = frame < RESIZE ? H1 * dragY(frame) : settledH;
 
+  // The chrome rides the corner. While the corner moves, the chrome is laid
+  // out where this drag lets go and the way there is a transform: layout
+  // rounds a box and a baseline to whole pixels, so chrome eased by
+  // `left`/`top` clicks along pixel by pixel. At rest it keeps plain layout.
+  const fhAt = (f: number) => {
+    if (f < RESIZE) return H1 * dragY(f);
+    const lo = Math.floor(f);
+    const hA = settleAt(lo).h;
+    return hA + (settleAt(lo + 1).h - hA) * (f - lo);
+  };
+  const cornerMoving =
+    stepping(boxW(frame - speed), fw, boxW(frame + speed)) ||
+    stepping(fhAt(frame - speed), fh, fhAt(frame + speed));
+  const anchorW = frame < RESIZE ? boxW(DRAG_END) : boxW(RESIZE_END);
+  const anchorH =
+    frame < RESIZE ? H1 * dragY(DRAG_END) : settleAt(RESIZE_END + 60).h;
+  const chromeAt = (x: number, y: number, ax: number, ay: number) =>
+    cornerMoving
+      ? { left: ax, top: ay, shift: `translate(${x - ax}px, ${y - ay}px) ` }
+      : { left: x, top: y, shift: "" };
+
   // When does the growing frame first pass each word's centre?
   const wordIn = wide.pos.map((p, i) => {
     const centre = p.x + (m.words[i] ?? 0) * 0.5;
@@ -374,6 +401,22 @@ export function CursorFrame({
   const finalH = breakLines(m, W2, lineH).lines * lineH;
   const shiftX = re * (W1 - W2) * 0.5;
   const shiftY = re * (H1 - finalH) * 0.5;
+  const reAt = (f: number) =>
+    interpolate(f, [RECENTRE, RECENTRE + RECENTRE_LEN], [0, 1], {
+      ...clamp,
+      easing: EASE_IN_OUT,
+    });
+  // The block is laid out where it lands and the glide is a transform, for
+  // the same reason as the chrome above. The transform stays on before and
+  // after the glide: handed to layout at rest, the text would jump to the
+  // nearest pixel.
+  const recentring = stepping(
+    reAt(frame - speed) * Math.max(W1, H1),
+    re * Math.max(W1, H1),
+    reAt(frame + speed) * Math.max(W1, H1),
+  );
+  const endX = (W1 - W2) * 0.5;
+  const endY = (H1 - finalH) * 0.5;
 
   const stroke = Math.max(1, 1.5 * u);
   const hs = 9 * u;
@@ -384,6 +427,37 @@ export function CursorFrame({
     [fw, fh],
   ];
   const badgeSize = 13 * u;
+  const badge = chromeAt(fw / 2, fh + 10 * u, anchorW / 2, anchorH + 10 * u);
+  const cursorAt = (f: number) => {
+    const en = interpolate(f, [ENTER, ENTER + ENTER_LEN], [0, 1], {
+      ...clamp,
+      easing: EASE_IN_OUT,
+    });
+    const lv = interpolate(f, [RELEASE + 6, RELEASE + 34], [0, 1], {
+      ...clamp,
+      easing: EASE_IN_OUT,
+    });
+    const r = reAt(f);
+    const x =
+      f < DRAG
+        ? interpolate(en, [0, 1], [x0 + width * 0.16, x0])
+        : x0 + boxW(f);
+    const y =
+      f < DRAG
+        ? interpolate(en, [0, 1], [y0 + height * 0.2, y0])
+        : y0 + fhAt(f);
+    return {
+      x: x + lv * width * 0.1 + r * endX,
+      y: y + lv * height * 0.12 + r * endY,
+    };
+  };
+  const cursorX = cx + shiftX;
+  const cursorY = cy + shiftY;
+  // The cursor travels by transform too: layout would step it pixel by pixel.
+  const cPrev = cursorAt(frame - speed);
+  const cNext = cursorAt(frame + speed);
+  const cursorMoving =
+    stepping(cPrev.x, cursorX, cNext.x) || stepping(cPrev.y, cursorY, cNext.y);
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
@@ -419,11 +493,12 @@ export function CursorFrame({
         <div
           style={{
             position: "absolute",
-            left: x0 + shiftX,
-            top: y0 + shiftY,
+            left: x0 + endX,
+            top: y0 + endY,
             width: 0,
             height: 0,
             opacity: metrics ? 1 : 0,
+            transform: `translate(${(1 - re) * -endX}px, ${(1 - re) * -endY}px)${glide(recentring)}`,
           }}
         >
           {words.map((w, i) => {
@@ -469,6 +544,29 @@ export function CursorFrame({
               color: fg,
             } as const;
             const inP = p * wrapP;
+            const dropAt = (f: number) =>
+              (1 -
+                interpolate(
+                  f,
+                  [wordIn[i] ?? DRAG, (wordIn[i] ?? DRAG) + WORD_IN],
+                  [0, 1],
+                  { ...clamp, easing: EASE_OUT },
+                )) *
+                fontSize *
+                0.12 -
+              (1 -
+                interpolate(f, [pos.wrap + 4, pos.wrap + 4 + WRAP_IN], [0, 1], {
+                  ...clamp,
+                  easing: EASE_OUT,
+                })) *
+                fontSize *
+                0.22;
+            const drop = dropAt(frame);
+            const dropping = stepping(
+              dropAt(frame - speed),
+              drop,
+              dropAt(frame + speed),
+            );
             return (
               <span key={i}>
                 {ghostP < 1 ? (
@@ -491,7 +589,7 @@ export function CursorFrame({
                     top: pos.y,
                     opacity: inP,
                     filter: inP < 1 ? `blur(${(1 - inP) * 8}px)` : undefined,
-                    transform: `translateY(${(1 - p) * fontSize * 0.12 - (1 - wrapP) * fontSize * 0.22}px)`,
+                    transform: `translateY(${drop}px)${glide(dropping && !recentring)}`,
                   }}
                 >
                   {w}
@@ -511,30 +609,38 @@ export function CursorFrame({
               opacity: chrome,
             }}
           />
-          {corners.map(([hx, hy]) => (
-            <div
-              key={`${hx === 0 ? "l" : "r"}${hy === 0 ? "t" : "b"}`}
-              style={{
-                position: "absolute",
-                left: hx - hs / 2,
-                top: hy - hs / 2,
-                width: hs,
-                height: hs,
-                boxSizing: "border-box",
-                background: t.handle,
-                border: `${stroke}px solid ${accent}`,
-                borderRadius: 1.5 * u,
-                opacity: chrome * handlesIn,
-                transform: `scale(${handleScale})`,
-              }}
-            />
-          ))}
+          {corners.map(([hx, hy]) => {
+            const at = chromeAt(
+              hx - hs / 2,
+              hy - hs / 2,
+              (hx === 0 ? 0 : anchorW) - hs / 2,
+              (hy === 0 ? 0 : anchorH) - hs / 2,
+            );
+            return (
+              <div
+                key={`${hx === 0 ? "l" : "r"}${hy === 0 ? "t" : "b"}`}
+                style={{
+                  position: "absolute",
+                  left: at.left,
+                  top: at.top,
+                  width: hs,
+                  height: hs,
+                  boxSizing: "border-box",
+                  background: t.handle,
+                  border: `${stroke}px solid ${accent}`,
+                  borderRadius: 1.5 * u,
+                  opacity: chrome * handlesIn,
+                  transform: `${at.shift}scale(${handleScale})`,
+                }}
+              />
+            );
+          })}
           <div
             style={{
               position: "absolute",
-              left: fw / 2,
-              top: fh + 10 * u,
-              transform: "translateX(-50%)",
+              left: badge.left,
+              top: badge.top,
+              transform: `${badge.shift}translateX(-50%)${glide(cornerMoving && !recentring)}`,
               padding: `${3 * u}px ${6 * u}px`,
               borderRadius: 4 * u,
               background: accent,
@@ -557,8 +663,11 @@ export function CursorFrame({
           <div
             style={{
               position: "absolute",
-              left: cx + shiftX,
-              top: cy + shiftY,
+              left: cursorMoving ? x0 : cursorX,
+              top: cursorMoving ? y0 : cursorY,
+              transform: cursorMoving
+                ? `translate(${cursorX - x0}px, ${cursorY - y0}px)`
+                : undefined,
               opacity: metrics ? cursorOpacity : 0,
               filter: "drop-shadow(0 1px 1.5px rgba(0,0,0,0.28))",
             }}

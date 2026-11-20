@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadBricolage("normal", {
   weights: ["400", "500"],
@@ -225,6 +226,7 @@ export function Streamgraph({
   theme = "dark",
   speed = 1,
 }: StreamgraphProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
@@ -341,7 +343,9 @@ export function Streamgraph({
       <ScaleLayer scale={size}>
         <AbsoluteFill
           style={{
-            transform: `scale(${push})`,
+            // The slow push carries the number and its caption, so the tilt
+            // rides here for the whole of it.
+            transform: `scale(${push})${glide(t > 0 && t < 150)}`,
             transformOrigin: "45% 50%",
             opacity: stage,
           }}

@@ -10,6 +10,7 @@ import {
   useCaptions,
   useCaptionWordRects,
 } from "@/lib/remocn/caption-core";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface CaptionHighlightBoxProps extends CaptionBaseProps {
   activeColor?: string;
@@ -41,6 +42,8 @@ function mix(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 export function CaptionHighlightBox({
   captions,
   combineTokensWithinMilliseconds = 1200,
@@ -55,6 +58,7 @@ export function CaptionHighlightBox({
   shadow = true,
   className,
 }: CaptionHighlightBoxProps) {
+  const glide = useGlide();
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
@@ -136,7 +140,7 @@ export function CaptionHighlightBox({
         lineHeight: 1.2,
         textAlign: "center",
         opacity: Math.min(enter, exit),
-        transform: `translateY(${(1 - enter) * RISE_EM}em)`,
+        transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
       }}
     >
       {box && (

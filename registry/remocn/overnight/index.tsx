@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const afacad = loadFont("normal", {
   weights: ["400", "500"],
@@ -171,6 +172,7 @@ export function Overnight({
   speed = 1,
   theme = "dark",
 }: OvernightProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const t = frame * speed;
   const { width: W, height: H, durationInFrames: T } = useVideoConfig();
@@ -303,7 +305,7 @@ export function Overnight({
             marginBottom: S * 1.1,
             whiteSpace: "nowrap",
             opacity: se,
-            transform: `translateY(${((1 - se) * S).toFixed(2)}px)`,
+            transform: `translateY(${((1 - se) * S).toFixed(2)}px)${glide(se > 0 && se < 1)}`,
           }}
         >
           {beats[i].slug}
@@ -317,7 +319,7 @@ export function Overnight({
             color: inks[i],
             textWrap: "balance",
             opacity: e,
-            transform: `translateY(${((1 - e) * F * 0.32).toFixed(2)}px)`,
+            transform: `translateY(${((1 - e) * F * 0.32).toFixed(2)}px)${glide(e > 0 && e < 1)}`,
           }}
         >
           {beats[i].line}

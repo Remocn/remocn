@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: bricolage } = loadFont("normal", {
   weights: ["400", "500"],
@@ -216,6 +217,8 @@ function Logo({ size, color }: { size: number; color: string }) {
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -249,6 +252,7 @@ export function VersionHero({
   speed = 1,
   theme = "dark",
 }: VersionHeroProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = height / 720;
@@ -492,7 +496,7 @@ export function VersionHero({
               alignItems: "center",
               gap: 9 * u,
               opacity: labelP(0),
-              transform: `translateY(${(1 - labelP(0)) * 14 * u}px)`,
+              transform: `translateY(${(1 - labelP(0)) * 14 * u}px)${glide(midway(labelP(0)))}`,
             }}
           >
             {logo ??
@@ -525,7 +529,7 @@ export function VersionHero({
               fontWeight: 400,
               letterSpacing: "-0.01em",
               opacity: labelP(6),
-              transform: `translateY(${(1 - labelP(6)) * 14 * u}px)`,
+              transform: `translateY(${(1 - labelP(6)) * 14 * u}px)${glide(midway(labelP(6)))}`,
             }}
           >
             {label}

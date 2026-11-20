@@ -1,6 +1,7 @@
 "use client";
 
 import { interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface StrikethroughReplaceProps {
   from: string;
@@ -23,6 +24,7 @@ export function StrikethroughReplace({
   speed = 1,
   className,
 }: StrikethroughReplaceProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame() * speed;
   const { durationInFrames } = useVideoConfig();
 
@@ -52,6 +54,11 @@ export function StrikethroughReplace({
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
+  // Chrome parks a glyph raster on a whole pixel vertically for as long as the
+  // matrix is axis-aligned, so text under a slow translate clicks along pixel
+  // by pixel. The rise is a marked transform, so the text leans off that grid
+  // while it rises.
+  const rising = toY > 0 && toY < 8;
 
   const textStyle: React.CSSProperties = {
     fontSize,
@@ -113,7 +120,7 @@ export function StrikethroughReplace({
           style={{
             ...textStyle,
             opacity: toOpacity,
-            translate: `0 ${toY}px`,
+            transform: `translateY(${toY}px)${glide(rising)}`,
           }}
         >
           {to}

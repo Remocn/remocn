@@ -11,6 +11,8 @@ import {
   useVideoConfig,
 } from "remotion";
 
+import { useGlide } from "@/lib/remocn/glide";
+
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
   subsets: ["latin"],
@@ -256,6 +258,7 @@ export function FullBleedType({
   theme = "dark",
   speed = 1,
 }: FullBleedTypeProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -282,12 +285,19 @@ export function FullBleedType({
 
   const lastAt = FIRST_AT + (list.length - 1) * beat;
   const lockAt = lastAt + slamLen + SETTLE_LEN;
-  const lock = LOCK(interpolate(t, [lockAt, lockAt + LOCK_LEN], [0, 1], CLAMP));
+  const lockOf = (tt: number) =>
+    LOCK(interpolate(tt, [lockAt, lockAt + LOCK_LEN], [0, 1], CLAMP));
+  const lock = lockOf(t);
   const gap = openGap + (lockGap * fit - openGap) * lock;
+  // Rows stepped by `y` as the stack locks count as moving from the frame
+  // before their first step to the frame after their last, so the lean never
+  // comes or goes on a frame the rows move.
+  const locking = lockOf(t - speed) !== lock || lock !== lockOf(t + speed);
   const stackH =
     sizes.reduce((h, s) => h + CAP * s, 0) + gap * (rows.length - 1);
 
   let y = (H - stackH) / 2;
+  let sliding = false;
   const glyphs = rows.flatMap((row, r) => {
     const fs = sizes[r];
     const baseline = y + CAP * fs;
@@ -301,16 +311,22 @@ export function FullBleedType({
       const at = FIRST_AT + id * beat;
       const enter = fromLeft ? -(x + w) - 0.04 * W : W - x + 0.04 * W;
       const over = (fromLeft ? 1 : -1) * 0.011 * W;
-      const slam = SLAM(interpolate(t, [at, at + slamLen], [0, 1], CLAMP));
-      const settle = SETTLE(
-        interpolate(
-          t,
-          [at + slamLen, at + slamLen + SETTLE_LEN],
-          [0, 1],
-          CLAMP,
-        ),
-      );
-      const dx = enter + (over - enter) * slam - over * settle;
+      const dxAt = (tt: number) => {
+        const slam = SLAM(interpolate(tt, [at, at + slamLen], [0, 1], CLAMP));
+        const settle = SETTLE(
+          interpolate(
+            tt,
+            [at + slamLen, at + slamLen + SETTLE_LEN],
+            [0, 1],
+            CLAMP,
+          ),
+        );
+        return enter + (over - enter) * slam - over * settle;
+      };
+      const dx = dxAt(t);
+      // A slide on x needs no lean, but the last one ends on the frame the
+      // lock starts: the lean has to be on already when it lands.
+      sliding ||= t >= at && (dxAt(t - speed) !== dx || dx !== dxAt(t + speed));
       return {
         key: `${id}-${word}`,
         word,
@@ -322,6 +338,8 @@ export function FullBleedType({
       };
     });
   });
+
+  const moving = locking || sliding;
 
   // The sunrise sits on the hero word's baseline and climbs a little over the
   // shot, so the word warms up while it holds.
@@ -340,7 +358,9 @@ export function FullBleedType({
           width={W}
           height={H}
           viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
+          // The rows move by SVG attributes, which can't carry the mark, so
+          // the drawing is marked instead.
+          style={{ position: "absolute", inset: 0, transform: glide(moving) }}
           aria-label={list.join(" ")}
           role="img"
         >

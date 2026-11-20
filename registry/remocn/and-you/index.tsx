@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const gabarito = loadFont("normal", {
   weights: ["400", "500"],
@@ -157,6 +158,8 @@ function flow(
   return { words, lastLine };
 }
 
+const moving = (p: number) => p > 0 && p < 1;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -191,6 +194,7 @@ export function AndYou({
   speed = 1,
   theme = "dark",
 }: AndYouProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const t = frame * speed;
@@ -240,20 +244,32 @@ export function AndYou({
   const clauseAt = (k: number) => start + k * cl;
   const finalAt = clauseAt(n);
 
-  let scroll = scrollAt(0);
-  for (let k = 1; k < n; k++) {
-    const e = interpolate(t, [clauseAt(k) - 2, clauseAt(k) + 12], [0, 1], {
+  /** The page's scroll and its pull-back to `sFinal`, at time `u`. */
+  const pageAt = (u: number) => {
+    let scroll = scrollAt(0);
+    for (let k = 1; k < n; k++) {
+      const e = interpolate(u, [clauseAt(k) - 2, clauseAt(k) + 12], [0, 1], {
+        ...CLAMP,
+        easing: EASE_IO,
+      });
+      scroll += (scrollAt(k) - scrollAt(k - 1)) * e;
+    }
+    const back = interpolate(u, [finalAt - 4, finalAt + 16], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
-    scroll += (scrollAt(k) - scrollAt(k - 1)) * e;
-  }
-  const back = interpolate(t, [finalAt - 4, finalAt + 16], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const s = 1 + (sFinal - 1) * back;
-  const offY = -scroll * (1 - back);
+    return { back, s: 1 + (sFinal - 1) * back, offY: -scroll * (1 - back) };
+  };
+  const { back, s, offY } = pageAt(t);
+  // The far end of the page sits a whole screen from the corner the scale
+  // pivots on, so its tail is still crossing pixels when a progress test
+  // already reads rest; compare with the neighbouring frames instead.
+  const pageMoved = (a: number, b: number) => {
+    const p = pageAt(a);
+    const q = pageAt(b);
+    return Math.abs(p.offY - q.offY) > 1e-3 || Math.abs(p.s - q.s) * W > 1e-3;
+  };
+  const pageMoving = pageMoved(t + speed, t) || pageMoved(t, t - speed);
   const dim = 1 - 0.38 * back;
 
   const wordStyle: React.CSSProperties = {
@@ -291,7 +307,7 @@ export function AndYou({
           left: w.x * F0,
           top: lineTop + (lineH - F0) / 2,
           opacity: p * seen,
-          transform: `translateY(${((1 - p) * F0 * 0.35).toFixed(2)}px)`,
+          transform: `translateY(${((1 - p) * F0 * 0.35).toFixed(2)}px)${glide(moving(p))}`,
         }}
       >
         {w.text}
@@ -330,7 +346,7 @@ export function AndYou({
             top: marginY,
             width: room,
             transformOrigin: "0 0",
-            transform: `scale(${s.toFixed(5)}) translateY(${offY.toFixed(2)}px)`,
+            transform: `scale(${s.toFixed(5)}) translateY(${offY.toFixed(2)}px)${glide(pageMoving)}`,
             opacity: dim,
           }}
         >
@@ -352,7 +368,7 @@ export function AndYou({
                 ...lastStyle,
                 marginTop: FY * 0.2,
                 color: fg,
-                transform: `translateY(${((1 - lastIn) * FY * 1.3).toFixed(2)}px)`,
+                transform: `translateY(${((1 - lastIn) * FY * 1.3).toFixed(2)}px)${glide(moving(lastIn))}`,
               }}
             >
               {lastHead}
@@ -362,7 +378,7 @@ export function AndYou({
                 ...lastStyle,
                 marginTop: FY * 0.2,
                 color: hi,
-                transform: `translateY(${((1 - tailIn) * FY * 1.3).toFixed(2)}px)`,
+                transform: `translateY(${((1 - tailIn) * FY * 1.3).toFixed(2)}px)${glide(moving(tailIn))}`,
               }}
             >
               {lastTail}

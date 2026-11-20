@@ -3,26 +3,32 @@
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont } from "@remotion/google-fonts/HankenGrotesk";
 import type React from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
+  continueRender,
+  delayRender,
   Easing,
   interpolate,
   spring,
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily: hanken } = loadFont("normal", {
+const hankenFont = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
-const { fontFamily: mono } = loadMono("normal", {
+const monoFont = loadMono("normal", {
   weights: ["400"],
   subsets: ["latin"],
 });
+const hanken = hankenFont.fontFamily;
+const mono = monoFont.fontFamily;
 
 export interface VoiceToolCall {
   /** Function name listed in the call panel, e.g. "book_table". */
@@ -352,12 +358,58 @@ function Lane({
   );
 }
 
-function Grow({ p, children }: { p: number; children: React.ReactNode }) {
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/**
+ * A row that opens from nothing to its own height. It is laid out fully open
+ * all its life: `ride` is the px it sits off its place, `hide` the px of its
+ * bottom still to open, `moving` whether the ride changes on this frame and
+ * `shut` whether nothing of it shows yet.
+ */
+function Grow({
+  ride,
+  hide,
+  moving,
+  shut,
+  children,
+}: {
+  ride: number;
+  hide: number;
+  moving: boolean;
+  shut: boolean;
+  children: React.ReactNode;
+}) {
+  const glide = useGlide();
   return (
-    <div style={{ display: "grid", gridTemplateRows: `${p}fr` }}>
-      <div style={{ minHeight: 0, overflow: "hidden" }}>{children}</div>
+    <div style={{ display: "grid", gridTemplateRows: "1fr" }}>
+      <div
+        style={{
+          minHeight: 0,
+          overflow: "hidden",
+          transform: `translateY(${Math.abs(ride) > 1e-3 ? ride : 0}px)${glide(moving)}`,
+          clipPath: hide > 1e-3 ? `inset(0 0 ${hide}px 0)` : undefined,
+          visibility: shut ? "hidden" : undefined,
+        }}
+      >
+        {children}
+      </div>
     </div>
   );
+}
+
+/** Top padding of the transcript list. */
+const LIST_PAD = 14;
+
+/** Content height layout gave a box, in px: unrounded, and no transform reaches it. */
+function contentHeight(el: Element) {
+  const s = getComputedStyle(el);
+  const px = (v: string) => Number.parseFloat(v) || 0;
+  const frame =
+    px(s.paddingTop) +
+    px(s.paddingBottom) +
+    px(s.borderTopWidth) +
+    px(s.borderBottomWidth);
+  return px(s.height) - (s.boxSizing === "border-box" ? frame : 0);
 }
 
 function ToolRow({
@@ -367,6 +419,7 @@ function ToolRow({
   frame,
   pal,
   accent,
+  held,
 }: {
   tool: VoiceToolCall;
   start: number;
@@ -374,7 +427,10 @@ function ToolRow({
   frame: number;
   pal: Pal;
   accent: string;
+  /** The window holds still, so this row carries its own tilt. */
+  held: boolean;
 }) {
+  const glide = useGlide();
   const inP = tween(frame, start, start + 10);
   const swap = tween(frame, done, done + 8, MOVE);
   const ok = spring({
@@ -394,7 +450,7 @@ function ToolRow({
         color: pal.muted,
         whiteSpace: "nowrap",
         opacity: inP,
-        transform: `translateY(${(1 - inP) * 8}px)`,
+        transform: `translateY(${(1 - inP) * 8}px)${glide(held && midway(inP))}`,
       }}
     >
       <div style={{ position: "relative", width: 18, height: 18 }}>
@@ -454,6 +510,7 @@ function TurnRow({
   agentName,
   callerName,
   startSeconds,
+  held,
 }: {
   p: TurnPlan;
   frame: number;
@@ -462,6 +519,7 @@ function TurnRow({
   agentName: string;
   callerName: string;
   startSeconds: number;
+  held: boolean;
 }) {
   const agent = p.turn.speaker === "agent";
   const cut = p.turn.interruptedAfter ? tween(frame, p.end - 2, p.end + 6) : 0;
@@ -527,6 +585,7 @@ function TurnRow({
             frame={frame}
             pal={pal}
             accent={accent}
+            held={held}
           />
         ) : null}
       </div>
@@ -543,6 +602,7 @@ function SummaryCard({
   fps,
   pal,
   callerLine,
+  held,
 }: {
   rows: VoiceSummaryRow[];
   title: string;
@@ -552,8 +612,15 @@ function SummaryCard({
   fps: number;
   pal: Pal;
   callerLine: string;
+  /** The window holds still, so the card carries its own tilt. */
+  held: boolean;
 }) {
-  const inP = spring({ frame: frame - at, fps, config: CARD });
+  const glide = useGlide();
+  const inAt = (f: number) => spring({ frame: f - at, fps, config: CARD });
+  const inP = inAt(frame);
+  const settling =
+    Math.abs(inAt(frame + 1) - inP) * 24 > 5e-4 ||
+    Math.abs(inP - inAt(frame - 1)) * 24 > 5e-4;
   return (
     <div style={{ padding: "8px 2px 4px" }}>
       <div
@@ -562,7 +629,7 @@ function SummaryCard({
           background: pal.card,
           boxShadow: pal.cardShadow,
           opacity: Math.min(1, inP * 1.6),
-          transform: `translateY(${(1 - inP) * 24}px)`,
+          transform: `translateY(${(1 - inP) * 24}px)${glide(held && settling)}`,
           overflow: "hidden",
         }}
       >
@@ -590,7 +657,7 @@ function SummaryCard({
                   height: 32,
                   fontSize: 16,
                   opacity: a,
-                  transform: `translateY(${(1 - a) * 6}px)`,
+                  transform: `translateY(${(1 - a) * 6}px)${glide(held && !settling && midway(a))}`,
                 }}
               >
                 <span style={{ width: 132, color: pal.faint }}>{r.label}</span>
@@ -666,6 +733,7 @@ export function VoiceAgent({
   ground,
   groundParams,
 }: VoiceAgentProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width;
@@ -677,7 +745,12 @@ export function VoiceAgent({
   const tl = plan(turns, stagger);
   const ended = tween(frame, tl.callEnd, tl.callEnd + 8, MOVE);
   const callSec = startSeconds + Math.min(frame, tl.callEnd) / 30;
-  const winIn = spring({ frame, fps, config: HEAVY });
+  const winAt = (f: number) => spring({ frame: f, fps, config: HEAVY });
+  const winIn = winAt(frame);
+  // Whether a value built from the frame moves into or out of this frame.
+  const stirs = (at: (f: number) => number, eps: number) =>
+    Math.abs(at(frame + 1) - at(frame)) > eps ||
+    Math.abs(at(frame) - at(frame - 1)) > eps;
   const agentLvl = level(tl.turns, "agent", frame) * (1 - ended);
   const callerLvl = level(tl.turns, "caller", frame) * (1 - ended);
   const toolLive = tl.turns.find(
@@ -694,29 +767,129 @@ export function VoiceAgent({
   const callerState =
     ended > 0.5 ? "Ended" : callerLvl > 0.04 ? "Speaking" : "Listening";
   const latency = Math.round(380 + 90 * noise(3, frame / 18));
-  const cam = interpolate(
-    frame,
-    [tl.summaryAt - 10, tl.summaryAt + 40],
-    [1, 1.025],
-    {
+  const camAt = (f: number) =>
+    interpolate(f, [tl.summaryAt - 10, tl.summaryAt + 40], [1, 1.025], {
       ...clampX,
       easing: CAMERA,
-    },
-  );
+    });
+  const cam = camAt(frame);
+  // The window carries the whole call, so its tilt covers everything inside
+  // while it rises or the camera leans in; the movers inside tilt themselves
+  // only while it holds still.
+  const winMoving =
+    stirs((f) => (1 - winAt(f)) * 80, 5e-4) ||
+    stirs((f) => (0.96 + 0.04 * winAt(f)) * camAt(f), 1e-6);
+  const held = !winMoving;
   const live = 1 - ended;
-  const endPress =
-    spring({ frame: frame - tl.callEnd + 2, fps, config: CHIP }) -
-    spring({ frame: frame - tl.callEnd - 3, fps, config: CHIP });
+  const endPressAt = (f: number) =>
+    spring({ frame: f - tl.callEnd + 2, fps, config: CHIP }) -
+    spring({ frame: f - tl.callEnd - 3, fps, config: CHIP });
+  const endPress = endPressAt(frame);
+  const endPressing = held && stirs((f) => Math.max(0, endPressAt(f)), 1e-5);
+
+  // The transcript in flow order: every row and how far open it is.
+  const flowAt = (f: number) => [
+    ...tl.turns.map((p, i) => ({
+      kind: "turn" as const,
+      i,
+      open: tween(f, p.start - 3, p.start + 7, MOVE),
+    })),
+    {
+      kind: "end" as const,
+      i: -1,
+      open: f >= tl.callEnd ? tween(f, tl.callEnd, tl.callEnd + 8, MOVE) : 0,
+    },
+    {
+      kind: "summary" as const,
+      i: -1,
+      open:
+        f >= tl.summaryAt - 2
+          ? tween(f, tl.summaryAt - 2, tl.summaryAt + 10, MOVE)
+          : 0,
+    },
+  ];
+  const flow = flowAt(frame);
+  // A row that opens by layout pushes its neighbours by layout, and layout
+  // rounds every baseline and box edge on the way: once the transcript
+  // outgrows its panel and hangs from the bottom, each line above an opening
+  // row clicks up pixel by pixel, and a row handed between layout and a
+  // transform jumps. So the list is laid out once, with every row fully open
+  // as it finally rests, and everything still to come is a transform on each
+  // row, on every frame.
+  const panelRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const [laid, setLaid] = useState({ room: 0, rows: [] as number[] });
+  // A font that arrives after the first render rewraps the transcript with no
+  // render to follow (a still, a paused player), so the frame is held until
+  // the fonts are in and the heights have been read once more.
+  const [handle] = useState(() => delayRender("voice-agent: measuring"));
+  const [fontsIn, setFontsIn] = useState(false);
+  useEffect(() => {
+    let live = true;
+    Promise.all([hankenFont.waitUntilDone(), monoFont.waitUntilDone()])
+      .then(() => document.fonts.ready)
+      .catch(() => undefined)
+      .then(() => {
+        if (live) setFontsIn(true);
+        else continueRender(handle);
+      });
+    return () => {
+      live = false;
+    };
+  }, [handle]);
+  useLayoutEffect(() => {
+    if (fontsIn) continueRender(handle);
+  }, [fontsIn, handle]);
+  // No dependency list: the copy and the font can change on any render. It
+  // runs before the frame is painted, so a frame never shows the heights of
+  // the one before.
+  useLayoutEffect(() => {
+    const panel = panelRef.current;
+    const list = listRef.current;
+    if (!panel || !list) return;
+    const room = contentHeight(panel);
+    const rows = Array.from(list.children, contentHeight);
+    if (
+      Math.abs(room - laid.room) > 1e-3 ||
+      rows.length !== laid.rows.length ||
+      rows.some((h, k) => Math.abs(h - laid.rows[k]) > 1e-3)
+    ) {
+      setLaid({ room, rows });
+    }
+  });
+  const fullHeight = LIST_PAD + laid.rows.reduce((a, b) => a + b, 0);
+  const listTop = (h: number) => Math.min(0, laid.room - h);
+  // What each row still hides, and how far each sits off its laid-out place:
+  // the list rests at the top of the panel while it fits and hangs from the
+  // bottom once it does not, and a row moves up by everything the rows above
+  // it still hide.
+  const placeAt = (f: number) => {
+    const hidden = flowAt(f).map(
+      (row, k) => (laid.rows[k] ?? 0) * (1 - row.open),
+    );
+    const listShift =
+      listTop(fullHeight - hidden.reduce((a, b) => a + b, 0)) -
+      listTop(fullHeight);
+    const rides = hidden.map(
+      (_, k) => listShift - hidden.slice(0, k).reduce((a, b) => a + b, 0),
+    );
+    return { hidden, rides };
+  };
+  const { hidden, rides } = placeAt(frame);
+  const ridesBefore = placeAt(frame - 1).rides;
+  const ridesAfter = placeAt(frame + 1).rides;
 
   const L = tall
     ? { win: { x: 56, y: 100, w: 608, h: 1080 }, sideW: 608, sideH: 352 }
     : { win: { x: 136, y: 50, w: 1008, h: 620 }, sideW: 340, sideH: 0 };
   const headH = 64;
   const rise = (at: number): React.CSSProperties => {
+    const riseAt = (f: number) =>
+      (1 - spring({ frame: f - at, fps, config: CARD })) * 12;
     const p = spring({ frame: frame - at, fps, config: CARD });
     return {
       opacity: Math.min(1, p * 1.6),
-      transform: `translateY(${(1 - p) * 12}px)`,
+      transform: `translateY(${(1 - p) * 12}px)${glide(held && stirs(riseAt, 5e-4))}`,
     };
   };
 
@@ -837,7 +1010,7 @@ export function VoiceAgent({
             justifyContent: "center",
             gap: 10,
             fontSize: 17,
-            transform: `scale(${1 - 0.04 * Math.max(0, endPress)})`,
+            transform: `scale(${1 - 0.04 * Math.max(0, endPress)})${glide(endPressing)}`,
           }}
         >
           <Icon
@@ -904,7 +1077,7 @@ export function VoiceAgent({
               boxShadow: pal.shadow,
               overflow: "hidden",
               opacity: Math.min(1, winIn * 2),
-              transform: `translateY(${(1 - winIn) * 80}px) scale(${(0.96 + 0.04 * winIn) * cam})`,
+              transform: `translateY(${(1 - winIn) * 80}px) scale(${(0.96 + 0.04 * winIn) * cam})${glide(winMoving)}`,
               transformOrigin: "60% 70%",
               display: "flex",
               flexDirection: "column",
@@ -992,6 +1165,7 @@ export function VoiceAgent({
             >
               {sidePanel}
               <div
+                ref={panelRef}
                 style={{
                   flex: 1,
                   minHeight: 0,
@@ -1007,74 +1181,99 @@ export function VoiceAgent({
                     "linear-gradient(to bottom, transparent 0, #000 40px)",
                 }}
               >
-                <div style={{ marginBottom: "auto", paddingTop: 14 }}>
-                  {tl.turns.map((p, i) => {
-                    const g = tween(frame, p.start - 3, p.start + 7, MOVE);
-                    if (g <= 0) return null;
+                <div
+                  ref={listRef}
+                  style={{ marginBottom: "auto", paddingTop: LIST_PAD }}
+                >
+                  {flow.map((row, k) => {
+                    const riding =
+                      Math.abs(ridesBefore[k] - rides[k]) > 1e-6 ||
+                      Math.abs(ridesAfter[k] - rides[k]) > 1e-6;
+                    const grow = {
+                      ride: rides[k],
+                      // The row used to open as a `p`fr track in an
+                      // auto-height grid: p of its content tall, with the
+                      // content showing through the top p * p of it. So the
+                      // clip takes off more than the row holds back.
+                      hide: hidden[k] * (1 + row.open),
+                      moving: riding,
+                      shut: row.open <= 0,
+                    };
+                    // The movers inside mark their own moves only while the
+                    // window and the row hold still.
+                    const rowHeld = held && !riding;
+                    if (row.kind === "turn") {
+                      const p = tl.turns[row.i];
+                      return (
+                        <Grow key={`turn${row.i}`} {...grow}>
+                          <div
+                            style={{
+                              opacity: tween(frame, p.start - 1, p.start + 7),
+                            }}
+                          >
+                            <TurnRow
+                              p={p}
+                              frame={frame}
+                              pal={pal}
+                              accent={accent}
+                              agentName={agentName}
+                              callerName={callerName}
+                              startSeconds={startSeconds}
+                              held={rowHeld}
+                            />
+                          </div>
+                        </Grow>
+                      );
+                    }
+                    if (row.kind === "end") {
+                      return (
+                        <Grow key="end" {...grow}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 14,
+                              padding: "14px 0 10px",
+                              fontSize: 16,
+                              color: pal.faint,
+                              fontVariantNumeric: "tabular-nums",
+                            }}
+                          >
+                            <div
+                              style={{
+                                flex: 1,
+                                height: 1,
+                                background: pal.hair,
+                              }}
+                            />
+                            Call ended · {clock(callSec)}
+                            <div
+                              style={{
+                                flex: 1,
+                                height: 1,
+                                background: pal.hair,
+                              }}
+                            />
+                          </div>
+                        </Grow>
+                      );
+                    }
                     return (
-                      <Grow key={i} p={g}>
-                        <div
-                          style={{
-                            opacity: tween(frame, p.start - 1, p.start + 7),
-                          }}
-                        >
-                          <TurnRow
-                            p={p}
-                            frame={frame}
-                            pal={pal}
-                            accent={accent}
-                            agentName={agentName}
-                            callerName={callerName}
-                            startSeconds={startSeconds}
-                          />
-                        </div>
+                      <Grow key="summary" {...grow}>
+                        <SummaryCard
+                          rows={summary}
+                          title={summaryTitle}
+                          status={summaryStatus}
+                          at={tl.summaryAt}
+                          frame={frame}
+                          fps={fps}
+                          pal={pal}
+                          callerLine={callerLine}
+                          held={rowHeld}
+                        />
                       </Grow>
                     );
                   })}
-                  {frame >= tl.callEnd ? (
-                    <Grow p={tween(frame, tl.callEnd, tl.callEnd + 8, MOVE)}>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 14,
-                          padding: "14px 0 10px",
-                          fontSize: 16,
-                          color: pal.faint,
-                          fontVariantNumeric: "tabular-nums",
-                        }}
-                      >
-                        <div
-                          style={{ flex: 1, height: 1, background: pal.hair }}
-                        />
-                        Call ended · {clock(callSec)}
-                        <div
-                          style={{ flex: 1, height: 1, background: pal.hair }}
-                        />
-                      </div>
-                    </Grow>
-                  ) : null}
-                  {frame >= tl.summaryAt - 2 ? (
-                    <Grow
-                      p={tween(
-                        frame,
-                        tl.summaryAt - 2,
-                        tl.summaryAt + 10,
-                        MOVE,
-                      )}
-                    >
-                      <SummaryCard
-                        rows={summary}
-                        title={summaryTitle}
-                        status={summaryStatus}
-                        at={tl.summaryAt}
-                        frame={frame}
-                        fps={fps}
-                        pal={pal}
-                        callerLine={callerLine}
-                      />
-                    </Grow>
-                  ) : null}
                 </div>
               </div>
             </div>

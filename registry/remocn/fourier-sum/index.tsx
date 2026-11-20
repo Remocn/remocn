@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400"],
@@ -151,6 +152,8 @@ function ScaleLayer({
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 export function FourierSum({
   harmonics = [1, 3, 5, 7, 9],
   title = "Many parts. One signal.",
@@ -167,6 +170,7 @@ export function FourierSum({
   speed = 1,
   theme = "dark",
 }: FourierSumProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -198,6 +202,11 @@ export function FourierSum({
   const remaining = count - merged;
   const slotIndexY = (idx: number) => midY + (idx - remaining / 2) * gap;
   const rowIndex = (i: number) => 1 + i - merged;
+  // The stack recentres as rows merge away. The labels ride that by a
+  // transform from where they stood before the merge: layout rounds a
+  // baseline to whole pixels, so a label eased by `top` clicks along.
+  const lift = (merged * gap) / 2;
+  const merging = merge.some(midway);
 
   const FINAL = [mergeEnd - 2, mergeEnd + 26] as const;
   const TITLE_AT = mergeEnd + 14;
@@ -237,8 +246,13 @@ export function FourierSum({
     easing: EASE_OUT,
   });
 
-  const capY = lerp(slotY - amp - 40 * u, finY - 158 * u, fin);
-
+  // The caption rides the stack while it recentres and then rises to the
+  // title. Layout rounds a baseline to whole pixels, so it is laid out where
+  // it ends and travels there by a transform, all its life: handing it to
+  // layout on the frame it lands would move it by that rounding.
+  const capRest = finY - 158 * u;
+  const capRide = (slotY - amp - 40 * u - capRest) * (1 - fin);
+  const capMoving = merging || midway(fin);
   const gid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const isDark = theme === "dark";
   const drift = interpolate(t, [0, 180], [0, 1], { ...CLAMP, easing: EASE_IO });
@@ -255,7 +269,7 @@ export function FourierSum({
     backgroundClip: "text",
     color: "transparent",
   } as const;
-  const capX = lerp(waveX, W / 2, fin);
+  const capSlide = (waveX - W / 2) * (1 - fin);
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
@@ -389,7 +403,7 @@ export function FourierSum({
               style={{
                 position: "absolute",
                 left: blockX,
-                top: slotIndexY(rowIndex(i)) - 12 * u,
+                top: midY + (1 + i - count / 2) * gap - 12 * u,
                 width: labelCol - 14 * u,
                 textAlign: "right",
                 fontFamily: sans,
@@ -399,7 +413,7 @@ export function FourierSum({
                 color: p.muted,
                 fontVariantNumeric: "tabular-nums",
                 opacity: a * out,
-                transform: `translateX(${(1 - a) * -8 * u}px)`,
+                transform: `translate(${(1 - a) * -8 * u}px, ${-lift}px)${glide(merging)}`,
               }}
             >
               {n}×
@@ -411,7 +425,7 @@ export function FourierSum({
           style={{
             position: "absolute",
             left: blockX,
-            top: slotY - 16 * u,
+            top: midY - (count / 2) * gap - 16 * u,
             width: labelCol - 14 * u,
             textAlign: "right",
             fontFamily: sans,
@@ -420,7 +434,7 @@ export function FourierSum({
             lineHeight: `${32 * u}px`,
             color: accent,
             opacity: slotO,
-            transform: `translateX(${(1 - slotIn) * 10 * u}px)`,
+            transform: `translate(${(1 - slotIn) * 10 * u}px, ${lift}px)${glide(merging)}`,
           }}
         >
           Σ
@@ -429,9 +443,9 @@ export function FourierSum({
         <div
           style={{
             position: "absolute",
-            left: capX,
-            top: capY,
-            transform: `translateX(${-50 * fin}%)`,
+            left: W / 2,
+            top: capRest,
+            transform: `translate(${capSlide}px, ${capRide}px) translateX(${-50 * fin}%)${glide(capMoving)}`,
             display: "flex",
             whiteSpace: "nowrap",
             fontFamily: sans,
@@ -454,7 +468,7 @@ export function FourierSum({
                 key={n}
                 style={{
                   opacity: a,
-                  transform: `translateY(${(1 - a) * 6 * u}px)`,
+                  transform: `translateY(${(1 - a) * 6 * u}px)${glide(midway(a) && !capMoving)}`,
                   display: "inline-block",
                 }}
               >
@@ -480,7 +494,7 @@ export function FourierSum({
             color: fg,
             textWrap: "balance",
             opacity: titleA,
-            transform: `translateY(${(1 - titleA) * 18 * u}px)`,
+            transform: `translateY(${(1 - titleA) * 18 * u}px)${glide(midway(titleA))}`,
           }}
         >
           {sentence ? (

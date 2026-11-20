@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["500"],
@@ -181,6 +182,7 @@ export function OvalType({
   theme = "dark",
   speed = 1,
 }: OvalTypeProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -252,10 +254,9 @@ export function OvalType({
 
     const fi = k - m;
     const growAt = posterAt + Math.max(0, fi) * 2;
-    const grow =
-      fi >= 0
-        ? GROW(interpolate(t, [growAt, growAt + landLen], [0, 1], CLAMP))
-        : 0;
+    const growP =
+      fi >= 0 ? interpolate(t, [growAt, growAt + landLen], [0, 1], CLAMP) : 0;
+    const grow = fi >= 0 ? GROW(growP) : 0;
     const gap = gapLoose + (gapTight - gapLoose) * grow;
     const pitchNow = ow + gap;
     const rowW = n * ow + (n - 1) * gap;
@@ -277,8 +278,32 @@ export function OvalType({
         ? GROW(interpolate(t, [posterAt, posterAt + landLen], [0, 1], CLAMP)) *
           (ow + 0.1 * W)
         : 0;
-    const fs = fsPoster * (0.84 + 0.16 * grow) * (isAccent(k) ? SERIF_BUMP : 1);
-    return { key: `${k}-${word}`, word, k, x: x - clear, w, h, fs };
+    const fsRest = fsPoster * (isAccent(k) ? SERIF_BUMP : 1);
+    const fs = fsRest * (0.84 + 0.16 * grow);
+    const growing = growP > 0 && growP < 1;
+    return {
+      key: `${k}-${word}`,
+      word,
+      k,
+      x: x - clear,
+      w,
+      h,
+      fs,
+      fsRest,
+      growing,
+    };
+  });
+
+  const wordStyle = (k: number, size: number): React.CSSProperties => ({
+    color: ink ?? c.word,
+    fontFamily: isAccent(k) ? serif : fontFamily,
+    fontStyle: isAccent(k) ? "italic" : "normal",
+    fontWeight: isAccent(k) ? 400 : 500,
+    fontSize: size,
+    letterSpacing: isAccent(k) ? "0em" : `${TRACK}em`,
+    lineHeight: 1,
+    whiteSpace: "nowrap",
+    fontKerning: "normal",
   });
 
   return (
@@ -317,26 +342,47 @@ export function OvalType({
                   background: field,
                 }}
               />
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: ink ?? c.word,
-                  fontFamily: isAccent(q.k) ? serif : fontFamily,
-                  fontStyle: isAccent(q.k) ? "italic" : "normal",
-                  fontWeight: isAccent(q.k) ? 400 : 500,
-                  fontSize: q.fs,
-                  letterSpacing: isAccent(q.k) ? "0em" : `${TRACK}em`,
-                  lineHeight: 1,
-                  whiteSpace: "nowrap",
-                  fontKerning: "normal",
-                }}
-              >
-                {q.word}
-              </div>
+              {q.growing ? (
+                // While the poster grows, the capsule's top and the type size
+                // both ease, and layout rounds each baseline to whole pixels,
+                // so the word clicks along. Here it is laid out once, on the
+                // frame's centre line at its settled size, and the ride and
+                // the size are a transform, marked as moving.
+                <div
+                  style={{
+                    position: "absolute",
+                    left: -left,
+                    top: -top,
+                    width: W,
+                    height: H,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <div
+                    style={{
+                      ...wordStyle(q.k, q.fsRest),
+                      transform: `translateX(${q.x - W / 2}px) scale(${q.fs / q.fsRest})${glide(true)}`,
+                    }}
+                  >
+                    {q.word}
+                  </div>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    ...wordStyle(q.k, q.fs),
+                  }}
+                >
+                  {q.word}
+                </div>
+              )}
             </div>
           );
         })}

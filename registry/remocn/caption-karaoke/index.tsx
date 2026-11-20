@@ -9,6 +9,7 @@ import {
   groupCaptionWords,
   useCaptions,
 } from "@/lib/remocn/caption-core";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface CaptionKaraokeProps extends CaptionBaseProps {
   activeColor?: string;
@@ -23,6 +24,8 @@ const LEGIBILITY_SHADOW =
 
 const enterEasing = Easing.bezier(0.2, 0.8, 0.2, 1);
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 export function CaptionKaraoke({
   captions,
   combineTokensWithinMilliseconds = 1200,
@@ -34,6 +37,7 @@ export function CaptionKaraoke({
   shadow = true,
   className,
 }: CaptionKaraokeProps) {
+  const glide = useGlide();
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
@@ -73,7 +77,7 @@ export function CaptionKaraoke({
         lineHeight: 1.2,
         textAlign: "center",
         opacity: Math.min(enter, exit),
-        transform: `translateY(${(1 - enter) * RISE_EM}em)`,
+        transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
       }}
     >
       {groupCaptionWords(state.tokens).map((word, w) => (

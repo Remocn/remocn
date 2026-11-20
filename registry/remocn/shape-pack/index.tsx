@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["300", "400", "500"],
@@ -224,6 +225,7 @@ export function ShapePack({
   theme = "dark",
   speed = 1,
 }: ShapePackProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -260,32 +262,49 @@ export function ShapePack({
   const impact = (s: number, amp: number) =>
     s < 0 ? 0 : amp * Math.sin((Math.PI * s) / 5) * Math.exp(-s / 3.2);
 
-  const accentDrop = drop(
-    t,
-    SLOT.at,
-    ACCENT_FALL,
-    -span(SLOT.h) - 40 * u,
-    Y(SLOT.r),
-  );
-  const shake = impact(accentDrop.landed ? accentDrop.since : -1, 3.5 * u);
+  const accentDropAt = (tt: number) =>
+    drop(tt, SLOT.at, ACCENT_FALL, -span(SLOT.h) - 40 * u, Y(SLOT.r));
+  const accentDrop = accentDropAt(t);
+  const shakeAt = (tt: number) => {
+    const d = accentDropAt(tt);
+    return impact(d.landed ? d.since : -1, 3.5 * u);
+  };
+  const shake = shakeAt(t);
+  // A move counts while it changes against either neighbouring frame by more
+  // than a thousandth of a pixel: the impacts ring down with no clean
+  // progress, and the eases' tails still cross pixels.
+  const stirs = (at: (tt: number) => number) => {
+    const now = at(t);
+    return (
+      Math.abs(at(t + speed) - now) > 1e-3 ||
+      Math.abs(now - at(t - speed)) > 1e-3
+    );
+  };
   const flash = accentDrop.landed ? Math.exp(-accentDrop.since / 4) : 0;
 
   const count = interpolate(t, [LOCK + 4, LOCK + 30], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.22, 1, 0.36, 1),
   });
-  const statIn = interpolate(t, [LOCK + 2, LOCK + 16], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const labelIn = interpolate(t, [LOCK + 10, LOCK + 26], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const push = interpolate(t, [LOCK, LOCK + 70], [1, 1.018], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const statInAt = (tt: number) =>
+    interpolate(tt, [LOCK + 2, LOCK + 16], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  const labelInAt = (tt: number) =>
+    interpolate(tt, [LOCK + 10, LOCK + 26], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  const pushAt = (tt: number) =>
+    interpolate(tt, [LOCK, LOCK + 70], [1, 1.018], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const statIn = statInAt(t);
+  const labelIn = labelInAt(t);
+  const push = pushAt(t);
+  const camMoving = stirs(shakeAt) || stirs((tt) => (pushAt(tt) - 1) * (W / 2));
 
   const gid = `sp${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   // Grain palette: a peach key light top-left, falling through ember into a
@@ -317,7 +336,7 @@ export function ShapePack({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `translateY(${shake}px) scale(${push})`,
+            transform: `translateY(${shake}px) scale(${push})${glide(camMoving)}`,
             transformOrigin: "50% 50%",
           }}
         >
@@ -351,8 +370,14 @@ export function ShapePack({
 
           {BLOCKS.map((b) => {
             const h = span(b.h);
-            const d = drop(t, b.at, fall, -h - 40 * u, Y(b.r));
-            const hop = d.landed ? -impact(d.since, 2.5 * u) : 0;
+            // Laid out where the block lands; the fall and the hop are a
+            // transform, since layout rounds a box and the logo's baseline to
+            // whole pixels and a block eased by `top` clicks down.
+            const lift = (tt: number) => {
+              const d = drop(tt, b.at, fall, -h - 40 * u, Y(b.r));
+              return d.landed ? -impact(d.since, 2.5 * u) : d.y - Y(b.r);
+            };
+            const dy = lift(t);
             const fill = c.tones[b.tone];
             return (
               <div
@@ -360,11 +385,17 @@ export function ShapePack({
                 style={{
                   position: "absolute",
                   left: X(b.c),
-                  top: d.y + hop,
+                  top: Y(b.r),
                   width: span(b.w),
                   height: h,
                   background: fill,
                   borderRadius: radius * u,
+                  transform:
+                    Math.abs(dy) < 1e-3
+                      ? undefined
+                      : `translateY(${dy}px)${glide(
+                          b.key === "a" && !camMoving && stirs(lift),
+                        )}`,
                 }}
               >
                 {b.key === "a" ? (
@@ -386,7 +417,10 @@ export function ShapePack({
             style={{
               position: "absolute",
               left: X(SLOT.c),
-              top: accentDrop.y,
+              top: Y(SLOT.r),
+              transform: accentDrop.landed
+                ? undefined
+                : `translateY(${accentDrop.y - Y(SLOT.r)}px)`,
               width: statW,
               height: statH,
               background: panel,
@@ -437,7 +471,9 @@ export function ShapePack({
                 letterSpacing: "-0.01em",
                 color: "rgba(43,16,21,0.82)",
                 opacity: labelIn,
-                transform: `translateY(${(1 - labelIn) * 6 * u}px)`,
+                transform: `translateY(${(1 - labelIn) * 6 * u}px)${glide(
+                  !camMoving && stirs((tt) => labelInAt(tt) * 6 * u),
+                )}`,
                 whiteSpace: "nowrap",
               }}
             >
@@ -457,7 +493,9 @@ export function ShapePack({
                 color: fg,
                 whiteSpace: "nowrap",
                 opacity: statIn,
-                transform: `translateY(${(1 - statIn) * 14 * u}px)`,
+                transform: `translateY(${(1 - statIn) * 14 * u}px)${glide(
+                  !camMoving && stirs((tt) => statInAt(tt) * 14 * u),
+                )}`,
               }}
             >
               {shown}

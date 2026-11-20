@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -343,6 +344,7 @@ export function WaitlistSwarm({
   ground,
   groundParams,
 }: WaitlistSwarmProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width;
@@ -566,11 +568,9 @@ export function WaitlistSwarm({
   }
   const shown =
     landed >= arrivals.length ? value : Math.min(value - 1, value * fill);
-  const counterRise = spring({
-    frame: t - (firstArrival - 16),
-    fps,
-    config: CARD,
-  });
+  const riseAt = (g: number) =>
+    spring({ frame: g - (firstArrival - 16), fps, config: CARD });
+  const counterRise = riseAt(t);
   const counterIn = interpolate(
     t,
     [firstArrival - 16, firstArrival + 2],
@@ -583,11 +583,18 @@ export function WaitlistSwarm({
     [0, 1],
     { ...CLAMP, easing: EASE_OUT },
   );
-  const punch =
-    t >= lastArrival
-      ? 1 + 0.05 * (1 - spring({ frame: t - lastArrival, fps, config: CHIP }))
+  const punchAt = (g: number) =>
+    g >= lastArrival
+      ? 1 + 0.05 * (1 - spring({ frame: g - lastArrival, fps, config: CHIP }))
       : 1;
+  const punch = punchAt(t);
   const numFs = tall ? height * 0.1 : height * 0.18;
+  // Both springs run without a fixed length, so the count is moving while
+  // either shifts its glyphs by more than 1e-3px against a neighbour frame.
+  const counterStep = (g: number) =>
+    Math.abs(riseAt(g) - counterRise) * 0.18 * numFs > 1e-3 ||
+    Math.abs(punchAt(g) - punch) * numFs > 1e-3;
+  const counterMoving = counterStep(t - 1) || counterStep(t + 1);
   const labelFs = tall ? height * 0.03 : height * 0.05;
   const counterBox: React.CSSProperties = tall
     ? {
@@ -672,7 +679,7 @@ export function WaitlistSwarm({
               fontVariantNumeric: "tabular-nums",
               opacity: counterIn,
               transformOrigin: tall ? "50% 60%" : "0% 60%",
-              transform: `translateY(${(1 - counterRise) * 0.18 * numFs}px) scale(${punch})`,
+              transform: `translateY(${(1 - counterRise) * 0.18 * numFs}px) scale(${punch})${glide(counterMoving)}`,
               filter: `blur(${(1 - counterIn) * 6 * u}px)`,
             }}
           >
@@ -687,7 +694,7 @@ export function WaitlistSwarm({
               paddingLeft: tall ? 0 : numFs * 0.05,
               color: pal.muted,
               opacity: labelIn,
-              transform: `translateY(${(1 - labelIn) * 0.4 * labelFs}px)`,
+              transform: `translateY(${(1 - labelIn) * 0.4 * labelFs}px)${glide(labelIn > 5e-4 && labelIn < 1 - 5e-4)}`,
             }}
           >
             {label}

@@ -241,6 +241,12 @@ export function LeaderboardClimb({
     score = mix(score, scoreStops[i + 1] ?? self.to, p);
   });
   const selfRank = Math.round(selfSlot) + 1;
+  const selfHome = Math.round(selfSlot);
+  const spread = 6 * moving;
+  const selfOut: [string, string] | undefined =
+    spread < 1e-3
+      ? undefined
+      : [`translateX(${-spread}px)`, `translateX(${spread}px)`];
 
   const payoff = spring({ frame: frame - B.payoff, fps, config: CHIP });
   const flash =
@@ -282,7 +288,7 @@ export function LeaderboardClimb({
           ? "#cf8a54"
           : null;
 
-  const rankCell = (rank: number, onAccent: boolean) => {
+  const rankCell = (rank: number, onAccent: boolean, shift?: string) => {
     const m = medal(rank);
     return (
       <div
@@ -291,6 +297,7 @@ export function LeaderboardClimb({
           display: "flex",
           justifyContent: "center",
           flexShrink: 0,
+          transform: shift,
         }}
       >
         {m ? (
@@ -337,11 +344,12 @@ export function LeaderboardClimb({
     onAccent: boolean,
     trend: "up" | "flat" | "down",
     extra?: React.ReactNode,
+    out?: [string, string],
   ) => (
     <>
-      {rankCell(rank, onAccent)}
+      {rankCell(rank, onAccent, out?.[0])}
       {avatar}
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ flex: 1, minWidth: 0, transform: out?.[0] }}>
         <div
           style={{
             display: "flex",
@@ -387,6 +395,7 @@ export function LeaderboardClimb({
           fontVariantNumeric: "tabular-nums",
           minWidth: 80 * fs,
           textAlign: "right",
+          transform: out?.[1],
         }}
       >
         {scoreText}
@@ -395,7 +404,7 @@ export function LeaderboardClimb({
         viewBox="0 0 24 24"
         width={18 * fs}
         height={18 * fs}
-        style={{ marginLeft: 10, flexShrink: 0 }}
+        style={{ marginLeft: 10, flexShrink: 0, transform: out?.[1] }}
         aria-hidden
       >
         <path
@@ -587,6 +596,12 @@ export function LeaderboardClimb({
                     : spring({ frame: frame - t - 1, fps, config: CARD });
                 const s = j + drop;
                 const rank = Math.round(s) + 1;
+                // Layout rounds a box and a baseline to whole pixels, so a row
+                // eased by `top` clicks down pixel by pixel. Layout holds the
+                // nearest slot and the travel is a transform; the slot pitch is
+                // whole pixels, so the hand-over between slots doesn't show.
+                const home = j + Math.round(drop);
+                const dy = (s - home) * slot;
                 return (
                   <div
                     key={e.name}
@@ -594,8 +609,10 @@ export function LeaderboardClimb({
                       position: "absolute",
                       left: pad,
                       right: pad,
-                      top: slotY(s),
+                      top: slotY(home),
                       height: rowH,
+                      transform:
+                        Math.abs(dy) < 1e-3 ? undefined : `translateY(${dy}px)`,
                       borderRadius: 14,
                       background: rowBg,
                       border: `1px solid ${hair}`,
@@ -641,17 +658,23 @@ export function LeaderboardClimb({
                   position: "absolute",
                   left: pad - 6 * moving,
                   right: pad - 6 * moving,
-                  top: slotY(selfSlot) - 2 * moving,
+                  // Same as the other rows: layout holds the nearest slot,
+                  // the climb itself is the translate below.
+                  top: slotY(selfHome),
                   height: rowH,
                   borderRadius: 14,
                   background: accent,
                   display: "flex",
                   alignItems: "center",
                   gap: 14,
-                  padding: "0 16px 0 14px",
+                  // The row widens by `left`/`right` while it climbs, and the
+                  // padding grows by as much, so layout keeps every item where
+                  // it rests; the items' outward drift is a transform, since
+                  // layout moved them in uneven whole pixels.
+                  padding: `0 ${16 + 6 * moving}px 0 ${14 + 6 * moving}px`,
                   boxSizing: "border-box",
                   opacity: selfIn,
-                  transform: `scale(${1 + 0.02 * moving + 0.03 * flash})`,
+                  transform: `translateY(${(selfSlot - selfHome) * slot - 2 * moving}px) scale(${1 + 0.02 * moving + 0.03 * flash})`,
                   boxShadow: `inset 0 1px 0 rgba(255,255,255,0.25), 0 ${10 + 14 * moving}px ${26 + 24 * moving}px color-mix(in oklab, ${accent} ${45 + 20 * flash}%, transparent), 0 0 0 ${6 * flash}px color-mix(in oklab, ${accent} ${30 * flash}%, transparent)`,
                   filter: selfBlur > 0.4 ? "url(#lbc-self)" : undefined,
                   clipPath: `inset(0 ${100 - 100 * selfIn}% 0 0 round 14px)`,
@@ -670,6 +693,7 @@ export function LeaderboardClimb({
                       alignItems: "center",
                       justifyContent: "center",
                       boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+                      transform: selfOut?.[0],
                     }}
                   >
                     {logo ?? (
@@ -699,6 +723,7 @@ export function LeaderboardClimb({
                   >
                     ▲ {stepCount} {gainLabel}
                   </span>,
+                  selfOut,
                 )}
               </div>
             </div>

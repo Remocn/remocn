@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const syne = loadFont("normal", {
   weights: ["400", "500"],
@@ -184,6 +185,7 @@ export function CueWord({
   speed = 1,
   theme = "dark",
 }: CueWordProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -250,7 +252,7 @@ export function CueWord({
     cursor = end + (k < n - 1 ? moveOf(k) : 0);
   }
 
-  const offsetOf = (k: number) => {
+  const offsetOf = (k: number, at = t) => {
     let x = 0;
     let y = 0;
     if (k > 0) {
@@ -258,10 +260,10 @@ export function CueWord({
       const span = moveOf(k - 1);
       const p =
         span === 0
-          ? t >= leave[k - 1]
+          ? at >= leave[k - 1]
             ? 1
             : 0
-          : interpolate(t, [leave[k - 1], leave[k - 1] + span], [0, 1], {
+          : interpolate(at, [leave[k - 1], leave[k - 1] + span], [0, 1], {
               ...CLAMP,
               easing: EASE_IO,
             });
@@ -275,10 +277,10 @@ export function CueWord({
       const span = moveOf(k);
       const p =
         span === 0
-          ? t >= leave[k]
+          ? at >= leave[k]
             ? 1
             : 0
-          : interpolate(t, [leave[k], leave[k] + span], [0, 1], {
+          : interpolate(at, [leave[k], leave[k] + span], [0, 1], {
               ...CLAMP,
               easing: EASE_IO,
             });
@@ -297,6 +299,11 @@ export function CueWord({
     if (t < startVis || t > endVis) continue;
     const { x, y } = offsetOf(k);
     if (Math.abs(x) >= W || Math.abs(y) >= H) continue;
+    // The field paints the whole frame, so it can't take the tilt itself;
+    // its words carry it while a drop or lift moves the field on y.
+    const fieldMoving =
+      Math.abs(offsetOf(k, t + 1).y - y) > 1e-3 ||
+      Math.abs(y - offsetOf(k, t - 1).y) > 1e-3;
 
     const onAccent = k % 2 === 1;
     const field = onAccent ? hi : base;
@@ -338,7 +345,7 @@ export function CueWord({
               style={{
                 display: "inline-block",
                 color: isCue ? cueCol : inkCol,
-                transform: `translateY(${((1 - p) * F * 1.15).toFixed(2)}px)`,
+                transform: `translateY(${((1 - p) * F * 1.15).toFixed(2)}px)${glide(fieldMoving || (p > 0 && p < 1))}`,
               }}
             >
               {w}

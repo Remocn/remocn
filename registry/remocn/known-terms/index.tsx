@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const epilogue = loadFont("normal", {
   weights: ["400", "500"],
@@ -179,6 +180,8 @@ interface Layout {
   blockW: number;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -208,6 +211,7 @@ export function KnownTerms({
   speed = 1,
   theme = "dark",
 }: KnownTermsProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -299,15 +303,30 @@ export function KnownTerms({
   const devX = gutterL + (GAP_EM * 2 + maxJ) * F;
   const pitch = INNER * F;
 
+  const easeAt = (at: number, from: number, dur: number, curve = EASE_OUT) =>
+    interpolate(at, [from, from + dur], [0, 1], { ...CLAMP, easing: curve });
   const ease = (from: number, dur: number, curve = EASE_OUT) =>
-    interpolate(t, [from, from + dur], [0, 1], { ...CLAMP, easing: curve });
+    easeAt(t, from, dur, curve);
 
-  let visible = rowsEm[0] * F;
-  for (let k = 1; k < n; k++) {
-    visible += ease(starts[k], STEP, EASE_MOVE) * rowsEm[k] * F;
-  }
+  // The block recentres as rows join. That travel is a transform on every
+  // node, laid out where the full block settles: layout rounds a baseline
+  // moved by `top` to whole pixels, so the rows would click up one by one.
+  const liftAt = (at: number) => {
+    let missing = 0;
+    for (let k = 1; k < n; k++) {
+      missing += (1 - easeAt(at, starts[k], STEP, EASE_MOVE)) * rowsEm[k] * F;
+    }
+    return missing / 2;
+  };
+  const lift = liftAt(t);
+  const shifting =
+    Math.abs(liftAt(t + speed) - lift) > 1e-6 ||
+    Math.abs(lift - liftAt(t - speed)) > 1e-6;
+  // It stays a transform while the block stands with only some rows in, too:
+  // handed back to layout there, the rows would jump by the rounding.
+  const shiftY = `translateY(${lift}px) `;
   const rowTops: number[] = [];
-  let acc = H / 2 - visible / 2;
+  let acc = H / 2 - rowsEm.reduce((a, r) => a + r * F, 0) / 2;
   for (let k = 0; k < n; k++) {
     rowTops.push(acc);
     acc += rowsEm[k] * F;
@@ -362,6 +381,7 @@ export function KnownTerms({
           height: vh + F * 0.36,
           overflow: "hidden",
           opacity: lead,
+          transform: shiftY.trim(),
         }}
       >
         {v.lines.map((line, i) => (
@@ -372,7 +392,7 @@ export function KnownTerms({
               left: F * 0.06 + vw - lineW(line) * F,
               top: F * 0.26 + i * pitch,
               color: termColor,
-              transform: `translateY(${((1 - arrive) * (vh + F * 0.3)).toFixed(2)}px)`,
+              transform: `translateY(${((1 - arrive) * (vh + F * 0.3)).toFixed(2)}px)${glide(midway(arrive) || shifting)}`,
             }}
           >
             {line.join(" ")}
@@ -396,7 +416,7 @@ export function KnownTerms({
             top: top + F * 0.1 + i * pitch,
             color: termColor,
             opacity: lead,
-            transform: `translateX(${dx.toFixed(2)}px)`,
+            transform: `${shiftY}translateX(${dx.toFixed(2)}px)${glide(shifting)}`,
           }}
         >
           {line.join(" ")}
@@ -414,7 +434,7 @@ export function KnownTerms({
           top: top + F * 0.1,
           color: fg,
           opacity: joinIn * JOIN_DIM * (0.6 + 0.4 * lead),
-          transform: `translate(${(joinMid - jw / 2).toFixed(2)}px, ${((1 - joinIn) * F * 0.35).toFixed(2)}px)`,
+          transform: `${shiftY}translate(${(joinMid - jw / 2).toFixed(2)}px, ${((1 - joinIn) * F * 0.35).toFixed(2)}px)${glide(midway(joinIn) || shifting)}`,
         }}
       >
         {joins[k]}

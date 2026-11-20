@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 /** Film-title serif for the hero, its sans sibling for the caption. */
 const serif = loadSerif("normal", { weights: ["400"], subsets: ["latin"] });
@@ -235,7 +236,9 @@ export function AspectSlit({
   speed = 1,
   theme = "dark",
 }: AspectSlitProps) {
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
+  const raw = Math.max(0, useCurrentFrame() - delay);
+  const frame = raw * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
@@ -245,21 +248,23 @@ export function AspectSlit({
   const scopeBar = Math.max(0, (H - W / 2.39) / 2);
   const slitH = Math.round(H * slit);
   const slitBar = (H - slitH) / 2;
-  const toScope = interpolate(frame, [SCOPE_AT, SCOPE_END], [0, 1], {
-    ...CLAMP,
-    easing: BARS,
-  });
-  const toSlit = interpolate(frame, [SLIT_AT, SLIT_END], [0, 1], {
-    ...CLAMP,
-    easing: BARS,
-  });
-  const open = interpolate(frame, [OPEN_AT, OPEN_END], [0, 1], {
-    ...CLAMP,
-    easing: OPEN,
-  });
-  const closed = toScope * scopeBar + toSlit * (slitBar - scopeBar);
-  const bar = closed * (1 - open);
-  const opening = H - 2 * bar;
+  const barAt = (fr: number) => {
+    const toScope = interpolate(fr, [SCOPE_AT, SCOPE_END], [0, 1], {
+      ...CLAMP,
+      easing: BARS,
+    });
+    const toSlit = interpolate(fr, [SLIT_AT, SLIT_END], [0, 1], {
+      ...CLAMP,
+      easing: BARS,
+    });
+    const open = interpolate(fr, [OPEN_AT, OPEN_END], [0, 1], {
+      ...CLAMP,
+      easing: OPEN,
+    });
+    const closed = toScope * scopeBar + toSlit * (slitBar - scopeBar);
+    return closed * (1 - open);
+  };
+  const bar = barAt(frame);
 
   const drift = (k: number) => ({
     x: Math.sin(frame / 44 + k * 1.7) * 3,
@@ -325,47 +330,68 @@ export function AspectSlit({
   // spans most of the width.
   const slitSize = (slitH * 0.5) / (BASELINE - CAP_TOP);
   const heroSize = Math.min(H * 0.3, (W * 0.78) / metrics.width);
-  const grow = interpolate(frame, [GROW_AT, GROW_END], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  // A slow push while it sits in the slit, so the hold is never frozen.
-  const push = interpolate(frame, [RISE_END - 6, OPEN_AT + 4], [0, 1], CLAMP);
-  const wanted = slitSize * (1 + 0.035 * push) + (heroSize - slitSize) * grow;
-  // Framed, never clipped: the ink stays inside the opening with room to spare.
-  const size = Math.min(
-    wanted,
-    (opening * 0.6) / (BASELINE + metrics.descent - CAP_TOP),
-  );
-  const scale = size / heroSize;
-
-  const rise = interpolate(frame, [RISE_AT, RISE_END], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const tracking = interpolate(
-    frame,
-    [RISE_AT, OPEN_AT, GROW_END],
-    [0.01, -0.012, HERO_TRACK],
-    CLAMP,
-  );
-
-  const captionIn = interpolate(frame, [CAPTION_AT, CAPTION_END], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
   const captionSize = H * 0.034;
   const captionGap = H * 0.028;
+  const geometry = (fr: number) => {
+    const opening = H - 2 * barAt(fr);
+    const grow = interpolate(fr, [GROW_AT, GROW_END], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+    // A slow push while it sits in the slit, so the hold is never frozen.
+    const push = interpolate(fr, [RISE_END - 6, OPEN_AT + 4], [0, 1], CLAMP);
+    const wanted = slitSize * (1 + 0.035 * push) + (heroSize - slitSize) * grow;
+    // Framed, never clipped: the ink stays inside the opening with room to spare.
+    const size = Math.min(
+      wanted,
+      (opening * 0.6) / (BASELINE + metrics.descent - CAP_TOP),
+    );
+    const scale = size / heroSize;
 
-  // Cap-height centre of the title sits on the frame centre, then the group
-  // (title + caption) recentres as the caption arrives.
-  const capMid = ((CAP_TOP + BASELINE) / 2) * size;
-  const descender = metrics.descent * size;
-  const groupShift = -captionIn * (descender + captionGap + captionSize) * 0.5;
-  // Starts with its cap line just behind the lower bar's edge, wherever it is.
-  const riseFrom = opening / 2 + ((BASELINE - CAP_TOP) / 2) * size + 2;
-  const titleTop = H / 2 - capMid + groupShift + (1 - rise) * riseFrom;
-  const baseline = titleTop + BASELINE * size;
+    const rise = interpolate(fr, [RISE_AT, RISE_END], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+    const tracking = interpolate(
+      fr,
+      [RISE_AT, OPEN_AT, GROW_END],
+      [0.01, -0.012, HERO_TRACK],
+      CLAMP,
+    );
+
+    const captionIn = interpolate(fr, [CAPTION_AT, CAPTION_END], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+
+    // Cap-height centre of the title sits on the frame centre, then the group
+    // (title + caption) recentres as the caption arrives.
+    const capMid = ((CAP_TOP + BASELINE) / 2) * size;
+    const descender = metrics.descent * size;
+    const groupShift =
+      -captionIn * (descender + captionGap + captionSize) * 0.5;
+    // Starts with its cap line just behind the lower bar's edge, wherever it is.
+    const riseFrom = opening / 2 + ((BASELINE - CAP_TOP) / 2) * size + 2;
+    const titleTop = H / 2 - capMid + groupShift + (1 - rise) * riseFrom;
+    const baseline = titleTop + BASELINE * size;
+    const captionTop = baseline + descender + captionGap - captionSize * 0.2;
+    return { scale, rise, tracking, captionIn, titleTop, captionTop };
+  };
+  const { scale, rise, tracking, captionIn, titleTop, captionTop } =
+    geometry(frame);
+  // Layout rounds a box and a baseline to whole pixels, so a title eased by
+  // `top` clicks along pixel by pixel. The title and the caption are laid out
+  // where they finally rest and travel by a transform all their life: handing
+  // them back to layout at a stop would snap them to the nearest pixel.
+  const rest = geometry(Number.MAX_SAFE_INTEGER);
+  const moving = [raw - 1, raw + 1].some((f) => {
+    const g = geometry(f * speed);
+    return (
+      Math.abs(g.titleTop - titleTop) > 1e-3 ||
+      Math.abs(g.scale - scale) * heroSize > 1e-3 ||
+      Math.abs(g.captionTop - captionTop) > 1e-3
+    );
+  });
 
   const body =
     c.accentPeriod && title.endsWith(".") ? title.slice(0, -1) : title;
@@ -381,7 +407,8 @@ export function AspectSlit({
               position: "absolute",
               left: 0,
               width: W,
-              top: titleTop,
+              top: rest.titleTop,
+              transform: `translateY(${titleTop - rest.titleTop}px)${glide(moving)}`,
               height: heroSize,
               display: "flex",
               justifyContent: "center",
@@ -414,7 +441,7 @@ export function AspectSlit({
               position: "absolute",
               left: 0,
               right: 0,
-              top: baseline + descender + captionGap - captionSize * 0.2,
+              top: rest.captionTop,
               textAlign: "center",
               fontFamily: sans.fontFamily,
               fontWeight: 400,
@@ -423,7 +450,7 @@ export function AspectSlit({
               letterSpacing: "-0.005em",
               color: c.caption,
               opacity: captionIn,
-              transform: `translateY(${(1 - captionIn) * H * 0.012}px)`,
+              transform: `translateY(${captionTop - rest.captionTop + (1 - captionIn) * H * 0.012}px)${glide(moving)}`,
             }}
           >
             {caption}

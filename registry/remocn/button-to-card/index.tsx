@@ -292,6 +292,14 @@ export function ButtonToCard({
   const cardContent = 1 - ramp(frame, B.shrink, 8, EXIT);
   const tileContent = ramp(frame, B.shrink + 12, 12);
   const media = lerpRect(mediaCard, mediaTile, shrink);
+  // Layout rounds a box and a baseline to whole pixels, so anything eased by
+  // `left`/`top` here clicks along pixel by pixel. Each mover is laid out at
+  // one resting place and travels by transform; a shift under 0.001px is
+  // dropped so nothing extra sits on the layer tree there.
+  const shift = (x: number, y: number) =>
+    Math.abs(x) < 1e-3 && Math.abs(y) < 1e-3
+      ? ""
+      : `translate(${x}px, ${y}px) `;
 
   const typedName = name.slice(0, Math.max(0, frame - B.title));
   const typedPrice = price.slice(
@@ -357,6 +365,7 @@ export function ButtonToCard({
         easing: MOVE,
       },
     );
+  const cursorRest = cursorPath[cursorPath.length - 1];
   const attach =
     ramp(frame, B.carry - 2, 6) * (1 - ramp(frame, B.drop + 2, 8, EXIT));
   const pointerX = mix(cAt(1), ix + 30, attach);
@@ -669,8 +678,9 @@ export function ButtonToCard({
             <div
               style={{
                 position: "absolute",
-                left: box.x,
-                top: box.y,
+                // Laid out where the open card holds longest.
+                left: cardRect.x,
+                top: cardRect.y,
                 width: box.w,
                 height: box.h,
                 borderRadius: box.r,
@@ -679,7 +689,7 @@ export function ButtonToCard({
                 boxShadow: shadow,
                 overflow: "hidden",
                 opacity: Math.min(1, pillIn * 1.6),
-                transform: `translateY(${mix(40, 0, pillIn)}px) scale(${press})`,
+                transform: `${shift(box.x - cardRect.x, box.y - cardRect.y)}translateY(${mix(40, 0, pillIn)}px) scale(${press})`,
                 filter:
                   shrinkBlurX + shrinkBlurY > 0.4
                     ? "url(#btc-shrink)"
@@ -689,8 +699,8 @@ export function ButtonToCard({
               <div
                 style={{
                   position: "absolute",
-                  left: (box.w - pillRect.w) / 2,
-                  top: (box.h - pillRect.h) / 2,
+                  left: 0,
+                  top: 0,
                   width: pillRect.w,
                   height: pillRect.h,
                   display: "flex",
@@ -701,7 +711,7 @@ export function ButtonToCard({
                   fontSize: 22,
                   letterSpacing: "-0.01em",
                   opacity: pillLabel,
-                  transform: `scale(${mix(1, 1.25, 1 - pillLabel)})`,
+                  transform: `${shift((box.w - pillRect.w) / 2, (box.h - pillRect.h) / 2)}scale(${mix(1, 1.25, 1 - pillLabel)})`,
                 }}
               >
                 <span
@@ -725,15 +735,15 @@ export function ButtonToCard({
               <div
                 style={{
                   position: "absolute",
-                  left: media.x,
-                  top: media.y,
+                  left: mediaCard.x,
+                  top: mediaCard.y,
                   width: media.w,
                   height: media.h,
                   borderRadius: media.r,
                   background: slotFill,
                   overflow: "hidden",
                   opacity: fieldIn(0),
-                  transform: `scale(${breathe})`,
+                  transform: `${shift(media.x - mediaCard.x, media.y - mediaCard.y)}scale(${breathe})`,
                   outline: placed
                     ? undefined
                     : `1.5px dashed ${slotHot > 0.3 ? accent : faint}`,
@@ -1025,13 +1035,13 @@ export function ButtonToCard({
               <div
                 style={{
                   position: "absolute",
-                  left: ix - carriedW / 2,
-                  top: iy - carriedH / 2,
+                  left: mediaCx - mediaCard.w / 2,
+                  top: mediaCy - mediaCard.h / 2,
                   width: carriedW,
                   height: carriedH,
                   borderRadius: mix(14, mediaCard.r, Math.min(1, drop)),
                   overflow: "hidden",
-                  transform: `rotate(${carriedRot}deg)`,
+                  transform: `${shift(ix - carriedW / 2 - (mediaCx - mediaCard.w / 2), iy - carriedH / 2 - (mediaCy - mediaCard.h / 2))}rotate(${carriedRot}deg)`,
                   opacity: ramp(frame, B.carry - 2, 6),
                   boxShadow: `0 ${mix(30, 4, Math.min(1, drop))}px ${mix(50, 10, Math.min(1, drop))}px rgba(30,10,0,${dark ? 0.55 : 0.3})`,
                   border: `${mix(4, 0, Math.min(1, drop))}px solid #ffffff`,
@@ -1048,11 +1058,11 @@ export function ButtonToCard({
             <div
               style={{
                 position: "absolute",
-                left: pointerX,
-                top: pointerY,
+                left: cursorRest[1],
+                top: cursorRest[2],
                 opacity: cursorOpacity,
                 transformOrigin: "5px 4px",
-                transform: `scale(${cursorScale})`,
+                transform: `${shift(pointerX - cursorRest[1], pointerY - cursorRest[2])}scale(${cursorScale})`,
                 filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.3))",
               }}
             >

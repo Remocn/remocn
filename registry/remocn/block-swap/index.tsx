@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const space = loadSpace("normal", {
   weights: ["400", "500"],
@@ -288,6 +289,8 @@ const lerpRect = (a: Rect, b: Rect, k: number): Rect => ({
   h: a.h + (b.h - a.h) * k,
 });
 
+const midway = (p: number) => p > 0 && p < 1;
+
 const bare = (s: string) => s.replace(/[.,!?;:…]+$/, "").toLowerCase();
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -320,6 +323,7 @@ export function BlockSwap({
   speed = 1,
   theme = "dark",
 }: BlockSwapProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -404,6 +408,13 @@ export function BlockSwap({
     let fill = 0;
     let inner: { w: Word; o: number } | null = null;
     let alpha = 1;
+    // Layout rounds a box to whole pixels, so a block eased across by
+    // `left`/`top` creeps pixel by pixel at the slow ends of its morph. While
+    // it morphs, layout holds it where it lands and the travel is a transform.
+    // It stays on that transform from cover to uncover: a frame that hands it
+    // to layout snaps the word inside it to a whole pixel.
+    let land: Rect | null = null;
+    let moving = false;
 
     if (prev) {
       const source = prev[Math.min(j, prev.length - 1)];
@@ -431,6 +442,8 @@ export function BlockSwap({
         { ...CLAMP, easing: EASE_IN_OUT },
       );
       rect = lerpRect(coverRect, target.block, mk);
+      land = target.block;
+      moving = midway(mk);
       if (splitting && t < sw.morphAt) alpha = 0;
       if (!splitting && t < sw.start + j * STAGGER) alpha = 0;
       if (merging && mk >= 1) alpha = 0;
@@ -471,6 +484,7 @@ export function BlockSwap({
       const right = target.block.x + target.block.w;
       const left = target.block.x + target.block.w * u;
       rect = { ...target.block, x: left, w: right - left };
+      moving = moving || midway(u);
       if (rect.w < F * 0.03) alpha = 0;
     }
     const pillOn = keep
@@ -486,10 +500,13 @@ export function BlockSwap({
         key={`blk-${j}`}
         style={{
           position: "absolute",
-          left: rect.x,
-          top: rect.y,
+          left: land ? land.x : rect.x,
+          top: land ? land.y : rect.y,
           width: rect.w,
           height: rect.h,
+          transform: land
+            ? `translate(${rect.x - land.x}px, ${rect.y - land.y}px)${glide(moving)}`
+            : undefined,
           borderRadius: Math.min(r, rect.w / 2),
           overflow: "hidden",
           opacity: alpha,
@@ -500,14 +517,18 @@ export function BlockSwap({
           <div
             style={{
               position: "absolute",
-              left: -rect.x,
-              top: -rect.y,
+              // Pinned to the frame through the block's move, so it takes
+              // the move back as a transform too.
+              left: -(land ?? rect).x,
+              top: -(land ?? rect).y,
               width: W * 2,
               height: H,
               backgroundImage: shimmer,
               backgroundSize: `${W}px ${H}px`,
               backgroundRepeat: "repeat-x",
-              transform: `translateX(${(-((drift * W) % W)).toFixed(2)}px)`,
+              transform: land
+                ? `translate(${(-((drift * W) % W)).toFixed(2)}px, 0px) translate(${land.x - rect.x}px, ${land.y - rect.y}px)`
+                : `translateX(${(-((drift * W) % W)).toFixed(2)}px)`,
               opacity: fill,
             }}
           />
@@ -523,14 +544,21 @@ export function BlockSwap({
           />
         ) : null}
         {inner && inner.o > 0 ? (
-          <div style={{ opacity: inner.o }}>
+          <div
+            style={{
+              opacity: inner.o,
+              transform: land
+                ? `translate(${land.x - rect.x}px, ${land.y - rect.y}px)`
+                : undefined,
+            }}
+          >
             {wordAt(
               inner.w,
               pillOn > 0
                 ? interpolateColors(pillOn, [0, 0.3], [c.bg, "#FFFFFF"])
                 : c.bg,
-              rect.x,
-              rect.y,
+              (land ?? rect).x,
+              (land ?? rect).y,
             )}
           </div>
         ) : null}

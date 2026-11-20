@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const jakarta = loadJakarta("normal", {
   weights: ["400", "500"],
@@ -182,6 +183,8 @@ function departure(tau: number) {
   return 1.4 * tau * tau + 0.04 * tau * tau * tau;
 }
 
+const midway = (p: number) => p > 0 && p < 1;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -213,6 +216,7 @@ export function PullIn({
   speed = 1,
   theme = "dark",
 }: PullInProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -344,7 +348,9 @@ export function PullIn({
                 wordSpacing: `${WORD}em`,
                 whiteSpace: "pre",
                 color: c.muted,
-                transform: `translateY(${((1 - leadP) * L * 1.2).toFixed(2)}px)`,
+                // Rounding the rise to 0.01px would add its own steps while it
+                // moves; at rest it keeps the old `translateY(0.00px)`.
+                transform: `translateY(${midway(leadP) ? (1 - leadP) * L * 1.2 : ((1 - leadP) * L * 1.2).toFixed(2)}px)${glide(midway(leadP))}`,
               }}
             >
               {lead}

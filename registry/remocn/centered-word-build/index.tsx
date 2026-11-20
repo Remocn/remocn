@@ -1,6 +1,7 @@
 "use client";
 
 import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface CenteredWordBuildProps {
   text: string;
@@ -61,6 +62,7 @@ export function CenteredWordBuild({
   speed = 1,
   className,
 }: CenteredWordBuildProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame() * speed;
   const words = text.trim().split(/\s+/).filter(Boolean);
 
@@ -70,20 +72,22 @@ export function CenteredWordBuild({
     (_, index) => frame >= revealFrame(index, wordGap, accel),
   ).length;
   let cameraScale = 1;
+  // Zooms overlap, so the camera moves while any one of them is midway.
+  let cameraMoving = false;
   for (let index = 1; index < visibleCount; index++) {
     const revealAt = revealFrame(index, wordGap, accel);
-    cameraScale +=
-      zoomStep *
-      interpolate(
-        frame,
-        [revealAt, revealAt + Math.max(settleFrames, 0.001)],
-        [0, 1],
-        {
-          easing: settleEasing,
-          extrapolateLeft: "clamp",
-          extrapolateRight: "clamp",
-        },
-      );
+    const zoom = interpolate(
+      frame,
+      [revealAt, revealAt + Math.max(settleFrames, 0.001)],
+      [0, 1],
+      {
+        easing: settleEasing,
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      },
+    );
+    cameraScale += zoomStep * zoom;
+    if (zoom > 0 && zoom < 1) cameraMoving = true;
   }
   const exitProgress = interpolate(
     frame,
@@ -122,7 +126,8 @@ export function CenteredWordBuild({
           letterSpacing: "-0.02em",
           lineHeight: 1.1,
           whiteSpace: "nowrap",
-          scale: `${cameraScale}`,
+          // The camera is a transform so it can carry the mark.
+          transform: `scale(${cameraScale})${glide(cameraMoving)}`,
           opacity: exitProgress >= 1 ? 0 : 1,
           maskImage: exitProgress > 0 ? exitMask : undefined,
           WebkitMaskImage: exitProgress > 0 ? exitMask : undefined,
@@ -149,7 +154,7 @@ export function CenteredWordBuild({
               style={{
                 display: "inline-block",
                 marginLeft: index > 0 ? "0.25em" : undefined,
-                translate: `0 ${y}px`,
+                transform: `translateY(${y}px)${glide(y > 0)}`,
               }}
             >
               {word}

@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -77,6 +78,14 @@ const clamp01 = {
   extrapolateRight: "clamp",
 } as const;
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+// Layout rounds a box and a baseline to whole pixels, so anything eased by
+// `left`/`top` steps along pixel by pixel. Moves are laid out at a resting
+// place and carried by this translate, dropped once it is spent.
+const shift = (dx: number, dy: number) =>
+  Math.abs(dx) > 1e-3 || Math.abs(dy) > 1e-3
+    ? `translate(${dx}px, ${dy}px) `
+    : "";
 const ramp = (
   f: number,
   from: number,
@@ -456,11 +465,16 @@ function CityArt({ index }: { index: number }) {
 function Cursor({
   x,
   y,
+  restX,
+  restY,
   press,
   opacity,
 }: {
   x: number;
   y: number;
+  /** Where the cursor waits longest; it is laid out there. */
+  restX: number;
+  restY: number;
   press: number;
   opacity: number;
 }) {
@@ -471,11 +485,11 @@ function Cursor({
       viewBox="0 0 20 24"
       style={{
         position: "absolute",
-        left: x - 2.4,
-        top: y - 2.4,
+        left: restX - 2.4,
+        top: restY - 2.4,
         opacity,
         transformOrigin: "2px 2px",
-        transform: `scale(${1 - 0.12 * press})`,
+        transform: `${shift(x - restX, y - restY)}scale(${1 - 0.12 * press})`,
         filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
         overflow: "visible",
         zIndex: 10,
@@ -720,6 +734,7 @@ export function AiImageGrid({
   ground,
   groundParams,
 }: AiImageGridProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width * 1.2;
@@ -769,7 +784,10 @@ export function AiImageGrid({
   const enter = spring({ frame, fps, config: HEAVY });
   const dock = spring({ frame: frame - GEN - 2, fps, config: HEAVY });
   const cardOut = ramp(frame, PICK, 10, EXIT);
-  const cardY = lerp(introY, dockY, dock) + (1 - enter) * 60 + cardOut * 60;
+  // The card is laid out docked, where it waits longest; the rise in, the
+  // dock and the drop out ride a transform.
+  const cardDy =
+    (introY - dockY) * (1 - dock) + (1 - enter) * 60 + cardOut * 60;
   const cardS = lerp(INTRO_S, 1, dock) * (0.96 + 0.04 * enter);
 
   const pickRect = rects[pickIdx];
@@ -819,6 +837,9 @@ export function AiImageGrid({
   const d3 = spring({ frame: frame - PICK - 18, fps, config: CARD });
 
   const push = interpolate(frame, [0, 240], [1, 1.03], clamp01);
+  // The slow push carries everything, so one tilt on it covers the text that
+  // scales or rises anywhere inside.
+  const pushMoving = frame < 240;
   const tileLocal = (i: number) => frame - GEN - 6 - i * stagger;
 
   return (
@@ -874,7 +895,7 @@ export function AiImageGrid({
             style={{
               position: "absolute",
               inset: 0,
-              transform: `scale(${push})`,
+              transform: `scale(${push})${glide(pushMoving)}`,
               transformOrigin: "50% 50%",
             }}
           >
@@ -920,7 +941,7 @@ export function AiImageGrid({
               style={{
                 position: "absolute",
                 left: cardX,
-                top: cardY,
+                top: dockY,
                 width: cardW,
                 height: cardH,
                 borderRadius: 20,
@@ -930,7 +951,7 @@ export function AiImageGrid({
                 boxSizing: "border-box",
                 padding: "20px 22px 0",
                 opacity: ramp(frame, 0, 10, ENTER_SOFT) * (1 - cardOut),
-                transform: `scale(${cardS})`,
+                transform: `${shift(0, cardDy)}scale(${cardS})`,
                 transformOrigin: "50% 50%",
               }}
             >
@@ -1155,7 +1176,14 @@ export function AiImageGrid({
                 </div>
               </>
             )}
-            <Cursor x={cur.x} y={cur.y} press={press} opacity={curOpacity} />
+            <Cursor
+              x={cur.x}
+              y={cur.y}
+              restX={dw * 0.78}
+              restY={dh * 0.5}
+              press={press}
+              opacity={curOpacity}
+            />
           </div>
         </div>
       </ScaleLayer>

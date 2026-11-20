@@ -1,6 +1,7 @@
 "use client";
 
 import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface BottomUpLettersProps {
   text: string;
@@ -23,6 +24,7 @@ export function BottomUpLetters({
   speed = 1,
   className,
 }: BottomUpLettersProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame() * speed;
 
   const chars = Array.from(text);
@@ -64,6 +66,7 @@ export function BottomUpLetters({
             extrapolateRight: "clamp",
             easing,
           });
+          const rising = y !== 0 && y !== distance;
           return (
             <span
               key={i}
@@ -73,7 +76,7 @@ export function BottomUpLetters({
                 backfaceVisibility: "hidden",
                 transformOrigin: "50% 55%",
                 opacity,
-                translate: `0 ${y}px`,
+                transform: `translateY(${y}px)${glide(rising)}`,
               }}
             >
               {char}

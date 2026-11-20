@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const jakarta = loadJakarta("normal", {
   weights: ["400"],
@@ -63,6 +64,8 @@ const PUSH = 16;
 const CLEAR = 14;
 const OPEN = CRACK + PUSH + CLEAR;
 const PAD = 0.22;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_PUSH = Easing.bezier(0.45, 0, 0.35, 1);
@@ -188,6 +191,7 @@ export function SlideDoors({
   speed = 1,
   theme = "dark",
 }: SlideDoorsProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -354,7 +358,7 @@ export function SlideDoors({
             ...textStyle,
             left: centre - (ln.full * F) / 2,
             transformOrigin: `${((ln.full * F) / 2).toFixed(2)}px ${(lineH * 0.7).toFixed(2)}px`,
-            transform: `scale(${s.toFixed(4)})`,
+            transform: `scale(${s.toFixed(4)})${glide(midway(push))}`,
             opacity: fits,
           }}
         >

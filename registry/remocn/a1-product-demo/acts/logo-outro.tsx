@@ -7,7 +7,14 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { FLOW_BG, FLOW_INK, FLOW_YELLOW, FONT_SERIF } from "../foundation";
+import {
+  FLOW_BG,
+  FLOW_INK,
+  FLOW_YELLOW,
+  FONT_SERIF,
+  stirring,
+  useGlide,
+} from "../foundation";
 
 function FlowithLogo({ size }: { size: number }) {
   return (
@@ -38,12 +45,17 @@ function FlowithLogo({ size }: { size: number }) {
 export function LogoOutro({ speed = 1 }: { speed?: number }) {
   const f = useCurrentFrame() * speed;
   const { fps } = useVideoConfig();
+  const glide = useGlide();
 
-  const reveal = spring({
-    frame: f - 4,
-    fps,
-    config: { damping: 22, stiffness: 90 },
-  });
+  const revealAt = (g: number) =>
+    spring({
+      frame: g - 4,
+      fps,
+      config: { damping: 22, stiffness: 90 },
+    });
+  const reveal = revealAt(f);
+  // A 16% zoom about the centre of a lockup about 500px wide.
+  const zooming = stirring((g) => revealAt(g) * 0.16 * 250, f, speed);
   const opacity = interpolate(f, [4, 24], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
@@ -66,8 +78,8 @@ export function LogoOutro({ speed = 1 }: { speed?: number }) {
           gap: 30,
           opacity,
           scale: `${scale}`,
+          transform: glide(zooming),
           transformOrigin: "center",
-          willChange: "transform, opacity",
         }}
       >
         <FlowithLogo size={110} />

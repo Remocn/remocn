@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const flex = loadVariableFont("normal", { subsets: ["latin"] });
 
@@ -86,6 +87,8 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 const SPRING_SNAP = { damping: 14, stiffness: 170, mass: 0.7 };
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const mix = (a: Axes, b: Axes, k: number): Axes => ({
   wdth: a.wdth + (b.wdth - a.wdth) * k,
@@ -218,6 +221,7 @@ export function AxisFlex({
   theme = "dark",
   speed = 1,
 }: AxisFlexProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -294,7 +298,7 @@ export function AxisFlex({
             backgroundClip: "text",
             color: "transparent",
             opacity: 0.4 + 0.6 * enter,
-            transform: `translateY(${(1 - enter) * F * 0.08}px)`,
+            transform: `translateY(${(1 - enter) * F * 0.08}px)${glide(midway(enter))}`,
           }}
         >
           {chars.map((ch, i) => {
@@ -334,7 +338,7 @@ export function AxisFlex({
               color: accent,
               fontVariationSettings: fvs(lineAxes),
               letterSpacing: "0.01em",
-              transform: `translateY(${(1 - lineP) * F2 * 1.25}px)`,
+              transform: `translateY(${(1 - lineP) * F2 * 1.25}px)${glide(midway(lineP))}`,
             }}
           >
             {line}

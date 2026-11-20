@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadSans("normal", {
   weights: ["400", "500"],
@@ -219,6 +220,8 @@ function simulate(
   return { angle: a };
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -252,6 +255,7 @@ export function BalanceBeam({
   theme = "dark",
   speed = 1,
 }: BalanceBeamProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
@@ -561,7 +565,7 @@ export function BalanceBeam({
               opacity: titleIn,
               filter:
                 titleIn < 0.99 ? `blur(${(1 - titleIn) * 8 * u}px)` : undefined,
-              transform: `translateY(${(1 - titleIn) * 18 * u}px)`,
+              transform: `translateY(${(1 - titleIn) * 18 * u}px)${glide(midway(titleIn))}`,
             }}
           >
             {titleHead}
@@ -584,7 +588,7 @@ export function BalanceBeam({
                 letterSpacing: "-0.005em",
                 color: p.muted,
                 opacity: subIn,
-                transform: `translateY(${(1 - subIn) * 8 * u}px)`,
+                transform: `translateY(${(1 - subIn) * 8 * u}px)${glide(midway(subIn))}`,
               }}
             >
               <span

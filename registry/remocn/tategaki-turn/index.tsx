@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const kaku = loadZenKaku("normal", { weights: ["500"], subsets: ["latin"] });
 
@@ -173,6 +174,7 @@ export function TategakiTurn({
   speed = 1,
   theme = "dark",
 }: TategakiTurnProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -282,24 +284,6 @@ export function TategakiTurn({
   const lastStart = (n - 1) * stagger + (maxLen - 1) * LETTER_STAGGER;
   const turnAt = lastStart + LETTER_LEN + hold;
 
-  const swing = m.words.map((_wd, j) =>
-    spring({
-      frame: t - turnAt - lineOf[j] * LINE_STAGGER,
-      fps,
-      durationInFrames: SWING_LEN,
-      config: { damping: 15, stiffness: 90, mass: 1 },
-    }),
-  );
-  const travel = m.words.map((_wd, j) => {
-    const s0 = turnAt + lineOf[j] * LINE_STAGGER;
-    return interpolate(t, [s0 - 2, s0 + TRAVEL_LEN], [0, 1], {
-      ...CLAMP,
-      easing: EASE_TRAVEL,
-    });
-  });
-  const zoomP =
-    travel.reduce((acc, v) => acc + v, 0) / Math.max(1, travel.length);
-
   interface Glyph {
     j: number;
     k: number;
@@ -308,79 +292,136 @@ export function TategakiTurn({
     y: number;
     adv: number;
   }
-  const glyphs: Glyph[] = [];
-  m.words.forEach((wd, j) => {
-    const ph = { x: hCenter(j, 0), y: wordY[j] };
-    const pv = pivotV[j];
-    const theta = (Math.PI / 2) * (1 - swing[j]);
-    const px = pv.x + (ph.x - pv.x) * travel[j];
-    const py = pv.y + (ph.y - pv.y) * travel[j];
-    const bend = Math.min(Math.PI / 2, Math.max(0, theta));
-    const g = 1 + STRETCH * Math.sin(2 * bend);
-    const cos = Math.cos(theta);
-    wd.chars.forEach((ch, k) => {
-      const rv = k * pitch;
-      const rh = hCenter(j, k) - ph.x;
-      let d = g * Math.hypot(rh * cos, rv * Math.sin(theta));
-      if (cos > 0.001) d = Math.min(d, rh / cos);
-      glyphs.push({
-        j,
-        k,
-        ch,
-        x: px + d * cos,
-        y: py + d * Math.sin(theta),
-        adv: wd.advs[k],
+  // Every glyph's box and font size at `time`. Called for the neighbouring
+  // frames and for the settled line, so the travel can be a transform.
+  const sceneAt = (time: number) => {
+    const swing = m.words.map((_wd, j) =>
+      spring({
+        frame: time - turnAt - lineOf[j] * LINE_STAGGER,
+        fps,
+        durationInFrames: SWING_LEN,
+        config: { damping: 15, stiffness: 90, mass: 1 },
+      }),
+    );
+    const travel = m.words.map((_wd, j) => {
+      const s0 = turnAt + lineOf[j] * LINE_STAGGER;
+      return interpolate(time, [s0 - 2, s0 + TRAVEL_LEN], [0, 1], {
+        ...CLAMP,
+        easing: EASE_TRAVEL,
       });
     });
-  });
+    const zoomP =
+      travel.reduce((acc, v) => acc + v, 0) / Math.max(1, travel.length);
 
-  let minX = Number.POSITIVE_INFINITY;
-  let maxX = Number.NEGATIVE_INFINITY;
-  let minY = Number.POSITIVE_INFINITY;
-  let maxY = Number.NEGATIVE_INFINITY;
-  for (const g of glyphs) {
-    minX = Math.min(minX, g.x - g.adv / 2);
-    maxX = Math.max(maxX, g.x + g.adv / 2);
-    minY = Math.min(minY, g.y - m.cap);
-    maxY = Math.max(maxY, g.y);
-  }
-  const F = Math.min(
-    Fv + (Fh - Fv) * zoomP,
-    fitW / (maxX - minX),
-    (H * 0.84) / (maxY - minY),
-  );
-  const marginX = W * (portrait ? 0.08 : 0.07);
-  const marginY = H * (portrait ? 0.07 : 0.09);
-  const oxV = W - marginX - maxX * F;
-  const oyV = marginY - minY * F;
-  const oxH = marginX - minX * F;
-  const oyH = H - marginY - maxY * F;
-  const ox = oxV + (oxH - oxV) * zoomP;
-  const oy = oyV + (oyH - oyV) * zoomP;
-
-  const nodes: React.ReactNode[] = glyphs.map((g) => {
-    const startAt = g.j * stagger + g.k * LETTER_STAGGER - 3;
-    const rise = interpolate(t, [startAt, startAt + LETTER_LEN], [0, 1], {
-      ...CLAMP,
-      easing: EASE_OUT,
+    const glyphs: Glyph[] = [];
+    m.words.forEach((wd, j) => {
+      const ph = { x: hCenter(j, 0), y: wordY[j] };
+      const pv = pivotV[j];
+      const theta = (Math.PI / 2) * (1 - swing[j]);
+      const px = pv.x + (ph.x - pv.x) * travel[j];
+      const py = pv.y + (ph.y - pv.y) * travel[j];
+      const bend = Math.min(Math.PI / 2, Math.max(0, theta));
+      const g = 1 + STRETCH * Math.sin(2 * bend);
+      const cos = Math.cos(theta);
+      wd.chars.forEach((ch, k) => {
+        const rv = k * pitch;
+        const rh = hCenter(j, k) - ph.x;
+        let d = g * Math.hypot(rh * cos, rv * Math.sin(theta));
+        if (cos > 0.001) d = Math.min(d, rh / cos);
+        glyphs.push({
+          j,
+          k,
+          ch,
+          x: px + d * cos,
+          y: py + d * Math.sin(theta),
+          adv: wd.advs[k],
+        });
+      });
     });
+
+    let minX = Number.POSITIVE_INFINITY;
+    let maxX = Number.NEGATIVE_INFINITY;
+    let minY = Number.POSITIVE_INFINITY;
+    let maxY = Number.NEGATIVE_INFINITY;
+    for (const g of glyphs) {
+      minX = Math.min(minX, g.x - g.adv / 2);
+      maxX = Math.max(maxX, g.x + g.adv / 2);
+      minY = Math.min(minY, g.y - m.cap);
+      maxY = Math.max(maxY, g.y);
+    }
+    const F = Math.min(
+      Fv + (Fh - Fv) * zoomP,
+      fitW / (maxX - minX),
+      (H * 0.84) / (maxY - minY),
+    );
+    const marginX = W * (portrait ? 0.08 : 0.07);
+    const marginY = H * (portrait ? 0.07 : 0.09);
+    const oxV = W - marginX - maxX * F;
+    const oyV = marginY - minY * F;
+    const oxH = marginX - minX * F;
+    const oyH = H - marginY - maxY * F;
+    const ox = oxV + (oxH - oxV) * zoomP;
+    const oy = oyV + (oyH - oyV) * zoomP;
+
+    return glyphs.map((g) => {
+      const startAt = g.j * stagger + g.k * LETTER_STAGGER - 3;
+      const rise = interpolate(time, [startAt, startAt + LETTER_LEN], [0, 1], {
+        ...CLAMP,
+        easing: EASE_OUT,
+      });
+      return {
+        ...g,
+        rise,
+        F,
+        left: ox + (g.x - g.adv / 2) * F,
+        top: oy + (g.y - m.base) * F,
+        drop: -(1 - rise) * DROP * F,
+      };
+    });
+  };
+
+  // Layout rounds a box and a baseline to whole pixels, so a glyph eased by
+  // `left`, `top` and `fontSize` steps along pixel by pixel. Each glyph is
+  // laid out once, where it finally rests in the settled line, and carried by
+  // a transform all its life: handing it from one layout place to another
+  // would snap it by the rounding difference on that frame.
+  const now = sceneAt(t);
+  const before = sceneAt(t - speed);
+  const after = sceneAt(t + speed);
+  const settled = sceneAt(turnAt + 1e4);
+  const moved = (i: number) =>
+    [before[i], after[i]].some(
+      (o) =>
+        Math.abs(o.left - now[i].left) > 1e-3 ||
+        Math.abs(o.top + o.drop - now[i].top - now[i].drop) > 1e-3 ||
+        Math.abs(o.F - now[i].F) * 1.4 > 1e-3,
+    );
+
+  const nodes: React.ReactNode[] = now.map((g, i) => {
     const fill: React.CSSProperties = { color: g.j === hiIdx ? red : fg };
+    const rest = settled[i];
+    const off = (v: number) => (Math.abs(v) < 1e-3 ? 0 : v);
+    const dx = off(g.left - rest.left);
+    const dy = off(g.top + g.drop - rest.top);
+    const k = Math.abs(g.F / rest.F - 1) < 1e-6 ? 1 : g.F / rest.F;
     return (
       <div
         key={`${g.j}-${g.k}`}
         style={{
           position: "absolute",
-          left: ox + (g.x - g.adv / 2) * F,
-          top: oy + (g.y - m.base - (1 - rise) * DROP) * F,
-          width: g.adv * F,
-          height: F * 1.4,
-          opacity: rise,
+          left: rest.left,
+          top: rest.top,
+          width: g.adv * rest.F,
+          height: rest.F * 1.4,
+          opacity: g.rise,
           fontFamily,
           fontWeight: 500,
-          fontSize: F,
-          lineHeight: `${F}px`,
+          fontSize: rest.F,
+          lineHeight: `${rest.F}px`,
           textAlign: "center",
           whiteSpace: "pre",
+          transformOrigin: "0 0",
+          transform: `translate(${dx}px, ${dy}px) scale(${k})${glide(moved(i))}`,
           ...fill,
         }}
       >

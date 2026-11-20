@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const WEIGHTS = ["200", "300", "400", "500"] as const;
 const jakarta = loadJakarta("normal", {
@@ -145,6 +146,8 @@ function jolt(tau: number) {
   return Math.sin(tau * 0.95) * Math.exp(-tau * 0.42);
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -179,6 +182,7 @@ export function GearShift({
   speed = 1,
   theme = "dark",
 }: GearShiftProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -212,8 +216,12 @@ export function GearShift({
   }
   const end = acc;
 
-  let gear = 0;
-  for (let k = 0; k < G; k++) if (t >= gearStart[k]) gear = k;
+  const gearAt = (tt: number) => {
+    let k0 = 0;
+    for (let k = 0; k < G; k++) if (tt >= gearStart[k]) k0 = k;
+    return k0;
+  };
+  const gear = gearAt(t);
   const top = gear === G - 1;
   const u = interpolate(
     t,
@@ -235,9 +243,11 @@ export function GearShift({
 
   const weight = Number(WEIGHTS[WEIGHTS.length - G + gear]);
   const tau = t - gearStart[gear];
-  const j = gear > 0 ? jolt(tau) : 0;
-  const land = jolt(t - end + 2) * 0.6;
-  const kick = j + land;
+  const kickAt = (tt: number) => {
+    const k = gearAt(tt);
+    return (k > 0 ? jolt(tt - gearStart[k]) : 0) + jolt(tt - end + 2) * 0.6;
+  };
+  const kick = kickAt(t);
 
   const panelIn = interpolate(t, [0, 14], [0, 1], {
     ...CLAMP,
@@ -261,8 +271,23 @@ export function GearShift({
           ...CLAMP,
           easing: EASE_OUT,
         }));
+  // A font size that eases moves the baseline inside its own box by layout,
+  // pixel by pixel, and so does switching the layout from one gear's size to
+  // the next. Until the top gear's size is reached the figure is laid out at
+  // that size and scaled to the live one about its baseline; the switch to
+  // the plain layout lands where the scale is exactly 1, so nothing moves.
+  const sizing = Math.abs(sz - F) > F * 1e-9;
+  const growing = gear > 0 && tau > 0 && tau < 5;
+  const szBox = F;
+  const grow = sz / szBox;
   const baseY = areaTop + areaH / 2 + (m.figTop * F) / 2;
-  const boxTop = baseY - (m.asc + (1 - m.asc - m.desc) / 2) * sz;
+  const boxTop = baseY - (m.asc + (1 - m.asc - m.desc) / 2) * szBox;
+  // The jolt is a decaying wave with no clean end, so it counts as moving
+  // while the shove it gives the figure still changes from frame to frame.
+  const shove = (tt: number) => kickAt(Math.max(0, tt)) * F * 0.035;
+  const jolting =
+    Math.abs(shove(t + speed) - shove(t)) > 1e-3 ||
+    Math.abs(shove(t) - shove(t - speed)) > 1e-3;
   const enter = interpolate(t, [0, 8], [0, 1], { ...CLAMP, easing: EASE_OUT });
 
   const labelFs = Math.max(minDim * 0.04, Math.min(minDim * 0.052, 40));
@@ -330,7 +355,7 @@ export function GearShift({
                 textWrap: "balance",
                 color: c.panelInk,
                 opacity: labelP,
-                transform: `translateY(${((1 - labelP) * labelFs * 0.5).toFixed(2)}px)`,
+                transform: `translateY(${((1 - labelP) * labelFs * 0.5).toFixed(2)}px)${glide(midway(labelP))}`,
               }}
             >
               {label}
@@ -343,16 +368,18 @@ export function GearShift({
             position: "absolute",
             left: areaX,
             top: boxTop,
-            height: sz,
-            lineHeight: `${sz}px`,
+            height: szBox,
+            lineHeight: `${szBox}px`,
             whiteSpace: "pre",
             fontFamily,
             fontWeight: weight,
-            fontSize: sz,
+            fontSize: szBox,
             fontVariantNumeric: "tabular-nums",
             letterSpacing: `${TRACK}em`,
-            transformOrigin: `0 ${((m.asc + (1 - m.asc - m.desc) / 2) * sz).toFixed(1)}px`,
-            transform: `translateX(${(kick * F * 0.035).toFixed(2)}px) scale(${(1 + kick * 0.025).toFixed(4)}, ${(1 - kick * 0.035).toFixed(4)})`,
+            transformOrigin: `0 ${((m.asc + (1 - m.asc - m.desc) / 2) * szBox).toFixed(1)}px`,
+            transform: sizing
+              ? `translateX(${(kick * F * 0.035).toFixed(2)}px) scale(${grow * (1 + kick * 0.025)}, ${grow * (1 - kick * 0.035)})${glide(growing || jolting)}`
+              : `translateX(${(kick * F * 0.035).toFixed(2)}px) scale(${(1 + kick * 0.025).toFixed(4)}, ${(1 - kick * 0.035).toFixed(4)})${glide(jolting)}`,
             opacity: enter,
             color: fg,
           }}

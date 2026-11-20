@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -243,12 +244,17 @@ function pathAt(keys: Key[], f: number): Pt {
   return keys[keys.length - 1];
 }
 
+// Laid out at `home`, the spot where the pointer waits longest, and led from
+// there by a transform: layout rounds a box to whole pixels, so a pointer
+// moved by `left`/`top` steps instead of gliding.
 function Cursor({
   x,
   y,
+  home,
   press,
   cross,
-}: Pt & { press: number; cross: boolean }) {
+}: Pt & { home: Pt; press: number; cross: boolean }) {
+  const travel = `translate(${x - home.x}px, ${y - home.y}px)`;
   if (cross) {
     return (
       <svg
@@ -257,8 +263,9 @@ function Cursor({
         viewBox="-11 -11 22 22"
         style={{
           position: "absolute",
-          left: x - 11,
-          top: y - 11,
+          left: home.x - 11,
+          top: home.y - 11,
+          transform: travel,
           filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.3))",
         }}
       >
@@ -283,10 +290,10 @@ function Cursor({
       viewBox="0 0 20 24"
       style={{
         position: "absolute",
-        left: x - 2,
-        top: y - 2,
+        left: home.x - 2,
+        top: home.y - 2,
         transformOrigin: "2px 2px",
-        transform: `scale(${1 - 0.04 * press})`,
+        transform: `${travel} scale(${1 - 0.04 * press})`,
         filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.28))",
         overflow: "visible",
       }}
@@ -613,6 +620,7 @@ function ChartCard({
   values,
   labels,
   grow,
+  growing,
   pal,
   accent,
   title,
@@ -621,11 +629,14 @@ function ChartCard({
   values: number[];
   labels: string[];
   grow: number[];
+  /** Per bar: whether it is still rising on this frame. */
+  growing: boolean[];
   pal: Pal;
   accent: string;
   title: string;
   fmt: (v: number) => string;
 }) {
+  const glide = useGlide();
   const max = Math.max(...values, 1e-6);
   const e = 10 ** Math.floor(Math.log10(max));
   const step =
@@ -682,7 +693,8 @@ function ChartCard({
       })}
       {values.map((v, k) => {
         const g = clamp(grow[k], 0, 1.2);
-        const h = (v / top) * plot.h * g;
+        const full = (v / top) * plot.h;
+        const h = full * g;
         const x = plot.x + slot * k + (slot - bw) / 2;
         return (
           <div key={labels[k]}>
@@ -707,7 +719,11 @@ function ChartCard({
                 position: "absolute",
                 left: x - 10,
                 width: bw + 20,
-                top: plot.y + plot.h - h - 16,
+                // Laid out above the full bar and carried by a transform
+                // while the bar rises: layout rounds a baseline to whole
+                // pixels, so a label eased by `top` climbs in steps.
+                top: plot.y + plot.h - full - 16,
+                transform: `translateY(${full - h}px)${glide(growing[k])}`,
                 textAlign: "center",
                 fontSize: 10,
                 fontWeight: 400,
@@ -775,8 +791,17 @@ export function SheetFormula({
   ground,
   groundParams,
 }: SheetFormulaProps) {
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
+  const rawFrame = useCurrentFrame();
+  const frame = Math.max(0, rawFrame - delay) * speed;
   const { width, height, fps } = useVideoConfig();
+  // Whether a value of the frame is moving right now: springs overshoot and
+  // trail off, so it is read against the neighbouring frames instead of a
+  // progress. Nothing moves while `delay` holds the first frame.
+  const stirs = (at: (f: number) => number, eps = 1e-5) =>
+    rawFrame >= delay &&
+    (Math.abs(at(frame + speed) - at(frame)) > eps ||
+      Math.abs(at(frame) - at(frame - speed)) > eps);
   const tall = height > width;
   const W = tall ? 720 : 1280;
   const H = tall ? 1280 : 720;
@@ -841,8 +866,9 @@ export function SheetFormula({
     easing: ENTER,
   });
   const enter = sp(frame, HEAVY);
-  const cellIn = (r: number, c: number) =>
-    sp(frame - (T.fill + (r - 1) * 2 + c * 0.6), CARD);
+  const cellAt = (f: number, r: number, c: number) =>
+    sp(f - (T.fill + (r - 1) * 2 + c * 0.6), CARD);
+  const cellIn = (r: number, c: number) => cellAt(frame, r, c);
   const selMove = sp(frame - T.click, CARD);
   const selGrow = sp(frame - T.release, CARD);
   const curRow = clamp(
@@ -851,20 +877,23 @@ export function SheetFormula({
     lastRow,
   );
   const dragRows = dragging ? curRow : 2;
-  const valueIn = (k: number) =>
-    k === 0
-      ? sp(frame - T.enter, CHIP)
-      : sp(frame - (T.release + k * 2.4), CHIP);
+  const valueAt = (f: number, k: number) =>
+    k === 0 ? sp(f - T.enter, CHIP) : sp(f - (T.release + k * 2.4), CHIP);
+  const valueIn = (k: number) => valueAt(frame, k);
   const cfIn = (k: number) => sp(frame - (T.cf + k * 3), MORPH);
-  const chartIn = sp(frame - (T.chart + 3), CARD);
-  const grow = values.map((_, k) => sp(frame - (T.chart + 10 + k * 2), CARD));
+  const chartAt = (f: number) => sp(f - (T.chart + 3), CARD);
+  const chartIn = chartAt(frame);
+  const growAt = (f: number, k: number) => sp(f - (T.chart + 10 + k * 2), CARD);
+  const grow = values.map((_, k) => growAt(frame, k));
+  const growing = values.map((_, k) => stirs((f) => growAt(f, k)));
   const chartHover = interpolate(
     frame,
     [T.chart - 10, T.chart - 3, T.chart + 14, T.chart + 22],
     [0, 1, 1, 0],
     CL,
   );
-  const s = interpolate(frame, [0, 290], [1, 1.025], CL);
+  const pushAt = (f: number) => interpolate(f, [0, 290], [1, 1.025], CL);
+  const s = pushAt(frame);
   const avg = values.reduce((a, b) => a + b, 0) / Math.max(1, n);
   const chartSel = interpolate(frame, [T.chart + 70, T.chart + 78], [1, 0], CL);
 
@@ -930,7 +959,13 @@ export function SheetFormula({
           opacity: clamp(p * 1.4, 0, 1),
         }}
       >
-        <span style={{ transform: `translateY(${(1 - p) * 5}px)` }}>{h}</span>
+        <span
+          style={{
+            transform: `translateY(${(1 - p) * 5}px)${glide(stirs((f) => cellAt(f, 1, c)))}`,
+          }}
+        >
+          {h}
+        </span>
       </div>,
     );
   });
@@ -948,7 +983,11 @@ export function SheetFormula({
           key={`c${r}-${c}`}
           style={{ ...cellBox(c, r), opacity: clamp(p * 1.4, 0, 1) }}
         >
-          <span style={{ transform: `translateY(${(1 - p) * 6}px)` }}>
+          <span
+            style={{
+              transform: `translateY(${(1 - p) * 6}px)${glide(stirs((f) => cellAt(f, r, c)))}`,
+            }}
+          >
             {txt}
           </span>
         </div>,
@@ -973,7 +1012,7 @@ export function SheetFormula({
         <span
           style={{
             opacity: clamp(v * 1.5, 0, 1),
-            transform: `scale(${0.92 + 0.08 * v})`,
+            transform: `scale(${0.92 + 0.08 * v})${glide(stirs((f) => valueAt(f, k)))}`,
             transformOrigin: "right center",
           }}
         >
@@ -987,17 +1026,21 @@ export function SheetFormula({
     items.map((node, i) => {
       const inAt = beats[i];
       const outAt = beats[i + 1];
-      const pin = interpolate(frame, [inAt, inAt + 14], [0, 1], {
-        ...CL,
-        easing: ENTER,
-      });
-      const pout =
+      const pinAt = (f: number) =>
+        interpolate(f, [inAt, inAt + 14], [0, 1], {
+          ...CL,
+          easing: ENTER,
+        });
+      const poutAt = (f: number) =>
         outAt === undefined
           ? 0
-          : interpolate(frame, [outAt - 2, outAt + 6], [0, 1], {
+          : interpolate(f, [outAt - 2, outAt + 6], [0, 1], {
               ...CL,
               easing: EXIT,
             });
+      const pin = pinAt(frame);
+      const pout = poutAt(frame);
+      const shiftAt = (f: number) => (1 - pinAt(f)) * 70 - poutAt(f) * 50;
       if (pin <= 0 || pout >= 1) return null;
       return (
         <div
@@ -1007,7 +1050,7 @@ export function SheetFormula({
             left: 0,
             right: 0,
             top: 0,
-            transform: `translateY(${(1 - pin) * 70 - pout * 50}%)`,
+            transform: `translateY(${shiftAt(frame)}%)${glide(stirs(shiftAt, 1e-3))}`,
             opacity: pin * (1 - pout),
           }}
         >
@@ -1124,7 +1167,9 @@ export function SheetFormula({
                 position: "absolute",
                 inset: 0,
                 transformOrigin: `${WIN.x + WIN.w / 2}px ${WIN.y + WIN.h / 2}px`,
-                transform: `scale(${s})`,
+                // The slow push runs the length of the scene, so this tilt
+                // is on throughout and covers every cell of the sheet.
+                transform: `scale(${s})${glide(stirs(pushAt, 1e-7))}`,
               }}
             >
               <div
@@ -1405,13 +1450,17 @@ export function SheetFormula({
                       style={{
                         position: "absolute",
                         right: -5,
-                        bottom: -5,
+                        // Pinned where `bottom: -5` leaves it on the filled
+                        // range; the ride down as the range grows is a
+                        // transform, since layout would step it pixel by
+                        // pixel.
+                        top: RH * n - 6,
                         width: 8,
                         height: 8,
                         borderRadius: 2,
                         background: accent,
                         boxShadow: `0 0 0 1.5px ${pal.win}`,
-                        transform: `scale(${1 + 0.5 * (cross ? 1 : 0)})`,
+                        transform: `translateY(${sel.h - RH * n}px) scale(${1 + 0.5 * (cross ? 1 : 0)})`,
                       }}
                     />
                   )}
@@ -1466,7 +1515,7 @@ export function SheetFormula({
                         : `0 0 0 1px ${chartSel > 0.01 ? withAlpha(accent, chartSel) : "rgba(17,19,24,0.08)"}, 0 2px 4px rgba(17,19,24,0.04), 0 16px 36px -8px rgba(17,19,24,0.16)`,
                       opacity: clamp(chartIn * 1.5, 0, 1),
                       transformOrigin: "0% 0%",
-                      transform: `scale(${0.96 + 0.04 * chartIn}) translateY(${(1 - chartIn) * 8}px)`,
+                      transform: `scale(${0.96 + 0.04 * chartIn}) translateY(${(1 - chartIn) * 8}px)${glide(stirs(chartAt))}`,
                     }}
                   >
                     {[
@@ -1494,6 +1543,7 @@ export function SheetFormula({
                       values={values}
                       labels={rows.map((r) => r.month.slice(0, 3))}
                       grow={grow}
+                      growing={growing}
                       pal={pal}
                       accent={accent}
                       title={chartTitle}
@@ -1565,7 +1615,12 @@ export function SheetFormula({
                 </div>
               </div>
               <div style={{ opacity: cursorIn }}>
-                <Cursor {...cur} press={press} cross={cross} />
+                <Cursor
+                  {...cur}
+                  home={{ x: e2.x + 46, y: e2.y + 58 }}
+                  press={press}
+                  cross={cross}
+                />
               </div>
             </div>
           </div>

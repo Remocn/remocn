@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const urbanist = loadVariableFont("normal", { subsets: ["latin"] });
 const manrope = loadManrope("normal", {
@@ -182,6 +183,7 @@ export function BugDock({
   speed = 1,
   theme = "dark",
 }: BugDockProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -251,11 +253,21 @@ export function BugDock({
   const dockAt = tuckEnd + 2;
   const headAt = dockAt + HEAD_DELAY;
 
-  const visibleEm =
-    firstAdv -
-    (logo ? R_GAP : 0) * tuckP[0] +
-    tailAdv.reduce((a, w, k) => a + w * (1 - tuckP[k]), 0);
-  const groupLeft = (W - visibleEm * LF) / 2;
+  const leftAt = (tucks: number[]) =>
+    (W -
+      (firstAdv -
+        (logo ? R_GAP : 0) * tucks[0] +
+        tailAdv.reduce((a, w, k) => a + w * (1 - tucks[k]), 0)) *
+        LF) /
+    2;
+  const groupLeft = leftAt(tuckP);
+  // Layout rounds a box to whole pixels, so the first letter's box clicks
+  // sideways as the tail tucks in. While it slides it is laid out where it
+  // stood before the tuck and the slide is a transform; standing before or
+  // after the tuck it keeps its plain layout.
+  const sliding = tuckP.some((k) => k > 0 && k < 1);
+  const firstLeft = sliding ? leftAt(tuckP.map(() => 0)) : groupLeft;
+  const firstDx = groupLeft - firstLeft;
 
   const xs: number[] = [];
   let shift = 0;
@@ -282,9 +294,15 @@ export function BugDock({
   const startLeft = groupLeft;
   const startBottom = baseY;
   const endLeft = bugRight - firstW * bugScale;
-  const curLeft = startLeft + (endLeft - startLeft) * dock;
-  const curBottom = startBottom + (bugBottom - startBottom) * dock;
   const curScale = 1 + (bugScale - 1) * dock;
+  // Layout rounds a box to whole pixels, so a mark eased by `left`/`top`
+  // clicks along pixel by pixel. It is laid out where it docks and the ride
+  // there is a transform, exactly 0 once docked.
+  const restTop = bugBottom - firstH * bugScale;
+  const dockDx = (startLeft - endLeft) * (1 - dock);
+  const dockDy =
+    (1 - dock) * (startBottom - bugBottom - firstH * (1 - bugScale));
+  const docking = dock < 1;
   const bugOpacity = 1 - 0.18 * dock;
 
   const enter = (i: number) =>
@@ -327,7 +345,7 @@ export function BugDock({
             letterSpacing: `${LOGO_TRACK}em`,
             whiteSpace: "pre",
             color: fg,
-            transform: `translateY(${((1 - e) * LF * 0.9).toFixed(2)}px)`,
+            transform: `translateY(${((1 - e) * LF * 0.9).toFixed(2)}px)${glide(e > 0 && (1 - e) * LF > 1e-3)}`,
           }}
         >
           {ch}
@@ -347,12 +365,14 @@ export function BugDock({
         <div
           style={{
             position: "absolute",
-            left: groupLeft,
+            left: firstLeft,
             top: baseY - firstH - LF * 0.2,
             width: firstW + LF * 0.1,
             height: firstH + LF * 0.2,
             overflow: "hidden",
             opacity: dock > 0 ? 0 : 1,
+            transform:
+              Math.abs(firstDx) > 1e-3 ? `translateX(${firstDx}px)` : undefined,
           }}
         >
           <div
@@ -360,7 +380,7 @@ export function BugDock({
               position: "absolute",
               left: 0,
               top: LF * 0.2,
-              transform: `translateY(${((1 - firstEnter) * firstH * 1.1).toFixed(2)}px)`,
+              transform: `translateY(${((1 - firstEnter) * firstH * 1.1).toFixed(2)}px)${glide(firstEnter > 0 && (1 - firstEnter) * firstH > 1e-3)}`,
             }}
           >
             {logo ? (
@@ -388,12 +408,12 @@ export function BugDock({
           <div
             style={{
               position: "absolute",
-              left: curLeft,
-              top: curBottom - firstH * curScale,
+              left: endLeft,
+              top: restTop,
               width: firstW,
               height: firstH,
               transformOrigin: "0 0",
-              transform: `scale(${curScale.toFixed(4)})`,
+              transform: `${docking ? `translate(${dockDx}px, ${dockDy}px) ` : ""}scale(${curScale.toFixed(4)})${glide(docking)}`,
               opacity: bugOpacity,
             }}
           >
@@ -456,7 +476,10 @@ export function BugDock({
                   style={{
                     display: "inline-block",
                     color: hi ? blue : fg,
-                    transform: `translateY(${((1 - p) * 1.1).toFixed(3)}em)`,
+                    // The value stays raw (rounding would step it by hand),
+                    // and the mark stays on at rest so the word keeps one way
+                    // of being drawn from the rise into the hold.
+                    transform: `translateY(${(1 - p) * 1.1}em)${glide(p > 0 && p < 1)}`,
                   }}
                 >
                   {w}

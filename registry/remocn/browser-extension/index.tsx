@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -187,6 +188,8 @@ const CARD: SpringCfg = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP: SpringCfg = { mass: 0.5, damping: 12, stiffness: 200 };
 const MORPH: SpringCfg = { damping: 200 };
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 interface Pal {
   base: string;
   scrim: string;
@@ -350,7 +353,17 @@ function Spinner({
   );
 }
 
-function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
+function Cursor({
+  x,
+  y,
+  rest,
+  press,
+}: {
+  x: number;
+  y: number;
+  rest: Pt;
+  press: number;
+}) {
   return (
     <svg
       width={22}
@@ -358,10 +371,13 @@ function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
       viewBox="0 0 20 24"
       style={{
         position: "absolute",
-        left: x - 2,
-        top: y - 2,
+        // Layout rounds a box to whole pixels, so a pointer eased by
+        // `left`/`top` clicks along its path. It is laid out where it waits
+        // longest and the way there is a transform.
+        left: rest.x - 2,
+        top: rest.y - 2,
         transformOrigin: "2px 2px",
-        transform: `scale(${1 - 0.12 * press})`,
+        transform: `translate(${x - rest.x}px, ${y - rest.y}px) scale(${1 - 0.12 * press})`,
         filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.28))",
         overflow: "visible",
       }}
@@ -482,6 +498,7 @@ export function BrowserExtension({
   ground,
   groundParams,
 }: BrowserExtensionProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const L = H > W ? LAYOUT_TALL : LAYOUT_WIDE;
@@ -494,9 +511,22 @@ export function BrowserExtension({
   const hlColor =
     highlightColor ??
     (pal.dark ? "rgba(250,204,21,0.26)" : "rgba(250,204,21,0.36)");
+  const spAt = (
+    f: number,
+    at: number,
+    config: SpringCfg,
+    durationInFrames?: number,
+  ) => spring({ frame: f - at, fps, config, durationInFrames });
   const sp = (at: number, config: SpringCfg, durationInFrames?: number) =>
-    spring({ frame: frame - at, fps, config, durationInFrames });
-  const tap = (at: number) => sp(at - 2, MORPH, 3) - sp(at + 2, CHIP);
+    spAt(frame, at, config, durationInFrames);
+  const tapAt = (f: number, at: number) =>
+    spAt(f, at - 2, MORPH, 3) - spAt(f, at + 2, CHIP);
+  const tap = (at: number) => tapAt(frame, at);
+  // The springs here overshoot, so "still moving" is read off the
+  // neighbouring frames rather than off a progress value.
+  const moved = (at: (f: number) => number) =>
+    Math.abs(at(frame + 1) - at(frame)) > 1e-5 ||
+    Math.abs(at(frame) - at(frame - 1)) > 1e-5;
 
   const enter = sp(0, HEAVY);
   const extPt = {
@@ -540,14 +570,10 @@ export function BrowserExtension({
     text: h,
     at: T.hl[i] ?? T.hl[T.hl.length - 1] + i * 10,
   }));
-  const scroll = interpolate(frame, [T.hl[1] - 4, T.hl[2] + 6], [0, 52], {
-    ...clampX,
-    easing: moveE,
-  });
-  const cam = interpolate(frame, [0, 200], [1, 1.03], {
-    ...clampX,
-    easing: camE,
-  });
+  const scrollP = tween(frame, T.hl[1] - 4, T.hl[2] + 6, moveE);
+  const scroll = 52 * scrollP;
+  const camP = tween(frame, 0, 200, camE);
+  const cam = 1 + 0.03 * camP;
   const favicon = (size: number) => (
     <div
       style={{
@@ -610,7 +636,7 @@ export function BrowserExtension({
             style={{
               position: "absolute",
               inset: 0,
-              transform: `scale(${cam})`,
+              transform: `scale(${cam})${glide(midway(camP))}`,
               transformOrigin: `${(extPt.x / L.w) * 100}% ${(extPt.y / L.h) * 100}%`,
             }}
           >
@@ -626,7 +652,7 @@ export function BrowserExtension({
                 background: pal.page,
                 boxShadow: pal.shadow,
                 opacity: Math.min(1, enter * 1.6),
-                transform: `translateY(${(1 - enter) * 48}px) scale(${0.97 + 0.03 * enter})`,
+                transform: `translateY(${(1 - enter) * 48}px) scale(${0.97 + 0.03 * enter})${glide(midway(enter))}`,
               }}
             >
               <div
@@ -812,7 +838,7 @@ export function BrowserExtension({
                   style={{
                     display: "flex",
                     padding: `${L.padTop}px 56px 0`,
-                    transform: `translateY(${-scroll}px)`,
+                    transform: `translateY(${-scroll}px)${glide(midway(scrollP))}`,
                   }}
                 >
                   <article style={{ width: L.articleW }}>
@@ -943,7 +969,7 @@ export function BrowserExtension({
                     background: pal.pop,
                     boxShadow: pal.popShadow,
                     opacity: popOp,
-                    transform: `translateY(${(1 - open) * -8 - closeP * 6}px) scale(${0.94 + 0.06 * open - 0.03 * closeP})`,
+                    transform: `translateY(${(1 - open) * -8 - closeP * 6}px) scale(${0.94 + 0.06 * open - 0.03 * closeP})${glide(moved((f) => spAt(f, T.click + 1, CARD)) || midway(closeP))}`,
                     transformOrigin: `${EXT.x + EXT.s / 2 - POP.x}px -8px`,
                     overflow: "hidden",
                   }}
@@ -1086,7 +1112,7 @@ export function BrowserExtension({
                               color: pal.ink,
                               marginBottom: 10,
                               opacity: a,
-                              transform: `translateY(${(1 - a) * 8}px)`,
+                              transform: `translateY(${(1 - a) * 8}px)${glide(midway(a))}`,
                             }}
                           >
                             <span
@@ -1167,7 +1193,7 @@ export function BrowserExtension({
                         justifyContent: "center",
                         gap: 8,
                         fontSize: 15,
-                        transform: `scale(${1 - 0.04 * tap(T.save)})`,
+                        transform: `scale(${1 - 0.04 * tap(T.save)})${glide(moved((f) => tapAt(f, T.save)))}`,
                         filter: `brightness(${saved ? 1 : 1 - 0.08 * saveHover})`,
                       }}
                     >
@@ -1206,7 +1232,7 @@ export function BrowserExtension({
                     position: "absolute",
                     right: 20,
                     top: POP.top,
-                    transform: `translateY(${(1 - toast) * -18}px) scale(${0.96 + 0.04 * toast})`,
+                    transform: `translateY(${(1 - toast) * -18}px) scale(${0.96 + 0.04 * toast})${glide(moved((f) => spAt(f, T.toast, CARD)))}`,
                     transformOrigin: "100% 0",
                     opacity: toastOp,
                     display: "flex",
@@ -1251,7 +1277,7 @@ export function BrowserExtension({
 
             {cursorOp > 0 ? (
               <div style={{ opacity: cursorOp }}>
-                <Cursor x={cur.x} y={cur.y} press={press} />
+                <Cursor x={cur.x} y={cur.y} rest={extPt} press={press} />
               </div>
             ) : null}
           </div>

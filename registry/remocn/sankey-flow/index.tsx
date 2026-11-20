@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadGeist("normal", {
   weights: ["400", "500"],
@@ -202,6 +203,7 @@ export function SankeyFlow({
   theme = "dark",
   speed = 1,
 }: SankeyFlowProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
@@ -277,6 +279,8 @@ export function SankeyFlow({
     easing: EASE_IO,
   });
   const stage = interpolate(t, [0, 8], [0.5, 1], CLAMP);
+  // The push runs for the whole scene, so its text leans until it stops.
+  const pushing = t > 0 && t < 150;
 
   const numSize = 136 * u;
   const blockLeft = tgtX + tgtW + 40 * u;
@@ -286,7 +290,7 @@ export function SankeyFlow({
       <ScaleLayer scale={size}>
         <AbsoluteFill
           style={{
-            transform: `scale(${push})`,
+            transform: `scale(${push})${glide(pushing)}`,
             transformOrigin: "50% 50%",
             opacity: stage,
           }}

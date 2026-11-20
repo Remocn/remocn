@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const hubot = loadFont("normal", {
   weights: ["400", "500"],
@@ -212,6 +213,8 @@ function layout(
   return { placed, lines: lines.length, widest };
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -241,6 +244,7 @@ export function NoButs({
   speed = 1,
   theme = "dark",
 }: NoButsProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames: T } = useVideoConfig();
   const c = THEMES[theme];
@@ -354,7 +358,7 @@ export function NoButs({
                 position: "absolute",
                 inset: 0,
                 opacity: 1 - leave,
-                transform: `translate(${(-leave * W * 0.025).toFixed(2)}px, ${(-leave * H * 0.05).toFixed(2)}px)`,
+                transform: `translate(${(-leave * W * 0.025).toFixed(2)}px, ${(-leave * H * 0.05).toFixed(2)}px)${glide(midway(leave))}`,
               }}
             >
               {oLay.placed.map((p, j) => {
@@ -377,7 +381,7 @@ export function NoButs({
                       whiteSpace: "pre",
                       color: c.muted,
                       opacity: e,
-                      transform: `translateY(${((1 - e) * Fo * 0.3).toFixed(2)}px)`,
+                      transform: `translateY(${((1 - e) * Fo * 0.3).toFixed(2)}px)${glide(midway(e) && !midway(leave))}`,
                     }}
                   >
                     {p.text}
@@ -404,7 +408,7 @@ export function NoButs({
                       whiteSpace: "pre",
                       color: replyColor,
                       opacity: e,
-                      transform: `translateY(${((1 - e) * Fr * 0.22).toFixed(2)}px)`,
+                      transform: `translateY(${((1 - e) * Fr * 0.22).toFixed(2)}px)${glide(midway(e) && !midway(leave))}`,
                     }}
                   >
                     {p.text}

@@ -20,6 +20,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -72,6 +73,8 @@ const RECEDE = Easing.bezier(0.65, 0, 0.35, 1);
 const TYPE_IN = Easing.bezier(0.32, 0.72, 0, 1);
 const STAIR = { mass: 0.8, damping: 18, stiffness: 160 };
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 export type BandOpenProps = {
   center?: number;
   band?: number;
@@ -102,6 +105,7 @@ const BandOpenPresentation: React.FC<
   presentationDirection,
   passedProps,
 }) => {
+  const glide = useGlide();
   const { width: W, height: H } = useVideoConfig();
   const o = { ...bandOpenDefaults, ...passedProps };
   const p = presentationProgress;
@@ -140,6 +144,11 @@ const BandOpenPresentation: React.FC<
   const scale = 1 + o.parallax * (1 - settle);
   const drift = W * o.parallax * 0.6 * (1 - settle);
   const edgeOn = (1 - ex) * Math.min(1, open * 3);
+  // The drift outruns the parallax scale, so the scene's left edge sits
+  // inside the frame by this much. The tilt slants that edge by half a pixel,
+  // which only shows once the gap has closed, so it stops before that.
+  const leftGap = drift - ((scale - 1) * W) / 2;
+  const tilt = glide(midway(p) && leftGap > 1);
 
   return (
     <AbsoluteFill style={{ zIndex: 2 }}>
@@ -148,7 +157,11 @@ const BandOpenPresentation: React.FC<
           style={{
             position: "absolute",
             left: 0,
-            top,
+            // The band slides by a transform, not `top`: layout rounds a box
+            // and the scene inside it to whole pixels, so a band eased by
+            // `top` steps open pixel by pixel.
+            top: 0,
+            transform: `translateY(${top}px)`,
             width: W,
             height: h,
             overflow: "hidden",
@@ -162,11 +175,11 @@ const BandOpenPresentation: React.FC<
             style={{
               position: "absolute",
               left: 0,
-              top: -top,
+              top: 0,
               width: W,
               height: H,
               transformOrigin: `50% ${cy}px`,
-              transform: `translateX(${drift}px) scale(${scale})`,
+              transform: `translateY(${-top}px) translateX(${drift}px) scale(${scale})${tilt}`,
             }}
           >
             {children}
@@ -184,12 +197,16 @@ const BandOpenPresentation: React.FC<
                   opacity: edgeOn,
                 }}
               />
+              {/* Pinned by `bottom` to a band whose height grows, the lower
+                  edge stepped in uneven whole pixels; it rides a transform
+                  from the top instead. */}
               <div
                 style={{
                   position: "absolute",
                   left: 0,
                   right: 0,
-                  bottom: 0,
+                  top: 0,
+                  transform: `translateY(${h - Math.max(1, u)}px)`,
                   height: Math.max(1, u),
                   background: o.edge,
                   opacity: edgeOn,
@@ -286,14 +303,37 @@ function StackScene({
   delay: number;
   speed: number;
 }) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const F = lineSize(W, H, line);
   const rows = strips(H, F);
-  const push = interpolate(frame, [0, 110], [1, 1.03], {
-    ...CLAMP,
-    easing: Easing.bezier(0.45, 0, 0.55, 1),
-  });
+  const pushAt = (f: number) =>
+    interpolate(f, [0, 110], [1, 1.03], {
+      ...CLAMP,
+      easing: Easing.bezier(0.45, 0, 0.55, 1),
+    });
+  const push = pushAt(frame);
+  // Every strip's text in px at frame `f`: the push weighed at the frame's
+  // edge, the rise and the stair step. A strip tilts while any of them moves.
+  const travel = (r: (typeof rows)[number], f: number) => {
+    const d = Math.abs(r.k);
+    const rise = TYPE_IN(
+      interpolate(f, [-5 + stagger * d, 9 + stagger * d], [0, 1], CLAMP),
+    );
+    const stair = spring({ frame: f - 2 - d, fps, config: STAIR });
+    return [
+      (pushAt(f) - 1) * W * 0.5,
+      (1 - rise) * (r.h / 2 + F * 0.95),
+      Math.min(d, 5) * W * 0.05 * stair,
+    ];
+  };
+  const stirs = (r: (typeof rows)[number]) => {
+    const now = travel(r, frame);
+    return [travel(r, frame - speed), travel(r, frame + speed)].some((o) =>
+      o.some((v, i) => Math.abs(v - now[i]) > 1e-3),
+    );
+  };
   return (
     <AbsoluteFill
       style={{
@@ -345,7 +385,7 @@ function StackScene({
                 overflow: "hidden",
                 borderTop: r.k <= 0 ? `1px solid ${c.hair}` : undefined,
                 borderBottom: r.k >= 0 ? `1px solid ${c.hair}` : undefined,
-                transform: `scale(${push})`,
+                transform: `scale(${push})${glide(stirs(r))}`,
                 transformOrigin: `50% ${H / 2 - r.top}px`,
               }}
             >
@@ -404,6 +444,7 @@ function PhotoScene({
   scale: number;
   speed: number;
 }) {
+  const glide = useGlide();
   const frame = useCurrentFrame() * speed;
   const fg = ink ?? "#ffffff";
   const { width: W, height: H } = useVideoConfig();
@@ -413,9 +454,12 @@ function PhotoScene({
     ...CLAMP,
     easing: Easing.bezier(0.45, 0, 0.55, 1),
   });
-  const metaIn = TYPE_IN(
-    interpolate(frame, [start, start + 14], [0, 1], CLAMP),
-  );
+  const metaAt = (f: number) =>
+    TYPE_IN(interpolate(f, [start, start + 14], [0, 1], CLAMP));
+  const metaIn = metaAt(frame);
+  const metaMoving =
+    Math.abs(metaAt(frame + speed) - metaIn) * 12 * u > 1e-3 ||
+    Math.abs(metaIn - metaAt(frame - speed)) * 12 * u > 1e-3;
   const tagIn = TYPE_IN(interpolate(frame, [4, 16], [0, 1], CLAMP));
   return (
     <AbsoluteFill style={{ background: "#0b0d10", overflow: "hidden" }}>
@@ -489,7 +533,7 @@ function PhotoScene({
             textTransform: "uppercase",
             color: "rgba(255,255,255,0.84)",
             opacity: metaIn,
-            transform: `translateY(${(1 - metaIn) * 12 * u}px)`,
+            transform: `translateY(${(1 - metaIn) * 12 * u}px)${glide(metaMoving)}`,
           }}
         >
           {meta}

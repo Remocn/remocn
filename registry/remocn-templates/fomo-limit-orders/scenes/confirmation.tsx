@@ -1,25 +1,31 @@
 import type { SceneProps } from "../content";
-import { key, tween } from "../motion";
+import { key, tween, useGlide } from "../motion";
 import { AssetIcon, Badge, Layer, muted, row } from "../ui";
 
 export function Confirmation({ t, content: c, theme }: SceneProps) {
+  const glide = useGlide();
   const scale = key(
     t,
     [14.45, 14.65, 15.25, 15.6, 15.8, 16],
     [0.67, 0.73, 1, 1.16, 1.25, 1.3],
   );
   const exit = tween(t, 15.77, 16, 0, 210, (v) => v * v);
+  // The card turns through level on its way from -1.2° to 2°; the mark on
+  // its transform keeps the text off the pixel grid as it crosses.
+  const turn = key(t, [14.45, 15.4, 16], [-1.2, 0, 2]);
   const fill = Math.round(
     key(t, [14.45, 14.7, 15, 15.25, 15.45], [20, 50, 83, 97, 100]),
   );
   return (
     <Layer
       x={240}
-      y={135 + exit}
+      y={135}
       w={300}
       h={110}
       style={{
-        transform: `translate(-50%, -50%) scale(${scale}) rotate(${key(t, [14.45, 15.4, 16], [-1.2, 0, 2])}deg)`,
+        // The drop is a translate, not `top`: layout rounds the card to whole
+        // pixels of the 480×270 stage, which is then scaled up.
+        transform: `translate(-50%, -50%) translateY(${exit}px) scale(${scale}) rotate(${turn}deg)${glide(true)}`,
         background: theme.panel,
         borderRadius: 12,
         boxShadow: "0 0 10px #18131e65",

@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const serif = loadFont("normal", { weights: ["400"], subsets: ["latin"] });
 
@@ -286,6 +287,7 @@ export function ChangedMind({
   speed = 1,
   theme = "dark",
 }: ChangedMindProps) {
+  const tilt = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames: T } = useVideoConfig();
   const c = THEMES[theme];
@@ -384,6 +386,8 @@ export function ChangedMind({
     k > 0 && fresh[k].has(id) ? hi : fg;
 
   const nodes: React.ReactNode[] = [];
+  // A word is laid out where it rests and travels by (dx, dy): layout rounds a
+  // box and a baseline to whole pixels, so a word eased by `top` clicks along.
   const glyph = (
     key: string,
     text: string,
@@ -391,27 +395,34 @@ export function ChangedMind({
     y: number,
     opacity: number,
     color: string,
-  ) => (
-    <div
-      key={key}
-      style={{
-        position: "absolute",
-        left: x,
-        top: y,
-        height: lineH,
-        lineHeight: `${lineH}px`,
-        fontFamily,
-        fontWeight: 400,
-        fontSize: F,
-        letterSpacing: `${TRACK}em`,
-        whiteSpace: "pre",
-        color,
-        opacity,
-      }}
-    >
-      {text}
-    </div>
-  );
+    dx = 0,
+    dy = 0,
+  ) => {
+    // The transform stays at rest, so the word keeps one way of being drawn.
+    const moving = Math.abs(dx) > 1e-3 || Math.abs(dy) > 1e-3;
+    return (
+      <div
+        key={key}
+        style={{
+          position: "absolute",
+          left: x,
+          top: y,
+          transform: `translate(${moving ? dx : 0}px, ${moving ? dy : 0}px)${tilt(moving)}`,
+          height: lineH,
+          lineHeight: `${lineH}px`,
+          fontFamily,
+          fontWeight: 400,
+          fontSize: F,
+          letterSpacing: `${TRACK}em`,
+          whiteSpace: "pre",
+          color,
+          opacity,
+        }}
+      >
+        {text}
+      </div>
+    );
+  };
 
   const xy = (k: number, i: number) => {
     const p = layouts[k].pos[i];
@@ -431,9 +442,11 @@ export function ChangedMind({
       "open",
       OPEN,
       marginX - adv(OPEN) * F,
-      top + lift * (1 - openIn),
+      top,
       openIn,
       fg,
+      0,
+      lift * (1 - openIn),
     ),
   );
 
@@ -446,9 +459,11 @@ export function ChangedMind({
           ids[to][i],
           tk.text,
           x,
-          y + lift * (1 - e),
+          y,
           e,
           colorIn(to, ids[to][i]),
+          0,
+          lift * (1 - e),
         ),
       );
     });
@@ -465,8 +480,11 @@ export function ChangedMind({
       const j = idxB.get(id);
       if (j !== undefined) {
         const b = xy(to, j);
-        const gx = a.x + (b.x - a.x) * glide;
-        const gy = a.y + (b.y - a.y) * glide;
+        // Laid out at either end while it waits there, at the end it settles
+        // on while it travels.
+        const at = glide > 0 ? b : a;
+        const gx = (a.x - b.x) * (1 - glide) * (glide > 0 ? 1 : 0);
+        const gy = (a.y - b.y) * (1 - glide) * (glide > 0 ? 1 : 0);
         const col = interpolateColors(
           glide,
           [0, 1],
@@ -475,11 +493,12 @@ export function ChangedMind({
         const ta = rows[from][i].text;
         const tb = rows[to][j].text;
         if (ta === tb) {
-          nodes.push(glyph(id, tb, gx, gy, 1, col));
+          nodes.push(glyph(id, tb, at.x, at.y, 1, col, gx, gy));
         } else {
           const swap = interpolate(lt, [TR * 0.1, TR * 0.4], [0, 1], CLAMP);
-          if (swap < 1) nodes.push(glyph(`${id}-a`, ta, gx, gy, 1 - swap, col));
-          nodes.push(glyph(id, tb, gx, gy, swap, col));
+          if (swap < 1)
+            nodes.push(glyph(`${id}-a`, ta, at.x, at.y, 1 - swap, col, gx, gy));
+          nodes.push(glyph(id, tb, at.x, at.y, swap, col, gx, gy));
         }
       } else {
         const u = interpolate(lt, [outOrder, outOrder + TR * 0.34], [0, 1], {
@@ -493,9 +512,11 @@ export function ChangedMind({
               `${id}-out`,
               rows[from][i].text,
               a.x,
-              a.y + lift * u,
+              a.y,
               1 - u,
               colorIn(from, id),
+              0,
+              lift * u,
             ),
           );
         }
@@ -517,9 +538,11 @@ export function ChangedMind({
             id,
             rows[to][j].text,
             b.x,
-            b.y + lift * (1 - v),
+            b.y,
             v,
             colorIn(to, id),
+            0,
+            lift * (1 - v),
           ),
         );
       }
@@ -545,7 +568,12 @@ export function ChangedMind({
   const quoteBottom =
     top + Math.max(...layouts.map((l) => l.lines)) * lineH + F * 0.7;
 
-  const whenLine = (text: string, dy: number, opacity: number) => (
+  const whenLine = (
+    text: string,
+    dy: number,
+    opacity: number,
+    moving = false,
+  ) => (
     <div
       style={{
         position: "absolute",
@@ -553,7 +581,7 @@ export function ChangedMind({
         top: 0,
         lineHeight: `${slotH}px`,
         whiteSpace: "pre",
-        transform: `translateY(${dy.toFixed(2)}px)`,
+        transform: `translateY(${moving ? dy : dy.toFixed(2)}px)${tilt(moving)}`,
         opacity,
       }}
     >
@@ -576,7 +604,11 @@ export function ChangedMind({
             fontSize: L,
             letterSpacing: "-0.005em",
             opacity: attrIn,
-            transform: `translateY(${((1 - attrIn) * L * 0.6).toFixed(2)}px)`,
+            transform: `translateY(${
+              attrIn > 0 && attrIn < 1
+                ? (1 - attrIn) * L * 0.6
+                : ((1 - attrIn) * L * 0.6).toFixed(2)
+            }px)${tilt(attrIn > 0 && attrIn < 1)}`,
           }}
         >
           <div
@@ -602,10 +634,10 @@ export function ChangedMind({
             }}
           >
             {whenMix < 1
-              ? whenLine(whenPrev, -slotH * whenMix, 1 - whenMix)
+              ? whenLine(whenPrev, -slotH * whenMix, 1 - whenMix, whenMix > 0)
               : null}
             {whenMix > 0 && cur > 0
-              ? whenLine(whenNext, slotH * (1 - whenMix), whenMix)
+              ? whenLine(whenNext, slotH * (1 - whenMix), whenMix, whenMix < 1)
               : null}
             {cur === 0 ? whenLine(whenNext, 0, 1) : null}
           </div>

@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: condensed } = loadFont("normal", {
   weights: ["500"],
@@ -162,6 +163,8 @@ function kick(d: number) {
   return k * k;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -199,6 +202,7 @@ export function VersusSplit({
   theme = "dark",
   speed = 1,
 }: VersusSplitProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed + 2;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -226,12 +230,22 @@ export function VersusSplit({
   const light = WIPE(ramp(t, lightAt, LIGHT_LEN));
   const dimP = ramp(t, lightAt + 3, 6);
 
-  const bump = Math.max(
-    kick(t - SPLIT_LEN + 1),
-    kick(t - VS_AT - 4),
-    0.6 * kick(t - lightAt - LIGHT_LEN + 2),
-  );
-  const camScale = 1 + 0.02 * bump;
+  const camAt = (at: number) =>
+    1 +
+    0.02 *
+      Math.max(
+        kick(at - SPLIT_LEN + 1),
+        kick(at - VS_AT - 4),
+        0.6 * kick(at - lightAt - LIGHT_LEN + 2),
+      );
+  const camScale = camAt(t);
+  // The camera kick carries the whole frame, and the halves paint up to its
+  // edges, so a tilt there would show a seam as the kick dies out. The text
+  // blocks take the tilt instead while the kick moves them.
+  const camMoving =
+    Math.abs(camAt(t + speed) - camScale) > 1e-6 ||
+    Math.abs(camScale - camAt(t - speed)) > 1e-6;
+  const textTilt = glide(camMoving);
 
   // The light's front edge runs parallel to the seam, from off the left edge
   // to just past the seam.
@@ -348,6 +362,7 @@ export function VersusSplit({
                 left: homeCx - 0.24 * W,
                 width: 0.48 * W,
                 top: nameY - 60 * u,
+                transform: textTilt || undefined,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -380,6 +395,7 @@ export function VersusSplit({
                 left: awayCx - 0.24 * W,
                 width: 0.48 * W,
                 top: nameY - 60 * u,
+                transform: textTilt || undefined,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -438,7 +454,7 @@ export function VersusSplit({
                     height: valueFs,
                     display: "flex",
                     alignItems: "center",
-                    transform: `translateX(${-(1 - p) * 0.38 * W}px)`,
+                    transform: `translateX(${-(1 - p) * 0.38 * W}px)${textTilt}`,
                     opacity: op,
                     fontFamily,
                     fontWeight: 500,
@@ -461,7 +477,7 @@ export function VersusSplit({
                     height: valueFs,
                     display: "flex",
                     alignItems: "center",
-                    transform: `translateX(${(1 - p) * 0.38 * W}px)`,
+                    transform: `translateX(${(1 - p) * 0.38 * W}px)${textTilt}`,
                     opacity: op,
                     fontFamily,
                     fontWeight: 500,
@@ -484,6 +500,7 @@ export function VersusSplit({
                     width: plateW,
                     height: plateH,
                     background: c.plate,
+                    transform: textTilt || undefined,
                     clipPath: `inset(0 ${50 * (1 - plate)}% 0 ${50 * (1 - plate)}%)`,
                     display: "flex",
                     alignItems: "center",
@@ -521,7 +538,7 @@ export function VersusSplit({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              transform: `scale(${vsScale})`,
+              transform: `scale(${vsScale})${glide(camMoving || midway(vs))}`,
               opacity: vsOpacity,
               fontFamily,
               fontStyle: "italic",

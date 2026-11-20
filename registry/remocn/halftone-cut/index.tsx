@@ -9,6 +9,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: serif } = loadSerif("normal", {
   weights: ["500"],
@@ -243,6 +244,7 @@ export function HalftoneCut({
   delay = 0,
   speed = 1,
 }: HalftoneCutProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -310,11 +312,21 @@ export function HalftoneCut({
   const fsA = Math.min(176 * u, (0.8 * W) / widthEm(from, ITALIC));
   const fsB = Math.min(200 * u, (0.82 * W) / widthEm(to, ROMAN));
   const drift = interpolate(t, [0, 108], [0, 1], CLAMP);
-  const driftA = 1 + 0.025 * interpolate(t, [0, T0 + spread], [0, 1], CLAMP);
-  const settle = SETTLE(
-    interpolate(t, [T0 + LAG + 10, end + 14], [0, 1], CLAMP),
-  );
-  const scaleB = 1.045 - 0.045 * settle;
+  const driftAt = (tt: number) =>
+    1 + 0.025 * interpolate(tt, [0, T0 + spread], [0, 1], CLAMP);
+  const scaleAt = (tt: number) =>
+    1.045 -
+    0.045 * SETTLE(interpolate(tt, [T0 + LAG + 10, end + 14], [0, 1], CLAMP));
+  const driftA = driftAt(t);
+  const scaleB = scaleAt(t);
+  // Chrome parks a glyph raster on a whole pixel vertically for as long as
+  // the matrix is axis-aligned, so a title under a slow scale clicks along
+  // pixel by pixel. The drawing is marked, and told while a title's scale
+  // changes at all.
+  const moving = (at: (tt: number) => number) =>
+    at(t + speed) !== at(t) || at(t) !== at(t - speed);
+  const titleMoving =
+    (!aEmpty && moving(driftAt)) || (!bEmpty && moving(scaleAt));
   const about = (k: number) =>
     `translate(${W / 2} ${H / 2}) scale(${k}) translate(${-W / 2} ${-H / 2})`;
 
@@ -352,7 +364,11 @@ export function HalftoneCut({
         width={W}
         height={H}
         viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
+        style={{
+          position: "absolute",
+          inset: 0,
+          transform: glide(titleMoving),
+        }}
         aria-hidden
       >
         <defs>

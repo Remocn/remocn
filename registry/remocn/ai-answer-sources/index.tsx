@@ -3,26 +3,32 @@
 import { loadFont as loadGeist } from "@remotion/google-fonts/Geist";
 import { loadFont as loadNewsreader } from "@remotion/google-fonts/Newsreader";
 import type React from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
+  continueRender,
+  delayRender,
   Easing,
   interpolate,
   spring,
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily: sans } = loadGeist("normal", {
+const geist = loadGeist("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
-const { fontFamily: serif } = loadNewsreader("normal", {
+const newsreader = loadNewsreader("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
+const sans = geist.fontFamily;
+const serif = newsreader.fontFamily;
 
 export interface AnswerSource {
   site: string;
@@ -193,6 +199,23 @@ const MORPH = { damping: 200 };
 const GLIDE = { mass: 0.9, damping: 24, stiffness: 130 };
 type SpringCfg = typeof CARD | typeof MORPH;
 
+/** Whether `px(f)`, a value in pixels, moves at frame `f`. */
+const stirs = (px: (f: number) => number, f: number) =>
+  Math.abs(px(f + 1) - px(f)) > 1e-3 || Math.abs(px(f) - px(f - 1)) > 1e-3;
+/** A leftover offset under a thousandth of a pixel is rest. */
+const settle = (v: number) => (Math.abs(v) < 1e-3 ? 0 : v);
+
+/** Height layout gives an element: unrounded, and blind to transforms. */
+function layoutHeight(el: Element) {
+  const style = getComputedStyle(el);
+  const height = Number.parseFloat(style.height) || 0;
+  return style.boxSizing === "border-box"
+    ? height
+    : height +
+        Number.parseFloat(style.paddingTop) +
+        Number.parseFloat(style.paddingBottom);
+}
+
 const TYPE_AT = 10;
 const SUBMIT = 60;
 const THREAD = 64;
@@ -201,6 +224,12 @@ const STEP2 = 94;
 const STEPS_DONE = 120;
 const ANSWER_AT = 132;
 const RATE = 6;
+const STEPS_OPEN = 122;
+const STEPS_SHUT = 32;
+const TILE = 96;
+/** What the row of source tiles opens to, and the gap it leaves under it. */
+const TILES_ROOM = 112;
+const TILES_GAP = 20;
 
 const ICONS = {
   plus: "M12 5v14M5 12h14",
@@ -291,14 +320,19 @@ function Favicon({
 function Cursor({
   x,
   y,
+  rest,
   press,
   opacity = 1,
 }: {
   x: number;
   y: number;
+  /** Where the cursor comes to rest; it is laid out there. */
+  rest: { x: number; y: number };
   press: number;
   opacity?: number;
 }) {
+  // Layout rounds a box to whole pixels, so a cursor eased by left/top clicks
+  // along; the travel to its resting place is a transform instead.
   return (
     <svg
       width={26}
@@ -306,10 +340,10 @@ function Cursor({
       viewBox="0 0 20 24"
       style={{
         position: "absolute",
-        left: x - 2,
-        top: y - 2,
+        left: rest.x - 2,
+        top: rest.y - 2,
         transformOrigin: "2px 2px",
-        transform: `scale(${1 - 0.04 * press})`,
+        transform: `translate(${settle(x - rest.x)}px, ${settle(y - rest.y)}px) scale(${1 - 0.04 * press})`,
         opacity,
         filter:
           "drop-shadow(0 1px 1px rgba(0,0,0,0.25)) drop-shadow(0 6px 10px rgba(0,0,0,0.2))",
@@ -459,6 +493,7 @@ function CitePill({
   ids,
   sources,
   pop,
+  moving,
   active,
   c,
   font,
@@ -467,11 +502,13 @@ function CitePill({
   ids: number[];
   sources: AnswerSource[];
   pop: number;
+  moving: boolean;
   active: boolean;
   c: Palette;
   font: string;
   children?: React.ReactNode;
 }) {
+  const glide = useGlide();
   const first = sources[ids[0]] ?? sources[0];
   return (
     <span
@@ -491,7 +528,7 @@ function CitePill({
         lineHeight: 1,
         whiteSpace: "nowrap",
         opacity: Math.min(1, pop * 1.5),
-        transform: `scale(${0.8 + 0.2 * pop})`,
+        transform: `scale(${0.8 + 0.2 * pop})${glide(moving)}`,
         transformOrigin: "left center",
       }}
     >
@@ -511,6 +548,7 @@ function HoverCard({
   font,
   v,
   out,
+  moving,
 }: {
   ids: number[];
   sources: AnswerSource[];
@@ -518,7 +556,9 @@ function HoverCard({
   font: string;
   v: number;
   out: number;
+  moving: boolean;
 }) {
+  const glide = useGlide();
   const src = sources[ids[0]] ?? sources[0];
   return (
     <span
@@ -538,7 +578,7 @@ function HoverCard({
         lineHeight: 1.4,
         transformOrigin: "20px 100%",
         opacity: Math.min(1, v * 1.6) * out,
-        transform: `translateY(${(1 - v) * 10 + (1 - out) * 4}px) scale(${0.92 + 0.08 * v})`,
+        transform: `translateY(${(1 - v) * 10 + (1 - out) * 4}px) scale(${0.92 + 0.08 * v})${glide(moving)}`,
         zIndex: 50,
       }}
     >
@@ -625,6 +665,7 @@ export function AiAnswerSources({
   ground,
   groundParams,
 }: AiAnswerSourcesProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { fps, width, height } = useVideoConfig();
   const f = frame * speed;
@@ -647,14 +688,29 @@ export function AiAnswerSources({
   const TOP = 64;
   const FOOT = 132;
 
-  const sp = (at: number, config: SpringCfg = CARD) =>
-    spring({ frame: f - at, fps, config });
-  const ease = (a: number, b: number, e = ENTER) =>
-    interpolate(f, [a, b], [0, 1], { ...CL, easing: e });
-  const enter = (v: number, dy = 12): React.CSSProperties => ({
-    opacity: Math.min(1, v * 1.3),
-    transform: `translateY(${(1 - v) * dy}px)`,
-  });
+  const spAt = (g: number, at: number, config: SpringCfg = CARD) =>
+    spring({ frame: g - at, fps, config });
+  const sp = (at: number, config: SpringCfg = CARD) => spAt(f, at, config);
+  /** Whether the spring starting at `at` moves its `px` of travel now. */
+  const springing = (at: number, px: number, config: SpringCfg = CARD) =>
+    stirs((g) => spAt(g, at, config) * px, f);
+  const easeAt = (g: number, a: number, b: number, e = ENTER) =>
+    interpolate(g, [a, b], [0, 1], { ...CL, easing: e });
+  const ease = (a: number, b: number, e = ENTER) => easeAt(f, a, b, e);
+  const winMoving = springing(0, 48, HEAVY);
+  // One tilt per chain: `carried` is set where an ancestor already tilts.
+  const enter = (
+    at: number,
+    dy = 12,
+    config: SpringCfg = CARD,
+    carried = false,
+  ): React.CSSProperties => {
+    const v = sp(at, config);
+    return {
+      opacity: Math.min(1, v * 1.3),
+      transform: `translateY(${(1 - v) * dy}px)${glide(!winMoving && !carried && springing(at, dy, config))}`,
+    };
+  };
   const click = (at: number) =>
     Math.max(
       0,
@@ -686,9 +742,20 @@ export function AiAnswerSources({
 
   const stepsCollapse = sp(STEPS_DONE + 2, MORPH);
   const panel = sp(PANEL_AT, HEAVY);
+  // Layout rounds a box and a baseline to whole pixels, so a column eased by
+  // `left` clicks sideways. Once the panel starts, layout holds each piece
+  // where the open panel leaves it and the slide there is a transform.
+  const slid = f >= PANEL_AT;
+  const slide = (d: number) => (slid ? settle((1 - panel) * d) : 0);
+  const slideX = (d: number) =>
+    slide(d) ? `translateX(${slide(d)}px)` : undefined;
   const hoverOn = f >= HOVER + 20;
   const card = sp(CARD_AT, CARD);
   const cardOut = 1 - ease(CLICK, CLICK + 6, EXIT);
+  const cardMoving =
+    // Vertical travel: 10px of rise plus the scale over its ~130px height.
+    springing(CARD_AT, 10 + 0.08 * 130) ||
+    stirs((g) => easeAt(g, CLICK, CLICK + 6, EXIT) * 4, f);
   const mark = ease(HOVER + 18, HOVER + 26);
   const citePress = click(CLICK);
   const hoverIds =
@@ -699,22 +766,156 @@ export function AiAnswerSources({
     ...arc(Math.min(1.02, sp(HOVER, GLIDE)), [300, 170], [34, 14], 60),
     o: ease(HOVER, HOVER + 6),
   };
+  const relRest = { x: 34, y: 14 };
 
   const bodySize = 19;
   const cplFor = (kind: Unit["kind"]) =>
     Math.floor((kind === "li" ? COL - 28 : COL) / (bodySize * 0.46));
+  /** Height a unit of the answer is allowed while it streams in. */
+  const unitRoom = (u: Unit, g: number) =>
+    (u.kind === "h" ? 34 : 30) *
+      (1 + Math.min((g - u.start) * RATE, u.len) / cplFor(u.kind)) +
+    16;
+
+  // The thread sticks to its bottom edge, so a block that opens pushes every
+  // line above it up by layout, and layout rounds each baseline and box edge
+  // on the way: the lines click up pixel by pixel, each on its own frame.
+  // Each block is laid out fully open instead, clipped down to what it shows,
+  // and the height still to come is a translate on it and on everything above
+  // it. That holds at rest too: a block handed back to its plain height when
+  // it stops would snap the lines above it to whole pixels in that frame.
+  const nodes = useRef(new Map<string, HTMLElement>());
+  const binders = useRef(new Map<string, (el: HTMLElement | null) => void>());
+  const bind = (key: string) => {
+    let binder = binders.current.get(key);
+    if (!binder) {
+      binder = (el) => {
+        if (el) nodes.current.set(key, el);
+        else nodes.current.delete(key);
+      };
+      binders.current.set(key, binder);
+    }
+    return binder;
+  };
+  // Natural height of each bound block: what its children take in layout,
+  // whatever `maxHeight` holds the block itself to right now.
+  const [heights, setHeights] = useState<Record<string, number>>({});
+  // A font that arrives after the first render rewraps the answer with no
+  // render to follow (a still, a paused player), so the frame is held until
+  // the fonts are in and the heights have been read once more.
+  const [handle] = useState(() => delayRender("ai-answer-sources: measuring"));
+  const [fontsIn, setFontsIn] = useState(false);
+  useEffect(() => {
+    let live = true;
+    Promise.all([geist.waitUntilDone(), newsreader.waitUntilDone()])
+      .then(() => document.fonts.ready)
+      .catch(() => undefined)
+      .then(() => {
+        if (live) setFontsIn(true);
+        else continueRender(handle);
+      });
+    return () => {
+      live = false;
+    };
+  }, [handle]);
+  useLayoutEffect(() => {
+    if (fontsIn) continueRender(handle);
+  }, [fontsIn, handle]);
+  // No dependency list: the copy and the font can change on any render, and
+  // this runs before the frame is painted.
+  useLayoutEffect(() => {
+    const next: Record<string, number> = {};
+    let changed = Object.keys(heights).length !== nodes.current.size;
+    for (const [key, el] of nodes.current) {
+      next[key] = Array.from(el.children).reduce(
+        (sum, child) => sum + layoutHeight(child),
+        0,
+      );
+      if (Math.abs(next[key] - (heights[key] ?? -1)) > 0.01) changed = true;
+    }
+    if (changed) setHeights(next);
+  });
+  const natural = (key: string) => heights[key] ?? 0;
+  const stepsHeight = (g: number) =>
+    interpolate(
+      spAt(g, STEPS_DONE + 2, MORPH),
+      [0, 1],
+      [g >= STEP1 ? STEPS_OPEN : 0, STEPS_SHUT],
+    );
+  // Px of its open height each block holds back at a frame, from the top of
+  // the thread down: the steps, the source tiles, the answer, the actions,
+  // the related questions.
+  const hiddenAt: ((g: number) => number)[] = [
+    (g) => STEPS_OPEN - stepsHeight(g),
+    (g) => {
+      const v = spAt(g, STEP2 + 6, MORPH);
+      return (
+        TILE - Math.min(TILE, TILES_ROOM * v) + TILES_GAP * (1 - Math.min(1, v))
+      );
+    },
+    ...units.map(
+      (u, ui) => (g: number) =>
+        g <= u.start || g > u.end + 8
+          ? 0
+          : Math.max(0, natural(`u${ui}`) - unitRoom(u, g)),
+    ),
+    (g) => Math.max(0, natural("actions") - 60 * spAt(g, ACTIONS, MORPH)),
+    (g) =>
+      Math.max(
+        0,
+        natural("related") -
+          (52 + related.length * 52) * spAt(g, RELATED, MORPH),
+      ),
+  ];
+  const UNITS = 2;
+  const ACTIONS_ROW = UNITS + units.length;
+  const RELATED_ROW = ACTIONS_ROW + 1;
+  const opening = hiddenAt.map((at) => stirs(at, f));
+  const hidden = hiddenAt.map((at) => at(f));
+  /** Whether block `i` rides a translate: it or a block under it is opening. */
+  const lifted = (i: number) => opening.slice(i).some(Boolean);
+  /**
+   * The translate that puts block `i`, laid out ahead, where it really is;
+   * `own` is travel the element has of its own, and `ownMoving` says whether
+   * it moves now. The translate stays on at rest (0 there): a block dropped
+   * from it back to plain layout loses its mark and snaps its lines to a
+   * whole pixel in that frame.
+   */
+  const lift = (
+    i: number,
+    own = 0,
+    ownMoving = false,
+  ): React.CSSProperties => ({
+    transform: `translateY(${hidden.slice(i).reduce((sum, h) => sum + h, own)}px)${glide(lifted(i) || ownMoving)}`,
+  });
+  // A lifted block is a stacking context, so the answer under the cited pill
+  // would paint over the pointer that flies in from below it. The unit that
+  // holds the pointer is raised, and so is the related list after it, whose
+  // rows were over the pointer all along.
+  const raised = (): React.CSSProperties => ({
+    position: "relative",
+    zIndex: 1,
+  });
+  /** The part of a block that is not there yet, cut off its bottom. */
+  const cut = (i: number): React.CSSProperties =>
+    hidden[i] > 1e-3 ? { clipPath: `inset(0 0 ${hidden[i]}px 0)` } : {};
 
   const renderUnit = (u: Unit, ui: number) => {
     const r = (f - u.start) * RATE;
     if (r <= 0) return null;
     const lh = u.kind === "h" ? 34 : 30;
-    const cpl = cplFor(u.kind);
     const done = f > u.end + 8;
-    const maxH = done ? 999 : lh * (1 + Math.min(r, u.len) / cpl) + 16;
+    const row = UNITS + ui;
     return (
       <div
         key={`u${ui}`}
-        style={{ maxHeight: maxH, overflow: done ? "visible" : "hidden" }}
+        ref={bind(`u${ui}`)}
+        style={{
+          overflow: done ? "visible" : "hidden",
+          ...cut(row),
+          ...lift(row),
+          ...(ui === hover.u ? raised() : {}),
+        }}
       >
         <div
           style={{
@@ -778,6 +979,7 @@ export function AiAnswerSources({
                   ids={tk.ids}
                   sources={sources}
                   pop={sp(popAt, CHIP)}
+                  moving={!lifted(row) && springing(popAt, 0.2 * 200, CHIP)}
                   active={isHover && hoverOn}
                   c={c}
                   font={fontFamily}
@@ -790,12 +992,14 @@ export function AiAnswerSources({
                       font={fontFamily}
                       v={card}
                       out={cardOut}
+                      moving={cardMoving}
                     />
                   ) : null}
                   {isHover && f >= HOVER ? (
                     <Cursor
                       x={relCur.x}
                       y={relCur.y}
+                      rest={relRest}
                       press={citePress}
                       opacity={relCur.o}
                     />
@@ -815,9 +1019,8 @@ export function AiAnswerSources({
     label: string,
     extra: React.ReactNode,
   ) => {
-    const v = sp(at);
     return (
-      <div style={{ ...enter(v, 8), marginBottom: 12 }}>
+      <div style={{ ...enter(at, 8, CARD, lifted(0)), marginBottom: 12 }}>
         <div
           style={{
             display: "flex",
@@ -853,7 +1056,7 @@ export function AiAnswerSources({
         background: c.chip,
         fontSize: 15,
         color: c.muted,
-        ...enter(sp(at, CHIP), 6),
+        ...enter(at, 6, CHIP, lifted(0)),
       }}
     >
       <Icon d={ICONS.search} size={14} color={c.muted} />
@@ -861,7 +1064,6 @@ export function AiAnswerSources({
     </div>
   );
 
-  const sourcesRow = sp(STEP2 + 6, MORPH);
   const actionsIn = sp(ACTIONS, MORPH);
   const barIn = sp(BAR, HEAVY);
   const tiles = portrait ? 2 : 3;
@@ -911,7 +1113,7 @@ export function AiAnswerSources({
               color: c.ink,
               WebkitFontSmoothing: "antialiased",
               opacity: ease(0, 12),
-              transform: `translateY(${(1 - sp(0, HEAVY)) * 48}px) scale(${0.96 + 0.04 * sp(0, HEAVY)})`,
+              transform: `translateY(${(1 - sp(0, HEAVY)) * 48}px) scale(${0.96 + 0.04 * sp(0, HEAVY)})${glide(winMoving)}`,
             }}
           >
             {home > 0 ? (
@@ -920,7 +1122,7 @@ export function AiAnswerSources({
                   position: "absolute",
                   inset: 0,
                   opacity: home,
-                  transform: `translateY(${(1 - home) * -20}px)`,
+                  transform: `translateY(${(1 - home) * -20}px)${glide(home < 1)}`,
                 }}
               >
                 <div
@@ -933,7 +1135,7 @@ export function AiAnswerSources({
                     alignItems: "center",
                     justifyContent: "center",
                     gap: 14,
-                    ...enter(sp(2), 14),
+                    ...enter(2, 14),
                   }}
                 >
                   <div
@@ -973,7 +1175,7 @@ export function AiAnswerSources({
                     boxShadow: c.raised,
                     boxSizing: "border-box",
                     padding: "20px 22px 0",
-                    ...enter(sp(5), 18),
+                    ...enter(5, 18),
                   }}
                 >
                   <div
@@ -1082,6 +1284,7 @@ export function AiAnswerSources({
                 <Cursor
                   x={homeCur.x}
                   y={homeCur.y}
+                  rest={{ x: sendPt[0], y: sendPt[1] }}
                   press={press}
                   opacity={homeCur.o}
                 />
@@ -1111,8 +1314,9 @@ export function AiAnswerSources({
                     style={{
                       display: "flex",
                       gap: 26,
-                      marginLeft: COL_X - 24 - panel * SHIFT,
+                      marginLeft: COL_X - 24 - (slid ? SHIFT : 0),
                       flex: 1,
+                      transform: slideX(SHIFT),
                     }}
                   >
                     {(
@@ -1157,7 +1361,8 @@ export function AiAnswerSources({
                         background: c.share,
                         color: c.shareText,
                         fontSize: 15,
-                        marginRight: panel * PANEL,
+                        marginRight: slid ? PANEL : 0,
+                        transform: slideX(PANEL),
                       }}
                     >
                       <Icon d={ICONS.share} size={15} color={c.shareText} />
@@ -1169,9 +1374,10 @@ export function AiAnswerSources({
                 <div
                   style={{
                     position: "absolute",
-                    left: COL_X - panel * SHIFT,
+                    left: COL_X - (slid ? SHIFT : 0),
                     width: COL,
                     top: TOP,
+                    transform: slideX(SHIFT),
                     bottom: FOOT,
                     display: "flex",
                     flexDirection: "column",
@@ -1187,7 +1393,12 @@ export function AiAnswerSources({
                         lineHeight: 1.18,
                         letterSpacing: "-0.025em",
                         marginBottom: 22,
-                        ...enter(sp(THREAD), 20),
+                        ...enter(THREAD, 20),
+                        ...lift(
+                          0,
+                          (1 - sp(THREAD)) * 20,
+                          !winMoving && springing(THREAD, 20),
+                        ),
                       }}
                     >
                       {query}
@@ -1195,13 +1406,11 @@ export function AiAnswerSources({
                     <div
                       style={{
                         position: "relative",
-                        height: interpolate(
-                          stepsCollapse,
-                          [0, 1],
-                          [f >= STEP1 ? 122 : 0, 32],
-                        ),
+                        height: STEPS_OPEN,
                         overflow: "hidden",
                         marginBottom: 14,
+                        ...cut(0),
+                        ...lift(0),
                       }}
                     >
                       <div style={{ opacity: 1 - stepsCollapse }}>
@@ -1220,7 +1429,7 @@ export function AiAnswerSources({
                               key="fav"
                               style={{
                                 display: "flex",
-                                ...enter(sp(STEP2 + 4, CHIP), 6),
+                                ...enter(STEP2 + 4, 6, CHIP, lifted(0)),
                               }}
                             >
                               {sources.slice(0, 6).map((src, i) => (
@@ -1266,8 +1475,8 @@ export function AiAnswerSources({
                       style={{
                         display: "flex",
                         gap: 10,
-                        maxHeight: interpolate(sourcesRow, [0, 1], [0, 112]),
-                        marginBottom: 20 * Math.min(1, sourcesRow),
+                        marginBottom: TILES_GAP,
+                        ...lift(1),
                       }}
                     >
                       {[...sources.slice(0, tiles), null].map((src, i) => {
@@ -1277,7 +1486,7 @@ export function AiAnswerSources({
                             key={src ? `${src.site}${i}` : "more"}
                             style={{
                               flex: src ? 1 : 0.7,
-                              height: 96,
+                              height: TILE,
                               borderRadius: 12,
                               background: c.tile,
                               padding: "12px 14px",
@@ -1360,10 +1569,12 @@ export function AiAnswerSources({
                     </div>
                     {units.map(renderUnit)}
                     <div
+                      ref={bind("actions")}
                       style={{
-                        maxHeight: interpolate(actionsIn, [0, 1], [0, 60]),
                         overflow: "hidden",
                         opacity: actionsIn,
+                        ...cut(ACTIONS_ROW),
+                        ...lift(ACTIONS_ROW),
                       }}
                     >
                       <div
@@ -1410,13 +1621,12 @@ export function AiAnswerSources({
                     </div>
                     {related.length > 0 ? (
                       <div
+                        ref={bind("related")}
                         style={{
-                          maxHeight: interpolate(
-                            sp(RELATED, MORPH),
-                            [0, 1],
-                            [0, 52 + related.length * 52],
-                          ),
                           overflow: "hidden",
+                          ...cut(RELATED_ROW),
+                          ...lift(RELATED_ROW),
+                          ...raised(),
                         }}
                       >
                         <div
@@ -1426,7 +1636,7 @@ export function AiAnswerSources({
                             gap: 9,
                             fontSize: 17,
                             padding: "20px 0 8px",
-                            ...enter(sp(RELATED), 8),
+                            ...enter(RELATED, 8, CARD, lifted(RELATED_ROW)),
                           }}
                         >
                           <Icon d={ICONS.related} size={18} color={c.ink} />
@@ -1442,7 +1652,12 @@ export function AiAnswerSources({
                               boxShadow: i ? `inset 0 1px 0 ${c.hair}` : "none",
                               fontSize: 17,
                               color: c.body,
-                              ...enter(sp(RELATED + 4 + i * 4), 10),
+                              ...enter(
+                                RELATED + 4 + i * 4,
+                                10,
+                                CARD,
+                                lifted(RELATED_ROW),
+                              ),
                             }}
                           >
                             <span style={{ flex: 1 }}>{q}</span>
@@ -1468,7 +1683,7 @@ export function AiAnswerSources({
                   <div
                     style={{
                       position: "absolute",
-                      left: COL_X - panel * SHIFT,
+                      left: COL_X - (slid ? SHIFT : 0),
                       width: COL,
                       bottom: 22,
                       height: 92,
@@ -1480,7 +1695,7 @@ export function AiAnswerSources({
                       fontSize: 17,
                       color: c.faint,
                       opacity: Math.min(1, barIn * 1.4),
-                      transform: `translateY(${(1 - barIn) * 48}px)`,
+                      transform: `${slideX(SHIFT) ?? ""} translateY(${(1 - barIn) * 48}px)${glide(springing(BAR, 48, HEAVY))}`,
                     }}
                   >
                     {followUpPlaceholder}
@@ -1537,7 +1752,7 @@ export function AiAnswerSources({
                           height: 580,
                           borderRadius: "24px 24px 0 0",
                           boxShadow: `0 -1px 0 ${c.border}, 0 -24px 48px -24px rgba(0,0,0,${dark ? 0.6 : 0.2})`,
-                          transform: `translateY(${(1 - panel) * 620}px)`,
+                          transform: `translateY(${(1 - panel) * 620}px)${glide(springing(PANEL_AT, 620, HEAVY))}`,
                         }
                       : {
                           top: 0,
@@ -1575,14 +1790,13 @@ export function AiAnswerSources({
                   </div>
                   {hoverIds.map((id, i) => {
                     const src = sources[id] ?? sources[0];
-                    const v = sp(PANEL_AT + 6 + i * 4);
                     return (
                       <div
                         key={`${id}`}
                         style={{
                           padding: "16px 0",
                           boxShadow: i ? `inset 0 1px 0 ${c.hair}` : "none",
-                          ...enter(v, 14),
+                          ...enter(PANEL_AT + 6 + i * 4, 14),
                         }}
                       >
                         <div

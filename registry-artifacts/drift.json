@@ -4,10 +4,11 @@
   "title": "Drift",
   "description": "A slow linear camera push-in wrapper that scales its scene from 1 to 1+grow across the sequence so no frame is ever static.",
   "dependencies": ["remotion"],
+  "registryDependencies": ["@remocn/glide"],
   "files": [
     {
       "path": "registry/remocn/drift/index.tsx",
-      "content": "\"use client\";\n\nimport type React from \"react\";\nimport {\n  AbsoluteFill,\n  interpolate,\n  useCurrentFrame,\n  useVideoConfig,\n} from \"remotion\";\n\nexport interface DriftProps {\n  children: React.ReactNode;\n  grow?: number;\n}\n\nexport function Drift({ children, grow = 0.035 }: DriftProps) {\n  const frame = useCurrentFrame();\n  const { durationInFrames } = useVideoConfig();\n  const scale = interpolate(frame, [0, durationInFrames], [1, 1 + grow]);\n  return <AbsoluteFill style={{ scale: `${scale}` }}>{children}</AbsoluteFill>;\n}\n",
+      "content": "\"use client\";\n\nimport type React from \"react\";\nimport {\n  AbsoluteFill,\n  interpolate,\n  useCurrentFrame,\n  useVideoConfig,\n} from \"remotion\";\nimport { useGlide } from \"@/lib/remocn/glide\";\n\nexport interface DriftProps {\n  children: React.ReactNode;\n  grow?: number;\n}\n\nexport function Drift({ children, grow = 0.035 }: DriftProps) {\n  const glide = useGlide();\n  const frame = useCurrentFrame();\n  const { durationInFrames } = useVideoConfig();\n  const scale = interpolate(frame, [0, durationInFrames], [1, 1 + grow]);\n  // The drift never rests, so the text under it is always marked as moving.\n  return (\n    <AbsoluteFill style={{ transform: `scale(${scale})${glide(true)}` }}>\n      {children}\n    </AbsoluteFill>\n  );\n}\n",
       "type": "registry:component",
       "target": "components/remocn/drift.tsx"
     }

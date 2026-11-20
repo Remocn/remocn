@@ -19,6 +19,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -564,6 +565,7 @@ function SceneA({
   delay: number;
   look: SceneLook;
 }) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const L = layout(W, H);
@@ -603,10 +605,17 @@ function SceneA({
   const btn = L.button;
   const startX = L.tall ? W * 0.84 : W * 0.9;
   const startY = L.tall ? H * 0.86 : H * 0.94;
-  const curX = mix(startX, btn.x + btn.r * 0.1, travel);
-  const curY = mix(startY, btn.y + btn.r * 0.15, travel);
+  // The cursor is laid out where it lands and travels there by transform:
+  // layout rounds a box to whole pixels, so `left`/`top` would step it.
+  const endX = btn.x + btn.r * 0.1;
+  const endY = btn.y + btn.r * 0.15;
+  const curDx = (startX - endX) * (1 - travel);
+  const curDy = (startY - endY) * (1 - travel);
   const curSize = 30 * u;
   const push = interpolate(frame, [0, A_LEN], [1, 1.04], CLAMP);
+  // The push never rests while the scene is on screen; rounding it to 1e-4
+  // would step it, so it rides raw while it moves. It moves from frame 0.
+  const pushMoving = frame < A_LEN;
   const fs = (L.tall ? 25 : 21) * u;
   const small = (L.tall ? 21 : 16.5) * u;
 
@@ -626,7 +635,7 @@ function SceneA({
         <AbsoluteFill
           style={{
             transformOrigin: `${btn.x}px ${btn.y}px`,
-            transform: `scale(${push.toFixed(4)})`,
+            transform: `scale(${pushMoving ? push : push.toFixed(4)})${glide(pushMoving)}`,
           }}
         >
           <Headline
@@ -790,7 +799,9 @@ function SceneA({
             style={{
               position: "absolute",
               left: btn.x - btn.r,
-              top: btn.y - btn.r + (1 - card) * 26 * u,
+              // Rises with the card by transform, not `top`, for the same
+              // reason as the cursor.
+              top: btn.y - btn.r,
               width: btn.r * 2,
               height: btn.r * 2,
               borderRadius: 99,
@@ -799,7 +810,7 @@ function SceneA({
               alignItems: "center",
               justifyContent: "center",
               opacity: interpolate(card, [0, 0.3], [0, 1], CLAMP),
-              transform: `scale(${(1 - 0.12 * press).toFixed(4)})`,
+              transform: `${(1 - card) * 26 * u > 1e-3 ? `translateY(${(1 - card) * 26 * u}px) ` : ""}scale(${(1 - 0.12 * press).toFixed(4)})`,
               boxShadow: done
                 ? `inset 0 1px 0 rgba(255,255,255,0.3), 0 4px 12px rgba(${palette.shadow},0.25)`
                 : `inset 0 0 0 1px ${palette.hairline}`,
@@ -814,9 +825,9 @@ function SceneA({
           <div
             style={{
               position: "absolute",
-              left: curX - curSize * 0.16,
-              top: curY - curSize * 0.1,
-              transform: `scale(${(1 - 0.14 * press).toFixed(4)})`,
+              left: endX - curSize * 0.16,
+              top: endY - curSize * 0.1,
+              transform: `${Math.abs(curDx) > 1e-3 || Math.abs(curDy) > 1e-3 ? `translate(${curDx}px, ${curDy}px) ` : ""}scale(${(1 - 0.14 * press).toFixed(4)})`,
               transformOrigin: "16% 10%",
               filter: `drop-shadow(0 ${3 * u}px ${5 * u}px rgba(0,0,0,0.28))`,
               opacity: interpolate(travel, [0, 0.15], [0, 1], CLAMP),
@@ -851,6 +862,7 @@ function SceneB({
   groundParams?: Partial<GradientParams>;
   look: SceneLook;
 }) {
+  const glide = useGlide();
   const frame = useCurrentFrame() * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const tall = H > W * 1.1;
@@ -867,7 +879,15 @@ function SceneB({
   const fs = (tall ? 22 : 18) * u;
   const small = (tall ? 19 : 15) * u;
   const secs = Math.floor(play * 30);
-  const push = interpolate(frame, [B_BEATS.emerge, B_LEN], [1, 1.03], CLAMP);
+  const zoomAt = (f: number) =>
+    interpolate(f, [B_BEATS.emerge, B_LEN], [1, 1.03], CLAMP) *
+    mix(1.45, 1, spring({ frame: f - B_BEATS.emerge, fps, config: HEAVY }));
+  const zoom = zoomAt(frame);
+  // The zoom is weighed at the frame's width; while it moves it rides raw,
+  // since rounding it to 1e-4 steps it, and tilted.
+  const zoomMoving =
+    Math.abs(zoomAt(frame + speed) - zoom) * W > 1e-3 ||
+    Math.abs(zoom - zoomAt(frame - speed)) * W > 1e-3;
   const rowIn = (i: number) =>
     spring({ frame: frame - B_BEATS.rows - i * 3, fps, config: CARD });
 
@@ -886,7 +906,7 @@ function SceneB({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${(push * mix(1.45, 1, emerge)).toFixed(4)})`,
+            transform: `scale(${zoomMoving ? zoom : zoom.toFixed(4)})${glide(zoomMoving)}`,
             opacity: interpolate(emerge, [0, 0.25], [0, 1], CLAMP),
             filter:
               emerge < 0.98

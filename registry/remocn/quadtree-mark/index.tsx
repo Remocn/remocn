@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const manrope = loadManrope("normal", {
   weights: ["600"],
@@ -297,6 +298,7 @@ export function QuadtreeMark({
   theme = "dark",
   speed = 1,
 }: QuadtreeMarkProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -363,13 +365,32 @@ export function QuadtreeMark({
   const groupW = markW + wordGap + wordW;
   const fit = name ? Math.min(1, (W * 0.74) / groupW) : 1;
 
-  const panE = EASE_IO(
-    interpolate(t, [PAN_AT, PAN_AT + PAN_DUR], [0, 1], CLAMP),
-  );
-  const focusX = W / 2 + (markLeft + groupW / 2 - W / 2) * panE;
-  const sc = 1 + (fit - 1) * panE;
+  const camAt = (tt: number) => {
+    const panE = EASE_IO(
+      interpolate(tt, [PAN_AT, PAN_AT + PAN_DUR], [0, 1], CLAMP),
+    );
+    const appear = EASE_OUT(interpolate(tt, [0, APPEAR + 4], [0, 1], CLAMP));
+    return {
+      focusX: W / 2 + (markLeft + groupW / 2 - W / 2) * panE,
+      k: (1 + (fit - 1) * panE) * ((1 - appear) * 0.05 + 1),
+    };
+  };
   const appear = EASE_OUT(interpolate(t, [0, APPEAR + 4], [0, 1], CLAMP));
-  const cam = (1 - appear) * 0.05 + 1;
+  const view = camAt(t);
+  const focusX = view.focusX;
+  // The pan is an in-out ease, so it counts as moving while a point at the
+  // frame's edge still shifts, not by its progress.
+  const camStep = (a: number, b: number) => {
+    const p = camAt(a);
+    const q = camAt(b);
+    return Math.abs(p.k - q.k) * W + Math.abs(p.focusX - q.focusX) * p.k;
+  };
+  const camMoving =
+    camStep(t + speed, t) > 1e-3 || camStep(t, Math.max(0, t - speed)) > 1e-3;
+  // After the pan the wordmark rests shrunk to fit, off the pixel grid, where
+  // it keeps its lean; the camera counts as moving for as long as it holds a
+  // zoom, so the mark does not change when the pan ends.
+  const camLeans = camMoving || Math.abs(view.k - 1) > 1e-9;
 
   const merge = EASE_IO(
     interpolate(t, [MERGE_AT, MERGE_AT + MERGE_DUR], [0, 1], CLAMP),
@@ -498,7 +519,7 @@ export function QuadtreeMark({
             width: W,
             height: H,
             transformOrigin: "0 0",
-            transform: `translate(${W / 2}px, ${H / 2}px) scale(${sc * cam}) translate(${-focusX}px, ${-H / 2}px)`,
+            transform: `translate(${W / 2}px, ${H / 2}px) scale(${view.k}) translate(${-focusX}px, ${-H / 2}px)${glide(camLeans)}`,
           }}
         >
           <div

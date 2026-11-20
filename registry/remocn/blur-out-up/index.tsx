@@ -1,6 +1,7 @@
 "use client";
 
 import { Easing, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface BlurOutUpProps {
   text: string;
@@ -22,6 +23,7 @@ export function BlurOutUp({
   className,
 }: BlurOutUpProps) {
   const frame = useCurrentFrame() * speed;
+  const glide = useGlide();
   const { durationInFrames } = useVideoConfig();
 
   const words = text.split(" ");
@@ -98,6 +100,8 @@ export function BlurOutUp({
           );
 
           const y = yEnter + yExit;
+          const moving =
+            (yEnter > 0 && yEnter < 10) || (yExit < 0 && yExit > -14);
 
           const blurEnter = interpolate(enterLocal, [0, enterDur], [6, 0], {
             extrapolateLeft: "clamp",
@@ -121,7 +125,7 @@ export function BlurOutUp({
                 marginRight: "0.25em",
                 transformOrigin: "50% 55%",
                 opacity,
-                translate: `0 ${y}px`,
+                transform: `translateY(${y}px)${glide(moving)}`,
                 filter: `blur(${blur}px)`,
               }}
             >

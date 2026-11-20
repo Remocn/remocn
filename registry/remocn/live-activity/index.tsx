@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -115,6 +116,15 @@ const T_RELEASE = 202;
 const T_FIN = 240;
 
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
+
+/** Whether `at` changes between this frame and either neighbour. */
+const moves = (
+  at: (f: number) => number,
+  f: number,
+  step: number,
+  eps = 1e-3,
+) =>
+  Math.abs(at(f + step) - at(f)) > eps || Math.abs(at(f) - at(f - step)) > eps;
 const enterE = Easing.bezier(0.22, 1, 0.36, 1);
 const exitE = Easing.bezier(0.55, 0, 1, 0.45);
 const moveE = Easing.bezier(0.65, 0, 0.35, 1);
@@ -559,6 +569,7 @@ function Ticker({
   since: number;
   style: React.CSSProperties;
 }) {
+  const glide = useGlide();
   const t = enterE(Math.min(1, since / 4));
   const chars = Array.from(value);
   const old = Array.from(prev.padStart(chars.length, " "));
@@ -585,7 +596,9 @@ function Ticker({
             <span
               style={{
                 display: "inline-block",
-                transform: changed ? `translateY(${(1 - t) * 45}%)` : undefined,
+                // Every digit keeps its transform, rolled or not: a mark
+                // that came and went with the roll would snap the digit.
+                transform: `translateY(${changed ? (1 - t) * 45 : 0}%)${glide(changed && t < 1)}`,
                 opacity: changed ? t : 1,
               }}
             >
@@ -597,7 +610,7 @@ function Ticker({
                   position: "absolute",
                   left: 0,
                   top: 0,
-                  transform: `translateY(${-t * 45}%)`,
+                  transform: `translateY(${-t * 45}%)${glide(t < 1)}`,
                   opacity: 1 - t,
                 }}
               >
@@ -787,19 +800,30 @@ function ActivityBody({
             background: accent,
           }}
         />
+        {/* Layout rounds a box edge to a whole pixel, so a knob eased by
+            `left` steps unevenly along the track; this layer spans the track
+            and carries it by transform, whose percent is the track width. */}
         <div
           style={{
             position: "absolute",
-            top: -4,
-            left: `calc(${s.progress * 100}% - 7px)`,
-            width: 14,
-            height: 14,
-            borderRadius: 7,
-            background: "#ffffff",
-            boxShadow: `0 0 0 3px ${accent}`,
-            opacity: 1 - s.done,
+            inset: 0,
+            transform: `translateX(${s.progress * 100}%)`,
           }}
-        />
+        >
+          <div
+            style={{
+              position: "absolute",
+              top: -4,
+              left: -7,
+              width: 14,
+              height: 14,
+              borderRadius: 7,
+              background: "#ffffff",
+              boxShadow: `0 0 0 3px ${accent}`,
+              opacity: 1 - s.done,
+            }}
+          />
+        </div>
       </div>
       <div
         style={{
@@ -856,6 +880,7 @@ export function LiveActivity({
   ground,
   groundParams,
 }: LiveActivityProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { fps, width, height } = useVideoConfig();
   const f = frame * speed;
@@ -866,13 +891,20 @@ export function LiveActivity({
   const phoneCx = tall ? width / 2 : width * 0.7;
   const yOff = tall ? 0.1 : 0;
   const lines = status.lines ?? [];
+  const spAt = (
+    ff: number,
+    at: number,
+    config: SpringCfg,
+    durationInFrames?: number,
+  ) => spring({ frame: ff - at, fps, config, durationInFrames });
   const sp = (at: number, config: SpringCfg, durationInFrames?: number) =>
-    spring({ frame: f - at, fps, config, durationInFrames });
+    spAt(f, at, config, durationInFrames);
   const format = status.format ?? "clock";
   const glyph = PATH[status.glyph ?? "render"];
 
-  const iosSpring = (at: number) => sp(at, CARD);
-  const bump = (at: number) => sp(at - 2, MORPH, 3) - sp(at + 2, CHIP);
+  const bumpAt = (ff: number, at: number) =>
+    spAt(ff, at - 2, MORPH, 3) - spAt(ff, at + 2, CHIP);
+  const bump = (at: number) => bumpAt(f, at);
 
   const span = T_FIN - T_START;
   const tickLen = span / status.seconds;
@@ -897,56 +929,87 @@ export function LiveActivity({
     detail: (status.details[step] ?? "").replace("{pct}", pct),
   };
 
-  const cover = (() => {
-    const pull = interpolate(f, [T_SWIPE, T_RELEASE], [0, 0.42], {
+  const coverAt = (ff: number) => {
+    const pull = interpolate(ff, [T_SWIPE, T_RELEASE], [0, 0.42], {
       ...clamp,
       easing: moveE,
     });
-    const rest = interpolate(f, [T_RELEASE, T_RELEASE + 11], [0, 0.58], {
+    const rest = interpolate(ff, [T_RELEASE, T_RELEASE + 11], [0, 0.58], {
       ...clamp,
       easing: sheet,
     });
     return pull + rest;
-  })();
-  const bloom = iosSpring(T_START) * (1 - iosSpring(T_SWIPE + 4));
-  const m = iosSpring(T_EXP) - iosSpring(T_COL);
-  const islW = ISL_W + (CMP_W - ISL_W) * bloom + (EXP_W - CMP_W) * m;
+  };
+  const cover = coverAt(f);
+  const island = (ff: number) => {
+    const ios = (at: number) => spAt(ff, at, CARD);
+    const bloom = ios(T_START) * (1 - ios(T_SWIPE + 4));
+    const m = ios(T_EXP) - ios(T_COL);
+    const islW = ISL_W + (CMP_W - ISL_W) * bloom + (EXP_W - CMP_W) * m;
+    const expandOp = interpolate(m, [0.2, 0.6], [0, 1], clamp);
+    return {
+      bloom,
+      m,
+      islW,
+      expandOp,
+      press: 1 - 0.04 * bumpAt(ff, T_PRESS + 2),
+      expK: (islW / EXP_W) * (0.96 + expandOp * 0.04),
+    };
+  };
+  const { bloom, m, islW, expandOp, press: pressScale, expK } = island(f);
+  // Px the island's text travels per unit of scale: its height, give or take.
+  const pressMoving = moves((ff) => island(ff).press * EXP_H, f, speed);
+  const expMoving = moves((ff) => island(ff).expK * EXP_H, f, speed);
   const islH = ISL_H + (EXP_H - ISL_H) * m;
   const islR = Math.min(islH / 2, 18 + (EXP_R - 18) * m);
   const compactOp =
     interpolate(m, [0.05, 0.35], [1, 0], clamp) * Math.min(1, bloom * 1.6);
-  const expandOp = interpolate(m, [0.2, 0.6], [0, 1], clamp);
 
   const camT = [0, 22, 46, 160, 182, 204, 226];
   const camEase = { ...clamp, easing: camE };
-  const camS = interpolate(
-    f,
-    camT,
-    tall ? [1, 1, 1.5, 1.5, 1, 1, 1.04] : [1, 1, 1.85, 1.85, 1, 1, 1.38],
-    camEase,
-  );
-  const camFy = interpolate(
-    f,
-    camT,
-    [
-      BH / 2,
-      BH / 2,
-      140,
-      140,
-      BH / 2,
-      BH / 2,
-      tall ? BH / 2 : BEZEL + CARD_Y + 30,
-    ],
-    camEase,
-  );
-  const camTy = interpolate(
-    f,
-    camT,
-    [0.5, 0.5, 0.36, 0.36, 0.5, 0.5, 0.5].map((v) => v + yOff),
-    camEase,
-  );
-  const rise = sp(0, HEAVY);
-  const S = k * camS;
+  const camera = (ff: number) => {
+    const camS = interpolate(
+      ff,
+      camT,
+      tall ? [1, 1, 1.5, 1.5, 1, 1, 1.04] : [1, 1, 1.85, 1.85, 1, 1, 1.38],
+      camEase,
+    );
+    const camFy = interpolate(
+      ff,
+      camT,
+      [
+        BH / 2,
+        BH / 2,
+        140,
+        140,
+        BH / 2,
+        BH / 2,
+        tall ? BH / 2 : BEZEL + CARD_Y + 30,
+      ],
+      camEase,
+    );
+    const camTy = interpolate(
+      ff,
+      camT,
+      [0.5, 0.5, 0.36, 0.36, 0.5, 0.5, 0.5].map((v) => v + yOff),
+      camEase,
+    );
+    const rise = spring({ frame: ff, fps, config: HEAVY });
+    const S = k * camS;
+    return {
+      rise,
+      S,
+      x: phoneCx - (BW / 2) * S,
+      y: height * camTy - camFy * S + (1 - rise) * height,
+    };
+  };
+  const { S, x: phoneX, y: phoneY } = camera(f);
+  // The camera carries the whole phone and rests under a scale, so its mark
+  // stays on at rest too. The test is on the phone's own px: the rise spring
+  // never lands exactly.
+  const phoneMoving =
+    moves((ff) => camera(ff).y, f, speed) ||
+    moves((ff) => camera(ff).S * BH, f, speed);
 
   const touches = [
     { t: 40, x: 250, y: 230 },
@@ -1008,9 +1071,14 @@ export function LiveActivity({
     [0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0],
     clamp,
   );
-  const pressScale = 1 - 0.04 * bump(T_PRESS + 2);
 
   const cardIn = sp(T_RELEASE - 2, CARD);
+  const cardMoving = moves(
+    (ff) => spAt(ff, T_RELEASE - 2, CARD) * 14,
+    f,
+    speed,
+  );
+  const coverMoving = moves((ff) => coverAt(ff) * SH, f, speed);
 
   return (
     <AbsoluteFill
@@ -1051,8 +1119,17 @@ export function LiveActivity({
           {lines.slice(0, LINE_AT.length).map((line, i) => {
             const at = LINE_AT[i];
             const next = LINE_AT[i + 1] ?? 100000;
-            const pin = i === 0 ? rise : tween(f, at, at + 12);
-            const pout = tween(f, next - 7, next, exitE);
+            const pinAt = (ff: number) =>
+              i === 0 ? camera(ff).rise : tween(ff, at, at + 12);
+            const poutAt = (ff: number) => tween(ff, next - 7, next, exitE);
+            const pin = pinAt(f);
+            const pout = poutAt(f);
+            const lineMoving = moves(
+              (ff) => (1 - pinAt(ff)) * 70 - poutAt(ff) * 50,
+              f,
+              speed,
+              1e-4,
+            );
             if (f < at - 1 || f > next + 1) return null;
             return (
               <div
@@ -1068,7 +1145,7 @@ export function LiveActivity({
                   letterSpacing: "-0.035em",
                   color: fg,
                   textWrap: "balance",
-                  transform: `translateY(${(1 - pin) * 70 - pout * 50}%)`,
+                  transform: `translateY(${(1 - pin) * 70 - pout * 50}%)${glide(lineMoving)}`,
                   opacity: pin * (1 - pout),
                 }}
               >
@@ -1085,7 +1162,7 @@ export function LiveActivity({
             width: BW,
             height: BH,
             transformOrigin: "0 0",
-            transform: `translate(${phoneCx - (BW / 2) * S}px, ${height * camTy - camFy * S + (1 - rise) * height}px) scale(${S})`,
+            transform: `translate(${phoneX}px, ${phoneY}px) scale(${S})${glide(phoneMoving)}`,
             WebkitFontSmoothing: "antialiased",
           }}
         >
@@ -1122,7 +1199,7 @@ export function LiveActivity({
                 style={{
                   position: "absolute",
                   inset: 0,
-                  transform: `translateY(${-(1 - cover) * SH}px)`,
+                  transform: `translateY(${-(1 - cover) * SH}px)${glide(coverMoving)}`,
                   zIndex: 10,
                   overflow: "hidden",
                 }}
@@ -1176,7 +1253,7 @@ export function LiveActivity({
                     background: c.card,
                     backdropFilter: "blur(24px) saturate(1.4)",
                     opacity: cardIn,
-                    transform: `translateY(${(1 - cardIn) * 14}px) scale(${0.97 + cardIn * 0.03})`,
+                    transform: `translateY(${(1 - cardIn) * 14}px) scale(${0.97 + cardIn * 0.03})${glide(cardMoving)}`,
                   }}
                 >
                   <ActivityBody
@@ -1217,14 +1294,17 @@ export function LiveActivity({
               style={{
                 position: "absolute",
                 top: ISL_TOP,
-                left: (SW - islW) / 2,
+                // Laid out where the resting pill sits; the recentring as it
+                // grows is a transform, since layout rounds a box edge to a
+                // whole pixel and the pill's edges would step out.
+                left: (SW - ISL_W) / 2,
                 width: islW,
                 height: islH,
                 borderRadius: islR,
                 background: "#000",
                 zIndex: 40,
                 overflow: "hidden",
-                transform: `scale(${pressScale})`,
+                transform: `${Math.abs(islW - ISL_W) > 2e-3 ? `translateX(${(ISL_W - islW) / 2}px) ` : ""}scale(${pressScale})${glide(pressMoving)}`,
                 transformOrigin: "50% 0",
                 boxShadow: m > 0.02 ? "0 10px 30px rgba(0,0,0,0.28)" : "none",
               }}
@@ -1232,9 +1312,12 @@ export function LiveActivity({
               {compactOp > 0 ? (
                 <div
                   style={{
+                    // Laid out at the compact width so the countdown keeps its
+                    // place in layout; the pill's growth reaches it as a
+                    // transform below.
                     position: "absolute",
                     left: 0,
-                    right: 0,
+                    width: CMP_W,
                     top: 0,
                     height: ISL_H,
                     display: "flex",
@@ -1252,7 +1335,15 @@ export function LiveActivity({
                     <Glyph d={PATH.check} size={20} color={accent} sw={2} />
                   ) : (
                     <div
-                      style={{ display: "flex", alignItems: "center", gap: 7 }}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 7,
+                        transform:
+                          Math.abs(islW - CMP_W) > 2e-3
+                            ? `translateX(${islW - CMP_W}px)`
+                            : undefined,
+                      }}
                     >
                       <Ticker
                         value={timeText}
@@ -1290,14 +1381,15 @@ export function LiveActivity({
                 <div
                   style={{
                     position: "absolute",
-                    left: (islW - EXP_W) / 2,
+                    left: 0,
                     top: 0,
                     width: EXP_W,
                     height: EXP_H,
                     padding: "18px 22px 0",
                     opacity: expandOp,
                     filter: `blur(${(1 - expandOp) * 3}px)`,
-                    transform: `scale(${(islW / EXP_W) * (0.96 + expandOp * 0.04)})`,
+                    // Centred in the pill by transform, like the pill itself.
+                    transform: `translateX(${(islW - EXP_W) / 2}px) scale(${expK})${glide(expMoving)}`,
                     transformOrigin: "50% 0",
                   }}
                 >
@@ -1330,8 +1422,10 @@ export function LiveActivity({
             <div
               style={{
                 position: "absolute",
-                left: touch.x - 22,
-                top: touch.y - 22,
+                // The finger travels by transform: layout rounds a box edge to
+                // a whole pixel, so a dot moved by left/top steps along.
+                left: 0,
+                top: 0,
                 width: 44,
                 height: 44,
                 borderRadius: 22,
@@ -1339,7 +1433,7 @@ export function LiveActivity({
                 border: "1.5px solid rgba(255,255,255,0.8)",
                 boxShadow: "0 2px 10px rgba(0,0,0,0.25)",
                 opacity: touchOpacity,
-                transform: `scale(${1 - down * 0.14})`,
+                transform: `translate(${touch.x - 22}px, ${touch.y - 22}px) scale(${1 - down * 0.14})`,
                 zIndex: 45,
               }}
             />

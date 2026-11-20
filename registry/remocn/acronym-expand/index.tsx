@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const sora = loadSora("normal", {
   weights: ["400", "500"],
@@ -80,6 +81,19 @@ const CLAMP = {
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.72, 0, 0.18, 1);
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+
+type Glide = ReturnType<typeof useGlide>;
+/** A raw (unclamped, uneased) progress that is still between its ends. */
+const live = (p: number) => p > 0 && p < 1;
+// Layout rounds a box and a baseline to whole pixels, so a glyph eased by
+// `left`/`top` clicks along pixel by pixel. Layout holds the resting place and
+// the travel to it is this transform. It stays on, at 0, once the glyph has
+// arrived: dropped there, it would take the mark with it and snap the glyph to
+// a whole pixel in that frame.
+const shift = (dx: number, dy: number, moving: boolean, glide: Glide) => {
+  const rest = !moving && Math.abs(dx) < 1e-3 && Math.abs(dy) < 1e-3;
+  return `translate(${rest ? 0 : dx}px, ${rest ? 0 : dy}px)${glide(moving)}`;
+};
 
 type Measure = ((s: string) => number) & {
   base: number;
@@ -222,6 +236,7 @@ export function AcronymExpand({
   speed = 1,
   theme = "dark",
 }: AcronymExpandProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, durationInFrames } = useVideoConfig();
   const t = THEMES[theme];
@@ -333,13 +348,20 @@ export function AcronymExpand({
     blur: number;
     init: number;
     z: number;
+    /** Where layout puts it: the place it rests at longest. */
+    rx: number;
+    ry: number;
+    moving: boolean;
+    /** The settled font size, while the size itself is still easing. */
+    sizing?: number;
   };
   const draws: Draw[] = [];
 
   const mid = (short.length - 1) / 2;
   shortGlyphs.forEach((g, si) => {
     if (g.ch === " ") return;
-    const e = EASE_OUT(clamp01((frame - si * 3) / 18));
+    const eRaw = (frame - si * 3) / 18;
+    const e = EASE_OUT(clamp01(eRaw));
     const spread = (1 - e) * (si - mid) * 0.14 * fsS;
     const fi = anchors[si];
     const u = anchorT(si);
@@ -355,6 +377,9 @@ export function AcronymExpand({
         blur: (1 - e) * 0.05 * fsS + out * 0.04 * fsS,
         init: 1,
         z: 2,
+        rx: g.x,
+        ry: g.y,
+        moving: live(eRaw),
       });
       return;
     }
@@ -364,6 +389,9 @@ export function AcronymExpand({
     const y = g.y + (1 - e) * 0.4 * fsS + (f.y - g.y) * u;
     const same = g.ch === f.ch;
     const c = same ? 0 : interpolate(u, [0.35, 0.75], [0, 1], CLAMP);
+    const resizing = live((frame - EXPAND - si * 2) / EXPAND_LEN);
+    const moving = live(eRaw) || resizing;
+    const sizing = resizing ? f.fs : undefined;
     draws.push({
       id: `s${si}`,
       ch: g.ch,
@@ -374,6 +402,10 @@ export function AcronymExpand({
       blur: (1 - e) * 0.05 * fsS,
       init: 1,
       z: 2,
+      rx: f.x,
+      ry: f.y,
+      moving,
+      sizing,
     });
     if (!same) {
       draws.push({
@@ -386,6 +418,10 @@ export function AcronymExpand({
         blur: 0,
         init: 1,
         z: 2,
+        rx: f.x,
+        ry: f.y,
+        moving,
+        sizing,
       });
     }
   });
@@ -400,6 +436,10 @@ export function AcronymExpand({
     w: number;
     v: number;
     max: number;
+    /** Left and top of the window once expanded: layout holds it there. */
+    restLeft: number;
+    restTop: number;
+    moving: boolean;
   };
   const tails: Tail[] = [];
   const runW = (txt: string, fs: number) =>
@@ -426,7 +466,8 @@ export function AcronymExpand({
   };
   for (const span of wordSpans) {
     if (span.anchor < 0) {
-      const v = EASE_OUT(clamp01((frame - EXPAND - 18) / 16));
+      const vRaw = (frame - EXPAND - 18) / 16;
+      const v = EASE_OUT(clamp01(vRaw));
       for (let i = span.a; i < span.b; i++) {
         const f = fullGlyphs[i];
         draws.push({
@@ -439,6 +480,9 @@ export function AcronymExpand({
           blur: (1 - v) * 0.06 * f.fs,
           init: 0,
           z: 1,
+          rx: f.x,
+          ry: f.y,
+          moving: live(vRaw),
         });
       }
       continue;
@@ -453,7 +497,10 @@ export function AcronymExpand({
     const aw = af.w * (afs / af.fs);
     const fs = af.fs;
     const y = ay + (afs - fs) * measure.base;
-    const v = EASE_OUT(clamp01((frame - EXPAND - si * 2 - 8) / 22));
+    const vRaw = (frame - EXPAND - si * 2 - 8) / 22;
+    const v = EASE_OUT(clamp01(vRaw));
+    const moving = live((frame - EXPAND - si * 2) / EXPAND_LEN) || live(vRaw);
+    const pad = fs * 0.25;
     const after = joined.slice(span.anchor + 1, span.b);
     const before = joined.slice(span.a, span.anchor);
     if (after) {
@@ -472,6 +519,9 @@ export function AcronymExpand({
         w,
         v,
         max: room(span.anchor, finalRight, edge),
+        restLeft: af.x + af.w + gap,
+        restTop: af.y - pad,
+        moving,
       });
     }
     if (before) {
@@ -486,38 +536,55 @@ export function AcronymExpand({
         w: runW(before, fs),
         v,
         max: Number.POSITIVE_INFINITY,
+        restLeft: first.x - pad,
+        restTop: af.y - pad,
+        moving,
       });
     }
   }
 
-  const eyeT = EASE_OUT(clamp01((frame - (EXPAND + 22)) / 18));
-  const subT = EASE_OUT(clamp01((frame - (EXPAND + 28)) / 20));
+  const eyeRaw = (frame - (EXPAND + 22)) / 18;
+  const subRaw = (frame - (EXPAND + 28)) / 20;
+  const eyeT = EASE_OUT(clamp01(eyeRaw));
+  const subT = EASE_OUT(clamp01(subRaw));
   const transparent = background === "transparent";
   const initImage = t.init(accent);
 
-  const glyphStyle = (d: Draw): React.CSSProperties => ({
-    position: "absolute",
-    left: d.x,
-    top: d.y,
-    fontFamily,
-    fontWeight: 500,
-    fontSize: d.fs,
-    lineHeight: LINE,
-    whiteSpace: "pre",
-    opacity: d.opacity,
-    zIndex: d.z,
-    filter: d.blur > 0.05 ? `blur(${d.blur.toFixed(2)}px)` : undefined,
-    ...(d.init
-      ? {
-          backgroundImage: initImage,
-          backgroundSize: `${width}px ${height}px`,
-          backgroundPosition: `${-d.x + (drift - 0.5) * width * 0.08}px ${-d.y}px`,
-          WebkitBackgroundClip: "text",
-          backgroundClip: "text",
-          color: "transparent",
-        }
-      : { color: fg }),
-  });
+  // A font size that eases moves the baseline inside the glyph's own box by
+  // layout, which rounds it to whole pixels whatever the transform does. While
+  // it eases, the glyph is laid out at its settled size and scaled down to the
+  // live one from its top-left corner (every metric is proportional to the
+  // size, so the box is the same); the gradient and blur painted inside it are
+  // divided by the same factor. At rest it is the plain layout again.
+  const glyphStyle = (d: Draw): React.CSSProperties => {
+    const k = d.sizing ? d.fs / d.sizing : 1;
+    const moved = shift(d.x - d.rx, d.y - d.ry, d.moving, glide);
+    return {
+      position: "absolute",
+      left: d.rx,
+      top: d.ry,
+      transform: d.sizing ? `${moved} scale(${k})` : moved,
+      transformOrigin: d.sizing ? "0 0" : undefined,
+      fontFamily,
+      fontWeight: 500,
+      fontSize: d.sizing ?? d.fs,
+      lineHeight: LINE,
+      whiteSpace: "pre",
+      opacity: d.opacity,
+      zIndex: d.z,
+      filter: d.blur > 0.05 ? `blur(${(d.blur / k).toFixed(2)}px)` : undefined,
+      ...(d.init
+        ? {
+            backgroundImage: initImage,
+            backgroundSize: `${width / k}px ${height / k}px`,
+            backgroundPosition: `${(-d.x + (drift - 0.5) * width * 0.08) / k}px ${-d.y / k}px`,
+            WebkitBackgroundClip: "text",
+            backgroundClip: "text",
+            color: "transparent",
+          }
+        : { color: fg }),
+    };
+  };
 
   return (
     <AbsoluteFill
@@ -544,7 +611,8 @@ export function AcronymExpand({
               position: "absolute",
               left: 0,
               right: 0,
-              top: stackTop + (1 - eyeT) * 10 * s,
+              top: stackTop,
+              transform: shift(0, (1 - eyeT) * 10 * s, live(eyeRaw), glide),
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
@@ -577,13 +645,20 @@ export function AcronymExpand({
             0,
             Math.min(tl.w * tl.v + pad * tl.v, tl.max + pad * 0.2),
           );
+          const left = tl.dir === 1 ? tl.edge : tl.edge - open;
           return (
             <div
               key={tl.id}
               style={{
                 position: "absolute",
-                left: tl.dir === 1 ? tl.edge : tl.edge - open,
-                top: tl.y - pad,
+                left: tl.restLeft,
+                top: tl.restTop,
+                transform: shift(
+                  left - tl.restLeft,
+                  tl.y - pad - tl.restTop,
+                  tl.moving,
+                  glide,
+                ),
                 width: open,
                 height: LINE * tl.fs + pad * 2,
                 overflow: "hidden",
@@ -628,7 +703,8 @@ export function AcronymExpand({
               left:
                 (width - Math.min(maxW, 820 * s * (portrait ? 1.1 : 1))) / 2,
               width: Math.min(maxW, 820 * s * (portrait ? 1.1 : 1)),
-              top: fullTop + fullH + fsF * 0.34 + (1 - subT) * 12 * s,
+              top: fullTop + fullH + fsF * 0.34,
+              transform: shift(0, (1 - subT) * 12 * s, live(subRaw), glide),
               textAlign: "center",
               fontFamily,
               fontWeight: 400,

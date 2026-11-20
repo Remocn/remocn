@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { Easing, useCurrentFrame, useVideoConfig } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export type KeystrokePlatform = "mac" | "windows";
 export type KeystrokeTheme = "light" | "dark";
@@ -764,11 +765,15 @@ function groupState(
   const dimmed = 1 - (1 - SLOT_OPACITY) * Math.min(1, slot);
   const last = group.chords.length - 1;
   let visible = group.layout.widths[0];
+  // The same sum with every chord in: where the caps finally rest.
+  let full = group.layout.widths[0];
   for (let chord = 1; chord <= last; chord++) {
     const added = group.layout.widths[chord] - group.layout.widths[chord - 1];
     visible += added * eased(time - group.timing[chord].enter, SLIDE, GLIDE);
+    full += added;
   }
   const left = -visible / 2;
+  const restLeft = -full / 2;
   const caps = group.layout.caps.flatMap((cap) => {
     const timing = group.timing[cap.chord];
     const enter = timing.enter + cap.index * STAGGER;
@@ -788,6 +793,7 @@ function groupState(
         index: cap.index,
         key,
         x: round((left + cap.x) * size),
+        restX: round((restLeft + cap.x) * size),
         y: round((1 - getKeystrokeRise(time - enter)) * metrics.rise),
         width: round(cap.width * size),
         opacity: round(fadeIn(time - enter) * (1 - (1 - DIM_OPACITY) * dim)),
@@ -808,6 +814,7 @@ function groupState(
         id: `then-${separator.chord}`,
         chord: separator.chord,
         x: round((left + separator.x) * size),
+        restX: round((restLeft + separator.x) * size),
         y: round((1 - getKeystrokeRise(time - enter)) * metrics.rise),
         width: round(separator.width * size),
         opacity: round(fadeIn(time - enter)),
@@ -923,6 +930,7 @@ export function Keystroke({
   speed = keystrokeDefaults.speed,
   className,
 }: KeystrokeProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame();
   const { width, height, fps } = useVideoConfig();
   const timeline = useMemo(
@@ -935,6 +943,41 @@ export function Keystroke({
     timeline,
   );
   const { metrics, palette } = state;
+  // The neighbouring frames, to tell a group or a cap in motion from one at
+  // rest.
+  const around = [frame - 1, frame + 1].map(
+    (f) =>
+      getKeystrokeState(
+        f,
+        { width, height, fps, theme, accent, x, y, size, speed },
+        timeline,
+      ).groups,
+  );
+  const groupMoves = (group: (typeof state.groups)[number]) =>
+    around.some((groups) => {
+      const o = groups.find((g) => g.id === group.id);
+      return !o || o.y !== group.y || o.scale !== group.scale;
+    });
+  const capMoves = (
+    group: (typeof state.groups)[number],
+    cap: (typeof group.caps)[number],
+  ) =>
+    around.some((groups) => {
+      const o = groups
+        .find((g) => g.id === group.id)
+        ?.caps.find((c) => c.id === cap.id);
+      return !o || o.x !== cap.x || o.y !== cap.y || o.lift !== cap.lift;
+    });
+  const separatorMoves = (
+    group: (typeof state.groups)[number],
+    separator: (typeof group.separators)[number],
+  ) =>
+    around.some((groups) => {
+      const o = groups
+        .find((g) => g.id === group.id)
+        ?.separators.find((s) => s.id === separator.id);
+      return !o || o.x !== separator.x || o.y !== separator.y;
+    });
 
   return (
     <div
@@ -947,91 +990,108 @@ export function Keystroke({
         fontFamily: FONT_FAMILY,
       }}
     >
-      {state.groups.map((group) => (
-        <div
-          key={group.id}
-          style={{
-            position: "absolute",
-            left: `${state.x * 100}%`,
-            top: `${state.y * 100}%`,
-            width: 0,
-            height: 0,
-            opacity: group.opacity,
-            transform: `translateY(${group.y}px) scale(${group.scale})`,
-            transformOrigin: "0 0",
-          }}
-        >
-          {group.separators.map((separator) => (
-            <div
-              key={separator.id}
-              style={{
-                position: "absolute",
-                left: separator.x,
-                top: separator.y - metrics.height / 2,
-                width: separator.width,
-                height: metrics.keytop,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                opacity: separator.opacity,
-                color: palette.separator,
-                fontSize: metrics.separatorFont,
-                fontWeight: 500,
-                lineHeight: 1,
-                whiteSpace: "nowrap",
-              }}
-            >
-              then
-            </div>
-          ))}
-          {group.caps.map((cap) => (
-            <div
-              key={cap.id}
-              style={{
-                position: "absolute",
-                left: cap.x,
-                top: cap.y - metrics.height / 2,
-                width: cap.width,
-                height: metrics.height,
-                opacity: cap.opacity,
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  top: metrics.travel,
-                  bottom: 0,
-                  borderRadius: metrics.radius,
-                  background: palette.wall,
-                  boxShadow: `0 ${cap.shadowY}px ${cap.shadowBlur}px ${palette.shadow}`,
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  top: 0,
-                  height: metrics.keytop,
-                  boxSizing: "border-box",
-                  borderRadius: metrics.radius,
-                  border: `${metrics.border}px solid ${palette.edge}`,
-                  background: palette.cap,
-                  color: cap.color,
-                  transform: `translateY(${cap.lift}px)`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Legend legend={cap.key.legend} metrics={metrics} />
-              </div>
-            </div>
-          ))}
-        </div>
-      ))}
+      {state.groups.map((group) => {
+        const groupMoving = groupMoves(group);
+        return (
+          <div
+            key={group.id}
+            style={{
+              position: "absolute",
+              left: `${state.x * 100}%`,
+              top: `${state.y * 100}%`,
+              width: 0,
+              height: 0,
+              opacity: group.opacity,
+              transform: `translateY(${group.y}px) scale(${group.scale})${glide(groupMoving)}`,
+              transformOrigin: "0 0",
+            }}
+          >
+            {group.separators.map((separator) => {
+              // Laid out where it rests and carried there, like a cap below.
+              const moving = separatorMoves(group, separator);
+              return (
+                <div
+                  key={separator.id}
+                  style={{
+                    position: "absolute",
+                    left: separator.restX,
+                    top: -metrics.height / 2,
+                    transform: `translate(${separator.x - separator.restX}px, ${separator.y}px)${glide(moving && !groupMoving)}`,
+                    width: separator.width,
+                    height: metrics.keytop,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    opacity: separator.opacity,
+                    color: palette.separator,
+                    fontSize: metrics.separatorFont,
+                    fontWeight: 500,
+                    lineHeight: 1,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  then
+                </div>
+              );
+            })}
+            {group.caps.map((cap) => {
+              // Layout rounds a box's edges and a baseline to whole pixels, so
+              // a cap sliding or rising on left/top steps a pixel at a time,
+              // and one handed back to layout when it stops jumps by the
+              // rounding. It is laid out where it finally rests, with every
+              // chord in and the rise done, and a transform carries it.
+              const moving = capMoves(group, cap);
+              return (
+                <div
+                  key={cap.id}
+                  style={{
+                    position: "absolute",
+                    left: cap.restX,
+                    top: -metrics.height / 2,
+                    width: cap.width,
+                    height: metrics.height,
+                    opacity: cap.opacity,
+                    transform: `translate(${cap.x - cap.restX}px, ${cap.y}px)${glide(moving && !groupMoving)}`,
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      top: metrics.travel,
+                      bottom: 0,
+                      borderRadius: metrics.radius,
+                      background: palette.wall,
+                      boxShadow: `0 ${cap.shadowY}px ${cap.shadowBlur}px ${palette.shadow}`,
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      top: 0,
+                      height: metrics.keytop,
+                      boxSizing: "border-box",
+                      borderRadius: metrics.radius,
+                      border: `${metrics.border}px solid ${palette.edge}`,
+                      background: palette.cap,
+                      color: cap.color,
+                      transform: `translateY(${cap.lift}px)`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Legend legend={cap.key.legend} metrics={metrics} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
     </div>
   );
 }

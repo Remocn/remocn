@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const hubot = loadFont("normal", {
   weights: ["400", "500"],
@@ -191,6 +192,8 @@ function layout(ws: number[], space: number, maxEm: number) {
   return { placed, lines: lines.length, widest };
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -220,6 +223,7 @@ export function InProportion({
   speed = 1,
   theme = "dark",
 }: InProportionProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames: T } = useVideoConfig();
   const c = THEMES[theme];
@@ -342,32 +346,54 @@ export function InProportion({
               easing: EASE_OUT,
             });
             const s0 = shrinkAt[i] * k;
-            const p = interpolate(t, [s0, s0 + shrink * k], [0, 1], {
-              ...CLAMP,
-              easing: EASE_IO,
-            });
             const bp = big.lay.placed[j];
             const bx = mx + bp.x * big.F;
             const by = big.y0 + bp.line * LH * big.F;
             const sx = noteLeft + bp.x * Fs;
             const sy = noteTops[i] + bp.line * LH * Fs;
-            const size = big.F + (Fs - big.F) * p;
-            const x = bx + (sx - bx) * p;
-            const y = by + (sy - by) * p;
+            const shrinkOf = (f: number) => {
+              const q = interpolate(f, [s0, s0 + shrink * k], [0, 1], {
+                ...CLAMP,
+                easing: EASE_IO,
+              });
+              return {
+                q,
+                size: big.F + (Fs - big.F) * q,
+                x: bx + (sx - bx) * q,
+                y: by + (sy - by) * q,
+              };
+            };
+            const { q: p, size, x, y } = shrinkOf(t);
+            // A font size and a place eased by layout land on whole pixels,
+            // baseline and all, so the shrink steps unevenly. While it moves
+            // the word is laid out once at the note's size, in the note's
+            // place, and scaled and shifted to the live ones from its top-left
+            // corner, where size and place both scale from. At rest it keeps
+            // the plain layout.
+            const shrinking = [shrinkOf(t - speed), shrinkOf(t + speed)].some(
+              (o) =>
+                Math.abs(o.x - x) > 1e-3 ||
+                Math.abs(o.y - y) > 1e-3 ||
+                Math.abs(o.size - size) * worryWs[i][j] > 1e-3,
+            );
+            const rise = `translateY(${((1 - e) * size * 0.18).toFixed(2)}px)`;
             return (
               <div
                 key={`w${i}-${j}`}
                 style={{
                   position: "absolute",
-                  left: x,
-                  top: y,
-                  fontSize: size,
-                  lineHeight: `${size * LH}px`,
+                  left: shrinking ? sx : x,
+                  top: shrinking ? sy : y,
+                  fontSize: shrinking ? Fs : size,
+                  lineHeight: `${(shrinking ? Fs : size) * LH}px`,
                   letterSpacing: `${TRACK}em`,
                   whiteSpace: "pre",
                   color: fg,
                   opacity: e * (1 - (1 - NOTE_DIM) * p),
-                  transform: `translateY(${((1 - e) * size * 0.18).toFixed(2)}px)`,
+                  transformOrigin: shrinking ? "0 0" : undefined,
+                  transform: shrinking
+                    ? `${rise} translate(${x - sx}px, ${y - sy}px) scale(${size / Fs})${glide(true)}`
+                    : `${rise}${glide(midway(e))}`,
                 }}
               >
                 {word}
@@ -405,7 +431,7 @@ export function InProportion({
                   whiteSpace: "pre",
                   color: hi,
                   opacity: e * (1 - leave),
-                  transform: `translateY(${((1 - e) * Fa * 0.22 + leave * H * 0.04).toFixed(2)}px)`,
+                  transform: `translateY(${((1 - e) * Fa * 0.22 + leave * H * 0.04).toFixed(2)}px)${glide(midway(e) || midway(leave))}`,
                 }}
               >
                 {word}

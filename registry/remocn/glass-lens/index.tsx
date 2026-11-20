@@ -15,6 +15,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const manrope = loadManrope("normal", {
   weights: ["500", "600"],
@@ -109,6 +110,8 @@ export interface GlassLensProps {
   speed?: number;
   theme?: "dark" | "light";
 }
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -328,6 +331,11 @@ function Placeholder({
     [0.71, 0.24, 0],
   ];
   const head = (w - pad * 2) * interpolate(t, [20, 190], [0.38, 0.62], CLAMP);
+  // Layout rounds a box's edges to whole pixels, so a playhead eased by
+  // `left` steps unevenly; while it moves it sits where it stops and travels
+  // by transform. At either end it keeps the plain layout.
+  const headRest = (w - pad * 2) * 0.62;
+  const headMoving = t > 20 && t < 190;
   return (
     <>
       {bar(pad, h * 0.045, w * 0.16, 9 * u, p.blockHi)}
@@ -426,8 +434,11 @@ function Placeholder({
       <div
         style={{
           position: "absolute",
-          left: pad + head,
+          left: pad + (headMoving ? headRest : head),
           top: h * 0.69,
+          transform: headMoving
+            ? `translateX(${head - headRest}px)`
+            : undefined,
           width: Math.max(1, 1.5 * u),
           height: h * 0.25,
           background: p.fg,
@@ -453,7 +464,10 @@ function Scene({
   bg,
   fontFamily,
   previewTitle,
+  tilted = false,
 }: {
+  /** An ancestor already carries the tilt; one per chain is enough. */
+  tilted?: boolean;
   t: number;
   lines: string[];
   italicLast: boolean;
@@ -468,6 +482,7 @@ function Scene({
   fontFamily: string;
   previewTitle: string;
 }) {
+  const glide = useGlide();
   const { width, height } = useVideoConfig();
   const { u } = L;
   const rise = (d: number) =>
@@ -523,7 +538,7 @@ function Scene({
               color: fg,
               whiteSpace: "pre",
               opacity: rise(i * 3),
-              transform: `translateY(${(1 - rise(i * 3)) * 24 * u}px)`,
+              transform: `translateY(${(1 - rise(i * 3)) * 24 * u}px)${glide(!tilted && midway(rise(i * 3)))}`,
             }}
           >
             {line}
@@ -626,6 +641,7 @@ export function GlassLens({
   speed = 1,
   theme = "dark",
 }: GlassLensProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { fps, width } = useVideoConfig();
   const p = THEMES[theme];
@@ -694,46 +710,68 @@ export function GlassLens({
     const last = stops[stops.length - 1];
     return { x: last.x, y: last.y };
   };
-  const pos = posAt(frame);
-  const prev = posAt(frame - 1.5);
-  const vx = (pos.x - prev.x) / 1.5 / u;
-  const vy = (pos.y - prev.y) / 1.5 / u;
-  const spd = Math.hypot(vx, vy);
-  const still = interpolate(spd, [0, 9], [1, 0], CLAMP);
+  const geometryAt = (f: number) => {
+    const pos = posAt(f);
+    const prev = posAt(f - 1.5);
+    const vx = (pos.x - prev.x) / 1.5 / u;
+    const vy = (pos.y - prev.y) / 1.5 / u;
+    const spd = Math.hypot(vx, vy);
+    const still = interpolate(spd, [0, 9], [1, 0], CLAMP);
 
-  // liquid morph into the CTA pill: the drop flattens first and bulges
-  // sideways (volume kept), then the width settles onto the label
-  const mH = spring({
-    frame: frame - 142,
-    fps,
-    config: { damping: 12, stiffness: 110, mass: 0.9 },
-  });
-  const mW = spring({
-    frame: frame - 148,
-    fps,
-    config: { damping: 13, stiffness: 100, mass: 1 },
-  });
-  const bulge = 1 + 0.2 * Math.max(0, mH - mW);
-  // wide enough that the magnified focus word sits inside the flat middle
-  const baseW = Math.max(350 * u, m.wordEm * L.size * 1.18 + 90 * u);
-  const baseH = 150 * u;
-  const sx = 1 + interpolate(Math.abs(vx), [0, 30], [0, 0.2], CLAMP);
-  const sy = 1 + interpolate(Math.abs(vy), [0, 30], [0, 0.2], CLAMP);
-  const lw = (baseW + (ctaW - baseW) * mW) * bulge * sx * (2 - sy);
-  const lh = (baseH + (ctaH - baseH) * mH) * sy * (2 - sx) ** 0.6;
-  // once it lands, the pill grows from its left edge like a real button
-  const anchor = Math.min(1, mH);
-  const cx = pos.x + (L.left + lw / 2 - pos.x) * anchor;
-  const lx = cx - lw / 2;
-  const ly = pos.y - lh / 2;
-  const radius = lh / 2;
-  const morph = Math.min(1, mH);
+    // liquid morph into the CTA pill: the drop flattens first and bulges
+    // sideways (volume kept), then the width settles onto the label
+    const mH = spring({
+      frame: f - 142,
+      fps,
+      config: { damping: 12, stiffness: 110, mass: 0.9 },
+    });
+    const mW = spring({
+      frame: f - 148,
+      fps,
+      config: { damping: 13, stiffness: 100, mass: 1 },
+    });
+    const bulge = 1 + 0.2 * Math.max(0, mH - mW);
+    // wide enough that the magnified focus word sits inside the flat middle
+    const baseW = Math.max(350 * u, m.wordEm * L.size * 1.18 + 90 * u);
+    const baseH = 150 * u;
+    const sx = 1 + interpolate(Math.abs(vx), [0, 30], [0, 0.2], CLAMP);
+    const sy = 1 + interpolate(Math.abs(vy), [0, 30], [0, 0.2], CLAMP);
+    const lw = (baseW + (ctaW - baseW) * mW) * bulge * sx * (2 - sy);
+    const lh = (baseH + (ctaH - baseH) * mH) * sy * (2 - sx) ** 0.6;
+    // once it lands, the pill grows from its left edge like a real button
+    const anchor = Math.min(1, mH);
+    const cx = pos.x + (L.left + lw / 2 - pos.x) * anchor;
+    const lx = cx - lw / 2;
+    const ly = pos.y - lh / 2;
+    const radius = lh / 2;
+    const morph = Math.min(1, mH);
 
-  const enter = interpolate(frame, [-6, 14], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const mag = 1 + (0.08 + 0.1 * still) * (1 - morph) * magnify;
+    const enter = interpolate(f, [-6, 14], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+    const mag = 1 + (0.08 + 0.1 * still) * (1 - morph) * magnify;
+    return { pos, still, lw, lh, cx, lx, ly, radius, morph, enter, mag };
+  };
+  const { pos, still, lw, lh, cx, lx, ly, radius, morph, enter, mag } =
+    geometryAt(frame);
+  // The lens is laid out where it lands on the CTA and travels by transform,
+  // and the magnified copy inside it counters that by transform too: layout
+  // rounds each of the two boxes to whole pixels on its own, so the copy
+  // shook against the lens a pixel at a time.
+  const landed = geometryAt(1e5);
+  const offX = lx - landed.lx;
+  const offY = ly - landed.ly;
+  const travel = Math.abs(offX) >= 1e-3 || Math.abs(offY) >= 1e-3;
+  const differs = (o: ReturnType<typeof geometryAt>) =>
+    Math.abs(o.lx - lx) > 1e-3 ||
+    Math.abs(o.ly - ly) > 1e-3 ||
+    Math.abs(o.cx - cx) > 1e-3 ||
+    Math.abs(o.pos.y - pos.y) > 1e-3 ||
+    Math.abs(o.mag - mag) * width > 1e-3;
+  const lensMoving =
+    differs(geometryAt(frame + speed)) ||
+    differs(geometryAt(Math.max(0, frame - speed)));
   const disp = (22 + 8 * still) * u * (1 - 0.55 * morph);
   const edge = Math.min(lw, lh) * 0.24;
   const M = Math.ceil(disp + 8 * u);
@@ -839,8 +877,9 @@ export function GlassLens({
         <div
           style={{
             position: "absolute",
-            left: lx,
-            top: ly,
+            left: landed.lx,
+            top: landed.ly,
+            transform: travel ? `translate(${offX}px, ${offY}px)` : undefined,
             width: lw,
             height: lh,
             borderRadius: radius,
@@ -852,14 +891,18 @@ export function GlassLens({
         <div
           style={{
             position: "absolute",
-            left: lx,
-            top: ly,
+            left: landed.lx,
+            top: landed.ly,
             width: lw,
             height: lh,
             borderRadius: radius,
             overflow: "hidden",
             opacity: enter,
             isolation: "isolate",
+            // The mark here covers the magnified copy and the CTA label. It
+            // stays on after the landing: the copy rests under a scale, off
+            // the pixel grid, and keeps its lean only under a mark.
+            transform: `translate(${travel ? offX : 0}px, ${travel ? offY : 0}px)${glide(lensMoving)}`,
           }}
         >
           <div
@@ -875,15 +918,15 @@ export function GlassLens({
             <div
               style={{
                 position: "absolute",
-                left: M - lx,
-                top: M - ly,
+                left: M - landed.lx,
+                top: M - landed.ly,
                 width,
                 height: "100%",
-                transform: `scale(${mag})`,
+                transform: `${travel ? `translate(${-offX}px, ${-offY}px) ` : ""}scale(${mag})`,
                 transformOrigin: `${cx}px ${pos.y}px`,
               }}
             >
-              <Scene {...sceneProps} />
+              <Scene {...sceneProps} tilted={lensMoving} />
             </div>
           </div>
 
@@ -945,11 +988,16 @@ export function GlassLens({
             }}
           />
 
-          {/* CTA label */}
+          {/* CTA label, laid out at the landed pill's size and kept centred
+              on the live one by transform: centring by layout in a box
+              that still grows rounds the label to whole pixels. */}
           <div
             style={{
               position: "absolute",
-              inset: 0,
+              left: 0,
+              top: 0,
+              width: landed.lw,
+              height: landed.lh,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -961,7 +1009,7 @@ export function GlassLens({
               color: "#FFFFFF",
               whiteSpace: "nowrap",
               opacity: label,
-              transform: `translateY(${(1 - label) * 8 * u}px)`,
+              transform: `translate(${(lw - landed.lw) / 2}px, ${(lh - landed.lh) / 2 + (1 - label) * 8 * u}px)${glide(midway(label) && !lensMoving)}`,
             }}
           >
             {cta}

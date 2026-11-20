@@ -9,6 +9,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const oswald = loadFont("normal", {
   weights: ["300", "400", "500"],
@@ -60,6 +61,10 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 const SETTLE = Easing.bezier(0.22, 1, 0.36, 1);
+
+// The settle is a clamped ramp, exactly 0 or 1 at rest, and moves the
+// line on every frame in between.
+const midway = (p: number) => p > 0 && p < 1;
 
 const THEMES = {
   /** Dark: the climax cuts to the mesh ground, white type on top. */
@@ -143,6 +148,8 @@ function Line({
   weight,
   color,
   scale,
+  dy = 0,
+  moving = false,
   fill,
   children,
 }: {
@@ -153,11 +160,19 @@ function Line({
   weight: number;
   color: string;
   scale: number;
+  /** Travel from `y`, as a transform so layout keeps the line still. */
+  dy?: number;
+  moving?: boolean;
   /** A frame-sized background painted through the glyphs. */
   fill?: { image: string; W: number; H: number };
   children: string;
 }) {
+  const glide = useGlide();
   const top = y - size * CAP_MID;
+  // The transform stays on at rest, at identity where nothing is left to
+  // carry: the mark that keeps a resting line's lean rides on it, and a line
+  // dropped back to plain layout would snap to the pixel grid on that frame.
+  const transform = `translateY(${Math.abs(dy) < 1e-3 ? 0 : dy}px) scale(${scale})`;
   const paint: React.CSSProperties = fill
     ? {
         color: "transparent",
@@ -188,7 +203,7 @@ function Line({
         paddingLeft: `${tracking}em`,
         ...paint,
         fontVariantNumeric: "tabular-nums",
-        transform: scale === 1 ? undefined : `scale(${scale})`,
+        transform: `${transform}${glide(moving)}`,
         transformOrigin: `50% ${CAP_MID * 100}%`,
       }}
     >
@@ -303,13 +318,19 @@ export function EscalateCards({
           weight={card.weight}
           color={fg}
           scale={zoom}
+          moving={!card.climax || midway(settle)}
           fill={card.climax && c.clip ? { image: mesh, W, H } : undefined}
         >
           {card.text}
         </Line>
         {showDate ? (
           <Line
-            y={titleY + (lastSize * CAP * zoom) / 2 + H * 0.1}
+            // Laid out where the push leaves it; the ride there follows the
+            // title's zoom by a transform, since layout rounds a baseline to
+            // whole pixels.
+            y={titleY + (lastSize * CAP * (1 + push)) / 2 + H * 0.1}
+            dy={(lastSize * CAP * push * (settle - 1)) / 2}
+            moving={midway(settle)}
             fontFamily={fontFamily}
             size={dateSize}
             tracking={0.36}

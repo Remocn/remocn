@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -195,6 +196,7 @@ export function CardFan({
   delay = 0,
   speed = 1,
 }: CardFanProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const t = THEMES[theme];
@@ -287,7 +289,31 @@ export function CardFan({
       dim = 1 - 0.3 * Math.min(1, lift);
     }
     const hidden = !isFront && frame < beat("drop") + 6;
-    return { x, y, rz, ry, rx, z, scale, blur, dim, hidden };
+    // Where the card comes to rest: fanned, dropped and the pick lifted.
+    // Layout sits there and the travel is a transform, since layout rounds a
+    // box to whole pixels and a card eased by `left`/`top` clicks along.
+    const restX =
+      j === pickIdx
+        ? openX + (cx - openX) * pull
+        : openX + (j < pickIdx ? -1 : 1) * cardW * (portrait ? 0.08 : 0.16);
+    const restY =
+      j === pickIdx
+        ? openY - cardH * (portrait ? 0.1 : 0.12)
+        : openY + cardH * 0.06;
+    return {
+      dx: x - restX,
+      dy: y - restY,
+      left: restX - cardW / 2,
+      top: restY - cardH / 2,
+      rz,
+      ry,
+      rx,
+      z,
+      scale,
+      blur,
+      dim,
+      hidden,
+    };
   };
 
   const order = list
@@ -320,7 +346,11 @@ export function CardFan({
         />
       )}
       <ScaleLayer scale={scaleProp}>
-        <AbsoluteFill style={{ transform: `scale(${push})` }}>
+        <AbsoluteFill
+          style={{
+            transform: `scale(${push})${glide(frame > 0 && frame < beat("end"))}`,
+          }}
+        >
           <AbsoluteFill
             style={{
               perspective: portrait ? 2200 : 1400,
@@ -336,12 +366,12 @@ export function CardFan({
                   key={`card-${c.label}-${j}`}
                   style={{
                     position: "absolute",
-                    left: s.x - cardW / 2,
-                    top: s.y - cardH / 2,
+                    left: s.left,
+                    top: s.top,
                     width: cardW,
                     height: cardH,
                     borderRadius: radius,
-                    transform: `translateZ(${s.z}px) rotateX(${s.rx}deg) rotateY(${s.ry}deg) rotateZ(${s.rz}deg) scale(${s.scale})`,
+                    transform: `translate(${s.dx}px, ${s.dy}px) translateZ(${s.z}px) rotateX(${s.rx}deg) rotateY(${s.ry}deg) rotateZ(${s.rz}deg) scale(${s.scale})`,
                     filter:
                       s.blur > 0.01
                         ? `blur(${s.blur}px) brightness(${s.dim})`

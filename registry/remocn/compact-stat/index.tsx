@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const hanken = loadHanken("normal", {
   weights: ["400", "500"],
@@ -310,6 +311,7 @@ export function CompactStat({
   speed = 1,
   theme = "dark",
 }: CompactStatProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -332,7 +334,13 @@ export function CompactStat({
     ...CLAMP,
     easing: EASE_IO,
   });
-  const F = F1 + (F2 - F1) * grow;
+  const F = grow === 1 ? F2 : F1 + (F2 - F1) * grow;
+  // The figure is laid out once at its settled size and scaled to the current
+  // one, all its life: an animated font size reflows every glyph, and layout
+  // rounds each baseline and box to whole pixels, so the figure would shake as
+  // it grows, and jump where the layout took over from the scale.
+  const growing = grow > 0 && grow < 1;
+  const L = F2;
 
   const reel = interpolate(t, [RETRACT_AT, RETRACT_AT + RETRACT_LEN], [0, 1], {
     ...CLAMP,
@@ -369,100 +377,126 @@ export function CompactStat({
     : slotEm;
 
   const width = Math.max(slotEm, tailEnd - tailShift, magX + magW);
-  const left = (W - width * F) / 2;
+  const left = (W - width * L) / 2;
 
   const labelSize = label
     ? Math.min(Math.max(F2 * 0.12, H * 0.044), H * 0.056, (W * 0.84) / m.label)
     : 0;
-  const gap = Math.max(F * 0.28, H * 0.05);
-  const blockH = m.cap * F + (label ? gap + labelSize : 0);
-  const baseY = (H - blockH) / 2 + m.cap * F;
+  const gapAt = (f: number) => Math.max(f * 0.28, H * 0.05);
+  const baseAt = (f: number) =>
+    (H - (m.cap * f + (label ? gapAt(f) + labelSize : 0))) / 2 + m.cap * f;
+  const labelTopAt = (f: number) => baseAt(f) + gapAt(f) - labelSize * 0.2;
+  const baseY = baseAt(L);
 
-  const maskTop = baseY - m.cap * F - F * 0.08;
-  const maskH = m.cap * F + F * 0.3;
+  const maskTop = baseY - m.cap * L - L * 0.08;
+  const maskH = m.cap * L + L * 0.3;
+  const growK = F / L;
+  const growDY = baseAt(F) - baseY;
 
   const glyph = (
     ch: string,
     x: number,
     key: string,
-    rise: number,
+    i: number,
     extra?: React.CSSProperties,
-  ) => (
-    <div
-      key={key}
-      style={{
-        position: "absolute",
-        left: x,
-        top: baseY - maskTop - m.base * F + (1 - rise) * maskH * 1.05,
-        height: F,
-        fontFamily,
-        fontWeight,
-        fontSize: F,
-        lineHeight: `${F}px`,
-        color: fg,
-        whiteSpace: "pre",
-        fontFeatureSettings: '"lnum" 1',
-        ...extra,
-      }}
-    >
-      {ch}
-    </div>
-  );
+  ) => {
+    // The rise is a transform on a glyph laid out where it lands: moved by
+    // `top`, its baseline would step down the mask a pixel at a time.
+    const lift = i < 0 ? 0 : (1 - riseAt(i, t)) * maskH * 1.05;
+    const moving =
+      i >= 0 &&
+      (Math.abs(riseAt(i, t + speed) - riseAt(i, t)) * maskH > 1e-3 ||
+        Math.abs(riseAt(i, t) - riseAt(i, t - speed)) * maskH > 1e-3);
+    return (
+      <div
+        key={key}
+        style={{
+          position: "absolute",
+          left: x,
+          top: baseY - maskTop - m.base * L,
+          height: L,
+          fontFamily,
+          fontWeight,
+          fontSize: L,
+          lineHeight: `${L}px`,
+          color: fg,
+          whiteSpace: "pre",
+          fontFeatureSettings: '"lnum" 1',
+          transform: `translateY(${lift}px)${glide(moving && !growing)}`,
+          ...extra,
+        }}
+      >
+        {ch}
+      </div>
+    );
+  };
 
-  const riseOf = (i: number) =>
+  const riseAt = (i: number, tt: number) =>
     interpolate(
-      t,
+      tt,
       [RISE_AT + i * stagger, RISE_AT + i * stagger + RISE_LEN],
       [0, 1],
       { ...CLAMP, easing: EASE_OUT },
     );
 
-  const slotPx = left + slotEm * F;
+  const slotPx = left + slotEm * L;
+  // The suffix is still settling while the figure grows, which slides the
+  // tail's clip box; during the grow it is laid out where the suffix lands
+  // and slides by transform, so its edge doesn't step a pixel at a time.
+  const settledW = Math.max(
+    slotEm,
+    tailEnd - tailShift,
+    hasMag ? m.xs[p.mag] + magW : slotEm,
+  );
+  const slotBox = growing ? (W - settledW * L) / 2 + slotEm * L : slotPx;
   const kept: React.ReactNode[] = [];
   const tail: React.ReactNode[] = [];
   p.full.forEach((ch, i) => {
-    const r = riseOf(i);
     if (p.keep[i] >= 0) {
       if (i === p.sep) {
         const swap = interpolate(reel, [0.25, 0.6], [0, 1], CLAMP);
-        const x = left + keptX(i) * F;
+        const x = left + keptX(i) * L;
         kept.push(
-          glyph(ch, x, `k${i}`, r, {
+          glyph(ch, x, `k${i}`, i, {
             opacity: 1 - swap,
             clipPath: `inset(0 0 ${(swap * 22).toFixed(1)}% 0)`,
           }),
-          glyph(".", x, `k${i}p`, r, { opacity: swap }),
+          glyph(".", x, `k${i}p`, i, { opacity: swap }),
         );
         return;
       }
-      kept.push(glyph(ch, left + keptX(i) * F, `k${i}`, r));
+      kept.push(glyph(ch, left + keptX(i) * L, `k${i}`, i));
       return;
     }
-    const x = left + (m.xf[i] - tailShift) * F - slotPx;
-    tail.push(glyph(ch, x, `t${i}`, r));
+    const x = left + (m.xf[i] - tailShift) * L - slotPx;
+    tail.push(glyph(ch, x, `t${i}`, i));
   });
 
+  // The suffix is laid out where it lands and slides in by transform: its
+  // painted box would otherwise step a pixel at a time.
+  const magSlide = hasMag ? (slotEm - magW - m.xs[p.mag]) * (1 - magP) * L : 0;
   const magGlyphs = hasMag
     ? p.short.slice(p.mag).map((ch, k) =>
-        glyph(
-          ch,
-          left + (magX + m.xs[p.mag + k] - m.xs[p.mag]) * F - slotPx,
-          `m${k}`,
-          1,
-          {
-            backgroundImage: c.fill(accent),
-            WebkitBackgroundClip: "text",
-            backgroundClip: "text",
-            color: "transparent",
-          },
-        ),
+        glyph(ch, left + m.xs[p.mag + k] * L - slotPx, `m${k}`, -1, {
+          transform:
+            Math.abs(magSlide) > 1e-3 ? `translateX(${magSlide}px)` : undefined,
+          backgroundImage: c.fill(accent),
+          WebkitBackgroundClip: "text",
+          backgroundClip: "text",
+          color: "transparent",
+        }),
       )
     : [];
 
-  const labelP = interpolate(t, [LABEL_AT, LABEL_AT + 18], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const labelAt = (tt: number) =>
+    interpolate(tt, [LABEL_AT, LABEL_AT + 18], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  const labelP = labelAt(t);
+  const labelMoving =
+    Math.abs(labelAt(t + speed) - labelP) * labelSize > 1e-3 ||
+    Math.abs(labelP - labelAt(t - speed)) * labelSize > 1e-3;
   const groundP = interpolate(t, [GROW_AT, GROW_AT + GROW_LEN + 10], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
@@ -488,18 +522,27 @@ export function CompactStat({
             width: W,
             top: maskTop,
             height: maskH,
-            overflow: "hidden",
+            // Only the rise is masked: scaled down before the grow, a box the
+            // width of the frame would cut the long figure at both ends.
+            overflowX: "visible",
+            overflowY: "clip",
+            transform: `translateY(${growDY}px) scale(${growK})${glide(growing)}`,
+            transformOrigin: `${W / 2}px ${baseY - maskTop}px`,
           }}
         >
           {kept}
           <div
             style={{
               position: "absolute",
-              left: slotPx,
+              left: slotBox,
               top: 0,
-              width: Math.max(0, W - slotPx),
+              // Reaches the frame's right edge at any scale of the figure.
+              width: Math.max(0, W / 2 / growK + W / 2 - slotBox),
               height: maskH,
               overflow: "hidden",
+              transform: growing
+                ? `translateX(${slotPx - slotBox}px)`
+                : undefined,
             }}
           >
             {tail}
@@ -512,7 +555,7 @@ export function CompactStat({
               position: "absolute",
               left: 0,
               width: W,
-              top: baseY + gap - labelSize * 0.2,
+              top: labelTopAt(L),
               height: labelSize * 1.4,
               overflow: "hidden",
               textAlign: "center",
@@ -523,11 +566,12 @@ export function CompactStat({
               letterSpacing: "-0.01em",
               color: c.muted,
               whiteSpace: "pre",
+              transform: `translateY(${labelTopAt(F) - labelTopAt(L)}px)${glide(growing)}`,
             }}
           >
             <div
               style={{
-                transform: `translateY(${((1 - labelP) * labelSize * 1.3).toFixed(2)}px)`,
+                transform: `translateY(${(1 - labelP) * labelSize * 1.3}px)${glide(labelMoving && !growing)}`,
               }}
             >
               {label}

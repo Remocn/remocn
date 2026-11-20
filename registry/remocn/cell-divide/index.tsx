@@ -9,6 +9,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sora } = loadFont("normal", {
   weights: ["300", "400"],
@@ -57,6 +58,8 @@ const ROLL = 9;
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_DIV = Easing.bezier(0.42, 0, 0.45, 1);
+const midway = (q: number) => q > 5e-4 && q < 1 - 5e-4;
+
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -225,6 +228,7 @@ export function CellDivide({
   theme = "dark",
   speed = 1,
 }: CellDivideProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
@@ -280,6 +284,9 @@ export function CellDivide({
     easing: EASE_IO,
   });
   const camScale = 0.985 + 0.03 * push;
+  // The clamped push starts at exactly 0 and lands on exactly 1; between
+  // them the camera carries the tilt for everything inside it.
+  const camMoving = push > 0 && push < 1;
 
   const gradId = `cd${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const colW = f * E;
@@ -403,7 +410,7 @@ export function CellDivide({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${camScale})`,
+            transform: `scale(${camScale})${glide(camMoving)}`,
             transformOrigin: "50% 50%",
           }}
         >
@@ -448,13 +455,13 @@ export function CellDivide({
                 height: lineH,
                 overflow: "hidden",
                 opacity: textIn,
-                transform: `translateY(${(1 - textIn) * 14 * u}px)`,
+                transform: `translateY(${(1 - textIn) * 14 * u}px)${glide(midway(textIn) && !camMoving)}`,
               }}
             >
               <div
                 style={{
                   ...numStyle,
-                  transform: `translateY(${rolling ? (1 - rollK) * lineH : 0}px)`,
+                  transform: `translateY(${rolling ? (1 - rollK) * lineH : 0}px)${glide(rolling && !camMoving)}`,
                 }}
               >
                 {cur}
@@ -480,7 +487,7 @@ export function CellDivide({
                 gap: 12 * u,
                 marginLeft: 6 * u,
                 opacity: labelIn,
-                transform: `translateY(${(1 - labelIn) * 8 * u}px)`,
+                transform: `translateY(${(1 - labelIn) * 8 * u}px)${glide(midway(labelIn) && !camMoving)}`,
               }}
             >
               <span

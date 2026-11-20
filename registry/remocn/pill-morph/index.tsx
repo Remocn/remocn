@@ -16,6 +16,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -205,6 +206,8 @@ const CLIPS = [
   [0.75, 1, 0],
 ] as const;
 
+const PLAY_FROM = 0.24;
+
 function Editor({
   w,
   h,
@@ -231,7 +234,7 @@ function Editor({
       ...CLAMP,
       easing: EASE_OUT,
     });
-  const play = interpolate(t, [40, 110], [0.24, 0.47], CLAMP);
+  const play = interpolate(t, [40, 110], [PLAY_FROM, 0.47], CLAMP);
   const secs = play * 12;
   const tc = `0:${String(Math.floor(secs)).padStart(2, "0")}.${String(Math.floor((secs % 1) * 30)).padStart(2, "0")}`;
   const right = side + 16 * u;
@@ -408,10 +411,17 @@ function Editor({
             boxShadow: `inset 0 0 0 1px ${p.hair}`,
           }}
         />
+        {/* Layout rounds a box's edges to whole pixels, so a playhead eased by
+            `left` steps along unevenly; it is laid out where it starts and
+            travels by a transform. */}
         <div
           style={{
             position: "absolute",
-            left: `${play * 100}%`,
+            left: `${PLAY_FROM * 100}%`,
+            transform:
+              play === PLAY_FROM
+                ? undefined
+                : `translateX(${(play - PLAY_FROM) * rw}px)`,
             top: -6 * u,
             bottom: -2 * u,
             width: 1.5 * u,
@@ -467,6 +477,7 @@ export function PillMorph({
   ground,
   groundParams,
 }: PillMorphProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { fps, width, height } = useVideoConfig();
   const tall = height > width;
@@ -533,6 +544,9 @@ export function PillMorph({
   const scale0 = 0.94 + 0.06 * appear;
 
   const shapes: Shape[] = [];
+  // Where each feature pill rests once split, for laying its label out there.
+  const restSegCx: number[] = [];
+  let restLeft = cx - (total + gap * 2) / 2;
   if (t < 116) {
     shapes.push({
       x: cx - (w * scale0) / 2,
@@ -549,6 +563,8 @@ export function PillMorph({
     pws.forEach((pw0, i) => {
       const pw = pw0 * k;
       const ph = h;
+      restSegCx.push(restLeft + pw0 / 2);
+      restLeft += pw0 + gap;
       const inner = r * Math.min(1, Math.max(0, split));
       const segCx = left + pw / 2;
       left += pw + g;
@@ -586,6 +602,13 @@ export function PillMorph({
   const labelX = t < 116 ? s0.x + pad * scale0 : 0;
   const labelY =
     t < 116 ? s0.y + Math.min(s0.h / 2, 30 * u) - (labelSize * scale0) / 2 : 0;
+  // The card's label and content are laid out where the open card leaves
+  // them and ride its growth as a transform: layout rounds a box and a
+  // baseline to whole pixels, so text eased by `left`/`top` clicks along.
+  const restX = cx - cw / 2;
+  const restY = cy - ch / 2;
+  const restLabelX = restX + pad;
+  const restLabelY = restY + Math.min(ch / 2, 30 * u) - labelSize / 2;
 
   const drift = interpolate(t, [0, 240], [1, 1.035]);
   const tileGlow = fade(178, 200);
@@ -669,7 +692,8 @@ export function PillMorph({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${drift})`,
+            // The drift never rests, so it is always moving.
+            transform: `scale(${drift})${glide(true)}`,
             opacity: interpolate(appear, [0, 0.4], [0, 1], CLAMP),
           }}
         >
@@ -700,13 +724,13 @@ export function PillMorph({
             <div
               style={{
                 position: "absolute",
-                left: labelX,
-                top: labelY,
+                left: restLabelX,
+                top: restLabelY,
                 display: "flex",
                 alignItems: "center",
                 gap: 9 * u * scale0,
                 opacity: labelOut * fade(-2, 9),
-                transform: `scale(${scale0})`,
+                transform: `translate(${labelX - restLabelX}px, ${labelY - restLabelY}px) scale(${scale0})`,
                 transformOrigin: "0 0",
               }}
             >
@@ -744,8 +768,9 @@ export function PillMorph({
             <div
               style={{
                 position: "absolute",
-                left: s0.x + 22 * u,
-                top: s0.y + 64 * u,
+                left: restX + 22 * u,
+                top: restY + 64 * u,
+                transform: `translate(${s0.x - restX}px, ${s0.y - restY}px)`,
                 width: cw - 44 * u,
                 height: ch - 86 * u,
                 opacity: content,
@@ -783,15 +808,21 @@ export function PillMorph({
             ? shapes.map((s, i) => {
                 const k = featIn(i);
                 if (k <= 0) return null;
+                // The label only needs the pill's centre: it is laid out on
+                // the split pill at rest and follows the live one by a
+                // transform, for the same reason as the card's label.
+                const pw = pws[i];
+                const dx = s.x + s.w / 2 - restSegCx[i];
+                const dy = s.y + s.h / 2 - cy;
                 return (
                   <div
                     key={features[i]}
                     style={{
                       position: "absolute",
-                      left: s.x,
-                      top: s.y,
-                      width: s.w,
-                      height: s.h,
+                      left: restSegCx[i] - pw / 2,
+                      top: cy - barH / 2,
+                      width: pw,
+                      height: barH,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -803,7 +834,7 @@ export function PillMorph({
                       color: fg,
                       whiteSpace: "nowrap",
                       opacity: k,
-                      transform: `translateY(${(1 - k) * 6 * u}px)`,
+                      transform: `translate(${dx}px, ${dy + (1 - k) * 6 * u}px)`,
                     }}
                   >
                     <svg

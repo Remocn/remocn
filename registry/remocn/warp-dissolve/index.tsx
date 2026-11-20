@@ -7,6 +7,7 @@ import type {
 import type React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { ShaderWarp } from "@/components/remocn/shader-warp";
+import { useGlide } from "@/lib/remocn/glide";
 
 const clampOpts = {
   extrapolateLeft: "clamp" as const,
@@ -31,6 +32,7 @@ const WarpDissolvePresentation: React.FC<
   presentationDirection,
   passedProps,
 }) => {
+  const glide = useGlide();
   const {
     colors = DEFAULT_COLORS,
     distortion = 0.8,
@@ -42,12 +44,13 @@ const WarpDissolvePresentation: React.FC<
   const p = presentationProgress;
 
   if (!entering) {
+    const melt = interpolate(p, [0, 0.38], [1, 1.16], {
+      ...clampOpts,
+      easing: Easing.in(Easing.cubic),
+    });
     const meltStyle: React.CSSProperties = {
       opacity: interpolate(p, [0.2, 0.38], [1, 0], clampOpts),
-      scale: `${interpolate(p, [0, 0.38], [1, 1.16], {
-        ...clampOpts,
-        easing: Easing.in(Easing.cubic),
-      })}`,
+      transform: `scale(${melt})${glide(melt > 1 && melt < 1.16)}`,
       filter: `blur(${interpolate(p, [0.04, 0.38], [0, 18], clampOpts)}px)`,
     };
     return <AbsoluteFill style={meltStyle}>{children}</AbsoluteFill>;
@@ -64,12 +67,13 @@ const WarpDissolvePresentation: React.FC<
     clampOpts,
   );
 
+  const settle = interpolate(p, [0.66, 1], [1.18, 1], {
+    ...clampOpts,
+    easing: Easing.out(Easing.cubic),
+  });
   const childStyle: React.CSSProperties = {
     opacity: interpolate(p, [0.66, 0.82], [0, 1], clampOpts),
-    scale: `${interpolate(p, [0.66, 1], [1.18, 1], {
-      ...clampOpts,
-      easing: Easing.out(Easing.cubic),
-    })}`,
+    transform: `scale(${settle})${glide(settle > 1 && settle < 1.18)}`,
     filter: `blur(${interpolate(p, [0.66, 0.92], [16, 0], clampOpts)}px)`,
   };
 

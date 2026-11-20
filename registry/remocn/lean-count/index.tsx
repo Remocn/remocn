@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const bricolage = loadBricolage("normal", {
   weights: ["400", "500"],
@@ -75,6 +76,8 @@ const LABEL_AT = 6;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IN_OUT = Easing.bezier(0.65, 0, 0.35, 1);
+const midway = (q: number) => q > 5e-4 && q < 1 - 5e-4;
+
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -225,6 +228,7 @@ export function LeanCount({
   speed = 1,
   theme = "dark",
 }: LeanCountProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -334,12 +338,20 @@ export function LeanCount({
             }}
           >
             {slots.map(({ ch, i, gx }) => {
-              const p = interpolate(
-                t,
-                [RISE_AT + i * RISE_GAP, RISE_AT + i * RISE_GAP + RISE_LEN],
-                [0, 1],
-                { ...CLAMP, easing: EASE_OUT },
-              );
+              const riseAt = (tt: number) =>
+                (1 -
+                  interpolate(
+                    tt,
+                    [RISE_AT + i * RISE_GAP, RISE_AT + i * RISE_GAP + RISE_LEN],
+                    [0, 1],
+                    { ...CLAMP, easing: EASE_OUT },
+                  )) *
+                F *
+                0.95;
+              const rise = riseAt(t);
+              const rising =
+                Math.abs(riseAt(t + 1) - rise) > 1e-3 ||
+                Math.abs(rise - riseAt(t - 1)) > 1e-3;
               return (
                 <span
                   key={`g${i}`}
@@ -355,7 +367,7 @@ export function LeanCount({
                     fontSize: F,
                     fontFeatureSettings: '"tnum" 1',
                     color: i >= suffixFrom ? spot : fg,
-                    transform: `translateY(${((1 - p) * F * 0.95).toFixed(2)}px)`,
+                    transform: `translateY(${rise.toFixed(2)}px)${glide(rising)}`,
                   }}
                 >
                   {ch}
@@ -393,7 +405,7 @@ export function LeanCount({
                     style={{
                       display: "inline-block",
                       opacity: p,
-                      transform: `translateY(${((1 - p) * labelSize * 0.6).toFixed(2)}px)`,
+                      transform: `translateY(${((1 - p) * labelSize * 0.6).toFixed(2)}px)${glide(midway(p))}`,
                     }}
                   >
                     {w}

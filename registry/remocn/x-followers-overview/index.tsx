@@ -11,6 +11,7 @@ import {
   useVideoConfig,
 } from "remotion";
 import { Confetti } from "@/components/remocn/confetti";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface FollowerNotification {
   name: string;
@@ -193,6 +194,7 @@ function NameBlock({
   theme,
   accent,
   deg,
+  flipping,
   opacity,
 }: {
   item: FollowerNotification;
@@ -201,8 +203,11 @@ function NameBlock({
   theme: Theme;
   accent: string;
   deg: number;
+  /** True on the frames the name turns. */
+  flipping: boolean;
   opacity: number;
 }) {
+  const glide = useGlide();
   return (
     <div
       style={{
@@ -218,7 +223,10 @@ function NameBlock({
         whiteSpace: "nowrap",
         transformOrigin: "center",
         backfaceVisibility: "hidden",
-        transform: `rotateX(${deg}deg)`,
+        // A name that rests unturned is still marked, so its text is drawn
+        // the same way at rest as while it turns (off the grid in a player
+        // that shows the scene smaller), and the flip starts without a jump.
+        transform: `rotateX(${deg}deg)${glide(flipping)}`,
         opacity,
       }}
     >
@@ -251,6 +259,7 @@ export function XFollowersOverview({
   orientation = "horizontal",
   speed = 1,
 }: XFollowersOverviewProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame();
   const { durationInFrames, width, height, fps } = useVideoConfig();
   const t = THEMES.light;
@@ -297,6 +306,7 @@ export function XFollowersOverview({
       })
     : 1;
   const nextDeg = 90 * (1 - flipP);
+  const flipping = hasNext && flipP > 0 && flipP < 1;
   const nextOpacity = interpolate(flipP, [0.45, 1], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
@@ -316,6 +326,25 @@ export function XFollowersOverview({
     config: { damping: 10, stiffness: 170, mass: 0.8 },
   });
   const revealScale = interpolate(revealSpring, [0, 1], [0.5, 1]);
+  // Chrome parks a glyph raster on a whole pixel vertically for as long as the
+  // matrix is axis-aligned, so the total clicks along pixel by pixel while it
+  // pops; its transform is marked as moving while it does. The spring
+  // overshoots, so motion is read from the neighbouring frames.
+  const countAt = (f: number) =>
+    interpolate(
+      spring({
+        fps,
+        frame: f - (revealStart + 2),
+        config: { damping: 10, stiffness: 170, mass: 0.8 },
+      }),
+      [0, 1],
+      [0.5, 1],
+    ) *
+      countNum +
+    blurIn(f, revealStart + 4, revealStart + 28).translateY;
+  const countMoving =
+    Math.abs(countAt(fc + speed) - countAt(fc)) > 1e-3 ||
+    Math.abs(countAt(fc) - countAt(fc - speed)) > 1e-3;
 
   // Avatar + handle reveal in sync with the total: same window as countIn,
   // avatar sliding in from the left, handle from the right.
@@ -422,6 +451,7 @@ export function XFollowersOverview({
                   theme={t}
                   accent={accentColor}
                   deg={currentDeg}
+                  flipping={flipping}
                   opacity={currentOpacity}
                 />
                 {next && (
@@ -432,6 +462,7 @@ export function XFollowersOverview({
                     theme={t}
                     accent={accentColor}
                     deg={nextDeg}
+                    flipping={flipping}
                     opacity={nextOpacity}
                   />
                 )}
@@ -509,8 +540,7 @@ export function XFollowersOverview({
                   gap: 18,
                   opacity: countIn.opacity,
                   filter: countIn.blur > 0 ? `blur(${countIn.blur}px)` : "none",
-                  translate: `0 ${countIn.translateY}px`,
-                  scale: `${revealScale}`,
+                  transform: `translateY(${countIn.translateY}px) scale(${revealScale})${glide(countMoving)}`,
                 }}
               >
                 <span

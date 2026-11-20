@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const dmSans = loadFont("normal", {
   weights: ["400", "500"],
@@ -54,6 +55,7 @@ const LEAD = 1.14;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IN = Easing.bezier(0.55, 0, 0.9, 0.4);
+
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -270,6 +272,7 @@ export function LoopBreak({
   speed = 1,
   theme = "dark",
 }: LoopBreakProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const k = Math.min(1, durationInFrames / BASE);
@@ -345,19 +348,31 @@ export function LoopBreak({
     const byRow = new Map<number, React.ReactNode[]>();
     list.forEach((w, i) => {
       const inAt = cur.at + i * stagger * cur.tempo;
-      const rise = interpolate(t, [inAt, inAt + ENTER * cur.tempo], [0, 1], {
-        ...CLAMP,
-        easing: EASE_OUT,
-      });
+      const riseAt = (tt: number) =>
+        interpolate(tt, [inAt, inAt + ENTER * cur.tempo], [0, 1], {
+          ...CLAMP,
+          easing: EASE_OUT,
+        });
       const outAt = cur.back + (n - 1 - i) * REWIND_WORD * cur.backTempo;
-      const sink = Number.isFinite(cur.back)
-        ? interpolate(t, [outAt, outAt + REWIND * cur.backTempo], [0, 1], {
-            ...CLAMP,
-            easing: EASE_IN,
-          })
-        : 0;
-      const shown = rise - sink;
+      const sinkAt = (tt: number) =>
+        Number.isFinite(cur.back)
+          ? interpolate(tt, [outAt, outAt + REWIND * cur.backTempo], [0, 1], {
+              ...CLAMP,
+              easing: EASE_IN,
+            })
+          : 0;
+      const rise = riseAt(t);
+      const shown = rise - sinkAt(t);
       if (shown <= 0) return;
+      // The travel is printed to 0.01px, and the ease's tail keeps stepping
+      // that by a hundredth after its progress reads as done; the tilt stays
+      // on while the printed offset still changes from frame to frame.
+      const offsetAt = (tt: number) =>
+        ((1 - (riseAt(tt) - sinkAt(tt))) * pitch).toFixed(2);
+      const offset = offsetAt(t);
+      const moving =
+        offset !== offsetAt(t + speed / k) ||
+        offset !== offsetAt(t - speed / k);
       const lit =
         cur.fix &&
         hiStart >= 0 &&
@@ -385,7 +400,7 @@ export function LoopBreak({
             fontKerning: "normal",
             color,
             opacity: 1 - fade,
-            transform: `translateY(${((1 - shown) * pitch).toFixed(2)}px)`,
+            transform: `translateY(${offset}px)${glide(moving)}`,
           }}
         >
           {w.text}

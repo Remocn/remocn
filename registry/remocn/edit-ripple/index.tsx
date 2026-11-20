@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const epilogue = loadFont("normal", {
   weights: ["400", "500"],
@@ -193,6 +194,7 @@ export function EditRipple({
   speed = 1,
   theme = "dark",
 }: EditRippleProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -285,6 +287,7 @@ export function EditRipple({
     top: number,
     y: number,
     color: string,
+    moving: boolean,
   ) => {
     nodes.push(
       <div
@@ -303,7 +306,7 @@ export function EditRipple({
           style={{
             ...lineStyle,
             color,
-            transform: `translateY(${y.toFixed(2)}px)`,
+            transform: `translateY(${y.toFixed(2)}px)${glide(moving)}`,
           }}
         >
           {text}
@@ -312,10 +315,10 @@ export function EditRipple({
     );
   };
 
-  const enter = (d: number) =>
-    interpolate(t, [d, d + ENTER], [0, 1], { ...CLAMP, easing: EASE_OUT });
-  const exit = (d: number) =>
-    interpolate(t, [d, d + EXIT], [0, 1], { ...CLAMP, easing: EASE_IN });
+  const enter = (d: number, tt = t) =>
+    interpolate(tt, [d, d + ENTER], [0, 1], { ...CLAMP, easing: EASE_OUT });
+  const exit = (d: number, tt = t) =>
+    interpolate(tt, [d, d + EXIT], [0, 1], { ...CLAMP, easing: EASE_IN });
   const cool = (land: number, keep: boolean) =>
     keep
       ? hi
@@ -340,16 +343,20 @@ export function EditRipple({
       const along = ((p.x - marginX) / F + p.row * 2) * perEm;
       const dIn = startOf(k) + lag + along + (first ? 0 : HANDOFF);
       if (t < dIn - 1) continue;
-      const pin = enter(dIn);
-      const pout = hasNext ? exit(startOf(k + 1) + lag + along) : 0;
+      const dOut = startOf(k + 1) + lag + along;
+      const yAt = (tt: number) =>
+        (1 - enter(dIn, tt) - (hasNext ? exit(dOut, tt) : 0)) * F * 1.4;
+      const pout = hasNext ? exit(dOut) : 0;
       if (pout >= 1) continue;
+      const y = yAt(t);
       word(
         `${prefix}${k}-${i}`,
         p.word,
         p.x,
         p.top,
-        (1 - pin - pout) * F * 1.4,
+        y,
         cool(dIn + ENTER * 0.6, keep),
+        Math.abs(yAt(t + 1) - y) > 1e-3 || Math.abs(y - yAt(t - 1)) > 1e-3,
       );
     }
   };

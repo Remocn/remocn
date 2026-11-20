@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -154,6 +155,7 @@ export function PovSetup({
   groundParams,
   speed = 1,
 }: PovSetupProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -184,16 +186,34 @@ export function PovSetup({
   const p = spring({ frame: t - beats.punch, fps, config: CARD });
   const punchOn = t >= beats.punch;
 
-  const bump = Math.max(
-    0.5 * kick(t - beats.pov - 4),
-    1.2 * kick(t - beats.punch - 4),
-  );
-  const hit = shake(t - beats.punch - 4, 8 * u, 2.3);
-  const creep = interpolate(t, [beats.setup, beats.punch + 70], [1, 1.035], {
-    ...CLAMP,
-    easing: CAMERA,
-  });
-  const camScale = creep * (1 + 0.03 * bump);
+  const camera = (at: number) => {
+    const bump = Math.max(
+      0.5 * kick(at - beats.pov - 4),
+      1.2 * kick(at - beats.punch - 4),
+    );
+    const creep = interpolate(at, [beats.setup, beats.punch + 70], [1, 1.035], {
+      ...CLAMP,
+      easing: CAMERA,
+    });
+    return {
+      hit: shake(at - beats.punch - 4, 8 * u, 2.3),
+      s: creep * (1 + 0.03 * bump),
+    };
+  };
+  const { hit, s: camScale } = camera(t);
+  // Kicks, a shake and a creep add up to no clean progress, so the camera
+  // counts as moving whenever it steps against either neighbouring frame.
+  const camStep = (a: number, b: number) => {
+    const p = camera(a);
+    const q = camera(b);
+    return (
+      Math.abs(p.s - q.s) * W +
+      Math.abs(p.hit.x - q.hit.x) +
+      Math.abs(p.hit.y - q.hit.y)
+    );
+  };
+  const camMoving =
+    camStep(t + speed, t) > 1e-3 || camStep(t, t - speed) > 1e-3;
 
   const povScale = 1.4 - 0.4 * pov;
   const povBlur = Math.max(0, 1 - pov) * 10;
@@ -227,7 +247,9 @@ export function PovSetup({
   const top0 = (H - labelFs * POV_BIG) / 2;
   const top1 = (H - labelH - setupH) / 2;
   const top2 = (H - labelH - setupH - punchH) / 2;
-  const blockTop = top0 + (top1 - top0) * shrink + (top2 - top1) * lift;
+  // The block is laid out where it settles and travels there by transform:
+  // layout rounds a baseline moved by `top` to whole pixels.
+  const blockShift = (top0 - top1) * (1 - shrink) + (top1 - top2) * (1 - lift);
   const labelScale = POV_BIG - (POV_BIG - 1) * shrink;
 
   return (
@@ -263,7 +285,7 @@ export function PovSetup({
           style={{
             position: "absolute",
             inset: 0,
-            transform: `translate(${hit.x}px, ${hit.y}px) scale(${camScale})`,
+            transform: `translate(${hit.x}px, ${hit.y}px) scale(${camScale})${glide(camMoving)}`,
             transformOrigin: "30% 50%",
           }}
         >
@@ -272,7 +294,11 @@ export function PovSetup({
               position: "absolute",
               left,
               right: left,
-              top: blockTop,
+              top: top2,
+              transform:
+                Math.abs(blockShift) > 1e-3
+                  ? `translateY(${blockShift}px)`
+                  : undefined,
               display: "flex",
               flexDirection: "column",
               alignItems: "flex-start",
@@ -286,7 +312,7 @@ export function PovSetup({
                 lineHeight: 1,
                 letterSpacing: "-0.01em",
                 color: fg,
-                transform: `scale(${povScale * labelScale})`,
+                transform: `scale(${povScale * labelScale})${glide(!camMoving && Math.abs(povScale * labelScale - 1) > 1e-5)}`,
                 transformOrigin: "0% 0%",
                 height: labelFs,
                 filter: povBlur > 0.2 ? `blur(${povBlur * u}px)` : undefined,

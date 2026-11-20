@@ -14,6 +14,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -199,6 +200,10 @@ function roundedPath(raw: Pt[], R: number) {
   return `${d}Z`;
 }
 
+// The word ramps are clamped, so exactly 0 or 1 at rest; the ease-out's last
+// frame still moves a word by a hundredth of a pixel, so it counts.
+const midway = (p: number) => p > 0 && p < 1;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -231,6 +236,7 @@ export function StoryText({
   groundParams,
   speed = 1,
 }: StoryTextProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const t = THEMES[theme];
@@ -285,9 +291,21 @@ export function StoryText({
   const fillAmt = 1 - toOutline + toFill;
   const strokeAmt = toOutline * (1 - toNone);
   const textColor = interpolateColors(fillAmt, [0, 1], [fg, t.onFill]);
-  const pop = spring({ frame: frame - C3, fps, config: CARD });
-  const settle =
-    frame >= C3 ? 1 + 0.035 * Math.sin(Math.min(1, pop) * Math.PI) : 1;
+  const settleAt = (f: number) =>
+    f >= C3
+      ? 1 +
+        0.035 *
+          Math.sin(
+            Math.min(1, spring({ frame: f - C3, fps, config: CARD })) * Math.PI,
+          )
+      : 1;
+  const settle = settleAt(frame);
+  // The pop is a spring, so it has no clean end: compare the scale with the
+  // neighbouring frames, weighed by the reach from the centre to the far text.
+  const reach = Math.max(W, H) / 2;
+  const settling =
+    Math.abs(settleAt(frame + speed) - settle) * reach > 1e-3 ||
+    Math.abs(settle - settleAt(frame - speed)) * reach > 1e-3;
 
   const lines = Array.from({ length: lineCount }, (_, l) => {
     const idx = words.map((_, i) => i).filter((i) => lineOf[i] === l);
@@ -388,7 +406,10 @@ export function StoryText({
       )}
       <ScaleLayer scale={scale}>
         <AbsoluteFill
-          style={{ transform: `scale(${settle})`, transformOrigin: "50% 50%" }}
+          style={{
+            transform: `scale(${settle})${glide(settling)}`,
+            transformOrigin: "50% 50%",
+          }}
         >
           <svg
             width={W}
@@ -458,7 +479,7 @@ export function StoryText({
                       textShadow: fillAmt < 0.5 ? t.shadow : undefined,
                       opacity: a,
                       transformOrigin: "0% 80%",
-                      transform: `translateY(${(1 - a) * F * 0.22}px) scale(${0.9 + 0.1 * a})`,
+                      transform: `translateY(${(1 - a) * F * 0.22}px) scale(${0.9 + 0.1 * a})${glide(midway(a) && !settling)}`,
                     }}
                   >
                     {words[i]}
@@ -470,8 +491,11 @@ export function StoryText({
               <div
                 style={{
                   position: "absolute",
-                  left: caret.x,
-                  top: caret.top,
+                  // Layout rounds a box's edges to whole pixels, so a caret
+                  // carried by `left`/`top` steps; it rides a transform.
+                  left: 0,
+                  top: 0,
+                  transform: `translate(${caret.x}px, ${caret.top}px)`,
                   width: Math.max(2, F * 0.045),
                   height: F * 1.08,
                   borderRadius: F,

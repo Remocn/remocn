@@ -2,6 +2,7 @@
 
 import { linearTiming, TransitionSeries } from "@remotion/transitions";
 import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import {
   LENS_ZOOM_DURATION_IN_FRAMES,
   lensZoom,
@@ -19,6 +20,7 @@ function Scene({
   background: string;
   squeezeAt?: number;
 }) {
+  const glide = useGlide();
   const frame = useCurrentFrame();
   const scale =
     squeezeAt === undefined
@@ -44,7 +46,11 @@ function Scene({
           fontWeight: 600,
           letterSpacing: "-0.03em",
           color: "#f2f2f2",
-          transform: `scale(${scale})`,
+          transform: `scale(${scale})${glide(
+            squeezeAt !== undefined &&
+              frame > squeezeAt &&
+              frame < squeezeAt + 7,
+          )}`,
         }}
       >
         {label}

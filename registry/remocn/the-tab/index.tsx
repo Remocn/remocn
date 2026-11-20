@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const albert = loadFont("normal", {
   weights: ["400", "500"],
@@ -111,6 +112,14 @@ function useWidths(keys: string[], fontFamily: string) {
   return state && state.key === key ? state.w : null;
 }
 
+// Chrome parks a glyph raster on a whole pixel vertically for as long as the
+// matrix is axis-aligned, so text under a slow transform clicks along pixel by
+// pixel. SVG text can't carry the mark itself, so the drawing is marked as
+// moving from the first line's rise to the last one's, and the text leans
+// off that grid. A drawing leans only while it moves, so one span with no
+// gaps in it: a lean that went in a pause and came back would snap the lines
+// already in place by up to half a pixel each time.
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -143,6 +152,7 @@ export function TheTab({
   speed = 1,
   theme = "dark",
 }: TheTabProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const T = durationInFrames * speed;
@@ -298,6 +308,12 @@ export function TheTab({
   const valueX0 = totalOnOwnLine ? mx : W - mx - valueW * Ft;
 
   let cursor = 0;
+  // The frame the last line lands: a row's price, the total or its last word.
+  const settled = Math.max(
+    n > 0 ? rowAt(n - 1) + 25 : 0,
+    totalAt + 14,
+    totalAt + 8 + Math.max(0, totalWords.length - 1) * stagger + 14,
+  );
   const valueNodes = totalWords.map((s, k) => {
     const x = valueX0 + cursor * Ft;
     cursor += wordWs[k] + space;
@@ -330,7 +346,11 @@ export function TheTab({
           width={W}
           height={H}
           viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: glide(t > rowAt(0) && t < settled),
+          }}
           fontFamily={fontFamily}
           aria-hidden
         >

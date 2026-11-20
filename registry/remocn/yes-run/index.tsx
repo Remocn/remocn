@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const unbounded = loadFont("normal", {
   weights: ["400", "500"],
@@ -243,6 +244,7 @@ export function YesRun({
   speed = 1,
   theme = "dark",
 }: YesRunProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const dark = theme === "dark";
@@ -321,6 +323,10 @@ export function YesRun({
   const dist = prev ? (prev.h + e.h) / 2 + gapV : e.h + gapV;
   const winH = prev ? prev.h + (e.h - prev.h) * p : e.h;
 
+  // Layout rounds a baseline and a box edge to whole pixels, so an exchange
+  // pushed by `top` and an answer block slid by `left` stepped in uneven
+  // pixels. Each is laid out where it rests and the travel is a transform.
+  const pushing = p > 0 && p < 1;
   const renderExchange = (x: Exchange, dy: number, reveal: number) => {
     const F = x.size;
     const blockW = bwEm * F;
@@ -355,7 +361,7 @@ export function YesRun({
       </div>
     );
 
-    const top = cy + dy - x.h / 2;
+    const top = cy - x.h / 2;
     const out: React.ReactNode[] = [];
     x.rows.forEach((row, i) => {
       const base = top + i * (LINE + ROW_GAP) * F + baseOff;
@@ -375,13 +381,19 @@ export function YesRun({
         ? `inset(0 ${side.toFixed(2)}% 0 ${side.toFixed(2)}%)`
         : `inset(0 ${((1 - reveal) * 100).toFixed(2)}% 0 0)`;
       const nudge = alone ? 0 : (1 - reveal) * F * 0.12;
+      const restW = alone ? blockW : qW + (GAP * F + blockW) * 1;
+      const restLeft = W / 2 - restW / 2;
+      const bRest = alone ? restLeft : restLeft + qW + GAP * F;
+      const shift = bLeft - nudge - bRest;
       out.push(
         <div
           key={`b${i}`}
           style={{
             position: "absolute",
-            left: bLeft - nudge,
+            left: bRest,
             top: base + blockTop,
+            transform:
+              Math.abs(shift) < 1e-3 ? undefined : `translateX(${shift}px)`,
             width: blockW,
             height: blockH,
             clipPath: clip,
@@ -400,7 +412,16 @@ export function YesRun({
       );
     });
     return (
-      <div key={x.start} style={{ position: "absolute", inset: 0 }}>
+      <div
+        key={x.start}
+        style={{
+          position: "absolute",
+          inset: 0,
+          // Kept at rest too: an exchange handed back to plain layout when
+          // the push ends would jump to the nearest whole pixel.
+          transform: `translateY(${Math.abs(dy) < 1e-3 ? 0 : dy}px)${glide(pushing)}`,
+        }}
+      >
         {out}
       </div>
     );

@@ -14,6 +14,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -157,13 +158,17 @@ function RevealWords({
   frame,
   stagger,
   accentFrom,
+  carried = false,
 }: {
   text: string;
   start: number;
   frame: number;
   stagger: number;
   accentFrom?: number;
+  /** An ancestor already tilts this frame; one tilt in the chain is enough. */
+  carried?: boolean;
 }) {
+  const glide = useGlide();
   const words = text.split(" ");
   return (
     <span
@@ -195,7 +200,9 @@ function RevealWords({
             <span
               style={{
                 display: "inline-block",
-                transform: `translateY(${(1 - p) * 140}%)`,
+                transform: `translateY(${(1 - p) * 140}%)${glide(
+                  p > 5e-4 && p < 1 - 5e-4 && !carried,
+                )}`,
                 filter: `blur(${(1 - p) * 6}px)`,
                 fontFamily: accent ? newsreader.fontFamily : undefined,
                 fontStyle: accent ? "italic" : undefined,
@@ -245,6 +252,7 @@ export function CoverRing({
   delay = 0,
   speed = 1,
 }: CoverRingProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const t = THEMES[theme];
@@ -342,9 +350,32 @@ export function CoverRing({
     [0, 1],
     { ...CLAMP, easing: EASE_EXIT },
   );
-  const push = interpolate(frame, [0, beat("end")], [1, 1.05], {
-    ...CLAMP,
-    easing: EASE_CAMERA,
+  const pushAt = (f: number) =>
+    interpolate(f, [0, beat("end")], [1, 1.05], {
+      ...CLAMP,
+      easing: EASE_CAMERA,
+    });
+  const push = pushAt(frame);
+  // The push carries every line of copy, so its tilt covers them all. Its
+  // ease is very flat at both ends: compare with the neighbouring frames,
+  // weighed by how far below or above the centre the copy sits (only
+  // vertical travel snaps), so the long tail counts as rest.
+  const reach = H / 4;
+  const pushing =
+    Math.abs(pushAt(frame + speed) - push) * reach > 1e-3 ||
+    Math.abs(push - pushAt(frame - speed)) * reach > 1e-3;
+  // The caption is laid out where the lift leaves it; the ride there is a
+  // transform, since layout rounds a baseline to whole pixels.
+  const liftEnd = liftAt(beat("bars") + 14);
+  const captionDy = liftEnd - liftAt(frame);
+  const lifting =
+    Math.abs(liftAt(frame + speed) - liftAt(frame)) > 1e-3 ||
+    Math.abs(liftAt(frame) - liftAt(frame - speed)) > 1e-3;
+  // A tile rests on its dot; it is laid out there and every other place it
+  // passes through is a transform, since layout rounds a box to whole pixels.
+  const tileRest = (i: number) => ({
+    x: cx + ((i % dots) - (dots - 1) / 2) * dotGap,
+    y: cy - liftEnd,
   });
 
   const order = Array.from({ length: n }, (_, i) => i).sort(
@@ -393,7 +424,7 @@ export function CoverRing({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${push})`,
+            transform: `scale(${push})${glide(pushing)}`,
             perspective: portrait ? 2200 : 1400,
             perspectiveOrigin: `50% ${(cy / H) * 100}%`,
           }}
@@ -429,6 +460,7 @@ export function CoverRing({
                   start={beat("lineIn") + r * stagger * row.split(" ").length}
                   frame={frame}
                   stagger={stagger}
+                  carried={pushing}
                 />
               ))}
             </div>
@@ -475,6 +507,13 @@ export function CoverRing({
               )
               .join(", ");
             const lift = size * (0.12 + 0.2 * s.depth) * flat;
+            const rest = tileRest(i);
+            const tx = s.x - rest.x;
+            const ty = s.y - rest.y;
+            const travel =
+              Math.abs(tx) < 1e-3 && Math.abs(ty) < 1e-3
+                ? ""
+                : `translate(${tx}px, ${ty}px) `;
             const shadow =
               s.q > 0.6
                 ? `0 0 ${dot * 1.2}px ${mix(acc, 50)}, 0 0 ${dot * 0.3}px ${mix(acc, 70)}`
@@ -484,14 +523,14 @@ export function CoverRing({
                 key={`cr-${i}`}
                 style={{
                   position: "absolute",
-                  left: s.x - w / 2,
-                  top: s.y - h / 2,
+                  left: rest.x - w / 2,
+                  top: rest.y - h / 2,
                   width: w,
                   height: h,
                   borderRadius: radius,
                   zIndex: z,
                   opacity: enter * fadeExtra,
-                  transform: `rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg)`,
+                  transform: `${travel}rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg)`,
                   filter: `${moving ? `url(#cr2-mb-${i}) ` : ""}blur(${depthBlur + Math.max(0, s.fly) * 8}px) brightness(${dim})`,
                   boxShadow: shadow,
                   backgroundColor: acc,
@@ -536,7 +575,11 @@ export function CoverRing({
               position: "absolute",
               left: 0,
               width: W,
-              top: cy - liftAt(frame) + barMax * 0.5 + capGap,
+              top: cy - liftEnd + barMax * 0.5 + capGap,
+              transform:
+                Math.abs(captionDy) > 1e-3
+                  ? `translateY(${captionDy}px)${glide(lifting && !pushing)}`
+                  : undefined,
               textAlign: "center",
               fontFamily,
               fontSize: capSize,
@@ -552,6 +595,7 @@ export function CoverRing({
               frame={frame}
               stagger={3}
               accentFrom={Math.max(1, captionWords.length - 1)}
+              carried={pushing || lifting}
             />
           </div>
         </AbsoluteFill>

@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const manrope = loadManrope("normal", {
   weights: ["500", "600"],
@@ -99,6 +100,8 @@ const PALETTES = {
     grain: 0.04,
   },
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -225,6 +228,7 @@ export function Introducing({
   speed = 1,
   theme = "dark",
 }: IntroducingProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const p = PALETTES[theme];
@@ -273,12 +277,20 @@ export function Introducing({
     ...CLAMP,
     easing: EASE_SWEEP,
   });
-  const settle = interpolate(frame, [0, 100], [1.035, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const settleAt = (f: number) =>
+    interpolate(f, [0, 100], [1.035, 1], { ...CLAMP, easing: EASE_OUT });
+  const settle = settleAt(frame);
+  // The ease-out creeps for its last frames, so "moving" is read off the
+  // step at the frame's edge, not off a progress.
+  const settling =
+    Math.abs(settleAt(frame + speed) - settle) * width * 0.5 > 1e-3 ||
+    Math.abs(settle - settleAt(frame - speed)) * width * 0.5 > 1e-3;
 
   const ls = lsStart + (LS_END - lsStart) * track;
+  // How far the open tracking widens the name past its settled width, in em;
+  // exactly 0 once the tracking lands.
+  const spread = (lsStart - LS_END) * (1 - track);
+  const widen = (chars - 1) * spread;
   const lockupEm = logoEm + textBase + chars * ls;
   const lockupW = lockupEm * nameFs;
 
@@ -303,8 +315,11 @@ export function Introducing({
   const nameY = top + eyeFsEnd + gapTop + nameH / 2;
   const tagTop = nameY + nameH / 2 + gapBottom;
 
-  const eyeY = interpolate(lift, [0, 1], [height / 2, eyeYEnd]);
   const eyeFs = interpolate(lift, [0, 1], [eyeFsStart, eyeFsEnd]);
+  // A font size that eases moves the baseline inside its own box by layout,
+  // pixel by pixel. While it shrinks, the eyebrow is laid out at its landed
+  // size and scaled about its centre instead; at rest it is plain text.
+  const eyeK = midway(lift) ? eyeFs / eyeFsEnd : 1;
 
   // ---- the beam ------------------------------------------------------------
   // P = beam centre, em from the lockup's left edge.
@@ -394,7 +409,7 @@ export function Introducing({
           style={{
             position: "absolute",
             inset: 0,
-            transform: `scale(${settle})`,
+            transform: `scale(${settle})${glide(settling)}`,
           }}
         >
           {/* eyebrow */}
@@ -403,8 +418,10 @@ export function Introducing({
               position: "absolute",
               left: 0,
               right: 0,
-              top: eyeY,
-              transform: "translateY(-50%)",
+              // Laid out where the eyebrow lands; the lift is a transform,
+              // since layout rounds a baseline moved by `top` to whole pixels.
+              top: eyeYEnd,
+              transform: `translateY(${(height / 2 - eyeYEnd) * (1 - lift)}px) translateY(-50%)`,
               display: "flex",
               justifyContent: "center",
             }}
@@ -414,12 +431,13 @@ export function Introducing({
                 fontFamily: serif.fontFamily,
                 fontStyle: "italic",
                 fontWeight: 400,
-                fontSize: eyeFs,
+                fontSize: eyeK === 1 ? eyeFs : eyeFsEnd,
                 lineHeight: 1,
                 color: interpolateColors(lift, [0, 1], [fg, p.muted]),
                 opacity: eyeIn,
                 letterSpacing: `${interpolate(eyeIn, [0, 1], [0.14, -0.005])}em`,
-                filter: `blur(${(1 - eyeIn) * 8 * s}px)`,
+                filter: `blur(${((1 - eyeIn) * 8 * s) / eyeK}px)`,
+                transform: eyeK === 1 ? undefined : `scale(${eyeK})`,
                 whiteSpace: "nowrap",
               }}
             >
@@ -449,7 +467,10 @@ export function Introducing({
                 display: "flex",
                 alignItems: "baseline",
                 height: nameFs,
-                transform: `translateY(${(1 - rise) * nameFs * 1.02}px)`,
+                // The lockup keeps its settled width in layout and recentres
+                // by transform: a centred box that narrows as the tracking
+                // closes would round its edge to whole pixels.
+                transform: `${Math.abs(widen * nameFs) > 1e-3 ? `translateX(${(-widen * nameFs) / 2}px) ` : ""}translateY(${(1 - rise) * nameFs * 1.02}px)`,
                 fontFamily: manrope.fontFamily,
                 fontWeight: wordmark ? 600 : 500,
                 fontSize: nameFs,
@@ -500,7 +521,7 @@ export function Introducing({
                 style={{
                   marginLeft: wordmark ? `${R_GAP}em` : 0,
                   letterSpacing: `${ls}em`,
-                  marginRight: `${-ls}em`,
+                  marginRight: `${-LS_END - chars * spread}em`,
                   backgroundImage: textFill.startsWith("linear")
                     ? textFill
                     : undefined,
@@ -552,7 +573,7 @@ export function Introducing({
                       style={{
                         display: "inline-block",
                         opacity: t,
-                        transform: `translateY(${(1 - t) * 0.45}em)`,
+                        transform: `translateY(${(1 - t) * 0.45}em)${glide(midway(t) && !settling)}`,
                         filter: `blur(${(1 - t) * 6 * s}px)`,
                       }}
                     >

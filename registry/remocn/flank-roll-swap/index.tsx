@@ -15,6 +15,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -235,6 +236,7 @@ export function FlankRollSwap({
   ground,
   groundParams,
 }: FlankRollSwapProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -292,13 +294,20 @@ export function FlankRollSwap({
     [0, 1, 0],
     CLAMP,
   );
-  const push =
+  const pushAt = (f: number) =>
     1 +
     0.035 *
-      interpolate(frame, [0, swapEnd + BEAT.hold - 12], [0, 1], {
+      interpolate(f, [0, swapEnd + BEAT.hold - 12], [0, 1], {
         ...CLAMP,
         easing: PUSH,
       });
+  const push = pushAt(frame);
+  // The push is a very flat in-out ease, so it counts as moving while the
+  // frame's far edge still travels more than a thousandth of a pixel.
+  const reach = Math.hypot(W, H) / 2;
+  const pushMoving =
+    Math.abs(pushAt(frame + 1) - push) * reach > 1e-3 ||
+    Math.abs(push - pushAt(frame - 1)) * reach > 1e-3;
   const cardScale = (0.55 + 0.45 * pop) * (1 + 0.035 * punch);
   const tilt = (1 - pop) * 14;
   const cut = cutIndex(frame, swapEnd);
@@ -517,7 +526,10 @@ export function FlankRollSwap({
       ) : null}
       <ScaleLayer scale={scale}>
         <AbsoluteFill
-          style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
+          style={{
+            transform: `scale(${push})${glide(pushMoving)}`,
+            transformOrigin: "50% 50%",
+          }}
         >
           {renderSide("a")}
           {renderSide("b")}

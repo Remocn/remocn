@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -101,6 +102,10 @@ const tween = (f: number, a: number, b: number, easing = enterE) =>
     extrapolateRight: "clamp",
     easing,
   });
+/** Whether `at` changes into or out of frame `f` by more than `eps`. */
+const moves = (at: (f: number) => number, f: number, eps = 1e-3) =>
+  Math.abs(at(f + 1) - at(f)) > eps || Math.abs(at(f) - at(f - 1)) > eps;
+
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 const enterE = Easing.bezier(0.22, 1, 0.36, 1);
 const exitE = Easing.bezier(0.55, 0, 1, 0.45);
@@ -736,6 +741,7 @@ export function AppStoreListing({
   ground,
   groundParams,
 }: AppStoreListingProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { fps, width, height } = useVideoConfig();
   const f = frame * speed;
@@ -749,25 +755,42 @@ export function AppStoreListing({
     spring({ frame: f - at, fps, config, durationInFrames });
   const bump = (at: number) => sp(at - 2, MORPH, 3) - sp(at + 2, CHIP);
 
-  const rise = sp(0, HEAVY);
   const camT = [0, 20, 38, 86, 102, 154, 172];
   const camEase = { ...clamp, easing: camE };
-  const camS = interpolate(f, camT, [1, 1, 1.5, 1.5, 1, 1, 1.36], camEase);
-  const camFy = interpolate(
-    f,
-    camT,
-    [BH / 2, BH / 2, 206, 206, BH / 2, BH / 2, 214],
-    camEase,
-  );
-  const camTy = interpolate(
-    f,
-    camT,
-    [0.5, 0.5, 0.44, 0.44, 0.5, 0.5, 0.42].map((v) => v + yOff),
-    camEase,
-  );
-  const S = k * camS;
+  const camera = (ff: number) => {
+    const camS = interpolate(ff, camT, [1, 1, 1.5, 1.5, 1, 1, 1.36], camEase);
+    const camFy = interpolate(
+      ff,
+      camT,
+      [BH / 2, BH / 2, 206, 206, BH / 2, BH / 2, 214],
+      camEase,
+    );
+    const camTy = interpolate(
+      ff,
+      camT,
+      [0.5, 0.5, 0.44, 0.44, 0.5, 0.5, 0.42].map((v) => v + yOff),
+      camEase,
+    );
+    const S = k * camS;
+    const r = spring({ frame: ff, fps, config: HEAVY });
+    return {
+      S,
+      r,
+      x: phoneCx - (BW / 2) * S,
+      y: height * camTy - camFy * S + (1 - r) * height,
+    };
+  };
+  const cam = camera(f);
+  const S = cam.S;
+  // The phone is taller than the frame, so its scale is weighed at its far
+  // edge.
+  const camMoving =
+    moves((ff) => camera(ff).y, f) ||
+    moves((ff) => camera(ff).S * BH, f) ||
+    moves((ff) => camera(ff).x, f);
 
   const press = bump(T_TAP);
+  const pressMoving = moves((ff) => bump(T_TAP + f - ff), f, 1e-6);
   const collapse = interpolate(f, [T_TAP + 2, T_TAP + 10], [0, 1], {
     ...clamp,
     easing: morph,
@@ -960,8 +983,17 @@ export function AppStoreListing({
           {lines.slice(0, LINE_AT.length).map((line, i) => {
             const at = LINE_AT[i];
             const next = LINE_AT[i + 1] ?? 100000;
-            const pin = i === 0 ? rise : tween(f, at, at + 12, enterE);
-            const pout = tween(f, next - 7, next, exitE);
+            const lineOff = (ff: number) => {
+              const pin =
+                i === 0
+                  ? spring({ frame: ff, fps, config: HEAVY })
+                  : tween(ff, at, at + 12, enterE);
+              const pout = tween(ff, next - 7, next, exitE);
+              return { pin, pout, y: (1 - pin) * 70 - pout * 50 };
+            };
+            const { pin, pout } = lineOff(f);
+            // The offset is a percentage of the 0.12-0.24 frame-high box.
+            const lineMoving = moves((ff) => lineOff(ff).y * height, f);
             if (f < at - 1 || f > next + 1) return null;
             return (
               <div
@@ -980,7 +1012,7 @@ export function AppStoreListing({
                   letterSpacing: "-0.035em",
                   color: fg,
                   textWrap: "balance",
-                  transform: `translateY(${(1 - pin) * 70 - pout * 50}%)`,
+                  transform: `translateY(${(1 - pin) * 70 - pout * 50}%)${glide(lineMoving)}`,
                   opacity: pin * (1 - pout),
                 }}
               >
@@ -997,7 +1029,7 @@ export function AppStoreListing({
             width: BW,
             height: BH,
             transformOrigin: "0 0",
-            transform: `translate(${phoneCx - (BW / 2) * S}px, ${height * camTy - camFy * S + (1 - rise) * height}px) scale(${S})`,
+            transform: `translate(${cam.x}px, ${cam.y}px) scale(${S})${glide(camMoving)}`,
             WebkitFontSmoothing: "antialiased",
           }}
         >
@@ -1079,7 +1111,7 @@ export function AppStoreListing({
                   [0, 1],
                   [`${c.blue}00`, c.blue],
                 ),
-                transform: `scale(${1 - press * 0.04})`,
+                transform: `scale(${1 - press * 0.04})${glide(pressMoving)}`,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -1335,8 +1367,10 @@ export function AppStoreListing({
             <div
               style={{
                 position: "absolute",
-                left: touch.x - 22,
-                top: touch.y - 22,
+                // The finger travels by transform, not `left`/`top`: layout
+                // rounds a box to whole pixels, so it would step along.
+                left: -22,
+                top: -22,
                 width: 44,
                 height: 44,
                 borderRadius: 22,
@@ -1344,7 +1378,7 @@ export function AppStoreListing({
                 border: "1.5px solid rgba(255,255,255,0.75)",
                 boxShadow: "0 2px 10px rgba(0,0,0,0.25)",
                 opacity: touchOpacity,
-                transform: `scale(${1 - Math.min(1, down) * 0.14})`,
+                transform: `translate(${touch.x}px, ${touch.y}px) scale(${1 - Math.min(1, down) * 0.14})`,
                 zIndex: 35,
               }}
             />

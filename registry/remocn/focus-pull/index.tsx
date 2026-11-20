@@ -6,11 +6,14 @@ import type {
 } from "@remotion/transitions";
 import type React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const clampOpts = {
   extrapolateLeft: "clamp" as const,
   extrapolateRight: "clamp" as const,
 };
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 export type FocusPullProps = {
   blur?: number;
@@ -24,20 +27,24 @@ const FocusPullPresentation: React.FC<
   presentationDirection,
   passedProps,
 }) => {
+  const glide = useGlide();
   const { blur = 16 } = passedProps;
   const entering = presentationDirection === "entering";
   const p = presentationProgress;
 
   if (!entering) {
+    const push = interpolate(p, [0, 0.6], [1, 1.05], {
+      ...clampOpts,
+      easing: Easing.bezier(0.42, 0, 0.58, 1),
+    });
     const exitStyle: React.CSSProperties = {
       opacity: interpolate(p, [0.42, 0.68], [1, 0], {
         ...clampOpts,
         easing: Easing.bezier(0.42, 0, 0.58, 1),
       }),
-      scale: `${interpolate(p, [0, 0.6], [1, 1.05], {
-        ...clampOpts,
-        easing: Easing.bezier(0.42, 0, 0.58, 1),
-      })}`,
+      // `transform` rather than `scale`: the mark that leans the scene's text
+      // rides on `transform` only.
+      transform: `scale(${push})${glide(midway(interpolate(p, [0, 0.6], [0, 1], clampOpts)))}`,
       filter: `blur(${interpolate(p, [0.05, 0.55], [0, blur], {
         ...clampOpts,
         easing: Easing.in(Easing.quad),
@@ -46,12 +53,13 @@ const FocusPullPresentation: React.FC<
     return <AbsoluteFill style={exitStyle}>{children}</AbsoluteFill>;
   }
 
+  const settle = interpolate(p, [0.35, 1], [0, 1], clampOpts);
   const childStyle: React.CSSProperties = {
     opacity: interpolate(p, [0.32, 0.52], [0, 1], clampOpts),
-    scale: `${interpolate(p, [0.35, 1], [0.97, 1], {
+    transform: `scale(${interpolate(p, [0.35, 1], [0.97, 1], {
       ...clampOpts,
       easing: Easing.out(Easing.cubic),
-    })}`,
+    })})${glide(midway(settle))}`,
     filter: `blur(${interpolate(p, [0.35, 0.9], [blur, 0], {
       ...clampOpts,
       easing: Easing.out(Easing.quad),

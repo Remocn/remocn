@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const shoulders = loadFont("normal", {
   weights: ["400", "500"],
@@ -123,6 +124,8 @@ function offsetIn(el: HTMLElement, root: HTMLElement) {
   return { x, y };
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function words(s: string) {
   return s.split(/\s+/).filter(Boolean);
 }
@@ -160,6 +163,7 @@ export function BetaThanks({
   speed = 1,
   theme = "dark",
 }: BetaThanksProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -290,7 +294,7 @@ export function BetaThanks({
         display: "inline-block",
         color,
         opacity: p,
-        transform: `translateY(${((1 - p) * 0.32).toFixed(3)}em)`,
+        transform: `translateY(${((1 - p) * 0.32).toFixed(3)}em)${glide(midway(p))}`,
       }}
     >
       {text}
@@ -355,7 +359,7 @@ export function BetaThanks({
                   display: "inline-flex",
                   alignItems: "baseline",
                   opacity: logoIn,
-                  transform: `translateY(${((1 - logoIn) * REF * 0.18).toFixed(2)}px)`,
+                  transform: `translateY(${((1 - logoIn) * REF * 0.18).toFixed(2)}px)${glide(midway(logoIn))}`,
                 }}
               >
                 {logo ?? <RemocnLogo fontSize={REF} color={fg} />}
@@ -398,7 +402,7 @@ export function BetaThanks({
                   color: fg,
                   opacity: tagIn * tagColorMix,
                   transformOrigin: "0 0",
-                  transform: `translate(${tagX.toFixed(2)}px, ${tagY.toFixed(2)}px) scale(${tagS.toFixed(4)})`,
+                  transform: `translate(${tagX.toFixed(2)}px, ${tagY.toFixed(2)}px) scale(${tagS.toFixed(4)})${glide(midway(lift) || midway(drop) || midway(slide))}`,
                   whiteSpace: "pre",
                 }}
               >

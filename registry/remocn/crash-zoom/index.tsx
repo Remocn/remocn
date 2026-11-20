@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -123,6 +124,8 @@ function shake(d: number, amp: number, len: number, seed: number) {
 
 const LINE_COUNT = 72;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -155,6 +158,7 @@ export function CrashZoom({
   ground,
   groundParams,
 }: CrashZoomProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -190,12 +194,22 @@ export function CrashZoom({
   const teaseBlur = crash > 0 ? 2 + 10 * crash : 0;
   const teaseOpacity = teaseIn * (1 - ramp(t, beat.crash + 3, 3));
 
-  const slam = spring({
-    frame: t - beat.impact - 1,
-    fps,
-    config: CARD,
-  });
+  const slamAt = (f: number) =>
+    spring({ frame: f - beat.impact - 1, fps, config: CARD });
+  const slam = slamAt(t);
   const revealScale = inverted ? 1.14 : 1.14 - 0.14 * slam;
+  // The slam spring has a long tail; weigh its scale step by the half width
+  // of the reveal, where its glyphs travel furthest.
+  const revealMoving =
+    !inverted &&
+    0.14 *
+      0.42 *
+      W *
+      Math.max(
+        Math.abs(slamAt(t + speed) - slam),
+        Math.abs(slam - slamAt(t - speed)),
+      ) >
+      1e-3;
   const revealBlur = inverted ? 0 : 10 * Math.max(0, 1 - slam * 1.4);
 
   const rumble = ramp(t, beat.crash, beat.crashLen);
@@ -249,7 +263,9 @@ export function CrashZoom({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        transform: `translateY(${(1 - teaseIn) * 0.04 * H}px) scale(${scale})`,
+        // The tease never stands still: it rises in, the push carries on to
+        // the crash, and the impact unmounts it.
+        transform: `translateY(${(1 - teaseIn) * 0.04 * H}px) scale(${scale})${glide(true)}`,
         filter:
           teaseBlur > 0.2
             ? `blur(${(teaseBlur * u) / scale}px)`
@@ -312,7 +328,11 @@ export function CrashZoom({
           style={{
             position: "absolute",
             inset: 0,
-            transform: `translate(${rx + hit.x}px, ${ry + hit.y}px) rotate(${hit.r}deg)`,
+            // The tail of the shake turns by less than an eighth of a degree,
+            // which shows nowhere but, turning against the reveal's lean,
+            // cancels it on some frames and snaps the type to the pixel grid
+            // mid-shake. The turn stops there; the shove runs on.
+            transform: `translate(${rx + hit.x}px, ${ry + hit.y}px) rotate(${Math.abs(hit.r) < 0.125 ? 0 : hit.r}deg)`,
             transformOrigin: "50% 50%",
           }}
         >
@@ -365,7 +385,7 @@ export function CrashZoom({
                   letterSpacing: "-0.05em",
                   whiteSpace: "nowrap",
                   color: inverted ? c.stage : fg,
-                  transform: `scale(${revealScale})`,
+                  transform: `scale(${revealScale})${glide(revealMoving)}`,
                   filter:
                     revealBlur > 0.2 ? `blur(${revealBlur * u}px)` : undefined,
                 }}
@@ -384,7 +404,7 @@ export function CrashZoom({
                     color: fg,
                     whiteSpace: "nowrap",
                     opacity: inverted ? 0 : tagIn,
-                    transform: `translateY(${(1 - tagIn) * 0.03 * H}px)`,
+                    transform: `translateY(${(1 - tagIn) * 0.03 * H}px)${glide(midway(tagIn))}`,
                     filter: `blur(${(1 - tagIn) * 6 * u}px)`,
                   }}
                 >

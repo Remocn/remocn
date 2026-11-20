@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -174,6 +175,8 @@ function Readout({
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -208,6 +211,7 @@ export function TimerDuel({
   theme = "dark",
   speed = 1,
 }: TimerDuelProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const STOP_AFTER = START + run;
   const STOP_BEFORE = STOP_AFTER + chase;
@@ -276,7 +280,11 @@ export function TimerDuel({
   const colW = size * (readoutEm(sample) + 0.08);
   const gapX = Math.max(width * 0.06, size * 0.6);
   const rowW = colW * 2 + gapX;
-  const rowY = interpolate(rise, [0, 1], [height * 0.47, height * 0.31]);
+  // The row rises by transform, not `top`: layout rounds a box and a
+  // baseline to whole pixels, so a row eased by `top` clicks up pixel by pixel.
+  const rowY = height * 0.47;
+  const rowLift = (height * 0.31 - rowY) * rise;
+  const rowMoving = midway(rise);
   const rowScale = interpolate(rise, [0, 1], [1, 0.8]);
   const labelSize = 22 * u;
   const deltaSize = Math.min(height * 0.2, width * 0.11);
@@ -326,7 +334,7 @@ export function TimerDuel({
             top: rowY,
             width: rowW,
             height: 0,
-            transform: `scale(${rowScale})`,
+            transform: `${rise > 0 ? `translateY(${rowLift}px) ` : ""}scale(${rowScale})${glide(rowMoving)}`,
           }}
         >
           {columns.map((col) => {
@@ -339,7 +347,7 @@ export function TimerDuel({
                   left: col.x,
                   top: 0,
                   width: colW,
-                  transform: `translateY(calc(-50% + ${(1 - a) * 16 * u}px))`,
+                  transform: `translateY(calc(-50% + ${(1 - a) * 16 * u}px))${glide(midway(a))}`,
                   opacity: a,
                 }}
               >
@@ -371,7 +379,7 @@ export function TimerDuel({
                   style={{
                     opacity: col.opacity,
                     transformOrigin: "0% 60%",
-                    transform: `scale(${1 + col.pulse * 0.02})`,
+                    transform: `scale(${1 + col.pulse * 0.02})${glide(col.pulse > 5e-4 && !rowMoving)}`,
                   }}
                 >
                   <Readout
@@ -419,7 +427,7 @@ export function TimerDuel({
             top: height * 0.69,
             display: "flex",
             justifyContent: "center",
-            transform: `translateY(calc(-50% + ${(1 - deltaIn) * 26 * u}px)) scale(${1 + hold * 0.015})`,
+            transform: `translateY(calc(-50% + ${(1 - deltaIn) * 26 * u}px)) scale(${1 + hold * 0.015})${glide(midway(deltaIn) || midway(hold))}`,
             opacity: deltaIn,
             fontFamily,
             fontWeight: 500,

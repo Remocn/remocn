@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const plex = loadPlexSans("normal", {
   weights: ["400", "500"],
@@ -81,6 +82,8 @@ function groups(n: number): string[] {
   return out;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -112,6 +115,7 @@ export function RowCount({
   speed = 1,
   theme = "dark",
 }: RowCountProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -164,11 +168,11 @@ export function RowCount({
     return born;
   }, [finalRows, start, target, countLength]);
 
-  const shift = (k: number) => {
+  const shift = (k: number, at = t) => {
     let s = 0;
     for (let j = k + 1; j < finalRows; j++) {
       s += spring({
-        frame: t - rowBorn[j] + 4,
+        frame: at - rowBorn[j] + 4,
         fps,
         config: { damping: 16, stiffness: 140, mass: 0.8 },
       });
@@ -220,7 +224,18 @@ export function RowCount({
       easing: EASE_OUT,
     });
     const isNew = k === 0 ? enter : born;
-    const y = firstTop + shift(k) * rowH;
+    // A row pushed down by the rows born above it is laid out in its final
+    // slot and travels there by transform all its life: layout rounds a box
+    // and a baseline to whole pixels, so a row eased by `top` clicks down
+    // pixel by pixel, and handing it back to layout when it settles snaps it
+    // by that rounding.
+    const slot = firstTop + (finalRows - 1 - k) * rowH;
+    const pushAt = (f: number) => {
+      const dy = (shift(k, f) - (finalRows - 1 - k)) * rowH;
+      return Math.abs(dy) > 1e-3 ? dy : 0;
+    };
+    const dy = pushAt(t);
+    const pushing = pushAt(t + 1) !== dy || pushAt(t - 1) !== dy;
     const topness = Math.max(0, 1 - Math.abs(rowsAnim - 1 - k));
     const text = (k === rows - 1 ? prefix : "") + grp;
     const comma = k > 0;
@@ -231,16 +246,19 @@ export function RowCount({
             position: "absolute",
             left: 0,
             width: W,
-            top: y,
+            top: slot,
             height: rowH,
             overflow: "hidden",
+            transform: `translateY(${dy}px)${glide(pushing)}`,
           }}
         >
           <div
             style={{
               position: "absolute",
               right: W - colRight,
-              top: (isNew - 1) * rowH,
+              // The rise into the row is a transform for the same reason.
+              top: 0,
+              transform: `translateY(${(isNew - 1) * rowH}px)${glide(midway(isNew))}`,
               height: rowH,
               display: "flex",
               alignItems: "baseline",
@@ -286,7 +304,8 @@ export function RowCount({
             position: "absolute",
             left: margin + (W - margin * 2) * (1 - isNew),
             right: margin,
-            top: y + rowH,
+            top: slot + rowH,
+            transform: dy !== 0 ? `translateY(${dy}px)` : undefined,
             height: 1,
             background: c.rule,
           }}
@@ -315,7 +334,7 @@ export function RowCount({
           letterSpacing: "-0.005em",
           color: c.muted,
           textWrap: "balance",
-          transform: `translateY(${((1 - labelP) * labelSize * 4).toFixed(2)}px)`,
+          transform: `translateY(${(1 - labelP) * labelSize * 4}px)${glide(midway(labelP))}`,
         }}
       >
         {label}

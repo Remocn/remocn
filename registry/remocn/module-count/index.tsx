@@ -9,6 +9,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const archivo = loadVariableFont("normal", { subsets: ["latin"] });
 
@@ -112,6 +113,8 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function glyph(ch: string | undefined): string[] {
   if (!ch) return BLANK3;
   return GLYPHS[ch] ?? BLANK3;
@@ -159,6 +162,7 @@ export function ModuleCount({
   speed = 1,
   theme = "dark",
 }: ModuleCountProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -225,40 +229,85 @@ export function ModuleCount({
     (H * CAP_H) / unitsH,
   );
 
-  const lock = interpolate(t, [lastStep + 4, lastStep + 22], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IN_OUT,
-  });
-  const gap = GAP + (GAP_LOCK - GAP) * lock;
-
-  const slotX: number[] = [];
-  let x = 0;
-  for (let i = 0; i < slots.length; i++) {
-    slotX.push(x);
-    x += (cols[i] + 1) * (1 + gap) * s;
-  }
-  const boxW = x - (1 + 2 * gap) * s;
-  const boxH = (ROWS + (ROWS - 1) * gap) * s;
-
-  const visibleFrom = (k: number) => {
-    const arr = strings[k];
-    let first = arr.findIndex((ch) => ch !== undefined);
-    if (first < 0) first = 0;
-    let lastI = arr.length - 1;
-    while (lastI > first && arr[lastI] === undefined) lastI--;
-    const l = slotX[first];
-    const r = slotX[lastI] + (cols[lastI] + (cols[lastI] - 1) * gap) * s;
-    return (l + r) / 2;
-  };
-  let centre = visibleFrom(0);
-  for (let k = 1; k < strings.length; k++) {
-    const p = interpolate(t, [times[k], times[k] + MORPH + 4], [0, 1], {
+  // Every position below drifts while the grid tightens and the figure
+  // recentres. Layout holds where the drift settles and the drift itself is a
+  // transform: layout rounds a box and a baseline to whole pixels, so the
+  // cells and the label would click along pixel by pixel. Rest goes through
+  // the same arithmetic, so the leftover translate there is exactly 0.
+  const labelRows = 2;
+  const geometry = (time: number) => {
+    const lock = interpolate(time, [lastStep + 4, lastStep + 22], [0, 1], {
       ...CLAMP,
       easing: EASE_IN_OUT,
     });
-    centre += (visibleFrom(k) - centre) * p;
-  }
-  const shiftX = boxW / 2 - centre;
+    const gap = GAP + (GAP_LOCK - GAP) * lock;
+
+    const slotX: number[] = [];
+    let x = 0;
+    for (let i = 0; i < slots.length; i++) {
+      slotX.push(x);
+      x += (cols[i] + 1) * (1 + gap) * s;
+    }
+    const boxW = x - (1 + 2 * gap) * s;
+    const boxH = (ROWS + (ROWS - 1) * gap) * s;
+
+    const visibleFrom = (k: number) => {
+      const arr = strings[k];
+      let first = arr.findIndex((ch) => ch !== undefined);
+      if (first < 0) first = 0;
+      let lastI = arr.length - 1;
+      while (lastI > first && arr[lastI] === undefined) lastI--;
+      const l = slotX[first];
+      const r = slotX[lastI] + (cols[lastI] + (cols[lastI] - 1) * gap) * s;
+      return (l + r) / 2;
+    };
+    let centre = visibleFrom(0);
+    for (let k = 1; k < strings.length; k++) {
+      const p = interpolate(time, [times[k], times[k] + MORPH + 4], [0, 1], {
+        ...CLAMP,
+        easing: EASE_IN_OUT,
+      });
+      centre += (visibleFrom(k) - centre) * p;
+    }
+    const shiftX = boxW / 2 - centre;
+    const P = (1 + gap) * s;
+    const boxTop = H / 2 - boxH / 2 - P * 0.5;
+    const boxLeft = W / 2 - boxW / 2 + shiftX;
+    const mod = (v: number) => ((v % P) + P) % P;
+    const gx0 = mod(boxLeft - (gap * s) / 2);
+    const gy0 = mod(boxTop - (gap * s) / 2);
+    const M = Math.min(W, H) * 0.07;
+    const labelLeft = gx0 + Math.ceil((M - gx0) / P) * P;
+    const labelTop = gy0 + Math.floor((H - M - gy0) / P) * P - labelRows * P;
+    return {
+      lock,
+      gap,
+      slotX,
+      boxW,
+      boxH,
+      P,
+      boxTop,
+      boxLeft,
+      gx0,
+      gy0,
+      labelLeft,
+      labelTop,
+    };
+  };
+  const g = geometry(t);
+  const rest = geometry(Number.MAX_SAFE_INTEGER);
+  const { lock, gap, slotX, boxW, boxH, P, boxTop, boxLeft, gx0, gy0 } = g;
+  const near = [geometry(t - 1), geometry(t + 1)];
+  const labelMoving = near.some(
+    (o) =>
+      Math.abs(o.labelLeft - g.labelLeft) > 1e-3 ||
+      Math.abs(o.labelTop - g.labelTop) > 1e-3 ||
+      Math.abs(o.P - g.P) > 1e-4,
+  );
+  const shift = (dx: number, dy: number) =>
+    Math.abs(dx) < 1e-3 && Math.abs(dy) < 1e-3
+      ? ""
+      : `translate(${dx}px, ${dy}px) `;
 
   const intro = interpolate(t, [START - 8, START + 6], [0, 1], {
     ...CLAMP,
@@ -311,20 +360,22 @@ export function ModuleCount({
         const scale = 0.62 + 0.38 * on;
         const left = slotX[i] + col * (1 + gap) * s;
         const top = row * (1 + gap) * s;
+        const leftRest = rest.slotX[i] + col * (1 + rest.gap) * s;
+        const topRest = row * (1 + rest.gap) * s;
         const enterLift = k === 0 ? (1 - intro) * s * 0.4 : 0;
         cells.push(
           <div
             key={`${i}-${col}-${row}`}
             style={{
               position: "absolute",
-              left,
-              top,
+              left: leftRest,
+              top: topRest,
               width: s,
               height: s,
               borderRadius: `${r[0]}px ${r[1]}px ${r[2]}px ${r[3]}px`,
               background: isFigure(slots[i]) ? spot : c.second,
               opacity: on,
-              transform: `translateY(${enterLift.toFixed(2)}px) scale(${scale.toFixed(4)})`,
+              transform: `${shift(left - leftRest, top - topRest)}translateY(${enterLift.toFixed(2)}px) scale(${scale.toFixed(4)})`,
             }}
           />,
         );
@@ -333,24 +384,36 @@ export function ModuleCount({
   }
 
   const labelAt = lastStep - 6;
-  const P = (1 + gap) * s;
-  const boxTop = H / 2 - boxH / 2 - P * 0.5;
-  const boxLeft = W / 2 - boxW / 2 + shiftX;
-  const mod = (v: number) => ((v % P) + P) % P;
-  const gx0 = mod(boxLeft - (gap * s) / 2);
-  const gy0 = mod(boxTop - (gap * s) / 2);
   const portrait = H > W * 1.1;
-  const M = Math.min(W, H) * 0.07;
-  const labelLeft = gx0 + Math.ceil((M - gx0) / P) * P;
-  const labelRows = 2;
-  const labelTop = gy0 + Math.floor((H - M - gy0) / P) * P - labelRows * P;
-  const labelSize = Math.min(
-    Math.max(P * 0.4, H * 0.036),
-    portrait ? W * 0.06 : H * 0.056,
-  );
+  const sizeAt = (p: number) =>
+    Math.min(Math.max(p * 0.4, H * 0.036), portrait ? W * 0.06 : H * 0.056);
+  const labelSize = sizeAt(P);
+  const labelSizeRest = sizeAt(rest.P);
+  const Pr = rest.P;
   const labelCols = Math.max(
     4,
-    Math.floor((portrait ? W * 0.84 : W * 0.42) / P),
+    Math.floor((portrait ? W * 0.84 : W * 0.42) / Pr),
+  );
+  // The label is laid out at its settled size and the tightening grid grows
+  // it through `scale` about the bottom-left of its lines, where flex-end
+  // stacks them, instead of re-laying out every frame. The bottom of the lines
+  // sits 1.84P below the top with border-box and 2P with content-box; a
+  // percentage of the box height covers both.
+  const dP = P - Pr;
+  const labelK = labelSize / labelSizeRest;
+  const labelMove =
+    Math.abs(dP) < 1e-6
+      ? shift(g.labelLeft - rest.labelLeft, g.labelTop - rest.labelTop)
+      : `translate(${g.labelLeft - rest.labelLeft + 0.16 * dP}px, calc(${g.labelTop - rest.labelTop - 0.16 * dP}px + ${(dP / Pr) * 100}%)) scale(${labelK}) `;
+  const wordsMoving = (label ? label.split(" ") : []).some((_, k) =>
+    midway(
+      interpolate(
+        t,
+        [labelAt + k * stagger, labelAt + k * stagger + 16],
+        [0, 1],
+        { ...CLAMP, easing: EASE_OUT },
+      ),
+    ),
   );
   const words = label ? label.split(" ") : [];
   const gridLine = Math.max(1, s * 0.016);
@@ -373,10 +436,12 @@ export function ModuleCount({
         <div
           style={{
             position: "absolute",
-            left: boxLeft,
-            top: boxTop,
+            left: rest.boxLeft,
+            top: rest.boxTop,
             width: boxW,
             height: boxH,
+            transform:
+              shift(boxLeft - rest.boxLeft, boxTop - rest.boxTop) || undefined,
           }}
         >
           {cells}
@@ -385,17 +450,21 @@ export function ModuleCount({
           <div
             style={{
               position: "absolute",
-              left: labelLeft + P * 0.16,
-              top: labelTop,
-              height: labelRows * P,
+              left: rest.labelLeft + Pr * 0.16,
+              top: rest.labelTop,
+              transform:
+                `${labelMove}${glide(labelMoving || wordsMoving)}`.trim() ||
+                undefined,
+              transformOrigin: `0 calc(100% - ${Pr * 0.16}px)`,
+              height: labelRows * Pr,
               display: "flex",
               flexWrap: "wrap",
               alignContent: "flex-end",
-              paddingBottom: P * 0.16,
-              width: labelCols * P - P * 0.32,
+              paddingBottom: Pr * 0.16,
+              width: labelCols * Pr - Pr * 0.32,
               fontFamily,
               fontVariationSettings: `"wdth" 125, "wght" ${fontWeight}`,
-              fontSize: labelSize,
+              fontSize: labelSizeRest,
               lineHeight: 1.18,
               letterSpacing: `${TRACK_LABEL}em`,
               color: ink ?? c.ink,
@@ -416,7 +485,7 @@ export function ModuleCount({
                     display: "inline-block",
                     whiteSpace: "pre",
                     opacity: p,
-                    transform: `translateY(${((1 - p) * labelSize * 0.6).toFixed(2)}px)`,
+                    transform: `translateY(${((1 - p) * labelSizeRest * 0.6).toFixed(2)}px)`,
                   }}
                 >
                   {w}

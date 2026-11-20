@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const shoulders = loadFont("normal", {
   weights: ["400", "500"],
@@ -198,6 +199,8 @@ function splitWords(s: string) {
   return s.split(/\s+/).filter(Boolean);
 }
 
+const midway = (p: number) => p > 0 && p < 1;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -229,6 +232,7 @@ export function PlainLicense({
   speed = 1,
   theme = "dark",
 }: PlainLicenseProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -302,26 +306,50 @@ export function PlainLicense({
     scales.push(Math.max(1, Math.min(boxW / maxW, boxH / h, maxS / s0)));
   }
 
-  const moveP = (k: number) =>
-    interpolate(t, [S(k) + 16, S(k) + 34], [0, 1], {
+  const moveP = (k: number, tt = t) =>
+    interpolate(tt, [S(k) + 16, S(k) + 34], [0, 1], {
       ...CLAMP,
       easing: EASE_MOVE,
     });
-  const lerpState = (get: (k: number) => number) => {
+  const lerpState = (get: (k: number) => number, tt = t) => {
     let v = get(0);
     for (let k = 0; k < n; k++) {
-      const p = moveP(k);
+      const p = moveP(k, tt);
       if (p <= 0) break;
       v = get(k) + (get(k + 1) - get(k)) * p;
     }
     return v;
   };
-  const zoomP = interpolate(t, [zoomAt, zoomAt + ZOOM], [0, 1], {
-    ...CLAMP,
-    easing: EASE_MOVE,
-  });
-  const preZoom = lerpState((k) => (k === n ? scales[n - 1] : scales[k]));
-  const scale = preZoom + (scales[n] - preZoom) * zoomP;
+  // A block is laid out where it finally rests and reaches each earlier
+  // place by a transform: layout rounds a baseline to whole pixels, so text
+  // eased by `top` clicks along, and text handed from a transform back to
+  // layout jumps by the rounding. The travel is exactly 0 once the last move
+  // lands, so the final frame is drawn as it always was.
+  const stateAnchor = (get: (k: number) => number) => {
+    const at = get(n);
+    let travel = get(0) - at;
+    for (let k = 0; k < n; k++) {
+      const p = moveP(k);
+      if (p <= 0) break;
+      travel = get(k + 1) - at + (get(k) - get(k + 1)) * (1 - p);
+    }
+    return { at, travel };
+  };
+  const reflowing = Array.from({ length: n }, (_, k) => moveP(k)).some(midway);
+  const scaleAt = (tt: number) => {
+    const zoomP = interpolate(tt, [zoomAt, zoomAt + ZOOM], [0, 1], {
+      ...CLAMP,
+      easing: EASE_MOVE,
+    });
+    const preZoom = lerpState((k) => (k === n ? scales[n - 1] : scales[k]), tt);
+    return preZoom + (scales[n] - preZoom) * zoomP;
+  };
+  const scale = scaleAt(t);
+  // The box scales from its top-left corner; a step of 1e-6 moves its far
+  // corner, ~1100px out, by a millipixel.
+  const zooming =
+    Math.abs(scaleAt(t + 1) - scale) > 1e-6 ||
+    Math.abs(scale - scaleAt(t - 1)) > 1e-6;
 
   const boxTop = (base: number) =>
     base - ((1 - m.asc - m.desc) / 2 + m.asc) * s0;
@@ -341,6 +369,7 @@ export function PlainLicense({
     color: string,
     opacity: number,
     dy: number,
+    moving: boolean,
   ) => (
     <div
       key={key}
@@ -356,7 +385,7 @@ export function PlainLicense({
         whiteSpace: "pre",
         color,
         opacity,
-        transform: `translateY(${dy.toFixed(2)}px)`,
+        transform: `translateY(${dy.toFixed(2)}px)${glide(moving && !zooming)}`,
       }}
     >
       {text}
@@ -367,7 +396,7 @@ export function PlainLicense({
   let rowIndex = 0;
   for (let i = 0; i < n; i++) {
     const st = S(i);
-    const top = lerpState((k) => tops[k][i]);
+    const { at: top, travel } = stateAnchor((k) => tops[k][i]);
     const mark = interpolate(t, [st, st + 8], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
@@ -393,7 +422,8 @@ export function PlainLicense({
               base,
               fg,
               p * (LEGAL_ALPHA + (1 - LEGAL_ALPHA) * mark) * (1 - out),
-              (1 - p) * s0 * 0.3 + out * s0 * 0.16,
+              (1 - p) * s0 * 0.3 + out * s0 * 0.16 + travel,
+              reflowing || midway(p) || midway(out),
             ),
           );
         });
@@ -425,7 +455,8 @@ export function PlainLicense({
             base,
             mix(hi, fg, cool),
             p,
-            (1 - p) * s0 * 0.28,
+            (1 - p) * s0 * 0.28 + travel,
+            reflowing || midway(p),
           ),
         );
       });
@@ -443,7 +474,12 @@ export function PlainLicense({
             width: boxW,
             height: boxH,
             transformOrigin: "0 0",
-            transform: `scale(${scale.toFixed(4)})`,
+            // Rounded only at rest: a scale stepped to 1e-4 while it moves
+            // would click the far text along by hand. The tilt pivots on
+            // the box's centre, not on the far-off origin.
+            transform: zooming
+              ? `translate(${boxW / 2}px, ${boxH / 2}px)${glide(true)} translate(${-boxW / 2}px, ${-boxH / 2}px) scale(${scale})`
+              : `scale(${scale.toFixed(4)})`,
           }}
         >
           {nodes}

@@ -1,5 +1,7 @@
 import { Easing, interpolate } from "remotion";
 
+export { useGlide } from "@/lib/remocn/glide";
+
 export const BRAND_GUIDELINES_FPS = 60;
 export const BRAND_GUIDELINES_FRAMES = 1072;
 export const BRAND_GUIDELINES_WIDTH = 1920;
@@ -27,6 +29,9 @@ export function slide(frame: number, from: number, to: number) {
     extrapolateRight: "clamp",
   });
 }
+
+/** True on the frames where a clamped tween is on its way. */
+export const midway = (p: number) => p > 0 && p < 1;
 
 const segmenter = new Intl.Segmenter("en", { granularity: "grapheme" });
 export const graphemes = (text: string) =>

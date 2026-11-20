@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -77,6 +78,8 @@ const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 const MORPH = { damping: 200 };
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const SYMBOLS: Record<string, string> = {
   USD: "$",
@@ -482,7 +485,9 @@ export function MoneySend({
   ground,
   groundParams,
 }: MoneySendProps) {
-  const frame = Math.max(0, useCurrentFrame() - delay);
+  const glide = useGlide();
+  const rawFrame = useCurrentFrame();
+  const frame = Math.max(0, rawFrame - delay);
   const { fps, width, height } = useVideoConfig();
   const f = frame * speed;
   const dark = theme !== "light";
@@ -496,11 +501,24 @@ export function MoneySend({
   const phoneCx = tall ? W / 2 : W * 0.665;
   const phoneCy = tall ? H - 36 - (BH * k) / 2 : H / 2;
 
+  const spAt = (
+    t: number,
+    at: number,
+    config: typeof CARD | typeof MORPH = CARD,
+  ) => spring({ frame: t - at, fps, config });
   const sp = (at: number, config: typeof CARD | typeof MORPH = CARD) =>
-    spring({ frame: f - at, fps, config });
-  const pressAt = (at: number) =>
-    spring({ frame: f - at, fps, config: CHIP }) -
-    spring({ frame: f - at - 4, fps, config: CHIP });
+    spAt(f, at, config);
+  const pressAtT = (t: number, at: number) =>
+    spring({ frame: t - at, fps, config: CHIP }) -
+    spring({ frame: t - at - 4, fps, config: CHIP });
+  const pressAt = (at: number) => pressAtT(f, at);
+  // Whether a value of time is moving on this frame: springs overshoot and
+  // trail off, so it is read against the neighbouring frames instead of a
+  // progress. Nothing moves while `delay` holds the first frame.
+  const stirs = (at: (t: number) => number, eps = 1e-5) =>
+    rawFrame >= delay &&
+    (Math.abs(at(f + speed) - at(f)) > eps ||
+      Math.abs(at(f) - at(f - speed)) > eps);
 
   const digits = String(Math.max(1, Math.round(amount))).slice(0, 6);
   const symbol = SYMBOLS[currency] ?? "";
@@ -579,26 +597,39 @@ export function MoneySend({
     clamp,
   );
   const touchPress = Math.max(...presses.map((p) => pressAt(p.t)));
+  const touchHome = presses[presses.length - 1];
 
   const kbOut = interpolate(f, [KB_SWAP, KB_SWAP + 8], [0, 1], {
     ...clamp,
     easing: EXIT,
   });
-  const qIn = f >= KB_SWAP + 5 ? sp(KB_SWAP + 5, MORPH) : 0;
+  const qInAt = (t: number) =>
+    t >= KB_SWAP + 5 ? spAt(t, KB_SWAP + 5, MORPH) : 0;
+  const qIn = qInAt(f);
   const fly = sp(FLY, MORPH);
-  const kbDown = interpolate(f, [SEND_TAP + 2, SEND_TAP + 11], [0, 1], {
-    ...clamp,
-    easing: ENTER,
-  });
-  const qY = (1 - qIn) * (SH - KB_TOP) + kbDown * (SH - KB_TOP);
+  const kbDownAt = (t: number) =>
+    interpolate(t, [SEND_TAP + 2, SEND_TAP + 11], [0, 1], {
+      ...clamp,
+      easing: ENTER,
+    });
+  const qYAt = (t: number) =>
+    (1 - qInAt(t)) * (SH - KB_TOP) + kbDownAt(t) * (SH - KB_TOP);
+  const qY = qYAt(f);
   const caps = nLetters === 0 && word[0] === word[0]?.toUpperCase();
   const lastLetter = nLetters - 1;
 
-  const rise = spring({ frame: f, fps, config: HEAVY });
-  const camS = interpolate(f, [16, 70, FLY, FLY + 50], [1, 1.03, 1.03, 1.05], {
-    ...clamp,
-    easing: CAMERA,
-  });
+  const riseAt = (t: number) => spring({ frame: t, fps, config: HEAVY });
+  const camAt = (t: number) =>
+    interpolate(t, [16, 70, FLY, FLY + 50], [1, 1.03, 1.03, 1.05], {
+      ...clamp,
+      easing: CAMERA,
+    });
+  const rise = riseAt(f);
+  const camS = camAt(f);
+  // Everything on the screen rides the phone, so the tolerances are those of
+  // a line 400px from its center under the slow camera push.
+  const phoneMoving =
+    stirs((t) => riseAt(t) * H * 0.9, 1e-4) || stirs(camAt, 1e-7);
 
   const enabled = interpolate(f, [keyTimes[0], keyTimes[0] + 6], [0, 1], {
     ...clamp,
@@ -641,37 +672,41 @@ export function MoneySend({
     ...clamp,
     easing: LIGHT,
   });
-  const title = sp(PROG + 4);
   const swap = sp(DONE + 4, CHIP);
-  const sub = sp(DONE + 8);
-  const done = sp(DONE + 24);
   const receipt: [string, string][] = [
     ["Amount", money(Number(digits))],
     ["From", `Main · ${currency}`],
     ["Arrives", "Instantly"],
     ["Fee", money(0)],
   ];
-  const rows = receipt.map((_, i) => sp(DONE + 12 + i * 3));
-  const enter = (v: number, dy = 14): React.CSSProperties => ({
-    opacity: Math.min(1, v * 1.4),
-    transform: `translateY(${(1 - v) * dy}px)`,
-  });
+  const rowAt = (i: number) => DONE + 12 + i * 3;
+  const enter = (at: number, dy = 14): React.CSSProperties => {
+    const v = sp(at);
+    return {
+      opacity: Math.min(1, v * 1.4),
+      transform: `translateY(${(1 - v) * dy}px)${glide(stirs((t) => spAt(t, at)))}`,
+    };
+  };
 
   const beats = [0, NOTE_TAP, PROG];
   const copyLine = (i: number) => {
     const inAt = beats[i] + (i === 0 ? 6 : 0);
     const outAt = beats[i + 1];
-    const pin = interpolate(f, [inAt, inAt + 14], [0, 1], {
-      ...clamp,
-      easing: ENTER,
-    });
-    const pout =
+    const pinAt = (t: number) =>
+      interpolate(t, [inAt, inAt + 14], [0, 1], {
+        ...clamp,
+        easing: ENTER,
+      });
+    const poutAt = (t: number) =>
       outAt === undefined
         ? 0
-        : interpolate(f, [outAt - 2, outAt + 6], [0, 1], {
+        : interpolate(t, [outAt - 2, outAt + 6], [0, 1], {
             ...clamp,
             easing: EXIT,
           });
+    const pin = pinAt(f);
+    const pout = poutAt(f);
+    const shiftAt = (t: number) => (1 - pinAt(t)) * 70 - poutAt(t) * 50;
     if (pin <= 0 || pout >= 1) return null;
     return (
       <div
@@ -681,7 +716,7 @@ export function MoneySend({
           left: 0,
           right: 0,
           top: 0,
-          transform: `translateY(${(1 - pin) * 70 - pout * 50}%)`,
+          transform: `translateY(${shiftAt(f)}%)${glide(stirs(shiftAt, 1e-4))}`,
           opacity: pin * (1 - pout),
         }}
       >
@@ -772,7 +807,7 @@ export function MoneySend({
               top: phoneCy - BH / 2,
               width: BW,
               height: BH,
-              transform: `translateY(${(1 - rise) * H * 0.9}px) scale(${k * camS})`,
+              transform: `translateY(${(1 - rise) * H * 0.9}px) scale(${k * camS})${glide(phoneMoving)}`,
             }}
           >
             <Phone c={c}>
@@ -788,7 +823,7 @@ export function MoneySend({
                   alignItems: "center",
                   justifyContent: "space-between",
                   opacity: 1 - away,
-                  transform: `translateY(${-away * 8}px)`,
+                  transform: `translateY(${-away * 8}px)${glide(midway(away))}`,
                 }}
               >
                 <Glyph d={ICON.back} size={24} color={c.text} />
@@ -815,13 +850,15 @@ export function MoneySend({
                   letterSpacing: "-0.05em",
                   fontVariantNumeric: "tabular-nums",
                   color: nTyped ? c.text : c.muted,
-                  transform: `translateY(${fly * (118 - AMOUNT_Y)}px) scale(${1 - fly * 0.5})`,
+                  transform: `translateY(${fly * (118 - AMOUNT_Y)}px) scale(${1 - fly * 0.5})${glide(stirs((t) => spAt(t, FLY, MORPH), 1e-6))}`,
                   zIndex: 5,
                 }}
               >
                 <span>{symbol}</span>
                 {amountChars.map(({ ch, di }, i) => {
-                  const pop = nTyped && di >= 0 ? sp(keyTimes[di], CHIP) : 1;
+                  const popAt = (t: number) => spAt(t, keyTimes[di], CHIP);
+                  const popping = nTyped > 0 && di >= 0;
+                  const pop = popping ? popAt(f) : 1;
                   return (
                     <span
                       key={i}
@@ -829,7 +866,7 @@ export function MoneySend({
                         display: "inline-block",
                         width: `${(ch === "," ? 0.26 : 0.56) * Math.min(1, pop * 1.3)}em`,
                         textAlign: "center",
-                        transform: `translateY(${(1 - pop) * 18}px) scale(${0.88 + pop * 0.12})`,
+                        transform: `translateY(${(1 - pop) * 18}px) scale(${0.88 + pop * 0.12})${glide(popping && stirs(popAt))}`,
                         opacity: Math.min(1, pop * 1.6),
                       }}
                     >
@@ -857,7 +894,7 @@ export function MoneySend({
                   display: "flex",
                   justifyContent: "center",
                   opacity: 1 - away,
-                  transform: `translateY(${-away * 10}px)`,
+                  transform: `translateY(${-away * 10}px)${glide(midway(away))}`,
                 }}
               >
                 <div
@@ -889,7 +926,7 @@ export function MoneySend({
                   borderRadius: 14,
                   background: c.field,
                   opacity: 1 - away,
-                  transform: `translateY(${-away * 10}px) scale(${1 - pressAt(NOTE_TAP) * 0.03})`,
+                  transform: `translateY(${-away * 10}px) scale(${1 - pressAt(NOTE_TAP) * 0.03})${glide(midway(away) || stirs((t) => pressAtT(t, NOTE_TAP)))}`,
                 }}
               >
                 <span
@@ -901,7 +938,7 @@ export function MoneySend({
                     lineHeight: "22px",
                     color: c.muted,
                     transformOrigin: "0 0",
-                    transform: `translateY(${-lbl * 10}px) scale(${1 - lbl * 0.3})`,
+                    transform: `translateY(${-lbl * 10}px) scale(${1 - lbl * 0.3})${glide(midway(lbl))}`,
                   }}
                 >
                   {notePlaceholder}
@@ -912,6 +949,10 @@ export function MoneySend({
                       position: "absolute",
                       left: 16,
                       top: 26,
+                      // One line tall before the first letter too: with the
+                      // caret alone the row was 21px, and the first letter
+                      // dropped the centred caret by half a pixel.
+                      height: 22,
                       fontSize: 17,
                       lineHeight: "22px",
                       color: c.text,
@@ -926,7 +967,7 @@ export function MoneySend({
                         style={{
                           display: "inline-block",
                           marginLeft: 5,
-                          transform: `scale(${0.5 + emojiIn * 0.5})`,
+                          transform: `scale(${0.5 + emojiIn * 0.5})${glide(stirs((t) => spAt(t, SUGG_TAP, CHIP)))}`,
                           opacity: Math.min(1, emojiIn * 2),
                         }}
                       >
@@ -985,7 +1026,7 @@ export function MoneySend({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  transform: `translateY(${-away * 10}px) scale(${1 - sendPress * 0.04})`,
+                  transform: `translateY(${-away * 10}px) scale(${1 - sendPress * 0.04})${glide(midway(away) || stirs((t) => pressAtT(t, SEND_TAP)))}`,
                   opacity: 1 - away,
                 }}
               >
@@ -1034,7 +1075,7 @@ export function MoneySend({
                           position: "relative",
                           fontSize: 30,
                           fontWeight: 300,
-                          transform: `scale(${1 - p * 0.04})`,
+                          transform: `scale(${1 - p * 0.04})${glide(idx >= 0 && stirs((t) => pressAtT(t, keyTimes[idx])))}`,
                         }}
                       >
                         {d === "." ? "·" : d}
@@ -1052,7 +1093,7 @@ export function MoneySend({
                     top: KB_TOP,
                     bottom: 0,
                     background: c.kb,
-                    transform: `translateY(${qY}px)`,
+                    transform: `translateY(${qY}px)${glide(stirs(qYAt, 1e-4))}`,
                   }}
                 >
                   <div
@@ -1196,7 +1237,7 @@ export function MoneySend({
                       top: RING_Y - 60,
                       width: 120,
                       height: 120,
-                      transform: `scale(${0.86 + ringIn * 0.14})`,
+                      transform: `scale(${0.86 + ringIn * 0.14})${glide(stirs((t) => spAt(t, PROG, CARD)))}`,
                       opacity: Math.min(1, ringIn * 1.6),
                     }}
                   >
@@ -1289,14 +1330,14 @@ export function MoneySend({
                       fontWeight: 300,
                       letterSpacing: "-0.03em",
                       color: c.text,
-                      ...enter(title),
+                      ...enter(PROG + 4),
                     }}
                   >
                     <span
                       style={{
                         display: "inline-block",
                         opacity: f < DONE + 4 ? 0.55 : Math.min(1, swap * 1.5),
-                        transform: `scale(${f < DONE + 4 ? 1 : 0.92 + swap * 0.08})`,
+                        transform: `scale(${f < DONE + 4 ? 1 : 0.92 + swap * 0.08})${glide(f >= DONE + 4 && stirs((t) => spAt(t, DONE + 4, CHIP)))}`,
                       }}
                     >
                       {f < DONE + 4
@@ -1313,7 +1354,7 @@ export function MoneySend({
                       textAlign: "center",
                       fontSize: 15,
                       color: c.muted,
-                      ...enter(sub),
+                      ...enter(DONE + 8),
                     }}
                   >
                     {note} · Just now
@@ -1327,7 +1368,7 @@ export function MoneySend({
                       borderRadius: 16,
                       background: c.field,
                       padding: "2px 16px",
-                      opacity: Math.min(1, rows[0] * 2),
+                      opacity: Math.min(1, sp(rowAt(0)) * 2),
                     }}
                   >
                     {receipt.map(([kk, v], i) => (
@@ -1340,7 +1381,7 @@ export function MoneySend({
                           justifyContent: "space-between",
                           fontSize: 15,
                           boxShadow: i ? `inset 0 1px 0 ${c.hair}` : "none",
-                          ...enter(rows[i], 10),
+                          ...enter(rowAt(i), 10),
                         }}
                       >
                         <span style={{ color: c.muted }}>{kk}</span>
@@ -1363,7 +1404,7 @@ export function MoneySend({
                       bottom: 40,
                       display: "flex",
                       gap: 10,
-                      ...enter(done, 24),
+                      ...enter(DONE + 24, 24),
                     }}
                   >
                     <div
@@ -1400,8 +1441,11 @@ export function MoneySend({
               <div
                 style={{
                   position: "absolute",
-                  left: touch.x - 22,
-                  top: touch.y - 22,
+                  // Laid out on its last tap and carried by a transform: layout
+                  // rounds a box to whole pixels, so a dot led around by
+                  // `left`/`top` steps instead of gliding.
+                  left: touchHome.x - 22,
+                  top: touchHome.y - 22,
                   width: 44,
                   height: 44,
                   borderRadius: 22,
@@ -1409,7 +1453,7 @@ export function MoneySend({
                   boxShadow:
                     "inset 0 0 0 1.5px rgba(255,255,255,0.7), 0 2px 10px rgba(0,0,0,0.2)",
                   opacity: touchOpacity,
-                  transform: `scale(${1 - touchPress * 0.12})`,
+                  transform: `translate(${touch.x - touchHome.x}px, ${touch.y - touchHome.y}px) scale(${1 - touchPress * 0.12})`,
                   zIndex: 35,
                 }}
               />

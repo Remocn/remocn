@@ -7,11 +7,14 @@ import type {
 import type React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { ShaderGrainGradient } from "@/components/remocn/shader-grain-gradient";
+import { useGlide } from "@/lib/remocn/glide";
 
 const clampOpts = {
   extrapolateLeft: "clamp" as const,
   extrapolateRight: "clamp" as const,
 };
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const DEFAULT_COLORS = ["#3a3a52", "#4a4a68", "#8f88ae"];
 
@@ -33,6 +36,7 @@ const WaveWipePresentation: React.FC<
   presentationDirection,
   passedProps,
 }) => {
+  const glide = useGlide();
   const {
     colors = DEFAULT_COLORS,
     colorBack = "#141318",
@@ -51,10 +55,10 @@ const WaveWipePresentation: React.FC<
         ...clampOpts,
         easing: Easing.bezier(0.42, 0, 0.58, 1),
       }),
-      translate: `0 ${interpolate(p, [0, 0.7], [0, -70], {
+      transform: `translateY(${interpolate(p, [0, 0.7], [0, -70], {
         ...clampOpts,
         easing: Easing.in(Easing.cubic),
-      })}%`,
+      })}%)${glide(midway(p / 0.7))}`,
     };
     return <AbsoluteFill style={exitStyle}>{children}</AbsoluteFill>;
   }
@@ -87,7 +91,11 @@ const WaveWipePresentation: React.FC<
           offsetY={drift}
         />
       </AbsoluteFill>
-      <AbsoluteFill style={{ translate: `0 ${rise}%` }}>
+      <AbsoluteFill
+        style={{
+          transform: `translateY(${rise}%)${glide(midway((p - 0.4) / 0.6))}`,
+        }}
+      >
         {children}
       </AbsoluteFill>
     </AbsoluteFill>

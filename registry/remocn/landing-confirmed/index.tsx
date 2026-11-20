@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -136,6 +137,8 @@ const THEMES = {
   },
 } as const;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function ramp(t: number, from: number, len: number) {
   return interpolate(t, [from, from + len], [0, 1], CLAMP);
 }
@@ -205,6 +208,7 @@ export function LandingConfirmed({
   theme = "dark",
   speed = 1,
 }: LandingConfirmedProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -423,7 +427,7 @@ export function LandingConfirmed({
             left: numCX,
             top: numCY,
             opacity: intro * descentOut,
-            transform: `translate(-50%, -50%) translateY(${(1 - intro) * -40 * u}px) scale(${1 + 0.05 * stopKick})`,
+            transform: `translate(-50%, -50%) translateY(${(1 - intro) * -40 * u}px) scale(${1 + 0.05 * stopKick})${glide(midway(intro) || stopKick > 0)}`,
           }}
         >
           <div
@@ -484,7 +488,7 @@ export function LandingConfirmed({
               textTransform: "uppercase",
               color: fg,
               whiteSpace: "nowrap",
-              transform: `translateY(-50%) translateY(${-exit * 110 * u}px) scale(${(1.22 - 0.22 * slam) * (1 + 0.02 * slamHit) * (1 - 0.12 * exit)})`,
+              transform: `translateY(-50%) translateY(${-exit * 110 * u}px) scale(${(1.22 - 0.22 * slam) * (1 + 0.02 * slamHit) * (1 - 0.12 * exit)})${glide(midway(slam) || slamHit > 0 || midway(exit))}`,
               opacity: ramp(slam, 0, 0.2) * (1 - exit),
             }}
           >
@@ -503,7 +507,7 @@ export function LandingConfirmed({
             fontSize: 20 * u,
             letterSpacing: "0.18em",
             opacity: labelIn,
-            transform: `translateY(${(1 - labelIn) * 14 * u}px)`,
+            transform: `translateY(${(1 - labelIn) * 14 * u}px)${glide(midway(labelIn))}`,
           }}
         >
           {confirm}
@@ -537,7 +541,7 @@ export function LandingConfirmed({
               backgroundClip: "text",
               color: "transparent",
               opacity: ramp(titleIn, 0, 0.25),
-              transform: `scale(${(1.2 - 0.2 * titleIn) * (1 + 0.02 * titleHit)})`,
+              transform: `scale(${(1.2 - 0.2 * titleIn) * (1 + 0.02 * titleHit)})${glide(midway(titleIn) || titleHit > 0)}`,
             }}
           >
             {title}
@@ -554,7 +558,7 @@ export function LandingConfirmed({
               whiteSpace: "nowrap",
               marginTop: 4 * u,
               opacity: subIn,
-              transform: `translateY(${(1 - subIn) * 28 * u}px)`,
+              transform: `translateY(${(1 - subIn) * 28 * u}px)${glide(midway(subIn))}`,
             }}
           >
             {subtitle}
@@ -571,7 +575,7 @@ export function LandingConfirmed({
             display: "flex",
             justifyContent: "center",
             opacity: logoIn,
-            transform: `translateY(${(1 - logoIn) * 18 * u}px)`,
+            transform: `translateY(${(1 - logoIn) * 18 * u}px)${glide(midway(logoIn))}`,
           }}
         >
           {logo ?? <RemocnLogo fontSize={40 * u} color={fg} />}

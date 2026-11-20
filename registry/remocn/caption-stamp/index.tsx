@@ -12,6 +12,7 @@ import {
   normalizeCaptionWord,
   useCaptions,
 } from "@/lib/remocn/caption-core";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface CaptionStampProps extends CaptionBaseProps {
   keywords?: string[];
@@ -31,6 +32,8 @@ const BORDER_EM = 0.06;
 const RADIUS_EM = 0.08;
 const LEGIBILITY_SHADOW =
   "0 2px 3px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.35)";
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const enterEasing = Easing.bezier(0.2, 0.8, 0.2, 1);
 const slamEasing = Easing.in(Easing.quad);
@@ -67,6 +70,7 @@ export function CaptionStamp({
   shadow = true,
   className,
 }: CaptionStampProps) {
+  const glide = useGlide();
   const filterId = `caption-stamp-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const state = useCaptions({
     captions,
@@ -117,7 +121,7 @@ export function CaptionStamp({
         lineHeight: 1.2,
         textAlign: "center",
         opacity: Math.min(enter, exit),
-        transform: `translateY(${(1 - enter) * RISE_EM}em)`,
+        transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
       }}
     >
       {texture && (

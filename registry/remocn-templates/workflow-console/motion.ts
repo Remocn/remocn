@@ -1,5 +1,7 @@
 import { Easing, interpolate } from "remotion";
 
+export { useGlide } from "@/lib/remocn/glide";
+
 export const WORKFLOW_FPS = 60;
 export const WORKFLOW_FRAMES = 2810;
 export const WORKFLOW_WIDTH = 1920;
@@ -44,6 +46,10 @@ export function move(
     easing,
   });
 }
+
+/** A clamped progress that still changes the transform it drives. */
+export const midway = (p: number) => p > 0 && p < 1;
+
 export function typed(text: string, t: number, from: number, to: number) {
   return Array.from(text)
     .slice(0, Math.floor(Array.from(text).length * ramp(t, from, to)))

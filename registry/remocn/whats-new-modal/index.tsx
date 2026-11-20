@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -355,20 +356,25 @@ function Art({
     const left = cx - pw / 2;
     const p = pop(0);
     const stretch = spring({ frame: t - 22, fps: 30, config: SPR.morph });
-    const head = interpolate(t, [6, 60], [0.08, 0.86], {
+    const HEAD_END = 0.86;
+    const head = interpolate(t, [6, 60], [0.08, HEAD_END], {
       ...CL,
       easing: EASE.move,
     });
     const scale = (pw - 32) / 15;
-    const rows: [string, number, number, boolean][][] = [
+    const rowsAt = (s: number): [string, number, number, boolean][][] => [
       [
         ["Intro", 0, 2.6, false],
-        ["Product UI", 2.8, 4.6 + 1.2 * stretch, true],
-        ["Pricing", 7.6 + 1.2 * stretch, 3.4, false],
+        ["Product UI", 2.8, 4.6 + 1.2 * s, true],
+        ["Pricing", 7.6 + 1.2 * s, 3.4, false],
       ],
-      [["Voiceover", 0.6, 9.4 + 1.2 * stretch, false]],
+      [["Voiceover", 0.6, 9.4 + 1.2 * s, false]],
       [["Music", 0, 14.6, false]],
     ];
+    const rows = rowsAt(stretch);
+    // Clips pushed along by the stretch are laid out where it leaves them and
+    // ride there by transform: layout would round their edges to whole pixels.
+    const settled = rowsAt(1);
     return (
       <div
         style={{
@@ -405,13 +411,16 @@ function Art({
         {rows.map((row, r) =>
           row.map(([label, x, len, hero], i) => {
             const grow = pop(4 + r * 3 + i * 2, SPR.card);
+            const home = settled[r][i][1];
+            const ride = settle((x - home) * scale);
             return (
               <div
                 key={label}
                 style={{
                   position: "absolute",
-                  left: 16 + x * scale,
+                  left: 16 + home * scale,
                   top: 46 + r * 46,
+                  transform: ride ? `translateX(${ride}px)` : undefined,
                   width: Math.max(0, len * scale * clamp01(grow) - 4),
                   height: 36,
                   borderRadius: 8,
@@ -441,7 +450,12 @@ function Art({
         <div
           style={{
             position: "absolute",
-            left: 16 + head * (pw - 32),
+            // Laid out where it stops and moved by transform: layout rounds
+            // the playhead's edges to whole pixels, so `left` stepped it.
+            left: 16 + HEAD_END * (pw - 32),
+            transform: settle((head - HEAD_END) * (pw - 32))
+              ? `translateX(${(head - HEAD_END) * (pw - 32)}px)`
+              : undefined,
             top: 36,
             width: 1.5,
             bottom: 10,
@@ -700,6 +714,12 @@ function DashboardMock({
   );
 }
 
+/** Whether `px(f)`, a value in pixels, moves at frame `f`. */
+const stirs = (px: (f: number) => number, f: number) =>
+  Math.abs(px(f + 1) - px(f)) > 1e-3 || Math.abs(px(f) - px(f - 1)) > 1e-3;
+/** A leftover offset under a thousandth of a pixel is rest. */
+const settle = (v: number) => (Math.abs(v) < 1e-3 ? 0 : v);
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -737,6 +757,7 @@ export function WhatsNewModal({
   ground,
   groundParams,
 }: WhatsNewModalProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width;
@@ -746,8 +767,10 @@ export function WhatsNewModal({
   const dark = theme === "dark";
   const pal = palette(dark);
   const fg = ink ?? pal.text;
+  const spAt = (f: number, at: number, config: Record<string, number>) =>
+    spring({ frame: f - at, fps, config });
   const sp = (at: number, config: Record<string, number>) =>
-    spring({ frame: frame - at, fps, config });
+    spAt(frame, at, config);
 
   const n = Math.max(1, slides.length);
   const swipeAt = Array.from({ length: n }, (_, i) => FIRST + i * dwell);
@@ -773,7 +796,20 @@ export function WhatsNewModal({
   const kick = swipeAt
     .slice(1)
     .reduce((acc, t) => acc + Math.sin(clamp01((frame - t) / 16) * Math.PI), 0);
-  const cam = 1 + 0.03 * tween(frame, 6, PRESS, EASE.camera);
+  const camAt = (f: number) => 1 + 0.03 * tween(f, 6, PRESS, EASE.camera);
+  const cam = camAt(frame);
+  // The camera carries the window and the modal, so its tilt covers their
+  // text; each of them tilts on its own only while the camera holds still.
+  const camMoving = stirs((f) => camAt(f) * 1000, frame);
+  const winMoving =
+    !camMoving && stirs((f) => spAt(f, 0, SPR.heavy) * 36, frame);
+  const modalMoving =
+    !camMoving && stirs((f) => spAt(f, 6, SPR.card) * (20 + 0.04 * MH), frame);
+  // Layout rounds a box to whole pixels, so slides swiped by `left` click
+  // sideways; they are laid out on the nearest stop and the swipe there is a
+  // transform.
+  const stop = Math.round(pos);
+  const swipe = settle((stop - pos) * (MW - 16));
 
   const ctaW = slides[n - 1]?.cta ? 148 : 112;
   const ctaPt = { x: mx + MW - 28 - ctaW / 2 + 6, y: my + MH - 46 };
@@ -831,7 +867,7 @@ export function WhatsNewModal({
             style={{
               position: "absolute",
               inset: 0,
-              transform: `scale(${cam})`,
+              transform: `scale(${cam})${glide(camMoving)}`,
               transformOrigin: `${SW / 2}px ${SH / 2}px`,
             }}
           >
@@ -846,7 +882,7 @@ export function WhatsNewModal({
                 overflow: "hidden",
                 boxShadow: pal.winShadow,
                 opacity: winOp,
-                transform: `translateY(${(1 - winIn) * 36}px) scale(${1 - 0.015 * dim})`,
+                transform: `translateY(${(1 - winIn) * 36}px) scale(${1 - 0.015 * dim})${glide(winMoving)}`,
               }}
             >
               <div
@@ -917,7 +953,7 @@ export function WhatsNewModal({
                 background: pal.modal,
                 boxShadow: pal.modalShadow,
                 opacity: modalOp,
-                transform: `translateY(${(1 - modalIn) * 20}px) scale(${0.96 + 0.04 * modalIn})`,
+                transform: `translateY(${(1 - modalIn) * 20}px) scale(${0.96 + 0.04 * modalIn})${glide(modalMoving)}`,
               }}
             >
               <div
@@ -941,8 +977,9 @@ export function WhatsNewModal({
                       key={s.title}
                       style={{
                         position: "absolute",
-                        left: x,
+                        left: (i - stop) * (MW - 16),
                         top: 0,
+                        transform: swipe ? `translateX(${swipe}px)` : undefined,
                         width: MW - 16,
                         height: ART_H,
                       }}
@@ -1147,11 +1184,13 @@ export function WhatsNewModal({
               aria-hidden
               style={{
                 position: "absolute",
-                left: cur.x - 2,
-                top: cur.y - 2,
+                // Laid out where it comes to rest; the travel there is a
+                // transform, for the same reason as the slides.
+                left: ctaPt.x - 2,
+                top: ctaPt.y - 2,
                 opacity: cursorOp,
                 transformOrigin: "2px 2px",
-                transform: `scale(${1 - 0.04 * press})`,
+                transform: `translate(${settle(cur.x - ctaPt.x)}px, ${settle(cur.y - ctaPt.y)}px) scale(${1 - 0.04 * press})`,
                 filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.3))",
                 overflow: "visible",
               }}

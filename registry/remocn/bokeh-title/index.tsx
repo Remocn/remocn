@@ -14,6 +14,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadSans("normal", {
   weights: ["400", "500"],
@@ -231,10 +232,20 @@ function Grain({ opacity }: { opacity: number }) {
 const HEX =
   "polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0% 50%)";
 
-/** One out-of-focus light: a disc with a faintly brighter rim, softened by blur. */
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/**
+ * One out-of-focus light: a disc with a faintly brighter rim, softened by blur.
+ *
+ * `left`/`top` is where layout keeps the box; `dx`/`dy` is how far it has
+ * travelled from there. Layout rounds a box to whole pixels, so a light eased
+ * by `left`/`top` crawls in one-pixel steps; the travel is a transform instead.
+ */
 function Light({
-  x,
-  y,
+  left,
+  top,
+  dx,
+  dy,
   size,
   blur,
   color,
@@ -243,8 +254,10 @@ function Light({
   shape,
   rim,
 }: {
-  x: number;
-  y: number;
+  left: number;
+  top: number;
+  dx: number;
+  dy: number;
   size: number;
   blur: number;
   color: string;
@@ -257,10 +270,11 @@ function Light({
     <div
       style={{
         position: "absolute",
-        left: x - size / 2,
-        top: y - size / 2,
+        left,
+        top,
         width: size,
         height: size,
+        transform: `translate(${dx}px, ${dy}px)`,
         opacity,
         mixBlendMode: blend,
         filter: blur > 0.3 ? `blur(${blur}px)` : undefined,
@@ -317,6 +331,7 @@ export function BokehTitle({
   speed = 1,
   theme = "dark",
 }: BokehTitleProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = height / 720;
@@ -377,11 +392,14 @@ export function BokehTitle({
     // lights gather first, then sharpen: reads as a focus pull, not a swarm
     const ease = 1 - (1 - focus) ** 2.4;
     const sharp = focus ** 1.7;
-    const x = sx + (tx - sx) * ease + dx * (1 - ease);
-    const y = sy + (ty - sy) * ease + dy * (1 - ease);
     const big = (22 + (1 - d) ** 2 * 96) * u * crowd;
     const small = unit * built.dot;
     const size = big + (small - big) * sharp;
+    // The box is laid out where it sits in focus, and both the way there and
+    // the shrink around its centre are travel: exactly zero once it is sharp.
+    const grown = ((big - small) * (1 - sharp)) / 2;
+    const offX = (sx - tx + dx) * (1 - ease) - grown;
+    const offY = (sy - ty + dy) * (1 - ease) - grown;
     const blur = (big * 0.075 + 2 * u) * (1 - sharp) ** 1.2;
     const focusColor = interpolateColors(
       tg.g,
@@ -397,8 +415,10 @@ export function BokehTitle({
     lights.push(
       <Light
         key={`p${i}`}
-        x={x}
-        y={y}
+        left={tx - small / 2}
+        top={ty - small / 2}
+        dx={offX}
+        dy={offY}
         size={size}
         blur={blur}
         color={color}
@@ -418,9 +438,14 @@ export function BokehTitle({
     const x0 = hash(i * 17 + 401) * width * 1.1 - width * 0.05;
     const y0 = hash(i * 19 + 402) * height * 1.1 - height * 0.05;
     const par = (0.6 + near * 1.4) * u;
-    const x = x0 - 90 * drift * par + Math.sin(t / 70 + i * 2.1) * 5 * par;
-    const y = y0 - 20 * drift * par;
-    const size = (40 + near ** 1.6 * 190) * u * (1 + focus * 0.18);
+    const wide = (40 + near ** 1.6 * 190) * u;
+    const size = wide * (1 + focus * 0.18);
+    // Laid out at its starting place; the drift and the bloom around its
+    // centre are travel.
+    const grown = (size - wide) / 2;
+    const offX =
+      -90 * drift * par + Math.sin(t / 70 + i * 2.1) * 5 * par - grown;
+    const offY = -20 * drift * par - grown;
     const blur = (size * 0.06 + 3 * u) * (1 + focus * 0.6);
     const tint = hash(i * 23 + 403) < 0.08;
     const color = tint
@@ -434,8 +459,10 @@ export function BokehTitle({
     ambient.push(
       <Light
         key={`a${i}`}
-        x={x}
-        y={y}
+        left={x0 - wide / 2}
+        top={y0 - wide / 2}
+        dx={offX}
+        dy={offY}
         size={size}
         blur={blur}
         color={color}
@@ -492,7 +519,7 @@ export function BokehTitle({
               opacity: titleP,
               filter:
                 titleP < 0.98 ? `blur(${(1 - titleP) * 10 * u}px)` : undefined,
-              transform: `scale(${1.04 - titleP * 0.04})`,
+              transform: `scale(${1.04 - titleP * 0.04})${glide(midway(titleP))}`,
             }}
           >
             {lead ? `${lead} ` : ""}
@@ -517,7 +544,7 @@ export function BokehTitle({
                 letterSpacing: "-0.005em",
                 color: p.muted,
                 opacity: subP,
-                transform: `translateY(${(1 - subP) * 10 * u}px)`,
+                transform: `translateY(${(1 - subP) * 10 * u}px)${glide(midway(subP))}`,
               }}
             >
               {subIsBrand ? (

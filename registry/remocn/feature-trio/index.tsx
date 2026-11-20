@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const bricolage = loadBricolage("normal", {
   weights: ["500"],
@@ -126,6 +127,8 @@ const DEFAULT_ITEMS: FeatureTrioItem[] = [
   },
 ];
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -154,6 +157,7 @@ export function FeatureTrio({
   speed = 1,
   theme = "dark",
 }: FeatureTrioProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, durationInFrames } = useVideoConfig();
   const p = PALETTES[theme];
@@ -374,6 +378,12 @@ export function FeatureTrio({
             : heroFs;
           const soloY = (1 - rise) * 112 - leave * 112;
           const heroVisible = rise > 0 && leave < 1 && (last || frame < r0);
+          // The last title travels into its column while its font size
+          // shrinks. Layout rounds a baseline to whole pixels, so moving it by
+          // `left`/`top`/`fontSize` clicks; while it travels it is laid out
+          // where it lands and carried there by a transform. At rest it keeps
+          // the plain layout.
+          const travelling = last && resolve > 0 && resolve < 1;
           const heroDescOut = last
             ? interpolate(resolve, [0, 0.35], [1, 0], CLAMP)
             : interpolate(
@@ -390,18 +400,24 @@ export function FeatureTrio({
                   <div
                     style={{
                       position: "absolute",
-                      left: heroX,
-                      top: heroYNow,
-                      transform: "translate(-50%, -50%)",
+                      left: travelling ? c.x : heroX,
+                      top: travelling ? rowTitleY : heroYNow,
+                      transform: travelling
+                        ? `translate(${heroX - c.x}px, ${heroYNow - rowTitleY}px) translate(-50%, -50%) scale(${heroFsNow / rowFs})${glide(true)}`
+                        : "translate(-50%, -50%)",
                       overflow: resolve > 0 && last ? "visible" : "hidden",
-                      padding: `${heroFsNow * 0.08}px ${heroFsNow * 0.06}px ${heroFsNow * 0.14}px`,
+                      padding: travelling
+                        ? `${rowFs * 0.08}px ${rowFs * 0.06}px ${rowFs * 0.14}px`
+                        : `${heroFsNow * 0.08}px ${heroFsNow * 0.06}px ${heroFsNow * 0.14}px`,
                     }}
                   >
                     <div
                       style={{
                         ...titleStyle,
-                        fontSize: heroFsNow,
-                        transform: `translateY(${soloY}%)`,
+                        fontSize: travelling ? rowFs : heroFsNow,
+                        transform: `translateY(${soloY}%)${glide(
+                          !travelling && (midway(rise) || midway(leave)),
+                        )}`,
                       }}
                     >
                       {it.title}
@@ -422,7 +438,7 @@ export function FeatureTrio({
                       letterSpacing: "-0.01em",
                       color: p.muted,
                       opacity: descIn * heroDescOut,
-                      transform: `translateY(${(1 - descIn) * 12 * s - (1 - heroDescOut) * 10 * s}px)`,
+                      transform: `translateY(${(1 - descIn) * 12 * s - (1 - heroDescOut) * 10 * s}px)${glide(midway(descIn) || midway(heroDescOut))}`,
                       filter: `blur(${(1 - descIn) * 5 * s}px)`,
                     }}
                   >
@@ -447,7 +463,7 @@ export function FeatureTrio({
                     style={{
                       ...titleStyle,
                       fontSize: rowFs,
-                      transform: `translateY(${(1 - back) * 112}%)`,
+                      transform: `translateY(${(1 - back) * 112}%)${glide(midway(back))}`,
                     }}
                   >
                     {it.title}
@@ -472,7 +488,7 @@ export function FeatureTrio({
                     letterSpacing: "-0.005em",
                     color: p.muted,
                     opacity: rowDescIn,
-                    transform: `translateY(${(1 - rowDescIn) * 10 * s}px)`,
+                    transform: `translateY(${(1 - rowDescIn) * 10 * s}px)${glide(midway(rowDescIn))}`,
                     filter: `blur(${(1 - rowDescIn) * 4 * s}px)`,
                   }}
                 >

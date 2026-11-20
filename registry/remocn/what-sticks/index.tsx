@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const rubik = loadFont("normal", {
   weights: ["400", "500"],
@@ -161,6 +162,8 @@ function ScaleLayer({
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const hash = (i: number, salt: number) => {
   const x = Math.sin(i * 127.1 + salt * 311.7) * 43758.5453;
   return x - Math.floor(x);
@@ -181,6 +184,7 @@ export function WhatSticks({
   speed = 1,
   theme = "dark",
 }: WhatSticksProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -326,7 +330,7 @@ export function WhatSticks({
                 )
               : fg,
             opacity: (0.72 + (last ? 0.28 : 0)) * (1 - pout) * pin,
-            transform: `translateY(${((1 - pin) * slugH * 0.6).toFixed(2)}px)`,
+            transform: `translateY(${((1 - pin) * slugH * 0.6).toFixed(2)}px)${glide(midway(pin))}`,
           }}
         >
           {steps[s]}
@@ -376,14 +380,14 @@ export function WhatSticks({
           height: rows.length * rowH + F * 0.24,
           overflow: "hidden",
           opacity: alpha,
-          transform: `scale(${1 + glow * 0.05})`,
+          transform: `scale(${1 + glow * 0.05})${glide(midway(glow))}`,
           transformOrigin: "50% 50%",
         }}
       >
         <div
           style={{
             paddingTop: F * 0.12,
-            transform: `translateY(${((1 - pin) * rowH * 0.9).toFixed(2)}px)`,
+            transform: `translateY(${((1 - pin) * rowH * 0.9).toFixed(2)}px)${glide(midway(pin) && !midway(glow))}`,
           }}
         >
           {rows.map((r) => (

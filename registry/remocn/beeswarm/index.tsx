@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -145,6 +146,8 @@ function swarm(xs: number[], d: number) {
   return ys;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -207,6 +210,7 @@ export function Beeswarm({
   speed = 1,
   theme = "dark",
 }: BeeswarmProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const u = Math.min(W / 1280, H / 720);
@@ -395,7 +399,9 @@ export function Beeswarm({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${camScale})`,
+            // The push outlasts every move inside it, so this one tilt
+            // covers all the text in the chart.
+            transform: `scale(${camScale})${glide(midway(push))}`,
             transformOrigin: "50% 50%",
           }}
         >

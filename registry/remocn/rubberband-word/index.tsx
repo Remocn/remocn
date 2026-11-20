@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["500"],
@@ -212,6 +213,8 @@ function Cursor({ size, pressed }: { size: number; pressed: number }) {
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -242,6 +245,7 @@ export function RubberbandWord({
   theme = "dark",
   speed = 1,
 }: RubberbandWordProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
@@ -276,12 +280,26 @@ export function RubberbandWord({
     easing: Easing.bezier(0.22, 1, 0.36, 1),
   });
   const held = sMax * (0.95 * drag + 0.05 * creep);
-  const snap = spring({
-    frame: frame - release,
-    fps,
-    config: { damping: 15, stiffness: 230, mass: 1 },
-  });
-  const s = frame < release ? held : sMax * (1 - snap);
+  const sAt = (f: number) => {
+    if (f < release) {
+      const d = interpolate(f, [GRAB + 4, DRAG_END], [0, 1], {
+        ...CLAMP,
+        easing: EASE_IO,
+      });
+      const c = interpolate(f, [DRAG_END, release], [0, 1], {
+        ...CLAMP,
+        easing: Easing.bezier(0.22, 1, 0.36, 1),
+      });
+      return sMax * (0.95 * d + 0.05 * c);
+    }
+    const snap = spring({
+      frame: f - release,
+      fps,
+      config: { damping: 15, stiffness: 230, mass: 1 },
+    });
+    return sMax * (1 - snap);
+  };
+  const s = sAt(frame);
 
   // Grab point: the last glyph's right stem, at mid x-height.
   const lastA = from.length - 1;
@@ -328,16 +346,21 @@ export function RubberbandWord({
   const SWAP = release + 4;
   const clipTop = baseline - F * 0.98;
   const clipH = F * 1.24;
-  const squash = (i: number, count: number, incoming: boolean) => {
+  const squash = (
+    i: number,
+    count: number,
+    incoming: boolean,
+    f: number = frame,
+  ) => {
     const start = SWAP + (count - 1 - i) * 0.5 + (incoming ? 4 : 0);
     if (!incoming) {
-      return interpolate(frame, [start, start + 5], [1, 0], {
+      return interpolate(f, [start, start + 5], [1, 0], {
         ...CLAMP,
         easing: Easing.bezier(0.55, 0, 1, 0.45),
       });
     }
     return spring({
-      frame: frame - start,
+      frame: f - start,
       fps,
       config: { damping: 12, stiffness: 240, mass: 0.8 },
     });
@@ -364,9 +387,20 @@ export function RubberbandWord({
     incoming: boolean,
   ) =>
     text.split("").map((ch, i) => {
+      const at = (f: number) => {
+        const e = elastic(i, text.length, L.xs, sAt(f), sMax);
+        const k = swaps ? squash(i, text.length, incoming, f) : 1;
+        return { dx: e.dx, sx: e.sx, sy: e.sy * k };
+      };
       const g = elastic(i, text.length, L.xs, s, sMax);
       const q = swaps ? squash(i, text.length, incoming) : 1;
       if (q <= 0.01) return null;
+      const now = at(frame);
+      const step = (o: ReturnType<typeof at>) =>
+        Math.abs(o.dx - now.dx) +
+          (Math.abs(o.sx - now.sx) + Math.abs(o.sy - now.sy)) * F >
+        1e-3;
+      const moving = step(at(frame - speed)) || step(at(frame + speed));
       const isLast = i === text.length - 1;
       const color =
         !incoming && isLast && accentOn && (swaps || frame < release + 6)
@@ -391,7 +425,9 @@ export function RubberbandWord({
           key={`${uid}-${incoming ? "b" : "a"}-${i}`}
           style={{
             position: "absolute",
-            left: left + L.xs[i] * F + g.dx,
+            // The pull is a transform, not `left`: layout rounds a painted
+            // box to whole pixels, so a glyph eased by `left` clicks along.
+            left: left + L.xs[i] * F,
             top: baseline - clipTop - BASELINE * F,
             width: w,
             fontSize: F,
@@ -399,7 +435,7 @@ export function RubberbandWord({
             ...fill,
             opacity: Math.min(1, q * 6),
             transformOrigin: `50% ${BASELINE * F}px`,
-            transform: `scale(${g.sx}, ${g.sy * q})`,
+            transform: `${Math.abs(g.dx) < 1e-3 ? "" : `translateX(${g.dx}px) `}scale(${g.sx}, ${g.sy * q})${glide(moving)}`,
             whiteSpace: "pre",
           }}
         >
@@ -505,7 +541,7 @@ export function RubberbandWord({
                 color: accent,
                 opacity: dotIn,
                 transformOrigin: `30% ${BASELINE * F}px`,
-                transform: `scale(${0.6 + 0.4 * dotIn})`,
+                transform: `scale(${0.6 + 0.4 * dotIn})${glide(midway(dotIn))}`,
               }}
             >
               .
@@ -515,8 +551,15 @@ export function RubberbandWord({
         <div
           style={{
             position: "absolute",
-            left: cx - cursorSize * 0.06,
-            top: cyCursor - cursorSize * 0.06,
+            // Laid out where it starts; the travel is a transform, since
+            // layout rounds a box to whole pixels and an eased `left`/`top`
+            // clicks along.
+            left: startX - cursorSize * 0.06,
+            top: startY - cursorSize * 0.06,
+            transform:
+              cx === startX && cyCursor === startY
+                ? undefined
+                : `translate(${cx - startX}px, ${cyCursor - startY}px)`,
             opacity: cursorOpacity,
           }}
         >

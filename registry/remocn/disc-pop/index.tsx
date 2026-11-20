@@ -21,6 +21,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -185,6 +186,9 @@ function layoutDiscs(W: number, H: number, props: Required<DiscPopProps>) {
 }
 
 const POP = { mass: 0.5, damping: 12, stiffness: 200 };
+
+const changing = (at: (f: number) => number, f: number) =>
+  Math.abs(at(f + 1) - at(f)) > 1e-6 || Math.abs(at(f) - at(f - 1)) > 1e-6;
 const EXIT = Easing.bezier(0.55, 0, 1, 0.45);
 
 function Discs({
@@ -439,6 +443,7 @@ function PromptScene({
   delay: number;
   speed: number;
 }) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
   const c = T[theme];
@@ -469,7 +474,12 @@ function PromptScene({
     frame < A_BEATS.send
       ? 1
       : 1 - Math.sin(Math.min(1, press) * Math.PI) * 0.12;
-  const push = interpolate(frame, [0, durationInFrames], [1, 1.04], CLAMP);
+  const pushAt = (f: number) =>
+    interpolate(f, [0, durationInFrames], [1, 1.04], CLAMP);
+  const push = pushAt(frame);
+  // The slow push carries the whole UI, so its tilt covers the greeting, the
+  // card rising inside it and the scene's half of the transition.
+  const pushMoving = changing(pushAt, frame);
   const text: React.CSSProperties = {
     fontFamily,
     fontWeight: 400,
@@ -497,7 +507,7 @@ function PromptScene({
             justifyContent: "center",
             alignItems: "center",
             gap: 34 * u,
-            transform: `scale(${push})`,
+            transform: `scale(${push})${glide(pushMoving)}`,
           }}
         >
           <div
@@ -650,6 +660,7 @@ function PlayerScene({
   scale: number;
   speed: number;
 }) {
+  const glide = useGlide();
   const frame = useCurrentFrame() * speed;
   const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
   const c = T[theme];
@@ -669,7 +680,12 @@ function PlayerScene({
     [0.04, 0.42],
     CLAMP,
   );
-  const push = interpolate(frame, [0, durationInFrames], [1, 1.035], CLAMP);
+  const pushAt = (f: number) =>
+    interpolate(f, [0, durationInFrames], [1, 1.035], CLAMP);
+  const push = pushAt(frame);
+  // As in the prompt scene: one tilt on the push covers the toolbar, the
+  // title rising word by word and this scene's half of the transition.
+  const pushMoving = changing(pushAt, frame);
   const imgDrift = interpolate(
     frame,
     [0, durationInFrames],
@@ -715,7 +731,7 @@ function PlayerScene({
             justifyContent: "center",
             alignItems: "center",
             gap: 16 * u,
-            transform: `scale(${push})`,
+            transform: `scale(${push})${glide(pushMoving)}`,
           }}
         >
           <div

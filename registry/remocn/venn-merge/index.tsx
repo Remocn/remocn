@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: serif } = loadSerif("normal", {
   weights: ["400"],
@@ -168,6 +169,7 @@ export function VennMerge({
   theme = "dark",
   speed = 1,
 }: VennMergeProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
@@ -215,7 +217,7 @@ export function VennMerge({
 
   const finalSep = three ? R * 0.92 : R * 0.52;
   const startSep = three ? R * 1.15 : R * 2.24;
-  const sep = startSep + (finalSep - startSep) * slide;
+  const sepAt = (k: number) => startSep + (finalSep - startSep) * k;
 
   const dirs = three
     ? [
@@ -227,27 +229,33 @@ export function VennMerge({
         { x: -1, y: 0 },
         { x: 1, y: 0 },
       ];
-  const reach = three ? sep / Math.sqrt(3) : sep / 2;
+  const reachAt = (k: number) =>
+    three ? sepAt(k) / Math.sqrt(3) : sepAt(k) / 2;
+  const reach = reachAt(slide);
   const centers = dirs.map((d) => ({
     x: cx + d.x * reach,
     y: cy + d.y * reach,
   }));
 
   const labelSize = (three ? 36 : 42) * u;
+  const labelAt = (d: { x: number; y: number }, k: number) => {
+    const off = three ? R * 0.42 * k : R - Math.min(2 * R, sepAt(k)) / 2;
+    const r = reachAt(k) + off;
+    return { x: cx + d.x * r, y: cy + d.y * r };
+  };
   const labels = list.map((name, i) => {
-    const c = centers[i];
     const d = dirs[i];
-    let off = 0;
-    if (three) {
-      off = R * 0.42 * slide;
-    } else {
-      const crescent = Math.min(2 * R, sep);
-      off = R - crescent / 2;
-    }
+    // Layout rounds a baseline to whole pixels, so a label carried by
+    // `left`/`top` steps as the circles slide. It is laid out where it
+    // settles and the slide is a transform, exactly 0 once settled.
+    const rest = labelAt(d, 1);
+    const now = labelAt(d, slide);
     return {
       name,
-      x: c.x + d.x * off,
-      y: c.y + d.y * off,
+      x: rest.x,
+      y: rest.y,
+      dx: now.x - rest.x,
+      dy: now.y - rest.y,
       a: interpolate(t, [DRAW[0] + 4 + i * 3, DRAW[0] + 20 + i * 3], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
@@ -274,7 +282,8 @@ export function VennMerge({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${pushScale})`,
+            // The push carries every label, so its tilt covers them all.
+            transform: `scale(${pushScale})${glide(t > 0 && t < CAPTION + 40)}`,
             transformOrigin: "50% 50%",
           }}
         >
@@ -358,7 +367,7 @@ export function VennMerge({
                 position: "absolute",
                 left: l.x,
                 top: l.y,
-                transform: `translate(-50%, -50%) translateY(${(1 - l.a) * 8 * u}px)`,
+                transform: `translate(-50%, -50%) translate(${l.dx}px, ${l.dy + (1 - l.a) * 8 * u}px)`,
                 fontFamily,
                 fontWeight: 400,
                 fontSize: labelSize,

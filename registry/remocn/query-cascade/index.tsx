@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -215,6 +216,8 @@ function split(q: string, term: string) {
   return parts;
 }
 
+const midway = (p: number) => p > 0 && p < 1;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -251,6 +254,7 @@ export function QueryCascade({
   groundParams,
   speed = 1,
 }: QueryCascadeProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const tall = H > W;
@@ -298,15 +302,20 @@ export function QueryCascade({
     (W * (tall ? 0.6 : 0.58)) / Math.max(totalQ, totalA),
   );
 
-  const grow = interpolate(t, [GROW[0], GROW[1]], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const fs = f + (Fh - f) * grow;
-  const clear = interpolate(t, [CLEAR[0], CLEAR[1]], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const growAt = (tt: number) =>
+    interpolate(tt, [GROW[0], GROW[1]], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const grow = growAt(t);
+  const sizeAt = (g: number) => f + (Fh - f) * g;
+  const fs = sizeAt(grow);
+  const clearAt = (tt: number) =>
+    interpolate(tt, [CLEAR[0], CLEAR[1]], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const clear = clearAt(t);
   const tint = interpolate(t, [TINT[0], TINT[1]], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
@@ -329,7 +338,24 @@ export function QueryCascade({
   });
 
   const cx = W / 2;
-  const heroY = H / 2 + (K - s) * pitch + fs * 0.27 - grow * 18 * u;
+  const heroAt = (sv: number, g: number) =>
+    H / 2 + (K - sv) * pitch + sizeAt(g) * 0.27 - g * 18 * u;
+  const heroY = heroAt(s, grow);
+  // While the hero scrolls in and grows, layout would round its baseline to
+  // whole pixels, both through `top` and inside a box whose font size
+  // changes. So the words are laid out once where they land, at the landed
+  // size, and the travel and the growth are a transform all their life: a
+  // word handed back to plain layout would jump by the rounding.
+  const fsRest = sizeAt(1);
+  const heroRest = heroAt(scroll(STOP), 1);
+  const heroMoving = [t - speed, t + speed].some(
+    (tt) =>
+      sizeAt(growAt(tt)) !== fs || heroAt(scroll(tt), growAt(tt)) !== heroY,
+  );
+  // The rows scroll in, wait, then spread out; they lean only while they go.
+  const rowsMoving = [t - speed, t + speed].some(
+    (tt) => scroll(tt) !== s || clearAt(tt) !== clear,
+  );
   const termQ = -totalQ / 2 + width(qLeft);
   const termA = -totalA / 2 + width(aLeft);
   const termX = termQ + (termA - termQ) * move;
@@ -370,24 +396,32 @@ export function QueryCascade({
     fontWeight: 400,
   };
 
+  const heroBox = (
+    anchorRight: boolean,
+    tx: string | undefined,
+  ): React.CSSProperties => ({
+    top: heroRest - fsRest * BASELINE,
+    fontSize: fsRest,
+    transform: `translateY(${heroY - heroRest}px) ${tx ?? ""} scale(${fs / fsRest})${glide(heroMoving)}`,
+    transformOrigin: `${anchorRight ? "100%" : "0"} ${fsRest * BASELINE}px`,
+  });
   const word = (
     text: string,
     x: number,
     anchorRight: boolean,
     opacity: number,
     extra?: React.CSSProperties,
+    tx: string | undefined = anchorRight ? "translateX(-100%)" : undefined,
   ) =>
     opacity > 0.001 ? (
       <div
         style={{
           ...textStyle,
           left: cx + x * fs,
-          top: heroY - fs * BASELINE,
-          fontSize: fs,
+          ...heroBox(anchorRight, tx),
           letterSpacing: `${HERO_TRACK}em`,
           color: fg,
           opacity,
-          transform: anchorRight ? "translateX(-100%)" : undefined,
           ...extra,
         }}
       >
@@ -436,6 +470,10 @@ export function QueryCascade({
               const spread = (i - K) * pitch * clear * 1.4;
               const y = y0 + spread;
               if (y < -pitch - smear || y > H + pitch + smear) return null;
+              // Rows ride the scroll and the spread by transform from where
+              // they land, not by `top`: layout rounds a baseline to whole
+              // pixels.
+              const yRest = H / 2 + (i - scroll(STOP)) * pitch;
               return tapOffsets.map((o) => (
                 <div
                   key={`${i}-${o.toFixed(2)}`}
@@ -443,7 +481,8 @@ export function QueryCascade({
                     ...textStyle,
                     left: 0,
                     right: 0,
-                    top: y + o + f * 0.27 - f * BASELINE,
+                    top: yRest + f * 0.27 - f * BASELINE,
+                    transform: `translateY(${y + o - yRest}px)${glide(rowsMoving)}`,
                     textAlign: "center",
                     fontSize: f,
                     letterSpacing: "-0.015em",
@@ -553,29 +592,53 @@ export function QueryCascade({
               transform: o ? `translateY(${o}px)` : undefined,
             }}
           >
-            {word(qLeft, termX, true, heroBright * (1 - leave), {
-              filter: leave > 0 ? `blur(${leave * 10 * u}px)` : undefined,
-              transform: `translateX(calc(-100% - ${leave * 30 * u}px))`,
-            })}
-            {word(qRight, termX + wTerm, false, heroBright * (1 - leave), {
-              filter: leave > 0 ? `blur(${leave * 10 * u}px)` : undefined,
-              transform: `translateX(${leave * 30 * u}px)`,
-            })}
-            {word(aLeft, termX, true, before, {
-              filter:
-                before < 1 ? `blur(${(1 - before) * 10 * u}px)` : undefined,
-              transform: `translateX(calc(-100% + ${(1 - before) * -24 * u}px))`,
-            })}
-            {word(aRight, termX + wTerm, false, after, {
-              filter: after < 1 ? `blur(${(1 - after) * 10 * u}px)` : undefined,
-              transform: `translateX(${(1 - after) * 24 * u}px)`,
-            })}
+            {word(
+              qLeft,
+              termX,
+              true,
+              heroBright * (1 - leave),
+              {
+                filter: leave > 0 ? `blur(${leave * 10 * u}px)` : undefined,
+              },
+              `translateX(calc(-100% - ${leave * 30 * u}px))`,
+            )}
+            {word(
+              qRight,
+              termX + wTerm,
+              false,
+              heroBright * (1 - leave),
+              {
+                filter: leave > 0 ? `blur(${leave * 10 * u}px)` : undefined,
+              },
+              `translateX(${leave * 30 * u}px)`,
+            )}
+            {word(
+              aLeft,
+              termX,
+              true,
+              before,
+              {
+                filter:
+                  before < 1 ? `blur(${(1 - before) * 10 * u}px)` : undefined,
+              },
+              `translateX(calc(-100% + ${(1 - before) * -24 * u}px))`,
+            )}
+            {word(
+              aRight,
+              termX + wTerm,
+              false,
+              after,
+              {
+                filter:
+                  after < 1 ? `blur(${(1 - after) * 10 * u}px)` : undefined,
+              },
+              `translateX(${(1 - after) * 24 * u}px)`,
+            )}
             <div
               style={{
                 ...textStyle,
                 left: cx + termX * fs,
-                top: heroY - fs * BASELINE,
-                fontSize: fs,
+                ...heroBox(false, undefined),
                 letterSpacing: `${HERO_TRACK}em`,
                 color: interpolateColors(tint, [0, 1], [fg, hi]),
                 opacity: Math.max(heroBright, tint),
@@ -586,13 +649,15 @@ export function QueryCascade({
             <div
               style={{
                 position: "absolute",
-                left: cx + termX * fs,
+                // Laid out where the answer leaves it; the slide there is a
+                // transform, since layout rounds a box edge to whole pixels.
+                left: cx + termA * fs,
                 top: heroY + fs * 0.16,
                 width: wTerm * fs,
                 height: Math.max(2, fs * 0.05),
                 borderRadius: 99,
                 background: hi,
-                transform: `scaleX(${rule})`,
+                transform: `translateX(${(termQ - termA) * fs * (1 - move)}px) scaleX(${rule})`,
                 transformOrigin: "0 50%",
               }}
             />
@@ -609,7 +674,7 @@ export function QueryCascade({
               display: "flex",
               justifyContent: "center",
               opacity: logoIn,
-              transform: `translateY(${(1 - logoIn) * 10 * u}px)`,
+              transform: `translateY(${(1 - logoIn) * 10 * u}px)${glide(midway(logoIn))}`,
             }}
           >
             {logo ?? <RemocnLogo fontSize={26 * u} color={fg} />}

@@ -374,6 +374,11 @@ export function BandShift({
         const landed = p >= 1;
         const fill = fills ? fills[i % fills.length] : null;
         const inView = (x: number, w: number) => x < W && x + w > 0;
+        // Layout rounds a box to whole pixels, so a scene slid by `left`
+        // lands in uneven steps on the ease's last frames; the slide is a
+        // transform instead, and none at all where the scene rests.
+        const slide = (x: number) =>
+          Math.abs(x) < 1e-3 ? undefined : `translateX(${x}px)`;
         return (
           <div
             key={`band-${top}`}
@@ -391,8 +396,9 @@ export function BandShift({
               <div
                 style={{
                   position: "absolute",
-                  left: xA,
+                  left: 0,
                   top: -y0,
+                  transform: slide(xA),
                   width: W,
                   height: H,
                 }}
@@ -430,8 +436,9 @@ export function BandShift({
               <div
                 style={{
                   position: "absolute",
-                  left: landed ? 0 : xB,
+                  left: 0,
                   top: -y0,
+                  transform: landed ? undefined : slide(xB),
                   width: W,
                   height: H,
                 }}

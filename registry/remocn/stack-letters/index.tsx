@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["500"],
@@ -266,6 +267,7 @@ export function StackLetters({
 }: StackLettersProps) {
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
+  const glide = useGlide();
   const c = THEMES[theme];
   const fg = inkColor ?? c.fg;
   const stage =
@@ -403,19 +405,29 @@ export function StackLetters({
     };
   };
   const cam0 = fit(toppleAt);
-  let camX = 0;
-  let camY = 0;
-  let scale = 0;
-  for (let d = -CAM_SMOOTH; d <= CAM_SMOOTH; d++) {
-    const f = fit(Math.max(toppleAt, t + d));
-    camX += f.x;
-    camY += f.y;
-    scale += f.s;
-  }
-  const samples = CAM_SMOOTH * 2 + 1;
-  camX /= samples;
-  camY /= samples;
-  scale /= samples;
+  const camAt = (time: number) => {
+    let x = 0;
+    let y = 0;
+    let s = 0;
+    for (let d = -CAM_SMOOTH; d <= CAM_SMOOTH; d++) {
+      const f = fit(Math.max(toppleAt, time + d));
+      x += f.x;
+      y += f.y;
+      s += f.s;
+    }
+    const samples = CAM_SMOOTH * 2 + 1;
+    return { x: x / samples, y: y / samples, s: s / samples };
+  };
+  const { x: camX, y: camY, s: scale } = camAt(t);
+  // The camera carries resting letters too: they lean while it moves.
+  // Measured on screen, against the neighbouring frames.
+  const camDiffers = (a: ReturnType<typeof camAt>) =>
+    Math.abs(a.x - camX) * scale > 1e-3 ||
+    Math.abs(a.y - camY) * scale > 1e-3 ||
+    Math.abs(a.s - scale) * W > 1e-3;
+  const camMoving =
+    t >= toppleAt - CAM_SMOOTH - speed &&
+    (camDiffers(camAt(t + speed)) || camDiffers(camAt(t - speed)));
   const viewTop = cam0.y - H / 2 / cam0.s;
 
   const pose = (k: number) => {
@@ -431,11 +443,12 @@ export function StackLetters({
         rot: 0,
         hit: 0,
         visible: t >= d,
+        falling: u > 0,
       };
     }
     const p = flight(k, t);
     const hit = t < rockAt ? squash(t - settled) : squash(t - landAt(k));
-    return { ...p, hit, visible: true };
+    return { ...p, hit, visible: true, falling: false };
   };
 
   const ruleH = Math.max(2, F * 0.012);
@@ -467,7 +480,7 @@ export function StackLetters({
             left: 0,
             top: 0,
             transformOrigin: "0 0",
-            transform: `translate(${W / 2}px, ${H / 2}px) scale(${scale}) translate(${-camX}px, ${-camY}px)`,
+            transform: `translate(${W / 2}px, ${H / 2}px) scale(${scale}) translate(${-camX}px, ${-camY}px)${glide(camMoving)}`,
             fontFamily,
             fontWeight: 500,
             fontSize: F,
@@ -519,6 +532,9 @@ export function StackLetters({
             const ox = (box.l + box.r) / 2;
             const sy = 1 - 0.09 * p.hit;
             const sx = 1 + 0.06 * p.hit;
+            // An upright letter that falls or squashes leans; one that rides
+            // the camera leans with it, and a real turn already leaves the grid.
+            const moving = p.rot === 0 && (p.falling || p.hit !== 0);
             return (
               <div
                 key={`${k}-${ch}`}
@@ -528,7 +544,7 @@ export function StackLetters({
                   top: 0,
                   color: fg,
                   transformOrigin: "0 0",
-                  transform: `translate(${p.x}px, ${p.y}px) rotate(${p.rot}deg) scale(${sx}, ${sy})`,
+                  transform: `translate(${p.x}px, ${p.y}px) rotate(${p.rot}deg) scale(${sx}, ${sy})${glide(moving)}`,
                 }}
               >
                 <span

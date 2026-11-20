@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -204,6 +205,7 @@ export function ShareDonut({
   theme = "dark",
   speed = 1,
 }: ShareDonutProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
@@ -301,7 +303,9 @@ export function ShareDonut({
       <ScaleLayer scale={size}>
         <AbsoluteFill
           style={{
-            transform: `scale(${scale})`,
+            // The push outlasts every other move, so this one tilt covers the
+            // labels and the center figure too.
+            transform: `scale(${scale})${glide(push > 0 && push < 1)}`,
             transformOrigin: "50% 50%",
           }}
         >
@@ -387,6 +391,11 @@ export function ShareDonut({
             });
             const ang = s.mid + (spin * Math.PI) / 180;
             const q = pt(cx, cy, R + sw / 2 + 38 * u + (1 - a) * -8 * u, ang);
+            // Placed by `left`/`top`, a label clicked along its orbit pixel by
+            // pixel; layout holds where it lands and the travel is a transform.
+            const rest = pt(cx, cy, R + sw / 2 + 38 * u, s.mid);
+            const dx = q.x - rest.x;
+            const dy = q.y - rest.y;
             const right = Math.sin(ang) >= -0.05;
             const fade = s.i === hl ? 1 - dim : 1 - 0.6 * dim;
             return (
@@ -394,9 +403,9 @@ export function ShareDonut({
                 key={s.label}
                 style={{
                   position: "absolute",
-                  left: q.x,
-                  top: q.y,
-                  transform: `translate(${right ? 0 : -100}%, -50%)`,
+                  left: rest.x,
+                  top: rest.y,
+                  transform: `${dx || dy ? `translate(${dx}px, ${dy}px) ` : ""}translate(${right ? 0 : -100}%, -50%)`,
                   display: "flex",
                   flexDirection: "column",
                   alignItems: right ? "flex-start" : "flex-end",

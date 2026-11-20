@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -350,6 +351,7 @@ export function TreemapSplit({
   theme = "dark",
   speed = 1,
 }: TreemapSplitProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
@@ -399,13 +401,30 @@ export function TreemapSplit({
   const cells: Cell[] = [];
   const lines: Line[] = [];
   layout(tree, root, t, gap, cells, lines, 0, split);
+  // Where each cell lands once every split has opened. A cell's label is laid
+  // out there and rides the cell by a transform: layout rounds a baseline to
+  // whole pixels, so a label carried by a growing cell's `top` clicks along.
+  const settled = new Map<string, Rect>();
+  {
+    const done: Cell[] = [];
+    layout(tree, root, Number.POSITIVE_INFINITY, gap, done, [], 0, split);
+    for (const c of done) settled.set(c.key, c.rect);
+  }
 
-  const enter = interpolate(t, [0, 14], [0, 1], { ...CLAMP, easing: EASE_OUT });
-  const push = interpolate(t, [0, ACC + 50], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const scale = (0.94 + 0.06 * enter) * (0.985 + 0.015 * push);
+  const enterAt = (tt: number) =>
+    interpolate(tt, [0, 14], [0, 1], { ...CLAMP, easing: EASE_OUT });
+  const pushAt = (tt: number) =>
+    interpolate(tt, [0, ACC + 50], [0, 1], { ...CLAMP, easing: EASE_IO });
+  const scaleAt = (tt: number) =>
+    (0.94 + 0.06 * enterAt(tt)) * (0.985 + 0.015 * pushAt(tt));
+  const enter = enterAt(t);
+  const push = pushAt(t);
+  const scale = scaleAt(t);
+  // The push eases out flat; a step is weighed at ~700px, the furthest a
+  // label sits from the centre.
+  const zooming =
+    Math.abs(scaleAt(t + 1) - scale) * 700 > 1e-3 ||
+    Math.abs(scale - scaleAt(t - 1)) * 700 > 1e-3;
 
   const fill = interpolate(t, [ACC, ACC + 18], [0, 1], {
     ...CLAMP,
@@ -434,7 +453,7 @@ export function TreemapSplit({
       <ScaleLayer scale={zoom}>
         <AbsoluteFill
           style={{
-            transform: `scale(${scale})`,
+            transform: `scale(${scale})${glide(zooming)}`,
             transformOrigin: "50% 50%",
             opacity: enter,
           }}
@@ -452,6 +471,9 @@ export function TreemapSplit({
                   })
                 : 0;
             const smallLab = isHl ? labA * (1 - preFill) : labA;
+            const home = settled.get(c.key) ?? c.rect;
+            const dx = c.rect.x - home.x;
+            const dy = c.rect.y - home.y;
             const heroFont = Math.min(
               136 * u,
               c.rect.h * 0.42,
@@ -484,13 +506,13 @@ export function TreemapSplit({
                   <div
                     style={{
                       position: "absolute",
-                      left: 16 * u,
-                      top: 14 * u,
+                      left: 16 * u - dx,
+                      top: 14 * u - dy,
                       display: "flex",
                       flexDirection: "column",
                       gap: 3 * u,
                       opacity: smallLab * (isHl ? 1 : 1 - 0.35 * dimOthers),
-                      transform: `translateY(${(1 - labA) * 6 * u}px)`,
+                      transform: `translate(${dx}px, ${dy + (1 - labA) * 6 * u}px)`,
                       whiteSpace: "nowrap",
                     }}
                   >

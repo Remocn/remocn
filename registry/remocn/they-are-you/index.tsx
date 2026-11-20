@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const gabarito = loadFont("normal", {
   weights: ["400", "500"],
@@ -167,6 +168,18 @@ function wrap(
   return lines;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
+/**
+ * Travel as a transform, kept at zero once it has arrived: the mark rides on
+ * it, and text that lost its transform at rest would snap to the pixel grid.
+ */
+const lift = (
+  dy: number,
+  moving: boolean,
+  glide: ReturnType<typeof useGlide>,
+) => `translateY(${Math.abs(dy) < 1e-3 ? 0 : dy}px)${glide(moving)}`;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -201,6 +214,7 @@ export function TheyAreYou({
   speed = 1,
   theme = "dark",
 }: TheyAreYouProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const t = frame * speed;
@@ -271,6 +285,7 @@ export function TheyAreYou({
   };
 
   let shift = 0;
+  let shifting = false;
   layout.forEach((lines, k) => {
     if (k === 0) return;
     const e = interpolate(
@@ -283,10 +298,15 @@ export function TheyAreYou({
       },
     );
     shift += ((1 - e) * (lines.length * LH + FACT_GAP) * F) / 2;
+    shifting ||= midway(e);
   });
 
+  // Layout rounds a box and a baseline to whole pixels, so lines eased by
+  // `top` click along pixel by pixel. Each line sits where the settled block
+  // leaves it and travels by transform; the recentring rides on the line's
+  // clip, the rise on the text inside it.
   const nodes: React.ReactNode[] = [];
-  let y = blockTop + shift;
+  let y = blockTop;
   layout.forEach((lines, k) => {
     const p = parsed[k];
     const appear = inStart + k * gapIn;
@@ -310,6 +330,7 @@ export function TheyAreYou({
         },
       );
       const offset = (1 - rise) * lineBox;
+      const rising = midway(rise);
       const lineX = marginX + (j === 0 ? proNow * F : 0);
       nodes.push(
         <div
@@ -321,13 +342,15 @@ export function TheyAreYou({
             top: y,
             height: lineBox,
             overflow: "hidden",
+            transform: lift(shift, shifting, glide),
           }}
         >
           <div
             style={{
               ...base,
               left: lineX,
-              top: textTop + offset,
+              top: textTop,
+              transform: lift(offset, rising && !shifting, glide),
               fontWeight: REST_W,
               color: fg,
             }}
@@ -339,7 +362,8 @@ export function TheyAreYou({
               style={{
                 ...base,
                 left: marginX,
-                top: textTop + offset,
+                top: textTop,
+                transform: lift(offset, rising && !shifting, glide),
                 fontWeight: PRO_W,
                 color: fg,
               }}
@@ -356,7 +380,12 @@ export function TheyAreYou({
             style={{
               ...base,
               left: marginX,
-              top: y + textTop - out * F * 0.32,
+              top: y + textTop,
+              transform: lift(
+                shift - out * F * 0.32,
+                shifting || midway(out),
+                glide,
+              ),
               fontWeight: PRO_W,
               color: fg,
               opacity: 1 - out,
@@ -369,7 +398,12 @@ export function TheyAreYou({
             style={{
               ...base,
               left: marginX,
-              top: y + textTop + (1 - inn) * F * 0.32,
+              top: y + textTop,
+              transform: lift(
+                shift + (1 - inn) * F * 0.32,
+                shifting || midway(inn),
+                glide,
+              ),
               fontWeight: PRO_W,
               color: hi,
               opacity: inn,

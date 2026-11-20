@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -68,6 +69,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const MATERIALS = {
   dark: {
@@ -327,6 +330,7 @@ export function KeycapPress({
   delay = 0,
   speed = 1,
 }: KeycapPressProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width;
@@ -380,9 +384,9 @@ export function KeycapPress({
     ...CLAMP,
     easing: EASE_IO,
   });
-  const keysY =
-    height * ((tall ? 0.42 : 0.46) - lift * (tall ? 0.05 : 0.08)) +
-    kick * 2 * u;
+  const keysY0 = height * (tall ? 0.42 : 0.46);
+  const keysDy = height * -(lift * (tall ? 0.05 : 0.08)) + kick * 2 * u;
+  const keysY = keysY0 + keysDy;
   const perspective = 1800 * u;
 
   const keyState = defs.map((_, i) => {
@@ -419,11 +423,14 @@ export function KeycapPress({
         style={{
           position: "absolute",
           left: width / 2,
-          top: keysY,
+          // Laid out where the keys start; the lift after the chord is a
+          // transform, since layout rounds a box edge to a whole pixel and
+          // every cap would step up with it.
+          top: keysY0,
           width: 0,
           height: 0,
           transformStyle: "preserve-3d",
-          transform: `scale(${camScale}) rotateX(${rotX}deg) rotateZ(${rotZ}deg)`,
+          transform: `${keysDy === 0 ? "" : `translateY(${keysDy}px) `}scale(${camScale}) rotateX(${rotX}deg) rotateZ(${rotZ}deg)`,
         }}
       >
         {children}
@@ -672,7 +679,7 @@ export function KeycapPress({
                 display: "inline-block",
                 whiteSpace: "pre",
                 opacity: word(i),
-                transform: `translateY(${(1 - word(i)) * 14 * u}px)`,
+                transform: `translateY(${(1 - word(i)) * 14 * u}px)${glide(midway(word(i)))}`,
                 filter: `blur(${(1 - word(i)) * 5 * u}px)`,
               }}
             >

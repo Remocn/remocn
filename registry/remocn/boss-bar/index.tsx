@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: chakra } = loadFont("normal", {
   weights: ["500"],
@@ -213,6 +214,7 @@ export function BossBar({
   theme = "dark",
   speed = 1,
 }: BossBarProps) {
+  const tilt = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -267,20 +269,37 @@ export function BossBar({
   const broken = t >= shatterAt;
 
   // ── Camera ────────────────────────────────────────────────────────────────
-  const camHits = hitAt.map((h, i) =>
-    shake(t, h, 8, (i === hits.length - 1 ? 9 : 5) * u),
-  );
-  const camDefeat = shake(t, defeatHit, 14, 20 * u);
-  const camX = camHits.reduce((a, s) => a + s.x, 0) + camDefeat.x;
-  const camY = camHits.reduce((a, s) => a + s.y, 0) + camDefeat.y;
+  const camAt = (tt: number) => {
+    const camHits = hitAt.map((h, i) =>
+      shake(tt, h, 8, (i === hits.length - 1 ? 9 : 5) * u),
+    );
+    const camDefeat = shake(tt, defeatHit, 14, 20 * u);
+    return {
+      x: camHits.reduce((a, s) => a + s.x, 0) + camDefeat.x,
+      y: camHits.reduce((a, s) => a + s.y, 0) + camDefeat.y,
+      k: interpolate(tt, [defeatHit, defeatHit + 70], [1, 1.03], CLAMP),
+    };
+  };
+  const cam = camAt(t);
+  const camX = cam.x;
+  const camY = cam.y;
+  // Shakes and the slow settle together have no single progress, so the
+  // camera counts as moving when a neighbour frame differs.
+  const camDiffers = (tt: number) => {
+    const o = camAt(tt);
+    return o.x !== cam.x || o.y !== cam.y || o.k !== cam.k;
+  };
+  const camMoving = camDiffers(t + speed) || camDiffers(t - speed);
   const inverted = t >= defeatHit && t < defeatHit + speed;
 
   // ── Defeat ────────────────────────────────────────────────────────────────
   const defeatP = SLAM(ramp(t, defeatAt, DEFEAT_LEN));
   const defeatFs = 210 * u;
   const defeatY = 0.5 * H;
-  const glide = INOUT(ramp(t, glideAt, 12));
-  const settle = interpolate(t, [defeatHit, defeatHit + 70], [1, 1.03], CLAMP);
+  const glideRaw = ramp(t, glideAt, 12);
+  const glide = INOUT(glideRaw);
+  const gliding = glideRaw > 0 && glideRaw < 1;
+  const settle = cam.k;
   const glowP = OUT(ramp(t, defeatHit, 18));
   const logoP = OUT(ramp(t, logoAt, 10));
 
@@ -290,7 +309,12 @@ export function BossBar({
   const nameX0 = barX;
   const nameY0 = barY - 46 * u;
   const nameY1 = defeatY - defeatFs * 0.62;
-
+  // Layout rounds a baseline to whole pixels, so the name eased by `top` and a
+  // growing font size clicked down pixel by pixel. It is laid out where it
+  // finally rests, in the settled size, for its whole life; the travel and the
+  // growth are transforms, both exactly none once it has glided. Handing it
+  // back to layout at the first hold would jump it by what layout rounds off.
+  const nameFs1 = 34 * u;
   const hitWordFs = 128 * u;
 
   // Shatter fragments.
@@ -396,7 +420,7 @@ export function BossBar({
             style={{
               position: "absolute",
               inset: 0,
-              transform: `translate(${camX}px, ${camY}px) scale(${settle})`,
+              transform: `translate(${camX}px, ${camY}px) scale(${settle})${tilt(camMoving)}`,
             }}
           >
             {/* Boss tag + name. */}
@@ -405,13 +429,13 @@ export function BossBar({
                 position: "absolute",
                 left: interpolate(glide, [0, 1], [nameX0, 0]),
                 width: interpolate(glide, [0, 1], [barW, W]),
-                top: interpolate(glide, [0, 1], [nameY0, nameY1]) - nameFs / 2,
+                top: nameY1 - nameFs1 / 2,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: glide > 0.5 ? "center" : "flex-start",
                 gap: 14 * u,
                 opacity: nameIn,
-                transform: `translateX(${(1 - nameIn) * -30 * u}px)`,
+                transform: `translateX(${(1 - nameIn) * -30 * u}px) translateY(${(nameY0 - nameY1) * (1 - glide)}px)${tilt(gliding)}`,
               }}
             >
               <div
@@ -438,11 +462,13 @@ export function BossBar({
                 style={{
                   fontFamily,
                   fontWeight: 500,
-                  fontSize: nameFs,
+                  fontSize: nameFs1,
                   letterSpacing: "0.1em",
                   lineHeight: 1,
                   color: fg,
                   whiteSpace: "nowrap",
+                  transform: `scale(${nameFs / nameFs1})`,
+                  transformOrigin: glide > 0.5 ? "50% 50%" : "0 50%",
                 }}
               >
                 {boss}
@@ -467,7 +493,11 @@ export function BossBar({
                 opacity: OUT(ramp(t, 8, 8)) * (1 - ramp(t, shatterAt, 4)),
               }}
             >
-              <span style={{ color: fg }}>
+              {/* The count fills the row up to the total, right-aligned where
+                  it sat: the lean reads a box's laid-out width as a whole
+                  number, which on a box a few digits wide is off enough to
+                  lean resting text, and to drop it as the count widens. */}
+              <span style={{ color: fg, flex: 1, textAlign: "right" }}>
                 {fmt(t < FIRST_HIT ? charge * maxHp : hp)}
               </span>
               <span>&nbsp;/ {fmt(maxHp)} HP</span>
@@ -562,9 +592,11 @@ export function BossBar({
               if (d < 0 || d > 26) return null;
               const before = i === 0 ? maxHp : hpAfter[i - 1];
               const x = barX + (barW * (before + hpAfter[i])) / 2 / maxHp;
-              const pop = SLAM(ramp(d, 0, 4));
+              const popRaw = ramp(d, 0, 4);
+              const pop = SLAM(popRaw);
               const isLast = i === hits.length - 1;
               const out = isLast ? ramp(t, shatterAt - 2, 5) : ramp(d, 16, 8);
+              const moving = (popRaw > 0 && popRaw < 1) || (out > 0 && out < 1);
               const fs = (isLast ? 64 : 54) * u;
               return (
                 <div
@@ -576,7 +608,7 @@ export function BossBar({
                     top: barY + barH + 18 * u,
                     display: "flex",
                     justifyContent: "center",
-                    transform: `translateY(${(-10 * pop - 22 * out) * u}px) scale(${interpolate(pop, [0, 1], [1.6, 1])})`,
+                    transform: `translateY(${(-10 * pop - 22 * out) * u}px) scale(${interpolate(pop, [0, 1], [1.6, 1])})${tilt(moving)}`,
                     opacity: ramp(d, 0, 2) * (1 - out),
                     fontFamily: italic,
                     fontStyle: "italic",
@@ -611,8 +643,11 @@ export function BossBar({
               return (
                 <div key={`hit-${h.label}`}>
                   {[3, 0].map((lag) => {
-                    const pp = SLAM(ramp(t - lag, start, SLAM_LEN));
+                    const ppRaw = ramp(t - lag, start, SLAM_LEN);
+                    const pp = SLAM(ppRaw);
                     if (lag > 0 && t > at + lag) return null;
+                    const moving =
+                      (ppRaw > 0 && ppRaw < 1) || (out > 0 && out < 1);
                     return (
                       <div
                         key={lag}
@@ -625,7 +660,7 @@ export function BossBar({
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          transform: `translateX(${(1 - (lag ? pp : p)) * 120 * u - out * 60 * u}px) scale(${interpolate(lag ? pp : p, [0, 1], [1.6, 1])})`,
+                          transform: `translateX(${(1 - (lag ? pp : p)) * 120 * u - out * 60 * u}px) scale(${interpolate(lag ? pp : p, [0, 1], [1.6, 1])})${tilt(moving)}`,
                           opacity:
                             ramp(t - lag, start, 2) *
                             (1 - out) *
@@ -673,8 +708,10 @@ export function BossBar({
             {/* DEFEATED. */}
             {t >= defeatAt
               ? [4, 2, 0].map((lag) => {
-                  const pp = SLAM(ramp(t - lag, defeatAt, DEFEAT_LEN));
+                  const ppRaw = ramp(t - lag, defeatAt, DEFEAT_LEN);
+                  const pp = SLAM(ppRaw);
                   if (lag > 0 && t > defeatHit + lag) return null;
+                  const moving = ppRaw > 0 && ppRaw < 1;
                   return (
                     <div
                       key={`def-${lag}`}
@@ -687,7 +724,7 @@ export function BossBar({
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        transform: `scale(${interpolate(lag ? pp : defeatP, [0, 1], [2.4, 1])})`,
+                        transform: `scale(${interpolate(lag ? pp : defeatP, [0, 1], [2.4, 1])})${tilt(moving)}`,
                         opacity:
                           ramp(t - lag, defeatAt, 2) *
                           (lag ? 0.18 / (lag / 2) : 1),
@@ -727,7 +764,7 @@ export function BossBar({
               display: "flex",
               justifyContent: "center",
               opacity: logoP,
-              transform: `translateY(${(1 - logoP) * 16 * u}px)`,
+              transform: `translateY(${(1 - logoP) * 16 * u}px)${tilt(logoP > 0 && logoP < 1)}`,
             }}
           >
             {logo ?? <RemocnLogo fontSize={34 * u} color={fg} />}

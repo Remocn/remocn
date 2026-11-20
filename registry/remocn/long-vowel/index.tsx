@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const fraunces = loadFraunces("normal", {
   weights: ["400"],
@@ -188,6 +189,8 @@ function rampAt(ramp: readonly string[], u: number) {
   return `color-mix(in oklab, ${ramp[i]} ${((1 - f) * 100).toFixed(1)}%, ${ramp[i + 1]})`;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -221,6 +224,7 @@ export function LongVowel({
   speed = 1,
   theme = "dark",
 }: LongVowelProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -262,13 +266,15 @@ export function LongVowel({
   const baseY = H / 2 + (blockTop - blockBot) / 2;
   const restBase = baseY + gap + m.restAsc * R;
 
-  const prog = Array.from({ length: copies }, (_, k) =>
-    spring({
-      frame: t - stretchAt - k * stagger,
-      fps,
-      config: { damping: 15, stiffness: 140, mass: 0.8 },
-    }),
-  );
+  const progAt = (f: number) =>
+    Array.from({ length: copies }, (_, k) =>
+      spring({
+        frame: f - stretchAt - k * stagger,
+        fps,
+        config: { damping: 15, stiffness: 140, mass: 0.8 },
+      }),
+    );
+  const prog = progAt(t);
   const vel = prog.map((_, k) => {
     const a = spring({
       frame: t - stretchAt - k * stagger - 1,
@@ -281,17 +287,25 @@ export function LongVowel({
   const n = chars.length + copies;
   const fx = m.x;
   const step = (i: number) => (i + 1 < n ? fx[i + 1] - fx[i] : 0);
-  const xs: number[] = [];
-  let shrink = 0;
-  for (let i = 0; i < n; i++) {
-    if (i > hold && i <= hold + copies) {
-      const k = i - hold - 1;
-      shrink += (1 - prog[k]) * step(i - 1);
+  /** Left edge of each glyph, in px, for the springs at `pr`. */
+  const lefts = (pr: number[]) => {
+    const xs: number[] = [];
+    let shrink = 0;
+    for (let i = 0; i < n; i++) {
+      if (i > hold && i <= hold + copies) {
+        const k = i - hold - 1;
+        shrink += (1 - pr[k]) * step(i - 1);
+      }
+      xs.push(fx[i] - shrink);
     }
-    xs.push(fx[i] - shrink);
-  }
-  const curW = m.width - shrink;
-  const left = (W - curW * F) / 2;
+    const left = (W - (m.width - shrink) * F) / 2;
+    return xs.map((x) => left + x * F);
+  };
+  const xNow = lefts(prog);
+  const xPrev = lefts(progAt(t - speed));
+  const xNext = lefts(progAt(t + speed));
+  // Where every glyph lands once all copies are drawn out.
+  const xRest = lefts(prog.map(() => 1));
 
   const maskTop = baseY - m.asc * F;
   const maskH = (m.asc + m.desc) * F;
@@ -311,6 +325,20 @@ export function LongVowel({
       { ...CLAMP, easing: EASE_OUT },
     );
     const dy = (1 - rp) * maskH * 1.05;
+    // Layout rounds a box and a baseline to whole pixels, so a glyph moved by
+    // `left`/`top` clicks along pixel by pixel, and jumps where layout takes
+    // over from a transform. Every glyph is laid out where it lands and
+    // carried there by a transform all its life.
+    const moving =
+      (rp > 0 && rp < 1) ||
+      Math.max(Math.abs(xNext[i] - xNow[i]), Math.abs(xNow[i] - xPrev[i])) >
+        1e-3;
+    const place: React.CSSProperties = {
+      left: xRest[i],
+      top: lineTop - maskTop,
+    };
+    const dx = xNow[i] - xRest[i];
+    const travel = `translate(${Math.abs(dx) > 1e-3 ? dx : 0}px, ${dy}px)${glide(moving)} `;
     let color: string = ink ?? c.ink;
     let opacity = 1;
     let skew = 0;
@@ -325,15 +353,14 @@ export function LongVowel({
           key={`g${i}`}
           style={{
             position: "absolute",
-            left: left + xs[i] * F,
-            top: lineTop - maskTop + dy,
+            ...place,
             fontFamily,
             fontWeight: 400,
             fontSize: F,
             lineHeight: `${F}px`,
             whiteSpace: "pre",
             opacity,
-            transform: `skewX(${skew.toFixed(2)}deg)`,
+            transform: `${travel}skewX(${skew.toFixed(2)}deg)`,
             transformOrigin: `0 ${(m.asc * F).toFixed(1)}px`,
             backgroundImage: `linear-gradient(90deg, ${color}, ${rampAt(ramp, u1)})`,
             WebkitBackgroundClip: "text",
@@ -351,14 +378,14 @@ export function LongVowel({
         key={`g${i}`}
         style={{
           position: "absolute",
-          left: left + xs[i] * F,
-          top: lineTop - maskTop + dy,
+          ...place,
           fontFamily,
           fontWeight: 400,
           fontSize: F,
           lineHeight: `${F}px`,
           whiteSpace: "pre",
           color,
+          transform: travel.trimEnd(),
         }}
       >
         {ch}
@@ -417,7 +444,7 @@ export function LongVowel({
                   key={`${w}-${k}`}
                   style={{
                     display: "inline-block",
-                    transform: `translateY(${((1 - p) * R * 1.2).toFixed(2)}px)`,
+                    transform: `translateY(${((1 - p) * R * 1.2).toFixed(2)}px)${glide(midway(p))}`,
                   }}
                 >
                   {w}

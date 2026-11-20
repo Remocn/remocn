@@ -15,6 +15,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -161,6 +162,13 @@ function wrap(
   return lines.map((l) => l.join(" "));
 }
 
+const between = (p: number) => p > 0 && p < 1;
+
+function needle(progress: number, rulerW: number) {
+  const dx = progress < 0.5 ? -progress * rulerW : (1 - progress) * rulerW;
+  return Math.abs(dx) < 1e-3 ? undefined : `translateX(${dx}px)`;
+}
+
 function ZoomReadout({
   value,
   progress,
@@ -232,8 +240,12 @@ function ZoomReadout({
         ))}
         <span
           style={{
+            // Laid out at the end it is nearer to and slid there by a
+            // transform: layout rounds a box to whole pixels, so a needle
+            // eased by `left` clicks along.
             position: "absolute",
-            left: (1 - progress) * rulerW - 1,
+            left: (progress < 0.5 ? rulerW : 0) - 1,
+            transform: needle(progress, rulerW),
             bottom: 0,
             width: 2,
             height: size * 0.34,
@@ -282,6 +294,7 @@ export function UpClose({
   speed = 1,
   theme = "dark",
 }: UpCloseProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames: D, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -386,7 +399,12 @@ export function UpClose({
     ...CLAMP,
     easing: ENTER,
   });
-  const closeTop = lerp(closeStartTop, closeFinalTop, lift);
+  // The lines are laid out where they finally rest and move by a transform
+  // all their life: layout rounds a baseline to whole pixels, so a line eased
+  // by `top` clicks along, and one handed back to layout at rest jumps.
+  const closeLift = (closeStartTop - closeFinalTop) * (1 - lift);
+  const shift = (dy: number, moving: boolean) =>
+    `translateY(${Math.abs(dy) < 1e-3 ? 0 : dy}px)${glide(moving)}`;
   const readSize = portrait ? W * 0.075 : H * 0.085;
 
   const text = {
@@ -457,7 +475,7 @@ export function UpClose({
             left: textX,
             top: portrait ? H * 0.06 : finalTopY,
             opacity: readoutIn,
-            transform: `translateY(${(1 - readoutIn) * readSize * 0.3}px)`,
+            transform: `translateY(${(1 - readoutIn) * readSize * 0.3}px)${glide(between(readoutIn))}`,
           }}
         >
           <ZoomReadout
@@ -476,7 +494,11 @@ export function UpClose({
             key={`c${i.toString()}`}
             style={{
               ...text,
-              top: closeTop + i * step + rise(closeIn),
+              top: closeFinalTop + i * step,
+              transform: shift(
+                closeLift + rise(closeIn),
+                between(closeIn) || between(lift),
+              ),
               opacity: closeIn,
               filter: blur(closeIn),
               color: lift > 0 ? mix(fg, c.dim, lift) : fg,
@@ -490,7 +512,8 @@ export function UpClose({
             key={`w${i.toString()}`}
             style={{
               ...text,
-              top: wideTop + i * step + rise(wideIn),
+              top: wideTop + i * step,
+              transform: shift(rise(wideIn), between(wideIn)),
               opacity: wideIn,
               filter: blur(wideIn),
               color: fg,
@@ -503,7 +526,8 @@ export function UpClose({
           <div
             style={{
               ...text,
-              top: wideTop + wideHead.length * step + rise(wideIn),
+              top: wideTop + wideHead.length * step,
+              transform: shift(rise(wideIn), between(wideIn)),
               opacity: wideIn,
               filter: blur(wideIn),
               color: fg,

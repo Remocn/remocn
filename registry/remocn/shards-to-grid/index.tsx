@@ -14,6 +14,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -162,10 +163,16 @@ const TALL_CLUSTERS = [
 const ASPECTS = [1.6, 1.33, 0.75, 1, 2.1, 0.62, 1.45, 0.8];
 const SWATCH = ["#e6dac8", "#b48a62", "#4b5a47", "#1d2230"];
 
+/**
+ * A shard's face, laid out once at the shard's full size `w` x `h` and shrunk
+ * with it by `k`. Sizing it from the shrinking box instead would reflow the
+ * type every frame, and layout rounds each baseline to a whole pixel.
+ */
 function Fragment({
   kind,
   w,
   h,
+  k,
   surface,
   ink,
   accent,
@@ -174,15 +181,25 @@ function Fragment({
   kind: Kind;
   w: number;
   h: number;
+  k: number;
   surface: string;
   ink: string;
   accent: string;
   seed: number;
 }) {
   const u = Math.min(w, h);
+  const face = {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    width: w,
+    height: h,
+    transform: k === 1 ? undefined : `scale(${k})`,
+    transformOrigin: "0 0",
+  } as const;
   if (kind === "swatch") {
     return (
-      <div style={{ position: "absolute", inset: 0, display: "flex" }}>
+      <div style={{ ...face, display: "flex" }}>
         {[...SWATCH, accent].map((c) => (
           <span key={c} style={{ flex: 1, backgroundColor: c }} />
         ))}
@@ -193,8 +210,7 @@ function Fragment({
     return (
       <div
         style={{
-          position: "absolute",
-          inset: 0,
+          ...face,
           backgroundColor: surface,
           display: "flex",
           alignItems: "center",
@@ -225,8 +241,7 @@ function Fragment({
   return (
     <div
       style={{
-        position: "absolute",
-        inset: 0,
+        ...face,
         backgroundColor: surface,
         padding: u * 0.12,
         boxSizing: "border-box",
@@ -341,6 +356,7 @@ export function ShardsToGrid({
   delay = 0,
   speed = 1,
 }: ShardsToGridProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const t = THEMES[theme];
@@ -487,7 +503,17 @@ export function ShardsToGrid({
       : { x: cx - s.w * 0.1, y: cy - s.h * 0.1, w: s.w * 0.2, h: s.h * 0.2 };
     const tx = target.x + target.w / 2;
     const ty = target.y + target.h / 2;
+    // The box is laid out where it lands and reaches that place by a
+    // transform: layout rounds a box and a baseline to whole pixels, so a
+    // shard carried by `left`/`top` clicks through its slow swirl. `dx`/`dy`
+    // is the corner's distance from home, exactly zero once it has landed.
+    const left = tx - target.w / 2;
+    const top = ty - target.h / 2;
     return {
+      left,
+      top,
+      dx: (sx - s.w / 2 - left) * (1 - q),
+      dy: (sy - s.h / 2 - top) * (1 - q),
       x: sx + (tx - sx) * q,
       y: sy + (ty - sy) * q,
       w: s.w + (target.w - s.w) * q,
@@ -591,8 +617,8 @@ export function ShardsToGrid({
         key={`sh-${s.i}`}
         style={{
           position: "absolute",
-          left: p.x - p.w / 2,
-          top: p.y - p.h / 2,
+          left: p.left,
+          top: p.top,
           width: p.w,
           height: p.h,
           borderRadius: radius,
@@ -602,7 +628,7 @@ export function ShardsToGrid({
             Math.min(1, p.e * 2) *
             fade *
             (s.isCell ? 1 : 0.55 + 0.45 * Math.min(1, s.z * 2)),
-          transform: `perspective(${W * 1.2}px) rotateX(${p.rx}deg) rotateY(${p.ry}deg) rotateZ(${p.rz}deg)`,
+          transform: `translate(${p.dx}px, ${p.dy}px) perspective(${W * 1.2}px) rotateX(${p.rx}deg) rotateY(${p.ry}deg) rotateZ(${p.rz}deg)`,
           filter:
             motion + depthBlur * (1 - p.q) > 0.3
               ? `blur(${motion + depthBlur * (1 - p.q)}px)`
@@ -624,8 +650,9 @@ export function ShardsToGrid({
         {s.kind === "type" || s.kind === "wave" || s.kind === "swatch" ? (
           <Fragment
             kind={s.kind}
-            w={p.w}
-            h={p.h}
+            w={s.w}
+            h={s.h}
+            k={p.w / s.w}
             surface={t.surface}
             ink={t.ink}
             accent={accent}
@@ -654,7 +681,11 @@ export function ShardsToGrid({
       />
       <ScaleLayer scale={scale}>
         <AbsoluteFill
-          style={{ transform: `scale(${push * (1 + snapPunch * 0.012)})` }}
+          style={{
+            // The push never rests once the clip runs, so neither does the
+            // tilt.
+            transform: `scale(${push * (1 + snapPunch * 0.012)})${glide(frame > 0)}`,
+          }}
         >
           {order
             .filter((s) => !s.isCell || frame < beat("morph"))
@@ -662,14 +693,17 @@ export function ShardsToGrid({
           <div
             style={{
               position: "absolute",
-              left: winRect.x,
-              top: winRect.y,
+              // Laid out at the window's corner; the way there from the
+              // pill is a transform, so the chrome inside doesn't click along
+              // through the long tail of the morph.
+              left: win.x,
+              top: win.y,
               width: winRect.w,
               height: winRect.h,
               borderRadius: winRadius,
               backgroundColor: fill > 0.01 ? winBg : t.pill,
               opacity: pillIn,
-              transform: `translateY(${(1 - pillIn) * H * 0.04}px)`,
+              transform: `translate(${(cx - pillW / 2 - win.x) * (1 - morph)}px, ${(cy - pillH / 2 - win.y) * (1 - morph) + (1 - pillIn) * H * 0.04}px)`,
               boxShadow: `inset 0 1px 0 rgba(255,255,255,${light ? 0.9 : 0.07}), 0 0 0 1px ${t.pillEdge}, 0 ${(2 + 4 * morph) * unit}px ${(6 + 10 * morph) * unit}px ${shadow(0.5)}, 0 ${(16 + 40 * morph) * unit}px ${(40 + 100 * morph) * unit}px ${shadow(0.6)}`,
               backdropFilter: fill < 1 ? "blur(14px)" : undefined,
             }}
@@ -717,8 +751,11 @@ export function ShardsToGrid({
               style={{
                 position: "absolute",
                 left: 0,
-                right: 0,
                 top: 0,
+                // The bar is as wide as the finished window from the start,
+                // so its right-hand group isn't reflowed as the window grows.
+                width: win.w,
+                boxSizing: "border-box",
                 height: bar,
                 display: "flex",
                 alignItems: "center",
@@ -763,6 +800,8 @@ export function ShardsToGrid({
                   display: "flex",
                   alignItems: "center",
                   gap: label * 0.9,
+                  // Rides the window's right edge by a transform instead.
+                  transform: `translateX(${winRect.w - win.w}px)`,
                 }}
               >
                 <PlayOutline size={label * 1.15} color={`rgba(${t.ink},0.6)`} />

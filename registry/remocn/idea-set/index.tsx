@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const sans = loadPlexSans("normal", {
   weights: ["500"],
@@ -149,6 +150,8 @@ function useMetrics(chars: string[], fontFamily: string) {
   return state && state.key === key ? state.m : null;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -179,6 +182,7 @@ export function IdeaSet({
   speed = 1,
   theme = "dark",
 }: IdeaSetProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -238,15 +242,15 @@ export function IdeaSet({
   const visH = (rows.length - 1) * lineH + F * 1.02;
   const top = (H - visH) / 2 - (baseIn - F * 0.72);
 
-  const stateOf = (i: number) => {
+  const stateOf = (i: number, tt = t) => {
     const a = interpolate(
-      t,
+      tt,
       [W1 + i * stagger, W1 + i * stagger + TURN],
       [0, 1],
       { ...CLAMP, easing: EASE_IO },
     );
     const b = interpolate(
-      t,
+      tt,
       [W2 + i * stagger, W2 + i * stagger + TURN],
       [0, 1],
       { ...CLAMP, easing: EASE_IO },
@@ -278,13 +282,37 @@ export function IdeaSet({
       easing: EASE_OUT,
     });
     const baseY = top + r * lineH + baseIn;
-    let x = 0;
+    // Where each glyph of the row is laid out at a time: a neighbour that
+    // changes face pushes it along by layout.
+    const lefts = (tt: number) => {
+      let at = 0;
+      return g.map((ch, k) => {
+        const { a, b } = stateOf(gi + k, tt);
+        const left = at;
+        at += advOf(ch, a, b) + trackOf(a, b);
+        return left;
+      });
+    };
+    const xs = lefts(t);
+    const xsNext = lefts(t + speed);
+    const xsPrev = lefts(t - speed);
     const rowGlyphs: React.ReactNode[] = [];
     g.forEach((ch, k) => {
+      const x = xs[k];
       const { a, b } = stateOf(gi + k);
       const fi = faceOf(a, b);
       const face = faces[fi];
       const lift = Math.sin(Math.PI * a) + Math.sin(Math.PI * b);
+      const hopping = midway(a) || midway(b);
+      // The lean comes and goes with any move of the glyph, its own hop or
+      // the push of a neighbour, so it never switches while layout carries it.
+      const moving =
+        hopping ||
+        Math.abs(xsNext[k] - x) * F > 1e-3 ||
+        Math.abs(x - xsPrev[k]) * F > 1e-3;
+      // Rounding the hop to 0.01px is fine at rest but steps it while it
+      // moves, so the raw value rides there.
+      const hop = -lift * F * 0.08;
       const inHl = hlStart >= 0 && ci >= hlStart && ci < hlEnd;
       const color = inHl && fi === 2 ? (accent ?? c.accent) : fg;
       rowGlyphs.push(
@@ -302,13 +330,12 @@ export function IdeaSet({
             fontWeight: face.weight,
             fontSize: F,
             color,
-            transform: `translateY(${(-lift * F * 0.08).toFixed(2)}px)`,
+            transform: `translateY(${hopping ? hop : hop.toFixed(2)}px)${glide(moving)}`,
           }}
         >
           {ch}
         </span>,
       );
-      x += advOf(ch, a, b) + trackOf(a, b);
       ci++;
     });
     gi += g.length;
@@ -342,9 +369,13 @@ export function IdeaSet({
           style={{
             position: "absolute",
             left: 0,
-            top: (1 - enter) * lineH,
+            // The row slides up by transform, not `top`: layout rounds a
+            // baseline to whole pixels, so text eased by `top` clicks.
+            top: 0,
             width: W,
             height: lineH,
+            // Kept at 0 once the row is in: the lean rides on it.
+            transform: `translateY(${(1 - enter) * lineH > 1e-3 ? (1 - enter) * lineH : 0}px)${glide(midway(enter))}`,
           }}
         >
           {rowGlyphs}

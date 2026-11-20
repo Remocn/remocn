@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const sans = loadInstrumentSans("normal", {
   weights: ["400", "500"],
@@ -181,6 +182,7 @@ export function DiffSwap({
   speed = 1,
   theme = "dark",
 }: DiffSwapProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, durationInFrames } = useVideoConfig();
   const t = THEMES[theme];
@@ -218,6 +220,7 @@ export function DiffSwap({
   const hB = rowH(rows.b.lines.length);
   const hA = rowH(rows.a.lines.length);
   const gap = fs * 0.12;
+  const bandWOf = (f: number) => width - padX * 2 + f * 0.3;
 
   const scaleEnd = Math.min(
     portrait ? 1.5 : 1.42,
@@ -225,14 +228,20 @@ export function DiffSwap({
     (height * (portrait ? 0.5 : 0.62)) / (rows.a.lines.length * LINE * fs),
   );
 
-  const enter = (i: number) => EASE_OUT(clamp01((frame - i * 3) / 18));
+  const enterAt = (f: number, i: number) => EASE_OUT(clamp01((f - i * 3) / 18));
+  const enter = (i: number) => enterAt(frame, i);
   const mark = EASE_OUT(clamp01((frame - 30) / 14));
-  const open = EASE_IO(clamp01((frame - 42) / 18));
-  const addIn = (i: number) => EASE_OUT(clamp01((frame - 53 - i * 3) / 18));
+  const openAt = (f: number) => EASE_IO(clamp01((f - 42) / 18));
+  const open = openAt(frame);
+  const addInAt = (f: number, i: number) =>
+    EASE_OUT(clamp01((f - 53 - i * 3) / 18));
+  const addIn = (i: number) => addInAt(frame, i);
   const plusBand = EASE_OUT(clamp01((frame - 46) / 14));
-  const fold = EASE_IO(clamp01((frame - foldAt) / 20));
+  const foldAtFrame = (f: number) => EASE_IO(clamp01((f - foldAt) / 20));
+  const fold = foldAtFrame(frame);
   const clear = EASE_OUT(clamp01((frame - (foldAt + 6)) / 16));
-  const grow = EASE_IO(clamp01((frame - (foldAt + 4)) / 22));
+  const growAt = (f: number) => EASE_IO(clamp01((f - (foldAt + 4)) / 22));
+  const grow = growAt(frame);
   const hlT = EASE_OUT(clamp01((frame - (foldAt + 12)) / 18));
   const drift = interpolate(
     frame,
@@ -241,18 +250,47 @@ export function DiffSwap({
     CLAMP,
   );
 
-  const curB = hB * (1 - fold);
-  const curGap = gap * open * (1 - fold);
-  const curA = hA * open;
-  const zoom = 1 + (scaleEnd - 1) * grow;
-  const total = curB + curGap + curA * zoom;
-  const top = height / 2 - total / 2;
-  const topA = top + curB + curGap;
+  const stack = (op: number, fo: number, gr: number) => {
+    const b = hB * (1 - fo);
+    const g = gap * op * (1 - fo);
+    const a = hA * op;
+    const z = 1 + (scaleEnd - 1) * gr;
+    const tp = height / 2 - (b + g + a * z) / 2;
+    return { curB: b, curA: a, zoom: z, top: tp, topA: tp + b + g };
+  };
+  const { curB, curA, zoom, top, topA } = stack(open, fold, grow);
+  // Layout rounds a box and a baseline to whole pixels, so rows eased by
+  // `top` clicked along. Each row is laid out where it rests longest (the
+  // removed line before the diff opens, the added one once it has grown)
+  // and travels by transform.
+  const topB0 = stack(0, 0, 0).top;
+  const topA1 = stack(1, 1, 1).topA;
+  const pose = (f: number) => {
+    const g = stack(openAt(f), foldAtFrame(f), growAt(f));
+    return {
+      ...g,
+      foldY: foldAtFrame(f) * hB * 0.55,
+      eB: rows.b.lines.map((_, i) => enterAt(f, i) * fs),
+      eA: rows.a.lines.map((_, i) => addInAt(f, i) * fs),
+    };
+  };
+  const now = pose(frame);
+  const near = [pose(frame - speed), pose(frame + speed)];
+  const moved = (pick: (q: typeof now) => number[]) =>
+    near.some((q) => {
+      const a = pick(q);
+      const b = pick(now);
+      return a.some((v, i) => Math.abs(v - b[i]) > 1e-3);
+    });
+  const movingB = moved((q) => [q.top, q.foldY, ...q.eB]);
+  const movingA = moved((q) => [q.topA, q.zoom * bandWOf(fs), ...q.eA]);
+  const travel = (dy: number) =>
+    Math.abs(dy) < 1e-3 ? "" : `translateY(${dy}px)`;
 
   const transparent = background === "transparent";
   const gutter = gutterEm * fs;
   const left = padX;
-  const bandW = width - padX * 2 + fs * 0.3;
+  const bandW = bandWOf(fs);
 
   const lineStyle: React.CSSProperties = {
     fontFamily,
@@ -300,11 +338,13 @@ export function DiffSwap({
           style={{
             position: "absolute",
             left: left - fs * 0.15,
-            top,
+            top: topB0,
             width: bandW,
             height: curB,
             overflow: "hidden",
             borderRadius: fs * 0.12,
+            transform:
+              `${travel(top - topB0)}${glide(movingB)}`.trim() || undefined,
           }}
         >
           <div
@@ -334,7 +374,8 @@ export function DiffSwap({
             style={{
               position: "absolute",
               left: gutter + fs * 0.15,
-              top: rowPadY - fold * hB * 0.55,
+              top: rowPadY,
+              transform: travel(-fold * hB * 0.55) || undefined,
               opacity: clamp01(1 - fold * 1.5),
             }}
           >
@@ -368,12 +409,14 @@ export function DiffSwap({
           style={{
             position: "absolute",
             left: left - fs * 0.15,
-            top: topA,
+            top: topA1,
             width: bandW,
             height: curA,
             overflow: "hidden",
             borderRadius: fs * 0.12,
-            transform: `translateX(${(grow * (fs * 0.15 - (gutter + fs * 0.15) * zoom)).toFixed(2)}px) scale(${zoom.toFixed(4)})`,
+            // The mark stays on at rest: the row rests under a zoom, off the
+            // pixel grid, and its text keeps the lean there.
+            transform: `${travel(topA - topA1)} translateX(${(grow * (fs * 0.15 - (gutter + fs * 0.15) * zoom)).toFixed(2)}px) scale(${zoom.toFixed(4)})${glide(movingA)}`,
             transformOrigin: "left top",
           }}
         >

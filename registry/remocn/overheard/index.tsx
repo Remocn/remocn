@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const serif = loadFont("normal", { weights: ["400"], subsets: ["latin"] });
 
@@ -257,7 +258,18 @@ export function Overheard({
   speed = 1,
   theme = "dark",
 }: OverheardProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
+  const now = useCurrentFrame();
+  const tAt = (f: number) => Math.max(0, f - delay) * speed;
+  const t = tAt(now);
+  /** Whether a lift, in px as a function of time, moves on this frame. */
+  const stirs = (lift: (t: number) => number) => {
+    const here = lift(t);
+    return (
+      Math.abs(lift(tAt(now + 1)) - here) > 1e-3 ||
+      Math.abs(here - lift(tAt(now - 1))) > 1e-3
+    );
+  };
   const { width: W, height: H, durationInFrames: T } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
@@ -362,15 +374,12 @@ export function Overheard({
             easing: EASE_IO,
           });
           const dim = 1 - back * 0.55;
-          const nIn = interpolate(
-            t,
-            [nameAt[i] * k, nameAt[i] * k + 16],
-            [0, 1],
-            {
+          const nameIn = (t: number) =>
+            interpolate(t, [nameAt[i] * k, nameAt[i] * k + 16], [0, 1], {
               ...CLAMP,
               easing: EASE_OUT,
-            },
-          );
+            });
+          const nIn = nameIn(t);
           const nameText = `— ${list[i].name}`;
           const nameW = adv(nameText) * L;
           const nameTop = tops[i] + lay.lines * lineH + F * nameGap;
@@ -386,10 +395,12 @@ export function Overheard({
                   ? W - marginX - (lw - p.x) * F
                   : marginX + p.x * F;
                 const at = natural[i][j] * k;
-                const e = interpolate(t, [at, at + RISE], [0, 1], {
-                  ...CLAMP,
-                  easing: EASE_OUT,
-                });
+                const rise = (t: number) =>
+                  interpolate(t, [at, at + RISE], [0, 1], {
+                    ...CLAMP,
+                    easing: EASE_OUT,
+                  });
+                const e = rise(t);
                 return (
                   <div
                     key={`w${j}`}
@@ -404,7 +415,7 @@ export function Overheard({
                       letterSpacing: `${TRACK}em`,
                       color: wd.hot ? hi : fg,
                       opacity: e,
-                      transform: `translateY(${((1 - e) * F * 0.28).toFixed(2)}px)`,
+                      transform: `translateY(${((1 - e) * F * 0.28).toFixed(2)}px)${glide(stirs((t) => (1 - rise(t)) * F * 0.28))}`,
                     }}
                   >
                     {wd.text}
@@ -422,7 +433,7 @@ export function Overheard({
                   letterSpacing: `${TRACK}em`,
                   color: fg,
                   opacity: nIn * 0.7,
-                  transform: `translateY(${((1 - nIn) * L * 0.6).toFixed(2)}px)`,
+                  transform: `translateY(${((1 - nIn) * L * 0.6).toFixed(2)}px)${glide(stirs((t) => (1 - nameIn(t)) * L * 0.6))}`,
                 }}
               >
                 {nameText}

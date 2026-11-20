@@ -14,6 +14,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const anton = loadAnton("normal", { weights: ["400"], subsets: ["latin"] });
 const manrope = loadManrope("normal", {
@@ -93,6 +94,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 interface WordMetrics {
   chars: string[];
@@ -242,6 +245,7 @@ export function EdgeFit({
   speed = 1,
   theme = "dark",
 }: EdgeFitProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -276,32 +280,58 @@ export function EdgeFit({
     const ink = wm.inkLeft[k - 1] + wm.inkRight[k - 1];
     return Math.min(measureW / Math.max(0.05, ink), maxInk / inkH);
   };
-  const arrive = (j: number) =>
+  const arriveAt = (lt: number, j: number) =>
     j === 0
       ? 1
       : spring({
-          frame: local - j * letterGap + LEAD,
+          frame: lt - j * letterGap + LEAD,
           fps,
           config: { damping: 19, stiffness: 260, mass: 0.6 },
         });
-  let S = fitOf(1);
-  for (let k = 2; k <= n; k++) S += (fitOf(k) - fitOf(k - 1)) * arrive(k - 1);
+  const arrive = (j: number) => arriveAt(local, j);
+  const sizeAt = (lt: number) => {
+    let v = fitOf(1);
+    for (let k = 2; k <= n; k++)
+      v += (fitOf(k) - fitOf(k - 1)) * arriveAt(lt, k - 1);
+    return v;
+  };
+  const liveS = sizeAt(local);
+  // While the word refits, its font size springs, and layout would round the
+  // baseline and the box edges to whole pixels as it goes. So the word is laid
+  // out once at the size it settles on and reaches the live size by `scale`
+  // around the frame's centre, which every position here is linear about. The
+  // scale stays on at rest too (at 1 once the spring has settled): handing the
+  // word back to a layout at the live size would move it on that frame.
+  const S = fitOf(n);
+  const settled = Math.abs(liveS - S) * (W / 2 / S) < 1e-3;
+  const refitting =
+    Math.abs(sizeAt(local + speed) - liveS) * (W / 2 / liveS) > 1e-3 ||
+    Math.abs(liveS - sizeAt(local - speed)) * (W / 2 / liveS) > 1e-3;
 
   const open = wm.adv.map((_, j) => Math.min(1.04, Math.max(0, arrive(j))));
-  let cursor = 0;
-  const xs: number[] = [];
-  for (let j = 0; j < n; j++) {
-    xs.push(cursor);
-    cursor += wm.adv[j] * open[j];
-  }
-  let shown = 1;
-  for (let j = 1; j < n; j++) if (open[j] > 0.001) shown = j + 1;
-  const kIn = Math.max(1, shown);
-  const blend = shown > 1 ? Math.min(1, open[shown - 1]) : 1;
-  const inkRightPrev = kIn > 1 ? wm.inkRight[kIn - 2] : wm.inkRight[0];
-  const inkRight = inkRightPrev + (wm.inkRight[kIn - 1] - inkRightPrev) * blend;
-  const inkW = (wm.inkLeft[0] + inkRight) * S;
-  const left = (W - inkW) / 2 + wm.inkLeft[0] * S;
+  const lineOf = (opens: number[]) => {
+    let cursor = 0;
+    const xs: number[] = [];
+    for (let j = 0; j < n; j++) {
+      xs.push(cursor);
+      cursor += wm.adv[j] * opens[j];
+    }
+    let shown = 1;
+    for (let j = 1; j < n; j++) if (opens[j] > 0.001) shown = j + 1;
+    const kIn = Math.max(1, shown);
+    const blend = shown > 1 ? Math.min(1, opens[shown - 1]) : 1;
+    const inkRightPrev = kIn > 1 ? wm.inkRight[kIn - 2] : wm.inkRight[0];
+    const inkRight =
+      inkRightPrev + (wm.inkRight[kIn - 1] - inkRightPrev) * blend;
+    const inkW = (wm.inkLeft[0] + inkRight) * S;
+    const left = (W - inkW) / 2 + wm.inkLeft[0] * S;
+    return xs.map((x) => left + x * S);
+  };
+  // Each letter is laid out where it rests once the word is whole and slides
+  // there by a transform: a `left` that springs is rounded by layout, and its
+  // last tiny steps would land on the frame the lean goes.
+  const xNow = lineOf(open);
+  const xRest = lineOf(open.map(() => 1));
 
   const baseY = H / 2 + ((wm.inkTop - wm.inkBottom) / 2) * S;
   const boxTop = baseY - m.baseline * S;
@@ -332,6 +362,8 @@ export function EdgeFit({
             width: W,
             top: maskTop,
             height: maskH,
+            transform: `scale(${settled ? 1 : liveS / S})${glide(refitting)}`,
+            transformOrigin: `${W / 2}px ${H / 2 - maskTop}px`,
           }}
         >
           {wm.chars.map((ch, j) => {
@@ -348,13 +380,13 @@ export function EdgeFit({
                   ...CLAMP,
                   easing: EASE_OUT,
                 });
-            const x = left + xs[j] * S;
+            const dx = xNow[j] - xRest[j];
             return (
               <div
                 key={`${wi}-${j}-${ch}`}
                 style={{
                   position: "absolute",
-                  left: x,
+                  left: xRest[j],
                   top: boxTop - maskTop,
                   height: S,
                   lineHeight: `${S}px`,
@@ -363,7 +395,7 @@ export function EdgeFit({
                   fontWeight: 400,
                   fontSize: S,
                   opacity: interpolate(rp, [0, 0.55], [0, 1], CLAMP),
-                  transform: `translateY(${((1 - rp) * S * 0.22).toFixed(2)}px)`,
+                  transform: `translate(${Math.abs(dx) > 1e-3 ? dx : 0}px, ${((1 - rp) * S * 0.22).toFixed(2)}px)${glide(midway(rp) && !refitting)}`,
                   color: spot,
                 }}
               >
@@ -388,7 +420,7 @@ export function EdgeFit({
                   lineHeight: 1,
                   color: fg,
                   opacity: sign,
-                  transform: `translateY(${((1 - sign) * smallFs * 0.8).toFixed(2)}px)`,
+                  transform: `translateY(${((1 - sign) * smallFs * 0.8).toFixed(2)}px)${glide(midway(sign))}`,
                 }}
               >
                 {caption}
@@ -401,7 +433,7 @@ export function EdgeFit({
                   right: margin,
                   bottom: margin,
                   opacity: sign,
-                  transform: `translateY(${((1 - sign) * smallFs * 0.8).toFixed(2)}px)`,
+                  transform: `translateY(${((1 - sign) * smallFs * 0.8).toFixed(2)}px)${glide(midway(sign))}`,
                 }}
               >
                 {logoNode}

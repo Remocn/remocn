@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const nunito = loadFont("normal", {
   weights: ["400", "500"],
@@ -204,6 +205,8 @@ function plan(from: number, value: number, steps: number) {
   return { start: digitsOf(from), changes, carries, cols: cur.length, end };
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -241,7 +244,10 @@ export function CarryCount({
   speed = 1,
   theme = "dark",
 }: CarryCountProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
+  const frame = useCurrentFrame();
+  const tAt = (f: number) => Math.max(0, f - delay) * speed;
+  const t = tAt(frame);
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
   const bg = background ?? c.bg;
@@ -314,11 +320,11 @@ export function CarryCount({
     (lh - (m.asc + m.desc) * size) / 2 + m.asc * size;
   const digitTop = base - bo(F, F);
 
-  const digitAt = (i: number) => {
+  const digitAt = (i: number, tt = t) => {
     let d: number | null = i < p.start.length ? p.start[i] : null;
     let last = -1e9;
     for (const ch of p.changes) {
-      if (ch.col === i && ch.at <= t) {
+      if (ch.col === i && ch.at <= tt) {
         d = ch.digit;
         last = ch.at;
       }
@@ -331,21 +337,33 @@ export function CarryCount({
     easing: EASE_OUT,
   });
 
-  const glyphs: React.ReactNode[] = [];
-  for (let i = 0; i < cols; i++) {
-    const { d, last } = digitAt(i);
-    if (d === null) continue;
+  /** A digit's squash at time `tt`, as the string it is rendered with. */
+  const squashAt = (i: number, tt: number) => {
+    const { last } = digitAt(i, tt);
     const born = i >= p.start.length ? last : -1e9;
     const grow =
       born > -1e8
-        ? interpolate(t - born, [0, 7], [0.55, 1], {
+        ? interpolate(tt - born, [0, 7], [0.55, 1], {
             ...CLAMP,
             easing: EASE_OUT,
           })
         : 1;
-    const q = impact(t - last);
+    const q = impact(tt - last);
     const sy = (1 - 0.16 * q) * grow;
     const sx = (1 + 0.1 * q) * grow;
+    return { grow, str: `scale(${sx.toFixed(4)}, ${sy.toFixed(4)})` };
+  };
+
+  const glyphs: React.ReactNode[] = [];
+  for (let i = 0; i < cols; i++) {
+    const { d } = digitAt(i);
+    if (d === null) continue;
+    const { grow, str } = squashAt(i, t);
+    // The impact rings out slowly; it moves for as long as the rendered
+    // squash differs from a neighbouring frame's.
+    const ringing =
+      squashAt(i, tAt(frame - 1)).str !== str ||
+      squashAt(i, tAt(frame + 1)).str !== str;
     const x = colX(i);
     const w = m.digit[d] * F;
     glyphs.push(
@@ -362,7 +380,7 @@ export function CarryCount({
           fontWeight,
           color: fg,
           whiteSpace: "pre",
-          transform: `scale(${sx.toFixed(4)}, ${sy.toFixed(4)})`,
+          transform: `${str}${glide(ringing)}`,
           transformOrigin: `50% ${bo(F, F).toFixed(1)}px`,
           opacity: intro,
         }}
@@ -413,7 +431,6 @@ export function CarryCount({
       ...CLAMP,
       easing: EASE_IN,
     });
-    const x = x0 + (x1 - x0) * a;
     const lift = Math.sin(a * Math.PI) * D * 0.55;
     const y =
       startY +
@@ -424,13 +441,16 @@ export function CarryCount({
       interpolate(u, [0, 1.6], [0.5, 1], { ...CLAMP, easing: EASE_OUT }) *
       (1 - 0.35 * dropP);
     const o = interpolate(u, [COL_GAP - 0.4, COL_GAP + 0.6], [1, 0], CLAMP);
+    // Laid out where the disc lands; the flight there is a transform, since
+    // layout rounds a box and its "1" to whole pixels and they'd click along.
+    const yLand = capTop + D * 0.15;
     carryNodes.push(
       <div
         key={`k${k.col}-${k.at}`}
         style={{
           position: "absolute",
-          left: x - D / 2,
-          top: y - D / 2,
+          left: x1 - D / 2,
+          top: yLand - D / 2,
           width: D,
           height: D,
           borderRadius: D,
@@ -443,7 +463,7 @@ export function CarryCount({
           fontWeight,
           fontSize: D * 0.72,
           lineHeight: 1,
-          transform: `scale(${s.toFixed(3)})`,
+          transform: `translate(${(x1 - x0) * (a - 1)}px, ${y - yLand}px) scale(${s.toFixed(3)})${glide(true)}`,
           opacity: o,
         }}
       >
@@ -480,7 +500,7 @@ export function CarryCount({
             letterSpacing: `${LABEL_TRACK}em`,
             color: fg,
             whiteSpace: "pre",
-            transform: `translateY(${((1 - lp) * L * 1.3).toFixed(2)}px)`,
+            transform: `translateY(${((1 - lp) * L * 1.3).toFixed(2)}px)${glide(midway(lp))}`,
           }}
         >
           {line}

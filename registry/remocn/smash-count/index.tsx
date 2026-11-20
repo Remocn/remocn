@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const rubik = loadRubik("normal", {
   weights: ["400", "500"],
@@ -205,6 +206,7 @@ export function SmashCount({
   speed = 1,
   theme = "dark",
 }: SmashCountProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -302,7 +304,9 @@ export function SmashCount({
             fontSize: F,
             letterSpacing: `${TRACK}em`,
             color: accent,
-            transform: `scale(${punch.toFixed(4)})`,
+            // Unrounded: a scale rounded to 1e-4 steps the far glyphs by
+            // a fraction of a pixel per frame on its own.
+            transform: `scale(${punch})${glide(punch !== 1)}`,
             transformOrigin: `${ox} ${oy}`,
           }}
         >

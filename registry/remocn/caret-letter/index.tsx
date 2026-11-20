@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const face = loadFont("normal", {
   weights: ["300", "400"],
@@ -67,6 +68,10 @@ const OPEN_LEN = 24;
 const MORPH = 134;
 const MORPH_LEN = 16;
 const SUB = 150;
+
+// Letters scale in and the subline rises by a transform; the shared glide
+// mark leans their text off the pixel grid while a progress is midway.
+const moving = (p: number) => p > 0 && p < 1;
 
 /** Caret proportions in em. */
 const CARET_W = 0.02;
@@ -178,6 +183,7 @@ export function CaretLetter({
   speed = 1,
 }: CaretLetterProps) {
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
   const { width, height } = useVideoConfig();
   const t = THEMES[theme];
   const fg = inkProp ?? t.fg;
@@ -368,7 +374,29 @@ export function CaretLetter({
   });
 
   const rowH = L?.rowH ?? fontSize * LINE_HEIGHT;
-  const left = width / 2 - centre;
+  // The row is laid out at the centre it rests at nearest in time, and the
+  // drift between rests is a transform: layout rounds the caret box to whole
+  // pixels, so a row eased by `left` makes it click along.
+  const restCentre =
+    frame < slideAt
+      ? typingCentre < typedEnd / 4
+        ? 0
+        : typedEnd / 2
+      : slide < 0.5
+        ? typedEnd / 2
+        : fullCentre;
+  const left = width / 2 - restCentre;
+  const drift = restCentre - centre;
+  // The caret the same way, laid out where it rests nearest in time.
+  const caretRest =
+    frame < slideAt
+      ? typeX(frame) < typedEnd / 2
+        ? 0
+        : typedEnd
+      : slide < 0.5
+        ? typedEnd
+        : stemCx;
+  const caretRun = caretX - caretRest;
   const top = height / 2 - rowH / 2 - height * 0.035;
 
   return (
@@ -405,6 +433,8 @@ export function CaretLetter({
             width: 0,
             height: rowH,
             opacity: L ? 1 : 0,
+            transform:
+              Math.abs(drift) < 1e-3 ? undefined : `translateX(${drift}px)`,
           }}
         >
           {typedLetters.map((ch, j) => {
@@ -432,7 +462,7 @@ export function CaretLetter({
                   opacity: p,
                   filter: p < 1 ? `blur(${(1 - p) * 8}px)` : undefined,
                   transformOrigin: `0px ${baseline}px`,
-                  transform: `scale(${0.6 + 0.4 * p})`,
+                  transform: `scale(${0.6 + 0.4 * p})${glide(moving(p))}`,
                 }}
               >
                 {ch}
@@ -443,8 +473,12 @@ export function CaretLetter({
           <div
             style={{
               position: "absolute",
-              left: caretX - caretW / 2,
+              left: caretRest - caretW / 2,
               top: caretTop,
+              transform:
+                Math.abs(caretRun) < 1e-3
+                  ? undefined
+                  : `translateX(${caretRun}px)`,
               width: caretW,
               height: caretBottom - caretTop,
               background: accent,
@@ -458,7 +492,7 @@ export function CaretLetter({
               position: "absolute",
               left: (L?.fullW ?? 0) / 2,
               top: rowH + fontSize * 0.02,
-              transform: `translate(-50%, ${(1 - subP) * 12}px)`,
+              transform: `translate(-50%, ${(1 - subP) * 12}px)${glide(moving(subP))}`,
               whiteSpace: "nowrap",
               fontFamily,
               fontWeight: 400,

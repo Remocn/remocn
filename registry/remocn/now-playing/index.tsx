@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -767,6 +768,8 @@ const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 const MORPH = { damping: 200 };
 const GLIDE = { mass: 0.9, damping: 24, stiffness: 140 };
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -805,6 +808,7 @@ export function NowPlaying({
   ground,
   groundParams,
 }: NowPlayingProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { fps, width, height } = useVideoConfig();
   const f = frame * speed;
@@ -1014,7 +1018,11 @@ export function NowPlaying({
             <div
               style={{
                 position: "absolute",
-                left: `${progress * 100}%`,
+                // The knob rides the bar as a transform (the bar spans the
+                // player less its 24px insets): layout rounds a box to whole
+                // pixels, so a knob moved by `left` clicks along.
+                left: 0,
+                transform: `translateX(${progress * (SW - 48)}px)`,
                 top: -4,
                 width: 12,
                 height: 12,
@@ -1284,7 +1292,8 @@ export function NowPlaying({
               top: phoneC.y - BH / 2,
               width: BW,
               height: BH,
-              transform: `translateY(${(1 - rise) * stageH * 0.7}px) scale(${k * (1 + 0.015 * (f / 300))})`,
+              // The phone never stops drifting, so its text always leans.
+              transform: `translateY(${(1 - rise) * stageH * 0.7}px) scale(${k * (1 + 0.015 * (f / 300))})${glide(true)}`,
             }}
           >
             <Phone>
@@ -1326,15 +1335,17 @@ export function NowPlaying({
               <div
                 style={{
                   position: "absolute",
-                  left: tap.x - 22,
-                  top: tap.y - 22,
+                  // Laid out at the first key; the travel between taps is a
+                  // transform, for the same reason as the progress knob.
+                  left: keys[0].x - 22,
+                  top: keys[0].y - 22,
                   width: 44,
                   height: 44,
                   borderRadius: 22,
                   background: "rgba(255,255,255,0.3)",
                   boxShadow: "inset 0 0 0 1.5px rgba(255,255,255,0.7)",
                   opacity: tapOpacity,
-                  transform: `scale(${1 - 0.2 * tapPress})`,
+                  transform: `translate(${tap.x - keys[0].x}px, ${tap.y - keys[0].y}px) scale(${1 - 0.2 * tapPress})`,
                   zIndex: 35,
                 }}
               />
@@ -1410,7 +1421,7 @@ export function NowPlaying({
                       top: 0,
                       width: textW,
                       opacity: inP * (1 - outP),
-                      transform: `translateY(${(1 - inP) * bigSize * 1.6 - outP * bigSize * 1.2}px)`,
+                      transform: `translateY(${(1 - inP) * bigSize * 1.6 - outP * bigSize * 1.2}px)${glide(midway(inP) || midway(outP))}`,
                     }}
                   >
                     <div

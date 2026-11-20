@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: serif } = loadSerif("normal", {
   weights: ["400"],
@@ -55,6 +56,8 @@ const DRAW = Easing.bezier(0.7, 0, 0.2, 1);
 const SHEAR = Easing.bezier(0.22, 1, 0.36, 1);
 const OPEN = Easing.bezier(0.7, 0, 0.3, 1);
 const SETTLE = Easing.bezier(0.22, 1, 0.36, 1);
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const STAGES = {
   dark: {
@@ -148,13 +151,17 @@ function Title({
   max,
   italic = false,
   fontFamily,
+  tilt,
 }: {
   content: React.ReactNode;
   color: string;
   max: number;
   italic?: boolean;
   fontFamily: string;
+  /** Marks the statement for the lean on every frame; true while it moves. */
+  tilt?: boolean;
 }) {
+  const glide = useGlide();
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
   if (typeof content !== "string")
@@ -165,6 +172,9 @@ function Title({
       style={{
         alignItems: "center",
         justifyContent: "center",
+        // The mark stays on at rest too: a statement left off the pixel grid
+        // keeps its lean only under a mark, and dropping it snaps the line.
+        transform: tilt === undefined ? undefined : glide(tilt).trim(),
       }}
     >
       <div
@@ -218,6 +228,7 @@ export function HairlineOpen({
   delay = 0,
   speed = 1,
 }: HairlineOpenProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -279,11 +290,15 @@ export function HairlineOpen({
               }}
             />
             <ScaleLayer scale={scale}>
+              {/* The tilt sits on the statement, not the half: a tilted half
+                  would lift its painted corner off the frame edge while the
+                  split is still narrow. */}
               <Title
                 content={from}
                 color={fg}
                 max={176}
                 fontFamily={fontFamily}
+                tilt={midway(open)}
               />
             </ScaleLayer>
           </div>
@@ -323,7 +338,7 @@ export function HairlineOpen({
       ) : null}
       <AbsoluteFill
         style={{
-          transform: `scale(${bScale})`,
+          transform: `scale(${bScale})${glide(midway(settle))}`,
           opacity: interpolate(gap, [0.05 * H, 0.32 * H], [0, 1], CLAMP),
         }}
       >

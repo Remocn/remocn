@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: geist } = loadGeist("normal", {
   weights: ["400", "500"],
@@ -38,6 +39,8 @@ export interface MoireRevealProps {
   theme?: "dark" | "light";
   speed?: number;
 }
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const CLAMP = {
   extrapolateLeft: "clamp",
@@ -191,6 +194,7 @@ export function MoireReveal({
   theme = "dark",
   speed = 1,
 }: MoireRevealProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -384,7 +388,7 @@ export function MoireReveal({
               whiteSpace: "nowrap",
               color: ink ?? stage.fg,
               opacity: capIn,
-              transform: `translateY(${(1 - capIn) * 12 * u}px)`,
+              transform: `translateY(${(1 - capIn) * 12 * u}px)${glide(midway(capIn))}`,
             }}
           >
             <span

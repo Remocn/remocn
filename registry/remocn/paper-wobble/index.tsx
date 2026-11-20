@@ -2,6 +2,7 @@
 
 import type React from "react";
 import { useCurrentFrame } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import { DEFAULT_STEP, paperJitter } from "@/lib/remocn/stop-motion";
 
 export interface PaperWobbleProps {
@@ -23,9 +24,17 @@ export function PaperWobble({
   className,
   style,
 }: PaperWobbleProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame();
-  const jitter = paperJitter(frame, seed, { amp, rotAmp, step });
-  const wobble = `translate(${jitter.x}px, ${jitter.y}px) rotate(${jitter.rot}deg)`;
+  const pose = (f: number) => {
+    const j = paperJitter(f, seed, { amp, rotAmp, step });
+    return `translate(${j.x}px, ${j.y}px) rotate(${j.rot}deg)`;
+  };
+  // A pose that lands close to level would put the text back on whole
+  // pixels for its hold and snap it there; the mark keeps it off the grid.
+  const here = pose(frame);
+  const moving = here !== pose(frame - 1) || here !== pose(frame + 1);
+  const wobble = `${here}${glide(moving)}`;
 
   return (
     <div

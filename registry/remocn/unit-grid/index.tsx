@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400"],
@@ -170,6 +171,7 @@ export function UnitGrid({
   theme = "dark",
   speed = 1,
 }: UnitGridProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -278,10 +280,16 @@ export function UnitGrid({
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const cam = interpolate(t, [0, flipEnd + 40], [1, 1.03], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const camAt = (f: number) =>
+    interpolate(f, [0, flipEnd + 40], [1, 1.03], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const cam = camAt(t);
+  // Weighed by the distance from the centre to the furthest text.
+  const camMoving = [t - speed, t + speed].some(
+    (f) => Math.abs(camAt(f) - cam) * W * 0.5 > 1e-3,
+  );
   const numSize = Math.min(gh * 0.5, colW * 0.46);
   const digits = String(hi).length;
   const colLeft = left + gw + gap;
@@ -301,7 +309,10 @@ export function UnitGrid({
       />
       <ScaleLayer scale={scale}>
         <AbsoluteFill
-          style={{ transform: `scale(${cam})`, transformOrigin: "50% 50%" }}
+          style={{
+            transform: `scale(${cam})${glide(camMoving)}`,
+            transformOrigin: "50% 50%",
+          }}
         >
           <svg
             width={W}

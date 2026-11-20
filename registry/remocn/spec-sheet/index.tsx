@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadSans("normal", {
   weights: ["400", "500"],
@@ -220,6 +221,8 @@ function Value({ value, p }: { value: string; p: number }) {
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -254,6 +257,7 @@ export function SpecSheet({
   theme = "dark",
   speed = 1,
 }: SpecSheetProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -284,14 +288,32 @@ export function SpecSheet({
     ...CLAMP,
     easing: EASE_IO,
   });
-  const heights = rows.map((_, i) => baseH + (i === hl ? extra * grow : 0));
-  const total = heights.reduce((a, b) => a + b, 0);
-  const top = (H - total) / 2;
-  const rowTop = (i: number) => {
-    let y = top;
-    for (let k = 0; k < i; k++) y += heights[k];
-    return y;
+  const geometry = (g: number) => {
+    const heights = rows.map((_, i) => baseH + (i === hl ? extra * g : 0));
+    const total = heights.reduce((a, b) => a + b, 0);
+    const top = (H - total) / 2;
+    const rowTop = (i: number) => {
+      let y = top;
+      for (let k = 0; k < i; k++) y += heights[k];
+      return y;
+    };
+    return { heights, total, top, rowTop };
   };
+  // Text is laid out where the open row leaves it and travels there by
+  // transform all its life: layout rounds a box and a baseline to whole
+  // pixels, so rows pushed by `top` click along pixel by pixel, and text
+  // handed back to layout at rest jumps by what the rounding takes. The
+  // rules have no text: closed, they keep their live layout and stay crisp,
+  // and only ride a transform while the row opens.
+  const expanding = grow > 0 && grow < 1;
+  const live = geometry(grow);
+  const { heights, total, top, rowTop } = geometry(1);
+  const shift = (y: number, yAt: number) => yAt - y;
+  const ruleAt = expanding ? rowTop : live.rowTop;
+  const ruleShift = (i: number) =>
+    expanding
+      ? `translateY(${live.rowTop(i) - rowTop(i)}px)${glide(false)}`
+      : undefined;
 
   const rule = (i: number) =>
     interpolate(t, [4 + i * stagger, 26 + i * stagger], [0, 1], {
@@ -327,6 +349,7 @@ export function SpecSheet({
             top: top - 2 * u,
             height: titleF * 1.2,
             overflow: "hidden",
+            transform: `translateY(${shift(top, live.top)}px)${glide(expanding)}`,
           }}
         >
           <div
@@ -338,7 +361,7 @@ export function SpecSheet({
               letterSpacing: "-0.02em",
               whiteSpace: "nowrap",
               color: fg,
-              transform: `translateY(${(1 - titleP) * titleF * 1.2}px)`,
+              transform: `translateY(${(1 - titleP) * titleF * 1.2}px)${glide(midway(titleP) && !expanding)}`,
             }}
           >
             {title}
@@ -361,7 +384,7 @@ export function SpecSheet({
             letterSpacing: "-0.01em",
             color: c.muted,
             opacity: lockP,
-            transform: `translateY(${(1 - lockP) * 10 * u}px)`,
+            transform: `translateY(${(1 - lockP) * 10 * u + shift(top + total, live.top + live.total)}px)${glide(midway(lockP) || expanding)}`,
           }}
         >
           {logo ?? <RemocnLogo fontSize={26 * u} color={fg} />}
@@ -377,7 +400,8 @@ export function SpecSheet({
               style={{
                 position: "absolute",
                 left: tableX,
-                top: rowTop(i) - th / 2,
+                top: ruleAt(i) - th / 2,
+                transform: ruleShift(i),
                 width: tableW * rule(i),
                 height: th,
                 background: strong ? c.rule : c.hair,
@@ -389,9 +413,14 @@ export function SpecSheet({
         {rows.map((row, i) => {
           const y = rowTop(i);
           const h = heights[i];
+          // Rows are centred in their slot, so the highlighted one travels by
+          // its centre while its slot grows.
+          const dy = shift(y + h / 2, live.rowTop(i) + live.heights[i] / 2);
           const isHl = i === hl;
           const lp = rise(10 + i * stagger);
-          const grown = isHl ? hScale + (1 - hScale) * grow : 1;
+          // Written to land on exactly 1 when the row is open, so the value
+          // rests on the pixel grid there.
+          const grown = isHl ? 1 - (1 - hScale) * (1 - grow) : 1;
           const fill =
             isHl && grow > 0
               ? {
@@ -429,7 +458,7 @@ export function SpecSheet({
                   whiteSpace: "nowrap",
                   color: labelColor,
                   opacity: lp,
-                  transform: `translateY(${(1 - lp) * 12 * u}px)`,
+                  transform: `translateY(${(1 - lp) * 12 * u + dy}px)${glide(midway(lp) || expanding)}`,
                 }}
               >
                 {row.label}
@@ -450,7 +479,7 @@ export function SpecSheet({
                   fontVariantNumeric: "tabular-nums",
                   whiteSpace: "pre",
                   ...fill,
-                  transform: `scale(${grown})`,
+                  transform: `translateY(${dy}px) scale(${grown})${glide(expanding)}`,
                   transformOrigin: "100% 50%",
                 }}
               >

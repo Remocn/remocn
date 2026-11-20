@@ -14,6 +14,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -297,7 +298,9 @@ export function FocusFrontSwap({
   delay = 0,
   speed = 1,
 }: FocusFrontSwapProps) {
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
+  const sinceDelay = useCurrentFrame() - delay;
+  const frame = Math.max(0, sinceDelay) * speed;
   const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
@@ -488,8 +491,12 @@ export function FocusFrontSwap({
     const logoTop = cy + (lastRows * lastT * 1.2) / 2 + lastT * 0.34;
 
     const push = interpolate(frame, [0, durationInFrames], [1, 1.04], CLAMP);
+    // The push is linear over the whole clip; it only holds during `delay`.
+    const pushing = sinceDelay > -1 && frame < durationInFrames;
     content = (
-      <AbsoluteFill style={{ transform: `scale(${push.toFixed(4)})` }}>
+      <AbsoluteFill
+        style={{ transform: `scale(${push.toFixed(4)})${glide(pushing)}` }}
+      >
         {nodes}
         {logo ? (
           <div

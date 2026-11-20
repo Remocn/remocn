@@ -20,6 +20,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -344,6 +345,7 @@ function SceneLine({
   delay: number;
   speed: number;
 }) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const t = THEMES[theme];
@@ -381,7 +383,8 @@ function SceneLine({
           style={{
             justifyContent: "center",
             alignItems: "center",
-            transform: `scale(${push})`,
+            // The push never rests, so neither does the tilt.
+            transform: `scale(${push})${glide(true)}`,
           }}
         >
           <div
@@ -458,6 +461,7 @@ function SceneLogo({
   scale: number;
   speed: number;
 }) {
+  const glide = useGlide();
   const frame = useCurrentFrame() * speed;
   const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
   const t = THEMES[theme];
@@ -501,7 +505,8 @@ function SceneLogo({
             justifyContent: "center",
             alignItems: "center",
             gap: logoSize * 0.34,
-            transform: `scale(${push})`,
+            // The same tilt as the headline's push, for the same reason.
+            transform: `scale(${push})${glide(true)}`,
           }}
         >
           <div

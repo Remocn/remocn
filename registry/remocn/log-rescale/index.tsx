@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -139,6 +140,8 @@ function Grain({ opacity }: { opacity: number }) {
 
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -172,6 +175,7 @@ export function LogRescale({
   speed = 1,
   theme = "dark",
 }: LogRescaleProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const u = height / 720;
@@ -198,11 +202,18 @@ export function LogRescale({
   const hi = 10 ** Math.ceil(Math.log10(maxV) + 1e-9);
   const decades = Math.round(Math.log10(hi / lo));
 
-  const m = interpolate(t, morph, [0, 1], { ...CLAMP, easing: EASE_IO });
+  const mAt = (tt: number) =>
+    interpolate(tt, morph, [0, 1], { ...CLAMP, easing: EASE_IO });
+  const m = mAt(t);
   const linN = (v: number) => v / linMax;
   const logN = (v: number) =>
     (Math.log10(Math.max(v, lo)) - Math.log10(lo)) / decades;
-  const norm = (v: number) => lerp(linN(v), logN(v), m);
+  const normAt = (v: number, mm: number) => lerp(linN(v), logN(v), mm);
+  const norm = (v: number) => normAt(v, m);
+  // A frame on either side, to tell a value still easing from one at rest.
+  const moves = (at: (tt: number) => number) =>
+    Math.abs(at(t + speed) - at(t)) > 1e-3 ||
+    Math.abs(at(t) - at(t - speed)) > 1e-3;
 
   const left = width * 0.16;
   const right = width * 0.88;
@@ -210,6 +221,7 @@ export function LogRescale({
   const bottom = height * 0.8;
   const chartH = bottom - top;
   const yOf = (v: number) => bottom - norm(v) * chartH;
+  const yAt = (v: number, tt: number) => bottom - normAt(v, mAt(tt)) * chartH;
 
   const intro = interpolate(t, [0, 14], [0, 1], { ...CLAMP, easing: EASE_OUT });
 
@@ -231,7 +243,13 @@ export function LogRescale({
       const y = yOf(v);
       const a = Math.max(kind.lin ? linA : 0, kind.log ? logA : 0);
       const edge = interpolate(y, [top - 34 * u, top - 4 * u], [0, 1], CLAMP);
-      return { v, y, a: a * edge * intro };
+      // A label is laid out where the morph leaves it and rides there by
+      // transform all its life: layout rounds a baseline to whole pixels, so
+      // a label eased by `top` clicks along, and one handed back to layout at
+      // rest jumps by what the rounding takes.
+      const anchor = yOf(v) - yAt(v, morph[1]);
+      const sliding = moves((tt) => yAt(v, tt));
+      return { v, y, a: a * edge * intro, anchor, sliding };
     });
 
   const minors: Array<{ v: number; y: number }> = [];
@@ -246,16 +264,16 @@ export function LogRescale({
   const slot = (right - left) / n;
   const bw = Math.min(slot * 0.52, 84 * u);
 
-  const growOf = (i: number) => {
+  const growOf = (i: number, tt = t) => {
     if (i === ai) {
       return spring({
-        frame: t - ACCENT_GROW,
+        frame: tt - ACCENT_GROW,
         fps,
         config: { damping: 18, stiffness: 70, mass: 0.9 },
       });
     }
     const order = i < ai ? i : i - 1;
-    return interpolate(t, [6 + order * 3, 26 + order * 3], [0, 1], {
+    return interpolate(tt, [6 + order * 3, 26 + order * 3], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -377,8 +395,9 @@ export function LogRescale({
                 position: "absolute",
                 left: left - 160 * u,
                 width: 160 * u - 16 * u,
-                top: tk.y - 10 * u,
+                top: tk.y - tk.anchor - 10 * u,
                 height: 20 * u,
+                transform: `translateY(${tk.anchor}px)${glide(tk.sliding)}`,
                 lineHeight: `${20 * u}px`,
                 textAlign: "right",
                 fontFamily,
@@ -399,8 +418,6 @@ export function LogRescale({
         {rows.map((d, i) => {
           const x = left + slot * (i + 0.5);
           const isA = i === ai;
-          const g = growOf(i);
-          const h = norm(values[i]) * chartH * g;
           const order = i < ai ? i : i - 1;
           const a = isA
             ? accentIn
@@ -410,7 +427,31 @@ export function LogRescale({
                 [0, 1],
                 { ...CLAMP, easing: EASE_OUT },
               );
-          const fs = isA ? lerp(20, 60, accentBig) * u : 17 * u;
+          const bigAt = (tt: number) =>
+            interpolate(tt, [LABELS_AT, LABELS_AT + 18], [0, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            });
+          const fsAt = (tt: number) =>
+            isA ? lerp(20, 60, bigAt(tt)) * u : 17 * u;
+          const topAt = (tt: number) => {
+            const h = normAt(values[i], mAt(tt)) * chartH * growOf(i, tt);
+            return bottom - h - fsAt(tt) * 1.1 - lerp(8, 6, bigAt(tt)) * u;
+          };
+          const fs = fsAt(t);
+          const top = topAt(t);
+          // The label is laid out where it ends, at its final size, and rides
+          // there by transform all its life: layout rounds a baseline to whole
+          // pixels, a font size that grows moves the baseline inside its own
+          // box, and a label handed back to layout at rest jumps by what the
+          // rounding takes.
+          const riding = moves(topAt) || moves(fsAt);
+          const fsEnd = fsAt(1e4);
+          const topEnd = topAt(1e4);
+          const rise = (1 - a) * 6 * u;
+          // The accent's spring leaves a tail far under a pixel.
+          const ride = top - topEnd + rise;
+          const box = fsEnd;
           return (
             <div key={`v-${d.label}`}>
               <div
@@ -418,20 +459,21 @@ export function LogRescale({
                   position: "absolute",
                   left: x - 140 * u,
                   width: 280 * u,
-                  top: bottom - h - fs * 1.1 - lerp(8, 6, accentBig) * u,
-                  height: fs * 1.1,
-                  lineHeight: `${fs * 1.1}px`,
+                  top: topEnd,
+                  height: box * 1.1,
+                  lineHeight: `${box * 1.1}px`,
                   textAlign: "center",
                   fontFamily,
                   fontWeight: 500,
-                  fontSize: fs,
+                  fontSize: box,
                   letterSpacing: isA
                     ? `${lerp(-0.01, -0.04, accentBig)}em`
                     : "-0.005em",
                   fontVariantNumeric: "tabular-nums",
                   color: fg,
                   opacity: a,
-                  transform: `translateY(${(1 - a) * 6 * u}px)`,
+                  transformOrigin: "50% 0",
+                  transform: `translateY(${Math.abs(ride) > 1e-3 ? ride : 0}px) scale(${fs / fsEnd})${glide(riding || midway(a))}`,
                   whiteSpace: "nowrap",
                 }}
               >
@@ -474,7 +516,7 @@ export function LogRescale({
             justifyContent: "space-between",
             width: right - left + 18 * u,
             opacity: titleA,
-            transform: `translateY(${(1 - titleA) * 8 * u}px)`,
+            transform: `translateY(${(1 - titleA) * 8 * u}px)${glide(midway(titleA))}`,
           }}
         >
           <div
@@ -513,7 +555,10 @@ export function LogRescale({
                   style={{
                     position: "absolute",
                     right: 0,
-                    top: (k - scaleSwap) * tagH,
+                    // Each tag is laid out where it rests and slides by
+                    // transform, for the same reason as the labels above.
+                    top: 0,
+                    transform: `translateY(${(k - scaleSwap) * tagH}px)${glide(midway(scaleSwap))}`,
                     height: tagH,
                     lineHeight: `${tagH}px`,
                     color: k === 1 ? fg : p.muted,

@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -381,6 +382,10 @@ const ICONS = {
   check: "M5.5 12.5l4 4 9-9.5",
 };
 
+/** A translate, or nothing once a spring's leftover is under a thousandth. */
+const shiftY = (dy: number) =>
+  Math.abs(dy) < 1e-3 ? "" : `translateY(${dy}px) `;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -416,6 +421,7 @@ export function FileDropzone({
   ground,
   groundParams,
 }: FileDropzoneProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width;
@@ -427,8 +433,14 @@ export function FileDropzone({
   const fg = ink ?? c.text;
   const list = files.slice(0, 3);
   const n = list.length;
+  const spAt = (f: number, at: number, config: Record<string, number>) =>
+    spring({ frame: f - at, fps, config });
   const sp = (at: number, config: Record<string, number>) =>
-    spring({ frame: frame - at, fps, config });
+    spAt(frame, at, config);
+  // Whether a value built from the frame moves into or out of this frame.
+  const stirs = (at: (f: number) => number, eps: number) =>
+    Math.abs(at(frame + 1) - at(frame)) > eps ||
+    Math.abs(at(frame) - at(frame - 1)) > eps;
 
   const WIN = tall
     ? { x: 20, y: 96, w: SW - 40, h: SH }
@@ -465,6 +477,14 @@ export function FileDropzone({
   const TABLE = CLOSE + 4;
   const TOAST = CLOSE + 12;
 
+  const modalHAt = (f: number) =>
+    HEADER_H +
+    DZ_OPEN +
+    (DZ_SHUT - DZ_OPEN) * spAt(f, BEAT.drop + 2, SPR.morph) +
+    12 +
+    rowAt.reduce((a, at) => a + Math.min(1, spAt(f, at, SPR.card)), 0) * ROW_H +
+    8 +
+    FOOTER_H;
   const shut = sp(BEAT.drop + 2, SPR.morph);
   const dzH = DZ_OPEN + (DZ_SHUT - DZ_OPEN) * shut;
   const listH = rowIn.reduce((a, b) => a + Math.min(1, b), 0) * ROW_H;
@@ -504,13 +524,17 @@ export function FileDropzone({
     return { x, y };
   };
   const cur = cursorAt(frame);
+  const curEnd = legs[legs.length - 1].to;
+  // A spring's leftover under a thousandth of a pixel counts as arrived.
+  const near = (v: number) => (Math.abs(v) < 1e-3 ? 0 : v);
+  const curDx = near(cur.x - curEnd.x);
+  const curDy = near(cur.y - curEnd.y);
   const held = cursorAt(Math.min(frame, BEAT.drop) - 2);
   const press = clamp01(sp(CLICK - 2, SPR.chip) - sp(CLICK + 3, SPR.chip));
 
   const hot = clamp01(sp(BEAT.hover, SPR.card) - sp(BEAT.drop + 2, SPR.card));
   const winIn = sp(BEAT.window, SPR.heavy);
   const winOp = tween(frame, BEAT.window, 10, EASE.enter);
-  const modalIn = sp(BEAT.modal, SPR.card);
   const modalOp = tween(frame, BEAT.modal, 8, EASE.enter);
   const close = tween(frame, CLOSE, 8, EASE.exit);
   const dim =
@@ -519,15 +543,47 @@ export function FileDropzone({
   const enabled = tween(frame, ENABLE, 6, EASE.enter);
   const toastIn = sp(TOAST, SPR.card);
   const toastOp = tween(frame, TOAST, 6, EASE.enter);
-  const cam =
+  const camAt = (f: number) =>
     1 +
-    0.035 * tween(frame, 8, 54, EASE.camera) -
-    0.035 * tween(frame, CLOSE - 2, 26, EASE.camera);
+    0.035 * tween(f, 8, 54, EASE.camera) -
+    0.035 * tween(f, CLOSE - 2, 26, EASE.camera);
+  const cam = camAt(frame);
+  // The camera carries the whole scene, so its tilt covers everything under
+  // it; the movers below tilt themselves only while it holds still.
+  const camMoving = stirs(camAt, 1e-6);
+  const winMoving = stirs(
+    (f) => (1 - spAt(f, BEAT.window, SPR.heavy)) * 40,
+    5e-4,
+  );
+  // The modal stays laid out at its final top; its recentring as the drop
+  // zone shuts and the rows arrive is part of its transform, since layout
+  // rounds a box and a baseline to whole pixels.
+  const modalYAt = (f: number) =>
+    (finalH - modalHAt(f)) / 2 +
+    (1 - spAt(f, BEAT.modal, SPR.card)) * 18 +
+    tween(f, CLOSE, 8, EASE.exit) * 10;
+  const modalSAt = (f: number) =>
+    (0.97 + 0.03 * spAt(f, BEAT.modal, SPR.card)) *
+    (1 - 0.03 * tween(f, CLOSE, 8, EASE.exit));
+  const modalMoving =
+    !camMoving && (stirs(modalYAt, 5e-4) || stirs(modalSAt, 1e-6));
+  const toastMoving =
+    !camMoving && stirs((f) => (1 - spAt(f, TOAST, SPR.card)) * 28, 1e-3);
+  const pressAt = (f: number) =>
+    clamp01(spAt(f, CLICK - 2, SPR.chip) - spAt(f, CLICK + 3, SPR.chip));
+  const pressMoving = !camMoving && !modalMoving && stirs(pressAt, 1e-5);
+  const badgeMoving =
+    !camMoving &&
+    (stirs((f) => cursorAt(f).y, 5e-4) ||
+      stirs((f) => spAt(f, BEAT.cursor + 4, SPR.chip), 1e-5));
   const cursorOp = tween(frame, BEAT.cursor, 4, EASE.enter);
   const badge =
     sp(BEAT.cursor + 4, SPR.chip) * (1 - tween(frame, BEAT.drop, 5, EASE.exit));
   const total = list.reduce((a, f) => a + f.size, 0);
   const dzLive = hot > 0.5;
+  // How far the zone's centred copy sits below where it ends up: half the
+  // zone's shrink, less half the hint row that folds away.
+  const dzShift = ((DZ_OPEN - DZ_SHUT - 22) / 2) * (1 - shut);
 
   const table = [
     ...list.map((f, i) => ({
@@ -553,6 +609,21 @@ export function FileDropzone({
         { i: 3, w: 130 },
       ];
   const tint = 1 - tween(frame, TABLE + 24, 40, EASE.soft);
+  // The fresh rows open by height and push the rows below them. Every row is
+  // laid out in the slot it ends up in and rides the gap still missing above
+  // it as a transform: layout rounds a baseline to whole pixels, and the
+  // spring's last wobble moved the rows below by a sixty-fourth of a pixel,
+  // enough to step them. A row not open yet keeps its slot empty.
+  const rowShort = (f: number, fresh: number) => {
+    const h = 54 * Math.min(1, spAt(f, TABLE + fresh * 4, SPR.card));
+    return h <= 0.01 ? 55 : 54 - h;
+  };
+  const rowShiftAt = (f: number, row: number) =>
+    near(
+      -table
+        .slice(0, row)
+        .reduce((a, r) => a + (r.fresh >= 0 ? rowShort(f, r.fresh) : 0), 0),
+    );
 
   return (
     <AbsoluteFill
@@ -592,7 +663,7 @@ export function FileDropzone({
             style={{
               position: "absolute",
               inset: 0,
-              transform: `scale(${cam})`,
+              transform: `scale(${cam})${glide(camMoving)}`,
               transformOrigin: `${SW / 2}px ${centerY}px`,
             }}
           >
@@ -608,7 +679,7 @@ export function FileDropzone({
                 background: c.win,
                 boxShadow: c.winShadow,
                 opacity: winOp,
-                transform: `translateY(${(1 - winIn) * 40}px)`,
+                transform: `translateY(${(1 - winIn) * 40}px)${glide(winMoving && !camMoving)}`,
               }}
             >
               <div
@@ -672,22 +743,31 @@ export function FileDropzone({
                       </span>
                     ))}
                   </div>
-                  {table.map((r) => {
+                  {table.map((r, row) => {
                     const fresh = r.fresh >= 0;
                     const p = fresh ? sp(TABLE + r.fresh * 4, SPR.card) : 1;
                     const hgt = 54 * Math.min(1, p);
-                    if (fresh && hgt <= 0.01) return null;
+                    if (fresh && hgt <= 0.01)
+                      return <div key={r.cells[0]} style={{ height: 55 }} />;
+                    const rowShift = rowShiftAt(frame, row);
+                    const rowMoving =
+                      !camMoving &&
+                      !winMoving &&
+                      stirs((f) => rowShiftAt(f, row), 0);
                     return (
                       <div
                         key={r.cells[0]}
                         style={{
                           height: hgt,
+                          transform: `translateY(${rowShift}px)${glide(rowMoving)}`,
                           overflow: "hidden",
                           borderBottom: `1px solid ${c.line}`,
                           background: fresh
                             ? withAlpha(accent, (dark ? 0.12 : 0.07) * tint)
                             : "transparent",
-                          margin: "0 -12px",
+                          // Below, the room a row still lacks keeps the rows
+                          // after it in their final slots.
+                          margin: `0 -12px ${54 - hgt}px`,
                           padding: "0 12px",
                           borderRadius: 8,
                         }}
@@ -750,7 +830,7 @@ export function FileDropzone({
               style={{
                 position: "absolute",
                 left: modalLeft,
-                top: modalTop,
+                top: finalTop,
                 width: MODAL_W,
                 height: modalH,
                 borderRadius: 20,
@@ -758,7 +838,7 @@ export function FileDropzone({
                 boxShadow: c.modalShadow,
                 overflow: "hidden",
                 opacity: modalOp * (1 - close),
-                transform: `translateY(${(1 - modalIn) * 18 + close * 10}px) scale(${(0.97 + 0.03 * modalIn) * (1 - 0.03 * close)})`,
+                transform: `translateY(${modalYAt(frame)}px) scale(${modalSAt(frame)})${glide(modalMoving)}`,
               }}
             >
               <div
@@ -785,8 +865,14 @@ export function FileDropzone({
               <div
                 style={{
                   position: "relative",
-                  margin: `0 ${PAD}px`,
+                  // The rows below and the copy inside are laid out as if the
+                  // zone had already shut and ride the difference as a
+                  // transform: the negative margin keeps the flow height at
+                  // the shut size, the bottom padding the centring box.
+                  margin: `0 ${PAD}px ${DZ_SHUT - dzH}px`,
                   height: dzH,
+                  paddingBottom: dzH - DZ_SHUT,
+                  boxSizing: "border-box",
                   borderRadius: 12,
                   background: dzLive ? withAlpha(accent, 0.06) : c.zone,
                   display: "flex",
@@ -818,7 +904,7 @@ export function FileDropzone({
                 </svg>
                 <div
                   style={{
-                    transform: `translateY(${-hot * 4}px)`,
+                    transform: `translateY(${-hot * 4 + dzShift}px)`,
                   }}
                 >
                   <Icon
@@ -827,7 +913,13 @@ export function FileDropzone({
                     color={hot > 0.5 ? accent : c.muted}
                   />
                 </div>
-                <div style={{ fontSize: 17, color: fg }}>
+                <div
+                  style={{
+                    fontSize: 17,
+                    color: fg,
+                    transform: shiftY(dzShift) || undefined,
+                  }}
+                >
                   {dzLive ? (
                     <span style={{ color: accent }}>{releaseLabel}</span>
                   ) : (
@@ -842,7 +934,9 @@ export function FileDropzone({
                     color: c.muted,
                     opacity: 1 - shut,
                     height: 22 * (1 - shut),
+                    marginBottom: -22 * (1 - shut),
                     overflow: "hidden",
+                    transform: shiftY(dzShift) || undefined,
                   }}
                 >
                   {hint}
@@ -853,6 +947,7 @@ export function FileDropzone({
                   position: "relative",
                   margin: `12px ${PAD}px 0`,
                   height: listH,
+                  transform: shiftY(dzH - DZ_SHUT) || undefined,
                 }}
               >
                 {list.map((f, i) => {
@@ -870,7 +965,10 @@ export function FileDropzone({
                         position: "absolute",
                         left: 0,
                         right: 0,
-                        top: before * ROW_H,
+                        // Laid out in its own slot and pushed there by
+                        // the rows above it as they open.
+                        top: i * ROW_H,
+                        transform: shiftY((before - i) * ROW_H) || undefined,
                         height: ROW_H,
                         display: "flex",
                         alignItems: "center",
@@ -976,7 +1074,10 @@ export function FileDropzone({
                   position: "absolute",
                   left: 0,
                   right: 0,
-                  bottom: 0,
+                  // Pinned at the final height's bottom; the modal growing
+                  // past it is a transform, like the modal's own travel.
+                  top: finalH - FOOTER_H,
+                  transform: shiftY(modalH - finalH) || undefined,
                   height: FOOTER_H,
                   borderTop: `1px solid ${c.line}`,
                   display: "flex",
@@ -1019,7 +1120,7 @@ export function FileDropzone({
                     borderRadius: 10,
                     overflow: "hidden",
                     background: c.disabledBg,
-                    transform: `scale(${1 - 0.04 * press})`,
+                    transform: `scale(${1 - 0.04 * press})${glide(pressMoving)}`,
                   }}
                 >
                   <div
@@ -1066,7 +1167,7 @@ export function FileDropzone({
                 padding: "0 18px",
                 boxSizing: "border-box",
                 opacity: toastOp,
-                transform: `translateY(${(1 - toastIn) * 28}px) scale(${0.97 + 0.03 * toastIn})`,
+                transform: `translateY(${(1 - toastIn) * 28}px) scale(${0.97 + 0.03 * toastIn})${glide(toastMoving)}`,
               }}
             >
               <Icon
@@ -1114,10 +1215,12 @@ export function FileDropzone({
                   key={f.name}
                   style={{
                     position: "absolute",
-                    left: x - CARD.w / 2,
-                    top: y - CARD.h / 2,
+                    // The flight is a transform, not left/top: layout rounds
+                    // a box edge to whole pixels.
+                    left: -CARD.w / 2,
+                    top: -CARD.h / 2,
                     opacity: o,
-                    transform: `rotate(${rot}deg) scale(${s})`,
+                    transform: `translate(${x}px, ${y}px) rotate(${rot}deg) scale(${s})`,
                     borderRadius: 10,
                     boxShadow: `0 1px 2px rgba(0,0,0,0.12), 0 ${16 * (1 - fly) + 4}px ${30 * (1 - fly) + 8}px -6px rgba(10,12,30,${0.4 * (1 - fly) + 0.1})`,
                     zIndex: i === 1 ? 3 : 2,
@@ -1137,8 +1240,8 @@ export function FileDropzone({
               <div
                 style={{
                   position: "absolute",
-                  left: cur.x + 92,
-                  top: cur.y + 4,
+                  left: 92,
+                  top: 4,
                   width: 28,
                   height: 28,
                   borderRadius: 14,
@@ -1150,7 +1253,7 @@ export function FileDropzone({
                   alignItems: "center",
                   justifyContent: "center",
                   boxShadow: "0 4px 10px -2px rgba(10,12,30,0.35)",
-                  transform: `scale(${badge})`,
+                  transform: `translate(${cur.x}px, ${cur.y}px) scale(${badge})${glide(badgeMoving)}`,
                   zIndex: 4,
                 }}
               >
@@ -1163,11 +1266,13 @@ export function FileDropzone({
               viewBox="0 0 24 24"
               style={{
                 position: "absolute",
-                left: cur.x,
-                top: cur.y,
+                // Laid out where the cursor comes to rest; the travel is a
+                // transform so its box edges don't step pixel by pixel.
+                left: curEnd.x,
+                top: curEnd.y,
                 overflow: "visible",
                 opacity: cursorOp,
-                transform: `scale(${1 - 0.04 * press})`,
+                transform: `${curDx || curDy ? `translate(${curDx}px, ${curDy}px) ` : ""}scale(${1 - 0.04 * press})`,
                 transformOrigin: "2px 2px",
                 filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.3))",
                 zIndex: 5,

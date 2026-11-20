@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -93,6 +94,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const THEMES = {
   dark: {
@@ -240,7 +243,13 @@ export function Countdown({
   speed = 1,
   theme = "dark",
 }: CountdownProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
+  const frame = useCurrentFrame();
+  const tAt = (df: number) => Math.max(0, frame + df - delay) * speed;
+  const t = tAt(0);
+  // Every numeral on screen breathes, enters or exits, so it moves whenever
+  // time does; only the held frames before `delay` stand still.
+  const ticking = tAt(1) !== t || tAt(-1) !== t;
   const { width, height, fps } = useVideoConfig();
   const u = height / 720;
   const p: Palette = THEMES[theme];
@@ -252,6 +261,17 @@ export function Countdown({
   const cxp = width / 2;
   const cyp = height / 2;
   const final = count * beat;
+
+  // the whole stage leans in a touch at the cut, then settles
+  const kickAt = (tt: number) =>
+    1 +
+    0.02 * interpolate(tt, [final, final + 3, final + 24], [0, 1, 0], CLAMP);
+  const stageKick = kickAt(t);
+  const kickMoving =
+    kickAt(tAt(1)) !== stageKick || kickAt(tAt(-1)) !== stageKick;
+  // The stage carries the tilt while it kicks; the layers inside take it
+  // over otherwise, so the chain never holds two.
+  const inner = (moving: boolean) => glide(moving && !kickMoving);
 
   const exitOf = (k: number): Exit =>
     k === count - 1 ? "through" : k % 2 === 0 ? "ring" : "slice";
@@ -408,7 +428,7 @@ export function Countdown({
                 fontWeight={fontWeight}
                 style={{
                   clipPath: clip,
-                  transform: `translate(${dir * sh * shift}px, ${dir * gapY}px) scale(${scale})`,
+                  transform: `translate(${dir * sh * shift}px, ${dir * gapY}px) scale(${scale})${inner(ticking)}`,
                   opacity:
                     interpolate(part, [0.25, 1], [1, 0], CLAMP) *
                     (g === 0
@@ -460,7 +480,7 @@ export function Countdown({
               fontFamily={fontFamily}
               fontWeight={fontWeight}
               style={{
-                transform: `scale(${scale * grow(gr)})`,
+                transform: `scale(${scale * grow(gr)})${inner(ticking)}`,
                 opacity:
                   0.14 * interpolate(gr, [0, 0.2, 0.8], [0, 1, 0], CLAMP),
                 filter: `blur(${(3 + gr * gr * 18) * u}px)`,
@@ -477,7 +497,7 @@ export function Countdown({
     if (opacity > 0.001) {
       style = {
         opacity,
-        transform: `scale(${scale})`,
+        transform: `scale(${scale})${inner(ticking)}`,
         filter: blur > 0.2 ? `blur(${blur}px)` : undefined,
         WebkitMaskImage: mask,
         maskImage: mask,
@@ -497,11 +517,13 @@ export function Countdown({
   }
 
   // ---- final hit ----
-  const f = spring({
-    frame: t - final,
-    fps,
-    config: { damping: 16, stiffness: 160, mass: 0.8 },
-  });
+  const hitAt = (tt: number) =>
+    spring({
+      frame: tt - final,
+      fps,
+      config: { damping: 16, stiffness: 160, mass: 0.8 },
+    });
+  const f = hitAt(t);
   const fO = interpolate(t, [final, final + 6], [0, 1], CLAMP);
   const fBlur = interpolate(t, [final, final + 8], [10 * u, 0], {
     ...CLAMP,
@@ -541,9 +563,12 @@ export function Countdown({
     (finalIsLogo && !capMatch ? null : (
       <RemocnLogo fontSize={27 * u} color={fg} />
     ));
-  // the whole stage leans in a touch at the cut, then settles
-  const stageKick =
-    1 + 0.02 * interpolate(t, [final, final + 3, final + 24], [0, 1, 0], CLAMP);
+  // the spring has a long tail: weigh its scale step at the label's edge
+  const hitMoving =
+    Math.max(Math.abs(hitAt(tAt(1)) - f), Math.abs(f - hitAt(tAt(-1)))) *
+      0.1 *
+      finalW >
+    1e-3;
 
   // the halo sits on the countdown ring's radius, breathes in as the count
   // runs, and opens up at the hit to frame the final label
@@ -583,7 +608,9 @@ export function Countdown({
             }}
           />
         ) : null}
-        <AbsoluteFill style={{ transform: `scale(${stageKick})` }}>
+        <AbsoluteFill
+          style={{ transform: `scale(${stageKick})${glide(kickMoving)}` }}
+        >
           {layers}
           {overlays}
 
@@ -604,7 +631,7 @@ export function Countdown({
                   gap: finalSize * 0.16,
                   opacity: fO,
                   filter: fBlur > 0.2 ? `blur(${fBlur}px)` : undefined,
-                  transform: `scale(${0.9 + 0.1 * f})`,
+                  transform: `scale(${0.9 + 0.1 * f})${inner(hitMoving)}`,
                 }}
               >
                 {indicator && (
@@ -644,7 +671,7 @@ export function Countdown({
                     alignItems: "center",
                     gap: 10 * u,
                     opacity: cap,
-                    transform: `translateY(${(1 - cap) * 12 * u}px)`,
+                    transform: `translateY(${(1 - cap) * 12 * u}px)${inner(midway(cap))}`,
                     fontFamily,
                     fontWeight: 400,
                     fontSize: 24 * u,

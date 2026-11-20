@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -210,6 +211,7 @@ export function CoolingType({
   delay = 0,
   speed = 1,
 }: CoolingTypeProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -351,6 +353,18 @@ export function CoolingType({
       );
     });
 
+    const pushAt = (fr: number) =>
+      interpolate(fr, [0, durationInFrames], [1, 1.04], {
+        ...CLAMP,
+        easing: CAMERA,
+      });
+    const push = pushAt(frame);
+    // The camera's ease is very flat at both ends, so "moving" is the scale
+    // step weighed at the frame's edge, against the neighbouring frames.
+    const pushMoving =
+      Math.abs(pushAt(frame + speed) - push) * W * 0.5 > 1e-3 ||
+      Math.abs(push - pushAt(frame - speed)) * W * 0.5 > 1e-3;
+
     const glyphEls = chars.map((ch, i) => {
       if (ch.t > f) return null;
       const a = f - ch.t;
@@ -382,7 +396,7 @@ export function CoolingType({
             color: `color-mix(in oklab, ${hotC} ${pct(heat)}, ${target})`,
             textShadow: shadow,
             opacity: Math.min(1, 0.35 + a / 1.5),
-            transform: `translateY(${((1 - e) * size * 0.1).toFixed(2)}px)`,
+            transform: `translateY(${((1 - e) * size * 0.1).toFixed(2)}px)${glide(a < 4 && !pushMoving)}`,
             filter:
               e < 0.98 ? `blur(${((1 - e) * 4).toFixed(2)}px)` : undefined,
           }}
@@ -444,14 +458,12 @@ export function CoolingType({
       </>
     );
 
-    const push = interpolate(frame, [0, durationInFrames], [1, 1.04], {
-      ...CLAMP,
-      easing: CAMERA,
-    });
     content = (
       <AbsoluteFill
         style={{
-          transform: `scale(${push.toFixed(5)})`,
+          // Rounded only at rest: a scale stepped by 1e-5 moves the frame's
+          // edge in 0.01px steps of its own while the camera pushes.
+          transform: `scale(${pushMoving ? push : push.toFixed(5)})${glide(pushMoving)}`,
           transformOrigin: "50% 50%",
         }}
       >

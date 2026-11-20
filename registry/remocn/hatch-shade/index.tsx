@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["400", "500"],
@@ -43,6 +44,8 @@ export interface HatchShadeProps {
   speed?: number;
   theme?: "dark" | "light";
 }
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const CLAMP = {
   extrapolateLeft: "clamp",
@@ -173,6 +176,7 @@ export function HatchShade({
   speed = 1,
   theme = "dark",
 }: HatchShadeProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -385,7 +389,11 @@ export function HatchShade({
               position: "absolute",
               left: 0,
               right: 0,
-              top: baseline + gapBelow + (1 - capIn) * 10 * u,
+              // Layout rounds a baseline to whole pixels, so a caption eased
+              // by `top` clicks up pixel by pixel; the rise is a transform.
+              top: baseline + gapBelow,
+              // It stays on at rest, at 0: the lean rides on it.
+              transform: `translateY(${(1 - capIn) * 10 * u > 1e-3 ? (1 - capIn) * 10 * u : 0}px)${glide(midway(capIn))}`,
               textAlign: "center",
               fontFamily,
               fontStyle: "italic",

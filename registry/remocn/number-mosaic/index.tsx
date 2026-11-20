@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -453,6 +454,7 @@ export function NumberMosaic({
   speed = 1,
   theme = "dark",
 }: NumberMosaicProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = height / 720;
@@ -589,7 +591,8 @@ export function NumberMosaic({
   // the gradient drifts a few % sideways over the shot
   const gDrift = interpolate(t, [0, 140], [-0.04, 0.04], CLAMP);
 
-  // Label
+  // Label: tilted while it rises, none at rest (exactly 0 or 1).
+  const tilt = (k: number) => glide(k > 0 && k < 1);
   const lab = (d: number) =>
     interpolate(t, [84 + d, 108 + d], [0, 1], { ...CLAMP, easing: EASE_OUT });
   const labelTop = numTop + unit * 1.08 + 30 * u;
@@ -607,7 +610,11 @@ export function NumberMosaic({
         >
           <AbsoluteFill
             style={{
-              transform: `rotateX(${rotX}deg) rotateY(${rotY}deg) scale(${push})`,
+              // The field is seen in perspective until the camera lands, and
+              // text in perspective is drawn on a layer of its own; from then
+              // on it rests flat, off the grid in a smaller player, and is
+              // marked so it keeps one way of being drawn.
+              transform: `rotateX(${rotX}deg) rotateY(${rotY}deg) scale(${push})${cam >= 1 ? glide(false) : ""}`,
               transformOrigin: "50% 46%",
             }}
           >
@@ -740,7 +747,7 @@ export function NumberMosaic({
               alignItems: "center",
               gap: 9 * u,
               opacity: lab(0),
-              transform: `translateY(${(1 - lab(0)) * 14 * u}px)`,
+              transform: `translateY(${(1 - lab(0)) * 14 * u}px)${tilt(lab(0))}`,
             }}
           >
             {logo ??
@@ -773,7 +780,7 @@ export function NumberMosaic({
               fontWeight: 400,
               letterSpacing: "-0.01em",
               opacity: lab(6),
-              transform: `translateY(${(1 - lab(6)) * 14 * u}px)`,
+              transform: `translateY(${(1 - lab(6)) * 14 * u}px)${tilt(lab(6))}`,
             }}
           >
             {label}

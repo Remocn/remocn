@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const geist = loadGeist("normal", {
   weights: ["300", "400"],
@@ -237,6 +238,7 @@ export function LumenCount({
   speed = 1,
   theme = "dark",
 }: LumenCountProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -274,23 +276,25 @@ export function LumenCount({
   const b = Math.max(0.04, b0);
 
   const F = Math.min(H * 0.46, (W * 0.84) / m.width(finalText));
-  let wEff = m.width(`${fmt(lo)}${suffix}`);
-  {
-    let prev = wEff;
+  const wEffAt = (tt: number) => {
+    let acc = m.width(`${fmt(lo)}${suffix}`);
+    let prev = acc;
     for (let s = COUNT_AT; s <= countEnd + 1; s += 0.5) {
       const uu = uAt(s);
       const w = m.width(`${fmt(uu >= 1 ? value : valueAt(uu))}${suffix}`);
       if (w !== prev) {
-        wEff +=
+        acc +=
           (w - prev) *
-          interpolate(t, [s, s + SHIFT], [0, 1], {
+          interpolate(tt, [s, s + SHIFT], [0, 1], {
             ...CLAMP,
             easing: EASE_OUT,
           });
         prev = w;
       }
     }
-  }
+    return acc;
+  };
+  const wEff = wEffAt(t);
   const lineW = wEff * F;
   const capH = m.capTop * F;
   const hasLabel = label.length > 0;
@@ -303,6 +307,14 @@ export function LumenCount({
   const floorY = baseY + F * 0.035;
   const left = (W - lineW) / 2;
   const top = baseY - m.baseline * F;
+  // Layout rounds a painted box to whole pixels, so the gradient fill eased
+  // sideways by `left` steps as the number widens. While it eases, the line
+  // is laid out where the final number puts it and carried by a transform;
+  // between shifts it keeps the plain layout.
+  const shifting = wEffAt(t + speed) !== wEff || wEffAt(t - speed) !== wEff;
+  const restLeft = (W - m.width(finalText) * F) / 2;
+  const boxLeft = shifting ? restLeft : left;
+  const slide = shifting ? `translateX(${left - restLeft}px)` : undefined;
 
   const chars = Array.from(text);
   const finalChars = Array.from(finalText);
@@ -313,7 +325,7 @@ export function LumenCount({
       key={key}
       style={{
         position: "absolute",
-        left,
+        left: boxLeft,
         top,
         height: F,
         display: "flex",
@@ -324,6 +336,8 @@ export function LumenCount({
         color,
         whiteSpace: "pre",
         ...extra,
+        transform:
+          [slide, extra?.transform].filter(Boolean).join(" ") || undefined,
       }}
     >
       {chars.map((ch, i) => {
@@ -354,7 +368,12 @@ export function LumenCount({
               display: "inline-block",
               width: i === chars.length - 1 ? w - TRACK * F : w,
               textAlign: isDigit ? "center" : "left",
-              transform: dy ? `translateY(${dy.toFixed(2)}px)` : undefined,
+              // The lead digit keeps its transform between rises: a mark
+              // that left with the last fraction of a rise would snap it.
+              transform:
+                i === 0
+                  ? `translateY(${dy.toFixed(2)}px)${glide(dy !== 0)}`
+                  : undefined,
               opacity: op,
             }}
           >
@@ -487,7 +506,7 @@ export function LumenCount({
               letterSpacing: "-0.01em",
               color: ink ?? c.label,
               opacity: labP,
-              transform: `translateY(${((1 - labP) * labSize * 0.7).toFixed(2)}px)`,
+              transform: `translateY(${((1 - labP) * labSize * 0.7).toFixed(2)}px)${glide(labP > 0 && labP < 1)}`,
             }}
           >
             {label}

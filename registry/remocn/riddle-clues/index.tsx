@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const funnel = loadFont("normal", {
   weights: ["400", "500"],
@@ -237,6 +238,7 @@ export function RiddleClues({
   speed = 1,
   theme = "dark",
 }: RiddleCluesProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -283,16 +285,24 @@ export function RiddleClues({
     if (local < -2) return null;
     if (!isLast && local > OUT_AT + OUT_LEN + 2) return null;
 
-    const shift = interpolate(local, [TURN_AT, TURN_AT + SHIFT_LEN], [0, 1], {
-      ...CLAMP,
-      easing: EASE_MOVE,
-    });
-    const out = isLast
-      ? 0
-      : interpolate(local, [OUT_AT, OUT_AT + OUT_LEN], [0, 1], {
-          ...CLAMP,
-          easing: EASE_IN,
-        });
+    const shiftAt = (l: number) =>
+      interpolate(l, [TURN_AT, TURN_AT + SHIFT_LEN], [0, 1], {
+        ...CLAMP,
+        easing: EASE_MOVE,
+      });
+    const outAt = (l: number) =>
+      isLast
+        ? 0
+        : interpolate(l, [OUT_AT, OUT_AT + OUT_LEN], [0, 1], {
+            ...CLAMP,
+            easing: EASE_IN,
+          });
+    const shift = shiftAt(local);
+    // A frame on either side, to tell a value still easing from one at rest.
+    const dt = speed / k;
+    const moves = (at: (l: number) => number) =>
+      Math.abs(at(local + dt) - at(local)) > 1e-3 ||
+      Math.abs(at(local) - at(local - dt)) > 1e-3;
 
     const placed: {
       part: Part;
@@ -302,6 +312,10 @@ export function RiddleClues({
       first: number;
     }[] = [];
     let topY: number;
+    // The block recentres as the turn arrives. Layout rounds a box and a
+    // baseline to whole pixels, so the rows sit where the turn leaves them
+    // and the climb there is a transform.
+    let lift = (_l: number) => 0;
     if (item.inline) {
       const lineW = item.line[0].w * F;
       const turnW = item.turn[0].w * F;
@@ -328,13 +342,13 @@ export function RiddleClues({
       const nt = item.turn.length;
       const lineTop0 = cy - ((nl - 1) * pitch) / 2;
       const lineTop1 = cy - ((nl + nt - 1) * pitch) / 2;
-      const lineTop = lineTop0 + (lineTop1 - lineTop0) * shift;
+      lift = (l: number) => (lineTop0 - lineTop1) * (1 - shiftAt(l));
       let first = 0;
       item.line.forEach((part, li) => {
         placed.push({
           part,
           x: W / 2 - (part.w * F) / 2,
-          y: lineTop + li * pitch,
+          y: lineTop1 + li * pitch,
           turn: false,
           first,
         });
@@ -351,11 +365,15 @@ export function RiddleClues({
         });
         first += part.words.length;
       });
-      topY = lineTop;
+      topY = lineTop1;
     }
+    const dyLift = lift(local);
+    const lifting = moves(lift);
+    const liftTransform =
+      Math.abs(dyLift) > 1e-3 ? `translateY(${dyLift}px)` : undefined;
 
-    const rise = (at: number) =>
-      interpolate(local, [at, at + IN_LEN], [0, 1], {
+    const riseAt = (l: number, at: number) =>
+      interpolate(l, [at, at + IN_LEN], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       });
@@ -368,6 +386,7 @@ export function RiddleClues({
       at: number,
       first: number,
       key: string,
+      climbs: boolean,
     ) => (
       <div
         key={key}
@@ -378,11 +397,14 @@ export function RiddleClues({
           width: part.w * F + F * 0.5,
           height: rowH,
           overflow: "hidden",
+          transform: climbs ? liftTransform : undefined,
         }}
       >
         {part.words.map((w, wi) => {
-          const q = rise(at + (first + wi) * stagger);
-          const dy = (1 - q) * rowH - out * rowH;
+          const wordAt = (l: number) =>
+            (1 - riseAt(l, at + (first + wi) * stagger)) * rowH -
+            outAt(l) * rowH;
+          const dy = wordAt(local);
           return (
             <div
               key={`${key}-${wi}`}
@@ -398,7 +420,7 @@ export function RiddleClues({
                 letterSpacing: `${TRACK}em`,
                 whiteSpace: "pre",
                 color,
-                transform: `translateY(${dy.toFixed(2)}px)`,
+                transform: `translateY(${dy.toFixed(2)}px)${glide((climbs && lifting) || moves(wordAt))}`,
               }}
             >
               {w.text}
@@ -409,7 +431,8 @@ export function RiddleClues({
     );
 
     const labelY = topY - rowH / 2 - LF * 1.9;
-    const labelQ = rise(0);
+    const labelAt = (l: number) =>
+      (1 - riseAt(l, 0)) * LF * 1.6 - outAt(l) * LF * 1.6;
     const labelText = isLast ? "" : `${label} ${i + 1} of ${n - 1}`;
 
     return (
@@ -424,6 +447,7 @@ export function RiddleClues({
               height: LF * 1.6,
               overflow: "hidden",
               textAlign: "center",
+              transform: liftTransform,
             }}
           >
             <div
@@ -435,7 +459,7 @@ export function RiddleClues({
                 letterSpacing: "0.14em",
                 textTransform: "uppercase",
                 color: c.dim,
-                transform: `translateY(${((1 - labelQ) * LF * 1.6 - out * LF * 1.6).toFixed(2)}px)`,
+                transform: `translateY(${labelAt(local).toFixed(2)}px)${glide(lifting || moves(labelAt))}`,
               }}
             >
               {labelText}
@@ -451,6 +475,7 @@ export function RiddleClues({
             p.turn ? TURN_AT + 4 : 0,
             p.first,
             `r-${i}-${pi}`,
+            !p.turn,
           ),
         )}
       </div>

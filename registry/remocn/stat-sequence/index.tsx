@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -478,6 +479,7 @@ export function StatSequence({
   speed = 1,
   theme = "dark",
 }: StatSequenceProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { width, height } = useVideoConfig();
   const t = frame * speed;
@@ -561,7 +563,11 @@ export function StatSequence({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${1 + drift * 0.025}) translateX(${-drift * 6 * u}px)`,
+            // Chrome parks a glyph raster on a whole pixel while its matrix is
+            // axis-aligned, so text under the slow drift clicks along. The
+            // drift outlasts the hero's move into the row, so this mark covers
+            // every stat while anything on screen travels.
+            transform: `scale(${1 + drift * 0.025}) translateX(${-drift * 6 * u}px)${glide(drift > 0 && drift < 1)}`,
             transformOrigin: "40% 50%",
           }}
         >

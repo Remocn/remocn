@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["300", "400"],
@@ -231,6 +232,8 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -266,6 +269,7 @@ export function LiveTicker({
   speed = 1,
   theme = "dark",
 }: LiveTickerProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -305,6 +309,12 @@ export function LiveTicker({
   const baseline = H * 0.555 - lift * 24 * u;
   const numTop = baseline - cap;
   const cy = baseline - cap / 2;
+  // The number and its labels are laid out where the lift leaves them and
+  // ride up by transform: text placed by `y` or `top` snaps its baseline to
+  // whole pixels and clicks up. `liftY` is exactly 0 once the lift lands.
+  const restBaseline = H * 0.555 - 24 * u;
+  const restNumTop = restBaseline - cap;
+  const liftY = (1 - lift) * 24 * u;
 
   // ---------------------------------------------------------------- feed
   const rise = Math.min(target * 0.05, 6000);
@@ -468,6 +478,18 @@ export function LiveTicker({
   const gx = (k: number) => numLeft + numW * k;
   const gy = (k: number) => numTop - cap * 0.2 + cap * 1.4 * k;
   const step = cap + 0.2 * fs;
+  const labelMoving =
+    midway(lift) || midway(label(0)) || midway(label(4)) || midway(label(7));
+  const labelShift = `translateY(${liftY}px)${glide(labelMoving)}`;
+  // The digits and the pills are SVG text, placed by attributes: the drawing
+  // carries the mark. Digits roll until the freeze, then the whole number
+  // lifts; a pill climbs its lane until it reaches the number, where its label
+  // has already faded and it only slides into the sink.
+  const drawingMoving =
+    !settled ||
+    nudge !== 0 ||
+    midway(lift) ||
+    items.some((it) => it.pill && (itemPoint(it)?.s ?? 1) < 1);
   const hair = (a: number) =>
     `rgba(${p.hair[0]},${p.hair[1]},${p.hair[2]},${a})`;
 
@@ -478,7 +500,11 @@ export function LiveTicker({
           width={W}
           height={H}
           viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: glide(drawingMoving),
+          }}
           role="img"
           aria-label={`${target.toLocaleString("en-US")} ${unit}`}
         >
@@ -563,7 +589,7 @@ export function LiveTicker({
             >
               <rect
                 x={0}
-                y={numTop - 0.1 * fs}
+                y={restNumTop - 0.1 * fs}
                 width={W}
                 height={cap + 0.2 * fs}
                 fill={`url(#${uid}feather)`}
@@ -607,7 +633,7 @@ export function LiveTicker({
                 fontSize={fs}
                 textAnchor="middle"
                 style={{ fontVariantNumeric: "tabular-nums" }}
-                transform={`translate(0 ${-nudge * 2.2 * u})`}
+                transform={`translate(0 ${-nudge * 2.2 * u + liftY})`}
               >
                 <g mask={`url(#${uid}win)`}>
                   {cols.out.map((c, i) => {
@@ -631,11 +657,11 @@ export function LiveTicker({
                         filter={`url(#${uid}blur${c.place})`}
                         transform={`translate(0 ${(1 - enter) * 0.6 * fs - f * step})`}
                       >
-                        <text x={cx} y={baseline}>
+                        <text x={cx} y={restBaseline}>
                           {digit(base)}
                         </text>
                         {f > 0.001 ? (
-                          <text x={cx} y={baseline + step}>
+                          <text x={cx} y={restBaseline + step}>
                             {digit(base + 1)}
                           </text>
                         ) : null}
@@ -654,7 +680,7 @@ export function LiveTicker({
                     <text
                       key={`comma${c.x}`}
                       x={numLeft + (c.x + COMMA_ADV / 2) * fs}
-                      y={baseline + (1 - enter) * 0.3 * fs}
+                      y={restBaseline + (1 - enter) * 0.3 * fs}
                       opacity={enter}
                     >
                       ,
@@ -749,29 +775,31 @@ export function LiveTicker({
                       fill={accent}
                       opacity={smooth((c - 0.5) / 0.5)}
                     />
-                    <svg
-                      x={x}
-                      y={-h / 2}
-                      width={w}
-                      height={h}
-                      overflow="hidden"
-                      opacity={1 - smooth((c - 0.2) / 0.6)}
-                    >
-                      <circle
-                        cx={textX - 10 * u}
-                        cy={h / 2}
-                        r={3 * u}
-                        fill={accent}
-                      />
-                      <text
-                        x={textX}
-                        y={h / 2 + pillFs * 0.36}
-                        fill={p.pillText}
-                        style={{ whiteSpace: "pre" }}
+                    {/* A nested viewport's x/y is snapped to whole pixels,
+                        so the window rides a transform instead. */}
+                    <g transform={`translate(${x} ${-h / 2})`}>
+                      <svg
+                        width={w}
+                        height={h}
+                        overflow="hidden"
+                        opacity={1 - smooth((c - 0.2) / 0.6)}
                       >
-                        {it.text}
-                      </text>
-                    </svg>
+                        {/* The label slides inside the window by transform
+                            too: placed by `x`/`y`, it moves the window's
+                            box as the pill folds. */}
+                        <g transform={`translate(${textX} ${h / 2})`}>
+                          <circle cx={-10 * u} cy={0} r={3 * u} fill={accent} />
+                          <text
+                            x={0}
+                            y={pillFs * 0.36}
+                            fill={p.pillText}
+                            style={{ whiteSpace: "pre" }}
+                          >
+                            {it.text}
+                          </text>
+                        </g>
+                      </svg>
+                    </g>
                   </g>
                 );
               })}
@@ -806,7 +834,8 @@ export function LiveTicker({
           style={{
             position: "absolute",
             left: numLeft + 0.04 * fs,
-            top: numTop - 0.3 * fs - 13 * u,
+            top: restNumTop - 0.3 * fs - 13 * u,
+            transform: `translateY(${liftY}px)${glide(midway(lift))}`,
             display: "flex",
             alignItems: "center",
             gap: 11 * u,
@@ -841,7 +870,8 @@ export function LiveTicker({
             position: "absolute",
             left: 0,
             right: 0,
-            top: baseline + 0.22 * fs,
+            top: restBaseline + 0.22 * fs,
+            transform: labelShift,
             display: "flex",
             justifyContent: "center",
             alignItems: "baseline",

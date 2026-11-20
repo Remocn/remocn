@@ -1,6 +1,7 @@
 "use client";
 
 import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface SharedAxisZProps {
   fromText: string;
@@ -12,6 +13,8 @@ export interface SharedAxisZProps {
   className?: string;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 export function SharedAxisZ({
   fromText,
   toText,
@@ -21,6 +24,7 @@ export function SharedAxisZ({
   speed = 1,
   className,
 }: SharedAxisZProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame() * speed;
 
   const enterDur = 16;
@@ -34,6 +38,10 @@ export function SharedAxisZ({
   const exitEasing = Easing.bezier(0.4, 0, 1, 1);
   const enterEasing = Easing.bezier(0.2, 0, 0, 1);
 
+  const fromP = interpolate(frame, [0, exitDur], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
   const fromOpacity = interpolate(frame, [0, exitDur], [1, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
@@ -51,6 +59,10 @@ export function SharedAxisZ({
   });
 
   const local = frame - newStart;
+  const toP = interpolate(local, [0, enterDur], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
   const toOpacity = interpolate(local, [0, enterDur], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
@@ -98,7 +110,7 @@ export function SharedAxisZ({
             display: "inline-block",
             transformOrigin: "50% 50%",
             opacity: fromOpacity,
-            scale: `${fromScale}`,
+            transform: `scale(${fromScale})${glide(midway(fromP))}`,
             filter: `blur(${fromBlur}px)`,
           }}
         >
@@ -125,7 +137,7 @@ export function SharedAxisZ({
             display: "inline-block",
             transformOrigin: "50% 50%",
             opacity: toOpacity,
-            scale: `${toScale}`,
+            transform: `scale(${toScale})${glide(midway(toP))}`,
             filter: `blur(${toBlur}px)`,
           }}
         >

@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -119,6 +120,8 @@ const PRESS = { mass: 0.4, damping: 14, stiffness: 420 };
 const ENTER = Easing.bezier(0.32, 0.72, 0, 1);
 const MOVE = Easing.bezier(0.65, 0, 0.35, 1);
 const CAMERA = Easing.bezier(0.87, 0, 0.13, 1);
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 const CL = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 const clamp = (v: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -389,6 +392,7 @@ export function FlowBuilder({
   ground,
   groundParams,
 }: FlowBuilderProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width;
@@ -539,6 +543,13 @@ export function FlowBuilder({
       y: lerp(a.y, b.y, p) - (dx / d) * arc,
     };
   }
+  const restKey = keys[keys.length - 1];
+  const cursorDx = cur.x - restKey.x;
+  const cursorDy = cur.y - restKey.y;
+  const cursorShift =
+    Math.abs(cursorDx) < 1e-3 && Math.abs(cursorDy) < 1e-3
+      ? undefined
+      : `translate(${cursorDx}px, ${cursorDy}px)`;
   const pressAt = (at: number) => sp(at - 2, PRESS) - sp(at + 3, PRESS);
   const runPress = pressAt(B.run);
   const pubPress = pressAt(PUBLISH);
@@ -548,6 +559,20 @@ export function FlowBuilder({
     easing: ENTER,
   });
 
+  // The window carries every card, chip and button, and the slow camera keeps
+  // it moving to the last frames, so its tilt covers all of their text. The
+  // spring never lands exactly, so "moving" is read off neighbouring frames.
+  const winAt = (f: number) => {
+    const w = spring({ frame: f, fps, config: HEAVY });
+    const c = interpolate(f, [0, 205], [1, 1.035], { ...CL, easing: CAMERA });
+    return { ty: (1 - w) * 60, k: (0.96 + 0.04 * w) * c };
+  };
+  const winNow = winAt(frame);
+  const winMoving = [winAt(frame - 1), winAt(frame + 1)].some(
+    (o) =>
+      Math.abs(o.ty - winNow.ty) + (Math.abs(o.k - winNow.k) * WIN.w) / 2 >
+      1e-3,
+  );
   const win = sp(0, HEAVY);
   const winFade = interpolate(frame, [0, 12], [0, 1], { ...CL, easing: ENTER });
   const running = frame >= B.run && frame < runEnd + 2;
@@ -776,7 +801,7 @@ export function FlowBuilder({
                 top: 150,
                 width: WIN.w,
                 opacity: headIn,
-                transform: `translateY(${(1 - headIn) * 18}px)`,
+                transform: `translateY(${(1 - headIn) * 18}px)${glide(midway(headIn))}`,
                 color: ink ?? (pal.dark ? "#F2F3F5" : "#16181D"),
               }}
             >
@@ -801,7 +826,7 @@ export function FlowBuilder({
               height: WIN.h,
               opacity: winFade,
               transformOrigin: "50% 45%",
-              transform: `translateY(${(1 - win) * 60}px) scale(${(0.96 + 0.04 * win) * cam})`,
+              transform: `translateY(${(1 - win) * 60}px) scale(${(0.96 + 0.04 * win) * cam})${glide(winMoving)}`,
             }}
           >
             <div
@@ -974,8 +999,11 @@ export function FlowBuilder({
             <div
               style={{
                 position: "absolute",
-                left: cur.x - 2,
-                top: cur.y - 2,
+                // Laid out where it ends; the glide there is a transform,
+                // since layout rounds a box's edges to whole pixels.
+                left: restKey.x - 2,
+                top: restKey.y - 2,
+                transform: cursorShift,
                 opacity: cursorIn,
                 zIndex: 50,
               }}

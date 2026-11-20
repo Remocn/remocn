@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["400", "500"],
@@ -161,7 +162,18 @@ export function BracketFocus({
   theme = "dark",
   speed = 1,
 }: BracketFocusProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
+  const now = useCurrentFrame();
+  const tAt = (n: number) => Math.max(0, n - delay) * speed;
+  const t = tAt(now);
+  /** Whether a value in px, as a function of time, moves on this frame. */
+  const stirs = (v: (t: number) => number) => {
+    const here = v(t);
+    return (
+      Math.abs(v(tAt(now + 1)) - here) > 1e-3 ||
+      Math.abs(here - v(tAt(now - 1))) > 1e-3
+    );
+  };
   const { width: W, height: H, fps } = useVideoConfig();
   const u = Math.min(W / 1280, H / 720);
   const p = THEMES[theme];
@@ -185,6 +197,13 @@ export function BracketFocus({
   const arm = 46 * u;
   const stroke = 3 * u;
 
+  const place = (sx: number, sy: number, fly: number, snap: number) => {
+    const hw =
+      far.hw + (loose.hw - far.hw) * fly + (tight.hw - loose.hw) * snap;
+    const hh =
+      far.hh + (loose.hh - far.hh) * fly + (tight.hh - loose.hh) * snap;
+    return { x: cx + sx * hw, y: cy + sy * hh };
+  };
   const corner = (sx: number, sy: number, delay: number, at: number) => {
     const fly = EASE_IO(
       interpolate(at, [FLY_AT + delay, SNAP_AT + delay], [0, 1], CLAMP),
@@ -194,12 +213,28 @@ export function BracketFocus({
       fps,
       config: { damping: 13, stiffness: 320, mass: 0.55 },
     });
-    const hw =
-      far.hw + (loose.hw - far.hw) * fly + (tight.hw - loose.hw) * snap;
-    const hh =
-      far.hh + (loose.hh - far.hh) * fly + (tight.hh - loose.hh) * snap;
-    return { x: cx + sx * hw, y: cy + sy * hh };
+    return place(sx, sy, fly, snap);
   };
+
+  // The tag and the readout ride the snapping corners. They are laid out
+  // where the corners settle and the ride is a transform: layout rounds a box
+  // and a baseline to whole pixels, so a label eased by `left`/`top` clicks
+  // along pixel by pixel. The snap is a spring, so the leftover is dropped,
+  // but the transform stays: without it the tag loses its mark and snaps to a
+  // whole pixel on the frame it goes.
+  const shiftOf = (sx: number, sy: number, delay: number) => {
+    const live = corner(sx, sy, delay, t);
+    const rest = place(sx, sy, 1, 1);
+    const dx = live.x - rest.x;
+    const dy = live.y - rest.y;
+    const still = Math.abs(dx) < 1e-3 && Math.abs(dy) < 1e-3;
+    const moving =
+      stirs((t) => corner(sx, sy, delay, t).x) ||
+      stirs((t) => corner(sx, sy, delay, t).y);
+    return { rest, dx, dy, still, moving };
+  };
+  const tagRide = shiftOf(-1, -1, 0);
+  const readRide = shiftOf(1, 1, 3);
 
   const appear = interpolate(t, [0, 8], [0.35, 1], CLAMP);
   const dim = EASE_IO(interpolate(t, [DIM_AT, DIM_AT + 22], [0, 1], CLAMP));
@@ -207,20 +242,30 @@ export function BracketFocus({
   const tagText = EASE_OUT(
     interpolate(t, [TAG_AT + 4, TAG_AT + 16], [0, 1], CLAMP),
   );
-  const subjectIn = EASE_OUT(interpolate(t, [0, 16], [0.25, 1], CLAMP));
-  const lift = EASE_OUT(
-    interpolate(t, [DIM_AT - 2, DIM_AT + 18], [0, 1], CLAMP),
-  );
-  const push = EASE_IO(interpolate(t, [0, DIM_AT + 50], [0, 1], CLAMP));
+  const subjectAt = (t: number) => {
+    const subjectIn = EASE_OUT(interpolate(t, [0, 16], [0.25, 1], CLAMP));
+    const lift = EASE_OUT(
+      interpolate(t, [DIM_AT - 2, DIM_AT + 18], [0, 1], CLAMP),
+    );
+    const push = EASE_IO(interpolate(t, [0, DIM_AT + 50], [0, 1], CLAMP));
+    return { subjectIn, lift, push };
+  };
+  const { subjectIn, lift, push } = subjectAt(t);
+  // Weighed at the subject's far edge, so both terms are in px.
+  const subjectMoving =
+    stirs((t) => (1 - subjectAt(t).subjectIn) * 10 * u) ||
+    stirs((t) => {
+      const q = subjectAt(t);
+      return (0.985 + 0.015 * q.lift + 0.012 * q.push) * (textW / 2);
+    });
 
-  const tl = corner(-1, -1, 0, t);
   const tagH = 32 * u;
   const tagFont = 14 * u;
   const tagW = tag.length * 0.6 * tagFont * 1.06 + 26 * u;
-  const br = corner(1, 1, 3, t);
-  const readIn = EASE_OUT(
-    interpolate(t, [TAG_AT + 8, TAG_AT + 22], [0, 1], CLAMP),
-  );
+  const readAt = (t: number) =>
+    EASE_OUT(interpolate(t, [TAG_AT + 8, TAG_AT + 22], [0, 1], CLAMP));
+  const readIn = readAt(t);
+  const readMoving = readRide.moving || stirs((t) => (1 - readAt(t)) * 6 * u);
   const boxW = Math.round((tight.hw * 2) / u);
   const boxH = Math.round((tight.hh * 2) / u);
   const drift = interpolate(t, [0, 150], [0, 1], CLAMP);
@@ -317,7 +362,7 @@ export function BracketFocus({
               whiteSpace: "nowrap",
               fontVariantNumeric: "tabular-nums",
               opacity: subjectIn,
-              transform: `translate(${-0.02 * size}px, ${(1 - subjectIn) * 10 * u}px) scale(${0.985 + 0.015 * lift + 0.012 * push})`,
+              transform: `translate(${-0.02 * size}px, ${(1 - subjectIn) * 10 * u}px) scale(${0.985 + 0.015 * lift + 0.012 * push})${glide(subjectMoving)}`,
             }}
           >
             <span style={{ color: p.rest, opacity: 1 - lift }}>{subject}</span>
@@ -368,8 +413,11 @@ export function BracketFocus({
         <div
           style={{
             position: "absolute",
-            left: tl.x - stroke / 2,
-            top: tl.y - stroke / 2 - tagH,
+            left: tagRide.rest.x - stroke / 2,
+            top: tagRide.rest.y - stroke / 2 - tagH,
+            transform: tagRide.still
+              ? `translate(0px, 0px)${glide(tagRide.moving)}`
+              : `translate(${tagRide.dx}px, ${tagRide.dy}px)${glide(tagRide.moving)}`,
             height: tagH,
             width: tagW,
             background: accent,
@@ -401,8 +449,8 @@ export function BracketFocus({
         <div
           style={{
             position: "absolute",
-            right: W - br.x - stroke / 2,
-            top: br.y + 14 * u,
+            right: W - readRide.rest.x - stroke / 2,
+            top: readRide.rest.y + 14 * u,
             fontFamily: mono,
             fontWeight: 400,
             fontSize: 13 * u,
@@ -411,7 +459,9 @@ export function BracketFocus({
             color: p.readout,
             whiteSpace: "pre",
             opacity: readIn,
-            transform: `translateY(${(1 - readIn) * 6 * u}px)`,
+            transform: readRide.still
+              ? `translateY(${(1 - readIn) * 6 * u}px)${glide(readMoving)}`
+              : `translate(${readRide.dx}px, ${readRide.dy + (1 - readIn) * 6 * u}px)${glide(readMoving)}`,
           }}
         >
           {`W ${boxW}  ×  H ${boxH}`}

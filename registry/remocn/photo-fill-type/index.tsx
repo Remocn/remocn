@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["400", "500"],
@@ -123,6 +124,12 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+// Chrome parks a glyph raster on a whole pixel vertically for as long as the
+// matrix is axis-aligned, so text under a slow transform clicks along pixel by
+// pixel. A transform that carries text is marked, and told when it moves, so
+// the text leans off that grid.
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const THEMES = {
   dark: { bg: "#0A0A0B", grain: 0.05 },
@@ -613,6 +620,7 @@ export function PhotoFillType({
   theme = "dark",
   speed = 1,
 }: PhotoFillTypeProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const u = H / 720;
@@ -638,19 +646,22 @@ export function PhotoFillType({
   const capH = fs * CAP;
 
   // Open.
-  const open = interpolate(frame, [0, 22], [0.18, 1], {
-    ...CLAMP,
-    easing: SETTLE,
-  });
-  const wordScaleIn = interpolate(open, [0, 1], [1.035, 1]);
+  const openAt = (f: number) =>
+    interpolate(f, [0, 22], [0.18, 1], {
+      ...CLAMP,
+      easing: SETTLE,
+    });
+  const open = openAt(frame);
 
   // Expand: tracking opens while each letter fills with image from the
   // baseline up (center letters first), the gutters between the filled
   // windows close into one band, and the band opens like a letterbox.
-  const track = interpolate(frame, [expandAt, expandAt + 20], [0, 1], {
-    ...CLAMP,
-    easing: CAMERA,
-  });
+  const trackAt = (f: number) =>
+    interpolate(f, [expandAt, expandAt + 20], [0, 1], {
+      ...CLAMP,
+      easing: CAMERA,
+    });
+  const track = trackAt(frame);
   const closeP = interpolate(frame, [expandAt + 18, expandAt + 30], [0, 1], {
     ...CLAMP,
     easing: CAMERA,
@@ -660,7 +671,13 @@ export function PhotoFillType({
     easing: OPEN,
   });
   const trackEm = TRACK1 * track * (1 - closeP * 0.35);
-  const wordScale = wordScaleIn * (1 + 0.02 * track);
+  const wordScaleAt = (f: number) =>
+    interpolate(openAt(f), [0, 1], [1.035, 1]) * (1 + 0.02 * trackAt(f));
+  const wordScale = wordScaleAt(frame);
+  // The word's edge sits ~W/2 from the pivot; a step under 1e-3px there is rest.
+  const wordMoving =
+    Math.abs(wordScaleAt(frame + speed) - wordScale) * W > 2e-3 ||
+    Math.abs(wordScale - wordScaleAt(frame - speed)) * W > 2e-3;
   const baseline = H / 2 + capH / 2;
 
   const totalW = (sumAdv + (n - 1) * trackEm) * fs;
@@ -737,7 +754,14 @@ export function PhotoFillType({
         <svg
           width={W}
           height={H}
-          style={{ position: "absolute", inset: 0 }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            // A drawing in SVG leans only while its mark says it moves; the
+            // word also holds under a scale, off the pixel grid, where
+            // dropping the lean would snap it to the nearest pixel.
+            transform: glide(wordMoving || Math.abs(wordScale - 1) > 1e-9),
+          }}
           aria-hidden
         >
           <defs>
@@ -820,7 +844,7 @@ export function PhotoFillType({
               flexDirection: "column",
               gap: 14 * u,
               opacity: cap,
-              transform: `translateY(${(1 - cap) * 12 * u}px)`,
+              transform: `translateY(${(1 - cap) * 12 * u}px)${glide(midway(cap))}`,
             }}
           >
             <div

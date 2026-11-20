@@ -15,6 +15,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -65,6 +66,8 @@ const ramp = (f: number, start: number, dur: number, easing = ENTER) =>
   });
 
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 type CardId = "chart" | "hero" | "stat" | "icon" | "sketch" | "cover";
 const ORDER: CardId[] = ["chart", "hero", "stat", "icon", "sketch", "cover"];
@@ -894,8 +897,17 @@ export function SendFountain({
   ground,
   groundParams,
 }: SendFountainProps) {
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
+  const rawFrame = useCurrentFrame();
+  const frame = Math.max(0, rawFrame - delay) * speed;
   const { width, height, fps } = useVideoConfig();
+  // Whether a value of the frame is moving right now: springs overshoot and
+  // trail off, so it is read against the neighbouring frames instead of a
+  // progress. Nothing moves while `delay` holds the first frame.
+  const stirs = (at: (f: number) => number, eps = 1e-5) =>
+    rawFrame >= delay &&
+    (Math.abs(at(frame + speed) - at(frame)) > eps ||
+      Math.abs(at(frame) - at(frame - speed)) > eps);
   const dark = theme === "dark";
   const themeTokens = tokens(dark);
   const t = ink ? { ...themeTokens, ink } : themeTokens;
@@ -905,13 +917,19 @@ export function SendFountain({
   const sc = width / L.stageW;
 
   const camT = ramp(frame, B.rise, B.riseEnd - B.rise, MOVE);
-  const camY = camT * L.rise;
-  const push = 1 + 0.03 * ramp(frame, B.snap, B.end - B.snap, SWAY);
-  const open = ramp(frame, -4, 40, MOVE);
-  const zoom = mix(1.22, 1, open);
+  const pushAt = (f: number) =>
+    1 + 0.03 * ramp(f, B.snap, B.end - B.snap, SWAY);
+  const push = pushAt(frame);
+  const zoomAt = (f: number) => mix(1.22, 1, ramp(f, -4, 40, MOVE));
+  const zoom = zoomAt(frame);
 
   const barIn = spring({ frame: frame - B.bar, fps, config: HEAVY });
-  const barY = L.bar.cy + camY + mix(60 * u, 0, barIn);
+  // How far the bar sits below its place in the layout: the entrance, then
+  // the camera rising past it.
+  const barDropAt = (f: number) =>
+    ramp(f, B.rise, B.riseEnd - B.rise, MOVE) * L.rise +
+    mix(60 * u, 0, spring({ frame: f - B.bar, fps, config: HEAVY }));
+  const barY = L.bar.cy + barDropAt(frame);
   const btnX = L.bar.cx + L.bar.w / 2 - L.bar.h / 2 + 0;
   const btnY = barY;
 
@@ -933,7 +951,9 @@ export function SendFountain({
   const winX = L.win.x;
   const winY = L.win.y;
   const chromeIn = ramp(frame, B.chrome, 16);
-  const liveIn = spring({ frame: frame - B.live, fps, config: CHIP });
+  const liveAt = (f: number) =>
+    spring({ frame: f - B.live, fps, config: CHIP });
+  const liveIn = liveAt(frame);
   const dataT = ramp(frame, B.data, 30, MOVE);
   const statValue = Math.round(mix(stat, stat + 312, dataT));
   const heroProg = 0.18 + 0.2 * ramp(frame, B.snap, B.end - B.snap, SWAY);
@@ -1072,7 +1092,7 @@ export function SendFountain({
             style={{
               position: "absolute",
               inset: 0,
-              transform: `scale(${zoom})`,
+              transform: `scale(${zoom})${glide(stirs(zoomAt, 1e-7))}`,
               transformOrigin: `${L.bar.cx + L.bar.w * 0.2}px ${L.bar.cy}px`,
             }}
           >
@@ -1080,7 +1100,7 @@ export function SendFountain({
               style={{
                 position: "absolute",
                 inset: 0,
-                transform: `scale(${push})`,
+                transform: `scale(${push})${glide(stirs(pushAt, 1e-7))}`,
                 transformOrigin: `${L.stageW / 2}px ${winY + L.win.h / 2}px`,
               }}
             >
@@ -1096,7 +1116,7 @@ export function SendFountain({
                   border: `1px solid ${t.hair}`,
                   boxShadow: surfaceShadow(t, 1),
                   opacity: chromeIn,
-                  transform: `scale(${mix(1.04, 1, chromeIn)})`,
+                  transform: `scale(${mix(1.04, 1, chromeIn)})${glide(midway(chromeIn))}`,
                   filter: chromeIn < 1 ? `blur(${(1 - chromeIn) * 8}px)` : "",
                 }}
               >
@@ -1208,7 +1228,7 @@ export function SendFountain({
                       background: dark
                         ? "rgba(122,240,198,0.12)"
                         : "rgba(17,138,99,0.1)",
-                      transform: `scale(${liveIn})`,
+                      transform: `scale(${liveIn})${glide(stirs(liveAt))}`,
                       opacity: Math.min(1, liveIn * 2),
                     }}
                   >
@@ -1241,7 +1261,11 @@ export function SendFountain({
                 style={{
                   position: "absolute",
                   left: L.bar.cx - L.bar.w / 2,
-                  top: barY - L.bar.h / 2,
+                  // Laid out where it rests and carried by a transform:
+                  // layout rounds a box and a baseline to whole pixels, so a
+                  // bar eased by `top` clicks along pixel by pixel.
+                  top: L.bar.cy - L.bar.h / 2,
+                  transform: `translateY(${barY - L.bar.cy}px)${glide(stirs(barDropAt, 1e-4))}`,
                   width: L.bar.w,
                   height: L.bar.h,
                   borderRadius: L.bar.h / 2,
@@ -1361,16 +1385,25 @@ export function SendFountain({
                 const speed = Math.hypot(pos.x - prev.x, pos.y - prev.y);
                 const slot = L.slots[id];
                 const lift = 1 - pos.q;
+                const moving = [prev, cardPos(id, i, frame + 1)].some(
+                  (o) =>
+                    Math.abs(o.x - pos.x) > 1e-4 ||
+                    Math.abs(o.y - pos.y) > 1e-4 ||
+                    Math.abs(o.s - pos.s) > 1e-7,
+                );
                 return (
                   <div
                     key={id}
                     style={{
                       position: "absolute",
-                      left: pos.x - slot.w / 2,
-                      top: pos.y - slot.h / 2,
+                      // Laid out in its slot; the flight there is a
+                      // transform, since `left`/`top` would step the card
+                      // and its text a whole pixel at a time.
+                      left: winX + slot.x,
+                      top: winY + slot.y,
                       width: slot.w,
                       height: slot.h,
-                      transform: `rotate(${pos.r}deg) scale(${pos.s})`,
+                      transform: `translate(${pos.x - (winX + slot.x + slot.w / 2)}px, ${pos.y - (winY + slot.y + slot.h / 2)}px) rotate(${pos.r}deg) scale(${pos.s})${glide(moving)}`,
                       borderRadius: 14 * u,
                       boxShadow:
                         lift > 0.02
@@ -1386,32 +1419,47 @@ export function SendFountain({
 
               {AVATARS.map((a, k) => {
                 const id = ORDER[a.card];
-                const pos = cardPos(id, a.card, frame);
                 const slot = L.slots[id];
-                const pop = spring({
-                  frame: frame - B.eject[a.card] - 5,
-                  fps,
-                  config: CHIP,
-                });
-                const go = spring({
-                  frame: frame - B.avatars - k * 3,
-                  fps,
-                  config: CARD,
-                });
-                const ox = (slot.w / 2) * pos.s - 6 * u;
-                const oy = (-slot.h / 2) * pos.s + 6 * u;
-                const rad = (pos.r * Math.PI) / 180;
-                const rx = ox * Math.cos(rad) - oy * Math.sin(rad);
-                const ry = ox * Math.sin(rad) + oy * Math.cos(rad);
-                const x = mix(pos.x + rx, avSlotX(k), go);
-                const y = mix(pos.y + ry, avSlotY, go);
+                const at = (f: number) => {
+                  const pos = cardPos(id, a.card, f);
+                  const pop = spring({
+                    frame: f - B.eject[a.card] - 5,
+                    fps,
+                    config: CHIP,
+                  });
+                  const go = spring({
+                    frame: f - B.avatars - k * 3,
+                    fps,
+                    config: CARD,
+                  });
+                  const ox = (slot.w / 2) * pos.s - 6 * u;
+                  const oy = (-slot.h / 2) * pos.s + 6 * u;
+                  const rad = (pos.r * Math.PI) / 180;
+                  const rx = ox * Math.cos(rad) - oy * Math.sin(rad);
+                  const ry = ox * Math.sin(rad) + oy * Math.cos(rad);
+                  return {
+                    x: mix(pos.x + rx, avSlotX(k), go),
+                    y: mix(pos.y + ry, avSlotY, go),
+                    s: pos.on ? pop : 0,
+                  };
+                };
+                const now = at(frame);
+                const moving = [at(frame - 1), at(frame + 1)].some(
+                  (o) =>
+                    Math.abs(o.x - now.x) > 1e-4 ||
+                    Math.abs(o.y - now.y) > 1e-4 ||
+                    Math.abs(o.s - now.s) > 1e-6,
+                );
                 return (
                   <div
                     key={a.id}
                     style={{
                       position: "absolute",
-                      left: x - avSize / 2,
-                      top: y - avSize / 2,
+                      // Laid out in the top bar, where it ends up; the ride
+                      // on the card and the hop over are a transform, for
+                      // the same reason as the cards.
+                      left: avSlotX(k) - avSize / 2,
+                      top: avSlotY - avSize / 2,
                       width: avSize,
                       height: avSize,
                       borderRadius: 99,
@@ -1422,7 +1470,7 @@ export function SendFountain({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      transform: `scale(${pos.on ? pop : 0})`,
+                      transform: `translate(${now.x - avSlotX(k)}px, ${now.y - avSlotY}px) scale(${now.s})${glide(moving)}`,
                       zIndex: 5 - k,
                     }}
                   >
@@ -1434,9 +1482,11 @@ export function SendFountain({
               <div
                 style={{
                   position: "absolute",
-                  left: curX,
-                  top: curY,
-                  transform: `scale(${1 - 0.1 * press})`,
+                  // Laid out on the button of the resting bar and led there
+                  // by a transform; `left`/`top` would step it pixel by pixel.
+                  left: btnX + 8 * u,
+                  top: L.bar.cy + 10 * u,
+                  transform: `translate(${curX - (btnX + 8 * u)}px, ${curY - (L.bar.cy + 10 * u)}px) scale(${1 - 0.1 * press})`,
                   transformOrigin: "4px 3px",
                   opacity: ramp(frame, B.cursor, 6),
                 }}

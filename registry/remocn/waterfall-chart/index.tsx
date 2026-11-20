@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -132,6 +133,8 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -177,6 +180,7 @@ export function WaterfallChart({
   theme = "dark",
   speed = 1,
 }: WaterfallChartProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
@@ -303,7 +307,12 @@ export function WaterfallChart({
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <ScaleLayer scale={zoom}>
         <AbsoluteFill
-          style={{ transform: `scale(${scale})`, transformOrigin: "50% 55%" }}
+          style={{
+            // The push outlasts every move inside it, so this one tilt covers
+            // all the text in the chart.
+            transform: `scale(${scale})${glide(midway(push))}`,
+            transformOrigin: "50% 55%",
+          }}
         >
           <AbsoluteFill style={{ transform: `translateY(${shift}px)` }}>
             <svg

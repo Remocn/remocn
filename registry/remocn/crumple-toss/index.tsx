@@ -2,6 +2,7 @@
 
 import type React from "react";
 import { useCurrentFrame } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import { DEFAULT_STEP, hashRange, qstep } from "@/lib/remocn/stop-motion";
 
 const GRAVITY = 0.9;
@@ -309,8 +310,16 @@ export function CrumpleToss({
   randomness,
   ...timing
 }: CrumpleTossProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame();
   const pose = crumpleTossPose({ frame, ...timing });
+  // The card leaves its flat pose by folding its copies at small angles,
+  // which would snap off-grid text level-to-tilted; the mark keeps it off
+  // the grid on every frame the pose changes.
+  const poseKey = (f: number) =>
+    JSON.stringify(crumpleTossPose({ frame: f, ...timing }));
+  const here = JSON.stringify(pose);
+  const moving = here !== poseKey(frame - 1) || here !== poseKey(frame + 1);
   if (pose.phase === "gone") return null;
 
   const pieces = crumpleSegments({
@@ -335,6 +344,7 @@ export function CrumpleToss({
         translate: `${pose.x}px ${pose.y}px`,
         rotate: `${pose.rotate}deg`,
         scale: `${pose.scale}`,
+        transform: glide(moving),
       }}
     >
       {pieces.map((piece, i) => (

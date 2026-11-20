@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const outfit = loadFont("normal", {
   weights: ["400", "500"],
@@ -163,6 +164,8 @@ function buildLayout(text: string, focus: string, family: string): Layout {
   return { words, lineW, focusX0, focusX1, baseline, cap };
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -194,6 +197,7 @@ export function DoubleTake({
   speed = 1,
   theme = "dark",
 }: DoubleTakeProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -244,11 +248,22 @@ export function DoubleTake({
     ...CLAMP,
     easing: EASE_REWIND,
   });
-  const zoom = interpolate(t, [rewindAt + REWIND_LEN * 0.35, landAt], [0, 1], {
-    ...CLAMP,
-    easing: Easing.bezier(0.45, 0, 0.2, 1),
-  });
-  const s = Math.exp(Math.log(sF) * zoom);
+  const zoomAt = (tt: number) =>
+    Math.exp(
+      Math.log(sF) *
+        interpolate(tt, [rewindAt + REWIND_LEN * 0.35, landAt], [0, 1], {
+          ...CLAMP,
+          easing: Easing.bezier(0.45, 0, 0.2, 1),
+        }),
+    );
+  const s = zoomAt(t);
+  // The zoom eases in and out slowly, so its tail still moves the far words
+  // across pixels: compare the scale with the neighbouring frames, weighed by
+  // the frame height.
+  const dt = speed / k;
+  const zooming =
+    Math.abs(zoomAt(t + dt) - s) * H > 1e-3 ||
+    Math.abs(s - zoomAt(t - dt)) * H > 1e-3;
   const focusCentre = (focusX0 + focusX1) / 2;
 
   const rewinding = t >= rewindAt;
@@ -299,7 +314,7 @@ export function DoubleTake({
                 letterSpacing: "-0.015em",
                 whiteSpace: "pre",
                 color: fg,
-                transform: `translateY(${((1 - cueIn) * 1.2 * cueF).toFixed(2)}px)`,
+                transform: `translateY(${((1 - cueIn) * 1.2 * cueF).toFixed(2)}px)${glide(midway(cueIn))}`,
               }}
             >
               {cue}
@@ -320,7 +335,8 @@ export function DoubleTake({
               left: 0,
               top: 0,
               transformOrigin: "0 0",
-              transform: `translate(${(W / 2).toFixed(2)}px, ${stripY.toFixed(2)}px) scale(${s.toFixed(5)}) translate(${(-fx * F).toFixed(2)}px, ${(-stripY).toFixed(2)}px)`,
+              // The tilt pivots on the strip's centre, which is on screen.
+              transform: `translate(${(W / 2).toFixed(2)}px, ${stripY.toFixed(2)}px)${glide(zooming)} scale(${s.toFixed(5)}) translate(${(-fx * F).toFixed(2)}px, ${(-stripY).toFixed(2)}px)`,
             }}
           >
             <div
@@ -334,12 +350,24 @@ export function DoubleTake({
               }}
             >
               {words.map((w, i) => {
-                const q = interpolate(
-                  t,
-                  [i * stagger, i * stagger + IN_LEN],
-                  [0, 1],
-                  { ...CLAMP, easing: EASE_OUT },
-                );
+                const riseAt = (tt: number) =>
+                  (
+                    (1 -
+                      interpolate(
+                        tt,
+                        [i * stagger, i * stagger + IN_LEN],
+                        [0, 1],
+                        { ...CLAMP, easing: EASE_OUT },
+                      )) *
+                    1.15 *
+                    F
+                  ).toFixed(2);
+                const rise = riseAt(t);
+                // The ease-out tail still moves a word this tall by a tenth
+                // of a pixel after its progress reads as done: the tilt runs
+                // for as long as the printed offset changes.
+                const rising =
+                  riseAt(t + dt) !== rise || riseAt(t - dt) !== rise;
                 return (
                   <div
                     key={`${i}-${w.text}`}
@@ -356,7 +384,7 @@ export function DoubleTake({
                       whiteSpace: "pre",
                       color: w.focus ? focusColor : fg,
                       opacity: w.focus ? 1 : clear,
-                      transform: `translateY(${((1 - q) * 1.15 * F).toFixed(2)}px)`,
+                      transform: `translateY(${rise}px)${glide(rising && !zooming)}`,
                     }}
                   >
                     {w.text}

@@ -9,6 +9,9 @@ import {
   FLOW_MUTED,
   FLOW_YELLOW,
   FONT,
+  midway,
+  stirring,
+  useGlide,
 } from "../foundation";
 
 const EASE = Easing.out(Easing.cubic);
@@ -211,8 +214,9 @@ function TaskBlock({
 
 function Cursor({ f }: { f: number }) {
   const appear = clampInterp(f, [90, 102], [0, 1], EASE);
-  const x = clampInterp(f, [90, 116], [40, 6], EASE);
-  const y = clampInterp(f, [90, 116], [34, 16], EASE);
+  // Laid out where it lands and carried there by a transform: layout rounds
+  // a box to whole pixels, so a cursor eased by `left`/`top` steps.
+  const travel = 1 - clampInterp(f, [90, 116], [0, 1], EASE);
   return (
     <svg
       width={22}
@@ -221,8 +225,9 @@ function Cursor({ f }: { f: number }) {
       fill="none"
       style={{
         position: "absolute",
-        left: GRID_W * 0.42 + x,
-        top: ROW_H * 5 - 6 + y,
+        left: GRID_W * 0.42 + 6,
+        top: ROW_H * 5 - 6 + 16,
+        translate: travel > 0 ? `${34 * travel}px ${18 * travel}px` : undefined,
         opacity: appear,
         filter: "drop-shadow(0 2px 4px rgba(30,28,22,0.18))",
       }}
@@ -241,9 +246,17 @@ function Cursor({ f }: { f: number }) {
 
 export function AIPlanning({ speed = 1 }: { speed?: number }) {
   const f = useCurrentFrame() * speed;
+  const glide = useGlide();
 
   const craneScale = clampInterp(f, [0, 24], [1.04, 1], EASE);
   const craneY = clampInterp(f, [0, 24], [40, 0], EASE);
+  // The crane carries the whole card: 40px of rise and a 4% zoom over half
+  // the frame's width.
+  const craning = stirring(
+    (g) => clampInterp(g, [0, 24], [0, 1], EASE) * (40 + 0.04 * 960),
+    f,
+    speed,
+  );
   const craneBlur = clampInterp(f, [0, 14, 24], [8, 3, 0]);
 
   const cardOpacity = clampInterp(f, [0, 12], [0, 1]);
@@ -256,7 +269,7 @@ export function AIPlanning({ speed = 1 }: { speed?: number }) {
 
   return (
     <AbsoluteFill style={{ background: FLOW_BG, fontFamily: FONT }}>
-      <Camera scale={craneScale} y={craneY} blur={craneBlur}>
+      <Camera scale={craneScale} y={craneY} blur={craneBlur} moving={craning}>
         <AbsoluteFill
           style={{ alignItems: "center", justifyContent: "center" }}
         >
@@ -278,6 +291,7 @@ export function AIPlanning({ speed = 1 }: { speed?: number }) {
                 justifyContent: "space-between",
                 opacity: headP,
                 translate: `0 ${(1 - headP) * 8}px`,
+                transform: glide(midway(headP) && !craning),
               }}
             >
               <span
@@ -309,6 +323,7 @@ export function AIPlanning({ speed = 1 }: { speed?: number }) {
                 marginBottom: 26,
                 opacity: titleP,
                 translate: `0 ${(1 - titleP) * 10}px`,
+                transform: glide(midway(titleP) && !craning),
               }}
             >
               Intelligently plan your entire day

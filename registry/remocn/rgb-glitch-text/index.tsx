@@ -1,6 +1,7 @@
 "use client";
 
 import { random, useCurrentFrame } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface RGBGlitchTextProps {
   text: string;
@@ -27,6 +28,7 @@ export function RGBGlitchText({
   speed = 1,
   className,
 }: RGBGlitchTextProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame() * speed;
 
   const isGlitching = frame >= glitchAt && frame < glitchAt + glitchDuration;
@@ -90,7 +92,7 @@ export function RGBGlitchText({
             ...baseStyle,
             color: "#ff0040",
             opacity: copyOpacity,
-            translate: `${rX}px ${rY}px`,
+            transform: `translate(${rX}px, ${rY}px)${glide(isGlitching)}`,
           }}
         >
           {text}
@@ -100,7 +102,7 @@ export function RGBGlitchText({
             ...baseStyle,
             color: "#00ff80",
             opacity: copyOpacity,
-            translate: `${gX}px ${gY}px`,
+            transform: `translate(${gX}px, ${gY}px)${glide(isGlitching)}`,
           }}
         >
           {text}
@@ -110,7 +112,7 @@ export function RGBGlitchText({
             ...baseStyle,
             color: "#0080ff",
             opacity: copyOpacity,
-            translate: `${bX}px ${bY}px`,
+            transform: `translate(${bX}px, ${bY}px)${glide(isGlitching)}`,
           }}
         >
           {text}

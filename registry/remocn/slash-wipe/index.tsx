@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const bricolage = loadBricolage("normal", {
   weights: ["400", "500"],
@@ -147,6 +148,7 @@ export function SlashWipe({
   theme = "dark",
 }: SlashWipeProps) {
   const raw = Math.max(0, useCurrentFrame() - delay);
+  const glide = useGlide();
   const frame = raw * speed;
   const { width: W, height: H } = useVideoConfig();
   const p = PALETTES[theme];
@@ -292,7 +294,14 @@ export function SlashWipe({
           width={W}
           height={H}
           viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0, overflow: "visible" }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            overflow: "visible",
+            // SVG text can't carry the mark itself; the drawing carries it
+            // while the title rises.
+            transform: glide(rise < 1),
+          }}
           aria-hidden
         >
           <defs>

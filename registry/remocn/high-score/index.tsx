@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: pixel } = loadPixel("normal", {
   weights: ["400"],
@@ -152,6 +153,8 @@ function ramp(t: number, from: number, len: number) {
   return interpolate(t, [from, from + len], [0, 1], CLAMP);
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function hexToRgb(h: string) {
   const n = Number.parseInt(h.slice(1), 16);
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
@@ -238,6 +241,7 @@ export function HighScore({
   theme = "dark",
   speed = 1,
 }: HighScoreProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -283,6 +287,11 @@ export function HighScore({
   // Player slot: starts below the table (n + 1), one slot up per overtake.
   const climbs = passes.map((p) => OUT(ramp(t, p, MOVE)));
   const playerPos = n + 1 - climbs.reduce((a, b) => a + b, 0);
+  // Layout rounds a box and a baseline to whole pixels, so the band and its
+  // row eased by `top` click up slot by slot. Both are laid out at #1, where
+  // they end, and climb there by a translate that is exactly 0 once landed.
+  const climb = (playerPos - 1) * rowH;
+  const climbing = climbs.some(midway);
   // Row i (0 = best) is shoved one slot down when the player passes it.
   const rowPos = (i: number) => i + 1 + SLAM(ramp(t, passAt(i), MOVE));
 
@@ -300,10 +309,11 @@ export function HighScore({
   const flashOn =
     t >= FLASH_AT && !(fd >= 9 && fd < 12) && !(fd >= 15 && fd < 18);
   const logoP = OUT(ramp(t, LOGO_AT, 10));
-  const push = interpolate(t, [FLASH_AT, FLASH_AT + 60], [1, 1.05], {
+  const pushP = interpolate(t, [FLASH_AT, FLASH_AT + 60], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.22, 1, 0.36, 1),
   });
+  const push = 1 + 0.05 * pushP;
 
   const pixelText = (
     text: string,
@@ -362,7 +372,9 @@ export function HighScore({
           style={{
             position: "absolute",
             inset: 0,
-            transform: `translate(${sh.x}px, ${sh.y}px) scale(${push})`,
+            transform: `translate(${sh.x}px, ${sh.y}px) scale(${push})${glide(
+              midway(pushP) || sh.x !== 0 || sh.y !== 0,
+            )}`,
             transformOrigin: "50% 40%",
           }}
         >
@@ -376,7 +388,9 @@ export function HighScore({
               display: "flex",
               justifyContent: "center",
               opacity: titleIn * (1 - titleOut),
-              transform: `translateY(${(1 - titleIn) * 12 * u}px) scaleY(${1 - titleOut})`,
+              transform: `translateY(${(1 - titleIn) * 12 * u}px) scaleY(${1 - titleOut})${glide(
+                midway(titleIn) || midway(titleOut),
+              )}`,
             }}
           >
             {pixelText(title, fg, 30 * u, { letterSpacing: 0 })}
@@ -441,7 +455,8 @@ export function HighScore({
             <div
               style={{
                 position: "absolute",
-                top: slotY(playerPos) - rowH / 2 + 4 * u,
+                top: slotY(1) - rowH / 2 + 4 * u,
+                transform: climb === 0 ? undefined : `translateY(${climb}px)`,
                 height: rowH - 8 * u,
                 left: interpolate(bleed, [0, 1], [x0 - 26 * u, 0]),
                 right: interpolate(bleed, [0, 1], [x0 - 26 * u, 0]),
@@ -526,9 +541,13 @@ export function HighScore({
                 position: "absolute",
                 left: 0,
                 width: W,
-                top: slotY(playerPos),
+                top: slotY(1),
                 height: 0,
                 opacity: ramp(t, BAND_IN + 3, 3),
+                transform:
+                  climb === 0
+                    ? undefined
+                    : `translateY(${climb}px)${glide(climbing)}`,
               }}
             >
               <div
@@ -575,7 +594,13 @@ export function HighScore({
                           color: "#FFFFFF",
                           opacity: shown ? 1 : isCursor ? 0 : 0.55,
                           transform: shown
-                            ? `scale(${interpolate(ramp(t, LETTERS_AT + k * LETTER_GAP, 3), [0, 1], [1.35, 1])})`
+                            ? `scale(${interpolate(ramp(t, LETTERS_AT + k * LETTER_GAP, 3), [0, 1], [1.35, 1])})${glide(
+                                // A letter appears at 1.35 and shrinks from
+                                // the next frame on, so its first frame
+                                // already counts as moving.
+                                ramp(t, LETTERS_AT + k * LETTER_GAP, 3) <
+                                  1 - 5e-4,
+                              )}`
                             : undefined,
                         }}
                       >
@@ -600,7 +625,7 @@ export function HighScore({
             display: "flex",
             justifyContent: "center",
             opacity: logoP,
-            transform: `translateY(${(1 - logoP) * 16 * u}px)`,
+            transform: `translateY(${(1 - logoP) * 16 * u}px)${glide(midway(logoP))}`,
           }}
         >
           {logo ?? <RemocnLogo fontSize={30 * u} color={fg} />}

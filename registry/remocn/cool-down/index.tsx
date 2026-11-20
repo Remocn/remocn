@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const saira = loadSaira("normal", {
   weights: ["400", "500"],
@@ -64,6 +65,8 @@ const LABEL_LEN = 16;
 const STILL_AT = 92;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
+
+const between = (p: number) => p > 0 && p < 1;
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -173,6 +176,7 @@ export function CoolDown({
   speed = 1,
   theme = "dark",
 }: CoolDownProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -303,7 +307,7 @@ export function CoolDown({
               color: labelColor,
               textWrap: "balance",
               maxWidth: Math.min(W - margin * 2, labelSize * 18),
-              transform: `translateY(${((1 - labelP) * labelSize * 2.8).toFixed(2)}px)`,
+              transform: `translateY(${((1 - labelP) * labelSize * 2.8).toFixed(2)}px)${glide(between(labelP))}`,
             }}
           >
             {label}
@@ -323,7 +327,11 @@ export function CoolDown({
             style={{
               position: "absolute",
               right: margin,
-              top: (1 - rise) * clipH,
+              // The rise is a transform, not `top`: layout rounds a baseline
+              // to whole pixels, so the title eased by `top` clicks upward. It
+              // stays on at rest to keep the mark.
+              top: 0,
+              transform: `translateY(${(1 - rise) * clipH}px)${glide(between(rise))}`,
               width: W - margin,
               height: clipH,
               filter: still ? undefined : `url(#${fid})`,

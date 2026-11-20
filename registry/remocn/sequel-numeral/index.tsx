@@ -14,6 +14,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const rubik = loadRubik("normal", {
   weights: ["400", "500"],
@@ -110,6 +111,8 @@ interface Metrics {
   numBase: number;
   tagline: number;
 }
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const isRemocn = (name: string) => name.trim().toLowerCase() === "remocn";
 
@@ -219,6 +222,7 @@ export function SequelNumeral({
   speed = 1,
   theme = "dark",
 }: SequelNumeralProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -257,25 +261,36 @@ export function SequelNumeral({
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const supP = interpolate(t, [SUP_AT, SUP_AT + 12], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const drop = interpolate(t, [dropAt, dropAt + DROP_LEN], [0, 1], {
-    ...CLAMP,
-    easing: EASE_DROP,
-  });
-  const grow = spring({
-    frame: t - growAt,
-    fps,
-    config: { damping: 14, stiffness: 120, mass: 0.9 },
-  });
-  const settle = spring({
-    frame: t - growAt,
-    fps,
-    config: { damping: 200, stiffness: 120, mass: 0.9 },
-    durationInFrames: SETTLE_LEN,
-  });
+  const supPOf = (f: number) =>
+    interpolate(f, [SUP_AT, SUP_AT + 12], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  const supP = supPOf(t);
+  const dropOf = (f: number) =>
+    interpolate(f, [dropAt, dropAt + DROP_LEN], [0, 1], {
+      ...CLAMP,
+      easing: EASE_DROP,
+    });
+  const growOf = (f: number) =>
+    spring({
+      frame: f - growAt,
+      fps,
+      config: { damping: 14, stiffness: 120, mass: 0.9 },
+    });
+  const settleAt = (f: number) =>
+    spring({
+      frame: f - growAt,
+      fps,
+      config: { damping: 200, stiffness: 120, mass: 0.9 },
+      durationInFrames: SETTLE_LEN,
+    });
+  const settle = settleAt(t);
+  // The settle carries the name by hundreds of pixels; a step under 1e-6 of
+  // it is under a thousandth of a pixel.
+  const settling =
+    Math.abs(settleAt(t + speed) - settle) > 1e-6 ||
+    Math.abs(settle - settleAt(t - speed)) > 1e-6;
   const tagP = interpolate(t, [tagAt, tagAt + 16], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
@@ -283,25 +298,82 @@ export function SequelNumeral({
 
   const L = L0 + (L1 - L0) * settle;
   const cap = LOGO_CAP * L;
-  const supS = (SUP * cap) / m.numCap;
-  const sizeFree = supS + (S1 - supS) * grow;
-  const gap = gapSup + (gap1 - gapSup) * Math.min(1, Math.max(0, grow));
 
   const lock0 = m.name * L0 + gapSup + m.num * supS0;
   const nameLeft0 = (W - lock0) / 2;
   const nameLeft1 = W - margin - m.num * S1 - gap1 - m.name * L1;
-  const nameLeft = nameLeft0 + (nameLeft1 - nameLeft0) * settle;
-  const numLeft = nameLeft + m.name * L + gap;
+  const nameLeftAt = (k: number) => nameLeft0 + (nameLeft1 - nameLeft0) * k;
+  const nameLeft = nameLeftAt(settle);
 
   const base0 = H / 2 + (LOGO_CAP * L0) / 2;
   const base1 = (H + m.numCap * S1) / 2;
-  const baseY = base0 + (base1 - base0) * settle;
+  const baseYAt = (k: number) => base0 + (base1 - base0) * k;
+  const baseY = baseYAt(settle);
 
-  const supBase = baseY - cap + m.numCap * sizeFree;
-  const numBaseY = supBase + (baseY - supBase) * drop;
-  const size = Math.min(sizeFree, (numBaseY - margin) / m.numCap);
+  // The numeral's box as a function of the frame, so it can be compared with
+  // its neighbours to tell motion from rest.
+  const numeralOf = (st: number, gr: number, dr: number) => {
+    const nL = L0 + (L1 - L0) * st;
+    const nCap = LOGO_CAP * nL;
+    const supS = (SUP * nCap) / m.numCap;
+    const sizeFree = supS + (S1 - supS) * gr;
+    const gap = gapSup + (gap1 - gapSup) * Math.min(1, Math.max(0, gr));
+    const nBase = baseYAt(st);
+    const supBase = nBase - nCap + m.numCap * sizeFree;
+    const numBaseY = supBase + (nBase - supBase) * dr;
+    const size = Math.min(sizeFree, (numBaseY - margin) / m.numCap);
+    return {
+      left: nameLeftAt(st) + m.name * nL + gap,
+      top: numBaseY - m.numBase * size,
+      size,
+      cap: nCap,
+    };
+  };
+  const numeralAt = (f: number) => {
+    const at = numeralOf(settleAt(f), growOf(f), dropOf(f));
+    return { ...at, rise: (1 - supPOf(f)) * at.cap * 0.4 };
+  };
+  const num = numeralAt(t);
+  const numPrev = numeralAt(t - speed);
+  const numNext = numeralAt(t + speed);
+  const numShifts = [numPrev, numNext].some(
+    (o) =>
+      Math.abs(o.left - num.left) > 1e-3 ||
+      Math.abs(o.top - num.top) > 1e-3 ||
+      Math.abs(o.size - num.size) * m.num > 1e-3,
+  );
+  const numRises = [numPrev, numNext].some(
+    (o) =>
+      Math.abs(Number(o.rise.toFixed(2)) - Number(num.rise.toFixed(2))) > 0,
+  );
+  // A font size and a place eased by layout land on whole pixels, baseline
+  // and all, so the drop and the grow step unevenly. The numeral is laid out
+  // once at its final size and place and scaled and shifted to the live ones
+  // from its top-left corner, where size and place both scale from. That is
+  // so all its life: handed back to layout at rest, it would jump by what the
+  // rounding takes. The grow spring leaves a tail far under a pixel.
+  const numRest = numeralOf(1, 1, 1);
+  const numBox = numRest;
+  const settled = (d: number) => (Math.abs(d) > 1e-3 ? d : 0);
+  const numDx = settled(num.left - numRest.left);
+  const numDy = settled(num.top - numRest.top);
+  const numK =
+    Math.abs(num.size - numRest.size) * m.num > 1e-3
+      ? num.size / numRest.size
+      : 1;
 
-  const nameRise = (1 - nameP) * L * 1.2;
+  // The name's font size shrinks as it settles, and layout rounds the box and
+  // the baseline of a growing font to whole pixels. So the block is laid out
+  // once at the settled size and position, and the shrink and the travel are
+  // a transform on it, all its life.
+  const Lb = L1;
+  const blockLeft = nameLeftAt(1) - L1 * 0.1;
+  const blockTop = baseYAt(1) - L1 * 1.1;
+  const blockMove = `translate(${settled(nameLeft - L * 0.1 - blockLeft)}px, ${settled(
+    baseY - L * 1.1 - blockTop,
+  )}px) scale(${L / L1})${glide(settling)}`;
+
+  const nameRise = (1 - nameP) * Lb * 1.2;
   const tagFs = Math.min(
     H * (portrait ? 0.022 : 0.04),
     (W * 0.6) / Math.max(0.1, m.tagline),
@@ -313,29 +385,34 @@ export function SequelNumeral({
         <div
           style={{
             position: "absolute",
-            left: nameLeft - L * 0.1,
-            top: baseY - L * 1.1,
-            width: m.name * L + L * 0.3,
-            height: L * 1.4,
+            left: blockLeft,
+            top: blockTop,
+            width: m.name * Lb + Lb * 0.3,
+            height: Lb * 1.4,
             overflow: "hidden",
+            transform: blockMove,
+            transformOrigin: "0 0",
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: L * 0.1,
-              top: L * 1.1 - m.nameBase * L + nameRise,
-              height: L,
+              left: Lb * 0.1,
+              // The rise is a transform, not `top`: layout rounds a
+              // baseline to whole pixels, so the name clicked up into place.
+              top: Lb * 1.1 - m.nameBase * Lb,
+              height: Lb,
+              transform: `translateY(${nameRise}px)${glide(midway(nameP) && !settling)}`,
             }}
           >
             {isRemocn(name) ? (
-              (logo ?? <RemocnLogo fontSize={L} color={fg} />)
+              (logo ?? <RemocnLogo fontSize={Lb} color={fg} />)
             ) : (
               <div
                 style={{
                   fontFamily: manrope.fontFamily,
                   fontWeight: 600,
-                  fontSize: L,
+                  fontSize: Lb,
                   lineHeight: 1,
                   letterSpacing: "-0.025em",
                   whiteSpace: "pre",
@@ -351,18 +428,19 @@ export function SequelNumeral({
         <div
           style={{
             position: "absolute",
-            left: numLeft,
-            top: numBaseY - m.numBase * size,
-            height: size,
-            lineHeight: `${size}px`,
+            left: numBox.left,
+            top: numBox.top,
+            height: numBox.size,
+            lineHeight: `${numBox.size}px`,
             whiteSpace: "pre",
             fontFamily,
             fontWeight: 500,
-            fontSize: size,
+            fontSize: numBox.size,
             letterSpacing: `${NUM_TRACK}em`,
             color: accent,
             opacity: supP,
-            transform: `translateY(${((1 - supP) * cap * 0.4).toFixed(2)}px)`,
+            transformOrigin: "0 0",
+            transform: `translateY(${((1 - supP) * cap * 0.4).toFixed(2)}px) translate(${numDx}px, ${numDy}px) scale(${numK})${glide(numShifts || numRises)}`,
           }}
         >
           {numeral}
@@ -387,7 +465,7 @@ export function SequelNumeral({
                 letterSpacing: "-0.01em",
                 whiteSpace: "pre",
                 color: c.soft,
-                transform: `translateY(${((1 - tagP) * tagFs * 1.4).toFixed(2)}px)`,
+                transform: `translateY(${(1 - tagP) * tagFs * 1.4}px)${glide(midway(tagP))}`,
               }}
             >
               {tagline}

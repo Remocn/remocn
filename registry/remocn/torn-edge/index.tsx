@@ -9,6 +9,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["500"],
@@ -54,6 +55,9 @@ const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 // is printed with it; `accent` takes the blue middle stop.
 const FLUTED = ["#1D2A8F", "#FF7A3D", "#FFE2C4"] as const;
 
+// How far the drawing reaches past the frame: more than the steepest lean
+// (0.5deg) moves a corner of a 1280x720 frame.
+const BLEED = 8;
 const TEAR_START = 2;
 const TEAR_END = 36;
 const PART_START = 32;
@@ -144,6 +148,7 @@ export function TornEdge({
   theme = "dark",
 }: TornEdgeProps) {
   const f = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
   const p = THEMES[theme];
@@ -223,10 +228,12 @@ export function TornEdge({
   const sOff = u * (1.5 + 6 * part);
   const sBlur = u * (2.2 + 5 * part);
 
-  const push = interpolate(f, [0, partEnd + 40], [1, 1.035], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const pushAt = (g: number) =>
+    interpolate(g, [0, partEnd + 40], [1, 1.035], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const push = pushAt(f);
   const drift = interpolate(f, [0, partEnd + 40], [0, 1], CLAMP);
   const cam = `translate(${W / 2} ${H / 2}) scale(${push}) translate(${-W / 2} ${-H / 2})`;
 
@@ -239,6 +246,15 @@ export function TornEdge({
   // than a ScaleLayer; the full-bleed sheet stays full-bleed.
   const headScale = (1.045 - 0.045 * settle) * scale;
   const headY = H / 2 + 0.34 * fs + (1 - settle) * 6 * u;
+  // The headline is SVG text under the slow push and settle, so the drawing
+  // is marked as moving on every frame either changes, however little: SVG
+  // text leans only while it is marked so, and the push's flat in-out ends
+  // would otherwise drop the lean while the headline rests under a scale,
+  // off the pixel grid, and snap it to a whole pixel.
+  const headMoving =
+    pushAt(f - 1) !== push ||
+    pushAt(f + 1) !== push ||
+    (settle > 0 && settle < 1);
 
   const userRegion = {
     filterUnits: "userSpaceOnUse" as const,
@@ -250,7 +266,22 @@ export function TornEdge({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <svg width={W} height={H} aria-hidden>
+      {/* The headline is SVG text, so the shared lean turns this whole
+          drawing while it moves. It reaches BLEED past the frame on every
+          side, so its turned edges stay outside the frame instead of showing
+          a seam; the user space is the frame's, as before. */}
+      <svg
+        width={W + 2 * BLEED}
+        height={H + 2 * BLEED}
+        viewBox={`${-BLEED} ${-BLEED} ${W + 2 * BLEED} ${H + 2 * BLEED}`}
+        aria-hidden
+        style={{
+          position: "absolute",
+          left: -BLEED,
+          top: -BLEED,
+          transform: glide(headMoving),
+        }}
+      >
         <defs>
           <filter
             id={paperId}

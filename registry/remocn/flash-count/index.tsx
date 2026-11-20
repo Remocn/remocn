@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const hanken = loadHanken("normal", {
   weights: ["300", "400", "500"],
@@ -186,7 +187,9 @@ export function FlashCount({
   speed = 1,
   theme = "dark",
 }: FlashCountProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
+  const frame = useCurrentFrame();
+  const t = Math.max(0, frame - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
@@ -256,7 +259,11 @@ export function FlashCount({
   const baseline = H - marginY;
   const right = W - marginX;
 
-  const driftP = Math.min(1, t / F_);
+  const driftAt = (f: number) =>
+    Math.min(1, (Math.max(0, f - delay) * speed) / F_);
+  const driftP = driftAt(frame);
+  const drifting =
+    driftAt(frame + 1) !== driftP || driftAt(frame - 1) !== driftP;
   const drift = 1 - driftP;
   const dx = drift * -W * 0.05;
   const ds = 1 - drift * 0.06;
@@ -315,7 +322,7 @@ export function FlashCount({
   });
   const cx = right;
   const cy = baseline - capPx / 2;
-  const subject = `translate(${dx.toFixed(2)}px, 0px) translate(${cx}px, ${cy}px) scale(${ds.toFixed(4)}) translate(${-cx}px, ${-cy}px)`;
+  const subject = `translate(${dx.toFixed(2)}px, 0px) translate(${cx}px, ${cy}px) scale(${ds.toFixed(4)}) translate(${-cx}px, ${-cy}px)${glide(drifting)}`;
   const dotR = smallFs * 0.32;
 
   return (

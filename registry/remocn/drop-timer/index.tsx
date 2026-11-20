@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -239,6 +240,8 @@ function shake(d: number, amp: number, seed: number) {
   };
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const pad = (n: number) => String(Math.max(0, Math.floor(n))).padStart(2, "0");
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -276,6 +279,7 @@ export function DropTimer({
   theme = "dark",
   speed = 1,
 }: DropTimerProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = Math.min(W / 1280, H / 720);
@@ -321,31 +325,49 @@ export function DropTimer({
 
   // ── Camera ──
   const enter = SLAM(ramp(t, 0, START));
-  const enterScale = 1.3 - 0.3 * enter;
   const enterBlur = (1 - enter) * 16;
-  let bump = 0;
-  let sx = 0;
-  let sy = 0;
-  for (let k = 1; k <= total; k++) {
-    const d = t - (START + k * tick);
-    if (d < -1 || d > 12) continue;
-    // hits grow as the clock runs out
-    const g = 0.7 + (0.6 * k) / total;
-    bump = Math.max(bump, g * kick(d));
-    const s = shake(d, 6 * u * g, k * 1.3);
-    sx += s.x;
-    sy += s.y;
-  }
-  const smashD = t - smashAt;
-  bump = Math.max(bump, 1.4 * kick(smashD - 4));
-  const s3 = shake(smashD - 4, 12 * u, 4.4);
-  sx += s3.x;
-  sy += s3.y;
-  const camScale = 1 + 0.04 * bump;
+  const cameraAt = (tt: number) => {
+    let bump = 0;
+    let sx = 0;
+    let sy = 0;
+    for (let k = 1; k <= total; k++) {
+      const d = tt - (START + k * tick);
+      if (d < -1 || d > 12) continue;
+      // hits grow as the clock runs out
+      const g = 0.7 + (0.6 * k) / total;
+      bump = Math.max(bump, g * kick(d));
+      const s = shake(d, 6 * u * g, k * 1.3);
+      sx += s.x;
+      sy += s.y;
+    }
+    const smashD = tt - smashAt;
+    bump = Math.max(bump, 1.4 * kick(smashD - 4));
+    const s3 = shake(smashD - 4, 12 * u, 4.4);
+    sx += s3.x;
+    sy += s3.y;
+    return { sx, sy, k: 1 + 0.04 * bump };
+  };
+  const cam = cameraAt(t);
+  const { sx, sy } = cam;
+  const camScale = cam.k;
+  // A frame either side, in the clock's own time; the scale is weighed by
+  // the half-width it swings the frame's edge through.
+  const camMoves = (o: ReturnType<typeof cameraAt>) =>
+    Math.abs(o.sx - sx) > 1e-3 ||
+    Math.abs(o.sy - sy) > 1e-3 ||
+    Math.abs(o.k - camScale) * W > 1e-3;
+  const camMoving =
+    camMoves(cameraAt(t + speed)) || camMoves(cameraAt(Math.max(0, t - speed)));
 
   // ── Smash ──
   const rush = RUSH(ramp(t, smashAt, 5));
-  const clockScale = enterScale * (1 + 1.8 * rush);
+  const clockScaleAt = (tt: number) =>
+    (1.3 - 0.3 * SLAM(ramp(tt, 0, START))) *
+    (1 + 1.8 * RUSH(ramp(tt, smashAt, 5)));
+  const clockScale = clockScaleAt(t);
+  const clockMoving =
+    clockScaleAt(t + speed) !== clockScale ||
+    clockScaleAt(Math.max(0, t - speed)) !== clockScale;
   const clockBlur = enterBlur + 26 * rush;
   const clockOpacity = Math.min(ramp(t, 0, 2), 1 - ramp(t, smashAt + 2, 3));
   const liveP = SLAM(ramp(t, smashAt + 1, 7));
@@ -360,6 +382,8 @@ export function DropTimer({
   );
   const after = t >= smashAt + 1;
   const rise = (a: number) => SLAM(ramp(t, a, 16));
+  const lift = (a: number) =>
+    `translateY(${(1 - rise(a)) * 14 * u}px)${glide(midway(ramp(t, a, 16)) && !camMoving)}`;
   const drift = ramp(t, smashAt, 70);
   const haze = SLAM(ramp(t, smashAt + 1, 24));
 
@@ -404,7 +428,7 @@ export function DropTimer({
           style={{
             position: "absolute",
             inset: 0,
-            transform: `translate(${sx}px, ${sy}px) scale(${camScale})`,
+            transform: `translate(${sx}px, ${sy}px) scale(${camScale})${glide(camMoving)}`,
             transformOrigin: "50% 50%",
           }}
         >
@@ -449,7 +473,7 @@ export function DropTimer({
             {t < smashAt + 6 ? (
               <g
                 style={{
-                  transform: `scale(${clockScale})`,
+                  transform: `scale(${clockScale})${glide(clockMoving && !camMoving)}`,
                   transformOrigin: `${W / 2}px ${baseline - capH / 2}px`,
                   filter:
                     clockBlur > 0.2 ? `blur(${clockBlur * u}px)` : undefined,
@@ -516,7 +540,7 @@ export function DropTimer({
                 opacity={liveOpacity}
                 style={{
                   letterSpacing: `${TRACK_LIVE}em`,
-                  transform: `scale(${liveScale})`,
+                  transform: `scale(${liveScale})${glide(midway(liveP) && !camMoving)}`,
                   transformOrigin: `${W / 2}px ${liveBase - liveCap / 2}px`,
                   filter:
                     liveBlur > 0.2 ? `blur(${liveBlur * u}px)` : undefined,
@@ -538,7 +562,7 @@ export function DropTimer({
                 display: "flex",
                 justifyContent: "center",
                 opacity: rise(smashAt + 7),
-                transform: `translateY(${(1 - rise(smashAt + 7)) * 14 * u}px)`,
+                transform: lift(smashAt + 7),
               }}
             >
               {logo ??
@@ -579,7 +603,7 @@ export function DropTimer({
                 color: fg,
                 lineHeight: 1,
                 opacity: rise(smashAt + 11),
-                transform: `translateY(${(1 - rise(smashAt + 11)) * 14 * u}px)`,
+                transform: lift(smashAt + 11),
               }}
             >
               <div

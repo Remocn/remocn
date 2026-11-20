@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: fraunces } = loadFont("normal", {
   weights: ["300", "400"],
@@ -207,6 +208,7 @@ export function TallyMarks({
   theme = "dark",
   speed = 1,
 }: TallyMarksProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
@@ -303,6 +305,7 @@ export function TallyMarks({
     ...CLAMP,
     easing: EASE_IO,
   });
+  const pushing = t > 0 && t < TIP + 30;
   const showStrokes = t < TIP;
 
   const tip = spring({
@@ -411,7 +414,10 @@ export function TallyMarks({
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <ScaleLayer scale={scale}>
         <AbsoluteFill
-          style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
+          style={{
+            transform: `scale(${push})${glide(pushing)}`,
+            transformOrigin: "50% 50%",
+          }}
         >
           <svg
             width={width}
@@ -488,7 +494,7 @@ export function TallyMarks({
                       letterSpacing: "-0.035em",
                       fontVariantNumeric: "lining-nums tabular-nums",
                       color: fg,
-                      transform: `translateY(${(1 - k) * 105}%)`,
+                      transform: `translateY(${(1 - k) * 105}%)${glide(k > 0 && (1 - k) * numSize > 1e-3 && !pushing)}`,
                     }}
                   >
                     {ch}
@@ -513,7 +519,7 @@ export function TallyMarks({
               color: p.muted,
               whiteSpace: "nowrap",
               opacity: label1,
-              transform: `translateY(${(1 - label1) * 8 * u}px)`,
+              transform: `translateY(${(1 - label1) * 8 * u}px)${glide(label1 > 0 && (1 - label1) * 8 * u > 1e-3 && !pushing)}`,
             }}
           >
             {label}

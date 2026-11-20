@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: MANROPE } = loadManrope("normal", {
   weights: ["400", "500"],
@@ -450,6 +451,8 @@ function bySpace(pts: Pt[]): Pt[] {
 
 // ── Component ───────────────────────────────────────────────────────────────
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -483,6 +486,7 @@ export function DotFieldMorph({
   speed = 1,
   theme = "dark",
 }: DotFieldMorphProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - wait) * speed;
   const { width: W, height: H } = useVideoConfig();
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
@@ -698,7 +702,7 @@ export function DotFieldMorph({
               fontFamily,
               color: fg,
               opacity: labelOp,
-              transform: `translateY(${(1 - labelIn) * H * 0.012}px)`,
+              transform: `translateY(${(1 - labelIn) * H * 0.012}px)${glide(midway(labelIn))}`,
               filter: `blur(${(1 - labelOp) * 4}px)`,
             }}
           >

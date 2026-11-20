@@ -9,6 +9,7 @@ import {
   DEFAULT_HOLD_MS,
   useCaptionWordRects,
 } from "@/lib/remocn/caption-core";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface CaptionTeleprompterProps extends CaptionBaseProps {
   visibleLines?: number;
@@ -44,6 +45,8 @@ const LEGIBILITY_SHADOW =
 
 const scrollEasing = Easing.bezier(0.45, 0, 0.2, 1);
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const clamp = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -76,6 +79,7 @@ export function CaptionTeleprompter({
   shadow = true,
   className,
 }: CaptionTeleprompterProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const timeMs = (frame / fps) * 1000;
@@ -152,7 +156,7 @@ export function CaptionTeleprompter({
           left: 0,
           right: 0,
           top: 0,
-          transform: `translateY(${windowHeight / 2 - centerY}px)`,
+          transform: `translateY(${windowHeight / 2 - centerY}px)${glide(k > 0 && midway(progress))}`,
         }}
       >
         {lines.map((line, i) => {

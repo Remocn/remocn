@@ -11,6 +11,7 @@ import {
   groupCaptionWords,
   useCaptions,
 } from "@/lib/remocn/caption-core";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface CaptionProsodyProps extends CaptionBaseProps {
   minScale?: number;
@@ -26,6 +27,8 @@ const LEGIBILITY_SHADOW =
   "0 2px 3px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.35)";
 
 const appearEasing = Easing.bezier(0.2, 0.8, 0.2, 1);
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const clamp = {
   extrapolateLeft: "clamp",
@@ -75,6 +78,7 @@ export function CaptionProsody({
   shadow = true,
   className,
 }: CaptionProsodyProps) {
+  const glide = useGlide();
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
@@ -123,7 +127,7 @@ export function CaptionProsody({
                 fontSize: `${scales[w]}em`,
                 color: active ? activeColor : color,
                 opacity: appear,
-                transform: `translateY(${(1 - appear) * RISE_EM}em)`,
+                transform: `translateY(${(1 - appear) * RISE_EM}em)${glide(midway(appear))}`,
                 textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
               }}
             >

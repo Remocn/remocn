@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["300", "400", "500"],
@@ -104,6 +105,8 @@ const SWEEP = [4, 50] as const;
 const CELL_IN = 10;
 const HIT = 62;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function rgb(hex: string): number[] | null {
   const m = /^#([0-9a-f]{6})$/i.exec(hex);
   if (!m) return null;
@@ -195,6 +198,7 @@ export function ContributionHeatmap({
   theme = "dark",
   speed = 1,
 }: ContributionHeatmapProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
@@ -316,7 +320,7 @@ export function ContributionHeatmap({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `translate(${(0.5 - drift) * 14 * u}px, ${gridY}px) scale(${gridScale})`,
+            transform: `translate(${(0.5 - drift) * 14 * u}px, ${gridY}px) scale(${gridScale})${glide(midway(drift) || midway(zoom) || midway(settle))}`,
             transformOrigin: "50% 50%",
             opacity: stage * gridOpacity,
             filter: gridBlur > 0.05 ? `blur(${gridBlur}px)` : undefined,
@@ -432,7 +436,7 @@ export function ContributionHeatmap({
               opacity: land,
               filter:
                 land < 0.99 ? `blur(${(1 - land) * 10 * u}px)` : undefined,
-              transform: `translateY(${(1 - land) * 28 * u}px) scale(${1.04 - 0.04 * land})`,
+              transform: `translateY(${(1 - land) * 28 * u}px) scale(${1.04 - 0.04 * land})${glide(midway(land))}`,
             }}
           >
             {shown}
@@ -444,7 +448,7 @@ export function ContributionHeatmap({
               alignItems: "center",
               gap: 12 * u,
               opacity: labIn,
-              transform: `translateY(${(1 - labIn) * 10 * u}px)`,
+              transform: `translateY(${(1 - labIn) * 10 * u}px)${glide(midway(labIn))}`,
             }}
           >
             <span

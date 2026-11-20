@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -172,7 +173,9 @@ export function GridToApp({
   ground,
   groundParams,
 }: GridToAppProps) {
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
+  const clock = useCurrentFrame() - delay;
+  const frame = Math.max(0, clock) * speed;
   const { width, height, fps } = useVideoConfig();
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
@@ -372,7 +375,10 @@ export function GridToApp({
               width: 0,
               height: 0,
               transformStyle: "preserve-3d",
-              transform: `translate(${-fx * z}px, ${-fy * z}px) rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg) scale(${z})`,
+              // The camera's turns start from level on the first frame, where
+              // the zoomed cards would sit on whole pixels; the camera never
+              // holds once it starts, so it is marked as moving from then on.
+              transform: `translate(${-fx * z}px, ${-fy * z}px) rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg) scale(${z})${glide(clock >= 0)}`,
             }}
           >
             <div

@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["400", "500"],
@@ -171,6 +172,7 @@ export function CrosshairLock({
   theme = "dark",
   speed = 1,
 }: CrosshairLockProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const u = Math.min(W / 1280, H / 720);
@@ -251,11 +253,18 @@ export function CrosshairLock({
   const endX = elbowX + dir * run;
   const leadLen = Math.SQRT2 * diag + run;
   const lead = EASE_IO(interpolate(t, [LEAD_AT, LEAD_AT + 14], [0, 1], CLAMP));
-  const pop = spring({
-    frame: t - POP_AT,
-    fps,
-    config: { damping: 16, stiffness: 200, mass: 0.6 },
-  });
+  const popAt = (tt: number) =>
+    spring({
+      frame: tt - POP_AT,
+      fps,
+      config: { damping: 16, stiffness: 200, mass: 0.6 },
+    });
+  const pop = popAt(t);
+  // The spring has a long tail, so the test is on its neighbours, not on a
+  // progress window.
+  const popMoving =
+    Math.abs(popAt(t + speed) - pop) > 1e-6 ||
+    Math.abs(pop - popAt(t - speed)) > 1e-6;
   const popOp = interpolate(t, [POP_AT, POP_AT + 8], [0, 1], CLAMP);
   const { head, tail } = splitValue(value);
   const gradId = `mesh${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
@@ -442,7 +451,7 @@ export function CrosshairLock({
             justifyContent: "center",
             alignItems: dir < 0 ? "flex-end" : "flex-start",
             opacity: popOp,
-            transform: `translateX(${dir * (1 - pop) * 14 * u}px) scale(${0.96 + 0.04 * pop})`,
+            transform: `translateX(${dir * (1 - pop) * 14 * u}px) scale(${0.96 + 0.04 * pop})${glide(popMoving)}`,
             transformOrigin: dir < 0 ? "100% 50%" : "0% 50%",
           }}
         >

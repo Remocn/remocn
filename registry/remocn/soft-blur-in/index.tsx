@@ -1,6 +1,7 @@
 "use client";
 
 import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface SoftBlurInProps {
   text: string;
@@ -22,6 +23,7 @@ export function SoftBlurIn({
   className,
 }: SoftBlurInProps) {
   const frame = useCurrentFrame() * speed;
+  const glide = useGlide();
 
   const chars = Array.from(text);
   const charDurationFrames = 27;
@@ -78,7 +80,7 @@ export function SoftBlurIn({
                 backfaceVisibility: "hidden",
                 transformOrigin: "50% 55%",
                 opacity,
-                translate: `0 ${y}px`,
+                transform: `translateY(${y}px)${glide(local > 0 && local < charTravelFrames)}`,
                 filter: `blur(${blurAmount}px)`,
               }}
             >

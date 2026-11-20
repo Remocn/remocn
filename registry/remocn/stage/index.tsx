@@ -253,7 +253,6 @@ export function Stage({
     transformOrigin: `${geometry.targetX}px ${geometry.targetY}px`,
     transformStyle: "preserve-3d",
     backfaceVisibility: "visible",
-    willChange: "transform",
   };
 
   return (

@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -84,6 +85,8 @@ const EXIT = Easing.bezier(0.55, 0, 1, 0.45);
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const DARK = {
   copy: "#f4f4f6",
@@ -415,6 +418,7 @@ export function StockScrub({
   ground,
   groundParams,
 }: StockScrubProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { fps, width, height } = useVideoConfig();
   const f = frame * speed;
@@ -552,6 +556,7 @@ export function StockScrub({
   const sheetRows = [0, 1, 2, 3].map((i) => sp(BUY_TAP + 10 + i * 3, CARD));
   const pulse = ((f - DRAW - 40) % 36) / 36;
   const camS = interpolate(f, [0, 270], [1, 1.03], clamp);
+  const camMoving = f > 0 && f < 270;
 
   const enter = (v: number, dy = 12): React.CSSProperties => ({
     opacity: Math.min(1, v * 1.4),
@@ -600,7 +605,7 @@ export function StockScrub({
           left: 0,
           right: 0,
           top: 0,
-          transform: `translateY(${(1 - pin) * 70 - pout * 50}%)`,
+          transform: `translateY(${(1 - pin) * 70 - pout * 50}%)${glide(midway(pin) || midway(pout))}`,
           opacity: pin * (1 - pout),
         }}
       >
@@ -609,6 +614,11 @@ export function StockScrub({
     );
   };
   const readIn = sp(18, CARD);
+  // The spring overshoots, so it is still moving past 1: the neighbouring
+  // frames say whether it is, not the progress.
+  const readMoving =
+    Math.abs(sp(17, CARD) - readIn) > 1e-5 ||
+    Math.abs(readIn - sp(19, CARD)) > 1e-5;
 
   return (
     <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
@@ -672,7 +682,7 @@ export function StockScrub({
               color: c.copyMuted,
               fontVariantNumeric: "tabular-nums",
               opacity: Math.min(1, readIn * 1.4),
-              transform: `translateY(${(1 - readIn) * 16}px)`,
+              transform: `translateY(${(1 - readIn) * 16}px)${glide(readMoving)}`,
             }}
           >
             <span>{ticker}</span>
@@ -689,7 +699,9 @@ export function StockScrub({
               top: phoneCy - BH / 2,
               width: BW,
               height: BH,
-              transform: `translateY(${(1 - rise) * H * 0.9}px) scale(${k * camS})`,
+              // The camera push runs the whole scene, so the tilt here
+              // covers every label on the screen while it lasts.
+              transform: `translateY(${(1 - rise) * H * 0.9}px) scale(${k * camS})${glide(camMoving || midway(rise))}`,
             }}
           >
             <Phone c={c}>
@@ -918,13 +930,17 @@ export function StockScrub({
               <div
                 style={{
                   position: "absolute",
-                  left: tabX + 4,
+                  // Laid out under the first tab; the slide to the tapped
+                  // one is a transform, because layout rounds a box to whole
+                  // pixels and a pill eased by `left` clicks along.
+                  left: 12 + TAB_W + 4,
                   top: TABS_Y,
                   width: TAB_W - 8,
                   height: 32,
                   borderRadius: 16,
                   background: c.tabOn,
-                  ...enter(headIn[3]),
+                  opacity: enter(headIn[3]).opacity,
+                  transform: `translateX(${tabX - 12 - TAB_W}px) ${enter(headIn[3]).transform}`,
                 }}
               />
               {TABS.map((t, i) => {
@@ -1189,8 +1205,10 @@ export function StockScrub({
               <div
                 style={{
                   position: "absolute",
-                  left: touch.x - 23,
-                  top: touch.y - 23,
+                  // Parked on the first stop; the travel between stops is
+                  // a transform, for the same reason as the tab pill.
+                  left: path[0].x - 23,
+                  top: path[0].y - 23,
                   width: 46,
                   height: 46,
                   borderRadius: 23,
@@ -1199,7 +1217,7 @@ export function StockScrub({
                     ? "inset 0 0 0 1.5px rgba(255,255,255,0.7)"
                     : "inset 0 0 0 1.5px rgba(255,255,255,0.9), 0 4px 14px rgba(0,0,0,0.18)",
                   opacity: touchOpacity,
-                  transform: `scale(${touchScale})`,
+                  transform: `translate(${touch.x - path[0].x}px, ${touch.y - path[0].y}px) scale(${touchScale})`,
                   zIndex: 35,
                 }}
               />

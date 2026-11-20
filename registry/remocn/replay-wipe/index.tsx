@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: condensed } = loadFont("normal", {
   weights: ["500"],
@@ -240,6 +241,7 @@ function ReplayShot({
   tag: string;
   look: ShotLook;
 }) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = Math.min(W / 1280, H / 720);
@@ -263,7 +265,8 @@ function ReplayShot({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            transform: `translateX(${creep}px) scale(${grow})`,
+            // The slow-mo creep never rests while the shot is on screen.
+            transform: `translateX(${creep}px) scale(${grow})${glide(t > 0 && t < 150)}`,
             fontFamily,
             fontWeight: 500,
             fontSize: 420 * u,
@@ -338,6 +341,7 @@ export function ReplayWipe({
   theme = "dark",
   speed = 1,
 }: ReplayWipeProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = Math.min(W / 1280, H / 720);
@@ -346,28 +350,11 @@ export function ReplayWipe({
     background === "transparent"
       ? "transparent"
       : (background ?? THEMES[theme].stage);
-  const look: ShotLook = { fontFamily, scale, delay, speed };
-
-  const shots = [
-    from ?? (
-      <LiveShot
-        theme={theme}
-        accent={accent}
-        label={liveLabel}
-        ink={ink}
-        stage={background === undefined ? undefined : stage}
-        look={look}
-      />
-    ),
-    to ?? <ReplayShot label={replayLabel} tag={slowMoLabel} look={look} />,
-  ];
 
   const len = Math.max(1, wipeLength);
   const starts = [...wipeAt].sort((a, b) => a - b);
   const done = starts.filter((w) => t >= w + len).length;
   const active = starts.find((w) => t >= w && t < w + len);
-  const outgoing = shots[done % 2];
-  const incoming = shots[(done + 1) % 2];
 
   // Streak geometry: a slanted band whose head (x at mid-height = X) is the
   // wipe edge. The incoming shot shows left of the head.
@@ -393,7 +380,30 @@ export function ReplayWipe({
     }
     return w + q * len;
   });
-  const hit = midAt.reduce((a, m) => Math.max(a, kick(t - m)), 0);
+  const hitAt = (f: number) =>
+    midAt.reduce((a, m) => Math.max(a, kick(f - m)), 0);
+  const hit = hitAt(t);
+  const look: ShotLook = { fontFamily, scale, delay, speed };
+  const shake =
+    Math.abs(hitAt(t + speed) - hit) > 1e-6 ||
+    Math.abs(hit - hitAt(t - speed)) > 1e-6;
+
+  const shots = [
+    from ?? (
+      <LiveShot
+        theme={theme}
+        accent={accent}
+        label={liveLabel}
+        ink={ink}
+        stage={background === undefined ? undefined : stage}
+        look={look}
+      />
+    ),
+    to ?? <ReplayShot label={replayLabel} tag={slowMoLabel} look={look} />,
+  ];
+
+  const outgoing = shots[done % 2];
+  const incoming = shots[(done + 1) % 2];
   const flash = midAt.reduce((a, m) => {
     const d = t - m + 1;
     if (d < 0 || d > 5) return a;
@@ -427,7 +437,8 @@ export function ReplayWipe({
         style={{
           position: "absolute",
           inset: 0,
-          transform: cam,
+          // The shots paint the full frame; the mark leans only their text.
+          transform: `${cam}${glide(shake)}`,
           transformOrigin: "50% 50%",
         }}
       >

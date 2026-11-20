@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: serif } = loadFont("normal", {
   weights: ["400"],
@@ -128,6 +129,8 @@ function Grain({ opacity }: { opacity: number }) {
 
 const lerp = (a: number, b: number, p: number) => a + (b - a) * p;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 export const ellipsisResolveDuration = SWEEP + SWEEP_LEN + RISE + 34;
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -160,6 +163,7 @@ export function EllipsisResolve({
   theme = "dark",
   speed = 1,
 }: EllipsisResolveProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -192,37 +196,34 @@ export function EllipsisResolve({
   const pitch = 1.95 * d;
 
   // Camera: starts close on the typing indicator, eases out to the word.
-  const zoom = interpolate(
-    t,
-    [resolveAt - 6, resolveAt + STRETCH_LEN + 6],
-    [0, 1],
-    {
+  const zoomAt = (tt: number) =>
+    interpolate(tt, [resolveAt - 6, resolveAt + STRETCH_LEN + 6], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
-    },
-  );
+    });
+  const zoom = zoomAt(t);
   const cam = lerp(1.75, 1, zoom);
 
   // Dots begin centered in frame, then settle onto the word's baseline.
-  const drop = EASE_IO(
-    interpolate(t, [resolveAt, resolveAt + STRETCH_LEN], [0, 1], CLAMP),
-  );
-  const dotY = lerp(H / 2, restY, drop);
+  const dropAt = (tt: number) =>
+    EASE_IO(
+      interpolate(tt, [resolveAt, resolveAt + STRETCH_LEN], [0, 1], CLAMP),
+    );
 
-  const bump = (k: number) => {
+  const bump = (tt: number, k: number) => {
     let b = 0;
     for (const start of [PULSE_A, PULSE_B]) {
-      const local = (t - start - k * BUMP_STEP) / BUMP;
+      const local = (tt - start - k * BUMP_STEP) / BUMP;
       if (local > 0 && local < 1) b = Math.max(b, Math.sin(Math.PI * local));
     }
     return b;
   };
 
   // Stretch: dot 3 travels to the period, dots 1 and 2 pull into one bar.
-  const st = (k: number) =>
+  const st = (tt: number, k: number) =>
     EASE_IO(
       interpolate(
-        t,
+        tt,
         [resolveAt + (2 - k) * 2, resolveAt + (2 - k) * 2 + STRETCH_LEN - 4],
         [0, 1],
         CLAMP,
@@ -231,21 +232,6 @@ export function EllipsisResolve({
   const barRight = periodCx - d / 2 - 0.55 * d;
   const mid = (left + barRight) / 2;
   const startCx = (k: number) => W / 2 + (k - 1) * pitch;
-
-  // Sweep: the bar's left edge chases right and folds into the period.
-  const sweepRaw = interpolate(
-    t,
-    [sweepAt, sweepAt + sweepFrames],
-    [0, 1],
-    CLAMP,
-  );
-  const sweep = EASE_SWEEP(sweepRaw);
-  const closeGap = EASE_IO(
-    interpolate(t, [sweepAt, sweepAt + 10], [0, 1], CLAMP),
-  );
-  const barL = lerp(left, periodCx - d / 2, sweep);
-  const barR = lerp(barRight, periodCx + d / 2, closeGap);
-  const sweeping = t >= sweepAt;
 
   // Each letter starts rising the frame the bar's edge clears its middle.
   const crossAt = useMemo(
@@ -267,10 +253,19 @@ export function EllipsisResolve({
   const landAt = sweepAt + sweepFrames;
   const settle = interpolate(t, [landAt - 2, landAt + SETTLE], [0, 1], CLAMP);
   const pop = 1 + 0.14 * Math.sin(Math.PI * EASE_OUT(settle));
-  const push = interpolate(t, [landAt, landAt + 40], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const pushAt = (tt: number) =>
+    interpolate(tt, [landAt, landAt + 40], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  const push = pushAt(t);
+  // The push eases out over 40 frames, so its tail is tested frame to frame
+  // on the camera's scale itself rather than on a progress.
+  const camAt = (tt: number) =>
+    lerp(1.75, 1, zoomAt(tt)) * (1 + 0.02 * pushAt(tt));
+  const camMoving =
+    Math.abs(camAt(t + speed) - camAt(t)) > 1e-6 ||
+    Math.abs(camAt(t) - camAt(t - speed)) > 1e-6;
 
   // The silk sheen drifts a few degrees while the word holds.
   const sheen =
@@ -278,27 +273,115 @@ export function EllipsisResolve({
       ? `linear-gradient(${96 + 10 * push}deg, ${c.ink[0]} 0%, ${c.ink[1]} 34%, ${c.ink[2]} 72%, ${c.ink[3]} 100%)`
       : `linear-gradient(${ink}, ${ink})`;
 
-  const dotStyle = (
-    l: number,
-    r: number,
-    y: number,
-    color: string,
-  ): React.CSSProperties => ({
-    position: "absolute",
-    left: l,
-    top: y - d / 2,
-    width: Math.max(d, r - l),
-    height: d,
-    borderRadius: d / 2,
-    background: color,
-  });
+  // Every dot and bar on frame `tt`, keyed so a frame can be compared with
+  // its neighbours. `at` is the fixed spot it is laid out at while it moves.
+  type Dot = {
+    key: string;
+    l: number;
+    r: number;
+    y: number;
+    color: string;
+    at: [number, number];
+  };
+  const dotsAt = (tt: number): Dot[] => {
+    const dotY = lerp(H / 2, restY, dropAt(tt));
+    const atStart = (k: number): [number, number] => [
+      startCx(k) - d / 2,
+      H / 2,
+    ];
+    const accentAt = EASE_OUT(
+      interpolate(tt, [resolveAt + 4, resolveAt + STRETCH_LEN], [0, 1], CLAMP),
+    );
+    const dot3Cx = lerp(startCx(2), periodCx, st(tt, 2));
+    const dot3: Dot = {
+      key: "c",
+      l: dot3Cx - d / 2,
+      r: dot3Cx + d / 2,
+      y: dotY - bump(tt, 2) * 0.05 * F * (1 - st(tt, 2)),
+      color: interpolateColors(
+        accentAt,
+        [0, 1],
+        [interpolateColors(bump(tt, 2), [0, 1], [c.muted, fg]), accent],
+      ),
+      at: atStart(2),
+    };
+    // Sweep: the bar's left edge chases right and folds into the period.
+    if (tt >= sweepAt) {
+      const sweep = EASE_SWEEP(
+        interpolate(tt, [sweepAt, sweepAt + sweepFrames], [0, 1], CLAMP),
+      );
+      const closeGap = EASE_IO(
+        interpolate(tt, [sweepAt, sweepAt + 10], [0, 1], CLAMP),
+      );
+      const bar: Dot = {
+        key: "bar",
+        l: lerp(left, periodCx - d / 2, sweep),
+        r: lerp(barRight, periodCx + d / 2, closeGap),
+        y: dotY,
+        color: fg,
+        at: [left, restY],
+      };
+      return [bar, dot3];
+    }
+    const segs = [0, 1].map((k): Dot => {
+      const s = st(tt, k);
+      const cx = startCx(k);
+      const l0 = cx - d / 2;
+      const r0 = cx + d / 2;
+      return {
+        key: k === 0 ? "a" : "b",
+        l: k === 0 ? lerp(l0, left, s) : lerp(l0, mid - d / 2, s),
+        r: k === 0 ? lerp(r0, mid + d / 2, s) : lerp(r0, barRight, s),
+        y: dotY - bump(tt, k) * 0.05 * F * (1 - s),
+        color: interpolateColors(
+          Math.max(bump(tt, k), Math.min(1, s * 3)),
+          [0, 1],
+          [c.muted, fg],
+        ),
+        at: atStart(k),
+      };
+    });
+    // Once the two capsules overlap they are one bar: draw it once so
+    // the rounded ends never leave an antialiased seam.
+    if (segs[1].l < segs[0].r) {
+      const bar: Dot = {
+        key: "ab",
+        l: segs[0].l,
+        r: segs[1].r,
+        y: dotY,
+        color: fg,
+        at: [left, restY],
+      };
+      return [bar, dot3];
+    }
+    return [...segs, dot3];
+  };
 
-  const dot3Cx = lerp(startCx(2), periodCx, st(2));
-  const dot3Color = interpolateColors(
-    accentIn,
-    [0, 1],
-    [interpolateColors(bump(2), [0, 1], [c.muted, fg]), accent],
-  );
+  // Layout rounds a box's edges to whole pixels, so a dot eased by `left`
+  // and `top` steps unevenly under the camera's zoom. While a dot moves it
+  // is laid out at its fixed spot and the travel is a translate; at rest it
+  // keeps the plain layout it always had.
+  const before = dotsAt(t - speed);
+  const after = dotsAt(t + speed);
+  const shifts = (g: Dot, list: Dot[]) => {
+    const o = list.find((x) => x.key === g.key);
+    return !o || Math.abs(g.l - o.l) > 1e-3 || Math.abs(g.y - o.y) > 1e-3;
+  };
+  const dotStyle = (g: Dot, extra = ""): React.CSSProperties => {
+    const moving = shifts(g, before) || shifts(g, after);
+    const [ax, ay] = moving ? g.at : [g.l, g.y];
+    const move = moving ? `translate(${g.l - ax}px, ${g.y - ay}px) ` : "";
+    return {
+      position: "absolute",
+      left: ax,
+      top: ay - d / 2,
+      width: Math.max(d, g.r - g.l),
+      height: d,
+      borderRadius: d / 2,
+      background: g.color,
+      transform: `${move}${extra}`.trim() || undefined,
+    };
+  };
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
@@ -311,7 +394,7 @@ export function EllipsisResolve({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${cam * (1 + 0.02 * push)})`,
+            transform: `scale(${cam * (1 + 0.02 * push)})${glide(camMoving)}`,
             transformOrigin: `${W / 2}px ${lerp(H / 2, baseline - 0.3 * F, zoom)}px`,
           }}
         >
@@ -340,7 +423,7 @@ export function EllipsisResolve({
                   WebkitBackgroundClip: "text",
                   backgroundClip: "text",
                   opacity: Math.min(1, p * 1.6),
-                  transform: `translateY(${(1 - p) * 0.16 * F}px)`,
+                  transform: `translateY(${(1 - p) * 0.16 * F}px)${glide(midway(p) && !camMoving)}`,
                 }}
               >
                 {l.ch}
@@ -348,48 +431,12 @@ export function EllipsisResolve({
             );
           })}
 
-          {(() => {
-            if (sweeping) return <div style={dotStyle(barL, barR, dotY, fg)} />;
-            const segs = [0, 1].map((k) => {
-              const s = st(k);
-              const cx = startCx(k);
-              const l0 = cx - d / 2;
-              const r0 = cx + d / 2;
-              return {
-                l: k === 0 ? lerp(l0, left, s) : lerp(l0, mid - d / 2, s),
-                r: k === 0 ? lerp(r0, mid + d / 2, s) : lerp(r0, barRight, s),
-                lift: bump(k) * 0.05 * F * (1 - s),
-                color: interpolateColors(
-                  Math.max(bump(k), Math.min(1, s * 3)),
-                  [0, 1],
-                  [c.muted, fg],
-                ),
-              };
-            });
-            // Once the two capsules overlap they are one bar: draw it once so
-            // the rounded ends never leave an antialiased seam.
-            if (segs[1].l < segs[0].r) {
-              return <div style={dotStyle(segs[0].l, segs[1].r, dotY, fg)} />;
-            }
-            return segs.map((g, k) => (
-              <div
-                key={k === 0 ? "a" : "b"}
-                style={dotStyle(g.l, g.r, dotY - g.lift, g.color)}
-              />
-            ));
-          })()}
-
-          <div
-            style={{
-              ...dotStyle(
-                dot3Cx - d / 2,
-                dot3Cx + d / 2,
-                dotY - bump(2) * 0.05 * F * (1 - st(2)),
-                dot3Color,
-              ),
-              transform: `scale(${pop})`,
-            }}
-          />
+          {dotsAt(t).map((g) => (
+            <div
+              key={g.key}
+              style={dotStyle(g, g.key === "c" ? `scale(${pop})` : "")}
+            />
+          ))}
         </AbsoluteFill>
       </ScaleLayer>
       {grain ? <Grain opacity={c.grain} /> : null}

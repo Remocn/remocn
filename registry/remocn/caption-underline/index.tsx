@@ -10,6 +10,7 @@ import {
   useCaptions,
   useCaptionWordRects,
 } from "@/lib/remocn/caption-core";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface CaptionUnderlineProps extends CaptionBaseProps {
   underlineColor?: string;
@@ -37,6 +38,8 @@ function mix(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 export function CaptionUnderline({
   captions,
   combineTokensWithinMilliseconds = 1200,
@@ -50,6 +53,7 @@ export function CaptionUnderline({
   shadow = true,
   className,
 }: CaptionUnderlineProps) {
+  const glide = useGlide();
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
@@ -127,7 +131,7 @@ export function CaptionUnderline({
         lineHeight: 1.2,
         textAlign: "center",
         opacity: Math.min(enter, exit),
-        transform: `translateY(${(1 - enter) * RISE_EM}em)`,
+        transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
       }}
     >
       {words.map((word, w) => (

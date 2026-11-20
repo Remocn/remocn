@@ -21,6 +21,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -453,6 +454,7 @@ function SceneA({
   delay: number;
   speed: number;
 }) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const tall = height > width;
@@ -492,7 +494,7 @@ function SceneA({
       <ScaleLayer scale={fgScale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${push})`,
+            transform: `scale(${push})${glide(frame > 0 && frame < A_LEN)}`,
             alignItems: "center",
             justifyContent: "center",
             flexDirection: "column",

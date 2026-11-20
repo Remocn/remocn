@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -742,6 +743,7 @@ export function ColorBars({
   delay = 0,
   grain = true,
 }: ColorBarsProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -872,7 +874,7 @@ export function ColorBars({
           <AbsoluteFill style={{ clipPath: region(edges[n]) }}>
             <AbsoluteFill
               style={{
-                transform: `translate(${ux * drift}px, ${uy * drift}px) scale(${1 + 0.03 * (1 - settle)})`,
+                transform: `translate(${ux * drift}px, ${uy * drift}px) scale(${1 + 0.03 * (1 - settle)})${glide(settle > 5e-4 && settle < 1 - 5e-4)}`,
               }}
             >
               {shot(1)}

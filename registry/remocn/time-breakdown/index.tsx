@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -280,7 +281,9 @@ export function TimeBreakdown({
   theme = "dark",
   speed = 1,
 }: TimeBreakdownProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
+  const frame = useCurrentFrame();
+  const t = Math.max(0, frame - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
   const th = THEMES[theme];
@@ -378,10 +381,19 @@ export function TimeBreakdown({
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const drift = interpolate(t, [0, T_DONE + 60], [1.025, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const driftAt = (f: number) =>
+    interpolate(Math.max(0, f - delay) * speed, [0, T_DONE + 60], [1.025, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const drift = driftAt(frame);
+  // The drift's ease is so flat at its ends that a progress test would keep
+  // the tilt on while nothing visibly moves; weigh the scale step by the
+  // distance from the origin to the frame's edge instead.
+  const reach = Math.max(width, height) / 2;
+  const drifting =
+    Math.abs(driftAt(frame + 1) - drift) * reach > 1e-3 ||
+    Math.abs(drift - driftAt(frame - 1)) * reach > 1e-3;
 
   const bracketY = barTop - 22 * u;
   const auroraDrift = interpolate(
@@ -401,7 +413,10 @@ export function TimeBreakdown({
       />
       <ScaleLayer scale={scale}>
         <AbsoluteFill
-          style={{ transform: `scale(${drift})`, transformOrigin: "50% 55%" }}
+          style={{
+            transform: `scale(${drift})${glide(drifting)}`,
+            transformOrigin: "50% 55%",
+          }}
         >
           <div
             style={{

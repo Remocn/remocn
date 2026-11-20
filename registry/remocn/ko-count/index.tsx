@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: shoulders } = loadFont("normal", {
   weights: ["400", "500"],
@@ -182,6 +183,8 @@ function shake(t: number, at: number, len: number, amp: number) {
   };
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -214,6 +217,7 @@ export function KoCount({
   theme = "dark",
   speed = 1,
 }: KoCountProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed + 1;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -229,17 +233,35 @@ export function KoCount({
   const subAt = hitAt + SUB_DELAY;
   const logoAt = hitAt + LOGO_DELAY;
 
-  let idx = 0;
-  for (let i = 0; i < 10; i++) if (t >= countAt[i]) idx = i;
+  const idxAt = (tt: number) => {
+    let i0 = 0;
+    for (let i = 0; i < 10; i++) if (tt >= countAt[i]) i0 = i;
+    return i0;
+  };
+  const idx = idxAt(t);
   const counting = t < koAt;
   const local = t - countAt[idx];
 
   // ── Camera: a kick on every count, growing; a big one on the word ─────────
-  const kickAmp = (3 + idx * 1.4) * u;
-  const sk = counting ? shake(t, countAt[idx] + 2, 5, kickAmp) : { x: 0, y: 0 };
-  const sh = shake(t, hitAt, 14, 22 * u);
-  const camX = (sk.x + sh.x) * shakeAmt;
-  const camY = (sk.y + sh.y) * shakeAmt;
+  const camAt = (tt: number) => {
+    const i = idxAt(tt);
+    const sk =
+      tt < koAt
+        ? shake(tt, countAt[i] + 2, 5, (3 + i * 1.4) * u)
+        : { x: 0, y: 0 };
+    const sh = shake(tt, hitAt, 14, 22 * u);
+    return { x: (sk.x + sh.x) * shakeAmt, y: (sk.y + sh.y) * shakeAmt };
+  };
+  const cam = camAt(t);
+  const camX = cam.x;
+  const camY = cam.y;
+  const camStep = (a: number, b: number) => {
+    const p = camAt(a);
+    const q = camAt(b);
+    return Math.abs(p.x - q.x) + Math.abs(p.y - q.y);
+  };
+  const camMoving =
+    camStep(t + speed, t) > 1e-3 || camStep(t, Math.max(1, t - speed)) > 1e-3;
 
   const shot = SHOTS[idx];
   const numFs = shot.fs * H;
@@ -347,7 +369,7 @@ export function KoCount({
           style={{
             position: "absolute",
             inset: 0,
-            transform: `translate(${camX}px, ${camY}px)`,
+            transform: `translate(${camX}px, ${camY}px)${glide(camMoving)}`,
           }}
         >
           {counting ? (
@@ -405,7 +427,11 @@ export function KoCount({
                       top: wordCy - CAP_TOP * wordFs - wordCapH / 2,
                       display: "flex",
                       justifyContent: "center",
-                      transform: `scale(${wordScale(tt)})`,
+                      transform: `scale(${wordScale(tt)})${glide(
+                        !camMoving &&
+                          (midway(ramp(tt, koAt, SLAM_LEN)) ||
+                            midway(ramp(tt, hitAt, 60))),
+                      )}`,
                       transformOrigin: `50% ${CAP_TOP * wordFs + wordCapH / 2}px`,
                       opacity: op,
                     }}
@@ -470,7 +496,7 @@ export function KoCount({
                     display: "flex",
                     justifyContent: "center",
                     opacity: logoP,
-                    transform: `translateY(${(1 - logoP) * 14 * u}px)`,
+                    transform: `translateY(${(1 - logoP) * 14 * u}px)${glide(midway(logoP) && !camMoving)}`,
                   }}
                 >
                   {logo ?? <RemocnLogo fontSize={34 * u} color={fg} />}

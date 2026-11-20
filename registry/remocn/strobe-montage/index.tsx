@@ -20,6 +20,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -73,6 +74,9 @@ const RECEDE = Easing.bezier(0.65, 0, 0.35, 1);
 const TYPE_IN = Easing.bezier(0.32, 0.72, 0, 1);
 const PANEL = { mass: 1, damping: 26, stiffness: 120 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
+
+const moves = (at: (f: number) => number, f: number, eps: number) =>
+  Math.abs(at(f + 1) - at(f)) > eps || Math.abs(at(f) - at(f - 1)) > eps;
 
 export const STROBE_MONTAGE_IMAGES = [
   "templates/launch-anything/desk.jpg",
@@ -362,6 +366,7 @@ function OpenerScene({
   delay: number;
   look: SceneLook;
 }) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const landscape = W >= H;
@@ -398,7 +403,7 @@ function OpenerScene({
             justifyContent: "center",
             flexDirection: "column",
             gap: 34 * u,
-            transform: `scale(${push})`,
+            transform: `scale(${push})${glide(frame > 0 && frame < 110)}`,
           }}
         >
           <div
@@ -496,6 +501,7 @@ function PromptScene({
   start: number;
   look: SceneLook;
 }) {
+  const glide = useGlide();
   const frame = useCurrentFrame() * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const landscape = W >= H;
@@ -518,7 +524,17 @@ function PromptScene({
     config: CHIP,
   });
   const caretOn = done ? Math.floor(t / 8) % 2 === 0 : true;
-  const lift = spring({ frame: t + 2, fps, config: PANEL });
+  const liftAt = (f: number) =>
+    (1 - spring({ frame: f + 2, fps, config: PANEL })) * 18 * u;
+  const chipAt = (f: number) =>
+    0.8 + 0.2 * spring({ frame: f - 6, fps, config: CHIP });
+  // The strobe lands on this scene with a scale kick that eases out to 1, and
+  // its wrapper paints the whole frame, so it can't lean without a seam at the
+  // edges. The blocks lean here instead, for as long as the transition runs.
+  const kicking = frame > 0 && frame < start;
+  const cardMoving = moves(liftAt, t, 1e-3);
+  // Weighed by the chip's width from its left-edge origin.
+  const chipMoving = !cardMoving && moves(chipAt, t, 5e-6);
   return (
     <AbsoluteFill
       style={{
@@ -540,6 +556,7 @@ function PromptScene({
             gap: 40 * u,
             fontFamily,
             paddingBottom: landscape ? 40 * u : 120 * u,
+            transform: kicking ? glide(true).trim() : undefined,
           }}
         >
           <div
@@ -565,7 +582,7 @@ function PromptScene({
               backdropFilter: "blur(18px)",
               boxShadow: `inset 0 0 0 1px ${c.cardHair}, ${c.cardLift}, ${c.cardShadow}`,
               padding: 14 * u,
-              transform: `translateY(${(1 - lift) * 18 * u}px)`,
+              transform: `translateY(${liftAt(t)}px)${glide(cardMoving && !kicking)}`,
             }}
           >
             <div
@@ -577,7 +594,7 @@ function PromptScene({
                 borderRadius: 10 * u,
                 background: c.chip,
                 boxShadow: `inset 0 0 0 1px ${c.chipHair}`,
-                transform: `scale(${0.8 + 0.2 * chipIn})`,
+                transform: `scale(${0.8 + 0.2 * chipIn})${glide(chipMoving)}`,
                 transformOrigin: "0% 50%",
                 opacity: Math.min(1, chipIn * 1.5),
               }}

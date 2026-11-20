@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -42,6 +43,8 @@ const B = {
 };
 
 export const HEAT_DRAIN_REVEAL_DURATION = B.end;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const ramp = (f: number, start: number, dur: number, easing = ENTER) =>
   interpolate(f, [start, start + dur], [0, 1], {
@@ -279,6 +282,7 @@ export function HeatDrainReveal({
   ground,
   groundParams,
 }: HeatDrainRevealProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const dark = theme === "dark";
@@ -313,7 +317,20 @@ export function HeatDrainReveal({
   const breathe = 0.9 + 0.1 * Math.sin(((frame - B.halo) / 36) * Math.PI);
   const recede = ramp(frame, B.recede, 14, EXIT);
   const lift = spring({ frame: frame - B.recede, fps, config: HEAVY });
-  const push = 1 + 0.03 * ramp(frame, B.rise + 20, B.end - B.rise - 20, SWAY);
+  const pushP = ramp(frame, B.rise + 20, B.end - B.rise - 20, SWAY);
+  const push = 1 + 0.03 * pushP;
+  const pushMoving = midway(pushP);
+  const liftAt = (f: number) =>
+    spring({ frame: f - B.recede, fps, config: HEAVY });
+  const headMoving =
+    !pushMoving &&
+    (portrait
+      ? Math.abs(liftAt(frame + 1) - lift) > 1e-6 ||
+        Math.abs(lift - liftAt(frame - 1)) > 1e-6
+      : midway(recede) ||
+        headline
+          .split(" ")
+          .some((_, i) => midway(ramp(frame, B.words + i * stagger, 14))));
   const chipS = spring({ frame: frame - B.chip, fps, config: CHIP });
   const chipOn = ramp(frame, B.chip, 4);
 
@@ -402,7 +419,7 @@ export function HeatDrainReveal({
             style={{
               position: "absolute",
               inset: 0,
-              transform: `scale(${push})`,
+              transform: `scale(${push})${glide(pushMoving)}`,
               transformOrigin: "50% 50%",
               perspective: 1700 * u,
             }}
@@ -429,8 +446,8 @@ export function HeatDrainReveal({
                     : undefined,
                 transformOrigin: "50% 0%",
                 transform: portrait
-                  ? `translateY(${mix(0, 190 - stageH * 0.42, lift)}px) scale(${mix(1, 0.6, lift)})`
-                  : `scale(${mix(1, 0.88, recede)}) translateY(${-recede * 30}px)`,
+                  ? `translateY(${mix(0, 190 - stageH * 0.42, lift)}px) scale(${mix(1, 0.6, lift)})${glide(headMoving)}`
+                  : `scale(${mix(1, 0.88, recede)}) translateY(${-recede * 30}px)${glide(headMoving)}`,
               }}
             >
               {headline.split(" ").map((w, i) => {

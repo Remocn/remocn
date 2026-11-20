@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 /** Variable cut, so display sizes pick up the tight, ink-trapped optical size. */
 const display = loadVariableFont("normal", { subsets: ["latin"] });
@@ -191,6 +192,7 @@ export function ParallaxLockup({
   speed = 1,
   theme = "dark",
 }: ParallaxLockupProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -245,16 +247,26 @@ export function ParallaxLockup({
     };
   }, [ink, W, H]);
 
-  const scroll = interpolate(frame, [0, lockAt], [0, 1], {
-    ...CLAMP,
-    easing: SCROLL,
-  });
+  const scrollAt = (f: number) =>
+    interpolate(f, [0, lockAt], [0, 1], { ...CLAMP, easing: SCROLL });
+  const pushAt = (f: number) =>
+    interpolate(f, [lockAt - 30, lockAt + 56], [1, 1.018], {
+      ...CLAMP,
+      easing: Easing.bezier(0.33, 0, 0.67, 1),
+    });
+  const scroll = scrollAt(frame);
   const rest = 1 - scroll;
   const rise = H * 0.05 * rest;
-  const push = interpolate(frame, [lockAt - 30, lockAt + 56], [1, 1.018], {
-    ...CLAMP,
-    easing: Easing.bezier(0.33, 0, 0.67, 1),
-  });
+  const push = pushAt(frame);
+  // The lines climb at most 0.14H over the scroll and the push reaches half
+  // the frame from its centre: both eases have long flat tails, so the tilt
+  // follows how far the text really moves per frame, not the progress.
+  const step = (f: number) =>
+    Math.max(
+      Math.abs(scrollAt(f) - scrollAt(f - 1)) * H * 0.14,
+      Math.abs(pushAt(f) - pushAt(f - 1)) * W * 0.5,
+    );
+  const moving = Math.max(step(frame), step(frame + 1)) > 1e-3;
   const accentIn = interpolate(frame, [accentAt, accentEnd], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
@@ -271,7 +283,7 @@ export function ParallaxLockup({
             style={{
               position: "absolute",
               inset: 0,
-              transform: `scale(${push})`,
+              transform: `scale(${push})${glide(moving)}`,
               transformOrigin: "50% 50%",
             }}
             aria-hidden

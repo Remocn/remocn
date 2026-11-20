@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: bricolage } = loadFont("normal", {
   weights: ["400", "500"],
@@ -183,6 +184,7 @@ export function Ridgeline({
   speed = 1,
   theme = "dark",
 }: RidgelineProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const u = Math.min(W / 1280, H / 720);
@@ -204,11 +206,16 @@ export function Ridgeline({
   const greyH = Math.min(gap * 2.3, H * 0.17);
   const accentH = Math.min(gap * 4, H * 0.33);
 
-  const push = interpolate(t, [0, HIT + 30], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const camScale = 0.975 + 0.025 * push;
+  const pushAt = (f: number) =>
+    interpolate(f, [0, HIT + 30], [0, 1], { ...CLAMP, easing: EASE_IO });
+  const push = pushAt(t);
+  const camAt = (f: number) => 0.975 + 0.025 * pushAt(f);
+  const camScale = camAt(t);
+  // The push eases out very flat; a step of 1.5e-6 in scale still moves the
+  // furthest text, ~630px from the origin, by a millipixel.
+  const camMoving =
+    Math.abs(camAt(t + 1) - camScale) > 1.5e-6 ||
+    Math.abs(camScale - camAt(t - 1)) > 1.5e-6;
   const shift = interpolate(t, SHIFT, [0, 1], { ...CLAMP, easing: EASE_IO });
 
   const rows = Array.from({ length: n }, (_, i) => {
@@ -266,11 +273,16 @@ export function Ridgeline({
     return { line, fill };
   });
 
-  const hit = spring({
-    frame: t - HIT,
-    fps,
-    config: { damping: 16, stiffness: 160, mass: 0.7 },
-  });
+  const hitAt = (f: number) =>
+    spring({
+      frame: f - HIT,
+      fps,
+      config: { damping: 16, stiffness: 160, mass: 0.7 },
+    });
+  const hit = hitAt(t);
+  const hitMoving =
+    Math.abs(hitAt(t + 1) - hit) * 20 * u > 1e-3 ||
+    Math.abs(hit - hitAt(t - 1)) * 20 * u > 1e-3;
   const hitO = interpolate(t, [HIT, HIT + 8], [0, 1], CLAMP);
   const capIn = interpolate(t, [HIT + 8, HIT + 26], [0, 1], {
     ...CLAMP,
@@ -324,7 +336,7 @@ export function Ridgeline({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${camScale})`,
+            transform: `scale(${camScale})${glide(camMoving)}`,
             transformOrigin: "50% 55%",
           }}
         >
@@ -470,7 +482,7 @@ export function Ridgeline({
                 top: H * 0.09,
                 textAlign: "right",
                 opacity: hitO,
-                transform: `translateY(${(1 - hit) * 20 * u}px)`,
+                transform: `translateY(${(1 - hit) * 20 * u}px)${glide(hitMoving && !camMoving)}`,
               }}
             >
               <div

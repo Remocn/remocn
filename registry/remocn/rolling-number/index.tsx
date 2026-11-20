@@ -9,6 +9,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: MONO_FAMILY } = loadMono();
 
@@ -75,11 +76,14 @@ function DigitColumn({
   value,
   fontSize,
   reveal,
+  moving,
 }: {
   value: number;
   fontSize: number;
   reveal: number;
+  moving: boolean;
 }) {
+  const glide = useGlide();
   const cellHeight = fontSize * 1.1;
   return (
     <span
@@ -98,7 +102,7 @@ function DigitColumn({
         style={{
           display: "flex",
           flexDirection: "column",
-          translate: `0 ${-value * cellHeight}px`,
+          transform: `translateY(${-value * cellHeight}px)${glide(moving)}`,
         }}
       >
         {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((d, i) => (
@@ -152,12 +156,23 @@ export function RollingNumber({
     const startDigit = Math.floor(start / pow) % 10;
     const travel = placeTravel(start, end, place);
     const pos = startDigit + e * travel;
+    // The tail of the ease still spins the low places hundreds of px a frame
+    // when the progress looks done, so motion is read off the strip itself.
+    const at = (f: number) =>
+      (startDigit + easedProgress(f, speed, durationInFrames) * travel) *
+      cellHeight;
+    const reveal = placeReveal(current, place);
+    const moving =
+      Math.abs(at(frame + 1) - at(frame)) > 1e-3 ||
+      Math.abs(at(frame) - at(frame - 1)) > 1e-3 ||
+      (reveal > 5e-4 && reveal < 1 - 5e-4);
     cells.unshift(
       <DigitColumn
         key={`d${place}`}
         value={wrap10(pos)}
         fontSize={fontSize}
-        reveal={placeReveal(current, place)}
+        reveal={reveal}
+        moving={moving}
       />,
     );
   }

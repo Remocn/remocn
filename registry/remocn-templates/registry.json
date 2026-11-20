@@ -50,7 +50,8 @@
           "type": "registry:component",
           "target": "components/remocn/templates/release-teaser/scenes/closing.tsx"
         }
-      ]
+      ],
+      "registryDependencies": ["@remocn/glide"]
     },
     {
       "name": "brand-guidelines",
@@ -58,7 +59,7 @@
       "type": "registry:component",
       "description": "An independent 17.9-second identity film with a geometric mark, sliding palette, kinetic type specimens, and original object photography.",
       "dependencies": ["remotion", "@fontsource/manrope", "@fontsource/inter"],
-      "registryDependencies": ["@remocn/caret"],
+      "registryDependencies": ["@remocn/caret", "@remocn/glide"],
       "files": [
         {
           "path": "brand-guidelines/assets.ts",
@@ -122,7 +123,11 @@
         "@fontsource/inter",
         "@fontsource/roboto-mono"
       ],
-      "registryDependencies": ["@remocn/typed-split-wipe", "@remocn/caret"],
+      "registryDependencies": [
+        "@remocn/typed-split-wipe",
+        "@remocn/caret",
+        "@remocn/glide"
+      ],
       "files": [
         {
           "path": "workflow-console/content.ts",
@@ -202,7 +207,7 @@
       "type": "registry:component",
       "description": "An independent 26.7-second editorial product film with forest-green accents, original photography, seven editable demos, and geometric marks.",
       "dependencies": ["remotion", "@fontsource/manrope"],
-      "registryDependencies": ["@remocn/shader-text-reveal"],
+      "registryDependencies": ["@remocn/shader-text-reveal", "@remocn/glide"],
       "files": [
         {
           "path": "launch-anything/assets.ts",
@@ -338,7 +343,8 @@
           "type": "registry:component",
           "target": "components/remocn/templates/fomo-limit-orders/ui.tsx"
         }
-      ]
+      ],
+      "registryDependencies": ["@remocn/glide"]
     }
   ]
 }

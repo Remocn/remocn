@@ -2,6 +2,7 @@
 
 import { loadFont } from "@remotion/google-fonts/Inter";
 import { Easing, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: INTER } = loadFont("normal", {
   weights: ["100", "900"],
@@ -146,6 +147,8 @@ export function getPeriodDropDot(t: number): PeriodDropDot {
   return { visible: true, y: Math.min(0, y), scaleX: 1 / scaleY, scaleY };
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 export function PeriodDrop({
   text = periodDropDefaults.text,
   fontSize = periodDropDefaults.fontSize,
@@ -157,6 +160,7 @@ export function PeriodDrop({
   speed = periodDropDefaults.speed,
   className,
 }: PeriodDropProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame();
   const { fps, height } = useVideoConfig();
   const unit = height / 720;
@@ -202,7 +206,7 @@ export function PeriodDrop({
             <span
               style={{
                 display: "inline-block",
-                transform: `translateY(${getPeriodDropRise(t, i) * 115}%)`,
+                transform: `translateY(${getPeriodDropRise(t, i) * 115}%)${glide(midway(getPeriodDropRise(t, i)))}`,
               }}
             >
               {char}

@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -145,6 +146,7 @@ export function FractionSplit({
   theme = "dark",
   speed = 1,
 }: FractionSplitProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
@@ -165,21 +167,41 @@ export function FractionSplit({
   const textGap = 58 * u;
   const finalTop = cy - (barH + textGap + textH) / 2;
 
-  const open: number[] = [0];
-  for (let b = 1; b < SEGS; b++) {
-    const lv = LEVELS[boundaryLevel(b)];
-    const stagger = boundaryLevel(b) === 2 ? Math.abs(b - 4) * 0.6 : 0;
-    open.push(
-      spring({ frame: t - lv.at - stagger, fps, config: SPLIT_SPRING }),
-    );
-  }
-  const totalGap = open.reduce((s, x) => s + x, 0) * G;
-  const segW = (barW - totalGap) / SEGS;
-
-  const reg = interpolate(t, [REG, REG + REG_LEN], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  // The bar's geometry at any time; `settled` is where every piece lands.
+  const geometry = (tt: number, settled = false) => {
+    const open: number[] = [0];
+    for (let b = 1; b < SEGS; b++) {
+      const lv = LEVELS[boundaryLevel(b)];
+      const stagger = boundaryLevel(b) === 2 ? Math.abs(b - 4) * 0.6 : 0;
+      open.push(
+        settled
+          ? 1
+          : spring({ frame: tt - lv.at - stagger, fps, config: SPLIT_SPRING }),
+      );
+    }
+    const totalGap = open.reduce((s, x) => s + x, 0) * G;
+    const segW = (barW - totalGap) / SEGS;
+    const reg = settled
+      ? 1
+      : interpolate(tt, [REG, REG + REG_LEN], [0, 1], {
+          ...CLAMP,
+          easing: EASE_IO,
+        });
+    const left = cx - barW / 2 - (E / 2) * reg;
+    const xs: number[] = [];
+    let acc = left;
+    for (let j = 0; j < SEGS; j++) {
+      if (j > 0) acc += open[j] * G;
+      xs.push(acc + (j > ap ? E * reg : 0));
+      acc += segW;
+    }
+    const top = cy - barH / 2 + (finalTop - (cy - barH / 2)) * reg;
+    return { open, segW, reg, xs, top };
+  };
+  const { open, segW, reg, xs, top } = geometry(t);
+  const before = geometry(t - speed);
+  const after = geometry(t + speed);
+  const landed = geometry(t, true);
   const rise = interpolate(t, [REG, REG + 16], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
@@ -193,15 +215,6 @@ export function FractionSplit({
       { ...CLAMP, easing: EASE_IO },
     );
   };
-  const left = cx - barW / 2 - (E / 2) * reg;
-  const xs: number[] = [];
-  let acc = left;
-  for (let j = 0; j < SEGS; j++) {
-    if (j > 0) acc += open[j] * G;
-    xs.push(acc + (j > ap ? E * reg : 0));
-    acc += segW;
-  }
-  const top = cy - barH / 2 + (finalTop - (cy - barH / 2)) * reg;
 
   const wipe = interpolate(t, [2, 22], [0, 1], {
     ...CLAMP,
@@ -244,10 +257,22 @@ export function FractionSplit({
     const w = xs[j1] + segW - x;
     const rl = cornerAt(j0);
     const rr = cornerAt(j1 + 1);
+    // While a piece travels it is laid out where it lands and the way there
+    // is a transform: layout rounds a box to whole pixels, so a piece eased
+    // by `left`/`top` clicks along pixel by pixel. At rest it keeps its plain
+    // layout.
+    const moving =
+      Math.abs(after.xs[j0] - x) > 1e-3 ||
+      Math.abs(x - before.xs[j0]) > 1e-3 ||
+      Math.abs(after.top - top) > 1e-3 ||
+      Math.abs(top - before.top) > 1e-3;
     const box = {
       position: "absolute",
-      left: x,
-      top,
+      left: moving ? landed.xs[j0] : x,
+      top: moving ? landed.top : top,
+      transform: moving
+        ? `translate(${x - landed.xs[j0]}px, ${top - landed.top}px)`
+        : undefined,
       width: w,
       height: barH,
       borderTopLeftRadius: rl,
@@ -366,10 +391,18 @@ export function FractionSplit({
     } else pushWords(rest, false);
   } else pushWords(line, false);
 
-  const push = interpolate(t, [0, REG + REG_LEN + 40], [0.985, 1.01], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const pushAt = (tt: number) =>
+    interpolate(tt, [0, REG + REG_LEN + 40], [0.985, 1.01], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const push = pushAt(t);
+  // The push carries the bar and the line; weighed by the ~1000px from the
+  // centre to the furthest text. It runs past every piece's travel, so its
+  // tilt covers the labels inside the pieces too.
+  const pushing =
+    Math.abs(pushAt(t + speed) - push) > 1e-6 ||
+    Math.abs(push - pushAt(t - speed)) > 1e-6;
 
   return (
     <AbsoluteFill
@@ -381,7 +414,10 @@ export function FractionSplit({
     >
       <ScaleLayer scale={scale}>
         <AbsoluteFill
-          style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
+          style={{
+            transform: `scale(${push})${glide(pushing)}`,
+            transformOrigin: "50% 50%",
+          }}
         >
           <AbsoluteFill
             style={{

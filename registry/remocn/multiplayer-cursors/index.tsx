@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -69,6 +70,8 @@ const ENTER = Easing.bezier(0.32, 0.72, 0, 1);
 const CAMERA = Easing.bezier(0.87, 0, 0.13, 1);
 const CL = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 const clamp = (v: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v));
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 function withAlpha(color: string, alpha: number) {
   const hex = color.replace("#", "");
@@ -619,6 +622,7 @@ export function MultiplayerCursors({
   ground,
   groundParams,
 }: MultiplayerCursorsProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width;
@@ -634,6 +638,11 @@ export function MultiplayerCursors({
   );
   const sp = (at: number, config: Partial<typeof CARD>) =>
     spring({ frame: frame - at, fps, config });
+  // A spring has no clean 0..1 progress, so "is it moving" is read off the
+  // neighbouring frames.
+  const moves = (at: (f: number) => number) =>
+    Math.abs(at(frame + 1) - at(frame)) > 1e-5 ||
+    Math.abs(at(frame) - at(frame - 1)) > 1e-5;
 
   const tbX = (WIN.w - TOOLBAR_W) / 2;
   const tbY = WIN.h - 16 - TOOLBAR_H;
@@ -650,12 +659,15 @@ export function MultiplayerCursors({
   );
   const cur = actors.map((a) => cursorAt(a, frame, fps));
 
-  const win = sp(0, HEAVY);
+  const winAt = (f: number) => spring({ frame: f, fps, config: HEAVY });
+  const win = winAt(frame);
+  const winMoving = moves(winAt);
   const winFade = interpolate(frame, [0, 12], [0, 1], { ...CL, easing: ENTER });
   const cam = interpolate(frame, [20, 260], [1, 1.04], {
     ...CL,
     easing: CAMERA,
   });
+  const camMoving = midway(interpolate(frame, [20, 260], [0, 1], CL));
   const camO = { x: WIN.w / 2, y: WIN.h * 0.45 };
   const toScreen = (p: { x: number; y: number }) => ({
     x: camO.x + (p.x - camO.x) * cam,
@@ -702,6 +714,11 @@ export function MultiplayerCursors({
   const SH = L.shape;
   const shapeX = SH.x + held.x - grab.x;
   const shapeY = SH.y + held.y - grab.y;
+  const dropped = along(pri.keys, 110, fps);
+  const shapeRest = {
+    x: SH.x + dropped.x - grab.x,
+    y: SH.y + dropped.y - grab.y,
+  };
   const lift = dragging ? 1 : 1 - drop;
   const shapeScale = 1 + 0.05 * lift;
 
@@ -785,7 +802,7 @@ export function MultiplayerCursors({
                 lineHeight: 1.04,
                 color: ink ?? (pal.dark ? "#F2F2F4" : "#1C1B19"),
                 opacity: headIn,
-                transform: `translateY(${(1 - headIn) * 18}px)`,
+                transform: `translateY(${(1 - headIn) * 18}px)${glide(midway(headIn))}`,
               }}
             >
               {headline}
@@ -800,7 +817,7 @@ export function MultiplayerCursors({
               height: WIN.h,
               opacity: winFade,
               transformOrigin: "50% 45%",
-              transform: `translateY(${(1 - win) * 60}px) scale(${0.96 + 0.04 * win})`,
+              transform: `translateY(${(1 - win) * 60}px) scale(${0.96 + 0.04 * win})${glide(winMoving)}`,
             }}
           >
             <div
@@ -817,7 +834,9 @@ export function MultiplayerCursors({
                 style={{
                   position: "absolute",
                   inset: 0,
-                  transform: `scale(${cam})`,
+                  // The camera drifts for nearly the whole clip, so its mark
+                  // covers every label on the board.
+                  transform: `scale(${cam})${glide(camMoving)}`,
                   transformOrigin: `${camO.x}px ${camO.y}px`,
                 }}
               >
@@ -884,8 +903,13 @@ export function MultiplayerCursors({
                   <div
                     style={{
                       position: "absolute",
-                      left: selBox.x,
-                      top: selBox.y,
+                      // Laid out on the card it snaps to and carried there
+                      // by a transform, handles included: layout rounds every
+                      // box to whole pixels, so the slow end of the snap
+                      // stepped the handles one pixel at a time.
+                      left: SELECTED.x,
+                      top: SELECTED.y,
+                      transform: `translate(${selBox.x - SELECTED.x}px, ${selBox.y - SELECTED.y}px)`,
                       width: selBox.w,
                       height: selBox.h,
                       boxShadow: `inset 0 0 0 1.5px ${people[1].color}`,
@@ -902,14 +926,14 @@ export function MultiplayerCursors({
                         key={`${hx}${hy}`}
                         style={{
                           position: "absolute",
-                          left: `calc(${hx * 100}% - 4px)`,
-                          top: `calc(${hy * 100}% - 4px)`,
+                          left: hx * SELECTED.w - 4,
+                          top: hy * SELECTED.h - 4,
                           width: 8,
                           height: 8,
                           background: "#fff",
                           boxShadow: `inset 0 0 0 1.5px ${people[1].color}`,
                           borderRadius: 2,
-                          transform: `scale(${snap})`,
+                          transform: `translate(${hx * (selBox.w - SELECTED.w)}px, ${hy * (selBox.h - SELECTED.h)}px) scale(${snap})`,
                         }}
                       />
                     ))}
@@ -918,8 +942,11 @@ export function MultiplayerCursors({
                 <div
                   style={{
                     position: "absolute",
-                    left: shapeX - SH.r,
-                    top: shapeY - SH.r,
+                    // Laid out where it is dropped; the drag is a transform,
+                    // or the shape and its label step pixel by pixel as the
+                    // hand slows down.
+                    left: shapeRest.x - SH.r,
+                    top: shapeRest.y - SH.r,
                     width: SH.r * 2,
                     height: SH.r * 2,
                     borderRadius: "50%",
@@ -930,7 +957,7 @@ export function MultiplayerCursors({
                     justifyContent: "center",
                     fontSize: 15,
                     color: pal.shapeText,
-                    transform: `scale(${shapeScale})`,
+                    transform: `translate(${shapeX - shapeRest.x}px, ${shapeY - shapeRest.y}px) scale(${shapeScale})`,
                   }}
                 >
                   {shapeLabel}
@@ -939,14 +966,16 @@ export function MultiplayerCursors({
                   <div
                     style={{
                       position: "absolute",
-                      left: ghost ? cur[0].x - 76 : L.sticky.x,
-                      top: ghost ? cur[0].y - 20 : L.sticky.y,
+                      left: L.sticky.x,
+                      top: L.sticky.y,
                       width: L.sticky.w,
                       height: L.sticky.h,
                       background: pal.sticky,
                       opacity: ghost ? 0.6 : 1,
+                      // The ghost rides the cursor on a transform, like the
+                      // cursor itself, so the two stay glued between pixels.
                       transform: ghost
-                        ? "scale(0.82) rotate(-4deg)"
+                        ? `translate(${cur[0].x - 76 - L.sticky.x}px, ${cur[0].y - 20 - L.sticky.y}px) scale(0.82) rotate(-4deg)`
                         : `scale(${0.86 + 0.14 * stickyIn}) rotate(${-5 + 3.5 * stickyIn}deg)`,
                       transformOrigin: "76px 20px",
                       borderRadius: 3,
@@ -1072,7 +1101,9 @@ export function MultiplayerCursors({
                 <div style={{ display: "flex", alignItems: "center" }}>
                   {[...people].reverse().map((p, ri) => {
                     const i = people.length - 1 - ri;
-                    const s = sp(joinAt[i], CHIP);
+                    const sAt = (f: number) =>
+                      spring({ frame: f - joinAt[i], fps, config: CHIP });
+                    const s = sAt(frame);
                     return (
                       <div
                         key={p.name}
@@ -1087,7 +1118,7 @@ export function MultiplayerCursors({
                             position: "absolute",
                             left: 0,
                             top: 0,
-                            transform: `scale(${s})`,
+                            transform: `scale(${s})${glide(moves(sAt))}`,
                           }}
                         >
                           <Avatar
@@ -1145,8 +1176,14 @@ export function MultiplayerCursors({
                   key={people[i].name}
                   style={{
                     position: "absolute",
-                    left: c.x + (s.x - c.x) * k,
-                    top: c.y + (s.y - c.y) * k,
+                    left: 0,
+                    top: 0,
+                    // A cursor never rests, it idles in a slow wobble. Eased
+                    // by `left`/`top` it stepped over whole pixels, because
+                    // layout rounds a box and a baseline to them; on a
+                    // transform it glides, and its name tag
+                    // leans all the while.
+                    transform: `translate(${c.x + (s.x - c.x) * k}px, ${c.y + (s.y - c.y) * k}px)${glide(true)}`,
                     opacity: vis,
                     zIndex: 20,
                   }}

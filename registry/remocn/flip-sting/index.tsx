@@ -11,6 +11,8 @@ import {
   useVideoConfig,
 } from "remotion";
 
+import { useGlide } from "@/lib/remocn/glide";
+
 const manrope = loadManrope("normal", {
   weights: ["400", "600"],
   subsets: ["latin"],
@@ -358,6 +360,7 @@ export function FlipSting({
   speed = 1,
   theme = "dark",
 }: FlipStingProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -368,16 +371,25 @@ export function FlipSting({
   const centerY = showLine ? H * 0.46 : H * 0.5;
 
   // Camera: out of the R, settling on the whole logo, then a slow push.
-  const pull = interpolate(t, [0, pullEnd], [0, 1], {
-    ...CLAMP,
-    easing: PULL,
-  });
-  const push = interpolate(t, [pullEnd, FLIP_STING_DURATION], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const s0 = zoomFrom;
-  const scale = Math.exp(Math.log(s0) * (1 - pull)) * (1 + push * 0.025);
+  const pullAt = (f: number) =>
+    interpolate(f, [0, pullEnd], [0, 1], {
+      ...CLAMP,
+      easing: PULL,
+    });
+  const scaleAt = (f: number) => {
+    const push = interpolate(f, [pullEnd, FLIP_STING_DURATION], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+    return Math.exp(Math.log(zoomFrom) * (1 - pullAt(f))) * (1 + push * 0.025);
+  };
+  const pull = pullAt(t);
+  const scale = scaleAt(t);
+  const restScale = scaleAt(FLIP_STING_DURATION);
+  // Any change at all: the push eases out to the last frame, and the logo
+  // rests under it off the pixel grid, so the lean must not drop early.
+  const cameraMoving =
+    scaleAt(t + speed) !== scale || scale !== scaleAt(t - speed);
   const focusX =
     ((-LOGO_WIDTH * size) / 2 + R_WIDTH * size * 0.42) * (1 - pull);
   const focusY = -R_HEIGHT * size * 0.1 * (1 - pull);
@@ -399,7 +411,21 @@ export function FlipSting({
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const logoBottom = centerY + (R_HEIGHT * size * scale) / 2;
+  // The line is laid out under the settled logo; the camera's pull on it is
+  // a transform, since layout would round its baseline to whole pixels.
+  const logoBottom = centerY + (R_HEIGHT * size * restScale) / 2;
+  const lineYAt = (f: number) =>
+    (R_HEIGHT * size * (scaleAt(f) - restScale)) / 2 +
+    (1 -
+      interpolate(f, [LINE_AT, LINE_AT + 16], [0, 1], {
+        ...CLAMP,
+        easing: EASE_OUT,
+      })) *
+      H *
+      0.015;
+  const lineY = lineYAt(t);
+  const lineMoving =
+    lineYAt(t + speed) !== lineY || lineY !== lineYAt(t - speed);
 
   return (
     <AbsoluteFill
@@ -414,7 +440,13 @@ export function FlipSting({
           width={W}
           height={H}
           viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
+          // The camera is an SVG attribute, which can't carry the mark, so
+          // the drawing it moves is marked instead.
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: glide(cameraMoving),
+          }}
           aria-hidden
         >
           <defs>
@@ -461,7 +493,7 @@ export function FlipSting({
               paddingLeft: "0.42em",
               color: ink ?? c.muted,
               opacity: lineIn,
-              transform: `translateY(${(1 - lineIn) * H * 0.015}px)`,
+              transform: `translateY(${lineY}px)${glide(lineMoving)}`,
             }}
           >
             {line}

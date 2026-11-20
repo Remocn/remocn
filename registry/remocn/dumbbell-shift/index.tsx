@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -202,7 +203,9 @@ export function DumbbellShift({
   theme = "dark",
   speed = 1,
 }: DumbbellShiftProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
+  const frame = useCurrentFrame();
+  const t = Math.max(0, frame - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
@@ -253,10 +256,19 @@ export function DumbbellShift({
     ...CLAMP,
     easing: EASE_IO,
   });
-  const push = interpolate(t, [0, HERO + 40], [1.025, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const pushAt = (f: number) =>
+    interpolate(Math.max(0, f - delay) * speed, [0, HERO + 40], [1.025, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const push = pushAt(frame);
+  // The push's ease is so flat at its ends that a progress test would keep
+  // the tilt on while nothing visibly moves; weigh the scale step by the
+  // distance from the origin to the frame's edge instead.
+  const reach = Math.max(width, height) / 2;
+  const pushing =
+    Math.abs(pushAt(frame + 1) - push) * reach > 1e-3 ||
+    Math.abs(push - pushAt(frame - 1)) * reach > 1e-3;
 
   const items = list.map((row, i) => {
     const enter = interpolate(
@@ -281,6 +293,12 @@ export function DumbbellShift({
     );
     const pos = i + (rank[i] - i) * sortK;
     const y = rowsTop + rowH * (pos + 0.5);
+    // Rows are laid out in their sorted slot and ride there by a transform:
+    // layout rounds a baseline to whole pixels, so a label eased by `top`
+    // clicks along pixel by pixel.
+    const yRest = rowsTop + rowH * (i + (rank[i] - i) + 0.5);
+    const dy = y - yRest;
+    const sortY = dy === 0 ? "" : `translateY(${dy}px) `;
     const xb = xOf(row.before);
     const xa = xOf(row.after);
     const x = xb + (xa - xb) * slide;
@@ -289,7 +307,22 @@ export function DumbbellShift({
     const tone = isWin
       ? p.fluted[3]
       : interpolateColors(dim, [0, 1], [p.fluted[3], p.muted]);
-    return { row, i, enter, slide, deltaIn, y, xb, xa, x, isWin, fade, tone };
+    return {
+      row,
+      i,
+      enter,
+      slide,
+      deltaIn,
+      y,
+      yRest,
+      sortY,
+      xb,
+      xa,
+      x,
+      isWin,
+      fade,
+      tone,
+    };
   });
   const duck = items.map((it) => {
     let d = Number.POSITIVE_INFINITY;
@@ -300,6 +333,11 @@ export function DumbbellShift({
   });
 
   const win = items[winner];
+  // Before it grows, the hero figure sits at a sixth of its size under its
+  // own scale, so it is marked while the push, the sort or the growth moves.
+  const heroK = interpolate(grow, [0, 1], [20 / 132, 1]);
+  const heroMoving =
+    pushing || (sortK > 0 && sortK < 1) || (grow > 0 && grow < 1);
   const heroText = win
     ? `${deltas[winner] >= 0 ? "+" : "−"}${Math.abs(Math.round(deltas[winner] * win.slide))}`
     : "";
@@ -311,7 +349,10 @@ export function DumbbellShift({
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
       <ScaleLayer scale={scale}>
         <AbsoluteFill
-          style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
+          style={{
+            transform: `scale(${push})${glide(pushing)}`,
+            transformOrigin: "50% 50%",
+          }}
         >
           <svg
             width={width}
@@ -398,8 +439,8 @@ export function DumbbellShift({
               style={{
                 position: "absolute",
                 left: m,
-                top: it.y,
-                transform: `translateY(-50%) translateX(${(1 - it.enter) * -10 * u}px)`,
+                top: it.yRest,
+                transform: `${it.sortY}translateY(-50%) translateX(${(1 - it.enter) * -10 * u}px)`,
                 fontFamily,
                 fontWeight: it.isWin && dim > 0.5 ? 500 : 400,
                 fontSize: 24 * u,
@@ -422,8 +463,8 @@ export function DumbbellShift({
                 style={{
                   position: "absolute",
                   left: it.xa + r + 14 * u,
-                  top: it.y,
-                  transform: `translateY(-50%) translateX(${(1 - it.deltaIn) * -6 * u}px)`,
+                  top: it.yRest,
+                  transform: `${it.sortY}translateY(-50%) translateX(${(1 - it.deltaIn) * -6 * u}px)`,
                   fontFamily,
                   fontWeight: 400,
                   fontSize: 20 * u,
@@ -448,8 +489,8 @@ export function DumbbellShift({
                   style={{
                     position: "absolute",
                     left: nt.x,
-                    top: win.y - r - 10 * u,
-                    transform: `translate(-50%, -100%) translateY(${(1 - nt.a) * 6 * u}px)`,
+                    top: win.yRest - r - 10 * u,
+                    transform: `${win.sortY}translate(-50%, -100%) translateY(${(1 - nt.a) * 6 * u}px)`,
                     display: "flex",
                     alignItems: "baseline",
                     gap: "0.3em",
@@ -479,8 +520,8 @@ export function DumbbellShift({
                 position: "absolute",
                 left:
                   win.xa + r + 14 * u + (heroX - (win.xa + r + 14 * u)) * grow,
-                top: win.y,
-                transform: "translateY(-50%)",
+                top: win.yRest,
+                transform: `${win.sortY}translateY(-50%)`,
                 opacity: win.deltaIn,
               }}
             >
@@ -495,7 +536,7 @@ export function DumbbellShift({
                   fontVariantNumeric: "tabular-nums",
                   whiteSpace: "nowrap",
                   transformOrigin: "0% 50%",
-                  transform: `scale(${interpolate(grow, [0, 1], [20 / 132, 1])})`,
+                  transform: `scale(${heroK})${glide(heroMoving)}`,
                 }}
               >
                 <span style={{ position: "relative", display: "inline-block" }}>

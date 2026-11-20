@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const gloock = loadFont("normal", { weights: ["400"], subsets: ["latin"] });
 
@@ -170,6 +171,7 @@ export function WholePage({
   speed = 1,
   theme = "dark",
 }: WholePageProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const t = frame * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
@@ -263,30 +265,36 @@ export function WholePage({
   const arriveAt = (i: number) => START + i * per;
   const pullAt = START + n * per - 6;
 
-  let qx = paras[0].x;
-  let qy = paras[0].y;
-  let S = zoomOf[0];
-  for (let i = 1; i < n; i++) {
-    const p = interpolate(t, [arriveAt(i) - pan, arriveAt(i)], [0, 1], {
+  const pullOf = (tt: number) =>
+    interpolate(tt, [pullAt, pullAt + pullLen], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
-    if (p > 0) {
-      qx = paras[i - 1].x + (paras[i].x - paras[i - 1].x) * p;
-      qy = paras[i - 1].y + (paras[i].y - paras[i - 1].y) * p;
-      S = zoomOf[i - 1] * (zoomOf[i] / zoomOf[i - 1]) ** p;
+  const cameraAt = (tt: number) => {
+    let qx = paras[0].x;
+    let qy = paras[0].y;
+    let S = zoomOf[0];
+    for (let i = 1; i < n; i++) {
+      const p = interpolate(tt, [arriveAt(i) - pan, arriveAt(i)], [0, 1], {
+        ...CLAMP,
+        easing: EASE_IO,
+      });
+      if (p > 0) {
+        qx = paras[i - 1].x + (paras[i].x - paras[i - 1].x) * p;
+        qy = paras[i - 1].y + (paras[i].y - paras[i - 1].y) * p;
+        S = zoomOf[i - 1] * (zoomOf[i] / zoomOf[i - 1]) ** p;
+      }
     }
-  }
-  const pull = interpolate(t, [pullAt, pullAt + pullLen], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const z = S ** (1 - pull);
-  const zp = (S - z) / Math.max(0.0001, S - 1);
-  const cx = qx + (ax - qx) * zp;
-  const cy = qy + (ay - qy) * zp;
-  const tx = ax - cx * z;
-  const ty = ay - cy * z;
+    const z = S ** (1 - pullOf(tt));
+    const zp = (S - z) / Math.max(0.0001, S - 1);
+    const cx = qx + (ax - qx) * zp;
+    const cy = qy + (ay - qy) * zp;
+    return `translate(${(ax - cx * z).toFixed(2)}px, ${(ay - cy * z).toFixed(2)}px) scale(${z.toFixed(5)})`;
+  };
+  const pull = pullOf(t);
+  const camera = cameraAt(t);
+  const cameraMoving =
+    cameraAt(t + speed) !== camera || cameraAt(t - speed) !== camera;
 
   const intro = interpolate(t, [0, 18], [0, 1], {
     ...CLAMP,
@@ -326,6 +334,8 @@ export function WholePage({
       const color = isLast
         ? interpolateColors(Math.max(focus, settle * read), [0, 1], [fg, hi])
         : fg;
+      // The first paragraph rises in by transform, not `top`: layout rounds a
+      // baseline to whole pixels, so words eased by `top` click into place.
       const rise = i === 0 ? (1 - intro) * Fp * 0.3 : 0;
       nodes.push(
         <div
@@ -333,7 +343,7 @@ export function WholePage({
           style={{
             position: "absolute",
             left: para.x + w.x * Fp,
-            top: para.y + w.line * LH * Fp + rise,
+            top: para.y + w.line * LH * Fp,
             fontFamily,
             fontWeight: 400,
             fontSize: Fp,
@@ -342,6 +352,10 @@ export function WholePage({
             whiteSpace: "pre",
             color,
             opacity,
+            transform:
+              i === 0
+                ? `translateY(${rise > 1e-3 ? rise : 0}px)${glide(intro > 0 && intro < 1)}`
+                : undefined,
           }}
         >
           {w.text}
@@ -363,7 +377,7 @@ export function WholePage({
             width: W,
             height: H,
             transformOrigin: "0 0",
-            transform: `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px) scale(${z.toFixed(5)})`,
+            transform: `${camera}${glide(cameraMoving)}`,
           }}
         >
           {title ? (

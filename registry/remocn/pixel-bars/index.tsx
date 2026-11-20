@@ -9,6 +9,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: grotesk } = loadFont("normal", {
   weights: ["400", "500"],
@@ -113,6 +114,7 @@ function parseMetric(metric: string) {
 }
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+
 function ScaleLayer({
   scale,
   children,
@@ -144,6 +146,7 @@ export function PixelBars({
   theme = "dark",
   speed = 1,
 }: PixelBarsProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -270,7 +273,6 @@ export function PixelBars({
       k + EASE_OUT(interpolate(t - tp, [0, POP_DUR], [0, 1], CLAMP)),
     );
   }
-  const topY = base - litRows * P + (P - sq);
   const countK = EASE_OUT(
     interpolate(t, [passAt - 6, finish + 2], [0, 1], CLAMP),
   );
@@ -283,20 +285,38 @@ export function PixelBars({
         maximumFractionDigits: parsed.decimals,
       })}${parsed.suffix}`
     : metric;
-  const numY = topY - numSize * 0.146 + (1 - numIn) * 14 * u;
+  // The number rides the top of the climbing column. By `top`, layout rounded
+  // its baseline to whole pixels and the ride stepped unevenly; layout holds
+  // the settled top and the ride is a transform, exactly 0 once settled.
+  const numYRest = base - heights[last] * P + (P - sq) - numSize * 0.146;
+  const numLift = (heights[last] - litRows) * P + (1 - numIn) * 14 * u;
+  const numMove =
+    Math.abs(numLift) > 1e-3 ? `translateY(${numLift}px)` : undefined;
   const labelK = EASE_OUT(interpolate(t, [finish, finish + 14], [0, 1], CLAMP));
   // Colour turns hot exactly where the hero column passes the previous best.
   const passK = Math.min(0.9, prevMax / heights[last]);
   const baseK = EASE_OUT(interpolate(t, [0, 14], [0, 1], CLAMP));
-  const cam = interpolate(t, [0, finish + 30], [1.035, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  // Chart alone sits centred; the frame slides over as the number arrives.
-  const slide = EASE_IO(
-    interpolate(t, [passAt - 10, finish + 8], [0, 1], CLAMP),
-  );
-  const camX = ((numGap + numW) / 2) * (1 - slide);
+  const camAt = (f: number) => {
+    const k = interpolate(f, [0, finish + 30], [1.035, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+    // Chart alone sits centred; the frame slides over as the number arrives.
+    const slide = EASE_IO(
+      interpolate(f, [passAt - 10, finish + 8], [0, 1], CLAMP),
+    );
+    return { k, x: ((numGap + numW) / 2) * (1 - slide) };
+  };
+  const { k: cam, x: camX } = camAt(t);
+  // The camera eases in and out, so test the motion itself, in px at the
+  // frame edge, against the neighbouring frames.
+  const camStep = (a: number, b: number) => {
+    const p = camAt(a);
+    const q = camAt(b);
+    return Math.abs(p.k - q.k) * W + Math.abs(p.x - q.x);
+  };
+  const camMoving =
+    camStep(t, t + speed) > 1e-3 || camStep(t - speed, t) > 1e-3;
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
@@ -308,7 +328,7 @@ export function PixelBars({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `translateX(${camX}px) scale(${cam})`,
+            transform: `translateX(${camX}px) scale(${cam})${glide(camMoving)}`,
             transformOrigin: "50% 50%",
           }}
         >
@@ -359,7 +379,8 @@ export function PixelBars({
             style={{
               position: "absolute",
               left: lastX + colW + numGap,
-              top: numY,
+              top: numYRest,
+              transform: numMove,
               opacity: numIn,
               fontFamily,
               fontWeight: 500,
@@ -379,12 +400,12 @@ export function PixelBars({
               style={{
                 position: "absolute",
                 left: lastX + colW + numGap + 6 * u,
-                top: numY + numSize * 1.08,
+                top: numYRest + numSize * 1.08,
                 display: "flex",
                 alignItems: "center",
                 gap: 12 * u,
                 opacity: labelK,
-                transform: `translateY(${(1 - labelK) * 8 * u}px)`,
+                transform: `${numMove ? `${numMove} ` : ""}translateY(${(1 - labelK) * 8 * u}px)`,
                 fontFamily,
                 fontWeight: 400,
                 fontSize: labelSize,

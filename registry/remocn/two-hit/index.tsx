@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const urbanist = loadVariableFont("normal", { subsets: ["latin"] });
 
@@ -161,6 +162,7 @@ export function TwoHit({
   speed = 1,
   theme = "dark",
 }: TwoHitProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -213,11 +215,21 @@ export function TwoHit({
   const idx = t < swapAt ? 0 : 1;
   const lines = phrases[idx];
 
-  const enter = (j: number) =>
-    interpolate(t, [2 + j * 4, 20 + j * 4], [0, 1], {
+  const enterAt = (j: number, f: number) =>
+    interpolate(f, [2 + j * 4, 20 + j * 4], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
+  const enter = (j: number) => enterAt(j, t);
+  // The rise is a long ease-out, so its tail still crosses pixels well after
+  // the progress looks settled: test the travel itself against its neighbours.
+  const rising = (j: number) => {
+    const rise = (f: number) => (1 - enterAt(j, f)) * F * 1.05;
+    return (
+      Math.abs(rise(t + 1) - rise(t)) > 1e-3 ||
+      Math.abs(rise(t) - rise(t - 1)) > 1e-3
+    );
+  };
 
   const blockH = (m.cap + (lines.length - 1) * LEAD) * F;
   const firstBase = H * (portrait ? 0.5 : 0.53) - blockH / 2 + m.cap * F;
@@ -258,7 +270,7 @@ export function TwoHit({
                   marginRight: `${(-track).toFixed(4)}em`,
                   whiteSpace: "pre",
                   color: last ? blue : fg,
-                  transform: `translateY(${((1 - p) * F * 1.05).toFixed(2)}px)`,
+                  transform: `translateY(${((1 - p) * F * 1.05).toFixed(2)}px)${glide(rising(j))}`,
                 }}
               >
                 {line}

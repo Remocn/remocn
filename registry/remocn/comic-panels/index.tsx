@@ -9,6 +9,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export type ComicPanelsColors = {
   ink: string;
@@ -92,6 +93,7 @@ const clamp = {
   extrapolateLeft: "clamp" as const,
   extrapolateRight: "clamp" as const,
 };
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 const ease = (
   t: number,
   from: number,
@@ -127,6 +129,7 @@ export function ComicPanels({
   heroScale = comicPanelsDefaults.heroScale,
   speed = comicPanelsDefaults.speed,
 }: ComicPanelsProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame();
   const { width: W, height: H, fps } = useVideoConfig();
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
@@ -268,7 +271,7 @@ export function ComicPanels({
           style={{
             alignItems: "center",
             justifyContent: "center",
-            transform: `translate(${heroFocus[0] - W / 2 + shake[0]}px, ${heroFocus[1] - H / 2 + shake[1]}px) scale(${heroS})`,
+            transform: `translate(${heroFocus[0] - W / 2 + shake[0]}px, ${heroFocus[1] - H / 2 + shake[1]}px) scale(${heroS})${glide(midway(crackA) || shaking)}`,
           }}
         >
           {children ?? <PlaceholderLockup ink={c.ink} accent={c.accent} />}

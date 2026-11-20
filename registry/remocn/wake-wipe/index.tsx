@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const figtree = loadFigtree("normal", {
   weights: ["400", "500"],
@@ -74,6 +75,7 @@ const TAIL = 0.5;
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_WAKE = Easing.bezier(0.5, 0, 0.2, 1);
 const EASE_REVEAL = Easing.bezier(0.3, 0, 0.15, 1);
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -185,6 +187,7 @@ export function WakeWipe({
   speed = 1,
   theme = "dark",
 }: WakeWipeProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -398,7 +401,7 @@ export function WakeWipe({
               textTransform: "uppercase",
               color: c.muted,
               opacity: eyebrowP,
-              transform: `translateY(${((1 - eyebrowP) * ebSize * 0.6).toFixed(2)}px)`,
+              transform: `translateY(${((1 - eyebrowP) * ebSize * 0.6).toFixed(2)}px)${glide(midway(eyebrowP))}`,
             }}
           >
             {eyebrow}

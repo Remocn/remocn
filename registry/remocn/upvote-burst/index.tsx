@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -444,6 +445,7 @@ export function UpvoteBurst({
   ground,
   groundParams,
 }: UpvoteBurstProps) {
+  const glide = useGlide();
   const rawFrame = Math.max(0, useCurrentFrame() - delay);
   const { fps, width, height } = useVideoConfig();
   const frame = rawFrame * speed;
@@ -579,9 +581,6 @@ export function UpvoteBurst({
     easing: MOVE,
   });
   const curFrom = { x: sheetX + sheetW + 150, y: sheetY + sheetH + 40 };
-  const curX = curFrom.x + (voteX + 4 - curFrom.x) * cur;
-  const curY =
-    curFrom.y + (voteY0 + 6 - curFrom.y) * cur - Math.sin(Math.PI * cur) * 70;
   const curShow =
     interpolate(frame, [BEAT.cursor, BEAT.cursor + 6], [0, 1], CLAMP) *
     interpolate(frame, [BEAT.press + 12, BEAT.press + 20], [1, 0], {
@@ -597,6 +596,15 @@ export function UpvoteBurst({
       easing: EXIT,
     },
   );
+  // The cursor is laid out on the vote button and travels there and away by
+  // a transform: layout rounds a box to whole pixels, so one eased by
+  // `left`/`top` creeps onto the button a pixel at a time.
+  const curRest = { x: voteX + 4, y: voteY0 + 6 };
+  const curDx = (curFrom.x - curRest.x) * (1 - cur) + curLeave * 40;
+  const curDy =
+    (curFrom.y - curRest.y) * (1 - cur) -
+    Math.sin(Math.PI * cur) * 70 +
+    curLeave * 30;
 
   const badgeC = tall
     ? { x: stageW / 2, y: stageH * 0.4 }
@@ -642,7 +650,9 @@ export function UpvoteBurst({
             position: "absolute",
             width: stageW,
             height: stageH,
-            transform: `scale(${k * push * camIn}) translate(${shake * Math.sin(tl * 2.9)}px, ${shake * 0.7 * Math.cos(tl * 3.7)}px)`,
+            // The push runs the whole clip, so its tilt carries everything
+            // that moves on the stage.
+            transform: `scale(${k * push * camIn}) translate(${shake * Math.sin(tl * 2.9)}px, ${shake * 0.7 * Math.cos(tl * 3.7)}px)${glide(push > 1 && push < 1.03)}`,
             transformOrigin: `${stageW / 2}px ${stageH / 2}px`,
             left: (width - stageW) / 2,
             top: (height - stageH) / 2,
@@ -725,7 +735,11 @@ export function UpvoteBurst({
 
           {rows.map(({ item, ri, slot }) => {
             const isProduct = ri < 0;
+            // A row is laid out in the slot it ends up in and rides there by
+            // a transform. Layout rounds a box and a baseline to whole
+            // pixels, so a row swapped by `top` clicks into its new slot.
             let y = listTop + slot * rowH;
+            let ride = 0;
             let rank = slot + 1;
             let lift = 0;
             let bump = 0;
@@ -733,7 +747,8 @@ export function UpvoteBurst({
               for (const c of crossAt) {
                 if (c === null) continue;
                 const s = swap(c);
-                y -= s * rowH;
+                y -= rowH;
+                ride += (1 - s) * rowH;
                 lift = Math.max(lift, Math.sin(Math.PI * Math.min(1, s)));
                 bump = Math.max(
                   bump,
@@ -744,7 +759,8 @@ export function UpvoteBurst({
             } else {
               const c = crossAt[ri];
               if (c !== null) {
-                y += swap(c) * rowH;
+                y += rowH;
+                ride -= (1 - swap(c)) * rowH;
                 if (frame >= c + 3) rank += 1;
               }
             }
@@ -773,7 +789,7 @@ export function UpvoteBurst({
                     Math.min(1, rowIn * 1.3) *
                     (isProduct ? 1 : 1 - dim * 0.55) *
                     (1 - out),
-                  transform: `translateY(${(1 - rowIn) * 16 + out * (isProduct ? -8 : 12)}px) scale(${1 + lift * 0.018})`,
+                  transform: `translateY(${ride + (1 - rowIn) * 16 + out * (isProduct ? -8 : 12)}px) scale(${1 + lift * 0.018})`,
                 }}
               >
                 {isProduct ? (
@@ -927,11 +943,11 @@ export function UpvoteBurst({
             <div
               style={{
                 position: "absolute",
-                left: curX + curLeave * 40,
-                top: curY + curLeave * 30,
+                left: curRest.x,
+                top: curRest.y,
                 opacity: curShow,
                 zIndex: 30,
-                transform: `scale(${frame >= BEAT.press - 1 && frame < BEAT.press + 5 ? 0.9 : 1})`,
+                transform: `translate(${curDx}px, ${curDy}px) scale(${frame >= BEAT.press - 1 && frame < BEAT.press + 5 ? 0.9 : 1})`,
                 transformOrigin: "4px 4px",
               }}
             >

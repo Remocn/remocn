@@ -20,6 +20,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -94,6 +95,7 @@ const BeamSweepPresentation: React.FC<
   presentationDirection,
   passedProps,
 }) => {
+  const glide = useGlide();
   const props = {
     ...beamSweepDefaults,
     ...passedProps,
@@ -119,7 +121,7 @@ const BeamSweepPresentation: React.FC<
         style={{
           maskImage: aMask,
           WebkitMaskImage: aMask,
-          transform: `scale(${push})`,
+          transform: `scale(${push})${glide(p > 0 && p < 0.5)}`,
           filter: `brightness(${(1 + k * (props.light ? 0.25 : 1.3)).toFixed(3)}) saturate(${(1 + k * 0.5).toFixed(3)}) blur(${(k * 4).toFixed(2)}px)`,
         }}
       >
@@ -292,6 +294,7 @@ function BuilderScene({
   delay: number;
   speed: number;
 }) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = UI[theme];
@@ -315,6 +318,7 @@ function BuilderScene({
     },
   );
   const push = interpolate(frame, [0, 66], [1, 1.03], CLAMP);
+  const pushing = frame > 0 && frame < 66;
   const tile = (i: number) =>
     spring({
       frame: frame - A_BEATS.tilesIn - i * 3,
@@ -332,7 +336,10 @@ function BuilderScene({
   };
   return (
     <AbsoluteFill
-      style={{ backgroundColor: c.app, transform: `scale(${push})` }}
+      style={{
+        backgroundColor: c.app,
+        transform: `scale(${push})${glide(pushing)}`,
+      }}
     >
       <ScaleLayer scale={scale}>
         <div
@@ -743,6 +750,7 @@ function StatementScene({
   scale: number;
   speed: number;
 }) {
+  const glide = useGlide();
   const frame = useCurrentFrame() * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = UI[theme];
@@ -775,7 +783,8 @@ function StatementScene({
           style={{
             justifyContent: "center",
             alignItems: "center",
-            transform: `scale(${push})`,
+            // The push runs for the whole scene, so it never rests.
+            transform: `scale(${push})${glide(true)}`,
             paddingBottom: tall ? H * 0.16 : H * 0.2,
             gap: size * 0.42,
           }}

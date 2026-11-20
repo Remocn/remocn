@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const barlow = loadFont("normal", { weights: ["500"], subsets: ["latin"] });
 
@@ -310,6 +311,7 @@ export function HookUncurl({
   speed = 1,
   theme = "dark",
 }: HookUncurlProps) {
+  const tilt = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -572,7 +574,7 @@ export function HookUncurl({
                 fontSize: F,
                 letterSpacing: `${TRACK}em`,
                 color: it.lit ? spot : fg,
-                transform: `translateY(${it.shift.toFixed(2)}px)`,
+                transform: `translateY(${it.shift.toFixed(2)}px)${tilt(it.shift > 1e-3 && it.shift < clipH - 1e-3)}`,
               }}
             >
               {it.text}

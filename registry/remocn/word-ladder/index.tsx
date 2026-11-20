@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["500"],
@@ -110,6 +111,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 // The ground under the floor line: light spilling down from the slot line the
 // outgoing letters sink through. gradients.sh "beam" (dark), "pixel-glass" (light).
@@ -231,6 +234,7 @@ export function WordLadder({
   theme = "dark",
   speed = 1,
 }: WordLadderProps) {
+  const tilt = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -309,13 +313,29 @@ export function WordLadder({
       { ...CLAMP, easing: EASE_IO },
     );
   const glides = Array.from({ length: steps }, (_, k) => glide(k));
-  const slotX = (i: number) => {
+  const slotXAt = (i: number, gs: number[]) => {
     let x = layouts[0].cx[i];
-    glides.forEach((g, k) => {
+    gs.forEach((g, k) => {
       x += (layouts[k + 1].cx[i] - layouts[k].cx[i]) * g;
     });
     return W / 2 + x * F;
   };
+  const slotX = (i: number) => slotXAt(i, glides);
+  // The same slot on a rung: where a mark rests, so its glide to the next rung
+  // can ride a transform and be exactly 0 once there. The mark is laid out at
+  // the rung it leaves until its letter swaps, then at the one it heads for:
+  // that frame changes its width anyway, while switching on a frame of its
+  // own steps the box by however little the slot moves between rungs.
+  const restX = (i: number) =>
+    slotXAt(
+      i,
+      glides.map((g, k) => {
+        if (g <= 0 || g >= 1) return g;
+        const swap = plan.swaps[i].find((s) => s.step === k);
+        if (!swap) return g < 0.5 ? 0 : 1;
+        return t < swap.at + RISE_DELAY ? 0 : 1;
+      }),
+    );
 
   const poster = interpolate(
     t,
@@ -344,6 +364,7 @@ export function WordLadder({
       ch: string,
       y: number,
       color: string,
+      moving: boolean,
       opacity = 1,
     ) => {
       if (!ch || opacity <= 0) return;
@@ -356,7 +377,7 @@ export function WordLadder({
             top: baseline - ASC * F,
             color,
             opacity,
-            transform: `translateY(${y}px)`,
+            transform: `translateY(${y}px)${tilt(moving)}`,
           }}
         >
           {ch}
@@ -371,7 +392,7 @@ export function WordLadder({
         [0, 1],
         { ...CLAMP, easing: EASE_OUT },
       );
-      draw(`s${i}`, rungs[0][i] ?? "", (1 - enter) * dropD, fg);
+      draw(`s${i}`, rungs[0][i] ?? "", (1 - enter) * dropD, fg, midway(enter));
     } else {
       const drop = interpolate(t, [current.at, current.at + DROP], [0, 1], {
         ...CLAMP,
@@ -383,6 +404,7 @@ export function WordLadder({
           current.from,
           drop * dropD,
           interpolateColors(drop, [0, 1], [fg, c.dim]),
+          midway(drop),
         );
       const rise = interpolate(
         t,
@@ -403,6 +425,7 @@ export function WordLadder({
         current.to,
         (1 - rise) * dropD,
         interpolateColors(settle, [0, 1], [accent, fg]),
+        midway(rise),
       );
     }
 
@@ -427,18 +450,22 @@ export function WordLadder({
       const v = grow * (1 - shrink);
       if (v <= 0) continue;
       const [l, r] = barSpan(i, glyphNow);
+      // Layout rounds a box edge to whole pixels, so a mark eased by `left`
+      // clicks across pixel by pixel; it sits at its rung and the glide
+      // between rungs is a transform.
+      const dx = slotX(i) - restX(i);
       bars.push(
         <div
           key={`b${i}-${m.in}`}
           style={{
             position: "absolute",
-            left: l,
+            left: l - dx,
             top: floorY,
             width: r - l,
             height: barH,
             background: accent,
             opacity: isLast ? 1 : Math.min(1, v * 1.4),
-            transform: `scaleX(${isLast ? 0.35 + 0.65 * grow : 0.35 + 0.65 * v})`,
+            transform: `${dx ? `translateX(${dx}px) ` : ""}scaleX(${isLast ? 0.35 + 0.65 * grow : 0.35 + 0.65 * v})`,
           }}
         />,
       );
