@@ -14,6 +14,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -130,6 +131,12 @@ const MATCH = 114;
 const END = 180;
 
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+/** Whether `at` changes between this frame and either neighbour. */
+const moves = (at: (f: number) => number, f: number, step: number) =>
+  Math.abs(at(f + step) - at(f)) > 1e-3 ||
+  Math.abs(at(f) - at(f - step)) > 1e-3;
 
 const P = {
   x: "M6 6l12 12M18 6L6 18",
@@ -464,6 +471,7 @@ function Preview({
   accent: string;
   t: number;
 }) {
+  const glide = useGlide();
   const fill: React.CSSProperties = { position: "absolute", inset: 0 };
   if (scene === "captions") {
     const words = ["SHIP", "YOUR", "LAUNCH", "TODAY"];
@@ -563,7 +571,8 @@ function Preview({
                 fontWeight: 400,
                 color: "#141821",
                 letterSpacing: "-0.02em",
-                transform: `translateY(${Math.sin(t / 12 + i) * 2}px)`,
+                // The bob never rests, so neither does its tilt.
+                transform: `translateY(${Math.sin(t / 12 + i) * 2}px)${glide(true)}`,
               }}
             >
               <Icon
@@ -1081,6 +1090,7 @@ export function SwipeDeck({
   ground,
   groundParams,
 }: SwipeDeckProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { fps, width, height } = useVideoConfig();
   const f = frame * speed;
@@ -1100,36 +1110,58 @@ export function SwipeDeck({
   const ease = (a: number, b: number, e = ENTER) =>
     interpolate(f, [a, b], [0, 1], { ...clamp, easing: e });
 
-  const rise = sp(0, HEAVY);
-  const cam = interpolate(f, [MATCH, END], [1, 1.035], {
-    ...clamp,
-    easing: CAMERA,
-  });
+  const riseAt = (ff: number) => spring({ frame: ff, fps, config: HEAVY });
+  const camAt = (ff: number) =>
+    interpolate(ff, [MATCH, END], [1, 1.035], {
+      ...clamp,
+      easing: CAMERA,
+    });
+  const rise = riseAt(f);
+  const cam = camAt(f);
+  // The phone carries every card, so its tilt covers them; the movers inside
+  // skip theirs while it is on. The rise spring never lands exactly, hence
+  // the test on its px.
+  const phoneMoving =
+    moves((ff) => (1 - riseAt(ff)) * H * 0.9, f, speed) ||
+    moves((ff) => camAt(ff) * k * BH, f, speed);
 
-  const motion = ACTS.map((a) => {
-    const dir = a.kind === "like" ? 1 : a.kind === "nope" ? -1 : 0;
-    const drag = dir
-      ? spring({
-          frame: Math.min(f, a.release) - a.down,
-          fps,
-          config: { damping: 20, stiffness: 140 },
-        })
-      : 0;
-    const fly = interpolate(
-      f,
-      [a.release, a.release + (dir ? 12 : 14)],
-      [0, 1],
-      { ...clamp, easing: EXIT },
-    );
-    const dragX = dir * 150 * Math.min(1, drag);
-    const dx = dragX + dir * 560 * fly;
-    const dy = dir ? -12 * drag + 70 * fly : -1000 * fly;
-    const stamp = dir
-      ? Math.min(1, drag * 1.6)
-      : interpolate(f, [a.release - 4, a.release + 2], [0, 1], clamp);
-    const gone = dir ? Math.max(drag * 0.3, fly) : fly;
-    return { ...a, dir, drag, fly, dx, dy, dragX, rot: dx * 0.07, stamp, gone };
-  });
+  const motionAt = (f: number) =>
+    ACTS.map((a) => {
+      const dir = a.kind === "like" ? 1 : a.kind === "nope" ? -1 : 0;
+      const drag = dir
+        ? spring({
+            frame: Math.min(f, a.release) - a.down,
+            fps,
+            config: { damping: 20, stiffness: 140 },
+          })
+        : 0;
+      const fly = interpolate(
+        f,
+        [a.release, a.release + (dir ? 12 : 14)],
+        [0, 1],
+        { ...clamp, easing: EXIT },
+      );
+      const dragX = dir * 150 * Math.min(1, drag);
+      const dx = dragX + dir * 560 * fly;
+      const dy = dir ? -12 * drag + 70 * fly : -1000 * fly;
+      const stamp = dir
+        ? Math.min(1, drag * 1.6)
+        : interpolate(f, [a.release - 4, a.release + 2], [0, 1], clamp);
+      const gone = dir ? Math.max(drag * 0.3, fly) : fly;
+      return {
+        ...a,
+        dir,
+        drag,
+        fly,
+        dx,
+        dy,
+        dragX,
+        rot: dx * 0.07,
+        stamp,
+        gone,
+      };
+    });
+  const motion = motionAt(f);
   const top = motion.findIndex((m) => m.fly < 1);
   const topIdx = top === -1 ? ACTS.length : top;
   const cur = motion[topIdx];
@@ -1202,6 +1234,7 @@ export function SwipeDeck({
     const pin = ease(inAt, inAt + 16);
     const pout = outAt === undefined ? 0 : ease(outAt - 8, outAt, EXIT);
     if (pin <= 0 || pout >= 1) return null;
+    const moving = midway(pin) || midway(pout);
     return (
       <div
         key={i}
@@ -1210,7 +1243,7 @@ export function SwipeDeck({
           left: 0,
           right: 0,
           top: 0,
-          transform: `translateY(${(1 - pin) * 60 - pout * 40}%)`,
+          transform: `translateY(${(1 - pin) * 60 - pout * 40}%)${glide(moving)}`,
           opacity: pin * (1 - pout),
           filter: `blur(${(1 - pin) * 6 + pout * 4}px)`,
         }}
@@ -1294,7 +1327,7 @@ export function SwipeDeck({
               top: phoneCy - BH / 2,
               width: BW,
               height: BH,
-              transform: `translateY(${(1 - rise) * H * 0.9}px) scale(${k * cam})`,
+              transform: `translateY(${(1 - rise) * H * 0.9}px) scale(${k * cam})${glide(phoneMoving)}`,
             }}
           >
             <Phone c={c}>
@@ -1334,6 +1367,15 @@ export function SwipeDeck({
                   const behind = i > topIdx;
                   const prevGone = i > 0 ? motion[i - 1].gone : 1;
                   const sc = behind ? 0.94 + 0.06 * Math.min(1, prevGone) : 1;
+                  const risingUp =
+                    behind &&
+                    !phoneMoving &&
+                    moves(
+                      (ff) =>
+                        Math.min(1, motionAt(ff)[i - 1].gone) * CARD_BOX.h,
+                      f,
+                      speed,
+                    );
                   return (
                     <div
                       key={card.title}
@@ -1346,7 +1388,7 @@ export function SwipeDeck({
                         transform:
                           mo && !behind
                             ? `translate(${mo.dx}px, ${mo.dy}px) rotate(${mo.rot}deg)`
-                            : `translateY(${(1 - Math.min(1, prevGone)) * 10}px) scale(${sc})`,
+                            : `translateY(${(1 - Math.min(1, prevGone)) * 10}px) scale(${sc})${glide(risingUp)}`,
                         transformOrigin: "50% 110%",
                         borderRadius: 28,
                         boxShadow: behind
@@ -1609,8 +1651,10 @@ export function SwipeDeck({
               <div
                 style={{
                   position: "absolute",
-                  left: tap.x - 22,
-                  top: tap.y - 22,
+                  // The finger travels by transform: layout rounds a box edge to
+                  // a whole pixel, so a dot moved by left/top steps along.
+                  left: 0,
+                  top: 0,
                   width: 44,
                   height: 44,
                   borderRadius: 22,
@@ -1618,7 +1662,7 @@ export function SwipeDeck({
                   boxShadow:
                     "0 0 0 1.5px rgba(255,255,255,0.85), 0 4px 14px rgba(0,0,0,0.3)",
                   opacity: tapOpacity,
-                  transform: `scale(${tapScale})`,
+                  transform: `translate(${tap.x - 22}px, ${tap.y - 22}px) scale(${tapScale})`,
                   zIndex: 35,
                 }}
               />

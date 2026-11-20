@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -205,6 +206,7 @@ export function MilestoneRoll({
   groundParams,
   speed = 1,
 }: MilestoneRollProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -255,17 +257,36 @@ export function MilestoneRoll({
   const pushDist = 0.8 * H;
   const inHit = hit >= 0 && !isFinal && t < h + hold + OUT;
 
-  let bump = 0;
-  let sx = 0;
-  let sy = 0;
-  for (let i = 0; i < n; i++) {
-    const d = t - hitAt(i) - 3;
-    bump = Math.max(bump, (i === n - 1 ? 1.3 : 0.9) * kick(d));
-    const s = shake(d, (i === n - 1 ? 9 : 6) * u, i * 1.9);
-    sx += s.x;
-    sy += s.y;
-  }
-  const camScale = 1 + 0.03 * bump;
+  const cameraAt = (tt: number) => {
+    let bump = 0;
+    let x = 0;
+    let y = 0;
+    for (let i = 0; i < n; i++) {
+      const d = tt - hitAt(i) - 3;
+      bump = Math.max(bump, (i === n - 1 ? 1.3 : 0.9) * kick(d));
+      const s = shake(d, (i === n - 1 ? 9 : 6) * u, i * 1.9);
+      x += s.x;
+      y += s.y;
+    }
+    return { x, y, k: 1 + 0.03 * bump };
+  };
+  const cam = cameraAt(t);
+  const sx = cam.x;
+  const sy = cam.y;
+  const camScale = cam.k;
+  // A move counts while it changes against either neighbouring frame by more
+  // than a thousandth of a pixel: kicks, shakes and springs have no clean
+  // progress, and their tails still cross pixels.
+  const stirs = (at: (tt: number) => number) => {
+    const now = at(t);
+    return (
+      Math.abs(at(t + speed) - now) > 1e-3 ||
+      Math.abs(now - at(t - speed)) > 1e-3
+    );
+  };
+  const camMoving =
+    stirs((tt) => cameraAt(tt).y) ||
+    stirs((tt) => (cameraAt(tt).k - 1) * (H / 2));
 
   const runFs = 0.28 * base;
   const hugeFs = 0.56 * base;
@@ -285,13 +306,29 @@ export function MilestoneRoll({
     whiteSpace: "nowrap",
   } as const;
 
-  const pFinal = spring({ frame: t - finalAt, fps, config: CARD });
-  const pUnit = spring({ frame: t - finalAt - 6, fps, config: MORPH });
-  const pLogo = spring({ frame: t - finalAt - 12, fps, config: MORPH });
-  const creep = interpolate(t, [finalAt + 4, finalAt + 70], [1, 1.035], {
-    ...CLAMP,
-    easing: CAMERA,
-  });
+  const pFinalAt = (tt: number) =>
+    spring({ frame: tt - finalAt, fps, config: CARD });
+  const pUnitAt = (tt: number) =>
+    spring({ frame: tt - finalAt - 6, fps, config: MORPH });
+  const pLogoAt = (tt: number) =>
+    spring({ frame: tt - finalAt - 12, fps, config: MORPH });
+  const creepAt = (tt: number) =>
+    interpolate(tt, [finalAt + 4, finalAt + 70], [1, 1.035], {
+      ...CLAMP,
+      easing: CAMERA,
+    });
+  const pFinal = pFinalAt(t);
+  const pUnit = pUnitAt(t);
+  const pLogo = pLogoAt(t);
+  const creep = creepAt(t);
+  // The final block carries one tilt for the creep, the number's punch and
+  // the unit's rise; the camera's own tilt covers it while that moves.
+  const finalMoving =
+    !camMoving &&
+    (stirs((tt) => (creepAt(tt) - 1) * (W / 2)) ||
+      stirs((tt) => pFinalAt(tt) * 0.25 * (W / 2)) ||
+      stirs((tt) => pUnitAt(tt) * 0.06 * base));
+  const logoMoving = !camMoving && stirs((tt) => pLogoAt(tt) * 0.04 * H);
 
   const chromeOut = isFinal ? 1 - ENTER(ramp(t, finalAt, 6)) : 1;
   const runFill = isFinal ? 1 : inHit ? 1 : race;
@@ -324,7 +361,7 @@ export function MilestoneRoll({
           style={{
             position: "absolute",
             inset: 0,
-            transform: `translate(${sx}px, ${sy}px) scale(${camScale})`,
+            transform: `translate(${sx}px, ${sy}px) scale(${camScale})${glide(camMoving)}`,
             transformOrigin: "50% 50%",
             color: fg,
           }}
@@ -470,7 +507,7 @@ export function MilestoneRoll({
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                transform: `scale(${creep})`,
+                transform: `scale(${creep})${glide(finalMoving)}`,
               }}
             >
               <div
@@ -515,7 +552,7 @@ export function MilestoneRoll({
                 display: "flex",
                 justifyContent: "center",
                 opacity: ramp(t, finalAt + 12, 5),
-                transform: `translateY(${(1 - pLogo) * 0.04 * H}px)`,
+                transform: `translateY(${(1 - pLogo) * 0.04 * H}px)${glide(logoMoving)}`,
               }}
             >
               {logo ?? (

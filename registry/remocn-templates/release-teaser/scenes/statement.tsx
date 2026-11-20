@@ -1,6 +1,13 @@
 import { Interactive, interpolate } from "remotion";
 import type { ReleaseTeaserScene } from "../content";
-import { characterState, fitText, graphemes } from "../motion";
+import {
+  characterState,
+  fitText,
+  graphemes,
+  midway,
+  progress,
+  useGlide,
+} from "../motion";
 
 export function Statement({
   scene,
@@ -13,6 +20,7 @@ export function Statement({
   frame: number;
   duration: number;
 }) {
+  const glide = useGlide();
   return (
     <Interactive.Div
       name="Statement"
@@ -35,6 +43,11 @@ export function Statement({
               extrapolateLeft: "clamp",
               extrapolateRight: "clamp",
             }),
+        // The drift runs for the statement's whole life, and the letters'
+        // own rise sits under it, so one mark here covers both.
+        transform: scene.reducedMotion
+          ? undefined
+          : glide(midway(progress(frame, 0, duration))),
       }}
     >
       {text.split("\n").map((line, lineIndex) => {

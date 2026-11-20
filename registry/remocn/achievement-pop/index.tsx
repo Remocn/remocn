@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -164,6 +165,8 @@ const THEMES = {
   },
 } as const;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -250,6 +253,7 @@ export function AchievementPop({
   delay = 0,
   speed = 1,
 }: AchievementPopProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const tall = H > W;
@@ -337,7 +341,9 @@ export function AchievementPop({
           style={{
             position: "absolute",
             inset: 0,
-            transform: `scale(${groupK})`,
+            // The cards below ride `kf` through `top`, so the tilt covers
+            // their text as well.
+            transform: `scale(${groupK})${glide(midway(kf - Math.floor(kf)) || midway(poster))}`,
             transformOrigin: `50% ${(cy / H) * 100}%`,
           }}
         >
@@ -345,7 +351,11 @@ export function AchievementPop({
             const s = starts[i];
             if (t < s) return null;
             const rare = i === n - 1 && n > 1;
-            const y = cy + (i - (kf - 1) / 2) * gap;
+            // The stack recentres as it grows. That travel is a transform on
+            // the card, not `top`: layout rounds a box and a baseline to whole
+            // pixels, so a card eased by `top` clicks down pixel by pixel.
+            const y = cy + i * gap;
+            const lift = -((kf - 1) / 2) * gap;
             const pop = sp(s, CHIP);
             const badgeK = 0.5 + 0.5 * pop;
             const open = sp(s + BEATS.open, MORPH, 16);
@@ -379,7 +389,14 @@ export function AchievementPop({
             const R = D / 2;
             const appear = interpolate(t, [s, s + 3], [0, 1], CLAMP);
             return (
-              <div key={`${a.title}-${s}`}>
+              <div
+                key={`${a.title}-${s}`}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  transform: `translateY(${lift}px)`,
+                }}
+              >
                 <div
                   style={{
                     position: "absolute",
@@ -525,11 +542,14 @@ export function AchievementPop({
                 <div
                   style={{
                     position: "absolute",
-                    left: bx - R,
+                    // Laid out where the open pill leaves it; the ride
+                    // there as the pill opens is a transform, for the same
+                    // reason as the lift above.
+                    left: W / 2 - pw / 2,
                     top: y - R,
                     width: D,
                     height: D,
-                    transform: `scale(${badgeK})`,
+                    transform: `translateX(${(pw - pillW) / 2}px) scale(${badgeK})`,
                     opacity: appear,
                   }}
                 >
@@ -567,7 +587,7 @@ export function AchievementPop({
               alignItems: "center",
               gap: 18 * u,
               opacity: totalIn,
-              transform: `translateY(${(1 - totalIn) * 24 * u}px)`,
+              transform: `translateY(${(1 - totalIn) * 24 * u}px)${glide(midway(totalIn))}`,
             }}
           >
             <div
@@ -613,7 +633,7 @@ export function AchievementPop({
             display: "flex",
             justifyContent: "center",
             opacity: logoP,
-            transform: `translateY(${(1 - logoP) * 14 * u}px)`,
+            transform: `translateY(${(1 - logoP) * 14 * u}px)${glide(midway(logoP))}`,
           }}
         >
           {logo ?? <RemocnLogo fontSize={30 * u} color={c.logo} />}

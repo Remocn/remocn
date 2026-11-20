@@ -1,6 +1,6 @@
 import { Interactive, interpolate } from "remotion";
 import type { ReleaseTeaserScene } from "../content";
-import { ease, fitText } from "../motion";
+import { ease, fitText, midway, progress, useGlide } from "../motion";
 import { BrandImage, OrbitMark } from "../ui";
 
 export function ReleaseLockup({
@@ -10,6 +10,7 @@ export function ReleaseLockup({
   scene: ReleaseTeaserScene;
   frame: number;
 }) {
+  const glide = useGlide();
   const title = `${scene.brandName}${scene.release ? ` ${scene.release}` : ""}`;
   const reveal = scene.reducedMotion ? 1 : ease(frame, 0, 32);
   return (
@@ -33,6 +34,9 @@ export function ReleaseLockup({
               extrapolateLeft: "clamp",
               extrapolateRight: "clamp",
             }),
+        transform: scene.reducedMotion
+          ? undefined
+          : glide(midway(progress(frame, 0, 350))),
       }}
     >
       <div

@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -87,6 +88,7 @@ const T_LIVE = 206;
 
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 const glide = Easing.bezier(0.65, 0, 0.35, 1);
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 const camera = Easing.bezier(0.87, 0, 0.13, 1);
 const easeOut = Easing.bezier(0.22, 1, 0.36, 1);
 const sheetEase = Easing.bezier(0.32, 0.72, 0, 1);
@@ -865,6 +867,7 @@ export function HomeWidget({
   ground,
   groundParams,
 }: HomeWidgetProps) {
+  const tilt = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { fps, width, height } = useVideoConfig();
   const f = frame * speed;
@@ -885,7 +888,6 @@ export function HomeWidget({
 
   const bump = (at: number) =>
     interpolate(f, [at - 1, at + 1, at + 6], [0, 1, 0], clamp);
-  const rise = spring({ frame: f, fps, config: HEAVY });
 
   const jig =
     interpolate(f, [T_JIG, T_JIG + 6], [0, 1], clamp) *
@@ -903,7 +905,10 @@ export function HomeWidget({
     ...clamp,
     easing: sheetEase,
   });
-  const sheetY = SHEET_TOP + (SH - SHEET_TOP) * (1 - sheetIn + sheetOut);
+  // The sheet is laid out where it stands open and slides by transform: layout
+  // rounds a box and a baseline to whole pixels, so `top` would step it.
+  const sheetDy = (SH - SHEET_TOP) * (1 - sheetIn + sheetOut);
+  const sheetMoving = midway(sheetIn) || midway(sheetOut);
   const sheetVis = sheetIn * (1 - sheetOut);
   const push = interpolate(f, [T_ROW + 2, T_ROW + 13], [0, 1], {
     ...clamp,
@@ -925,8 +930,14 @@ export function HomeWidget({
   const fly = spring({ frame: f - T_ADD, fps, config: CARD });
   const from = { x: (SW - W.w) / 2, y: SHEET_TOP + PREVIEW_Y };
   const slot = { x: COL0, y: ROW0 };
-  const wx = from.x + (slot.x - from.x) * fly;
-  const wy = from.y + (slot.y - from.y) * fly;
+  // The widget is laid out in its slot and flies there by transform; the
+  // spring never quite lands, so the leftover is dropped below 1e-3px.
+  const wdx = (from.x - slot.x) * (1 - fly);
+  const wdy = (from.y - slot.y) * (1 - fly);
+  const wFly =
+    Math.abs(wdx) < 1e-3 && Math.abs(wdy) < 1e-3
+      ? ""
+      : `translate(${wdx}px, ${wdy}px) `;
   const lift = Math.sin(Math.min(1, fly) * Math.PI) * 0.05;
   const landed = f >= T_ADD;
 
@@ -962,33 +973,56 @@ export function HomeWidget({
     T_DONE + 26,
   ];
   const camEase = { ...clamp, easing: camera };
-  const camS = interpolate(
-    f,
-    camT,
-    [1, 1, tall ? 1.1 : 1.08, tall ? 1.1 : 1.08, 1, 1, tall ? 1.22 : 1.36],
-    camEase,
-  );
-  const camFy = interpolate(
-    f,
-    camT,
-    [
-      BH / 2,
-      BH / 2,
-      tall ? BEZEL + 468 : BH / 2,
-      tall ? BEZEL + 468 : BH / 2,
-      BH / 2,
-      BH / 2,
-      BEZEL + ROW0 + WH / 2 + 30,
-    ],
-    camEase,
-  );
-  const camFx = interpolate(
-    f,
-    camT,
-    [BW / 2, BW / 2, BW / 2, BW / 2, BW / 2, BW / 2, BEZEL + COL0 + W.w / 2],
-    camEase,
-  );
-  const S = k * camS;
+  const camAt = (ff: number) => {
+    const camS = interpolate(
+      ff,
+      camT,
+      [1, 1, tall ? 1.1 : 1.08, tall ? 1.1 : 1.08, 1, 1, tall ? 1.22 : 1.36],
+      camEase,
+    );
+    const camFy = interpolate(
+      ff,
+      camT,
+      [
+        BH / 2,
+        BH / 2,
+        tall ? BEZEL + 468 : BH / 2,
+        tall ? BEZEL + 468 : BH / 2,
+        BH / 2,
+        BH / 2,
+        BEZEL + ROW0 + WH / 2 + 30,
+      ],
+      camEase,
+    );
+    const camFx = interpolate(
+      ff,
+      camT,
+      [BW / 2, BW / 2, BW / 2, BW / 2, BW / 2, BW / 2, BEZEL + COL0 + W.w / 2],
+      camEase,
+    );
+    const below = 1 - spring({ frame: ff, fps, config: HEAVY });
+    const s = k * camS;
+    return {
+      s,
+      x: phoneCx - camFx * s,
+      y: phoneCy - camFy * s + below * height,
+    };
+  };
+  const cam = camAt(f);
+  const S = cam.s;
+  // The rise is a spring and the camera eases between holds, so motion is
+  // read from the neighbouring frames, in screen pixels.
+  const camStep = (a: number, b: number) => {
+    const p = camAt(a);
+    const q = camAt(b);
+    return Math.max(
+      Math.abs(p.x - q.x),
+      Math.abs(p.y - q.y),
+      Math.abs(p.s - q.s) * BH,
+    );
+  };
+  const camMoving =
+    camStep(f, f + speed) > 1e-3 || camStep(f - speed, f) > 1e-3;
 
   const rowIdx = LIST.indexOf("remocn");
   const listTop = SHEET_TOP + 64 + 352 + 20;
@@ -1006,6 +1040,7 @@ export function HomeWidget({
     { t: T_ADD - 1, x: SW / 2 + 10, y: SH - 64 },
     { t: T_DONE, x: SW - 48, y: 30 },
   ];
+  const touchEnd = touches[touches.length - 1];
   let touch = { x: touches[0].x, y: touches[0].y };
   for (let i = 0; i < touches.length - 1; i++) {
     const a = touches[i];
@@ -1159,7 +1194,7 @@ export function HomeWidget({
               >
                 <div
                   style={{
-                    transform: `translateY(${(1 - inP) * 70 - outP * 40}%)`,
+                    transform: `translateY(${(1 - inP) * 70 - outP * 40}%)${tilt(midway(inP) || midway(outP))}`,
                     opacity: Math.min(1, inP * 1.4) * (1 - outP),
                     textWrap: "balance",
                   }}
@@ -1178,7 +1213,7 @@ export function HomeWidget({
             width: BW,
             height: BH,
             transformOrigin: "0 0",
-            transform: `translate(${phoneCx - camFx * S}px, ${phoneCy - camFy * S + (1 - rise) * height}px) scale(${S})`,
+            transform: `translate(${cam.x}px, ${cam.y}px) scale(${S})${tilt(camMoving)}`,
             WebkitFontSmoothing: "antialiased",
           }}
         >
@@ -1195,7 +1230,7 @@ export function HomeWidget({
               style={{
                 position: "absolute",
                 inset: 0,
-                transform: `scale(${1 - homeDim * 0.06})`,
+                transform: `scale(${1 - homeDim * 0.06})${tilt(sheetMoving)}`,
                 borderRadius: 40 * homeDim,
                 overflow: "hidden",
               }}
@@ -1215,14 +1250,16 @@ export function HomeWidget({
                     key={app.name}
                     style={{
                       position: "absolute",
-                      left: a.x + (b.x - a.x) * mv,
-                      top: a.y + (b.y - a.y) * mv,
+                      // Laid out in the cell it moves to; the shuffle there
+                      // is a transform, which glides where `left`/`top` step.
+                      left: b.x,
+                      top: b.y,
                       width: ICON,
                       display: "flex",
                       flexDirection: "column",
                       alignItems: "center",
                       gap: 5,
-                      transform: `translateY(${j.y}px) rotate(${j.r}deg)`,
+                      transform: `translate(${(a.x - b.x) * (1 - mv)}px, ${(a.y - b.y) * (1 - mv)}px) translateY(${j.y}px) rotate(${j.r}deg)`,
                     }}
                   >
                     <AppTile app={app} size={ICON} />
@@ -1364,7 +1401,8 @@ export function HomeWidget({
                   position: "absolute",
                   left: 0,
                   right: 0,
-                  top: sheetY,
+                  top: SHEET_TOP,
+                  transform: `translateY(${sheetDy}px)${tilt(sheetMoving)}`,
                   height: SH - SHEET_TOP,
                   borderRadius: "38px 38px 0 0",
                   background: c.sheet,
@@ -1617,11 +1655,11 @@ export function HomeWidget({
                 <div
                   style={{
                     position: "absolute",
-                    left: wx,
-                    top: wy,
+                    left: slot.x,
+                    top: slot.y,
                     width: W.w,
                     zIndex: 6,
-                    transform: `translateY(${jiggle(20).y}px) rotate(${jiggle(20).r * 0.5}deg) scale(${1 + lift})`,
+                    transform: `${wFly}translateY(${jiggle(20).y}px) rotate(${jiggle(20).r * 0.5}deg) scale(${1 + lift})`,
                     filter: `drop-shadow(0 ${10 * lift * 20}px ${24 * lift * 20}px rgba(0,0,0,${0.25 * lift * 20}))`,
                   }}
                 >
@@ -1646,8 +1684,10 @@ export function HomeWidget({
             <div
               style={{
                 position: "absolute",
-                left: touch.x - 22,
-                top: touch.y - 22,
+                // Laid out at its last stop; travel is a transform so the
+                // ring glides instead of stepping through whole pixels.
+                left: touchEnd.x - 22,
+                top: touchEnd.y - 22,
                 width: 44,
                 height: 44,
                 borderRadius: 22,
@@ -1655,7 +1695,7 @@ export function HomeWidget({
                 border: "1.5px solid rgba(255,255,255,0.8)",
                 boxShadow: "0 2px 10px rgba(0,0,0,0.25)",
                 opacity: touchOpacity,
-                transform: `scale(${1 - down * 0.14})`,
+                transform: `translate(${touch.x - touchEnd.x}px, ${touch.y - touchEnd.y}px) scale(${1 - down * 0.14})`,
                 zIndex: 50,
               }}
             />

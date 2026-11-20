@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: serif } = loadSerif("italic", {
   weights: ["400"],
@@ -301,6 +302,7 @@ export function RingBurst({
   speed = 1,
   theme = "dark",
 }: RingBurstProps) {
+  const glide = useGlide();
   const t = useCurrentFrame() * speed;
   const look: Look = { fontFamily, ink, scale, logo };
   const stageB =
@@ -336,12 +338,28 @@ export function RingBurst({
 
   const last = gaps.length - 1;
   const done = progress(last) >= 1;
-  const push =
+  const pushAt = (f: number) =>
     1 +
     0.06 *
-      EASE_PUSH(interpolate(t, [delay, delay + expand * 0.8], [0, 1], CLAMP));
+      EASE_PUSH(interpolate(f, [delay, delay + expand * 0.8], [0, 1], CLAMP));
+  const settleAt = (f: number) =>
+    1.08 -
+    0.08 *
+      EASE_LAND(
+        interpolate(
+          f,
+          [delay + gaps[last], delay + gaps[last] + expand],
+          [0, 1],
+          CLAMP,
+        ),
+      );
+  const push = pushAt(t);
   const land = EASE_LAND(progress(last));
-  const settle = 1.08 - 0.08 * land;
+  const settle = settleAt(t);
+  // Both eases are flat at their ends, so the test is on the scale itself.
+  const changing = (at: (f: number) => number) =>
+    Math.abs(at(t + speed) - at(t)) > 2e-6 ||
+    Math.abs(at(t) - at(t - speed)) > 2e-6;
   // The halo keeps breathing outward a touch after the landing.
   const drift = interpolate(
     t,
@@ -379,7 +397,7 @@ export function RingBurst({
       {hideA ? null : (
         <AbsoluteFill
           style={{
-            transform: `scale(${push})`,
+            transform: `scale(${push})${glide(changing(pushAt))}`,
             transformOrigin: `${ox}px ${oy}px`,
           }}
         >
@@ -413,7 +431,7 @@ export function RingBurst({
                 top: (done ? reach : radius(last)) - oy,
                 width: W,
                 height: H,
-                transform: `scale(${settle})`,
+                transform: `scale(${settle})${glide(changing(settleAt))}`,
                 transformOrigin: `${ox}px ${oy}px`,
               }}
             >

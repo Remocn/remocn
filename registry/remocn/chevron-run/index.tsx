@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -52,6 +53,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 // Beat sheet (30fps, speed 1):
 //   0–50   a full-frame wall of up-chevrons races upward in staggered
@@ -138,6 +141,7 @@ export function ChevronRun({
   speed = 1,
   theme = "dark",
 }: ChevronRunProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -356,7 +360,7 @@ export function ChevronRun({
             letterSpacing: "-0.035em",
             color: fg,
             opacity: Math.min(1, land * 1.8),
-            transform: `translateY(${(1 - land) * -0.28 * F}px)`,
+            transform: `translateY(${(1 - land) * -0.28 * F}px)${glide(midway(land))}`,
             whiteSpace: "nowrap",
           }}
         >
@@ -377,7 +381,7 @@ export function ChevronRun({
             letterSpacing: "-0.01em",
             color: fg,
             opacity: capIn * 0.78,
-            transform: `translateY(${(1 - capIn) * 12 * u}px)`,
+            transform: `translateY(${(1 - capIn) * 12 * u}px)${glide(midway(capIn))}`,
           }}
         >
           {caption}

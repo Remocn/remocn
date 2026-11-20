@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { AbsoluteFill } from "remotion";
 import type { BrandGuidelinesScene, SceneProps } from "../content";
-import { fitSize, slide } from "../motion";
+import { fitSize, slide, useGlide } from "../motion";
 import { BrandImage, FormStudyMark, Label } from "../ui";
 
 type Plate = {
@@ -227,6 +227,7 @@ function Poster({
 }
 
 export function ObjectCollage({ scene, frame }: SceneProps) {
+  const glide = useGlide();
   // Photo/poster content changes with props, not with the camera or track positions.
   const contents = useMemo(
     () =>
@@ -249,7 +250,11 @@ export function ObjectCollage({ scene, frame }: SceneProps) {
   return (
     <AbsoluteFill
       style={{
-        scale: scene.reducedMotion ? 1 : 1 + 0.045 * slide(frame, 640, 806),
+        // The plates drift on their own tracks for the whole scene, so the
+        // collage never rests; one mark here covers the text on every plate.
+        transform: scene.reducedMotion
+          ? "scale(1)"
+          : `scale(${1 + 0.045 * slide(frame, 640, 806)})${glide(true)}`,
       }}
     >
       {plates.map((plate, index) => {

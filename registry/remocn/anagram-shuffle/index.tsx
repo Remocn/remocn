@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: serif } = loadFont("normal", {
   weights: ["400"],
@@ -257,6 +258,7 @@ export function AnagramShuffle({
   theme = "dark",
   speed = 1,
 }: AnagramShuffleProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -387,28 +389,47 @@ export function AnagramShuffle({
           }}
         >
           {ordered.map((m) => {
-            const p = interpolate(t, [m.start, m.start + travel], [0, 1], {
-              ...CLAMP,
-              easing: EASE_IO,
-            });
-            const arc = Math.sin(Math.PI * p);
-            const enter = interpolate(t, [m.enterAt, m.enterAt + 16], [0, 1], {
-              ...CLAMP,
-              easing: EASE_OUT,
-            });
-            const x = m.x0 + (m.x1 - m.x0) * p;
             const over = m.dir > 0;
-            const y =
-              (over ? -m.lift : m.lift * 0.7) * arc + (1 - enter) * F * 0.14;
-            const scale = over ? 1 + 0.09 * arc : 1 - 0.07 * arc;
-            const acc = interpolate(
-              t,
-              [m.accentAt, m.accentAt + ACCENT_LEN],
-              [0, 1],
-              { ...CLAMP, easing: EASE_OUT },
+            const pose = (f: number) => {
+              const p = interpolate(f, [m.start, m.start + travel], [0, 1], {
+                ...CLAMP,
+                easing: EASE_IO,
+              });
+              const arc = Math.sin(Math.PI * p);
+              const enter = interpolate(
+                f,
+                [m.enterAt, m.enterAt + 16],
+                [0, 1],
+                { ...CLAMP, easing: EASE_OUT },
+              );
+              const y =
+                (over ? -m.lift : m.lift * 0.7) * arc + (1 - enter) * F * 0.14;
+              const acc = interpolate(
+                f,
+                [m.accentAt, m.accentAt + ACCENT_LEN],
+                [0, 1],
+                { ...CLAMP, easing: EASE_OUT },
+              );
+              const bump = Math.sin(Math.PI * acc) * F * 0.045;
+              return {
+                p,
+                arc,
+                enter,
+                acc,
+                yOff: y - bump,
+                scale: over ? 1 + 0.09 * arc : 1 - 0.07 * arc,
+              };
+            };
+            const { p, arc, enter, acc, yOff, scale } = pose(t);
+            const x = m.x0 + (m.x1 - m.x0) * p;
+            const step = Math.max(speed, 1e-3);
+            // A glyph is about F tall above its baseline origin, so a scale
+            // step moves its top by roughly that much times the step.
+            const moving = [pose(t - step), pose(t + step)].some(
+              (q) =>
+                Math.abs(q.yOff - yOff) > 1e-3 ||
+                Math.abs(q.scale - scale) * F > 1e-3,
             );
-            const bump = Math.sin(Math.PI * acc) * F * 0.045;
-            const yOff = y - bump;
             const solid = over
               ? fg
               : interpolateColors(arc, [0, 1], [fg, c.dim]);
@@ -490,7 +511,7 @@ export function AnagramShuffle({
                   left: 0,
                   top: -ASC * F,
                   opacity,
-                  transform: `translate(${x}px, ${yOff}px) scale(${scale})`,
+                  transform: `translate(${x}px, ${yOff}px) scale(${scale})${glide(moving)}`,
                   transformOrigin: `0px ${ASC * F}px`,
                 }}
               >

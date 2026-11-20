@@ -54,6 +54,14 @@ const ramp = (f: number, start: number, dur: number, easing = ENTER) =>
 
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
 
+// Layout rounds a box and a baseline to whole pixels, so anything eased by
+// `left`/`top` clicks along pixel by pixel. Movers below are laid out where
+// they land and travel there by transform, dropped once under 1/1000px.
+const shift = (dx: number, dy: number) =>
+  Math.abs(dx) > 1e-3 || Math.abs(dy) > 1e-3
+    ? `translate(${dx}px, ${dy}px) `
+    : "";
+
 function FileTile({
   kind,
   accent,
@@ -372,8 +380,9 @@ export function DropUpload({
                 position: "absolute",
                 left: 40,
                 right: 40,
-                top: titleTop,
+                top: titleTop1,
                 height: titleSize * 1.25,
+                transform: shift(0, titleTop - titleTop1) || undefined,
                 overflow: "hidden",
                 textAlign: "center",
               }}
@@ -395,15 +404,15 @@ export function DropUpload({
             <div
               style={{
                 position: "absolute",
-                left: zL,
-                top: zT,
+                left: cx - rowW / 2,
+                top: cy - rowH / 2,
                 width: zW,
                 height: zH,
                 borderRadius: radius,
                 background: `linear-gradient(${tint}, ${tint}), color-mix(in oklab, ${base} ${Math.round(mix(dark ? 58 : 52, 100, solid))}%, transparent)`,
                 boxShadow: rowShadow(solid),
                 opacity: ramp(frame, -6, 8),
-                transform: `translateY(${mix(60, 0, zoneIn)}px) scale(${mix(0.94, 1, zoneIn) * (1 + breathe + dropPunch)})`,
+                transform: `${shift(zL - (cx - rowW / 2), zT - (cy - rowH / 2))}translateY(${mix(60, 0, zoneIn)}px) scale(${mix(0.94, 1, zoneIn) * (1 + breathe + dropPunch)})`,
                 overflow: "hidden",
               }}
             >
@@ -722,9 +731,9 @@ export function DropUpload({
             <div
               style={{
                 position: "absolute",
-                left: tx - tileW / 2,
-                top: ty - (tileW * 1.26) / 2,
-                transform: `rotate(${rot}deg) scale(${tileScale})`,
+                left: iconX - tileW / 2,
+                top: iconY - (tileW * 1.26) / 2,
+                transform: `${shift(tx - iconX, ty - iconY)}rotate(${rot}deg) scale(${tileScale})`,
                 filter: [
                   tileBlur > 0.3 ? `blur(${tileBlur}px)` : "",
                   `drop-shadow(0 ${mix(4, 34, shadowAmt)}px ${mix(6, 36, shadowAmt)}px rgba(4,6,30,${dark ? 0.55 : 0.22}))`,

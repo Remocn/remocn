@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const figtree = loadFigtree("normal", {
   weights: ["500"],
@@ -217,6 +218,7 @@ export function LessMore({
   speed = 1,
   theme = "dark",
 }: LessMoreProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -279,62 +281,90 @@ export function LessMore({
 
   const drainStep = n1 > 1 ? DRAIN_SPREAD / (n1 - 1) : 0;
   const growStep = n2 > 1 ? DRAIN_SPREAD / (n2 - 1) : 0;
-  const shrink = chars[0].map((_, i) =>
-    interpolate(
-      t,
-      [swapAt + i * drainStep, swapAt + i * drainStep + DRAIN_LEN],
-      [0, 1],
-      { ...CLAMP, easing: EASE_IO },
-    ),
-  );
-  const grow = chars[1].map((_, j) =>
-    spring({
-      frame: t - (swapAt + 3 + j * growStep),
-      fps,
-      config: { damping: 20, stiffness: 120, mass: 0.9 },
-    }),
-  );
-
-  const sizes = [
-    shrink.map((p) => M + (S - M) * p),
-    grow.map((p) => M + (B - M) * p),
-  ];
-  const placed = rows.map((r) => {
-    const xs: number[] = [];
-    let x = 0;
-    let max = 0;
-    for (let i = r.from; i < r.to; i++) {
-      const sz = sizes[r.group][i];
-      xs.push(x);
-      x += m.adv[r.group][i] * sz + trackFor(sz, S, B) * sz;
-      max = Math.max(max, sz);
-    }
-    return { xs, max };
-  });
-  const bases: number[] = [];
-  let y = marginY;
-  placed.forEach((p, k) => {
-    if (k > 0) {
-      const prev = placed[k - 1].max;
-      y += k === 1 ? 0.36 * prev + 0.1 * p.max : 0.24 * prev + 0.02 * p.max;
-    }
-    y += m.cap * p.max;
-    bases.push(y);
-  });
-
   const riseGap = Math.min(RISE_GAP, RISE_SPAN / Math.max(1, n1, n2));
   const riseEnd = (row: number, len: number) =>
     RISE_AT + row * LINE_GAP + (len - 1) * riseGap + RISE_LEN;
-  const rise = (row: number, i: number) =>
-    interpolate(
-      t,
-      [
-        RISE_AT + row * LINE_GAP + i * riseGap,
-        RISE_AT + row * LINE_GAP + i * riseGap + RISE_LEN,
-      ],
-      [0, 1],
-      { ...CLAMP, easing: EASE_OUT },
+  // Every glyph's place and size at `time`, so a row can tell whether it moves
+  // by comparing with the neighbouring frames.
+  const geometry = (time: number) => {
+    const shrink = chars[0].map((_, i) =>
+      interpolate(
+        time,
+        [swapAt + i * drainStep, swapAt + i * drainStep + DRAIN_LEN],
+        [0, 1],
+        { ...CLAMP, easing: EASE_IO },
+      ),
     );
+    const grow = chars[1].map((_, j) =>
+      spring({
+        frame: time - (swapAt + 3 + j * growStep),
+        fps,
+        config: { damping: 20, stiffness: 120, mass: 0.9 },
+      }),
+    );
+    const sizes = [
+      shrink.map((p) => M + (S - M) * p),
+      grow.map((p) => M + (B - M) * p),
+    ];
+    const placed = rows.map((r) => {
+      const xs: number[] = [];
+      let x = 0;
+      let max = 0;
+      for (let i = r.from; i < r.to; i++) {
+        const sz = sizes[r.group][i];
+        xs.push(x);
+        x += m.adv[r.group][i] * sz + trackFor(sz, S, B) * sz;
+        max = Math.max(max, sz);
+      }
+      return { xs, max };
+    });
+    const bases: number[] = [];
+    let y = marginY;
+    placed.forEach((p, k) => {
+      if (k > 0) {
+        const prev = placed[k - 1].max;
+        y += k === 1 ? 0.36 * prev + 0.1 * p.max : 0.24 * prev + 0.02 * p.max;
+      }
+      y += m.cap * p.max;
+      bases.push(y);
+    });
+    const rise = (row: number, i: number) =>
+      interpolate(
+        time,
+        [
+          RISE_AT + row * LINE_GAP + i * riseGap,
+          RISE_AT + row * LINE_GAP + i * riseGap + RISE_LEN,
+        ],
+        [0, 1],
+        { ...CLAMP, easing: EASE_OUT },
+      );
+    const glyphs = rows.map((r, k) => {
+      const out: { x: number; y: number; size: number }[] = [];
+      for (let i = r.from; i < r.to; i++) {
+        out.push({
+          x: marginX + placed[k].xs[i - r.from],
+          y: bases[k] + (1 - rise(k, i - r.from)) * M * 1.05,
+          size: sizes[r.group][i],
+        });
+      }
+      return out;
+    });
+    return { shrink, placed, bases, glyphs };
+  };
+  const now = geometry(t);
+  const before = geometry(t - speed);
+  const after = geometry(t + speed);
+  const rowMoves = (k: number) =>
+    now.glyphs[k].some((g, i) =>
+      [before.glyphs[k][i], after.glyphs[k][i]].some(
+        (o) =>
+          Math.abs(o.x - g.x) > 1e-3 ||
+          Math.abs(o.y - g.y) > 1e-3 ||
+          Math.abs(o.size - g.size) > 1e-3,
+      ),
+    );
+  const { shrink, placed, bases } = now;
+
   const fillStep = n2 > 1 ? FILL_SPREAD / (n2 - 1) : 0;
   const fill = chars[1].map((_, j) =>
     interpolate(
@@ -378,9 +408,7 @@ export function LessMore({
     const nodes: React.ReactNode[] = [];
     for (let i = r.from; i < r.to; i++) {
       const ch = chars[r.group][i];
-      const x = marginX + lay.xs[i - r.from];
-      const sz = sizes[r.group][i];
-      const gy = base + (1 - rise(k, i - r.from)) * M * 1.05;
+      const { x, y: gy, size: sz } = now.glyphs[k][i - r.from];
       if (r.group === 0) {
         const mix = interpolate(shrink[i], [0.15, 0.85], [0, 1], CLAMP);
         nodes.push(glyph(ch, x, gy, sz, fg, `i${i}`, 1 - mix));
@@ -419,7 +447,13 @@ export function LessMore({
           width={W}
           height={H}
           viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            // Text moved by its attributes clicks along pixel by pixel; SVG
+            // text can't carry the mark, so the drawing does while a row moves.
+            transform: glide(rows.some((_, k) => rowMoves(k))),
+          }}
           aria-hidden
         >
           {groups}

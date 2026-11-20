@@ -20,6 +20,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -261,6 +262,7 @@ export function WordPullback({
   ground,
   groundParams,
 }: WordPullbackProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -434,13 +436,26 @@ export function WordPullback({
     const Cp = cam(frame - 1);
     const vel = Math.abs(C.lnZ - Cp.lnZ);
     const screenBlur = Math.min(8, vel * 30);
-    const push = interpolate(
-      frame,
-      [BEAT.pull2 + BEAT.pull2Len, durationInFrames],
-      [1, 1.03],
-      CLAMP,
-    );
+    const pushAt = (f: number) =>
+      interpolate(
+        f,
+        [BEAT.pull2 + BEAT.pull2Len, durationInFrames],
+        [1, 1.03],
+        CLAMP,
+      );
+    const push = pushAt(frame);
     const Z = Math.exp(C.lnZ) * push;
+    // Where the frame's corner lands in the layer at frame `f`; the camera
+    // moves while that point does.
+    const corner = (f: number) => {
+      const q = cam(f);
+      const z = Math.exp(q.lnZ) * pushAt(f);
+      return [q.fx * z, q.fy * z, z * W * 0.5];
+    };
+    const here = corner(frame);
+    const camMoving = [corner(frame - speed), corner(frame + speed)].some((o) =>
+      o.some((v, i) => Math.abs(v - here[i]) > 1e-3),
+    );
     const depth = Math.max(0, Math.min(1, (Z - 1) / Math.max(0.001, z0 - 1)));
 
     const reveal = Math.min(1, typedPx / Math.max(1, accentPx) + 0.015);
@@ -520,7 +535,12 @@ export function WordPullback({
           width: W,
           height: H,
           transformOrigin: "0 0",
-          transform: `translate(${cx}px, ${cy}px) scale(${(Z * scale).toFixed(5)}) translate(${(-C.fx).toFixed(3)}px, ${(-C.fy).toFixed(3)}px)`,
+          // The tilt pivots on the frame's centre, not on the far-off origin.
+          // Rounding is kept only at rest: a stepped scale or focus moves
+          // text in steps of its own while the camera travels.
+          transform: camMoving
+            ? `translate(${cx}px, ${cy}px)${glide(true)} scale(${Z * scale}) translate(${-C.fx}px, ${-C.fy}px)`
+            : `translate(${cx}px, ${cy}px) scale(${(Z * scale).toFixed(5)}) translate(${(-C.fx).toFixed(3)}px, ${(-C.fy).toFixed(3)}px)`,
           opacity,
         }}
       >

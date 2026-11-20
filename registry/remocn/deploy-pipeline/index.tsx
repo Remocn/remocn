@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -267,6 +268,8 @@ function formatTime(ms: number) {
   return `${p(m)}:${p(s)}.${p(x, 3)}`;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -307,6 +310,7 @@ export function DeployPipeline({
   ground,
   groundParams,
 }: DeployPipelineProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width;
@@ -315,8 +319,10 @@ export function DeployPipeline({
   const u = Math.min(width / SW, height / SH);
   const base = theme === "dark" ? DARK : LIGHT;
   const c: Palette = { ...base, text: ink ?? base.text };
+  const spAt = (f: number, at: number, config: Partial<typeof CARD>) =>
+    spring({ frame: f - at, fps, config });
   const sp = (at: number, config: Partial<typeof CARD>) =>
-    spring({ frame: frame - at, fps, config });
+    spAt(frame, at, config);
   const ease = (a: number, b: number, easing = ENTER) =>
     interpolate(frame, [a, b], [0, 1], { ...CL, easing });
 
@@ -354,10 +360,17 @@ export function DeployPipeline({
 
   const win = sp(0, HEAVY);
   const winFade = ease(0, 12);
-  const cam = interpolate(frame, [0, 180], [1, 1.035], {
-    ...CL,
-    easing: CAMERA,
-  });
+  const camAt = (f: number) =>
+    interpolate(f, [0, 180], [1, 1.035], { ...CL, easing: CAMERA });
+  const cam = camAt(frame);
+  // The window rises on a spring and the camera pushes in on it for the whole
+  // build, so its tilt covers every line inside.
+  const winAt = (f: number) =>
+    (1 - spAt(f, 0, HEAVY)) * 60 +
+    (0.96 + 0.04 * spAt(f, 0, HEAVY)) * camAt(f) * (WIN.h / 2);
+  const winMoving =
+    Math.abs(winAt(frame + 1) - winAt(frame)) > 1e-3 ||
+    Math.abs(winAt(frame) - winAt(frame - 1)) > 1e-3;
   const headIn = ease(4, 20);
 
   const appear = ats.map((t) => ease(t, t + 6));
@@ -518,7 +531,7 @@ export function DeployPipeline({
                 lineHeight: 1.04,
                 color: ink ?? (c.dark ? "#F2F4F8" : "#16181D"),
                 opacity: headIn,
-                transform: `translateY(${(1 - headIn) * 18}px)`,
+                transform: `translateY(${(1 - headIn) * 18}px)${glide(midway(headIn))}`,
                 fontVariantNumeric: "tabular-nums",
                 whiteSpace: "nowrap",
               }}
@@ -528,7 +541,7 @@ export function DeployPipeline({
                   style={{
                     display: "inline-block",
                     opacity: statusSwap,
-                    transform: `translateY(${(1 - statusSwap) * 14}px)`,
+                    transform: `translateY(${(1 - statusSwap) * 14}px)${glide(midway(statusSwap) && !midway(headIn))}`,
                   }}
                 >
                   Live in {buildSeconds}s
@@ -557,7 +570,7 @@ export function DeployPipeline({
               boxShadow: c.depth,
               opacity: winFade,
               transformOrigin: "50% 50%",
-              transform: `translateY(${(1 - win) * 60}px) scale(${(0.96 + 0.04 * win) * cam})`,
+              transform: `translateY(${(1 - win) * 60}px) scale(${(0.96 + 0.04 * win) * cam})${glide(winMoving)}`,
             }}
           >
             <div

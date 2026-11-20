@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: MONO_FAMILY } = loadMono();
 
@@ -71,7 +72,11 @@ function DigitColumn({
   fontSize: number;
   opacity: number;
 }) {
+  const glide = useGlide();
   const cellHeight = fontSize * 1.1;
+  // A slowly rolling strip would click along pixel by pixel; the strip's
+  // transform is marked so its digits lean while it rolls.
+  const rolling = Math.abs(value - Math.round(value)) > 1e-6;
   return (
     <span
       style={{
@@ -88,7 +93,7 @@ function DigitColumn({
         style={{
           display: "flex",
           flexDirection: "column",
-          translate: `0 ${-value * cellHeight}px`,
+          transform: `translateY(${-value * cellHeight}px)${glide(rolling)}`,
         }}
       >
         {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((d, i) => (

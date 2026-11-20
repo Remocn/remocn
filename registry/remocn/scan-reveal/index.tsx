@@ -233,12 +233,27 @@ export function ScanReveal({
   const y0 = capTop - 0.1 * H;
   const y1 = yS + 0.11 * H;
 
-  const down = SCAN(interpolate(t, [DOWN_AT, DOWN_END + late], [0, 1], CLAMP));
-  const up = RISE(interpolate(t, [UP_AT + late, UP_END + late], [0, 1], CLAMP));
+  const downAt = (f: number) =>
+    SCAN(interpolate(f, [DOWN_AT, DOWN_END + late], [0, 1], CLAMP));
+  const upAt = (f: number) =>
+    RISE(interpolate(f, [UP_AT + late, UP_END + late], [0, 1], CLAMP));
+  const down = downAt(t);
+  const up = upAt(t);
   const goingUp = t >= UP_AT + late;
   const downY = y0 + (y1 - y0) * down;
   const upY = y1 + (yU - y1) * up;
   const lineY = goingUp ? upY : downY;
+  // Layout rounds a box edge to whole pixels, so the scan line eased by `top`
+  // clicks along pixel by pixel. While it travels, layout holds it where the
+  // pass ends and the travel is a transform, exactly 0 at that end; at rest
+  // it keeps the plain layout it always had.
+  const lineYAt = (f: number) =>
+    f >= UP_AT + late ? y1 + (yU - y1) * upAt(f) : y0 + (y1 - y0) * downAt(f);
+  const lineMoving =
+    Math.abs(lineYAt(t + speed) - lineY) > 1 / 64 ||
+    Math.abs(lineY - lineYAt(t - speed)) > 1 / 64;
+  const lineRest = goingUp ? yU : y1;
+  const lineTravel = goingUp ? (y1 - yU) * (1 - up) : (y0 - y1) * (1 - down);
 
   const lineIn = OUT(interpolate(t, [LINE_IN_AT, LINE_IN_END], [0, 1], CLAMP));
   const park = PARK(
@@ -438,8 +453,10 @@ export function ScanReveal({
                 position: "absolute",
                 left: "50%",
                 width: lineWidth,
-                transform: "translateX(-50%)",
-                top: lineY - (yB - BASE * s) - lw / 2,
+                transform: lineMoving
+                  ? `translateY(${lineTravel}px) translateX(-50%)`
+                  : "translateX(-50%)",
+                top: (lineMoving ? lineRest : lineY) - (yB - BASE * s) - lw / 2,
                 height: lw,
                 background: accent,
               }}

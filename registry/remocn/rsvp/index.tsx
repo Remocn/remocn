@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const lexend = loadFont("normal", {
   weights: ["300", "400", "500"],
@@ -164,6 +165,8 @@ const DEFAULT_FIELDS: RsvpField[] = [
   { label: "Bring", value: "The story. We brought the parts." },
 ];
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -196,6 +199,7 @@ export function Rsvp({
   speed = 1,
   theme = "dark",
 }: RsvpProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const Tt = durationInFrames * speed;
@@ -331,7 +335,7 @@ export function Rsvp({
               style={{
                 display: "inline-block",
                 opacity: e,
-                transform: `translateY(${((1 - e) * fH * 0.3).toFixed(2)}px)`,
+                transform: `translateY(${((1 - e) * fH * 0.3).toFixed(2)}px)${glide(midway(e))}`,
               }}
             >
               {word}
@@ -379,7 +383,7 @@ export function Rsvp({
             fontWeight: 400,
             color: hi,
             opacity: le,
-            transform: `translateY(${((1 - le) * fR * 0.5).toFixed(2)}px)`,
+            transform: `translateY(${((1 - le) * fR * 0.5).toFixed(2)}px)${glide(midway(le))}`,
           }}
         >
           {row.label}
@@ -412,7 +416,7 @@ export function Rsvp({
                         style={{
                           display: "inline-block",
                           opacity: e,
-                          transform: `translateY(${((1 - e) * fR * 0.55).toFixed(2)}px)`,
+                          transform: `translateY(${((1 - e) * fR * 0.55).toFixed(2)}px)${glide(midway(e))}`,
                         }}
                       >
                         {word}

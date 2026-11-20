@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["300", "400"],
@@ -129,6 +130,8 @@ function RemocnLogo({ fontSize, color }: { fontSize: number; color: string }) {
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -162,6 +165,7 @@ export function DepthHeadline({
   speed = 1,
   theme = "dark",
 }: DepthHeadlineProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -225,7 +229,7 @@ export function DepthHeadline({
             letterSpacing: `${tracking}em`,
             color: fg,
             whiteSpace: "nowrap",
-            transform: `translate(${headX}px, calc(-50% + ${headY}px)) scale(${headScale})`,
+            transform: `translate(${headX}px, calc(-50% + ${headY}px)) scale(${headScale})${glide(midway(open) || midway(push))}`,
             transformOrigin: "50% 60%",
           }}
         >
@@ -272,7 +276,7 @@ export function DepthHeadline({
               alignItems: "baseline",
               gap: H * 0.018,
               opacity: captionIn,
-              transform: `translateY(${(1 - captionIn) * H * 0.01}px)`,
+              transform: `translateY(${(1 - captionIn) * H * 0.01}px)${glide(midway(captionIn))}`,
             }}
           >
             {showLogo

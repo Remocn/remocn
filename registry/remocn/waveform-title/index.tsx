@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadSans("normal", {
   weights: ["500"],
@@ -142,6 +143,8 @@ function Grain({ opacity }: { opacity: number }) {
 
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -172,6 +175,7 @@ export function WaveformTitle({
   speed = 1,
   theme = "dark",
 }: WaveformTitleProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const u = height / 720;
@@ -362,7 +366,7 @@ export function WaveformTitle({
                       style={{
                         display: "inline-block",
                         marginRight: i < words.length - 1 ? "0.22em" : 0,
-                        transform: `translateY(${(1 - k) * fontSize * 1.6}px)`,
+                        transform: `translateY(${(1 - k) * fontSize * 1.6}px)${glide(midway(k))}`,
                         ...(isSerif
                           ? {
                               fontFamily: serif,

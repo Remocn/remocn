@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -155,6 +156,7 @@ export function ToolbarUnfurl({
   ground,
   groundParams,
 }: ToolbarUnfurlProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const dark = theme === "dark";
@@ -260,12 +262,27 @@ export function ToolbarUnfurl({
   });
   const finalEnter = ramp(frame, B.caption, 14);
 
-  const push = 1 + 0.04 * ramp(frame, 0, B.end, SWAY);
-  const lift = Math.min(
-    1,
-    spring({ frame: frame - B.retract - 2, fps, config: HEAVY }),
-  );
-  const groupY = mix(0, portrait ? 0 : 24, lift);
+  const groupAt = (f: number) => {
+    const lift = Math.min(
+      1,
+      spring({ frame: f - B.retract - 2, fps, config: HEAVY }),
+    );
+    return {
+      lift,
+      push: 1 + 0.04 * ramp(f, 0, B.end, SWAY),
+      y: mix(0, portrait ? 0 : 24, lift),
+    };
+  };
+  const { lift, push, y: groupY } = groupAt(frame);
+  // The push scales about the toolbar; the caption sits a few hundred px off
+  // that origin, so weigh the scale step by that distance.
+  const groupMoving = [frame - speed, frame + speed].some((f) => {
+    const g = groupAt(f);
+    return (
+      Math.abs(g.push - push) * stageH * 0.5 > 1e-3 ||
+      Math.abs(g.y - groupY) > 1e-3
+    );
+  });
   const fold = 1 + 0.16 * lift;
 
   const cursorPts = [
@@ -304,6 +321,15 @@ export function ToolbarUnfurl({
       cy = mix(pa.y, pb.y, t) + dx * bow;
     }
   }
+  // The cursor is laid out where it comes to rest and travels by transform:
+  // layout rounds a box to whole pixels, so `left`/`top` clicked it along.
+  const restPt = resolvePt(cursorPts[cursorPts.length - 1]);
+  const cursorDx = cx - restPt.x;
+  const cursorDy = cy - restPt.y;
+  const cursorTravel =
+    Math.abs(cursorDx) < 1e-3 && Math.abs(cursorDy) < 1e-3
+      ? ""
+      : `translate(${cursorDx}px, ${cursorDy}px) `;
   const clicks = [B.disc, ...B.hops];
   const pressAt = (c: number) =>
     Math.max(
@@ -372,7 +398,7 @@ export function ToolbarUnfurl({
             style={{
               position: "absolute",
               inset: 0,
-              transform: `scale(${push}) translateY(${groupY}px)`,
+              transform: `scale(${push}) translateY(${groupY}px)${glide(groupMoving)}`,
               transformOrigin: `50% ${(centerY / stageH) * 100}%`,
             }}
           >
@@ -461,7 +487,9 @@ export function ToolbarUnfurl({
                 <div
                   style={{
                     position: "absolute",
-                    left: centerX + pillLen / 2 - pad,
+                    // Pinned to the closed pill's edge; the last of the
+                    // retract rides in as a transform, not as `left`.
+                    left: centerX + (pillLen - span) / 2 - pad,
                     top: centerY - slot / 2,
                     width: caretW,
                     height: slot,
@@ -469,7 +497,7 @@ export function ToolbarUnfurl({
                     alignItems: "center",
                     justifyContent: "center",
                     opacity: caretIn,
-                    transform: `translateY(${mix(-6, 0, caretIn)}px) scale(${punchS})`,
+                    transform: `${span / 2 < 1e-3 ? "" : `translateX(${span / 2}px) `}translateY(${mix(-6, 0, caretIn)}px) scale(${punchS})`,
                   }}
                 >
                   <svg
@@ -566,10 +594,10 @@ export function ToolbarUnfurl({
               <div
                 style={{
                   position: "absolute",
-                  left: cx - 6,
-                  top: cy - 4,
+                  left: restPt.x - 6,
+                  top: restPt.y - 4,
                   opacity: cursorFade * ramp(frame, -4, 6, LIGHT),
-                  transform: `scale(${1 - 0.04 * press})`,
+                  transform: `${cursorTravel}scale(${1 - 0.04 * press})`,
                   transformOrigin: "20% 15%",
                 }}
               >

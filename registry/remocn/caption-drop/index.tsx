@@ -9,6 +9,7 @@ import {
   groupCaptionWords,
   useCaptions,
 } from "@/lib/remocn/caption-core";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface CaptionDropProps extends CaptionBaseProps {
   bounce?: number;
@@ -41,6 +42,7 @@ export function CaptionDrop({
   className,
 }: CaptionDropProps) {
   const { fps } = useVideoConfig();
+  const glide = useGlide();
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
@@ -51,9 +53,6 @@ export function CaptionDrop({
   const damping = interpolate(bounce, [0, 1], [20, 6], clamp);
   const words = groupCaptionWords(state.tokens);
   const exitWindow = getExitWindowMs(state, EXIT_MS);
-  const exitElapsed = state.endsInSilence
-    ? Math.max(0, exitWindow - state.untilEndMs)
-    : 0;
   const stagger = Math.min(EXIT_STAGGER_MS, exitWindow * 0.4);
   const fallSpan = Math.max(1, exitWindow - stagger);
 
@@ -70,25 +69,43 @@ export function CaptionDrop({
     >
       {words.map((word, w) => {
         const first = word[0];
-        const sinceMs = state.timeMs - first.token.fromMs;
+        const delay = words.length > 1 ? (w / (words.length - 1)) * stagger : 0;
+        // The word's fall, `df` frames away from now, so the glide mark
+        // below can tell motion from rest.
+        const at = (df: number) => {
+          const ms = (df * 1000) / fps;
+          const sinceMs = state.timeMs + ms - first.token.fromMs;
+          const landed =
+            sinceMs >= 0
+              ? spring({
+                  frame: (sinceMs / 1000) * fps,
+                  fps,
+                  config: { damping, stiffness: 180, mass: 0.7 },
+                })
+              : 0;
+          const elapsed = state.endsInSilence
+            ? Math.max(0, exitWindow - state.untilEndMs + ms)
+            : 0;
+          const out = state.endsInSilence
+            ? Math.min(1, Math.max(0, (elapsed - delay) / fallSpan))
+            : 0;
+          return { sinceMs, landed, out };
+        };
+        const { sinceMs, landed, out } = at(0);
         const arrived = sinceMs >= 0;
-        const landed = arrived
-          ? spring({
-              frame: (sinceMs / 1000) * fps,
-              fps,
-              config: { damping, stiffness: 180, mass: 0.7 },
-            })
-          : 0;
         const fadeIn = arrived
           ? interpolate(sinceMs, [0, FADE_IN_MS], [0, 1], clamp)
           : 0;
         const tilt =
           (random(`${state.pageIndex}-${first.index}-tilt`) * 2 - 1) *
           MAX_TILT_DEG;
-        const delay = words.length > 1 ? (w / (words.length - 1)) * stagger : 0;
-        const out = state.endsInSilence
-          ? Math.min(1, Math.max(0, (exitElapsed - delay) / fallSpan))
-          : 0;
+        const yPx = (p: { landed: number; out: number }) =>
+          (-(1 - p.landed) * FALL_EM + p.out * p.out * EXIT_FALL_EM) * fontSize;
+        // Any step counts: a spring's tail creeps under a thousandth of a
+        // pixel a frame and still crosses a pixel now and then.
+        const moving =
+          Math.abs(yPx(at(1)) - yPx(at(0))) > 1e-7 ||
+          Math.abs(yPx(at(0)) - yPx(at(-1))) > 1e-7;
         const gravity = out * out;
         const y = -(1 - landed) * FALL_EM + gravity * EXIT_FALL_EM;
         const rotate = tilt * (1 - landed) - tilt * 0.6 * gravity;
@@ -100,7 +117,7 @@ export function CaptionDrop({
                 display: "inline-block",
                 whiteSpace: "nowrap",
                 opacity: fadeIn * (1 - out ** 1.5),
-                transform: `translateY(${y}em) rotate(${rotate}deg)`,
+                transform: `translateY(${y}em) rotate(${rotate}deg)${glide(moving)}`,
                 transformOrigin: "50% 100%",
                 textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
               }}

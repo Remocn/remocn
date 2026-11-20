@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -152,6 +153,7 @@ export function CandleRally({
   speed = 1,
   theme = "dark",
 }: CandleRallyProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -224,20 +226,25 @@ export function CandleRally({
     });
     return m;
   };
-  let hiSum = 0;
-  for (let k = 0; k < 6; k++) {
-    const top = topAt(t - k);
-    hiSum += Math.max(HI_MIN, top + (top - LO) * 0.12);
-  }
-  const topNow = topAt(t);
-  const hi = Math.max(hiSum / 6, topNow + (topNow - LO) * 0.05);
-  const lo = LO - (hi - HI_MIN) * 0.03;
-  const yOf = (v: number) => H * 0.88 - ((v - lo) / (hi - lo)) * H * 0.76;
+  const yOfAt = (tt: number) => {
+    let hiSum = 0;
+    for (let k = 0; k < 6; k++) {
+      const top = topAt(tt - k);
+      hiSum += Math.max(HI_MIN, top + (top - LO) * 0.12);
+    }
+    const topNow = topAt(tt);
+    const hi = Math.max(hiSum / 6, topNow + (topNow - LO) * 0.05);
+    const lo = LO - (hi - HI_MIN) * 0.03;
+    return (v: number) => H * 0.88 - ((v - lo) / (hi - lo)) * H * 0.76;
+  };
+  const yOf = yOfAt(t);
   // the camera pulls back as the rally needs the room
-  const zx = interpolate(t, [0, RALLY_AT - 4, FINAL_AT + 16], [1.5, 1.42, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const zxAt = (tt: number) =>
+    interpolate(tt, [0, RALLY_AT - 4, FINAL_AT + 16], [1.5, 1.42, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const zx = zxAt(t);
 
   const slam1 = interpolate(t, [SLAM, SLAM + 7], [0, 1], {
     ...CLAMP,
@@ -252,13 +259,26 @@ export function CandleRally({
     easing: EASE_IO,
   });
   // one impact: the chart dips on the slam and settles
-  const hit =
-    interpolate(t, [SLAM + 1, SLAM + 3, SLAM + 16], [0, 1, 0], {
+  const hitAt = (tt: number) =>
+    interpolate(tt, [SLAM + 1, SLAM + 3, SLAM + 16], [0, 1, 0], {
       ...CLAMP,
       easing: EASE_OUT,
     }) *
     10 *
     u;
+  const hit = hitAt(t);
+  // Whether `value(f)`, in px, moves by more than a thousandth of a pixel
+  // into or out of this frame. The range pumps through a box filter and the
+  // eases have flat tails, so there is no single progress to test.
+  const moves = (value: (f: number) => number) =>
+    Math.abs(value(t) - value(t - speed)) > 1e-3 ||
+    Math.abs(value(t + speed) - value(t)) > 1e-3;
+  // The axis labels ride the auto-scaling range and the slam's dip as SVG
+  // attributes, so the mark sits on the drawing's own style and leans it
+  // while either moves.
+  const axisMoving = [60, 120, prevHigh].some((v) =>
+    moves((f) => yOfAt(f)(v) + hitAt(f)),
+  );
 
   // last candle's live close, the tag reads it
   const fk = EASE_PUSH(Math.max(0, Math.min(1, (t - FINAL_AT) / FINAL_LEN)));
@@ -349,12 +369,35 @@ export function CandleRally({
     );
   };
 
-  const fx = cx(fi);
-  const fw = cw(fi);
-  const wickTop = yOf(
-    Math.max(finalCandle[0], live) +
-      (finalCandle[2] - Math.max(finalCandle[0], finalCandle[1])) * fk,
-  );
+  // The tag rides the last wick. Layout rounds a box and a baseline to whole
+  // pixels, so it is laid out where it settles and the ride is a transform,
+  // computed by the same function at both ends so it is exactly 0 at rest.
+  const tagAt = (tt: number) => {
+    const z = zxAt(tt);
+    const k = EASE_PUSH(Math.max(0, Math.min(1, (tt - FINAL_AT) / FINAL_LEN)));
+    const x =
+      W * (0.065 + (xs[fi] - 0.065) * fit * z) -
+      (W * widths[fi] * fit * z) / 2 -
+      14 * u;
+    const y =
+      yOfAt(tt)(
+        Math.max(
+          finalCandle[0],
+          finalCandle[0] + (finalCandle[1] - finalCandle[0]) * k,
+        ) +
+          (finalCandle[2] - Math.max(finalCandle[0], finalCandle[1])) * k,
+      ) + hitAt(tt);
+    return { x, y };
+  };
+  const tag = tagAt(t);
+  const tagRest = tagAt(Math.max(FINAL_AT + FINAL_LEN, SLAM + 16) + 8);
+  const tagDx = tag.x - tagRest.x;
+  const tagDy = tag.y - tagRest.y;
+  const tagRide =
+    Math.abs(tagDx) < 1e-3 && Math.abs(tagDy) < 1e-3
+      ? ""
+      : `translate(${tagDx}px, ${tagDy}px) `;
+  const tagMark = glide(moves((f) => tagAt(f).y));
   const tagIn = interpolate(t, [FINAL_AT + 2, FINAL_AT + 10], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
@@ -386,7 +429,11 @@ export function CandleRally({
           width={W}
           height={H}
           viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: glide(axisMoving),
+          }}
           role="img"
           aria-label={`${symbol} candles rally to ${price.toFixed(2)}, ${headline} ${headline2}`}
         >
@@ -474,10 +521,10 @@ export function CandleRally({
         <div
           style={{
             position: "absolute",
-            left: fx - fw / 2 - 14 * u,
-            top: wickTop + hit,
+            left: tagRest.x,
+            top: tagRest.y,
             height: tagH,
-            transform: `translate(-100%, -50%) translateX(${(1 - tagIn) * 16 * u}px)`,
+            transform: `${tagRide}translate(-100%, -50%) translateX(${(1 - tagIn) * 16 * u}px)${tagMark}`,
             opacity: tagIn,
             display: "flex",
             alignItems: "center",
@@ -527,7 +574,7 @@ export function CandleRally({
           <div
             style={{
               opacity: Math.min(1, slam1 * 2.5),
-              transform: `scale(${1.28 - 0.28 * slam1})`,
+              transform: `scale(${1.28 - 0.28 * slam1})${glide(slam1 > 0 && slam1 < 1)}`,
               transformOrigin: "0% 60%",
             }}
           >
@@ -536,7 +583,7 @@ export function CandleRally({
           <div
             style={{
               opacity: Math.min(1, slam2 * 2.5),
-              transform: `scale(${1.28 - 0.28 * slam2})`,
+              transform: `scale(${1.28 - 0.28 * slam2})${glide(slam2 > 0 && slam2 < 1)}`,
               transformOrigin: "0% 60%",
             }}
           >

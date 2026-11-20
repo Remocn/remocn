@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -69,6 +70,12 @@ const ramp = (f: number, start: number, dur: number, easing = ENTER) =>
 
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+// For a spring that overshoots, where "between 0 and 1" says nothing: it moves
+// while it differs from either neighbouring frame.
+const stirs = (at: (f: number) => number, f: number) =>
+  Math.abs(at(f + 1) - at(f)) > 1e-5 || Math.abs(at(f) - at(f - 1)) > 1e-5;
+
 const fmt = (n: number) => Math.round(n).toLocaleString("en-US");
 
 function chartPoints(n: number) {
@@ -96,11 +103,12 @@ function Rise({
   style?: CSSProperties;
   dist?: number;
 }) {
+  const glide = useGlide();
   return (
     <div style={{ position: "absolute", overflow: "hidden", ...style }}>
       <div
         style={{
-          transform: `translateY(${(1 - t) * dist}px)`,
+          transform: `translateY(${(1 - t) * dist}px)${glide(midway(t))}`,
           opacity: Math.min(1, t * 1.6),
           filter: t < 0.98 ? `blur(${(1 - t) * 3}px)` : undefined,
         }}
@@ -217,6 +225,7 @@ export function DeviceGrowsAround({
   ground,
   groundParams,
 }: DeviceGrowsAroundProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const dark = theme === "dark";
@@ -282,17 +291,29 @@ export function DeviceGrowsAround({
         a1: [cx, 360],
       };
 
-  const g = spring({ frame: frame - B.grow, fps, config: HEAVY });
   const p = ramp(frame, B.push, 36, CAM);
   const pPrev = ramp(frame - 1, B.push, 36, CAM);
-  const drift = ramp(frame, B.push + 36, B.end - B.push - 36, MOVE);
-  const sA = Math.exp(mix(Math.log(K.sT), Math.log(K.s0), g));
-  const s =
-    Math.exp(mix(Math.log(sA), Math.log(K.s1), p)) * (1 + 0.025 * drift);
-  const fx = mix(mix(LX, K.f0[0], g), K.f1[0], p);
-  const fy = mix(mix(LY, K.f0[1], g), K.f1[1], p);
-  const ax = mix(mix(K.aT[0], K.a0[0], g), K.a1[0], p);
-  const ay = mix(mix(K.aT[1], K.a0[1], g), K.a1[1], p);
+  const camAt = (f: number) => {
+    const g = spring({ frame: f - B.grow, fps, config: HEAVY });
+    const push = ramp(f, B.push, 36, CAM);
+    const drift = ramp(f, B.push + 36, B.end - B.push - 36, MOVE);
+    const sA = Math.exp(mix(Math.log(K.sT), Math.log(K.s0), g));
+    const s =
+      Math.exp(mix(Math.log(sA), Math.log(K.s1), push)) * (1 + 0.025 * drift);
+    const fx = mix(mix(LX, K.f0[0], g), K.f1[0], push);
+    const fy = mix(mix(LY, K.f0[1], g), K.f1[1], push);
+    const ax = mix(mix(K.aT[0], K.a0[0], g), K.a1[0], push);
+    const ay = mix(mix(K.aT[1], K.a0[1], g), K.a1[1], push);
+    return { s, x: ax - fx * s, y: ay - fy * s };
+  };
+  const cam = camAt(frame);
+  // The camera chains a spring, a push and a drift, and its travel runs to
+  // over a thousand pixels, so "is it moving" is read off the result: the
+  // tail of the spring still carries the text across pixel boundaries long
+  // after its progress looks settled.
+  const camMoving = [camAt(frame - 1), camAt(frame + 1)].some(
+    (o) => Math.abs(o.y - cam.y) > 1e-4 || Math.abs(o.s - cam.s) > 1e-7,
+  );
   const camBlur = Math.min(3, Math.abs(p - pPrev) * 70);
 
   const bezelIn = ramp(frame, B.grow, 18, SOFT);
@@ -306,17 +327,22 @@ export function DeviceGrowsAround({
   const bezelOut = ramp(frame, B.push + 18, 16, MOVE);
 
   const avatarIn = spring({ frame: frame - B.avatar, fps, config: CHIP });
-  const badgeIn = spring({ frame: frame - badgeAt, fps, config: CHIP });
+  const badgeSpring = (f: number) =>
+    spring({ frame: f - badgeAt, fps, config: CHIP });
+  const badgeIn = badgeSpring(frame);
   const statusIn = ramp(frame, B.status, 12);
   const iconsIn = spring({ frame: frame - B.icons, fps, config: CHIP });
   const priceIn = ramp(frame, B.price, 14);
   const deltaIn = ramp(frame, B.delta, 14);
   const chartIn = ramp(frame, B.chart, 30, MOVE);
-  const cardIn = spring({ frame: frame - B.card, fps, config: CARD });
+  const cardAt = (f: number) =>
+    spring({ frame: f - B.card, fps, config: CARD });
+  const cardIn = cardAt(frame);
   const count = ramp(frame, B.card, B.lock - B.card, MOVE);
   const lockTick = spring({ frame: frame - B.lock, fps, config: CHIP });
   const tick =
     frame >= B.lock ? 1 + 0.05 * Math.sin(Math.min(1, lockTick) * Math.PI) : 1;
+  const ticking = Math.abs(tick - 1) > 1e-5;
 
   const caretOn =
     frame < subEnd + 6
@@ -429,7 +455,9 @@ export function DeviceGrowsAround({
               width: PW,
               height: PH,
               transformOrigin: "0 0",
-              transform: `translate(${ax - fx * s}px, ${ay - fy * s}px) scale(${s})`,
+              // The whole phone rides this camera, so one tilt here covers
+              // every line of copy on the screen while the camera travels.
+              transform: `translate(${cam.x}px, ${cam.y}px) scale(${cam.s})${glide(camMoving)}`,
             }}
           >
             <div
@@ -689,7 +717,7 @@ export function DeviceGrowsAround({
                           ? "rgba(90,115,255,0.2)"
                           : "rgba(59,91,253,0.1)",
                         opacity: Math.min(1, Math.max(0, badgeIn)),
-                        transform: `scale(${Math.max(0, badgeIn)})`,
+                        transform: `scale(${Math.max(0, badgeIn)})${glide(stirs(badgeSpring, frame))}`,
                       }}
                     >
                       {badge}
@@ -874,7 +902,7 @@ export function DeviceGrowsAround({
                             ? `inset 0 0 0 1px ${hair}`
                             : undefined,
                           opacity: tIn,
-                          transform: `translateY(${(1 - tIn) * 8}px)`,
+                          transform: `translateY(${(1 - tIn) * 8}px)${glide(midway(tIn))}`,
                         }}
                       >
                         {tb}
@@ -894,7 +922,7 @@ export function DeviceGrowsAround({
                     background: cardBg,
                     boxShadow: cardShadow,
                     opacity: Math.min(1, cardIn * 1.4),
-                    transform: `translateY(${(1 - cardIn) * 26}px)`,
+                    transform: `translateY(${(1 - cardIn) * 26}px)${glide(stirs(cardAt, frame))}`,
                   }}
                 >
                   <div
@@ -942,7 +970,7 @@ export function DeviceGrowsAround({
                         fontSize: 34,
                         letterSpacing: "-0.035em",
                         color: ink,
-                        transform: `scale(${tick})`,
+                        transform: `scale(${tick})${glide(ticking)}`,
                         transformOrigin: "left center",
                       }}
                     >
@@ -953,7 +981,7 @@ export function DeviceGrowsAround({
                         fontSize: 20,
                         letterSpacing: "-0.02em",
                         color: green,
-                        transform: `scale(${tick})`,
+                        transform: `scale(${tick})${glide(ticking)}`,
                         transformOrigin: "right center",
                       }}
                     >
@@ -1039,7 +1067,7 @@ export function DeviceGrowsAround({
                         style={{
                           height: 52,
                           opacity: rIn,
-                          transform: `translateY(${(1 - rIn) * 10}px)`,
+                          transform: `translateY(${(1 - rIn) * 10}px)${glide(midway(rIn))}`,
                         }}
                       >
                         <div

@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const manrope = loadManrope("normal", {
   weights: ["400", "500", "600"],
@@ -102,6 +103,8 @@ function RemocnLogo({ fontSize, color }: { fontSize: number; color: string }) {
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
+
+const midway = (p: number) => p > 0 && p < 1;
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -279,6 +282,8 @@ export function CollabLockup({
   theme = "dark",
   speed = 1,
 }: CollabLockupProps) {
+  // `glide` is the names' travel below.
+  const tilt = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const u = H / 720;
@@ -413,7 +418,7 @@ export function CollabLockup({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${1 + push * 0.03})`,
+            transform: `scale(${1 + push * 0.03})${tilt(midway(push))}`,
             transformOrigin: `50% ${(baseline / H) * 100}%`,
           }}
         >

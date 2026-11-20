@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: GEIST } = loadGeist("normal", {
   weights: ["400", "500"],
@@ -211,6 +212,7 @@ const CONVERGE = 58;
 const HIT = 96;
 
 const OUT = Easing.bezier(0.22, 1, 0.36, 1);
+
 const INOUT = Easing.bezier(0.65, 0, 0.35, 1);
 
 function hash(n: number): number {
@@ -304,6 +306,7 @@ export function FeatureChipsFlow({
   speed = 1,
   theme = "dark",
 }: FeatureChipsFlowProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const hit = converge + HIT - CONVERGE;
   const { width: W, height: H, fps } = useVideoConfig();
@@ -542,6 +545,7 @@ export function FeatureChipsFlow({
     c: Placed,
     key: string,
     st: ReturnType<typeof stateAt>,
+    shown = true,
   ) => {
     const v = c.chip.variant ?? "neutral";
     const isAccent = v === "accent";
@@ -567,7 +571,7 @@ export function FeatureChipsFlow({
             : isOutline
               ? `inset 0 0 0 1px ${p.outline}`
               : `inset 0 0 0 1px ${p.hair}, ${p.shadow}`,
-          display: "flex",
+          display: shown ? "flex" : "none",
           alignItems: "center",
           justifyContent: "center",
           gap,
@@ -586,29 +590,36 @@ export function FeatureChipsFlow({
   };
 
   const nodes: React.ReactNode[] = [];
+  // Every chip and trail copy keeps its node, hidden with `display: none`
+  // when it has nothing to paint, so the node order never shifts as chips
+  // come and go.
   placed.list.forEach((c, i) => {
     const st = stateAt(c, i, frame);
-    if (st.op <= 0.01) return;
+    const visible = st.op > 0.01;
     // Fake motion blur: two faint trailing copies while a chip snaps fast.
     if (c.target) {
       const prev = stateAt(c, i, frame - 1);
       const v = Math.hypot(st.x - prev.x, st.y - prev.y);
-      if (v > chipH * 0.25) {
-        const k = Math.min(1, (v - chipH * 0.25) / (chipH * 0.5));
-        [0.45, 0.9].forEach((back, g) => {
-          const gs = stateAt(c, i, frame - back);
-          nodes.push(
-            renderChip(c, `${i}-g${g}`, {
+      const trail = visible && v > chipH * 0.25;
+      const k = Math.min(1, (v - chipH * 0.25) / (chipH * 0.5));
+      [0.45, 0.9].forEach((back, g) => {
+        const gs = trail ? stateAt(c, i, frame - back) : st;
+        nodes.push(
+          renderChip(
+            c,
+            `${i}-g${g}`,
+            {
               ...gs,
               op: gs.op * k * (g ? 0.12 : 0.22),
               blur: gs.blur + 1.5,
               z: st.z - 1,
-            }),
-          );
-        });
-      }
+            },
+            trail,
+          ),
+        );
+      });
     }
-    nodes.push(renderChip(c, `${i}`, st));
+    nodes.push(renderChip(c, `${i}`, st, visible));
   });
 
   const nameSize = H * 0.13;
@@ -627,7 +638,12 @@ export function FeatureChipsFlow({
     >
       <ScaleLayer scale={scale}>
         <AbsoluteFill
-          style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
+          // The river never stops, so the tilt never does either: one tilt
+          // here covers every chip and the name.
+          style={{
+            transform: `scale(${push})${glide(true)}`,
+            transformOrigin: "50% 50%",
+          }}
         >
           {nodes}
           <div

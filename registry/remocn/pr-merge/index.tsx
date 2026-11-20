@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -227,7 +228,22 @@ function Spinner({
   );
 }
 
-function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
+/**
+ * Laid out where the cursor comes to rest (`rest`); the travel to it is a
+ * transform, since layout rounds the box to whole pixels and a slow glide by
+ * `left`/`top` would click along.
+ */
+function Cursor({
+  x,
+  y,
+  rest,
+  press,
+}: {
+  x: number;
+  y: number;
+  rest: { x: number; y: number };
+  press: number;
+}) {
   return (
     <svg
       width={24}
@@ -235,10 +251,10 @@ function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
       viewBox="0 0 20 24"
       style={{
         position: "absolute",
-        left: x - 2.4,
-        top: y - 2.4,
+        left: rest.x - 2.4,
+        top: rest.y - 2.4,
         transformOrigin: "2px 2px",
-        transform: `scale(${1 - 0.12 * press})`,
+        transform: `translate(${x - rest.x}px, ${y - rest.y}px) scale(${1 - 0.12 * press})`,
         filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
         overflow: "visible",
       }}
@@ -381,6 +397,7 @@ export function PrMerge({
   ground,
   groundParams,
 }: PrMergeProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width * 1.2;
@@ -423,16 +440,22 @@ export function PrMerge({
   const FOOT = 92;
   const rowsH = n * ROW + 8;
   const cardW = tall ? 576 : 588;
-  const cardH = HEAD + SUM + rowsH * (1 - collapse) + FOOT;
+  const cardHAt = (k: number) => HEAD + SUM + rowsH * (1 - k) + FOOT;
+  const cardH = cardHAt(collapse);
 
   const leftW = tall ? 576 : 440;
   const leftH = 300;
   const cardX = tall ? (dw - cardW) / 2 : dw - 96 - cardW;
-  const cardY = tall
-    ? (dh - leftH - 40 - cardH) / 2 + leftH + 40
-    : (dh - cardH) / 2;
+  const cardYAt = (h: number) =>
+    tall ? (dh - leftH - 40 - h) / 2 + leftH + 40 : (dh - h) / 2;
+  const cardY = cardYAt(cardH);
+  // The card recentres as the check list folds away. Layout keeps it where it
+  // sits before that and the shift is a transform: layout rounds a box and a
+  // baseline to whole pixels, so a slow `top` clicks along.
+  const cardY0 = cardYAt(cardHAt(0));
+  const cardShift = cardY - cardY0;
   const leftX = tall ? cardX : 96;
-  const leftY = tall ? cardY - leftH - 40 : (dh - leftH) / 2;
+  const leftY0 = tall ? cardY0 - leftH - 40 : (dh - leftH) / 2;
 
   const enterCard = sp(frame - 4, HEAVY);
   const L = (k: number) => ramp(frame, k * 3, 16);
@@ -450,6 +473,12 @@ export function PrMerge({
     { t: T.merged + 34, x: deleteBtn.x + 40, y: deleteBtn.y + 70 },
   ];
   const cur = pathAt(keys, frame);
+  // Where the last key lands while the card still holds its list: a fixed
+  // anchor for the cursor's layout box.
+  const curRest = {
+    x: deleteBtn.x + 40,
+    y: cardY0 + HEAD + SUM + rowsH + FOOT / 2 + 70,
+  };
   const curOpacity = ramp(frame, allDone - 14, 8);
   const pressAt = (k: number) => {
     if (frame < k - 4) return 0;
@@ -520,7 +549,9 @@ export function PrMerge({
             style={{
               position: "absolute",
               inset: 0,
-              transform: `scale(${push})`,
+              // Always drifting, so always tilted: the one tilt covers every
+              // line of text in the scene.
+              transform: `scale(${push})${glide(true)}`,
               transformOrigin: "50% 50%",
             }}
           >
@@ -528,8 +559,10 @@ export function PrMerge({
               style={{
                 position: "absolute",
                 left: leftX,
-                top: leftY,
+                top: leftY0,
                 width: leftW,
+                transform:
+                  tall && cardShift ? `translateY(${cardShift}px)` : undefined,
               }}
             >
               <div
@@ -645,7 +678,7 @@ export function PrMerge({
               style={{
                 position: "absolute",
                 left: cardX,
-                top: cardY,
+                top: cardY0,
                 width: cardW,
                 height: cardH,
                 borderRadius: 22,
@@ -654,7 +687,7 @@ export function PrMerge({
                 boxShadow: c.depth,
                 overflow: "hidden",
                 opacity: ramp(frame, 4, 10),
-                transform: `translateY(${(1 - enterCard) * 48}px) scale(${0.97 + 0.03 * enterCard})`,
+                transform: `translateY(${cardShift + (1 - enterCard) * 48}px) scale(${0.97 + 0.03 * enterCard})`,
                 transformOrigin: "50% 0%",
               }}
             >
@@ -706,8 +739,15 @@ export function PrMerge({
                   No conflicts with {base}
                 </span>
               </div>
+              {/* The list folds by its own height, out of the flow, and the
+                  footer below follows by a transform: in the flow it would be
+                  pushed up by layout, a whole pixel at a time. */}
               <div
                 style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  top: HEAD + SUM,
                   height: rowsH * (1 - collapse),
                   overflow: "hidden",
                   opacity: 1 - ramp(frame, T.merged, 8, EXIT),
@@ -767,9 +807,15 @@ export function PrMerge({
               </div>
               <div
                 style={{
-                  position: "relative",
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  top: HEAD + SUM + rowsH,
                   height: FOOT,
                   boxShadow: `inset 0 1px 0 ${c.rule}`,
+                  transform: collapse
+                    ? `translateY(${-rowsH * collapse}px)`
+                    : undefined,
                 }}
               >
                 {footA > 0.001 && (
@@ -881,7 +927,7 @@ export function PrMerge({
               </div>
             </div>
             <div style={{ opacity: curOpacity }}>
-              <Cursor x={cur.x} y={cur.y} press={press} />
+              <Cursor x={cur.x} y={cur.y} rest={curRest} press={press} />
             </div>
           </div>
         </div>

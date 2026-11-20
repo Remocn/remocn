@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: oswald } = loadFont("normal", {
   weights: ["400", "500"],
@@ -208,6 +209,7 @@ export function WalkoutName({
   theme = "dark",
   speed = 1,
 }: WalkoutNameProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed + 2;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -308,6 +310,9 @@ export function WalkoutName({
   const bandDrift = interpolate(t, [BAND_AT + BAND_LEN, 160], [0, 0.03], CLAMP);
   const bandCx =
     interpolate(bandIn, [0, 1], [-0.35 * W, 0.4 * W]) + bandDrift * W;
+  // The band is laid out where it parks; the swing and the drift are a
+  // transform, since layout would step its painted edges a pixel at a time.
+  const bandRest = 0.4 * W;
   const bandPoly = (cx: number, w: number) => {
     const ext = H * 0.4;
     const yT = -ext;
@@ -336,6 +341,34 @@ export function WalkoutName({
   const nickX = x0 + lineW(n - 1) + 44 * u;
   const nickP = OUT(ramp(t, NICK_AT, 11));
   const metaP = OUT(ramp(t, META_AT, 10));
+
+  // Everything that carries text on a transform, in pixels, so the tilt on
+  // the shake layer can follow it: the camera, the shake, the slams and the
+  // billing and logo rising in.
+  const pose = (tt: number) => {
+    const cm = camAt(tt);
+    const sh = [
+      n > 1 ? shake(tt, hit, 9, 14 * u * impact) : { x: 0, y: 0 },
+      shake(tt, RECORD_AT + SLAM_LEN, 6, 5 * u * impact),
+      shake(tt, FINISH_AT + SLAM_LEN, 6, 5 * u * impact),
+    ];
+    return [
+      W / 2 - cm.s * cm.cx + cm.dx,
+      H / 2 - cm.s * cm.cy,
+      cm.s * W,
+      ...sh.flatMap((v) => [v.x, v.y]),
+      (n > 1 ? 1.7 - 0.7 * SLAM(ramp(tt, lastShot, SLAM_LEN)) : 1) * W,
+      SLAM(ramp(tt, RECORD_AT, SLAM_LEN)) * W,
+      SLAM(ramp(tt, FINISH_AT, SLAM_LEN)) * W,
+      OUT(ramp(tt, META_AT, 10)) * 12 * u,
+    ];
+  };
+  const here = pose(t);
+  const before = pose(t - speed);
+  const after = pose(t + speed);
+  const moving = here.some(
+    (v, i) => Math.abs(after[i] - v) > 1e-3 || Math.abs(v - before[i]) > 1e-3,
+  );
 
   const text = (
     s: string,
@@ -435,7 +468,8 @@ export function WalkoutName({
           <div
             style={{
               position: "absolute",
-              left: bandCx - bandW / 2 - 0.5 * H * lean,
+              left: bandRest - bandW / 2 - 0.5 * H * lean,
+              transform: `translateX(${bandCx - bandRest}px)`,
               width: bandW + H * lean,
               top: 0,
               height: H,
@@ -475,7 +509,10 @@ export function WalkoutName({
             style={{
               position: "absolute",
               inset: 0,
-              transform: `translate(${shX}px, ${shY}px)`,
+              // One tilt for the whole poster: the camera's origin is the
+              // world's corner, far off screen, so the tilt goes here, about
+              // the frame's centre.
+              transform: `translate(${shX}px, ${shY}px)${glide(moving)}`,
             }}
           >
             {ghosts.map((op, k) => {

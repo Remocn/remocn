@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const hubot = loadFont("normal", {
   weights: ["400", "500"],
@@ -75,6 +76,8 @@ const EXIT = 12;
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_IN = Easing.bezier(0.55, 0, 0.85, 0.35);
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -234,6 +237,7 @@ export function Exactly({
   speed = 1,
   theme = "dark",
 }: ExactlyProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames: T } = useVideoConfig();
   const c = THEMES[theme];
@@ -404,13 +408,14 @@ export function Exactly({
                 x: first.x - (space + adv(replies[i])) * F,
                 y: first.y,
               };
+          const leaving = midway(leave);
           const quote = (x: number, y: number, appear: number) => ({
             ...textStyle(F),
             left: x,
             top: y,
             color: c.muted,
             opacity: appear * Math.max(0, 1 - drop * 1.6),
-            transform: `translateY(${((1 - appear) * F * 0.18 + drop * F * 0.45).toFixed(2)}px)`,
+            transform: `translateY(${(1 - appear) * F * 0.18 + drop * F * 0.45}px)${glide(!leaving && (midway(appear) || midway(drop)))}`,
           });
           return (
             <div
@@ -419,7 +424,7 @@ export function Exactly({
                 position: "absolute",
                 inset: 0,
                 opacity: 1 - leave,
-                transform: `translateY(${(-leave * H * 0.06).toFixed(2)}px)`,
+                transform: `translateY(${-leave * H * 0.06}px)${glide(leaving)}`,
               }}
             >
               <div style={quote(first.x - openW * F, first.y, inAt(0))}>“</div>
@@ -455,7 +460,7 @@ export function Exactly({
                       top: p.y,
                       color: interpolateColors(flow, [0, 1], [c.muted, fg]),
                       opacity: e,
-                      transform: `translateY(${((1 - e) * F * 0.18).toFixed(2)}px)`,
+                      transform: `translateY(${(1 - e) * F * 0.18}px)${glide(!leaving && midway(e))}`,
                     }}
                   >
                     {word}

@@ -1,7 +1,7 @@
 "use client";
 
 import { type CSSProperties, Fragment } from "react";
-import { Easing, interpolate } from "remotion";
+import { Easing, interpolate, useVideoConfig } from "remotion";
 import {
   type CaptionBaseProps,
   type CaptionTokenState,
@@ -10,6 +10,7 @@ import {
   groupCaptionWords,
   useCaptions,
 } from "@/lib/remocn/caption-core";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface CaptionCubeProps extends CaptionBaseProps {
   tintActive?: boolean;
@@ -28,11 +29,16 @@ const LEGIBILITY_SHADOW =
 const turnEasing = Easing.bezier(0.65, 0, 0.35, 1);
 const exitEasing = Easing.bezier(0.7, 0, 0.84, 0);
 
+// A turn about x foreshortens the face but keeps its matrix axis-aligned, and
+// Chrome parks a glyph raster on a whole pixel vertically for as long as it
+// is, so the words click along while the cube turns. The shared glide mark
+// leans them off that grid while the face turns.
 function CubeFace({
   tokens,
   activeIndex,
   activeColor,
   angle,
+  mark,
   before,
   style,
 }: {
@@ -40,6 +46,8 @@ function CubeFace({
   activeIndex: number;
   activeColor: string | undefined;
   angle: number;
+  /** The glide mark for this face: `glide(turning)`. */
+  mark: string;
   before: string;
   style?: CSSProperties;
 }) {
@@ -51,7 +59,7 @@ function CubeFace({
         backfaceVisibility: "hidden",
         WebkitBackfaceVisibility: "hidden",
         opacity: 0.35 + 0.65 * facing,
-        transform: `${before}rotateX(${angle}deg) translateZ(${DEPTH_EM}em)`,
+        transform: `${before}rotateX(${angle}deg) translateZ(${DEPTH_EM}em)${mark}`,
         ...style,
       }}
     >
@@ -94,26 +102,45 @@ export function CaptionCube({
     combineTokensWithinMilliseconds,
     holdMs,
   });
+  const { fps } = useVideoConfig();
+  const glide = useGlide();
   if (!state) return null;
 
   const turnMs = Math.max(
     1,
     Math.min(TURN_MS, state.sinceStartMs + state.untilEndMs),
   );
-  const turn = interpolate(state.sinceStartMs, [0, turnMs], [0, 1], {
-    easing: turnEasing,
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-  const exitProgress = state.endsInSilence
-    ? exitEasing(
-        Math.min(
-          1,
-          Math.max(0, 1 - state.untilEndMs / getExitWindowMs(state, EXIT_MS)),
-        ),
-      )
-    : 0;
-  const currentAngle = (turn - 1) * 90 + exitProgress * 90;
+  // Both faces' angles `dt` ms from now, on this page's clock.
+  const anglesAt = (dt: number) => {
+    const turn = interpolate(state.sinceStartMs + dt, [0, turnMs], [0, 1], {
+      easing: turnEasing,
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    });
+    const exitProgress = state.endsInSilence
+      ? exitEasing(
+          Math.min(
+            1,
+            Math.max(
+              0,
+              1 - (state.untilEndMs - dt) / getExitWindowMs(state, EXIT_MS),
+            ),
+          ),
+        )
+      : 0;
+    return {
+      turn,
+      previous: turn * 90,
+      current: (turn - 1) * 90 + exitProgress * 90,
+    };
+  };
+  const now = anglesAt(0);
+  const { turn } = now;
+  const currentAngle = now.current;
+  const step = 1000 / fps;
+  const around = [anglesAt(-step), anglesAt(step)];
+  const markOf = (face: "previous" | "current") =>
+    glide(around.some((a) => Math.abs(a[face] - now[face]) > 1e-5));
 
   return (
     <div
@@ -144,7 +171,8 @@ export function CaptionCube({
             tokens={state.previous.tokens}
             activeIndex={-1}
             activeColor={undefined}
-            angle={turn * 90}
+            angle={now.previous}
+            mark={markOf("previous")}
             before="translateX(-50%) "
             style={{ position: "absolute", top: 0, left: "50%" }}
           />
@@ -155,6 +183,7 @@ export function CaptionCube({
           activeIndex={state.activeIndex}
           activeColor={tintActive ? activeColor : undefined}
           angle={currentAngle}
+          mark={markOf("current")}
           before=""
         />
       </div>

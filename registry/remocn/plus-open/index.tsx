@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const sora = loadSora("normal", {
   weights: ["300", "400", "500"],
@@ -182,6 +183,8 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+const midway = (p: number) => p > 0 && p < 1;
+
 function crossPolygon(
   cx: number,
   cy: number,
@@ -230,6 +233,7 @@ export function PlusOpen({
   speed = 1,
   theme = "dark",
 }: PlusOpenProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -293,11 +297,19 @@ export function PlusOpen({
     u: arm0 + (cy + 4 - arm0) * armV,
     d: arm0 + (H - cy + 4 - arm0) * armV,
   };
-  const open = interpolate(t, [openAt, openAt + OPEN_LEN], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OPEN,
-  });
-  const spread = open * Math.max(cx, W - cx, cy, H - cy) * 1.04;
+  const spreadAt = (tt: number) =>
+    interpolate(tt, [openAt, openAt + OPEN_LEN], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OPEN,
+    }) *
+    Math.max(cx, W - cx, cy, H - cy) *
+    1.04;
+  const spread = spreadAt(t);
+  // The quarters carry the old scene's full-frame background, so a tilt on
+  // them would open a seam at the frame edges; the copy inside them takes it.
+  const opening =
+    Math.abs(spreadAt(t + speed) - spread) > 1e-3 ||
+    Math.abs(spread - spreadAt(t - speed)) > 1e-3;
   const split = t >= openAt;
 
   const drift = t / 30;
@@ -352,7 +364,11 @@ export function PlusOpen({
             style={{
               position: "absolute",
               left: left + m.x[i] * F,
-              top: baseY - maskTop - m.base * F + (1 - rise(i)) * maskH * 1.05,
+              // Layout rounds a baseline to whole pixels, so a digit raised
+              // by `top` clicks up pixel by pixel; the rise is a transform,
+              // kept at rest too so the digit is drawn one way all its life.
+              top: baseY - maskTop - m.base * F,
+              transform: `translateY(${(1 - rise(i)) * maskH * 1.05}px)${glide(midway(rise(i)) || opening)}`,
               fontFamily,
               fontWeight: 400,
               fontSize: F,
@@ -387,7 +403,7 @@ export function PlusOpen({
         >
           <div
             style={{
-              transform: `translateY(${((1 - labelP) * labelSize * 1.4).toFixed(2)}px)`,
+              transform: `translateY(${((1 - labelP) * labelSize * 1.4).toFixed(2)}px)${glide(midway(labelP) || opening)}`,
             }}
           >
             {label}
@@ -472,7 +488,7 @@ export function PlusOpen({
                 <span
                   style={{
                     display: "inline-block",
-                    transform: `translateY(${((1 - p) * 110).toFixed(1)}%)`,
+                    transform: `translateY(${((1 - p) * 110).toFixed(1)}%)${glide(midway(p))}`,
                   }}
                 >
                   {w}

@@ -264,6 +264,10 @@ export function FlutedGlass({
   const vel = (gx - slideAt(t - 1)) / u;
   const smear = interpolate(vel, [8, 40], [0, 5], CLAMP) * u;
 
+  // Layout rounds a box edge to whole pixels, so a sheet slid by `left` steps
+  // unevenly; it is laid out at its resting place and slides by transform.
+  const slide = gx === 0 ? undefined : `translateX(${gx}px)`;
+
   const flutes: number[] = [];
   for (let i = 0; gx + i * fw < width; i++) flutes.push(i);
 
@@ -277,10 +281,11 @@ export function FlutedGlass({
           <div
             style={{
               position: "absolute",
-              left: gx,
+              left: 0,
               top: 0,
               width: width + fw,
               height,
+              transform: slide,
               boxShadow: `${-18 * u}px 0 ${40 * u}px ${-6 * u}px ${p.contact}`,
             }}
           />
@@ -328,10 +333,12 @@ export function FlutedGlass({
           <div
             style={{
               position: "absolute",
-              left: gx,
+              left: 0,
               top: 0,
-              right: 0,
+              // Ends on the frame's right edge, as `right: 0` did.
+              width: width - gx,
               bottom: 0,
+              transform: slide,
               filter: smear > 0.3 ? `blur(${smear}px)` : undefined,
             }}
           >

@@ -15,6 +15,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -243,6 +244,7 @@ export function ShotAnswers({
   speed = 1,
   theme = "dark",
 }: ShotAnswersProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames: D, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -305,17 +307,34 @@ export function ShotAnswers({
   const SHOT_AT = 26 * k;
   const MORPH = answerAt * k;
 
-  const shotIn = spring({
-    frame: t - SHOT_AT,
-    fps,
-    config: HEAVY,
-  });
+  // Whether `value(f)`, in px, moves by more than a thousandth of a pixel
+  // into or out of this frame: the eases and the spring here have long flat
+  // tails, so a progress threshold drops the tilt while text still moves.
+  const moves = (value: (f: number) => number) =>
+    Math.abs(value(t) - value(t - speed)) > 1e-3 ||
+    Math.abs(value(t + speed) - value(t)) > 1e-3;
+
+  const shotInAt = (f: number) =>
+    spring({
+      frame: f - SHOT_AT,
+      fps,
+      config: HEAVY,
+    });
+  const shotIn = shotInAt(t);
   const reveal = interpolate(t, [SHOT_AT, SHOT_AT + 18 * k], [0, 1], {
     ...CLAMP,
     easing: ENTER,
   });
   const drift = portrait ? 0 : (1 - shotIn) * W * 0.06;
   const rise = portrait ? (1 - shotIn) * H * 0.04 : 0;
+  // Layout rounds a box to whole pixels, so the window is laid out where it
+  // lands and the spring's drift is a transform, all its life: handing the
+  // leftover back to layout once it settled would snap the URL in its bar by
+  // that rounding.
+  const shotLeft = (f: number) =>
+    (1 - shotInAt(f)) * (Math.max(W * 0.06, H * 0.04) + 0.03 * shot.w);
+  const shotMoving = moves(shotLeft);
+  const travel = `translate(${Math.abs(drift) > 1e-3 ? drift : 0}px, ${Math.abs(rise) > 1e-3 ? rise : 0}px) `;
   const imgScale = interpolate(t, [SHOT_AT, D], [1.08, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.22, 1, 0.36, 1),
@@ -341,22 +360,23 @@ export function ShotAnswers({
   const spans: ReactNode[] = [];
 
   qWords.forEach((wd, i) => {
-    const enter = interpolate(
-      t,
-      [i * stagger * k, i * stagger * k + 12 * k],
-      [0, 1],
-      {
+    const enterAt = (f: number) =>
+      interpolate(f, [i * stagger * k, i * stagger * k + 12 * k], [0, 1], {
         ...CLAMP,
         easing: ENTER,
-      },
-    );
+      });
+    const enter = enterAt(t);
     const q = Q.placed[i];
     const j = aToB[i];
     if (j < 0) {
-      const out = interpolate(t, [MORPH, MORPH + 8 * k], [0, 1], {
-        ...CLAMP,
-        easing: EXIT,
-      });
+      const outAt = (f: number) =>
+        interpolate(f, [MORPH, MORPH + 8 * k], [0, 1], {
+          ...CLAMP,
+          easing: EXIT,
+        });
+      const out = outAt(t);
+      const yAt = (f: number) =>
+        qTop + q.y + (1 - enterAt(f)) * size * 0.3 - outAt(f) * size * 0.24;
       spans.push(
         <span
           key={`q${i.toString()}`}
@@ -364,7 +384,7 @@ export function ShotAnswers({
             ...base,
             opacity: enter * (1 - out),
             filter: out > 0 ? `blur(${out * size * 0.08}px)` : undefined,
-            transform: `translate(${colX + q.x}px, ${qTop + q.y + (1 - enter) * size * 0.3 - out * size * 0.24}px)`,
+            transform: `translate(${colX + q.x}px, ${yAt(t)}px)${glide(moves(yAt))}`,
           }}
         >
           {wd}
@@ -374,11 +394,18 @@ export function ShotAnswers({
     }
     const a = A.placed[j];
     const start = MORPH + 6 * k + j * 0.6 * k;
-    const g = interpolate(t, [start, start + 20 * k], [0, 1], CLAMP);
+    const gAt = (f: number) =>
+      interpolate(f, [start, start + 20 * k], [0, 1], CLAMP);
+    const g = gAt(t);
     const gx = MOVE(interpolate(g, [0, 0.72], [0, 1], CLAMP));
-    const gy = MOVE(interpolate(g, [0.28, 1], [0, 1], CLAMP));
+    const yAt = (f: number) =>
+      qTop +
+      q.y +
+      (aTop + a.y - qTop - q.y) *
+        MOVE(interpolate(gAt(f), [0.28, 1], [0, 1], CLAMP));
     const x = colX + q.x + (a.x - q.x) * gx;
-    const y = qTop + q.y + (aTop + a.y - qTop - q.y) * gy;
+    const y = yAt(t);
+    const tilt = glide(moves((f) => yAt(f) + (1 - enterAt(f)) * size * 0.3));
     const next = aWords[j];
     const same = next === wd;
     const swap = same ? 0 : interpolate(g, [0.25, 0.75], [0, 1], CLAMP);
@@ -388,7 +415,7 @@ export function ShotAnswers({
         style={{
           ...base,
           opacity: enter * (1 - swap),
-          transform: `translate(${x}px, ${y + (1 - enter) * size * 0.3}px)`,
+          transform: `translate(${x}px, ${y + (1 - enter) * size * 0.3}px)${tilt}`,
         }}
       >
         {wd}
@@ -401,7 +428,7 @@ export function ShotAnswers({
           style={{
             ...base,
             opacity: swap,
-            transform: `translate(${x}px, ${y}px)`,
+            transform: `translate(${x}px, ${y}px)${tilt}`,
           }}
         >
           {next}
@@ -414,10 +441,13 @@ export function ShotAnswers({
     if (bToA[j] >= 0) return;
     const a = A.placed[j];
     const start = MORPH + 18 * k + j * 0.8 * k;
-    const e = interpolate(t, [start, start + 14 * k], [0, 1], {
-      ...CLAMP,
-      easing: ENTER,
-    });
+    const eAt = (f: number) =>
+      interpolate(f, [start, start + 14 * k], [0, 1], {
+        ...CLAMP,
+        easing: ENTER,
+      });
+    const e = eAt(t);
+    const yAt = (f: number) => aTop + a.y + (1 - eAt(f)) * size * 0.34;
     spans.push(
       <span
         key={`a${j.toString()}`}
@@ -426,7 +456,7 @@ export function ShotAnswers({
           color: hi,
           opacity: e,
           filter: e < 1 ? `blur(${(1 - e) * size * 0.08}px)` : undefined,
-          transform: `translate(${colX + a.x}px, ${aTop + a.y + (1 - e) * size * 0.34}px)`,
+          transform: `translate(${colX + a.x}px, ${yAt(t)}px)${glide(moves(yAt))}`,
         }}
       >
         {wd}
@@ -465,8 +495,8 @@ export function ShotAnswers({
         <div
           style={{
             position: "absolute",
-            left: shot.x + drift,
-            top: shot.y + rise,
+            left: shot.x,
+            top: shot.y,
             width: shot.w,
             height: shot.h,
             borderRadius: radius,
@@ -474,7 +504,7 @@ export function ShotAnswers({
             background: c.chrome,
             boxShadow: c.shadow,
             opacity: interpolate(reveal, [0, 0.25], [0, 1], CLAMP),
-            transform: `scale(${0.97 + 0.03 * shotIn})`,
+            transform: `${travel}scale(${0.97 + 0.03 * shotIn})${glide(shotMoving)}`,
             transformOrigin: portrait ? "50% 100%" : "100% 50%",
             clipPath: portrait
               ? `inset(${(1 - reveal) * 100}% 0 0 0 round ${radius}px)`

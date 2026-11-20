@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -223,6 +224,7 @@ export function ChartMorph({
   theme = "dark",
   speed = 1,
 }: ChartMorphProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
@@ -489,10 +491,17 @@ export function ChartMorph({
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const push = interpolate(t, [0, LABEL_IN + 40], [1.03, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const pushAt = (tt: number) =>
+    interpolate(tt, [0, LABEL_IN + 40], [1.03, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const push = pushAt(t);
+  // The push carries every label and eases in and out over the whole scene,
+  // so it is tested frame to frame in px at the frame's half-width.
+  const pushMoving =
+    Math.abs(pushAt(t + speed) - push) * (width / 2) > 1e-3 ||
+    Math.abs(push - pushAt(t - speed)) * (width / 2) > 1e-3;
   const end = P[n - 1];
   const areaIn = interpolate(t, [LABEL_IN - 6, LABEL_IN + 22], [0, 1], {
     ...CLAMP,
@@ -506,7 +515,10 @@ export function ChartMorph({
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <ScaleLayer scale={scale}>
         <AbsoluteFill
-          style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
+          style={{
+            transform: `scale(${push})${glide(pushMoving)}`,
+            transformOrigin: "50% 50%",
+          }}
         >
           <svg
             width={width}

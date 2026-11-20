@@ -20,6 +20,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -155,6 +156,11 @@ const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+
+// A camera scale built from punches, kicks and a drift has no single progress,
+// so it counts as moving while it differs from a neighbouring frame.
+const drifting = (at: (f: number) => number, f: number) =>
+  Math.abs(at(f + 1) - at(f)) > 1e-6 || Math.abs(at(f) - at(f - 1)) > 1e-6;
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
 export type LetterGateProps = {
@@ -519,21 +525,23 @@ function SceneA({
   delay: number;
   look: SceneLook;
 }) {
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
+  const now = useCurrentFrame();
+  const frame = Math.max(0, now - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const u = Math.min(W, H) / 720;
   const fs = pillFont(W, H);
   const rise = spring({ frame: frame - A_BEATS.pill, fps, config: CARD });
   const logoIn = ENTER(clamp01((frame - A_BEATS.logo) / 12));
-  const step = frame >= A_BEATS.punch2 ? 2 : frame >= A_BEATS.punch1 ? 1 : 0;
-  const since =
-    step === 2
-      ? frame - A_BEATS.punch2
-      : step === 1
-        ? frame - A_BEATS.punch1
-        : 99;
-  const kick = since < 3 ? 1.035 - since * 0.012 : 1;
-  const cam = PUNCH[step] * kick * (1 + 0.01 * clamp01(frame / A_LEN));
+  const camAt = (f: number) => {
+    const t = Math.max(0, f - delay) * speed;
+    const step = t >= A_BEATS.punch2 ? 2 : t >= A_BEATS.punch1 ? 1 : 0;
+    const since =
+      step === 2 ? t - A_BEATS.punch2 : step === 1 ? t - A_BEATS.punch1 : 99;
+    const kick = since < 3 ? 1.035 - since * 0.012 : 1;
+    return PUNCH[step] * kick * (1 + 0.01 * clamp01(t / A_LEN));
+  };
+  const cam = camAt(now);
   return (
     <AbsoluteFill
       style={{
@@ -556,7 +564,7 @@ function SceneA({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${cam})`,
+            transform: `scale(${cam})${glide(drifting(camAt, now))}`,
             transformOrigin: "50% 50%",
           }}
         >
@@ -679,7 +687,9 @@ function SceneB({
   groundParams?: Partial<GradientParams>;
   look: SceneLook;
 }) {
-  const frame = useCurrentFrame() * speed;
+  const glide = useGlide();
+  const now = useCurrentFrame();
+  const frame = now * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const uid = useId().replace(/:/g, "");
   const tall = H > W * 1.1;
@@ -720,7 +730,8 @@ function SceneB({
   const inD = tall
     ? `M${inFrom.x} ${inFrom.y}C${inFrom.x} ${inTo.y * 0.6} ${inTo.x} ${inTo.y * 0.5} ${inTo.x} ${inTo.y}`
     : `M${inFrom.x} ${inFrom.y}C${inTo.x * 0.5} ${inFrom.y} ${inTo.x * 0.5} ${inTo.y} ${inTo.x} ${inTo.y}`;
-  const push = 1 + 0.04 * clamp01(frame / B_LEN);
+  const pushAt = (f: number) => 1 + 0.04 * clamp01((f * speed) / B_LEN);
+  const push = pushAt(now);
   const len = 900 * k;
   const nodePop = spring({ frame: nodeLocal, fps, config: CARD });
   const labelShown = Math.max(0, nodeLocal - 2);
@@ -745,7 +756,10 @@ function SceneB({
       </Ground>
       <ScaleLayer scale={scale}>
         <AbsoluteFill
-          style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
+          style={{
+            transform: `scale(${push})${glide(drifting(pushAt, now))}`,
+            transformOrigin: "50% 50%",
+          }}
         >
           <svg
             width={W}

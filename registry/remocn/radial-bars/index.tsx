@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadGeist("normal", {
   weights: ["400", "500"],
@@ -172,6 +173,8 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -206,6 +209,7 @@ export function RadialBars({
   theme = "dark",
   speed = 1,
 }: RadialBarsProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
@@ -253,11 +257,19 @@ export function RadialBars({
     ...CLAMP,
     easing: EASE_IO,
   });
-  const push = interpolate(t, [0, HIT + 50], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const scale = 0.955 + 0.045 * push;
+  const scaleAt = (tt: number) =>
+    0.955 +
+    0.045 *
+      interpolate(tt, [0, HIT + 50], [0, 1], {
+        ...CLAMP,
+        easing: EASE_IO,
+      });
+  const scale = scaleAt(t);
+  // Weighed by the half height: the tick labels are the furthest text from
+  // the centre the camera scales about.
+  const camMoving =
+    Math.abs(scaleAt(t + speed) - scale) * (height / 2) > 1e-3 ||
+    Math.abs(scale - scaleAt(t - speed)) * (height / 2) > 1e-3;
   const focus = interpolate(t, [HIT, HIT + 16], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
@@ -320,7 +332,10 @@ export function RadialBars({
     <AbsoluteFill style={{ background: fill, overflow: "hidden" }}>
       <ScaleLayer scale={size}>
         <AbsoluteFill
-          style={{ transform: `scale(${scale})`, transformOrigin: "50% 50%" }}
+          style={{
+            transform: `scale(${scale})${glide(camMoving)}`,
+            transformOrigin: "50% 50%",
+          }}
         >
           <AbsoluteFill style={{ background: ground }} />
           <svg
@@ -428,6 +443,14 @@ export function RadialBars({
           {ticks.map((tk, i) => {
             const a = (i / ticks.length) * TAU + (spin * Math.PI) / 180;
             const q = pt(Rmax + 24 * u, a);
+            // Laid out where the dial stops turning; the turn there is a
+            // transform, since layout rounds a baseline to whole pixels and a
+            // label carried by `left`/`top` clicks along.
+            const rest = pt(Rmax + 24 * u, (i / ticks.length) * TAU);
+            const ride =
+              q.x === rest.x && q.y === rest.y
+                ? ""
+                : `translate(${q.x - rest.x}px, ${q.y - rest.y}px) `;
             const sx = Math.sin(a);
             const sy = -Math.cos(a);
             return (
@@ -435,9 +458,9 @@ export function RadialBars({
                 key={tk}
                 style={{
                   position: "absolute",
-                  left: q.x,
-                  top: q.y,
-                  transform: `translate(${-50 + sx * 50}%, ${-50 + sy * 50}%)`,
+                  left: rest.x,
+                  top: rest.y,
+                  transform: `${ride}translate(${-50 + sx * 50}%, ${-50 + sy * 50}%)`,
                   fontFamily: mono,
                   fontWeight: 400,
                   fontSize: 14 * u,
@@ -473,7 +496,7 @@ export function RadialBars({
                 opacity: land,
                 filter:
                   land < 0.99 ? `blur(${(1 - land) * 8 * u}px)` : undefined,
-                transform: `translateY(${(1 - land) * 18 * u}px) scale(${1.04 - 0.04 * land})`,
+                transform: `translateY(${(1 - land) * 18 * u}px) scale(${1.04 - 0.04 * land})${glide(midway(land) && !camMoving)}`,
                 marginTop: 12 * u,
               }}
             >
@@ -486,7 +509,7 @@ export function RadialBars({
                 alignItems: "center",
                 gap: 9 * u,
                 opacity: labIn,
-                transform: `translateY(${(1 - labIn) * 8 * u}px)`,
+                transform: `translateY(${(1 - labIn) * 8 * u}px)${glide(midway(labIn) && !camMoving)}`,
               }}
             >
               <span

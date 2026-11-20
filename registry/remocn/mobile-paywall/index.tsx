@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -152,6 +153,10 @@ const LIGHT = Easing.bezier(0.22, 1, 0.36, 1);
 const MOVE = Easing.bezier(0.65, 0, 0.35, 1);
 const EXIT = Easing.bezier(0.55, 0, 1, 0.45);
 const CAMERA = Easing.bezier(0.87, 0, 0.13, 1);
+
+/** Whether a value of the frame moves into or out of `f`. */
+const stirs = (at: (f: number) => number, f: number, eps = 1e-3) =>
+  Math.abs(at(f + 1) - at(f)) > eps || Math.abs(at(f) - at(f - 1)) > eps;
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
@@ -337,11 +342,17 @@ function Phone({
   sidePress: number;
   c: Palette;
 }) {
+  // The press nudges the button by a transform: layout would round its
+  // edge to whole pixels. A spring leaves a sliver behind; that is dropped.
   const btn = (side: "left" | "right", top: number, h: number, dx = 0) => (
     <div
       style={{
         position: "absolute",
-        [side]: -3 + dx,
+        [side]: -3,
+        transform:
+          Math.abs(dx) >= 1e-3
+            ? `translateX(${side === "right" ? -dx : dx}px)`
+            : undefined,
         top,
         width: 4,
         height: h,
@@ -478,6 +489,7 @@ export function MobilePaywall({
   ground,
   groundParams,
 }: MobilePaywallProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { fps, width, height } = useVideoConfig();
   const f = frame * speed;
@@ -530,6 +542,7 @@ export function MobilePaywall({
       };
     }
   }
+  const tapRest = keys[keys.length - 1];
   const tapOpacity = interpolate(
     f,
     [TAP_IN, TAP_IN + 6, TAP2 + 6, TAP2 + 11],
@@ -580,6 +593,17 @@ export function MobilePaywall({
     ...clamp,
     easing: CAMERA,
   });
+  // Asked of the px at the phone's far edge: the rise never quite lands and
+  // the push eases out so gently that its progress outlasts the motion.
+  const phoneMoving =
+    stirs((g) => (1 - spring({ frame: g, fps, config: HEAVY })) * H * 0.9, f) ||
+    stirs(
+      (g) =>
+        interpolate(g, [0, 250], [1, 1.035], { ...clamp, easing: CAMERA }) *
+        k *
+        (BH / 2),
+      f,
+    );
 
   const enter = (v: number, dy = 10): React.CSSProperties => ({
     opacity: Math.min(1, v * 1.4),
@@ -596,18 +620,26 @@ export function MobilePaywall({
   const copyLine = (i: number) => {
     const inAt = beats[i] + (i === 0 ? 8 : 0);
     const outAt = beats[i + 1];
-    const pin = interpolate(f, [inAt, inAt + 14], [0, 1], {
-      ...clamp,
-      easing: ENTER,
-    });
-    const pout =
-      outAt === undefined
-        ? 0
-        : interpolate(f, [outAt - 2, outAt + 6], [0, 1], {
-            ...clamp,
-            easing: EXIT,
-          });
+    const at = (g: number) => {
+      const pin = interpolate(g, [inAt, inAt + 14], [0, 1], {
+        ...clamp,
+        easing: ENTER,
+      });
+      const pout =
+        outAt === undefined
+          ? 0
+          : interpolate(g, [outAt - 2, outAt + 6], [0, 1], {
+              ...clamp,
+              easing: EXIT,
+            });
+      return { pin, pout, dy: (1 - pin) * 70 - pout * 50 };
+    };
+    const { pin, pout, dy } = at(f);
     if (pin <= 0 || pout >= 1) return null;
+    // Compared in % of a 72px line: a thousandth of a pixel is about 1.4e-3%.
+    const moving =
+      Math.abs(at(f + speed).dy - dy) > 1.4e-3 ||
+      Math.abs(dy - at(f - speed).dy) > 1.4e-3;
     return (
       <div
         key={i}
@@ -616,7 +648,7 @@ export function MobilePaywall({
           left: 0,
           right: 0,
           top: 0,
-          transform: `translateY(${(1 - pin) * 70 - pout * 50}%)`,
+          transform: `translateY(${dy}%)${glide(moving)}`,
           opacity: pin * (1 - pout),
         }}
       >
@@ -696,7 +728,7 @@ export function MobilePaywall({
               top: phoneCy - BH / 2,
               width: BW,
               height: BH,
-              transform: `translateY(${(1 - rise) * H * 0.9}px) scale(${k * camera})`,
+              transform: `translateY(${(1 - rise) * H * 0.9}px) scale(${k * camera})${glide(phoneMoving)}`,
             }}
           >
             <Phone sidePress={sidePress} c={c}>
@@ -1333,8 +1365,10 @@ export function MobilePaywall({
               <div
                 style={{
                   position: "absolute",
-                  left: tap.x - 22,
-                  top: tap.y - 22,
+                  // Laid out at the last key; the travel is a transform,
+                  // since layout would round the ring's edges to whole pixels.
+                  left: tapRest.x - 22,
+                  top: tapRest.y - 22,
                   width: 44,
                   height: 44,
                   borderRadius: 22,
@@ -1342,7 +1376,7 @@ export function MobilePaywall({
                   boxShadow:
                     "inset 0 0 0 1.5px rgba(255,255,255,0.85), 0 4px 14px rgba(0,0,0,0.22)",
                   opacity: tapOpacity,
-                  transform: `scale(${tapScale})`,
+                  transform: `translate(${tap.x - tapRest.x}px, ${tap.y - tapRest.y}px) scale(${tapScale})`,
                   zIndex: 15,
                 }}
               />

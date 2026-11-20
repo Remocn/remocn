@@ -14,6 +14,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -36,6 +37,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 type Tone = "dark" | "graphite" | "light" | "accent";
 type Kind =
@@ -1085,6 +1088,7 @@ export function GridMontage({
   speed = 1,
   theme = "dark",
 }: GridMontageProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const u = H / 720;
@@ -1108,8 +1112,14 @@ export function GridMontage({
   const tGrow = 5 * b;
   const tSwap2 = 7 * b;
   const tMerge = 9 * b;
-  const p = (start: number, dur: number) =>
-    interpolate(frame, [start, start + dur], [0, 1], CLAMP);
+  const pAt = (f: number, start: number, dur: number) =>
+    interpolate(f, [start, start + dur], [0, 1], CLAMP);
+  const p = (start: number, dur: number) => pAt(frame, start, dur);
+  // Springs overshoot and the pushes come in beats, so "is it moving" is read
+  // off the neighbouring frames rather than off a 0..1 progress.
+  const moves = (at: (f: number) => number) =>
+    Math.abs(at(frame + 1) - at(frame)) > 1e-5 ||
+    Math.abs(at(frame) - at(frame - 1)) > 1e-5;
 
   const beats = (since: number) => {
     let s = 0;
@@ -1118,12 +1128,21 @@ export function GridMontage({
     }
     return s;
   };
-  const ownPush = (start: number) => 1.02 + 0.012 * beats(frame - start);
+  const ownPushAt = (start: number, f: number) =>
+    1.02 + 0.012 * beats(f - start);
+  const ownPush = (start: number) => ownPushAt(start, frame);
   const openerPush = 1 + 0.03 * (frame / Math.max(1, tGrow));
-  const closerPush =
+  const closerPushAt = (f: number) =>
     1 +
     0.035 *
-      Easing.bezier(0.22, 1, 0.36, 1)(p(tSwap2, tMerge + MERGE + 40 - tSwap2));
+      Easing.bezier(
+        0.22,
+        1,
+        0.36,
+        1,
+      )(pAt(f, tSwap2, tMerge + MERGE + 40 - tSwap2));
+  const closerPush = closerPushAt(frame);
+  const closerTilt = glide(moves(closerPushAt));
 
   const list = scenes ?? images;
   const pickShot = (slot: number) => {
@@ -1192,21 +1211,28 @@ export function GridMontage({
     );
   };
 
+  // A tile is laid out at `rest`, the cell it holds between moves, and rides
+  // to `rect` on a transform: layout rounds a box and a baseline to whole
+  // pixels, so a tile eased by `left`/`top` drags its whole shot along pixel
+  // by pixel. The mark on the same transform covers both shots inside.
   const panel = (
     key: string,
     rect: Rect,
+    rest: Rect,
     radius: number,
     edge: number,
     from: Fill,
     to: Fill,
     swap: number,
+    moving: boolean,
   ) => (
     <div
       key={key}
       style={{
         position: "absolute",
-        left: rect.x,
-        top: rect.y,
+        left: rest.x,
+        top: rest.y,
+        transform: `translate(${rect.x - rest.x}px, ${rect.y - rest.y}px)${glide(moving)}`,
         width: rect.w,
         height: rect.h,
         borderRadius: Math.min(radius, rect.w / 2, rect.h / 2),
@@ -1250,18 +1276,28 @@ export function GridMontage({
   let body: React.ReactNode;
   if (frame < tOpen) {
     body = (
-      <AbsoluteFill style={{ transform: `scale(${openerPush})` }}>
+      <AbsoluteFill
+        style={{
+          transform: `scale(${openerPush})${glide(true)}`,
+        }}
+      >
         {shot(0)}
       </AbsoluteFill>
     );
   } else if (frame < tGrow) {
-    const q = spring({ frame: frame - tOpen, fps, config: CARD });
+    const qAt = (f: number) => spring({ frame: f - tOpen, fps, config: CARD });
+    const q = qAt(frame);
     const rects = grid(2, 2, W, H, M * q, G * q);
+    const rests = grid(2, 2, W, H, M, G);
     const quads = grid(2, 2, W, H, 0, 0);
-    body = rects.map((rect, i) =>
-      panel(
+    const parting = moves(qAt);
+    const pushing = moves((f) => ownPushAt(tSwap1, f));
+    body = rects.map((rect, i) => {
+      const swap = p(tSwap1 + i * 2, SWAP);
+      return panel(
         `a${i}`,
         rect,
+        rests[i],
         R * q,
         q,
         { type: "piece", shot: 0, push: openerPush, source: quads[i] },
@@ -1272,23 +1308,30 @@ export function GridMontage({
           focus: FOCI[i],
           nominal: rect,
         },
-        EASE_SWAP(p(tSwap1 + i * 2, SWAP)),
-      ),
-    );
+        EASE_SWAP(swap),
+        // Until its swap is through, a tile shows the opener, and the
+        // opener's push never stops.
+        swap < 1 || parting || pushing,
+      );
+    });
   } else {
-    const qg = spring({ frame: frame - tGrow, fps, config: CARD });
-    const qm =
-      frame >= tMerge + MERGE
+    const qgAt = (f: number) => spring({ frame: f - tGrow, fps, config: CARD });
+    const qg = qgAt(frame);
+    const qmAt = (f: number) =>
+      f >= tMerge + MERGE
         ? 1
         : Math.min(
             1,
             spring({
-              frame: frame - tMerge,
+              frame: f - tMerge,
               fps,
               config: MORPH_SPRING,
               durationInFrames: MERGE,
             }),
           );
+    const qm = qmAt(frame);
+    const reshaping = moves(qgAt) || moves(qmAt);
+    const closing = moves(closerPushAt);
     const m = M * (1 - qm);
     const g = G * (1 - qm);
     const cells = grid(3, 3, W, H, m, g);
@@ -1315,10 +1358,12 @@ export function GridMontage({
           ? lerpRect(two[corner], cells[idx], qg)
           : lerpRect(seed(r, c), cells[idx], qg);
         const ownShot = isCorner ? 1 + corner : 5 + fresh++;
+        const ownStart = isCorner ? tSwap1 : tGrow;
+        const swap = p(tSwap2 + (r + c) * 2, SWAP);
         const own: Fill = {
           type: "own",
           shot: ownShot,
-          push: ownPush(isCorner ? tSwap1 : tGrow),
+          push: ownPush(ownStart),
           focus: FOCI[isCorner ? corner : 4 + fresh - 1],
           nominal: isCorner ? rect : full3[idx],
         };
@@ -1327,6 +1372,7 @@ export function GridMontage({
           panel(
             `b${idx}`,
             rect,
+            full3[idx],
             R * (1 - qm),
             1 - qm,
             own,
@@ -1336,20 +1382,28 @@ export function GridMontage({
               push: closerPush,
               source: thirds[idx],
             },
-            EASE_SWAP(p(tSwap2 + (r + c) * 2, SWAP)),
+            EASE_SWAP(swap),
+            reshaping ||
+              midway(swap) ||
+              (swap < 1 && moves((f) => ownPushAt(ownStart, f))) ||
+              (swap > 0 && closing),
           ),
         );
       }
     }
     body =
       qm >= 1 ? (
-        <AbsoluteFill style={{ transform: `scale(${closerPush})` }}>
+        <AbsoluteFill
+          style={{ transform: `scale(${closerPush})${closerTilt}` }}
+        >
           {shot(10)}
         </AbsoluteFill>
       ) : (
         <>
           {qm > 0.9 ? (
-            <AbsoluteFill style={{ transform: `scale(${closerPush})` }}>
+            <AbsoluteFill
+              style={{ transform: `scale(${closerPush})${closerTilt}` }}
+            >
               {shot(10)}
             </AbsoluteFill>
           ) : null}

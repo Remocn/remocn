@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -254,7 +255,9 @@ export function RotaryDial({
   groundParams,
   speed = 1,
 }: RotaryDialProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
+  const frame = useCurrentFrame();
+  const t = Math.max(0, frame - delay) * speed;
   const { width: VW, height: VH, fps } = useVideoConfig();
   const tall = VH > VW;
   const u = tall ? VW / 760 : Math.min(VW / 1280, VH / 720);
@@ -380,17 +383,27 @@ export function RotaryDial({
   });
   const ridge = 3;
 
-  const cam = spring({
-    frame: t,
-    fps,
-    config: HEAVY,
-    durationInFrames: 54,
-  });
-  const push = interpolate(t, [land, land + 60], [0, 1], {
-    ...CLAMP,
-    easing: MOVE,
-  });
-  const camK = interpolate(cam, [0, 1], [1.08, 1]) + push * 0.02;
+  const camAt = (f: number) => {
+    const tt = Math.max(0, f - delay) * speed;
+    const cam = spring({
+      frame: tt,
+      fps,
+      config: HEAVY,
+      durationInFrames: 54,
+    });
+    const push = interpolate(tt, [land, land + 60], [0, 1], {
+      ...CLAMP,
+      easing: MOVE,
+    });
+    return interpolate(cam, [0, 1], [1.08, 1]) + push * 0.02;
+  };
+  const camK = camAt(frame);
+  // The camera has two drivers, so whether it moves is read off the
+  // neighbouring frames, weighed by the distance to the frame's edge.
+  const reach = Math.max(VW, VH) / 2;
+  const camMoving =
+    Math.abs(camAt(frame + 1) - camK) * reach > 1e-3 ||
+    Math.abs(camK - camAt(frame - 1)) * reach > 1e-3;
   const light = interpolate(t, [BEATS.turn, land + 6], [0, 1], {
     ...CLAMP,
     easing: ENTER,
@@ -607,7 +620,7 @@ export function RotaryDial({
           style={{
             alignItems: "center",
             justifyContent: "center",
-            transform: `scale(${camK})`,
+            transform: `scale(${camK})${glide(camMoving)}`,
           }}
         >
           <div

@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const anton = loadAnton("normal", { weights: ["400"], subsets: ["latin"] });
 
@@ -124,6 +125,12 @@ function digitCount(v: number, decimals: number) {
   return Array.from(format(v, decimals)).length;
 }
 
+// The rises ease out hard, so their tails are tested frame to frame on the
+// px they travel rather than on a progress.
+const stirs = (at: (f: number) => number, f: number, step: number) =>
+  Math.abs(at(f + step) - at(f)) > 1e-3 ||
+  Math.abs(at(f) - at(f - step)) > 1e-3;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -158,6 +165,7 @@ export function SlimCount({
   speed = 1,
   theme = "dark",
 }: SlimCountProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -217,10 +225,12 @@ export function SlimCount({
       ? "inset(100% 0 0 0)"
       : `polygon(${pts.join(", ")}, 100% 100%, 0% 100%)`;
 
-  const rise = interpolate(t, [0, RISE_LEN], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const riseAt = (f: number) =>
+    interpolate(f, [0, RISE_LEN], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  const rise = riseAt(t);
   const strokeW = Math.max(2, F * 0.011);
   const labelSize = portrait ? W * 0.1 : H * 0.094;
   const words = label ? label.split(" ") : [];
@@ -259,7 +269,7 @@ export function SlimCount({
               left: 0,
               top: boxTop - (baseY - capPx - F * 0.1),
               height: F,
-              transform: `translateY(${((1 - rise) * capPx * 1.15).toFixed(2)}px)`,
+              transform: `translateY(${((1 - rise) * capPx * 1.15).toFixed(2)}px)${glide(stirs((f) => riseAt(f) * capPx * 1.15, t, speed))}`,
             }}
           >
             <div
@@ -298,19 +308,21 @@ export function SlimCount({
             }}
           >
             {words.map((w, i) => {
-              const p = interpolate(
-                t,
-                [LABEL_AT + i * stagger, LABEL_AT + i * stagger + 16],
-                [0, 1],
-                { ...CLAMP, easing: EASE_OUT },
-              );
+              const wordAt = (f: number) =>
+                interpolate(
+                  f,
+                  [LABEL_AT + i * stagger, LABEL_AT + i * stagger + 16],
+                  [0, 1],
+                  { ...CLAMP, easing: EASE_OUT },
+                );
+              const p = wordAt(t);
               return (
                 <span key={`${w}-${i}`}>
                   <span
                     style={{
                       display: "inline-block",
                       opacity: p,
-                      transform: `translateY(${((1 - p) * labelSize * 0.5).toFixed(2)}px)`,
+                      transform: `translateY(${((1 - p) * labelSize * 0.5).toFixed(2)}px)${glide(stirs((f) => wordAt(f) * labelSize * 0.5, t, speed))}`,
                     }}
                   >
                     {w}

@@ -9,6 +9,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: condensed } = loadFont("normal", {
   weights: ["400", "500"],
@@ -166,6 +167,7 @@ export function MaxQ({
   theme = "dark",
   speed = 1,
 }: MaxQProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -219,6 +221,9 @@ export function MaxQ({
   const statusAt = MAXQ_AT + BAND_IN + bandHold + BAND_OUT - 1;
   const statusIn = OUT(ramp(t, statusAt, 12));
   const settleHit = kick(t - RACE_END, 8);
+  const settling =
+    kick(t + 1 - RACE_END, 8) !== settleHit ||
+    kick(t - 1 - RACE_END, 8) !== settleHit;
 
   const drift = ramp(t, 0, 150);
   const ground = [
@@ -236,6 +241,7 @@ export function MaxQ({
     whiteSpace: "nowrap",
     lineHeight: 1,
   };
+  const rise = `translateY(${(1 - intro) * 30 * u}px)${glide(intro < 1)}`;
   const number: React.CSSProperties = {
     fontFamily,
     fontWeight: 500,
@@ -342,7 +348,7 @@ export function MaxQ({
             left: margin,
             top: 0,
             opacity: intro,
-            transform: `translateY(${(1 - intro) * 30 * u}px)`,
+            transform: rise,
           }}
         >
           <div
@@ -362,7 +368,7 @@ export function MaxQ({
               position: "absolute",
               left: 0,
               top: numCY - numFs / 2,
-              transform: `scale(${1 + 0.015 * settleHit})`,
+              transform: `scale(${1 + 0.015 * settleHit})${glide(settling)}`,
               transformOrigin: "left center",
             }}
           >
@@ -377,7 +383,7 @@ export function MaxQ({
             right: margin,
             top: 0,
             opacity: intro,
-            transform: `translateY(${(1 - intro) * 30 * u}px)`,
+            transform: rise,
           }}
         >
           <div
@@ -400,7 +406,7 @@ export function MaxQ({
               position: "absolute",
               right: 0,
               top: numCY - numFs / 2,
-              transform: `scale(${1 + 0.015 * settleHit})`,
+              transform: `scale(${1 + 0.015 * settleHit})${glide(settling)}`,
               transformOrigin: "right center",
             }}
           >
@@ -420,7 +426,7 @@ export function MaxQ({
             alignItems: "center",
             gap: 16 * u,
             opacity: statusIn,
-            transform: `translateY(${(1 - statusIn) * -22 * u}px)`,
+            transform: `translateY(${(1 - statusIn) * -22 * u}px)${glide(statusIn > 0 && statusIn < 1)}`,
           }}
         >
           <div

@@ -1,7 +1,7 @@
 import { Interactive } from "remotion";
 import type { SceneProps } from "../content";
 import { type CountryKey, countryOutlines } from "../countries";
-import { move, ramp, smooth } from "../motion";
+import { midway, move, ramp, smooth, useGlide } from "../motion";
 
 const topologyPaths = {
   single: "M15 38h24v24H15ZM61 38h24v24H61ZM39 50h22",
@@ -14,6 +14,7 @@ const topologyPaths = {
 };
 
 export function Geography({ scene, t }: SceneProps) {
+  const glide = useGlide();
   const local = t - 12.55;
   const selected = scene.useCountries
     ? scene.countries
@@ -32,6 +33,15 @@ export function Geography({ scene, t }: SceneProps) {
     Math.sin(move(t, 15.75, 16.2, 0, Math.PI, smooth)) * 75;
   const intro = move(local, 0, 0.45);
   const outro = move(t, 16.45, 16.8);
+  // The card is laid out where it comes to rest and its travel there is a
+  // transform: layout rounds a baseline to whole pixels, so a label riding
+  // `top` and a growing `height` clicks down pixel by pixel.
+  const card = {
+    left: move(local, 0, 0.45, 80, 175),
+    top: move(local, 0, 0.45, 110, 67),
+    height: move(local, 0, 0.45, 48, 130),
+  };
+  const opening = intro < 1;
   return (
     <Interactive.Div
       name="Environment carousel"
@@ -85,10 +95,14 @@ export function Geography({ scene, t }: SceneProps) {
       <div
         style={{
           position: "absolute",
-          left: move(local, 0, 0.45, 80, 175),
-          top: move(local, 0, 0.45, 110, 67),
+          left: 175,
+          top: 67,
           width: move(local, 0, 0.45, 320, 130),
-          height: move(local, 0, 0.45, 48, 130),
+          height: card.height,
+          // The label's lean is marked on this transform, so it stays on at
+          // rest as translate(0): dropping it there would hand the label back
+          // to layout in one frame.
+          transform: `translate(${card.left - 175}px, ${card.top - 67}px)${glide(midway(intro))}`,
           border: "0.8px solid #3b536c",
           borderRadius: move(local, 0, 0.45, 0, 14),
           boxShadow: "0 0 0 2px #ffffff03",
@@ -144,7 +158,11 @@ export function Geography({ scene, t }: SceneProps) {
           <div
             style={{
               position: "absolute",
-              bottom: 8,
+              // Pinned to where the card's foot comes to rest: `bottom` gives
+              // back what the card still has to grow, and the label rides
+              // that distance on a transform.
+              bottom: 8 + (card.height - 130),
+              translate: opening ? `0px ${card.height - 130}px` : undefined,
               width: "100%",
               textAlign: "center",
               color: scene.accent,

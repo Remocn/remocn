@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -163,6 +164,7 @@ export function SplitFlash({
   speed = 1,
 }: SplitFlashProps) {
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
@@ -209,10 +211,35 @@ export function SplitFlash({
     !(since >= BLINK_AT && since < BLINK_AT + BLINK_LEN);
   const progress =
     finalMs === null ? 1 : Math.min(1, Math.max(0, t / freezeAt));
-  const push = 0.955 + 0.045 * PUSH(progress);
-  const drop = DROP(
-    interpolate(since, [DELTA_AT, DELTA_AT + DELTA_LEN], [0, 1], CLAMP),
-  );
+  const pushAt = (tt: number) =>
+    0.955 +
+    0.045 *
+      PUSH(finalMs === null ? 1 : Math.min(1, Math.max(0, tt / freezeAt)));
+  const push = pushAt(t);
+  // SVG text under a scaling group steps pixel by pixel while the matrix is
+  // axis-aligned, so the drawing leans while the clock creeps closer. Moving: the push changes against either neighbouring
+  // frame by more than a thousandth of a pixel at the clock's edge.
+  const pushMoving =
+    !frozen &&
+    (Math.abs(pushAt(t + speed) - push) * (W / 2) > 1e-3 ||
+      Math.abs(push - pushAt(t - speed)) * (W / 2) > 1e-3);
+  const dropAt = (tt: number) =>
+    DROP(
+      interpolate(
+        tt - freezeAt,
+        [DELTA_AT, DELTA_AT + DELTA_LEN],
+        [0, 1],
+        CLAMP,
+      ),
+    );
+  const drop = dropAt(t);
+
+  const deltaYAt = (tt: number) =>
+    bandBottom + deltaFs * (0.28 + CAP) - deltaFs * 1.1 * (1 - dropAt(tt));
+  const deltaY = deltaYAt(t);
+  const dropMoving =
+    Math.abs(deltaYAt(t + speed) - deltaY) > 1e-3 ||
+    Math.abs(deltaY - deltaYAt(t - speed)) > 1e-3;
 
   const lineH = Math.max(3, 0.0065 * H);
   // The band grows up out of the sector line, then blinks.
@@ -238,7 +265,12 @@ export function SplitFlash({
           width={W}
           height={H}
           viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
+          // SVG text placed by attributes leans with its whole drawing.
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: glide(pushMoving || dropMoving),
+          }}
           role="img"
           aria-label={`${frozen ? flashLabel : label} ${time} ${delta}`}
         >
@@ -319,11 +351,7 @@ export function SplitFlash({
             <g clipPath={`url(#${uid}-under)`}>
               <text
                 x={inkL + inkW}
-                y={
-                  bandBottom +
-                  deltaFs * (0.28 + CAP) -
-                  deltaFs * 1.1 * (1 - drop)
-                }
+                y={deltaY}
                 textAnchor="end"
                 fill={c.flash}
                 fontFamily={fontFamily}

@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const geologica = loadFont("normal", {
   weights: ["400", "500"],
@@ -203,6 +204,7 @@ export function NameGloss({
   speed = 1,
   theme = "dark",
 }: NameGlossProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -251,8 +253,14 @@ export function NameGloss({
   const whyAt = glossAt(n - 1) + WHY_AFTER;
   const moveAt = NAME_IN + NAME_HOLD;
 
+  const easeAt = (tt: number, from: number, dur: number, curve = EASE_OUT) =>
+    interpolate(tt, [from, from + dur], [0, 1], { ...CLAMP, easing: curve });
   const ease = (from: number, dur: number, curve = EASE_OUT) =>
-    interpolate(t, [from, from + dur], [0, 1], { ...CLAMP, easing: curve });
+    easeAt(t, from, dur, curve);
+  // Whether a rise of `px` that starts at `from` is still travelling.
+  const rising = (from: number, dur: number, px: number) =>
+    Math.abs(easeAt(t + 1, from, dur) - easeAt(t, from, dur)) * px > 1e-3 ||
+    Math.abs(easeAt(t, from, dur) - easeAt(t - 1, from, dur)) * px > 1e-3;
 
   let G = H * (portrait ? 0.05 : 0.085);
   let F = 0;
@@ -352,13 +360,16 @@ export function NameGloss({
   }
 
   const move = ease(moveAt, MOVE, EASE_MOVE);
+  // Layout rounds a box and a baseline to whole pixels, so a word carried by
+  // `left`/`top` steps along, and one handed back to layout when it stops
+  // jumps. It is laid out in its column for its whole life and rides there
+  // by transform.
+  const moving = move > 0 && move < 1;
   const nodes: React.ReactNode[] = [];
 
   placed.forEach((pl, i) => {
     const p = list[i];
     const inE = ease(i * 3, NAME_IN);
-    const x = pl.x0 + (pl.x1 - pl.x0) * move;
-    const y = pl.y0 + (pl.y1 - pl.y0) * move;
     const active = ease(glossAt(i) - 4, 10);
     const done = ease(whyAt - 6, 14);
     const waiting = ease(moveAt + MOVE - 8, 10);
@@ -369,8 +380,9 @@ export function NameGloss({
         key={`word-${p.word}-${i}`}
         style={{
           position: "absolute",
-          left: x - F * 0.05,
-          top: y - F * 0.12,
+          left: pl.x1 - F * 0.05,
+          top: pl.y1 - F * 0.12,
+          transform: `translate(${(pl.x0 - pl.x1) * (1 - move)}px, ${(pl.y0 - pl.y1) * (1 - move)}px)${glide(moving)}`,
           height: F * 1.3,
           paddingLeft: F * 0.05,
           paddingRight: F * 0.12,
@@ -388,7 +400,7 @@ export function NameGloss({
         <span
           style={{
             display: "inline-block",
-            transform: `translateY(${((1 - inE) * F * 1.2).toFixed(2)}px)`,
+            transform: `translateY(${((1 - inE) * F * 1.2).toFixed(2)}px)${glide(rising(i * 3, NAME_IN, F * 1.2))}`,
           }}
         >
           {p.word}
@@ -419,14 +431,15 @@ export function NameGloss({
         {pl.gloss.map((line) => (
           <div key={line.join(" ")}>
             {line.map((w, k) => {
-              const e = ease(at + wi++ * stagger, WORD_IN);
+              const from = at + wi++ * stagger;
+              const e = ease(from, WORD_IN);
               return (
                 <span
                   key={`${w}-${k}`}
                   style={{
                     display: "inline-block",
                     opacity: e * 0.86,
-                    transform: `translateY(${((1 - e) * G * 0.7).toFixed(2)}px)`,
+                    transform: `translateY(${((1 - e) * G * 0.7).toFixed(2)}px)${glide(rising(from, WORD_IN, G * 0.7))}`,
                   }}
                 >
                   {k > 0 ? ` ${w}` : w}
@@ -461,14 +474,15 @@ export function NameGloss({
         {whyLines.map((line) => (
           <div key={line.join(" ")}>
             {line.map((w, k) => {
-              const e = ease(whyAt + wi++ * stagger, WORD_IN);
+              const from = whyAt + wi++ * stagger;
+              const e = ease(from, WORD_IN);
               return (
                 <span
                   key={`${w}-${k}`}
                   style={{
                     display: "inline-block",
                     opacity: e,
-                    transform: `translateY(${((1 - e) * whyF * 0.7).toFixed(2)}px)`,
+                    transform: `translateY(${((1 - e) * whyF * 0.7).toFixed(2)}px)${glide(rising(from, WORD_IN, whyF * 0.7))}`,
                   }}
                 >
                   {k > 0 ? ` ${w}` : w}

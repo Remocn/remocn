@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -276,6 +277,7 @@ const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 const BURST = Easing.bezier(0.83, 0, 0.17, 1);
 const ROLL = Easing.bezier(0.65, 0, 0.35, 1);
 const EXIT = Easing.bezier(0.55, 0, 1, 0.45);
+
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -300,6 +302,7 @@ export function FloodSting({
   ground,
   groundParams,
 }: FloodStingProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const t = THEMES[theme];
@@ -443,13 +446,15 @@ export function FloodSting({
           <div
             style={{
               position: "absolute",
-              left: hx - (S * 1.36) / 2,
+              // Laid out on the slot it ends on; the hops there are a
+              // transform, since layout rounds a box's edges to whole pixels.
+              left: slotX(target) - (S * 1.36) / 2,
               top: cy - (S * 1.36) / 2,
               width: S * 1.36,
               height: S * 1.36,
               borderRadius: S * radius,
               backgroundColor: hlColor,
-              transform: `scale(${hlIn * pressScale})`,
+              transform: `translateX(${hx - slotX(target)}px) scale(${hlIn * pressScale})`,
               boxShadow: `0 ${S * 0.08}px ${S * 0.24}px rgba(0,0,0,${theme === "light" ? 0.12 : 0.4})`,
             }}
           />
@@ -517,7 +522,9 @@ export function FloodSting({
         />
       </AbsoluteFill>
       <ScaleLayer scale={scale}>
-        <AbsoluteFill style={{ transform: `scale(${push})` }}>
+        {/* The push never rests and carries the logo, so this layer, which
+            paints nothing of its own, is always tilted. */}
+        <AbsoluteFill style={{ transform: `scale(${push})${glide(true)}` }}>
           {frame >= beat("flood") && pickedOut < 1 ? (
             <div
               style={{
@@ -564,14 +571,16 @@ export function FloodSting({
                 key={`dot-${i}`}
                 style={{
                   position: "absolute",
-                  left: x - dot / 2,
-                  top: y - dot / 2,
+                  // Laid out on its corner; the flank to the logo is a
+                  // transform, for the same reason as the highlight's hops.
+                  left: x0 - dot / 2,
+                  top: y0 - dot / 2,
                   width: dot,
                   height: dot,
                   borderRadius: "50%",
                   backgroundColor: col,
                   opacity: before,
-                  transform: `scale(${Math.max(0, s)})`,
+                  transform: `translate(${x - x0}px, ${y - y0}px) scale(${Math.max(0, s)})`,
                 }}
               />
             );

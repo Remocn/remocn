@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface KineticCenterBuildProps {
   text: string;
@@ -18,6 +19,8 @@ const FONT_FAMILY =
 
 const MEASURE_FONT =
   '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 function measureWidths(
   words: string[],
@@ -42,6 +45,7 @@ export function KineticCenterBuild({
   speed = 1,
   className,
 }: KineticCenterBuildProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame() * speed;
 
   const words = useMemo(() => text.split(" "), [text]);
@@ -112,6 +116,7 @@ export function KineticCenterBuild({
           let scale = 1;
           let blur = 0;
           let y = 0;
+          let moving = false;
 
           if (frame < entryStart) {
             opacity = 0;
@@ -132,6 +137,7 @@ export function KineticCenterBuild({
             };
             x = interpolate(frame, travelRange, [xFrom, targetX], opts);
             opacity = interpolate(frame, range, [0, 1], opts);
+            moving = midway(opacity);
             scale = interpolate(frame, range, [entryScale, 1], opts);
             blur = interpolate(frame, range, [entryBlur, 0], opts);
             y =
@@ -180,7 +186,7 @@ export function KineticCenterBuild({
                 top: "50%",
                 whiteSpace: "nowrap",
                 backfaceVisibility: "hidden",
-                transform: `translate(-50%, -50%) translate3d(${x}px, ${y}px, 0) scale(${scale})`,
+                transform: `translate(-50%, -50%) translate3d(${x}px, ${y}px, 0) scale(${scale})${glide(moving)}`,
                 filter: `blur(${blur}px)`,
                 opacity,
               }}

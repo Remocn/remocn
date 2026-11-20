@@ -14,6 +14,7 @@ import {
   random,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const clampOpts = {
   extrapolateLeft: "clamp" as const,
@@ -197,6 +198,7 @@ const AsciiDissolvePresentation: React.FC<
     enterFade,
   } = passedProps;
   const { width, height } = useVideoConfig();
+  const glide = useGlide();
   const entering = presentationDirection === "entering";
   const p = presentationProgress;
   const textMode = enterText !== undefined;
@@ -456,14 +458,16 @@ const AsciiDissolvePresentation: React.FC<
         [10, 0],
         clampOpts,
       );
+  const settle = interpolate(p, [enterWindow[0], 1], [0, 1], {
+    ...clampOpts,
+    easing: Easing.out(Easing.cubic),
+  });
   const childStyle: React.CSSProperties = textMode
     ? { opacity: interpolate(p, enterWindow, [0, 1], clampOpts) }
     : {
         opacity: interpolate(p, enterWindow, [0, 1], clampOpts),
-        scale: `${interpolate(p, [enterWindow[0], 1], [1.04, 1], {
-          ...clampOpts,
-          easing: Easing.out(Easing.cubic),
-        })}`,
+        // Marked, so the incoming scene's text leans while the scale settles.
+        transform: `scale(${interpolate(settle, [0, 1], [1.04, 1])})${glide(settle > 0 && settle < 1)}`,
         filter: enterBlur > 0.01 ? `blur(${enterBlur}px)` : undefined,
       };
 

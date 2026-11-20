@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadTight("normal", {
   weights: ["500"],
@@ -111,6 +112,8 @@ const SERIF_BASELINE = 0.84;
 
 const STAGGER = 6;
 const FIRST = 6;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -316,6 +319,7 @@ export function TaglineJustify({
   theme = "dark",
   speed = 1,
 }: TaglineJustifyProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const u = H / 720;
@@ -388,11 +392,17 @@ export function TaglineJustify({
       levels[m] = (width - sum) / (m - 1);
     }
     levels[1] = (levels[2] ?? SPACE) + 1.1;
-    let gap = levels[1];
-    for (let m = 2; m <= n; m++) {
-      gap += (levels[m] - levels[m - 1]) * settle(line[m - 1]);
-    }
+    const gapAt = (settled: (j: number) => number) => {
+      let g = levels[1];
+      for (let m = 2; m <= n; m++) {
+        g += (levels[m] - levels[m - 1]) * settled(line[m - 1]);
+      }
+      return g;
+    };
+    const gap = gapAt(settle);
+    const gapRest = gapAt(() => 1);
     let x = 0;
+    let xRest = 0;
     line.forEach((j, k) => {
       const s = settle(j);
       const firstIn = k === 0 ? (1 - s) * 0.5 : 0;
@@ -403,6 +413,14 @@ export function TaglineJustify({
         : 0;
       const anchor = k === 0 ? x : x + widths[j];
       const size = isKey ? F * SERIF_SCALE : F;
+      // The highlight paints a clipped box, and layout rounds a box edge to
+      // whole pixels: it is laid out where it settles and slides there by
+      // transform. Plain words keep their `left`; their glyphs place
+      // sub-pixel on x.
+      const restAnchor = k === 0 ? xRest : xRest + widths[j];
+      const dx = isKey ? (anchor + firstIn - restAnchor) * F : 0;
+      const slide = Math.abs(dx) > 1e-3 ? `translateX(${dx}px)` : "";
+      const lean = k === 0 ? "" : "translateX(-100%)";
       if (isKey) {
         key.box = {
           x: left + (anchor + firstIn - (k === 0 ? 0 : widths[j])) * F,
@@ -417,8 +435,8 @@ export function TaglineJustify({
           style={{
             position: "absolute",
             top: baselines[li] - (isKey ? SERIF_BASELINE : BASELINE) * size,
-            left: left + (anchor + firstIn) * F,
-            transform: k === 0 ? undefined : "translateX(-100%)",
+            left: left + (isKey ? restAnchor : anchor + firstIn) * F,
+            transform: [slide, lean].filter(Boolean).join(" ") || undefined,
             fontFamily: isKey ? serif : fontFamily,
             fontStyle: isKey ? "italic" : "normal",
             fontWeight: isKey ? 400 : 500,
@@ -450,6 +468,7 @@ export function TaglineJustify({
         </div>,
       );
       x += widths[j] + gap;
+      xRest += widths[j] + gapRest;
     });
   });
 
@@ -477,7 +496,7 @@ export function TaglineJustify({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${1 + push * 0.025})`,
+            transform: `scale(${1 + push * 0.025})${glide(midway(push))}`,
             transformOrigin: "50% 45%",
           }}
         >

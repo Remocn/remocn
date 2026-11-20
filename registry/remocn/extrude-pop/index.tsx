@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface ExtrudePopProps {
   className?: string;
@@ -40,6 +41,7 @@ export function ExtrudePop({
   bodyColor = "#e8192b",
   faceColor = "#ffffff",
 }: ExtrudePopProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame();
 
   const fit = useMemo(() => {
@@ -55,16 +57,18 @@ export function ExtrudePop({
   const fitFontSize = fontSize * fit;
   const fitRadius = minimaxRadius * fit;
 
-  const radius = interpolate(
-    frame,
-    [extrudeStartFrame, extrudeEndFrame],
-    [0, fitRadius],
-    {
+  const radiusAt = (f: number) =>
+    interpolate(f, [extrudeStartFrame, extrudeEndFrame], [0, fitRadius], {
       extrapolateLeft: "clamp",
       extrapolateRight: "clamp",
       easing: Easing.bezier(0.16, 1, 0.3, 1),
-    },
-  );
+    });
+  const radius = radiusAt(frame);
+  // The face travels 2 * radius; the ease-out tail is long, so this tests the
+  // travel itself rather than the progress.
+  const moving =
+    Math.abs(radiusAt(frame + 1) - radius) * 2 > 1e-3 ||
+    Math.abs(radius - radiusAt(frame - 1)) * 2 > 1e-3;
 
   const depth = radius * 2;
 
@@ -72,7 +76,7 @@ export function ExtrudePop({
   const stepX = (depth * Math.sin(theta)) / extrudeSteps;
   const stepY = (depth * Math.cos(theta)) / extrudeSteps;
 
-  const glyph = (fill: string, dx: number, dy: number, key?: string) => (
+  const glyph = (fill: string, dx: number, dy: number, key: string) => (
     <text
       key={key}
       x={basePosition[0] + dx}
@@ -105,8 +109,29 @@ export function ExtrudePop({
             (_, i) => extrudeSteps - i,
           ).map((i) => glyph(bodyColor, stepX * i, stepY * i, `body-${i}`))}
         </g>
-
-        {glyph(faceColor, stepX * extrudeSteps, stepY * extrudeSteps)}
+      </svg>
+      {/* The face, stepped along by its x/y, is marked so it leans off the
+          pixel grid while it moves. A marked drawing leans whole, so the face
+          is a drawing of its own over the stack, with a body layer under it
+          so no edge of it is left bare: across the whole stack the lean opens
+          pinholes between layers, and a layer stepping inside a solid body
+          shows nowhere. */}
+      <svg
+        width="100%"
+        height="100%"
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="xMidYMid meet"
+        style={{ position: "absolute", inset: 0, transform: glide(moving) }}
+      >
+        {moving
+          ? glyph(
+              bodyColor,
+              stepX * extrudeSteps,
+              stepY * extrudeSteps,
+              "under",
+            )
+          : null}
+        {glyph(faceColor, stepX * extrudeSteps, stepY * extrudeSteps, "face")}
       </svg>
     </div>
   );

@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const instrument = loadInstrument("normal", {
   weights: ["400", "500"],
@@ -68,6 +69,7 @@ const SNAP_AT = 26;
 const SNAP_GAP = 12;
 const LABEL_AT = 66;
 const SLICE = 0.5;
+const BLEED = 2;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const CLAMP = {
@@ -232,7 +234,9 @@ export function StemStretch({
   speed = 1,
   theme = "dark",
 }: StemStretchProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
+  const frame = useCurrentFrame();
+  const t = Math.max(0, frame - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
@@ -255,15 +259,24 @@ export function StemStretch({
   );
   const block = gapMax / n;
 
-  let snapped = 0;
-  for (let k = 0; k < n; k++) {
-    snapped += spring({
-      frame: t - (SNAP_AT + k * snapGap),
-      fps,
-      config: { damping: 13, stiffness: 210, mass: 0.7 },
-    });
-  }
-  const gap = block * snapped;
+  const gapAt = (f: number) => {
+    const tt = Math.max(0, f - delay) * speed;
+    let snapped = 0;
+    for (let k = 0; k < n; k++) {
+      snapped += spring({
+        frame: tt - (SNAP_AT + k * snapGap),
+        fps,
+        config: { damping: 13, stiffness: 210, mass: 0.7 },
+      });
+    }
+    return block * snapped;
+  };
+  const gap = gapAt(frame);
+  // The snaps overshoot and never quite settle, so motion is read off the
+  // neighbouring frames rather than a progress.
+  const snapping =
+    Math.abs(gapAt(frame + 1) - gap) > 1e-3 ||
+    Math.abs(gap - gapAt(frame - 1)) > 1e-3;
 
   const labelSize = Math.min(
     Math.max(F * 0.17, H * 0.044 * scale),
@@ -271,11 +284,23 @@ export function StemStretch({
     (W * 0.84 * scale) / Math.max(0.1, m.label),
   );
   const labelGap = label ? Math.max(F * 0.2, H * 0.04 * scale) : 0;
-  const groupH = capPx + gap + (label ? labelGap + labelSize : 0);
-  const capTop = (H - groupH) / 2;
+  const capTopAt = (g: number) =>
+    (H - (capPx + g + (label ? labelGap + labelSize : 0))) / 2;
+  const capTop = capTopAt(gap);
   const baseY = capTop + capPx + gap;
   const lineTop0 = capTop + capPx - m.baseline * F;
   const cutY0 = capTop + capPx - m.cut * F;
+  // The group recentres as the gap opens. Each piece is laid out where the
+  // open gap leaves it and rides there by a transform: layout rounds a box
+  // and a baseline to whole pixels, so pieces eased by `top` click along
+  // pixel by pixel, each on its own frame.
+  const gapRest = block * n;
+  const shift = capTop - capTopAt(gapRest);
+  const lower = shift + gap - gapRest;
+  const ride = (dy: number, tilt = true) =>
+    Math.abs(dy) < 1e-3 && !snapping
+      ? undefined
+      : `translateY(${dy}px)${glide(snapping && tilt)}`;
   const left = (W - m.width * F) / 2;
 
   const chars = Array.from(value);
@@ -297,7 +322,7 @@ export function StemStretch({
             position: "absolute",
             left: gx,
             top: 0,
-            transform: `translateY(${((1 - p) * F * 0.9).toFixed(2)}px)`,
+            transform: `translateY(${((1 - p) * F * 0.9).toFixed(2)}px)${glide(p > 0 && p < 1 && !snapping)}`,
             ...style,
           }}
         >
@@ -348,9 +373,10 @@ export function StemStretch({
           position: "absolute",
           left: 0,
           width: W,
-          top: maskTop,
+          top: maskTop - shift,
           height: cutY0 - maskTop,
           overflow: "hidden",
+          transform: ride(shift),
         }}
       >
         <div style={{ ...lineStyle, top: lineTop0 - maskTop, color: fg }}>
@@ -363,52 +389,69 @@ export function StemStretch({
             position: "absolute",
             left: 0,
             width: W,
-            top: cutY0,
-            height: gap,
-            overflow: "hidden",
+            // The band rides by a transform too, so its edges land between
+            // pixels. Where the fill only half covers an edge pixel it leaks
+            // through the blend as a hairline across the frame, so the
+            // group's neutral ground bleeds past the clip and every edge
+            // pixel of the fill sits on solid ground. For the same reason the
+            // band takes no tilt; the stretched glyphs inside carry it.
+            top: cutY0 - shift - BLEED,
+            height: gap + 2 * BLEED,
             isolation: "isolate",
+            transform: ride(shift, false),
             background: groupBg,
             mixBlendMode: theme === "dark" ? "screen" : "multiply",
           }}
         >
           <div
             style={{
-              ...lineStyle,
-              top: -cutLocal,
-              transformOrigin: `0 ${cutLocal}px`,
-              transform: `scaleY(${k.toFixed(3)})`,
-              color: groupInk,
+              position: "absolute",
+              left: 0,
+              top: BLEED,
+              width: W,
+              height: gap,
+              overflow: "hidden",
             }}
           >
-            {glyphs("mid", {})}
+            <div
+              style={{
+                ...lineStyle,
+                top: -cutLocal,
+                transformOrigin: `0 ${cutLocal}px`,
+                transform: `scaleY(${k.toFixed(3)})${glide(snapping)}`,
+                color: groupInk,
+              }}
+            >
+              {glyphs("mid", {})}
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                backgroundImage: stretchFill,
+                backgroundSize: "100% 114%",
+                backgroundPosition: `0 ${(50 + Math.sin(drift * 0.5) * 45).toFixed(2)}%`,
+                mixBlendMode: theme === "dark" ? "multiply" : "screen",
+              }}
+            />
+            {Array.from({ length: n - 1 }, (_, j) => {
+              const y = (j + 1) * block;
+              if (y >= gap - 1) return null;
+              return (
+                <div
+                  key={`tick-${j}`}
+                  style={{
+                    position: "absolute",
+                    left: left - F * 0.04,
+                    width: m.width * F + F * 0.08,
+                    top: y - Math.max(1, F * 0.016),
+                    height: Math.max(2, F * 0.032),
+                    background: groupBg,
+                  }}
+                />
+              );
+            })}
           </div>
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              backgroundImage: stretchFill,
-              backgroundSize: "100% 114%",
-              backgroundPosition: `0 ${(50 + Math.sin(drift * 0.5) * 45).toFixed(2)}%`,
-              mixBlendMode: theme === "dark" ? "multiply" : "screen",
-            }}
-          />
-          {Array.from({ length: n - 1 }, (_, j) => {
-            const y = (j + 1) * block;
-            if (y >= gap - 1) return null;
-            return (
-              <div
-                key={`tick-${j}`}
-                style={{
-                  position: "absolute",
-                  left: left - F * 0.04,
-                  width: m.width * F + F * 0.08,
-                  top: y - Math.max(1, F * 0.016),
-                  height: Math.max(2, F * 0.032),
-                  background: groupBg,
-                }}
-              />
-            );
-          })}
         </div>
       ) : null}
       <div
@@ -416,9 +459,10 @@ export function StemStretch({
           position: "absolute",
           left: 0,
           width: W,
-          top: cutY0 + gap,
+          top: cutY0 + gap - lower,
           height: baseY + (m.desc + 0.02) * F - (cutY0 + gap),
           overflow: "hidden",
+          transform: ride(lower),
         }}
       >
         <div
@@ -437,7 +481,8 @@ export function StemStretch({
             position: "absolute",
             left: 0,
             width: W,
-            top: baseY + labelGap,
+            top: baseY + labelGap - lower,
+            transform: ride(lower),
             textAlign: "center",
             fontFamily,
             fontWeight: 400,
@@ -461,7 +506,7 @@ export function StemStretch({
                 style={{
                   display: "inline-block",
                   opacity: p,
-                  transform: `translateY(${((1 - p) * labelSize * 0.6).toFixed(2)}px)`,
+                  transform: `translateY(${((1 - p) * labelSize * 0.6).toFixed(2)}px)${glide(p > 0 && p < 1 && !snapping)}`,
                 }}
               >
                 {w}

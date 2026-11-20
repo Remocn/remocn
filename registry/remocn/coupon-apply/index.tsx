@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -217,7 +218,15 @@ function pathAt(keys: Key[], f: number): Pt {
   return keys[keys.length - 1];
 }
 
-function Cursor({ x, y, press }: Pt & { press: number }) {
+function Cursor({ x, y, rest, press }: Pt & { rest: Pt; press: number }) {
+  // Laid out where the cursor comes to rest; the travel is a transform so its
+  // box edges don't step pixel by pixel.
+  const dx = x - rest.x;
+  const dy = y - rest.y;
+  const move =
+    Math.abs(dx) < 1e-3 && Math.abs(dy) < 1e-3
+      ? ""
+      : `translate(${dx}px, ${dy}px) `;
   return (
     <svg
       width={24}
@@ -225,10 +234,10 @@ function Cursor({ x, y, press }: Pt & { press: number }) {
       viewBox="0 0 20 24"
       style={{
         position: "absolute",
-        left: x - 2,
-        top: y - 2,
+        left: rest.x - 2,
+        top: rest.y - 2,
         transformOrigin: "2px 2px",
-        transform: `scale(${1 - 0.1 * press})`,
+        transform: `${move}scale(${1 - 0.1 * press})`,
         filter: "drop-shadow(0 3px 5px rgba(0,0,0,0.3))",
         overflow: "visible",
       }}
@@ -327,6 +336,10 @@ function RollingAmount({
   );
 }
 
+/** A translate, or nothing once a spring's leftover is under a thousandth. */
+const shiftY = (dy: number) =>
+  Math.abs(dy) < 1e-3 ? undefined : `translateY(${dy}px)`;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -367,6 +380,7 @@ export function CouponApply({
   ground,
   groundParams,
 }: CouponApplyProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps, durationInFrames } = useVideoConfig();
   const tall = height > width;
@@ -456,13 +470,20 @@ export function CouponApply({
         spring({ frame: frame - at - 4, fps, config: CHIP }),
     );
 
-  const enter = spring({ frame, fps, config: HEAVY });
+  const enterAt = (f: number) => spring({ frame: f, fps, config: HEAVY });
+  const enter = enterAt(frame);
+  // Whether a value built from the frame moves into or out of this frame.
+  const stirs = (at: (f: number) => number, eps: number) =>
+    Math.abs(at(frame + 1) - at(frame)) > eps ||
+    Math.abs(at(frame) - at(frame - 1)) > eps;
   const sideIn = spring({ frame: frame - 6, fps, config: CARD });
 
-  const errP = hasInvalid
-    ? spring({ frame: frame - t.reject, fps, config: MORPH }) -
-      spring({ frame: frame - t.type2, fps, config: MORPH })
-    : 0;
+  const errAt = (f: number) =>
+    hasInvalid
+      ? spring({ frame: f - t.reject, fps, config: MORPH }) -
+        spring({ frame: f - t.type2, fps, config: MORPH })
+      : 0;
+  const errP = errAt(frame);
   const errO = Math.max(0, errP) * ERR_H;
 
   const fieldPt = {
@@ -532,13 +553,21 @@ export function CouponApply({
   const payP = tween(frame, t.pay, t.pay + 10, MOVE);
   const payGlow = tween(frame, t.pay + 18, t.pay + 26, ENTER2);
 
-  const zoomIn = tween(frame, 8, 40, MOVE);
-  const zoomOut = tween(frame, t.accept - 2, t.accept + 26, CAMERA);
-  const camZ = 1 + (tall ? 0.16 : 0.14) * zoomIn * (1 - zoomOut);
+  const camAt = (f: number) =>
+    (1 +
+      (tall ? 0.16 : 0.14) *
+        tween(f, 8, 40, MOVE) *
+        (1 - tween(f, t.accept - 2, t.accept + 26, CAMERA))) *
+    (1 + 0.02 * tween(f, t.accept + 20, durationInFrames, MOVE));
+  // The camera carries the whole checkout, so its tilt covers everything
+  // under it; the movers below tilt themselves only while it holds still.
+  const camMoving = stirs(camAt, 1e-6);
+  const cardMoving = !camMoving && stirs((f) => (1 - enterAt(f)) * 48, 5e-4);
+  const errMoving =
+    !camMoving && stirs((f) => Math.max(0, errAt(f)) * ERR_H, 5e-4);
   const camO = tall
     ? { x: DW / 2, y: card.y + Y.promo + 20 }
     : { x: card.x + COL_W * 0.6, y: card.y + Y.promo };
-  const drift = 1 + 0.02 * tween(frame, t.accept + 20, durationInFrames, MOVE);
 
   const borderColor =
     errBorder > 0.01
@@ -656,7 +685,7 @@ export function CouponApply({
               position: "absolute",
               inset: 0,
               transformOrigin: `${camO.x}px ${camO.y}px`,
-              transform: `scale(${camZ * drift})`,
+              transform: `scale(${camAt(frame)})${glide(camMoving)}`,
             }}
           >
             <div
@@ -671,7 +700,7 @@ export function CouponApply({
                 background: pal.card,
                 color: pal.text,
                 opacity: tween(frame, 0, 10, ENTER2),
-                transform: `translateY(${(1 - enter) * 48}px) scale(${0.97 + 0.03 * enter})`,
+                transform: `translateY(${(1 - enter) * 48}px) scale(${0.97 + 0.03 * enter})${glide(cardMoving)}`,
                 boxShadow: pal.cardShadow,
               }}
             >
@@ -905,7 +934,7 @@ export function CouponApply({
                         opacity:
                           Math.max(0, errP) *
                           tween(frame, t.reject + 3, t.reject + 9),
-                        transform: `translateY(${(1 - Math.max(0, errP)) * -5}px)`,
+                        transform: `translateY(${(1 - Math.max(0, errP)) * -5}px)${glide(errMoving)}`,
                       },
                       <>
                         <Icon name="alert" color={pal.red} size={16} />
@@ -963,14 +992,25 @@ export function CouponApply({
                     position: "absolute",
                     left: PAD,
                     right: PAD,
-                    top: Y.divider2 + errO,
+                    // The error line pushes the rows below it open; that
+                    // travel is a transform, since layout rounds a box and a
+                    // baseline to whole pixels.
+                    top: Y.divider2,
+                    transform: shiftY(errO),
                     height: 1,
                     background: pal.line,
                   }}
                 />
                 {row(
-                  Y.total + errO,
-                  { height: 30, fontSize: 18 },
+                  Y.total,
+                  {
+                    height: 30,
+                    fontSize: 18,
+                    transform:
+                      errO >= 1e-3
+                        ? `translateY(${errO}px)${glide(errMoving)}`
+                        : undefined,
+                  },
                   <>
                     <span>Total due today</span>
                     <span style={{ display: "inline-flex" }}>
@@ -1136,7 +1176,7 @@ export function CouponApply({
               </div>
             </div>
             <div style={{ opacity: cursorIn }}>
-              <Cursor x={cur.x} y={cur.y} press={press} />
+              <Cursor x={cur.x} y={cur.y} rest={payPt} press={press} />
             </div>
           </div>
         </div>

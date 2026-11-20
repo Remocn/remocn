@@ -1,6 +1,7 @@
 "use client";
 
 import { spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface SlotMachineRollProps {
   from?: string;
@@ -21,7 +22,8 @@ export function SlotMachineRoll({
   speed = 1,
   className,
 }: SlotMachineRollProps) {
-  const frame = useCurrentFrame() * speed;
+  const glide = useGlide();
+  const current = useCurrentFrame();
   const { fps } = useVideoConfig();
 
   const len = Math.max(from.length, to.length);
@@ -30,12 +32,18 @@ export function SlotMachineRoll({
 
   const columns = [];
   for (let i = 0; i < len; i++) {
-    const raw = spring({
-      frame: frame - i * 4,
-      fps,
-      config: { damping: 14 },
-    });
-    const t = Math.max(0, Math.min(1, raw));
+    const roll = (f: number) => {
+      const raw = spring({
+        frame: f * speed - i * 4,
+        fps,
+        config: { damping: 14 },
+      });
+      return Math.max(0, Math.min(1, raw)) * fontSize * 1.1;
+    };
+    const y = roll(current);
+    const moving =
+      Math.abs(roll(current + 1) - y) > 1e-3 ||
+      Math.abs(y - roll(current - 1)) > 1e-3;
     columns.push(
       <span
         key={i}
@@ -53,7 +61,7 @@ export function SlotMachineRoll({
           style={{
             display: "flex",
             flexDirection: "column",
-            translate: `0 ${-t * fontSize * 1.1}px`,
+            transform: `translateY(${-y}px)${glide(moving)}`,
           }}
         >
           <span>{paddedFrom[i]}</span>

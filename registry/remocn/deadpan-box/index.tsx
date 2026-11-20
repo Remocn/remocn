@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 /** Newspaper-ad grotesk for the copy: deadpan, upright, no shouting. */
 const copy = loadSchibsted("normal", {
@@ -305,6 +306,7 @@ export function DeadpanBox({
   theme = "dark",
   speed = 1,
 }: DeadpanBoxProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -409,10 +411,17 @@ export function DeadpanBox({
     ...CLAMP,
     easing: Easing.bezier(0.4, 0, 1, 1),
   });
-  const breathe = interpolate(t, [0, DEADPAN_BOX_DURATION], [1.03, 1], {
-    ...CLAMP,
-    easing: Easing.bezier(0.2, 0, 0.4, 1),
-  });
+  const breatheAt = (f: number) =>
+    interpolate(f, [0, DEADPAN_BOX_DURATION], [1.03, 1], {
+      ...CLAMP,
+      easing: Easing.bezier(0.2, 0, 0.4, 1),
+    });
+  const breathe = breatheAt(t);
+  // The camera paints the field edge to edge, so a tilt on it would open a
+  // seam at the frame's edges; the text blocks inside take it instead.
+  const breathing =
+    Math.abs(breatheAt(t + speed) - breathe) > 1e-7 ||
+    Math.abs(breathe - breatheAt(t - speed)) > 1e-7;
 
   const lineIn = (i: number) =>
     interpolate(
@@ -447,23 +456,29 @@ export function DeadpanBox({
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <ScaleLayer scale={scale}>
         <AbsoluteFill
-          style={{ transform: `scale(${breathe})`, transformOrigin: "50% 50%" }}
+          style={{
+            transform: `scale(${breathe})`,
+            transformOrigin: "50% 50%",
+          }}
         >
+          {/* The box is a clip over a frame-sized layer, not a moving
+              `overflow: hidden` box: layout rounds a box to whole pixels, so
+              everything pinned inside one that eases shivers along. */}
           <div
             style={{
               position: "absolute",
-              left: box.x,
-              top: box.y,
-              width: box.w,
-              height: box.h,
-              overflow: "hidden",
+              left: 0,
+              top: 0,
+              width: W,
+              height: H,
+              clipPath: `inset(${Math.max(0, box.y)}px ${Math.max(0, W - box.x - box.w)}px ${Math.max(0, H - box.y - box.h)}px ${Math.max(0, box.x)}px)`,
             }}
           >
             <div
               style={{
                 position: "absolute",
-                left: -box.x,
-                top: -box.y,
+                left: 0,
+                top: 0,
                 width: W,
                 height: H,
                 background: field,
@@ -474,10 +489,10 @@ export function DeadpanBox({
               <div
                 style={{
                   position: "absolute",
-                  left: mast.x - box.x + padM * M,
-                  top: mast.y - box.y + (padM + markCap - markBase) * M,
+                  left: mast.x + padM * M,
+                  top: mast.y + (padM + markCap - markBase) * M,
                   opacity: mastOut,
-                  transform: `translateY(${(1 - mastOut) * -0.35 * M}px)`,
+                  transform: `translateY(${(1 - mastOut) * -0.35 * M}px)${glide(breathing)}`,
                 }}
               >
                 {logo ??
@@ -508,8 +523,8 @@ export function DeadpanBox({
                   key={`${i}-${l}`}
                   style={{
                     position: "absolute",
-                    left: left - box.x + (padL - (i ? 0 : hang)) * Q,
-                    top: top - box.y + baselines[i] - BASELINE * Q,
+                    left: left + (padL - (i ? 0 : hang)) * Q,
+                    top: top + baselines[i] - BASELINE * Q,
                     height: 1.1 * Q,
                     overflow: "hidden",
                   }}
@@ -523,7 +538,7 @@ export function DeadpanBox({
                       letterSpacing: `${QUOTE_TRACK}em`,
                       color: ink,
                       whiteSpace: "pre",
-                      transform: `translateY(${(1 - p) * 1.1 * Q}px)`,
+                      transform: `translateY(${(1 - p) * 1.1 * Q}px)${glide(breathing)}`,
                     }}
                   >
                     {l}
@@ -536,8 +551,8 @@ export function DeadpanBox({
               style={{
                 position: "absolute",
                 // the dash hangs, so the words align with the quote's left edge
-                left: left - box.x + padL * Q - dashEm * S,
-                top: top - box.y + rowBaseline - BASELINE * S,
+                left: left + padL * Q - dashEm * S,
+                top: top + rowBaseline - BASELINE * S,
                 fontFamily,
                 fontWeight: 400,
                 fontSize: S,
@@ -546,7 +561,7 @@ export function DeadpanBox({
                 color: ink,
                 whiteSpace: "pre",
                 opacity: 0.84 * rowIn,
-                transform: `translateY(${(1 - rowIn) * 0.6 * S}px)`,
+                transform: `translateY(${(1 - rowIn) * 0.6 * S}px)${glide(breathing)}`,
               }}
             >
               <span style={{ opacity: 0.7 }}>— </span>
@@ -555,10 +570,10 @@ export function DeadpanBox({
             <div
               style={{
                 position: "absolute",
-                right: box.x + box.w - W + edge,
-                bottom: box.y + box.h - H + edge,
+                right: edge,
+                bottom: edge,
                 opacity: signIn,
-                transform: `translateY(${(1 - signIn) * 8 * (H / 720)}px)`,
+                transform: `translateY(${(1 - signIn) * 8 * (H / 720)}px)${glide(breathing)}`,
               }}
             >
               {logo ??

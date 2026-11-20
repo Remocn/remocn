@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: geist } = loadFont("normal", {
   weights: ["300", "400"],
@@ -212,6 +213,7 @@ export function AbacusCount({
   theme = "dark",
   speed = 1,
 }: AbacusCountProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
@@ -264,10 +266,17 @@ export function AbacusCount({
     ...CLAMP,
     easing: EASE_IO,
   });
-  const push = interpolate(t, [0, lastAt + 40], [0.985, 1.01], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const pushAt = (tt: number) =>
+    interpolate(tt, [0, lastAt + 40], [0.985, 1.01], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const push = pushAt(t);
+  // The push is a long in-out ease, so it counts as moving while the frame's
+  // edge still shifts, not by its progress.
+  const pushing =
+    Math.abs(pushAt(t + speed) - push) * width > 1e-3 ||
+    Math.abs(push - pushAt(Math.max(0, t - speed))) * width > 1e-3;
 
   const gradId = `ab${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const drift = interpolate(t, [0, lastAt + 40], [0, 1], {
@@ -411,7 +420,10 @@ export function AbacusCount({
       />
       <ScaleLayer scale={scale}>
         <AbsoluteFill
-          style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
+          style={{
+            transform: `scale(${push})${glide(pushing)}`,
+            transformOrigin: "50% 50%",
+          }}
         >
           <svg
             width={width}

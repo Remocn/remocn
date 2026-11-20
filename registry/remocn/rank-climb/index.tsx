@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -146,6 +147,8 @@ const THEMES = {
 
 type Theme = (typeof THEMES)[keyof typeof THEMES];
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const T_CLIMB = 28;
 const LAST_DUR = 22;
 
@@ -270,6 +273,7 @@ function Upvote({ size, color }: { size: number; color: string }) {
 function Row({
   item,
   pos,
+  rest,
   isBrand,
   n,
   rowH,
@@ -288,6 +292,8 @@ function Row({
 }: {
   item: RankItem;
   pos: number;
+  /** The slot the row ends in; `pos` reaches it exactly. */
+  rest: number;
   isBrand: boolean;
   n: number;
   rowH: number;
@@ -318,12 +324,15 @@ function Row({
       style={{
         position: "absolute",
         left: 0,
-        top: pos * rowH,
+        // Laid out in its final slot; the climb is a transform, not `top`:
+        // layout rounds a box and a baseline to whole pixels, so a row eased
+        // by `top` clicks down pixel by pixel.
+        top: rest * rowH,
         width: rowW,
         height: rowH,
         zIndex: isBrand ? 2 : 1,
         opacity: enter * (isBrand ? 1 : 1 - 0.62 * dim),
-        transform: `translateY(${(1 - enter) * 14 * u}px) scale(${1 + 0.018 * lift})`,
+        transform: `translateY(${(pos - rest) * rowH + (1 - enter) * 14 * u}px) scale(${1 + 0.018 * lift})`,
       }}
     >
       {isBrand ? (
@@ -437,6 +446,7 @@ export function RankClimb({
   theme = "dark",
   speed = 1,
 }: RankClimbProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
@@ -539,6 +549,20 @@ export function RankClimb({
     ...CLAMP,
     easing: EASE_IO,
   });
+  const enterAt = (slot: number) =>
+    interpolate(t, [slot * 2 - 6, slot * 2 + 14], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  // One tilt on the wrapper that carries the whole scene covers every row,
+  // number and caption under it, for as long as any of them moves.
+  const moving =
+    midway(interpolate(t, [0, climbEnd + 60], [0, 1], CLAMP)) ||
+    midway(leftIn) ||
+    midway(capIn) ||
+    midway(lift) ||
+    prog.some(midway) ||
+    Array.from({ length: n }).some((_, i) => midway(enterAt(i)));
 
   return (
     <AbsoluteFill style={{ background: fill, overflow: "hidden" }}>
@@ -549,7 +573,10 @@ export function RankClimb({
       />
       <ScaleLayer scale={scale}>
         <AbsoluteFill
-          style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
+          style={{
+            transform: `scale(${push})${glide(moving)}`,
+            transformOrigin: "50% 50%",
+          }}
         >
           <div
             style={{
@@ -701,20 +728,13 @@ export function RankClimb({
               const slot = initialSlot(i);
               const k = swaps.findIndex((w) => w.passed === i);
               const pos = slot + (k >= 0 ? prog[k] : 0);
-              const enter = interpolate(
-                t,
-                [slot * 2 - 6, slot * 2 + 14],
-                [0, 1],
-                {
-                  ...CLAMP,
-                  easing: EASE_OUT,
-                },
-              );
+              const enter = enterAt(slot);
               return (
                 <Row
                   key={item.label}
                   item={item}
                   pos={pos}
+                  rest={slot + (k >= 0 ? 1 : 0)}
                   isBrand={false}
                   n={n}
                   rowH={rowH}
@@ -736,15 +756,13 @@ export function RankClimb({
             <Row
               item={brandItem}
               pos={brandPos}
+              rest={end}
               isBrand
               n={n}
               rowH={rowH}
               rowW={rowW}
               u={u}
-              enter={interpolate(t, [start * 2 - 6, start * 2 + 14], [0, 1], {
-                ...CLAMP,
-                easing: EASE_OUT,
-              })}
+              enter={enterAt(start)}
               lift={lift}
               dim={dim}
               win={win}

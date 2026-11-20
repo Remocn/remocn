@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const face = loadFont("normal", { weights: ["300"], subsets: ["latin"] });
 
@@ -65,6 +66,8 @@ const EASE_IN_OUT = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_CUT = Easing.bezier(0.45, 0, 0.55, 1);
 const EASE_IN = Easing.bezier(0.55, 0, 0.85, 0.35);
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 // Beats, in frames at 30fps (before `speed`).
 const IN = 0;
@@ -233,6 +236,7 @@ export function ScissorsCut({
   theme = "dark",
   speed = 1,
 }: ScissorsCutProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const t = THEMES[theme];
@@ -491,7 +495,7 @@ export function ScissorsCut({
           color,
           opacity: p,
           filter: p < 1 ? `blur(${(1 - p) * 8}px)` : undefined,
-          transform: `translateY(${(1 - p) * em * 0.14 + dy}px)`,
+          transform: `translateY(${(1 - p) * em * 0.14 + dy}px)${glide(midway(p))}`,
         }}
       >
         {ch}

@@ -16,6 +16,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -163,6 +164,8 @@ const CLAMP = {
 } as const;
 const BURST = { mass: 0.9, damping: 22, stiffness: 90 };
 const LAND = { mass: 0.8, damping: 18, stiffness: 160 };
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 type Measure = (s: string) => number;
 
@@ -492,6 +495,7 @@ export function WordBurstCards({
   delay = 0,
   speed = 1,
 }: WordBurstCardsProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -670,7 +674,7 @@ export function WordBurstCards({
               whiteSpace: "pre",
               color: inkC,
               opacity: (1 - out) * Math.min(1, rise * 1.4),
-              transform: `translateY(${((1 - rise) * LH * 0.9).toFixed(2)}px) scale(${(1 + out * 0.15).toFixed(4)})`,
+              transform: `translateY(${((1 - rise) * LH * 0.9).toFixed(2)}px) scale(${(1 + out * 0.15).toFixed(4)})${glide(midway(rise) || midway(out))}`,
               filter:
                 out > 0.01 ? `blur(${(out * 4).toFixed(2)}px)` : undefined,
             }}
@@ -701,16 +705,21 @@ export function WordBurstCards({
         interpolate(a.d, [0, 3], [0, 1], CLAMP) *
         interpolate(a.z, [-560, -200], [0.55, 1], CLAMP);
       const tilt = 1 - a.p * 0.6;
+      // Laid out where the burst throws it; the flight there and the drift
+      // after are a transform. Layout rounds a box to whole pixels, so a card
+      // carried by `left`/`top` crawls through its slow drift pixel by pixel.
+      const homeX = cx + cs.tx * persp(cs.tz);
+      const homeY = cy + cs.ty * persp(cs.tz);
       return (
         <div
           key={`c${cs.glyph}`}
           style={{
             position: "absolute",
-            left: a.x - cs.w / 2,
-            top: a.y - cs.h / 2,
+            left: homeX - cs.w / 2,
+            top: homeY - cs.h / 2,
             width: cs.w,
             height: cs.h,
-            transform: `perspective(900px) rotateX(${(cs.rx * tilt).toFixed(2)}deg) rotateY(${(cs.ry * tilt).toFixed(2)}deg) rotateZ(${(cs.rz * a.p).toFixed(2)}deg) scale(${sc.toFixed(4)})`,
+            transform: `translate(${a.x - homeX}px, ${a.y - homeY}px) perspective(900px) rotateX(${(cs.rx * tilt).toFixed(2)}deg) rotateY(${(cs.ry * tilt).toFixed(2)}deg) rotateZ(${(cs.rz * a.p).toFixed(2)}deg) scale(${sc.toFixed(4)})`,
             opacity: op,
             filter: blur > 0.3 ? `blur(${blur.toFixed(2)}px)` : undefined,
             borderRadius: Math.min(cs.w, cs.h) * 0.1,
@@ -776,7 +785,7 @@ export function WordBurstCards({
             color: c.muted,
             whiteSpace: "pre",
             opacity: capP,
-            transform: `translateY(${((1 - capP) * capSize * 0.8).toFixed(2)}px)`,
+            transform: `translateY(${((1 - capP) * capSize * 0.8).toFixed(2)}px)${glide(midway(capP))}`,
           }}
         >
           {caption}
@@ -791,7 +800,9 @@ export function WordBurstCards({
     content = (
       <AbsoluteFill
         style={{
-          transform: `scale(${push.toFixed(5)})`,
+          // The push runs the whole clip, so its tilt also carries the logo
+          // landing inside it.
+          transform: `scale(${push.toFixed(5)})${glide(midway((push - 1) / 0.035))}`,
           transformOrigin: "50% 50%",
         }}
       >

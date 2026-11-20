@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -140,6 +141,16 @@ const ARRIVE: number[] = (() => {
 const COMPRESS = ARRIVE[3] + 2;
 
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+/** Whether `at` changes by more than `eps` next to frame `f`. */
+const stirs = (
+  at: (f: number) => number,
+  f: number,
+  step: number,
+  eps: number,
+) =>
+  Math.abs(at(f + step) - at(f)) > eps || Math.abs(at(f) - at(f - step)) > eps;
 const ENTER = Easing.bezier(0.32, 0.72, 0, 1);
 const LIGHT = Easing.bezier(0.22, 1, 0.36, 1);
 const MOVE = Easing.bezier(0.65, 0, 0.35, 1);
@@ -321,6 +332,7 @@ function Stack({
   from: "top" | "right";
   lk: Look;
 }) {
+  const glide = useGlide();
   const c = spring({ frame: f - COMPRESS, fps, config: HEAVY });
   const arrived = ARRIVE.filter((t) => t <= f).length;
   const enters = ARRIVE.map((t) => spring({ frame: f - t, fps, config: CARD }));
@@ -332,7 +344,7 @@ function Stack({
   const away = (i: number): React.CSSProperties => {
     const st = swipeT(i);
     return {
-      transform: `translateX(${-st * width * 1.15}px) rotate(${-st * 4}deg)`,
+      transform: `translateX(${-st * width * 1.15}px) rotate(${-st * 4}deg)${glide(st > 0 && st < 1)}`,
       opacity: interpolate(st, [0.3, 0.85], [1, 0], clamp),
     };
   };
@@ -707,6 +719,7 @@ function SideCopy({
   lk: Look;
   align: "left" | "center";
 }) {
+  const glide = useGlide();
   const arrived = ARRIVE.filter((t) => t <= f).length;
   const countT = interpolate(f, [COMPRESS + 2, SWIPE - 4], [0, 1], clamp);
   const count = Math.round(Math.max(arrived, 4 + (total - 4) * countT ** 2.4));
@@ -735,6 +748,15 @@ function SideCopy({
     easing: MOVE,
   });
   const origin = align === "left" ? "0% 100%" : "50% 100%";
+  const numMoving = midway(numIn) || midway(numOut);
+  // The punch decays without ever landing, so it is tested frame to frame in
+  // px at the digits' size.
+  const punchAt = (ff: number) => {
+    const n = ARRIVE.filter((t) => t <= ff).length;
+    const tk = n > 0 ? ff - ARRIVE[n - 1] : 99;
+    return 0.035 * size * Math.exp(-Math.max(0, tk) / 2.2);
+  };
+  const punchMoving = stirs(punchAt, f, 1, 1e-3);
   return (
     <div
       style={{
@@ -752,7 +774,7 @@ function SideCopy({
           right: 0,
           bottom: size * 0.42,
           opacity: numIn * (1 - numOut),
-          transform: `translateY(${(1 - numIn) * size * 0.12 - numOut * size * 0.16}px)`,
+          transform: `translateY(${(1 - numIn) * size * 0.12 - numOut * size * 0.16}px)${glide(numMoving)}`,
           filter: `blur(${(1 - numIn) * 6 + numOut * 6}px)`,
         }}
       >
@@ -763,7 +785,7 @@ function SideCopy({
             letterSpacing: "-0.045em",
             lineHeight: 0.9,
             fontVariantNumeric: "tabular-nums",
-            transform: `scale(${punch})`,
+            transform: `scale(${punch})${glide(punchMoving)}`,
             transformOrigin: origin,
           }}
         >
@@ -781,7 +803,7 @@ function SideCopy({
           color: lk.muted,
           letterSpacing: "-0.01em",
           opacity: capIn * (1 - numOut),
-          transform: `translateY(${(1 - capIn) * 12}px)`,
+          transform: `translateY(${(1 - capIn) * 12}px)${glide(midway(capIn))}`,
         }}
       >
         {counterLabel}
@@ -802,7 +824,7 @@ function SideCopy({
             fontWeight: 300,
             letterSpacing: "-0.035em",
             lineHeight: 1.04,
-            transform: `translateY(${(1 - payIn) * 110 - drift * 4}%)`,
+            transform: `translateY(${(1 - payIn) * 110 - drift * 4}%)${glide(midway(payIn) || midway(drift))}`,
             opacity: payIn > 0 ? 1 : 0,
           }}
         >
@@ -834,7 +856,7 @@ function SideCopy({
             color: lk.muted,
             fontVariantNumeric: "tabular-nums",
             opacity: subIn,
-            transform: `translateY(${(1 - subIn) * 12}px)`,
+            transform: `translateY(${(1 - subIn) * 12}px)${glide(midway(subIn))}`,
           }}
         >
           {clearSubLabel}
@@ -881,6 +903,7 @@ export function NotificationAvalanche({
   ground,
   groundParams,
 }: NotificationAvalancheProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { fps, width, height } = useVideoConfig();
   const f = frame * speed;
@@ -934,6 +957,14 @@ export function NotificationAvalanche({
   if (surface === "desktop") {
     const u = height / 720;
     const cardW = 356;
+    // The stack's springs have long tails; their sum is tested frame to frame.
+    const stackAt = (ff: number) =>
+      spring({ frame: ff - COMPRESS, fps, config: HEAVY }) +
+      ARRIVE.reduce(
+        (sum, t) => sum + spring({ frame: ff - t, fps, config: CARD }),
+        0,
+      );
+    const stackMoving = stirs(stackAt, f, speed, 1e-6);
     return (
       <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
         {groundLayer}
@@ -944,7 +975,7 @@ export function NotificationAvalanche({
               top: 72 * u,
               right: 72 * u,
               width: cardW,
-              transform: `scale(${u * 1.15}) translateX(${buzz}px)`,
+              transform: `scale(${u * 1.15}) translateX(${buzz}px)${glide(stackMoving)}`,
               transformOrigin: "100% 0%",
             }}
           >
@@ -987,6 +1018,21 @@ export function NotificationAvalanche({
     { ...clamp, easing: MOVE },
   );
   const focusY = interpolate(push, [1, 1.18], [0, 80 * k]);
+  // The phone carries every card on the lock screen; it is tested frame to
+  // frame in px (rise, plus scale at half its height) because the entry
+  // spring has a long tail.
+  const phoneAt = (ff: number) => {
+    const e = spring({ frame: ff, fps, config: HEAVY });
+    const p = interpolate(
+      ff,
+      [ARRIVE[1], ARRIVE[6], SWIPE + 2, CLEAR + 14],
+      [1, 1.18, 1.18, 1.02],
+      { ...clamp, easing: MOVE },
+    );
+    const ty = (1 - e) * 60 + interpolate(p, [1, 1.18], [0, 80 * k]);
+    return ty + k * p * interpolate(e, [0, 1], [0.94, 1]) * (SH / 2 + BEZEL);
+  };
+  const phoneMoving = stirs(phoneAt, f, speed, 1e-3);
   const copySize = tall ? width * 0.3 : height * 0.25;
   return (
     <AbsoluteFill
@@ -1024,7 +1070,7 @@ export function NotificationAvalanche({
             borderRadius: 68,
             background: lk.frame,
             boxShadow: `${lk.rim}, 0 2px 6px rgba(0,0,0,${dark ? 0.45 : 0.14}), 0 30px 70px -18px rgba(0,0,0,${dark ? 0.7 : 0.32})`,
-            transform: `translateX(${buzz}px) translateY(${(1 - enter) * 60 + focusY}px) scale(${k * push * interpolate(enter, [0, 1], [0.94, 1])})`,
+            transform: `translateX(${buzz}px) translateY(${(1 - enter) * 60 + focusY}px) scale(${k * push * interpolate(enter, [0, 1], [0.94, 1])})${glide(phoneMoving)}`,
             opacity: interpolate(enter, [0, 0.35], [0, 1], clamp),
           }}
         >

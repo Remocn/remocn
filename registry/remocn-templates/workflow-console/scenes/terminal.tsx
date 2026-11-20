@@ -1,6 +1,6 @@
 import { Interactive } from "remotion";
 import { type SceneProps, type TerminalRun, terminalContent } from "../content";
-import { move, ramp, typed } from "../motion";
+import { midway, move, ramp, typed, useGlide } from "../motion";
 import { AccentText, Command, mono } from "../ui";
 
 function Terminal({
@@ -13,6 +13,7 @@ function Terminal({
   const rows = scene.terminalRows[run]?.length
     ? scene.terminalRows[run]
     : terminalContent(run, scene.content);
+  const glide = useGlide();
   const local = t - start;
   const departure = move(t, end - (run === "launched" ? 0.15 : 0.65), end);
   return (
@@ -33,8 +34,7 @@ function Terminal({
           color: "#c1d4e2",
           overflow: "hidden",
           opacity: move(t, start, start + 0.23) * (1 - departure * 0.8),
-          translate: `${-departure * 390}px 0px`,
-          scale: move(t, start, start + 0.45, 0.92, 1),
+          transform: `translate(${-departure * 390}px, 0px) scale(${move(t, start, start + 0.45, 0.92, 1)})${glide(midway(move(t, start, start + 0.45)))}`,
           transformOrigin: "50% 60%",
           maskImage:
             "linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)",

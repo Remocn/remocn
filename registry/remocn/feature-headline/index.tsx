@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const geist = loadGeist("normal", {
   weights: ["400", "500"],
@@ -101,6 +102,8 @@ const PALETTES = {
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IN = Easing.bezier(0.6, 0, 0.9, 0.5);
+const midway = (q: number) => q > 5e-4 && q < 1 - 5e-4;
+
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -225,6 +228,7 @@ export function FeatureHeadline({
   speed = 1,
   theme = "dark",
 }: FeatureHeadlineProps) {
+  const glide = useGlide();
   const now = useCurrentFrame();
   const raw = Math.max(0, now - delay);
   const frame = raw * speed;
@@ -331,7 +335,7 @@ export function FeatureHeadline({
                 boxShadow: `inset 0 0 0 1px ${p.pillLine}`,
                 clipPath: pillClip,
                 opacity: 1 - pillExit,
-                transform: `translateY(${-pillExit * 14 * s}px)`,
+                transform: `translateY(${-pillExit * 14 * s}px)${glide(midway(pillExit))}`,
                 marginBottom: fs * 0.42,
               }}
             >
@@ -412,7 +416,7 @@ export function FeatureHeadline({
                           <span
                             style={{
                               display: "inline-block",
-                              transform: `translateY(${y}%)`,
+                              transform: `translateY(${y}%)${glide(midway(t) || midway(out))}`,
                               ...hlStyle,
                             }}
                           >
@@ -439,7 +443,7 @@ export function FeatureHeadline({
                 color: p.muted,
                 textWrap: "balance",
                 opacity: subT * (1 - subExit),
-                transform: `translateY(${(1 - subT) * 14 * s - subExit * 12 * s}px)`,
+                transform: `translateY(${(1 - subT) * 14 * s - subExit * 12 * s}px)${glide(midway(subT) || midway(subExit))}`,
                 filter: `blur(${(1 - subT) * 6 * s}px)`,
               }}
             >

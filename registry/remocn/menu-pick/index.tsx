@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -97,6 +98,8 @@ const EASE_MOVE = Easing.bezier(0.65, 0, 0.35, 1);
 const SPRING_HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const SPRING_CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 const SPRING_HOP = { mass: 0.5, damping: 16, stiffness: 260 };
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -176,6 +179,7 @@ export function MenuPick({
   ground,
   groundParams,
 }: MenuPickProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -225,16 +229,33 @@ export function MenuPick({
     ...CLAMP,
     easing: EASE_ENTER,
   });
-  const press =
-    spring({ frame: t - confirmAt, fps, config: SPRING_CHIP }) -
-    spring({ frame: t - confirmAt - 5, fps, config: SPRING_CHIP });
+  const pressAt = (f: number) =>
+    spring({ frame: f - confirmAt, fps, config: SPRING_CHIP }) -
+    spring({ frame: f - confirmAt - 5, fps, config: SPRING_CHIP });
+  const press = pressAt(t);
   const barScale = 1 - 0.04 * press;
   const settle = interpolate(t, [blinkEnd, blinkEnd + 10], [0, 1], {
     ...CLAMP,
     easing: EASE_MOVE,
   });
 
-  const panelIn = spring({ frame: t, fps, config: SPRING_HEAVY });
+  const panelAt = (f: number) =>
+    spring({ frame: f, fps, config: SPRING_HEAVY });
+  const panelIn = panelAt(t);
+  // The panel's spring has a long tail; weigh a step by the larger of its
+  // lift and the scale's reach to the panel's far corner.
+  const panelReach = Math.max(
+    H * 0.05,
+    (0.03 * Math.hypot(panelW, panelH)) / 2,
+  );
+  const panelMoving =
+    Math.abs(panelAt(t + 1) - panelIn) * panelReach > 1e-3 ||
+    Math.abs(panelIn - panelAt(t - 1)) * panelReach > 1e-3;
+  const barMoving =
+    !panelMoving &&
+    (midway(cursorIn) ||
+      Math.abs(pressAt(t + 1) - press) * 0.04 * rowW > 1e-3 ||
+      Math.abs(press - pressAt(t - 1)) * 0.04 * rowW > 1e-3);
   const panelO = interpolate(t, [0, 8], [0, 1], {
     ...CLAMP,
     easing: EASE_ENTER,
@@ -265,6 +286,15 @@ export function MenuPick({
     );
 
   const barY = rowsTop + pos * rowH;
+  // The bar hops by layout: its `top` and the counter-`top` that keeps the
+  // labels inside it in place round to whole pixels apart, so the labels
+  // stepped while it travelled. It is laid out on the picked row and travels
+  // by a transform instead; the labels cancel it exactly. Within 1/128px of
+  // that row the old layout path is kept, so a settled bar is untouched.
+  const barRest = rowsTop + chosen * rowH;
+  const barD = barY - barRest;
+  const barTravel = Math.abs(barD) >= 1 / 128;
+  const barTop = barTravel ? barRest : barY;
 
   const rowText = (onBar: boolean) =>
     list.map((label, i) => {
@@ -285,7 +315,7 @@ export function MenuPick({
             alignItems: "center",
             justifyContent: "space-between",
             opacity: p * (onBar ? 1 : dim),
-            transform: `translateY(${(1 - p) * rowH * 0.3}px)`,
+            transform: `translateY(${(1 - p) * rowH * 0.3}px)${glide(midway(p) && !panelMoving && !(onBar && barMoving))}`,
             color: onBar ? c.onAccent : fg,
           }}
         >
@@ -360,7 +390,7 @@ export function MenuPick({
             backgroundColor: c.panel,
             boxShadow: c.depth,
             opacity: panelO,
-            transform: `translateY(${(1 - panelIn) * H * 0.05}px) scale(${0.97 + 0.03 * panelIn})`,
+            transform: `translateY(${(1 - panelIn) * H * 0.05}px) scale(${0.97 + 0.03 * panelIn})${glide(panelMoving)}`,
             fontFamily,
             overflow: "hidden",
           }}
@@ -380,7 +410,7 @@ export function MenuPick({
               letterSpacing: "-0.005em",
               color: c.soft,
               opacity: headIn,
-              transform: `translateY(${(1 - headIn) * smallFs * 0.6}px)`,
+              transform: `translateY(${(1 - headIn) * smallFs * 0.6}px)${glide(midway(headIn) && !panelMoving)}`,
             }}
           >
             <span style={{ color: fg }}>{prompt}</span>
@@ -407,23 +437,24 @@ export function MenuPick({
             style={{
               position: "absolute",
               left: panelPad,
-              top: barY,
+              top: barTop,
               width: rowW,
               height: rowH,
               borderRadius: rowR,
               overflow: "hidden",
               backgroundColor: accent,
               opacity: blinkOff ? 0 : cursorIn,
-              transform: `scale(${barScale * (0.96 + 0.04 * cursorIn)})`,
+              transform: `${barTravel ? `translateY(${barD}px) ` : ""}scale(${barScale * (0.96 + 0.04 * cursorIn)})${glide(barMoving)}`,
             }}
           >
             <div
               style={{
                 position: "absolute",
                 left: -panelPad,
-                top: -barY,
+                top: -barTop,
                 width: panelW,
                 height: panelH,
+                transform: barTravel ? `translateY(${-barD}px)` : undefined,
               }}
             >
               {rowText(true)}

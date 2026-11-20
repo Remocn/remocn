@@ -14,6 +14,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const funnel = loadFont("normal", {
   weights: ["400", "500"],
@@ -75,6 +76,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const LINE_LEN = 18;
 const Q_AT = 6;
@@ -237,6 +240,7 @@ export function PeekShut({
   speed = 1,
   theme = "dark",
 }: PeekShutProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -307,7 +311,10 @@ export function PeekShut({
   const rowH = F * 1.2;
   const lineTop = cy - hMax / 2 - gap - layout.q.length * PITCH * F;
   const belowTop = cy + hMax / 2 + gap * 0.9;
-  const edge = (x: number, w: number, y: number, key: string) => (
+  // Layout rounds a box edge to whole pixels, so a slot edge eased by `top`
+  // clicks open pixel by pixel; it sits where the open slot leaves it and
+  // `dy` carries it there as a transform.
+  const edge = (x: number, w: number, y: number, key: string, dy = 0) => (
     <div
       key={key}
       style={{
@@ -317,6 +324,7 @@ export function PeekShut({
         width: Math.max(0, w),
         height: hair,
         background: c.line,
+        transform: Math.abs(dy) > 1e-3 ? `translateY(${dy}px)` : undefined,
       }}
     />
   );
@@ -365,7 +373,7 @@ export function PeekShut({
                 letterSpacing: `${TRACK}em`,
                 whiteSpace: "pre",
                 color,
-                transform: `translateY(${((1 - q) * rowH).toFixed(2)}px)`,
+                transform: `translateY(${((1 - q) * rowH).toFixed(2)}px)${glide(midway(q))}`,
               }}
             >
               {w.text}
@@ -420,14 +428,16 @@ export function PeekShut({
               edge(
                 slotX,
                 Math.min(reach, slotX + slotW) - slotX,
-                cy - h / 2,
+                cy - hMax / 2,
                 "e-t",
+                (hMax - h) / 2,
               ),
               edge(
                 slotX,
                 Math.min(reach, slotX + slotW) - slotX,
-                cy + h / 2,
+                cy + hMax / 2,
                 "e-b",
+                (h - hMax) / 2,
               ),
             ]
           : null}

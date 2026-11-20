@@ -1,6 +1,7 @@
 "use client";
 
 import { Easing, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface MaskRevealUpProps {
   text: string;
@@ -21,6 +22,7 @@ export function MaskRevealUp({
   speed = 1,
   className,
 }: MaskRevealUpProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame() * speed;
   const { durationInFrames } = useVideoConfig();
 
@@ -107,6 +109,9 @@ export function MaskRevealUp({
           );
 
           const y = yEnter + yExit;
+          const moving =
+            (enterLocal > 0 && enterLocal < enterTravel) ||
+            (exitLocal > exitTravelFrom && exitLocal < exitDur);
 
           const blurEnter = interpolate(enterLocal, [0, enterDur], [6, 0], {
             extrapolateLeft: "clamp",
@@ -129,7 +134,7 @@ export function MaskRevealUp({
                 display: "block",
                 transformOrigin: "50% 50%",
                 opacity,
-                translate: `0 ${y}px`,
+                transform: `translateY(${y}px)${glide(moving)}`,
                 filter: `blur(${blur}px)`,
               }}
             >

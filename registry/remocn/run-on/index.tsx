@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const dmSans = loadFont("normal", {
   weights: ["400", "500"],
@@ -88,6 +89,8 @@ interface Metrics {
   promiseW: number;
   dotW: number;
 }
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 function layoutWords(s: string, em: (x: string) => number) {
   const out: Word[] = [];
@@ -192,6 +195,7 @@ export function RunOn({
   speed = 1,
   theme = "dark",
 }: RunOnProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const k = Math.min(1, durationInFrames / BASE);
@@ -243,23 +247,31 @@ export function RunOn({
   const promiseAt = drainAt + DRAIN - PROMISE_LAG;
 
   const need = (ln: number) => Math.max(0, top0 + (ln + 1) * pitch - floor);
-  let scroll = 0;
-  for (let i = 0; i < n; i++) {
-    if (t < arrive[i]) break;
-    const from = i === 0 ? 0 : need(placed[i - 1].line);
-    const to = need(placed[i].line);
-    if (to !== from) {
-      scroll =
-        from +
-        (to - from) *
-          interpolate(t, [arrive[i], arrive[i] + SCROLL], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
-    } else {
-      scroll = to;
+  const scrollAt = (f: number) => {
+    let at = 0;
+    for (let i = 0; i < n; i++) {
+      if (f < arrive[i]) break;
+      const from = i === 0 ? 0 : need(placed[i - 1].line);
+      const to = need(placed[i].line);
+      if (to !== from) {
+        at =
+          from +
+          (to - from) *
+            interpolate(f, [arrive[i], arrive[i] + SCROLL], [0, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            });
+      } else {
+        at = to;
+      }
     }
-  }
+    return at;
+  };
+  const scroll = scrollAt(t);
+  const step = speed / k;
+  const scrolling =
+    Math.abs(scrollAt(t + step) - scroll) > 1e-3 ||
+    Math.abs(scroll - scrollAt(t - step)) > 1e-3;
   const drain = interpolate(t, [drainAt, drainAt + DRAIN], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.55, 0, 1, 0.45),
@@ -285,6 +297,11 @@ export function RunOn({
     dy: number,
     opacity: number,
     color: string,
+    moving: boolean,
+    // Layout puts a baseline on a whole pixel inside its box, so a glyph whose
+    // font size eases clicks even under a transform. While it grows it is laid
+    // out at `laid` and scaled from there; otherwise `laid` is `size`.
+    laid = size,
   ) => (
     <div
       key={key}
@@ -292,17 +309,18 @@ export function RunOn({
         position: "absolute",
         left: 0,
         top: 0,
-        height: size * 1.2,
-        lineHeight: `${size * 1.2}px`,
+        height: laid * 1.2,
+        lineHeight: `${laid * 1.2}px`,
         whiteSpace: "pre",
         fontFamily,
         fontWeight,
-        fontSize: size,
+        fontSize: laid,
         letterSpacing: `${TRACK}em`,
         fontKerning: "normal",
         color,
         opacity,
-        transform: `translate(${x.toFixed(2)}px, ${(baseY - size * 0.93 + dy).toFixed(2)}px)`,
+        transform: `translate(${x.toFixed(2)}px, ${(baseY - size * 0.93 + dy).toFixed(2)}px)${glide(moving)}${laid === size ? "" : ` scale(${size / laid})`}`,
+        transformOrigin: laid === size ? undefined : "0 0",
       }}
     >
       {text}
@@ -331,6 +349,7 @@ export function RunOn({
           F * 0.3 * (1 - r),
           r * (1 - drain * 0.5),
           join ? c.dim : fg,
+          midway(r) || scrolling || midway(drain),
         ),
       );
     });
@@ -350,6 +369,9 @@ export function RunOn({
     const stopY = baseOf(placed[last].line) - scroll;
     const restX = marginX + m.promiseW * Fp;
     const size = F + (Fp - F) * dotTravel;
+    // Both eases crawl into their ends, so they count as moving until they
+    // are exactly there.
+    const travelling = dotTravel > 0 && dotTravel < 1;
     nodes.push(
       glyph(
         "stop",
@@ -360,6 +382,8 @@ export function RunOn({
         -F * 0.7 * (1 - slam),
         Math.min(1, slam * 1.6),
         hi,
+        (slam > 0 && slam < 1) || travelling || scrolling,
+        travelling ? Fp : size,
       ),
     );
   }
@@ -392,6 +416,7 @@ export function RunOn({
         Fp * 0.4 * (1 - r),
         r,
         color,
+        midway(r),
       ),
     );
   });

@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadSans("normal", {
   weights: ["400", "500"],
@@ -182,6 +183,11 @@ function RisingText({
   );
 }
 
+// The push counts as moving on every frame it or the strip's settle changes,
+// however little: its in-out ends are slow, not still. (`tilt` is the shared
+// mark; `glide` in the component is the strip's settle.)
+const between = (p: number) => p > 0 && p < 1;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -216,6 +222,7 @@ export function UptimeStrip({
   theme = "dark",
   speed = 1,
 }: UptimeStripProps) {
+  const tilt = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
@@ -237,10 +244,17 @@ export function UptimeStrip({
     easing: EASE_IO,
   });
   const stripY = height / 2 + glide * 64 * u;
-  const push = interpolate(t, [0, 130], [0.965, 1.005], {
+  // Layout rounds a baseline to whole pixels, so the head and the captions
+  // clicked down as the strip glided. They are laid out where the strip
+  // settles and ride there by transform.
+  const stripRest = height / 2 + 64 * u;
+  const lift = (1 - glide) * 64 * u;
+  const ride = lift < 1e-3 ? undefined : `translateY(${-lift}px)`;
+  const pushP = interpolate(t, [0, 130], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
+  const push = 0.965 + 0.04 * pushP;
   const stage = interpolate(t, [0, 8], [0.45, 1], CLAMP);
 
   const gid = `up${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
@@ -271,7 +285,7 @@ export function UptimeStrip({
     );
 
   const headSize = 132 * u;
-  const headTop = stripY - barH / 2 - 44 * u - headSize * 0.92;
+  const headTop = stripRest - barH / 2 - 44 * u - headSize * 0.92;
   const valueChars = Array.from(value).length;
   const wordStart = LAND + valueChars * stagger + 4;
 
@@ -288,7 +302,7 @@ export function UptimeStrip({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${push})`,
+            transform: `scale(${push})${tilt(between(pushP) || between(glide))}`,
             transformOrigin: "50% 55%",
             opacity: stage,
           }}
@@ -401,6 +415,7 @@ export function UptimeStrip({
               left: 0,
               right: 0,
               top: headTop,
+              transform: ride,
               display: "flex",
               justifyContent: "center",
               alignItems: "baseline",
@@ -443,7 +458,8 @@ export function UptimeStrip({
               position: "absolute",
               left: (width - stripW) / 2 + (pitch - barW) / 2,
               width: stripW - (pitch - barW),
-              top: stripY + barH / 2 + 20 * u,
+              top: stripRest + barH / 2 + 20 * u,
+              transform: ride,
               display: "flex",
               justifyContent: "space-between",
               fontFamily,

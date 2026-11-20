@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const urbanist = loadVariableFont("normal", { subsets: ["latin"] });
 
@@ -52,6 +53,7 @@ const LABEL_AT = 3;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_COUNT = Easing.bezier(0.3, 0.1, 0.05, 1);
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -174,6 +176,7 @@ export function ChurnCount({
   speed = 1,
   theme = "dark",
 }: ChurnCountProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -332,7 +335,7 @@ export function ChurnCount({
               textWrap: "balance",
               color: blue,
               opacity: labelP,
-              transform: `translateY(${((1 - labelP) * labelFs * 0.5).toFixed(2)}px)`,
+              transform: `translateY(${((1 - labelP) * labelFs * 0.5).toFixed(2)}px)${glide(midway(labelP))}`,
             }}
           >
             {label}

@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const jost = loadVariableFont("normal", { subsets: ["latin"] });
 
@@ -49,6 +50,8 @@ const CLAMP = {
 } as const;
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -79,6 +82,7 @@ export function AbsorbStack({
   speed = 1,
   theme = "dark",
 }: AbsorbStackProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -109,14 +113,25 @@ export function AbsorbStack({
               easing: EASE_OUT,
             },
           );
-          const settle = spring({
-            frame: frame - SETTLE_AT - ring * stagger,
-            fps,
-            config: { damping: 20, stiffness: 70, mass: 1 },
-          });
+          const settleAt = (f: number) =>
+            spring({
+              frame: f - SETTLE_AT - ring * stagger,
+              fps,
+              config: { damping: 20, stiffness: 70, mass: 1 },
+            });
+          const settle = settleAt(frame);
           const from = centreY + offset * spreadPitch;
           const to = centreY + offset * pitch;
-          const y = from + (to - from) * settle;
+          // The settle is a transform from where the line lands, not `top`:
+          // layout rounds a baseline to whole pixels, so a line eased by `top`
+          // clicks along pixel by pixel. Layout holds the landing place for the
+          // line's whole life, so no frame hands it back to layout's rounding.
+          const travelAt = (f: number) => (from - to) * (1 - settleAt(f));
+          const travel = travelAt(frame);
+          const moving =
+            Math.abs(travelAt(frame + 1) - travel) > 1e-5 ||
+            Math.abs(travel - travelAt(frame - 1)) > 1e-5 ||
+            midway(enter);
           const drift = interpolate(
             enter,
             [0, 1],
@@ -131,7 +146,7 @@ export function AbsorbStack({
                 position: "absolute",
                 left: 0,
                 right: 0,
-                top: y - pitch / 2,
+                top: to - pitch / 2,
                 height: pitch,
                 display: "flex",
                 alignItems: "center",
@@ -145,7 +160,7 @@ export function AbsorbStack({
                 whiteSpace: "pre",
                 color: `color-mix(in oklab, ${ink} ${sat.toFixed(1)}%, ${bg})`,
                 opacity: enter,
-                transform: `translateY(${(drift * fs).toFixed(2)}px)`,
+                transform: `translateY(${travel + drift * fs}px)${glide(moving)}`,
               }}
             >
               {line}

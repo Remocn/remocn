@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: saira } = loadFont("normal", {
   weights: ["400", "500"],
@@ -151,6 +152,8 @@ const THEMES = {
   },
 } as const;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function ramp(t: number, from: number, len: number) {
   return interpolate(t, [from, from + len], [0, 1], CLAMP);
 }
@@ -227,6 +230,7 @@ export function TimingTower({
   theme = "dark",
   speed = 1,
 }: TimingTowerProps) {
+  const glide = useGlide();
   // Starts four frames in, so frame 0 already shows the tower wiping in.
   const t = Math.max(0, useCurrentFrame() - delay) * speed + 4;
   const { width: W, height: H } = useVideoConfig();
@@ -350,7 +354,7 @@ export function TimingTower({
         top: 0,
         width: cellW,
         height: giantFs,
-        transform: `translateY(${y}px)`,
+        transform: `translateY(${y}px)${glide(y !== 0 && midway(rollP))}`,
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
@@ -411,25 +415,33 @@ export function TimingTower({
   const drawOrder = cars.map((_, i) => i).filter((i) => i !== hero);
   drawOrder.push(hero);
 
+  const finalOrder = orders[orders.length - 1];
   const rows = drawOrder.map((car) => {
     const a = slotIn(from, car);
     const b = slotIn(to, car);
-    const slot = a + (b - a) * swapP;
     const settled = b;
     const isHero = car === hero;
     const passing = a !== b && b < a ? Math.sin(Math.PI * swapP) : 0;
     const ent = enter(3 + settled * 1.2);
     const ex = exitP(settled);
-    const x = towerX - (1 - ent) * (towerW + towerX) - ex * exitDX;
-    const y = rowsY + slot * pitch;
+    // Layout rounds a box and a baseline to whole pixels, so a row eased by
+    // `left`/`top` steps unevenly. The row is laid out once, in the slot it
+    // holds after the last lap, and every slot before that is a transform:
+    // moving its layout from slot to slot on each lap would snap its text by
+    // the rounding difference on that frame.
+    const home = slotIn(finalOrder, car);
+    const dx = -(1 - ent) * (towerW + towerX) - ex * exitDX + passing * 14 * u;
+    const dy = (b - home + (a - b) * (1 - swapP)) * pitch;
+    const off = (v: number) => (Math.abs(v) < 1e-3 ? 0 : v);
     const stripe = isHero ? PURPLE : c.stripes[(car * 3) % c.stripes.length];
     return (
       <div
         key={cars[car]}
         style={{
           position: "absolute",
-          left: x + posW + 4 * u + passing * 14 * u,
-          top: y,
+          left: towerX + posW + 4 * u,
+          top: rowsY + home * pitch,
+          transform: `translate(${off(dx)}px, ${off(dy)}px)${glide(a !== b && midway(swapP))}`,
           width: towerW - posW - 4 * u,
           height: rowH,
           background: c.row,
@@ -507,13 +519,16 @@ export function TimingTower({
   const posBoxes = cars.map((_, s) => {
     const ent = enter(3 + s * 1.2);
     const ex = exitP(s);
+    // Laid out in place and slid in by a transform, like the rows.
+    const dx = -(1 - ent) * (towerW + towerX) - ex * exitDX;
     return (
       <div
         key={`pos-${s + 1}`}
         style={{
           position: "absolute",
-          left: towerX - (1 - ent) * (towerW + towerX) - ex * exitDX,
+          left: towerX,
           top: rowsY + s * pitch,
+          transform: Math.abs(dx) < 1e-3 ? undefined : `translateX(${dx}px)`,
           width: posW,
           height: rowH,
           background: c.pos,
@@ -534,6 +549,7 @@ export function TimingTower({
 
   const headEnt = enter(0);
   const headEx = exitP(-1);
+  const headDX = -(1 - headEnt) * (towerW + towerX) - headEx * exitDX;
 
   const label: React.CSSProperties = {
     fontFamily: mono,
@@ -560,8 +576,10 @@ export function TimingTower({
         <div
           style={{
             position: "absolute",
-            left: towerX - (1 - headEnt) * (towerW + towerX) - headEx * exitDX,
+            left: towerX,
             top: towerY,
+            transform:
+              Math.abs(headDX) < 1e-3 ? undefined : `translateX(${headDX}px)`,
             width: towerW,
             height: headH,
             background: c.head,
@@ -644,7 +662,7 @@ export function TimingTower({
                 position: "relative",
                 width: giantW,
                 height: giantFs,
-                transform: `translateY(${(1 - giantIn) * 60 * u}px)`,
+                transform: `translateY(${(1 - giantIn) * 60 * u}px)${glide(midway(giantIn))}`,
                 opacity: giantIn,
               }}
             >
@@ -680,7 +698,7 @@ export function TimingTower({
                     lineHeight: 0.9,
                     letterSpacing: "0.02em",
                     color: fg,
-                    transform: `translateY(${(1 - blockIn(0)) * 100}%)`,
+                    transform: `translateY(${(1 - blockIn(0)) * 100}%)${glide(midway(blockIn(0)))}`,
                   }}
                 >
                   {code}

@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const onest = loadOnest("normal", {
   weights: ["400", "500"],
@@ -74,6 +75,8 @@ const FIRST_SNAP = 28;
 const SNAP_GAPS = [10, 8, 6, 5];
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
+const midway = (q: number) => q > 5e-4 && q < 1 - 5e-4;
+
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -264,6 +267,7 @@ export function ResClimb({
   speed = 1,
   theme = "dark",
 }: ResClimbProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -373,7 +377,10 @@ export function ResClimb({
 
   const cx = W / 2;
   const cy = top + inkH / 2;
-  const scale = `translate(${cx}px, ${cy}px) scale(${push}) translate(${-cx}px, ${-cy}px)`;
+  // The clamped push lands on exactly 1, so the tilt holds through its long
+  // tail and is gone at rest. It pivots on the block's centre, on screen.
+  const pushing = push < 1;
+  const scale = `translate(${cx}px, ${cy}px) scale(${push})${glide(pushing)} translate(${-cx}px, ${-cy}px)`;
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
@@ -467,7 +474,7 @@ export function ResClimb({
                 letterSpacing: "-0.01em",
                 color: fg,
                 opacity: labelP,
-                transform: `translateY(${((1 - labelP) * labelSize * 0.6).toFixed(2)}px)`,
+                transform: `translateY(${((1 - labelP) * labelSize * 0.6).toFixed(2)}px)${glide(midway(labelP) && !pushing)}`,
               }}
             >
               {label}

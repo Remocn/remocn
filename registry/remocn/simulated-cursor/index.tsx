@@ -165,7 +165,7 @@ export function SimulatedCursor({
           transformOrigin: "top left",
           zIndex: 2147483647,
           pointerEvents: "none",
-          willChange: "transform, left, top",
+          willChange: "left, top",
         }}
       >
         <svg

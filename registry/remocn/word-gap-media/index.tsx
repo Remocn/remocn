@@ -20,6 +20,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -257,6 +258,7 @@ export function WordGapMedia({
   ground,
   groundParams,
 }: WordGapMediaProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -345,6 +347,21 @@ export function WordGapMedia({
     const slotMain = (portrait ? cardH : cardW) * open;
     const slotCross =
       (portrait ? cardW : cardH) * (0.55 + 0.45 * Math.min(1, open));
+    // The card's resting size: the last image's aspect, fully open. Children
+    // pinned to its right or bottom edge are laid out against it and ride the
+    // live size by a transform, since layout rounds a box to whole pixels and
+    // a button carried by `right` while the card widens clicks across.
+    const aRest = aspectOf(n - 1);
+    const boxW = portrait ? slotCross : slotMain;
+    const boxH = portrait ? slotMain : slotCross;
+    const restW = portrait ? cardBase : cardBase * aRest;
+    const restH = portrait ? cardBase / aRest : cardBase;
+    const growX = boxW - restW;
+    const growY = boxH - restH;
+    const shift = (x: number, y: number) =>
+      Math.abs(x) < 1e-3 && Math.abs(y) < 1e-3
+        ? ""
+        : `translate(${x}px, ${y}px) `;
     const moveSpeed = Math.abs(a - aPrev) * cardBase;
     const wordBlur = Math.min(4, moveSpeed * 0.12);
     const gap = F * Math.max(0.12, gapEm * Math.min(1.1, open));
@@ -395,6 +412,11 @@ export function WordGapMedia({
       easing: LABEL_IN,
     });
     const barH = Math.max(3, cardBase * 0.008);
+    const barGap = barH * 1.6;
+    // Each bar sits where the resting card puts it and slides by its share
+    // of the width change, which is what the flex row did by layout.
+    const barW = (boxW - pad * 2 - barGap * (n - 1)) / n;
+    const barRestW = (restW - pad * 2 - barGap * (n - 1)) / n;
     const bars = (
       <div
         style={{
@@ -402,8 +424,7 @@ export function WordGapMedia({
           left: pad,
           right: pad,
           top: pad,
-          display: "flex",
-          gap: barH * 1.6,
+          height: barH,
           opacity: barsIn,
           transform: `translateY(${((1 - barsIn) * -pad * 0.6).toFixed(2)}px)`,
         }}
@@ -412,11 +433,17 @@ export function WordGapMedia({
           const from = swapAt[i];
           const to = i < n - 1 ? swapAt[i + 1] : settleAt;
           const fill = interpolate(t, [from, to], [0, 1], CLAMP);
+          const slide = i * (barW - barRestW);
           return (
             <div
               key={`bar${i}`}
               style={{
-                flex: 1,
+                position: "absolute",
+                left: i * (barRestW + barGap),
+                top: 0,
+                width: barW,
+                transform:
+                  Math.abs(slide) < 1e-3 ? undefined : `translateX(${slide}px)`,
                 height: barH,
                 borderRadius: barH,
                 background: "rgba(255,255,255,0.32)",
@@ -458,7 +485,8 @@ export function WordGapMedia({
           style={{
             position: "absolute",
             left: pad * 1.1,
-            bottom: pad * 1.15,
+            top: restH - pad * 1.15 - capFont,
+            height: capFont,
             fontFamily,
             fontWeight: 400,
             fontSize: capFont,
@@ -468,7 +496,7 @@ export function WordGapMedia({
             whiteSpace: "pre",
             clipPath: "inset(-20% -10% -20% -10%)",
             opacity: e * (1 - x),
-            transform: `translateY(${((1 - e) * capFont * 0.8 - x * capFont * 0.6).toFixed(2)}px)`,
+            transform: `${shift(0, growY)}translateY(${((1 - e) * capFont * 0.8 - x * capFont * 0.6).toFixed(2)}px)`,
           }}
         >
           {label}
@@ -489,76 +517,93 @@ export function WordGapMedia({
     const btnScale = btnIn * (t < settleAt ? 1 : 0.88 + 0.12 * settle);
     const borderHit = interpolate(t - settleAt, [0, 4, 20], [0, 1, 0.4], CLAMP);
 
+    // The slot keeps the words reflowing as before, but its centre never
+    // moves (the row is centred on both axes), while its top-left edge does,
+    // and layout rounds that edge to whole pixels: every box on the card
+    // clicked as it grew. The card hangs from the slot's centre instead, laid
+    // out at its resting corner and carried to the live one by a transform.
     const card = (
       <div
         style={{
           position: "relative",
-          width: portrait ? slotCross : slotMain,
-          height: portrait ? slotMain : slotCross,
+          width: boxW,
+          height: boxH,
           flexShrink: 0,
           margin: portrait ? `${gap}px 0` : `0 ${gap}px`,
-          transform: `perspective(${(H * 2).toFixed(0)}px) rotateY(${tilt.toFixed(2)}deg) rotateX(${tiltX.toFixed(2)}deg) scale(${punchScale.toFixed(4)})`,
-          opacity: open > 0.001 ? 1 : 0,
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            borderRadius: R,
-            overflow: "hidden",
-            boxShadow: c.shadow,
-            background: c.base,
-          }}
-        >
-          {imgNodes}
+        <div style={{ position: "absolute", left: "50%", top: "50%" }}>
           <div
             style={{
               position: "absolute",
-              inset: 0,
-              background:
-                "linear-gradient(180deg, rgba(0,0,0,0.32) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 62%, rgba(0,0,0,0.42) 100%)",
-            }}
-          />
-          {bars}
-          {capNodes}
-          <div
-            style={{
-              position: "absolute",
-              right: pad,
-              bottom: pad * 0.8,
-              width: btnD,
-              height: btnD,
-              borderRadius: btnD,
-              background: `color-mix(in oklab, ${hi} ${(armed * 100).toFixed(1)}%, rgba(255,255,255,0.2))`,
-              backdropFilter: "blur(14px)",
-              boxShadow: `inset 0 0 0 1px rgba(255,255,255,${(0.38 - 0.2 * armed).toFixed(3)}), 0 ${(btnD * 0.16).toFixed(1)}px ${(btnD * 0.4).toFixed(1)}px rgba(0,0,0,${(0.12 + 0.18 * armed).toFixed(3)})`,
-              transform: `scale(${btnScale.toFixed(4)})`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              left: -restW / 2,
+              top: -restH / 2,
+              width: boxW,
+              height: boxH,
+              transform: `${shift(-growX / 2, -growY / 2)}perspective(${(H * 2).toFixed(0)}px) rotateY(${tilt.toFixed(2)}deg) rotateX(${tiltX.toFixed(2)}deg) scale(${punchScale.toFixed(4)})`,
+              opacity: open > 0.001 ? 1 : 0,
             }}
           >
-            <svg
-              viewBox="0 0 24 24"
-              width={btnD * 0.4}
-              height={btnD * 0.4}
-              aria-hidden
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                borderRadius: R,
+                overflow: "hidden",
+                boxShadow: c.shadow,
+                background: c.base,
+              }}
             >
-              <path
-                d="M8.5 6.2v11.6c0 .6.6.9 1.1.6l9-5.8c.5-.3.5-.9 0-1.2l-9-5.8c-.5-.3-1.1 0-1.1.6z"
-                fill="#ffffff"
+              {imgNodes}
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background:
+                    "linear-gradient(180deg, rgba(0,0,0,0.32) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 62%, rgba(0,0,0,0.42) 100%)",
+                }}
               />
-            </svg>
+              {bars}
+              {capNodes}
+              <div
+                style={{
+                  position: "absolute",
+                  left: restW - pad - btnD,
+                  top: restH - pad * 0.8 - btnD,
+                  width: btnD,
+                  height: btnD,
+                  borderRadius: btnD,
+                  background: `color-mix(in oklab, ${hi} ${(armed * 100).toFixed(1)}%, rgba(255,255,255,0.2))`,
+                  backdropFilter: "blur(14px)",
+                  boxShadow: `inset 0 0 0 1px rgba(255,255,255,${(0.38 - 0.2 * armed).toFixed(3)}), 0 ${(btnD * 0.16).toFixed(1)}px ${(btnD * 0.4).toFixed(1)}px rgba(0,0,0,${(0.12 + 0.18 * armed).toFixed(3)})`,
+                  transform: `${shift(growX, growY)}scale(${btnScale.toFixed(4)})`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width={btnD * 0.4}
+                  height={btnD * 0.4}
+                  aria-hidden
+                >
+                  <path
+                    d="M8.5 6.2v11.6c0 .6.6.9 1.1.6l9-5.8c.5-.3.5-.9 0-1.2l-9-5.8c-.5-.3-1.1 0-1.1.6z"
+                    fill="#ffffff"
+                  />
+                </svg>
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  borderRadius: R,
+                  boxShadow: `inset 0 0 0 1px ${borderHit > 0.01 ? `color-mix(in oklab, ${hi} ${(borderHit * 100).toFixed(0)}%, ${c.border})` : c.border}, ${c.highlight}`,
+                }}
+              />
+            </div>
           </div>
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              borderRadius: R,
-              boxShadow: `inset 0 0 0 1px ${borderHit > 0.01 ? `color-mix(in oklab, ${hi} ${(borderHit * 100).toFixed(0)}%, ${c.border})` : c.border}, ${c.highlight}`,
-            }}
-          />
         </div>
       </div>
     );
@@ -573,7 +618,12 @@ export function WordGapMedia({
       filter: wordBlur > 0.1 ? `blur(${wordBlur.toFixed(2)}px)` : undefined,
     };
     const afterStart = before.split(" ").filter(Boolean).length * stagger;
-    const push = interpolate(frame, [0, durationInFrames], [1, 1.035], CLAMP);
+    const pushAt = (f: number) =>
+      interpolate(f, [0, durationInFrames], [1, 1.035], CLAMP);
+    const push = pushAt(frame);
+    const pushMoving =
+      Math.abs(pushAt(frame + speed) - push) * (W / 2) > 1e-3 ||
+      Math.abs(push - pushAt(frame - speed)) * (W / 2) > 1e-3;
 
     content = (
       <AbsoluteFill
@@ -582,7 +632,7 @@ export function WordGapMedia({
           flexDirection: portrait ? "column" : "row",
           alignItems: "center",
           justifyContent: "center",
-          transform: `scale(${push.toFixed(5)})`,
+          transform: `scale(${push.toFixed(5)})${glide(pushMoving)}`,
         }}
       >
         <Words

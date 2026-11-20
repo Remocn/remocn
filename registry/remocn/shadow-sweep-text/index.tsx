@@ -1,6 +1,7 @@
 "use client";
 
 import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface ShadowSweepTextProps {
   text: string;
@@ -23,6 +24,8 @@ const EXIT_START = 26;
 const EXIT_END = shadowSweepTextLength - 1;
 const REST_X = -20;
 const REST_Y = 9;
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const clamp = {
   extrapolateLeft: "clamp" as const,
   extrapolateRight: "clamp" as const,
@@ -41,6 +44,7 @@ export function ShadowSweepText({
   speed = 1,
   className,
 }: ShadowSweepTextProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame() * speed;
   const safeSoftness = Math.max(shadowSoftness, 0);
   const travelProgress = interpolate(
@@ -120,7 +124,7 @@ export function ShadowSweepText({
         style={{
           position: "relative",
           display: "inline-block",
-          transform: `translate3d(${x}px, ${y}px, 0)`,
+          transform: `translate3d(${x}px, ${y}px, 0)${glide(midway(travelProgress))}`,
         }}
       >
         <span

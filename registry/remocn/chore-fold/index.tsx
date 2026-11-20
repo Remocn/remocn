@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const geologica = loadFont("normal", {
   weights: ["400", "500"],
@@ -81,6 +82,8 @@ const SWAP_OUT = 10;
 const SWAP_IN = 18;
 const PAYOFF_AFTER = 16;
 const HOLD = 40;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 type Metrics = Record<string, number>;
 const key = (w: number, s: string) => `${w}\u0002${s}`;
@@ -197,6 +200,7 @@ export function ChoreFold({
   speed = 1,
   theme = "dark",
 }: ChoreFoldProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -258,8 +262,10 @@ export function ChoreFold({
     heroF *= 0.95;
   }
 
+  const easeAt = (at: number, from: number, dur: number, curve = EASE_OUT) =>
+    interpolate(at, [from, from + dur], [0, 1], { ...CLAMP, easing: curve });
   const ease = (from: number, dur: number, curve = EASE_OUT) =>
-    interpolate(t, [from, from + dur], [0, 1], { ...CLAMP, easing: curve });
+    easeAt(t, from, dur, curve);
 
   const D = (n - 1) / 2;
   const rounds = Math.max(1, Math.ceil(D));
@@ -273,13 +279,24 @@ export function ChoreFold({
   const read = Math.min(70, Math.max(18, span - linesDone - tail));
   const foldAt = linesDone + read;
 
-  let p = 0;
+  const foldP = (at: number) => {
+    let acc = 0;
+    let from = foldAt;
+    for (let r = 0; r < rounds; r++) {
+      acc += Math.min(1, D - r) * easeAt(at, from, roundDur(r), EASE_MOVE);
+      from += roundDur(r) + ROUND_GAP;
+    }
+    return acc;
+  };
+  const p = foldP(t);
+  // The in-out fold creeps at both ends of each round, so "moving" is read
+  // off the pixels the outermost line travels, not off a progress.
+  const foldPx = (at: number) => foldP(at) * pitch;
+  const folding =
+    Math.abs(foldPx(t + speed) - foldPx(t)) > 1e-3 ||
+    Math.abs(foldPx(t) - foldPx(t - speed)) > 1e-3;
   let cursor = foldAt;
-  for (let r = 0; r < rounds; r++) {
-    const step = Math.min(1, D - r);
-    p += step * ease(cursor, roundDur(r), EASE_MOVE);
-    cursor += roundDur(r) + ROUND_GAP;
-  }
+  for (let r = 0; r < rounds; r++) cursor += roundDur(r) + ROUND_GAP;
   const foldEnd = cursor;
   const swapAt = foldEnd + SWAP_LEAD - ROUND_GAP;
   const heroAt = swapAt + 4;
@@ -291,6 +308,14 @@ export function ChoreFold({
     const d = Math.abs(i - D);
     return cy + sign * Math.min(d, Math.max(0, D - p)) * pitch;
   });
+  // Where each line sits before the fold, and how far the fold has pulled it
+  // in: exactly 0 until the fold starts.
+  const yRest = list.map((_, i) => cy + (i - D) * pitch);
+  const fold = list.map((_, i) => {
+    const sign = i - D < 0 ? -1 : 1;
+    const d = Math.abs(i - D);
+    return sign * (Math.min(d, Math.max(0, D - p)) - d) * pitch;
+  });
 
   const nodes: React.ReactNode[] = [];
 
@@ -299,6 +324,8 @@ export function ChoreFold({
     const lout = ease(foldAt, 10);
     const labelF = Math.max(12, F * 0.46);
     const top = cy - D * pitch - pitch / 2 - labelF * 1.6;
+    // The pull rides the transform, not `top`: layout rounds a baseline to
+    // whole pixels, so text eased by `top` clicks along pixel by pixel.
     const pull = p * pitch * 0.5;
     nodes.push(
       <div
@@ -307,7 +334,7 @@ export function ChoreFold({
           position: "absolute",
           left: 0,
           width: W,
-          top: top + pull,
+          top,
           textAlign: "center",
           fontFamily,
           fontWeight: STEP_W,
@@ -315,7 +342,7 @@ export function ChoreFold({
           lineHeight: 1,
           color: hi,
           opacity: lin * (1 - lout),
-          transform: `translateY(${((1 - lin) * labelF * 0.6).toFixed(2)}px)`,
+          transform: `translateY(${(1 - lin) * labelF * 0.6 + pull}px)${glide(midway(lin) || (folding && lout < 1))}`,
           whiteSpace: "pre",
         }}
       >
@@ -345,15 +372,20 @@ export function ChoreFold({
     const out = lastStanding ? swapOut : 0;
     if (out >= 1) return;
     const words = splitWords(line);
+    const lineMoving = folding || midway(out);
     nodes.push(
       <div
         key={`step-${i}-${line}`}
         style={{
           position: "absolute",
           left: 0,
-          top: y - pitch / 2,
+          // Laid out where the line enters; the fold is a transform, for the
+          // same reason as the label's pull.
+          top: yRest[i] - pitch / 2,
           width: W,
           height: pitch,
+          transform:
+            Math.abs(fold[i]) > 1e-3 ? `translateY(${fold[i]}px)` : undefined,
           clipPath: `inset(${clipTop.toFixed(2)}px 0px ${clipBottom.toFixed(2)}px 0px)`,
           overflow: "hidden",
         }}
@@ -370,7 +402,7 @@ export function ChoreFold({
             color: fg,
             whiteSpace: "pre",
             opacity: (1 - out) * tuck,
-            transform: `translateY(${(-out * pitch * 0.7).toFixed(2)}px)`,
+            transform: `translateY(${(-out * pitch * 0.7).toFixed(2)}px)${glide(lineMoving)}`,
           }}
         >
           {words.map((w, wi) => {
@@ -381,7 +413,7 @@ export function ChoreFold({
                 style={{
                   display: "inline-block",
                   opacity: e,
-                  transform: `translateY(${((1 - e) * pitch * 0.7).toFixed(2)}px)`,
+                  transform: `translateY(${((1 - e) * pitch * 0.7).toFixed(2)}px)${glide(midway(e) && !lineMoving)}`,
                 }}
               >
                 {wi > 0 ? ` ${w}` : w}
@@ -429,7 +461,7 @@ export function ChoreFold({
                   style={{
                     display: "inline-block",
                     color: h.lit ? hi : fg,
-                    transform: `translateY(${((1 - e) * blockH * 1.1).toFixed(2)}px)`,
+                    transform: `translateY(${((1 - e) * blockH * 1.1).toFixed(2)}px)${glide(midway(e))}`,
                   }}
                 >
                   {wi > 0 ? ` ${h.w}` : h.w}
@@ -460,7 +492,7 @@ export function ChoreFold({
             lineHeight: 1.2,
             color: fg,
             opacity: pin * 0.72,
-            transform: `translateY(${((1 - pin) * pf * 0.6).toFixed(2)}px)`,
+            transform: `translateY(${((1 - pin) * pf * 0.6).toFixed(2)}px)${glide(midway(pin))}`,
             whiteSpace: "pre",
           }}
         >

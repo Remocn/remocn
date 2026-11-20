@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadFont("italic", {
   weights: ["500"],
@@ -221,6 +222,7 @@ export function ItalicSpeed({
   theme = "dark",
   speed = 1,
 }: ItalicSpeedProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -258,15 +260,25 @@ export function ItalicSpeed({
     const arrive = ARRIVE + (n - 1 - i) * stagger;
     const ride = RIDE(interpolate(t, [arrive - TRAVEL, arrive], [0, 1], CLAMP));
     const dx = -(1.05 * W) * (1 - ride);
-    const snap = spring({
-      frame: t - (arrive - 2),
-      fps,
-      config: { damping: 11, stiffness: 320, mass: 0.55 },
-    });
-    const lean = -arriveLean * (1 - snap);
+    const leanAt = (tt: number) =>
+      -arriveLean *
+      (1 -
+        spring({
+          frame: tt - (arrive - 2),
+          fps,
+          config: { damping: 11, stiffness: 320, mass: 0.55 },
+        }));
+    const lean = leanAt(t);
+    // The spring overshoots and trails off: the lean moves while it differs
+    // from a neighbouring frame's by more than a thousandth of a pixel at the
+    // cap height.
+    const still = 1e-3 / ((Math.PI / 180) * cap);
+    const leaning =
+      Math.abs(leanAt(t + speed) - lean) > still ||
+      Math.abs(lean - leanAt(t - speed)) > still;
     const x = penX + pens[i] * fs + dx;
     const pivot = x + (ADV[code(ch)] / 2000) * fs;
-    return { ch, x, lean, pivot, visible: ride > 0 };
+    return { ch, x, lean, leaning, pivot, visible: ride > 0 };
   });
   const lead = letters[n - 1];
   const leadRight = lead.x + (ADV[code(lead.ch)] / 1000) * fs;
@@ -298,7 +310,10 @@ export function ItalicSpeed({
   });
   const done = strips.every((s) => s.ret >= 1);
 
-  const subP = SUB(interpolate(t, [SUB_AT, SUB_AT + SUB_LEN], [0, 1], CLAMP));
+  const subAt = (tt: number) =>
+    SUB(interpolate(tt, [SUB_AT, SUB_AT + SUB_LEN], [0, 1], CLAMP));
+  const subP = subAt(t);
+  const subMoving = subAt(t + speed) !== subP || subAt(t - speed) !== subP;
   const subLean = -14 * (1 - subP);
   const subBase = ruleY + ruleH + subGap + subFs * CAP;
   const subDy = -(subFs * 1.2) * (1 - subP);
@@ -311,7 +326,14 @@ export function ItalicSpeed({
           width={W}
           height={H}
           viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            // A skew alone keeps a glyph raster on the pixel grid, so a letter
+            // whose italic lean springs, or a subtitle that rises, would click
+            // along; SVG text can't carry the mark, so the drawing does.
+            transform: glide(letters.some((g) => g.leaning) || subMoving),
+          }}
           role="img"
           aria-label={sub ? `${text}. ${sub}` : text}
         >

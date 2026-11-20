@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: space } = loadSpace("normal", {
   weights: ["400", "500"],
@@ -248,6 +249,8 @@ function buildArrow(W: number, H: number, u: number) {
   return { pts, tip, start: knots[0], by1 };
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -279,6 +282,7 @@ export function FlowArrow({
   theme = "dark",
   speed = 1,
 }: FlowArrowProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = Math.min(W / 1280, H / 720);
@@ -436,7 +440,10 @@ export function FlowArrow({
     >
       <ScaleLayer scale={scale}>
         <AbsoluteFill
-          style={{ transform: `scale(${zoom})`, transformOrigin: "50% 50%" }}
+          style={{
+            transform: `scale(${zoom})${glide(midway(push))}`,
+            transformOrigin: "50% 50%",
+          }}
         >
           <svg
             width={W}

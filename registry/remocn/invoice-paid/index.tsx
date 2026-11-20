@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -123,6 +124,12 @@ const clampOpts = {
 const tween = (f: number, a: number, b: number, easing = ENTER) =>
   interpolate(f, [a, b], [0, 1], { ...clampOpts, easing });
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+/** Whether `at` changes between this frame and either neighbour. */
+const moves = (at: (f: number) => number, f: number, step = 1) =>
+  Math.abs(at(f + step) - at(f)) > 1e-3 ||
+  Math.abs(at(f) - at(f - step)) > 1e-3;
 
 function withAlpha(hex: string, alpha: number) {
   const h = hex.replace("#", "");
@@ -262,11 +269,13 @@ function Cursor({ x, y, press }: Pt & { press: number }) {
       height={28}
       viewBox="0 0 20 24"
       style={{
+        // The pointer travels by transform: layout rounds a box edge to a
+        // whole pixel, so a cursor moved by left/top steps along.
         position: "absolute",
-        left: x - 2,
-        top: y - 2,
+        left: 0,
+        top: 0,
         transformOrigin: "2px 2px",
-        transform: `scale(${1 - 0.1 * press})`,
+        transform: `translate(${x - 2}px, ${y - 2}px) scale(${1 - 0.1 * press})`,
         filter: "drop-shadow(0 3px 5px rgba(0,0,0,0.3))",
         overflow: "visible",
       }}
@@ -339,12 +348,16 @@ function StatusPill({
   fps,
   pal,
   accent,
+  carried,
 }: {
   frame: number;
   fps: number;
   pal: Pal;
   accent: string;
+  /** A parent is moving and tilted, which covers the pill. */
+  carried: boolean;
 }) {
+  const glide = useGlide();
   const at = [0, T.send + 2, T.viewed, T.paid];
   const step = at.filter((t) => frame >= t).length - 1;
   const colors = [pal.faint, accent, pal.amber, pal.green];
@@ -355,11 +368,21 @@ function StatusPill({
     withAlpha(colors[prev], pal.dark ? 0.14 : 0.1),
     withAlpha(colors[step], pal.dark ? 0.14 : 0.1),
   ]);
-  const pop =
-    step > 0
-      ? spring({ frame: frame - at[step], fps, config: CHIP }) -
-        spring({ frame: frame - at[step] - 3, fps, config: CHIP })
+  const popAt = (f: number) => {
+    const k = at.filter((a) => f >= a).length - 1;
+    return k > 0
+      ? spring({ frame: f - at[k], fps, config: CHIP }) -
+          spring({ frame: f - at[k] - 3, fps, config: CHIP })
       : 0;
+  };
+  const pop = popAt(frame);
+  // Px the pill's edge moves per unit of pop: 7% of its 30px height. The
+  // label swaps on the frame the pop starts; the test looks a frame further
+  // ahead, so the lean is already on when the label's width changes.
+  const popping =
+    !carried &&
+    (moves((f) => popAt(f) * 2.1, frame) ||
+      moves((f) => popAt(f) * 2.1, frame + 1));
   return (
     <div
       style={{
@@ -372,7 +395,7 @@ function StatusPill({
         background: bg,
         color: c,
         fontSize: 16,
-        transform: `scale(${1 + 0.07 * pop})`,
+        transform: `scale(${1 + 0.07 * pop})${glide(popping)}`,
       }}
     >
       <StatusGlyph step={step} color={c} />
@@ -480,6 +503,7 @@ function InvoiceDoc({
   currency,
   stampDate,
   fontFamily,
+  carried,
 }: {
   frame: number;
   fps: number;
@@ -493,7 +517,10 @@ function InvoiceDoc({
   currency: string;
   stampDate: string;
   fontFamily: string;
+  /** The page is entering and tilted, which covers its rows. */
+  carried: boolean;
 }) {
+  const glide = useGlide();
   const total = lines.reduce((s, l) => s + l.qty * l.unit, 0);
   const ink = "#17181B";
   const muted = "#62646B";
@@ -501,12 +528,20 @@ function InvoiceDoc({
   const line = "rgba(20,20,24,0.08)";
   const r = (k: number): React.CSSProperties => {
     const p = tween(frame, 8 + k * 3, 20 + k * 3, ENTER2);
-    return { opacity: p, transform: `translateY(${(1 - p) * 10}px)` };
+    return {
+      opacity: p,
+      transform: `translateY(${(1 - p) * 10}px)${glide(midway(p) && !carried)}`,
+    };
   };
   const land = spring({ frame: frame - T.stamp, fps, config: CHIP });
-  const impact =
-    spring({ frame: frame - T.stamp - 3, fps, config: CHIP }) -
-    spring({ frame: frame - T.stamp - 6, fps, config: CHIP });
+  const impactAt = (f: number) =>
+    spring({ frame: f - T.stamp - 3, fps, config: CHIP }) -
+    spring({ frame: f - T.stamp - 6, fps, config: CHIP });
+  const impact = impactAt(frame);
+  // The stamp's knock shakes the whole page; the test is on its px, the
+  // drop plus the shrink over the page's height.
+  const knocked =
+    !carried && moves((f) => impactAt(f) * (2 + 0.006 * DOC.h), frame);
 
   return (
     <div
@@ -518,7 +553,7 @@ function InvoiceDoc({
         padding: "40px 40px",
         boxSizing: "border-box",
         color: ink,
-        transform: `translateY(${impact * 2}px) scale(${1 - 0.006 * impact})`,
+        transform: `translateY(${impact * 2}px) scale(${1 - 0.006 * impact})${glide(knocked)}`,
       }}
     >
       <div
@@ -763,6 +798,7 @@ export function InvoicePaid({
   ground,
   groundParams,
 }: InvoicePaidProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width;
@@ -786,11 +822,19 @@ export function InvoicePaid({
     ? { x: 60, y: 36, w: 600 }
     : { x: DW - 92 - 420, y: 40, w: 420 };
 
-  const docIn = spring({ frame, fps, config: HEAVY });
-  const panelIn = spring({ frame: frame - 6, fps, config: CARD });
+  const docInAt = (f: number) => spring({ frame: f, fps, config: HEAVY });
+  const panelInAt = (f: number) => spring({ frame: f - 6, fps, config: CARD });
+  const docIn = docInAt(frame);
+  const panelIn = panelInAt(frame);
+  // Neither spring lands exactly, so both are tested on their px.
+  const docMoving = moves((f) => docInAt(f) * 60, frame, speed);
+  const panelMoving = moves((f) => panelInAt(f) * 40, frame, speed);
   const rowIn = (k: number): React.CSSProperties => {
     const p = tween(frame, 12 + k * 3, 24 + k * 3, ENTER2);
-    return { opacity: p, transform: `translateY(${(1 - p) * 10}px)` };
+    return {
+      opacity: p,
+      transform: `translateY(${(1 - p) * 10}px)${glide(midway(p) && !panelMoving)}`,
+    };
   };
 
   const sendPt = {
@@ -826,7 +870,10 @@ export function InvoicePaid({
 
   const reachAt = [0, T.send + 4, T.viewed, T.paid];
   const paidP = tween(frame, T.paid, T.paid + 8, MOVE);
-  const notifIn = spring({ frame: frame - T.payout, fps, config: CARD });
+  const notifInAt = (f: number) =>
+    spring({ frame: f - T.payout, fps, config: CARD });
+  const notifIn = notifInAt(frame);
+  const notifMoving = moves((f) => notifInAt(f) * 70, frame, speed);
 
   return (
     <AbsoluteFill
@@ -877,7 +924,7 @@ export function InvoicePaid({
               borderRadius: 6,
               boxShadow: pal.docShadow,
               opacity: tween(frame, 0, 10, ENTER2),
-              transform: `translateY(${(1 - docIn) * 60}px) scale(${docScale * (0.97 + 0.03 * docIn)}) rotate(${(1 - docIn) * -2}deg)`,
+              transform: `translateY(${(1 - docIn) * 60}px) scale(${docScale * (0.97 + 0.03 * docIn)}) rotate(${(1 - docIn) * -2}deg)${glide(docMoving)}`,
             }}
           >
             <InvoiceDoc
@@ -893,6 +940,7 @@ export function InvoicePaid({
               currency={currency}
               stampDate={paidDay.toUpperCase() || "PAID"}
               fontFamily={fontFamily}
+              carried={docMoving}
             />
           </div>
 
@@ -908,7 +956,7 @@ export function InvoicePaid({
               color: fg,
               boxShadow: pal.panelShadow,
               opacity: Math.min(1, panelIn * 1.4),
-              transform: `translateY(${(1 - panelIn) * 40}px)`,
+              transform: `translateY(${(1 - panelIn) * 40}px)${glide(panelMoving)}`,
             }}
           >
             <div
@@ -929,7 +977,13 @@ export function InvoicePaid({
               >
                 {number}
               </span>
-              <StatusPill frame={frame} fps={fps} pal={pal} accent={accent} />
+              <StatusPill
+                frame={frame}
+                fps={fps}
+                pal={pal}
+                accent={accent}
+                carried={panelMoving || midway(tween(frame, 12, 24, ENTER2))}
+              />
               <div style={{ flex: 1 }} />
               <div
                 style={{
@@ -1145,7 +1199,7 @@ export function InvoicePaid({
                           color: pal.muted,
                           marginTop: 2,
                           opacity: on,
-                          transform: `translateY(${(1 - on) * 4}px)`,
+                          transform: `translateY(${(1 - on) * 4}px)${glide(midway(on) && !panelMoving)}`,
                         }}
                       >
                         {ev.detail}
@@ -1187,7 +1241,7 @@ export function InvoicePaid({
               alignItems: "center",
               gap: 14,
               opacity: Math.min(1, Math.max(0, notifIn) * 1.5),
-              transform: `translateY(${(1 - notifIn) * -70}px) scale(${0.96 + 0.04 * notifIn})`,
+              transform: `translateY(${(1 - notifIn) * -70}px) scale(${0.96 + 0.04 * notifIn})${glide(notifMoving)}`,
               boxShadow: pal.panelShadow,
             }}
           >

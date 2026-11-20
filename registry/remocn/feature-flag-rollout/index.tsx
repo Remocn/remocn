@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -133,6 +134,8 @@ const clamp = (v: number, lo: number, hi: number) =>
   Math.min(hi, Math.max(lo, v));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
@@ -189,7 +192,17 @@ function arcTo(a: Pt, b: Pt, p: number): Pt {
   };
 }
 
-function Cursor({ x, y, scale }: { x: number; y: number; scale: number }) {
+function Cursor({
+  x,
+  y,
+  rest,
+  scale,
+}: {
+  x: number;
+  y: number;
+  rest: Pt;
+  scale: number;
+}) {
   return (
     <svg
       width={24}
@@ -197,10 +210,13 @@ function Cursor({ x, y, scale }: { x: number; y: number; scale: number }) {
       viewBox="0 0 20 24"
       style={{
         position: "absolute",
-        left: x - 2,
-        top: y - 2,
+        // Layout rounds a box to whole pixels, so a pointer eased by
+        // `left`/`top` clicks along its arc. It is laid out where it waits
+        // longest and the way there is a transform.
+        left: rest.x - 2,
+        top: rest.y - 2,
         transformOrigin: "2px 2px",
-        transform: `scale(${scale})`,
+        transform: `translate(${x - rest.x}px, ${y - rest.y}px) scale(${scale})`,
         filter: "drop-shadow(0 3px 6px rgba(0,0,0,0.3))",
         overflow: "visible",
       }}
@@ -465,6 +481,7 @@ export function FeatureFlagRollout({
   ground,
   groundParams,
 }: FeatureFlagRolloutProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const pal = palette(theme);
@@ -472,9 +489,16 @@ export function FeatureFlagRollout({
   const tall = H > W * 1.2;
   const D = tall ? { w: 800, h: 1422 } : { w: 1280, h: 720 };
   const s = Math.min(W / D.w, H / D.h);
-  const sp = (at: number, config: object) =>
-    spring({ frame: frame - at, fps, config });
+  const spAt = (f: number, at: number, config: object) =>
+    spring({ frame: f - at, fps, config });
+  const sp = (at: number, config: object) => spAt(frame, at, config);
+  // The springs here overshoot and stack, so "still moving" is read off the
+  // neighbouring frames rather than off a progress value.
+  const moved = (at: (f: number) => number) =>
+    Math.abs(at(frame + 1) - at(frame)) > 1e-5 ||
+    Math.abs(at(frame) - at(frame - 1)) > 1e-5;
   const stepList = steps.length > 0 ? steps : [5, 25, 100];
+  const lastStep = stepList[stepList.length - 1];
 
   const WIN = tall
     ? { x: 40, y: 384, w: 720, h: 1010 }
@@ -534,6 +558,7 @@ export function FeatureFlagRollout({
   const win = sp(0, HEAVY);
   const winA = tween(frame, 0, 10);
   const cam = tween(frame, 10, lastRelease + 50, camEase);
+  const stageIn = tween(frame, 6, 20);
 
   const TOG = { x: WIN.w - PAD - 150, y: HEAD_H / 2 - 20 };
   const THUMB_R = 12;
@@ -616,6 +641,11 @@ export function FeatureFlagRollout({
     });
   });
 
+  const pulseAt = (f: number) =>
+    1 +
+    0.04 *
+      clamp(spAt(f, doneAt, CHIP), 0, 1.4) *
+      (1 - clamp(spAt(f, doneAt + 6, MORPH), 0, 1));
   const bigPct = (size: number, color: string) => (
     <div
       style={{
@@ -625,7 +655,7 @@ export function FeatureFlagRollout({
         lineHeight: 1,
         color,
         fontVariantNumeric: "tabular-nums",
-        transform: `scale(${1 + 0.04 * clamp(done, 0, 1.4) * (1 - clamp(sp(doneAt + 6, MORPH), 0, 1))})`,
+        transform: `scale(${pulseAt(frame)})${glide(moved(pulseAt))}`,
         transformOrigin: "0% 80%",
       }}
     >
@@ -671,7 +701,7 @@ export function FeatureFlagRollout({
               position: "absolute",
               inset: 0,
               transformOrigin: `${WIN.x + TRACK.x + TRACK.w}px ${WIN.y + TRACK.y}px`,
-              transform: `scale(${1 + 0.03 * cam})`,
+              transform: `scale(${1 + 0.03 * cam})${glide(midway(cam))}`,
             }}
           >
             {tall ? (
@@ -688,7 +718,7 @@ export function FeatureFlagRollout({
                 <div style={{ marginTop: 10, overflow: "hidden" }}>
                   <div
                     style={{
-                      transform: `translateY(${(1 - tween(frame, 6, 20)) * 100}%)`,
+                      transform: `translateY(${(1 - stageIn) * 100}%)${glide(midway(stageIn))}`,
                     }}
                   >
                     {bigPct(180, ink ?? pal.stageText)}
@@ -715,7 +745,7 @@ export function FeatureFlagRollout({
                 width: WIN.w,
                 height: WIN.h,
                 opacity: winA,
-                transform: `translateY(${(1 - win) * 48}px) scale(${0.97 + 0.03 * win})`,
+                transform: `translateY(${(1 - win) * 48}px) scale(${0.97 + 0.03 * win})${glide(midway(win))}`,
                 transformOrigin: "50% 100%",
                 borderRadius: 16,
                 background: pal.win,
@@ -810,7 +840,11 @@ export function FeatureFlagRollout({
                     style={{
                       position: "absolute",
                       top: 3,
-                      left: 3 + 16 * toggleOn,
+                      // Laid out switched on; the slide there is a transform,
+                      // because a knob eased by `left` is rounded to whole
+                      // pixels and clicks across.
+                      left: 3 + 16,
+                      transform: `translateX(${16 * (toggleOn - 1)}px)`,
                       width: 18,
                       height: 18,
                       borderRadius: 99,
@@ -879,14 +913,16 @@ export function FeatureFlagRollout({
                 <div
                   style={{
                     position: "absolute",
-                    left: THUMB_R + (pct / 100) * (TRACK.w - THUMB_R * 2),
+                    // Laid out at the last step, where it ends up; the drag
+                    // there is a transform, for the same reason as the knob.
+                    left: THUMB_R + (lastStep / 100) * (TRACK.w - THUMB_R * 2),
                     top: 4,
                     width: THUMB_R * 2,
                     height: THUMB_R * 2,
                     borderRadius: 99,
                     background: "#fff",
                     boxShadow: `0 0 0 1px ${pal.dark ? "rgba(0,0,0,0.3)" : "rgba(17,19,24,0.12)"}, 0 2px 6px rgba(17,19,24,0.25)`,
-                    transform: `translate(-50%, -50%) scale(${1 + 0.12 * dragHold})`,
+                    transform: `translateX(${((pct - lastStep) / 100) * (TRACK.w - THUMB_R * 2)}px) translate(-50%, -50%) scale(${1 + 0.12 * dragHold})`,
                   }}
                 />
               </div>
@@ -965,7 +1001,7 @@ export function FeatureFlagRollout({
                       top,
                       width: RIGHT.w,
                       opacity: a,
-                      transform: `translateY(${(1 - a) * 10}px)`,
+                      transform: `translateY(${(1 - a) * 10}px)${glide(midway(a))}`,
                     }}
                   >
                     <div
@@ -1044,56 +1080,71 @@ export function FeatureFlagRollout({
                   overflow: "hidden",
                 }}
               >
-                {(() => {
-                  let y = 0;
-                  return rows.map((r) => {
-                    const g = r.at < 0 ? 1 : clamp(sp(r.at, CARD), 0, 1.05);
-                    const top = y;
-                    y += ROW * Math.min(1, g);
-                    const fade =
-                      r.at < 0 ? 1 : tween(frame, r.at + 2, r.at + 10);
-                    if (top > ROW * 3) return null;
-                    return (
-                      <div
-                        key={r.key}
+                {rows.map((r, idx) => {
+                  // Each newer row opens a slot above and pushes this one
+                  // down. Layout holds the slot the row is heading for and
+                  // the way there is a transform: a row eased by `top` has
+                  // its box and its baseline rounded to whole pixels.
+                  const topAt = (f: number) => {
+                    let sum = 0;
+                    for (let j = 0; j < idx; j++) {
+                      const g =
+                        rows[j].at < 0
+                          ? 1
+                          : clamp(spAt(f, rows[j].at, CARD), 0, 1.05);
+                      sum += ROW * Math.min(1, g);
+                    }
+                    return sum;
+                  };
+                  const top = topAt(frame);
+                  const slot = ROW * idx;
+                  const fade = r.at < 0 ? 1 : tween(frame, r.at + 2, r.at + 10);
+                  if (top > ROW * 3) return null;
+                  return (
+                    <div
+                      key={r.key}
+                      style={{
+                        position: "absolute",
+                        left: 0,
+                        right: 0,
+                        top: slot,
+                        height: ROW,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        fontSize: 16,
+                        opacity: fade,
+                        transform: `translateY(${top - slot + (1 - fade) * -6}px)${glide(moved(topAt) || midway(fade))}`,
+                        borderTop: `1px solid ${pal.line}`,
+                      }}
+                    >
+                      <Avatar name={r.who} size={26} />
+                      <span style={{ color: fg, whiteSpace: "nowrap" }}>
+                        {r.who}
+                      </span>
+                      <span
                         style={{
-                          position: "absolute",
-                          left: 0,
-                          right: 0,
-                          top,
-                          height: ROW,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 12,
-                          fontSize: 16,
-                          opacity: fade,
-                          transform: `translateY(${(1 - fade) * -6}px)`,
-                          borderTop: `1px solid ${pal.line}`,
+                          color: r.at < 0 ? pal.muted : accent,
+                          fontFamily: r.at < 0 ? font : monoFamily,
+                          whiteSpace: "nowrap",
                         }}
                       >
-                        <Avatar name={r.who} size={26} />
-                        <span style={{ color: fg, whiteSpace: "nowrap" }}>
-                          {r.who}
-                        </span>
-                        <span
-                          style={{
-                            color: r.at < 0 ? pal.muted : accent,
-                            fontFamily: r.at < 0 ? font : monoFamily,
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {r.change}
-                        </span>
-                        <div style={{ flex: 1 }} />
-                        <span style={{ color: pal.faint }}>{r.time}</span>
-                      </div>
-                    );
-                  });
-                })()}
+                        {r.change}
+                      </span>
+                      <div style={{ flex: 1 }} />
+                      <span style={{ color: pal.faint }}>{r.time}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
             <div style={{ opacity: cursorA }}>
-              <Cursor x={cur.x} y={cur.y} scale={1 - 0.04 * press} />
+              <Cursor
+                x={cur.x}
+                y={cur.y}
+                rest={drags.length ? lookPt : togglePt}
+                scale={1 - 0.04 * press}
+              />
             </div>
           </div>
         </div>

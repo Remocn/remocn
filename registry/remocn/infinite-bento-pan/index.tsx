@@ -1,6 +1,7 @@
 "use client";
 
 import { interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface InfiniteBentoPanProps {
   panSpeed?: number;
@@ -427,6 +428,7 @@ export function InfiniteBentoPan({
   speed = 1,
   className,
 }: InfiniteBentoPanProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame() * speed;
   const { durationInFrames, width, height } = useVideoConfig();
 
@@ -441,6 +443,7 @@ export function InfiniteBentoPan({
 
   const px = t * maxX * Math.min(1, panSpeed);
   const py = t * maxY * Math.min(1, panSpeed);
+  const panning = t > 0 && t < 1 && py !== 0;
 
   return (
     <div
@@ -461,7 +464,7 @@ export function InfiniteBentoPan({
           width: SUPER_W,
           height: SUPER_H,
           translate: `${-px}px ${-py}px`,
-          willChange: "transform",
+          transform: glide(panning),
         }}
       >
         {CARDS.map((c, i) => (

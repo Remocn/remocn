@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -203,6 +204,7 @@ export function WrappedSquash({
   theme = "dark",
   speed = 1,
 }: WrappedSquashProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
@@ -259,11 +261,28 @@ export function WrappedSquash({
     const p = arrive[s];
     frac = frac.map((v, i) => v + (stages[s][i] - v) * p);
   }
-  const lock = spring({
-    frame: frame - LOCK,
-    fps,
-    config: { damping: 16, stiffness: 170, mass: 0.9 },
-  });
+  const lockAt = (f: number) =>
+    spring({
+      frame: f - LOCK,
+      fps,
+      config: { damping: 16, stiffness: 170, mass: 0.9 },
+    });
+  const lock = lockAt(frame);
+  // Chrome parks a glyph raster on a whole pixel vertically for as long as
+  // the matrix is axis-aligned, so a word stretched by a slow transform clicks
+  // along pixel by pixel. The words are SVG, so the drawing carries the mark
+  // that takes them off that grid while the blocks move.
+  // The lock spring has a long tail, so it is weighed in px of the frame.
+  const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+  const moving =
+    midway((intro - 0.46) / 0.54) ||
+    arrive.some(midway) ||
+    H *
+      Math.max(
+        Math.abs(lockAt(frame + speed) - lock),
+        Math.abs(lock - lockAt(frame - speed)),
+      ) >
+      1e-3;
   frac = frac.map((v, i) => v + (stages[n][i] - v) * lock);
 
   const margin = Math.round(H * 0.03);
@@ -294,7 +313,13 @@ export function WrappedSquash({
 
   return (
     <AbsoluteFill style={{ background: stage }}>
-      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} aria-hidden>
+      <svg
+        width={W}
+        height={H}
+        viewBox={`0 0 ${W} ${H}`}
+        style={{ transform: glide(moving) }}
+        aria-hidden
+      >
         <defs>
           <linearGradient
             id={`${uid}-field`}
@@ -327,16 +352,6 @@ export function WrappedSquash({
             />
             <stop offset="1" stopColor={t.glow} stopOpacity={0} />
           </radialGradient>
-          <filter id={`${uid}-grain`} x="0" y="0" width="100%" height="100%">
-            <feTurbulence
-              type="fractalNoise"
-              baseFrequency="0.85"
-              numOctaves={2}
-              seed={7}
-              stitchTiles="stitch"
-            />
-            <feColorMatrix values="0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 1.4 -0.2" />
-          </filter>
         </defs>
         <ScaleGroup scale={scale} W={W} H={H}>
           {blocks.map(({ text, i, top, h }) => {
@@ -422,7 +437,29 @@ export function WrappedSquash({
             );
           })}
         </ScaleGroup>
-        {flat || !grain ? null : (
+      </svg>
+      {/* The grain overlays everything under it. In a drawing of its own it
+          keeps doing so while the words' drawing leans, which isolates it. */}
+      {flat || !grain ? null : (
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            <filter id={`${uid}-grain`} x="0" y="0" width="100%" height="100%">
+              <feTurbulence
+                type="fractalNoise"
+                baseFrequency="0.85"
+                numOctaves={2}
+                seed={7}
+                stitchTiles="stitch"
+              />
+              <feColorMatrix values="0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 1.4 -0.2" />
+            </filter>
+          </defs>
           <rect
             width={W}
             height={H}
@@ -430,8 +467,8 @@ export function WrappedSquash({
             opacity={t.grain}
             style={{ mixBlendMode: "overlay" }}
           />
-        )}
-      </svg>
+        </svg>
+      )}
     </AbsoluteFill>
   );
 }

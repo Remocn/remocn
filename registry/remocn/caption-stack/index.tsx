@@ -12,6 +12,7 @@ import {
   normalizeCaptionWord,
   useCaptions,
 } from "@/lib/remocn/caption-core";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface CaptionStackProps extends CaptionBaseProps {
   keywords?: string[];
@@ -34,6 +35,8 @@ const RISE_MS = 220;
 const RISE_EM = 0.3;
 const LEGIBILITY_SHADOW =
   "0 2px 3px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.35)";
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const riseEasing = Easing.bezier(0.2, 0.8, 0.2, 1);
 
@@ -93,6 +96,7 @@ export function CaptionStack({
   shadow = true,
   className,
 }: CaptionStackProps) {
+  const glide = useGlide();
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
@@ -157,7 +161,7 @@ export function CaptionStack({
                     display: "inline-block",
                     whiteSpace: "nowrap",
                     opacity,
-                    transform: `translateY(${(1 - rise) * RISE_EM}em)`,
+                    transform: `translateY(${(1 - rise) * RISE_EM}em)${glide(midway(rise))}`,
                     textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
                   }}
                 >

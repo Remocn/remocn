@@ -1,5 +1,7 @@
 import { Easing, interpolate } from "remotion";
 
+export { useGlide } from "@/lib/remocn/glide";
+
 export const FOMO_FPS = 60;
 export const FOMO_FRAMES = 1108;
 export const FOMO_WIDTH = 1920;
@@ -21,6 +23,9 @@ export const clamp = (n: number) => Math.min(1, Math.max(0, n));
 export function ramp(t: number, start: number, end: number) {
   return clamp((t - start) / (end - start));
 }
+
+export const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 export function tween(
   t: number,
   start: number,

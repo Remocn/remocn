@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -585,6 +586,8 @@ function QuoteBlock({
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -616,6 +619,7 @@ export function QuoteHero({
   speed = 1,
   theme = "dark",
 }: QuoteHeroProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { width, height } = useVideoConfig();
   const t = frame * speed;
@@ -640,7 +644,9 @@ export function QuoteHero({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${1 + push * 0.03})`,
+            // The push runs the whole film, so this one tilt also covers
+            // every line, avatar and caption that eases in under it.
+            transform: `scale(${1 + push * 0.03})${glide(midway(push))}`,
             transformOrigin: "30% 50%",
           }}
         >

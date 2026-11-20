@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["500"],
@@ -244,6 +245,7 @@ export function LetterRelay({
   mark = true,
 }: LetterRelayProps) {
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
@@ -341,25 +343,38 @@ export function LetterRelay({
             const start = HOP_AT + i * hop;
             const land = start + hop;
 
-            const enter = interpolate(t, [i * 2, i * 2 + 14], [0, 1], {
-              ...CLAMP,
-              easing: EASE_OUT,
-            });
-
-            const p = interpolate(t, [start, land], [0, 1], CLAMP);
-            const air = p > 0 && p < 1;
             const lift = F * liftK * (last ? 1.25 : 1);
-            const arc = air ? 4 * p * (1 - p) : 0;
-
-            const crouch = interpolate(t, [start - 3, start], [0, 1], {
-              ...CLAMP,
-              easing: EASE_OUT,
-            });
-            const release = interpolate(p, [0, 0.2], [1, 0], CLAMP);
-            const stretch = air ? 0.11 * Math.sin(Math.PI * p) * (1 - p) : 0;
-            const hit = squash(t - land) * 0.085;
-            const sy = 1 - 0.06 * crouch * release + stretch - hit;
-            const sx = 1 + 0.04 * crouch * release - stretch * 0.6 + hit * 0.7;
+            const poseAt = (tt: number) => {
+              const enter = interpolate(tt, [i * 2, i * 2 + 14], [0, 1], {
+                ...CLAMP,
+                easing: EASE_OUT,
+              });
+              const p = interpolate(tt, [start, land], [0, 1], CLAMP);
+              const air = p > 0 && p < 1;
+              const arc = air ? 4 * p * (1 - p) : 0;
+              const crouch = interpolate(tt, [start - 3, start], [0, 1], {
+                ...CLAMP,
+                easing: EASE_OUT,
+              });
+              const release = interpolate(p, [0, 0.2], [1, 0], CLAMP);
+              const stretch = air ? 0.11 * Math.sin(Math.PI * p) * (1 - p) : 0;
+              const hit = squash(tt - land) * 0.085;
+              return {
+                enter,
+                p,
+                air,
+                y: -lift * arc + (1 - enter) * F * 0.16,
+                sy: 1 - 0.06 * crouch * release + stretch - hit,
+                sx: 1 + 0.04 * crouch * release - stretch * 0.6 + hit * 0.7,
+              };
+            };
+            const { enter, p, air, y, sx, sy } = poseAt(t);
+            // A scale step is weighed by the glyph's height above its origin.
+            const shifts = (o: ReturnType<typeof poseAt>) =>
+              Math.abs(o.y - y) > 1e-3 ||
+              Math.abs(o.sx - sx) * F > 1e-3 ||
+              Math.abs(o.sy - sy) * F > 1e-3;
+            const moving = shifts(poseAt(t + 1)) || shifts(poseAt(t - 1));
 
             const rot = air ? 5 * Math.sin(Math.PI * p) * (1 - 0.35 * p) : 0;
 
@@ -381,7 +396,6 @@ export function LetterRelay({
 
             const ox = isMark(i) ? R_W / 2 : inkCenter(ch);
             const x = (xAt(i) + ox) * F;
-            const y = -lift * arc + (1 - enter) * F * 0.16;
 
             return (
               <div
@@ -393,7 +407,7 @@ export function LetterRelay({
                   color,
                   opacity: enter,
                   transformOrigin: "0 0",
-                  transform: `translate(${x}px, ${y}px) rotate(${rot}deg) scale(${sx}, ${sy})`,
+                  transform: `translate(${x}px, ${y}px) rotate(${rot}deg) scale(${sx}, ${sy})${glide(moving)}`,
                 }}
               >
                 {isMark(i) ? (

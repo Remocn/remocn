@@ -7,6 +7,7 @@ import {
   useDelayRender,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface InlineWordRollProps {
   prefix?: string;
@@ -95,6 +96,7 @@ export function InlineWordRoll({
   acceleration = 0.9,
   transitionFrames = 6,
 }: InlineWordRollProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame();
   const { width, height } = useVideoConfig();
   const { delayRender, continueRender, cancelRender } = useDelayRender();
@@ -175,6 +177,9 @@ export function InlineWordRoll({
   );
   const moving = state.from !== state.to;
   const p = ease(state.progress);
+  // A word rolling on a transform would land on whole pixels; the mark lets
+  // it glide while it rolls.
+  const rolling = moving && p > 0;
   const gap = prefix ? size * 0.23 : 0;
   const prefixWidth = metrics?.prefix ?? 0;
   const fromWidth = metrics?.words[state.from] ?? 0;
@@ -252,7 +257,7 @@ export function InlineWordRoll({
                 position: "absolute",
                 left: 0,
                 top: 0,
-                translate: `0 ${moving ? -p * rowHeight : 0}px`,
+                transform: `translateY(${moving ? -p * rowHeight : 0}px)${glide(rolling)}`,
                 opacity: moving ? 1 - clamp(p * 1.2) : 1,
               }}
             >
@@ -265,7 +270,7 @@ export function InlineWordRoll({
                   position: "absolute",
                   left: 0,
                   top: 0,
-                  translate: `0 ${(1 - p) * rowHeight}px`,
+                  transform: `translateY(${(1 - p) * rowHeight}px)${glide(rolling)}`,
                   opacity: clamp(p * 1.6),
                 }}
               >

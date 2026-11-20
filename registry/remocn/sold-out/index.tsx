@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -177,6 +178,8 @@ function reelPos(v: number, p: number) {
   return whole + Math.max(0, rem - (p - 1));
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -210,6 +213,7 @@ export function SoldOut({
   theme = "dark",
   speed = 1,
 }: SoldOutProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = Math.min(W / 1280, H / 720);
@@ -257,30 +261,48 @@ export function SoldOut({
   const enterBlur = (1 - enter) * 14;
   const isLow = v <= low + 0.01 && t >= RACE_END;
   const lowAt = RACE_END;
-  // the tremble grows as the stock drains, then drops away under the band
   const drain = 1 - v / total;
   const band = SLAM(ramp(t, bandAt, BAND_LEN));
-  const tremble = 9 * u * drain ** 2.2 * (1 - ramp(t, bandAt, 4));
-  let sx =
-    tremble * (0.6 * Math.sin(t * 2.31 + 0.4) + 0.4 * Math.sin(t * 5.17 + 1.3));
-  let sy =
-    tremble * (0.6 * Math.cos(t * 2.83 + 2.1) + 0.4 * Math.sin(t * 4.41 + 0.2));
-  let bump = 0;
-  for (let k = 0; k < low; k++) {
-    const d = t - (RACE_END + k * TICK);
-    if (d < 0 || d > 12) continue;
-    const g = 0.5 + (0.7 * k) / Math.max(1, low - 1);
-    bump = Math.max(bump, 0.6 * g * kick(d));
-    const s = shake(d, 5 * u * g, k * 1.9);
-    sx += s.x;
-    sy += s.y;
-  }
-  const hitD = t - bandAt - BAND_LEN + 2;
-  bump = Math.max(bump, 1.5 * kick(hitD));
-  const s3 = shake(hitD, 16 * u, 3.3);
-  sx += s3.x;
-  sy += s3.y;
-  const camScale = 1 + 0.035 * bump;
+  const camAt = (tt: number) => {
+    // the tremble grows as the stock drains, then drops away under the band
+    const dr = 1 - level(tt, total) / total;
+    const tremble = 9 * u * dr ** 2.2 * (1 - ramp(tt, bandAt, 4));
+    let x =
+      tremble *
+      (0.6 * Math.sin(tt * 2.31 + 0.4) + 0.4 * Math.sin(tt * 5.17 + 1.3));
+    let y =
+      tremble *
+      (0.6 * Math.cos(tt * 2.83 + 2.1) + 0.4 * Math.sin(tt * 4.41 + 0.2));
+    let bump = 0;
+    for (let k = 0; k < low; k++) {
+      const d = tt - (RACE_END + k * TICK);
+      if (d < 0 || d > 12) continue;
+      const g = 0.5 + (0.7 * k) / Math.max(1, low - 1);
+      bump = Math.max(bump, 0.6 * g * kick(d));
+      const s = shake(d, 5 * u * g, k * 1.9);
+      x += s.x;
+      y += s.y;
+    }
+    const hitD = tt - bandAt - BAND_LEN + 2;
+    bump = Math.max(bump, 1.5 * kick(hitD));
+    const s3 = shake(hitD, 16 * u, 3.3);
+    x += s3.x;
+    y += s3.y;
+    return { x, y, k: 1 + 0.035 * bump };
+  };
+  const cam = camAt(t);
+  const sx = cam.x;
+  const sy = cam.y;
+  const camScale = cam.k;
+  // The camera shakes and bumps with no clean progress, so it counts as
+  // moving while any point out to the frame corner still shifts.
+  const camShift = (a: number, b: number) => {
+    const p = camAt(Math.max(0, a));
+    const q = camAt(Math.max(0, b));
+    return Math.abs(p.x - q.x) + Math.abs(p.y - q.y) + Math.abs(p.k - q.k) * W;
+  };
+  const camMoving =
+    camShift(t + speed, t) > 1e-3 || camShift(t, t - speed) > 1e-3;
   const flash = interpolate(
     t,
     [bandAt + BAND_LEN - 2, bandAt + BAND_LEN - 1, bandAt + BAND_LEN + 3],
@@ -333,7 +355,7 @@ export function SoldOut({
           style={{
             position: "absolute",
             inset: 0,
-            transform: `translate(${sx}px, ${sy}px) scale(${camScale})`,
+            transform: `translate(${sx}px, ${sy}px) scale(${camScale})${glide(camMoving)}`,
             transformOrigin: "50% 50%",
           }}
         >
@@ -347,7 +369,9 @@ export function SoldOut({
               inset: 0,
               overflow: "visible",
               opacity: Math.min(ramp(t, 0, 2), 1 - 0.6 * behind),
-              transform: `scale(${enterScale * (1 - 0.04 * behind)})`,
+              transform: `scale(${enterScale * (1 - 0.04 * behind)})${glide(
+                (midway(ramp(t, 0, ENTER_LEN)) || midway(behind)) && !camMoving,
+              )}`,
               transformOrigin: "50% 52%",
               filter: enterBlur > 0.2 ? `blur(${enterBlur * u}px)` : undefined,
             }}
@@ -526,7 +550,7 @@ export function SoldOut({
             lineHeight: 1,
             whiteSpace: "nowrap",
             opacity: rise,
-            transform: `translateY(${(1 - rise) * 14 * u}px)`,
+            transform: `translateY(${(1 - rise) * 14 * u}px)${glide(midway(rise))}`,
           }}
         >
           <span

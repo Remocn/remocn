@@ -14,6 +14,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const manrope = loadManrope("normal", {
   weights: ["600"],
@@ -85,6 +86,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 interface Metrics {
   text: number;
@@ -198,6 +201,7 @@ export function FirstLight({
   speed = 1,
   theme = "dark",
 }: FirstLightProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -240,15 +244,25 @@ export function FirstLight({
   const baseStart = sunLine0 + F * 0.06 + capH + H * (portrait ? 0.1 : 0.03);
   const climb = baseStart - baseFinal;
 
+  const dyAt = (tt: number) => {
+    const appear = interpolate(tt, [0, APPEAR_LEN], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+    const k = interpolate(tt, [CLIMB_AT, CLIMB_AT + rise], [0, 1], {
+      ...CLAMP,
+      easing: EASE_CLIMB,
+    });
+    return climb * (1 - k) + (1 - appear) * F * 0.06;
+  };
   const appear = interpolate(t, [0, APPEAR_LEN], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const k = interpolate(t, [CLIMB_AT, CLIMB_AT + rise], [0, 1], {
-    ...CLAMP,
-    easing: EASE_CLIMB,
-  });
-  const dy = climb * (1 - k) + (1 - appear) * F * 0.06;
+  const dy = dyAt(t);
+  const nameMoving =
+    Math.abs(dyAt(t + speed) - dy) > 1e-3 ||
+    Math.abs(dy - dyAt(t - speed)) > 1e-3;
 
   const set = interpolate(
     t,
@@ -345,7 +359,12 @@ export function FirstLight({
           width={W}
           height={H}
           viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
+          // The name climbs by an SVG attribute, which cannot carry the mark.
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: glide(nameMoving),
+          }}
           aria-hidden
         >
           <defs>
@@ -392,7 +411,11 @@ export function FirstLight({
           style={{
             position: "absolute",
             left: marginX,
-            top: sunLine + tagFs * 1.6,
+            // Laid out where the line settles; the line's last drift is a
+            // transform, since layout would click the tagline down a pixel at
+            // a time.
+            top: sunLine0 + F * 0.05 + tagFs * 1.6,
+            transform: `translateY(${-(1 - set) * F * 0.05}px)${glide(midway(set))}`,
             whiteSpace: "pre",
             fontFamily: mono.fontFamily,
             fontWeight: 400,

@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const manrope = loadManrope("normal", {
   weights: ["500", "600"],
@@ -123,6 +124,8 @@ function textEm(text: string, table: number[]) {
   return w / 1000;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function hexToRgb(hex: string) {
   const h = hex.replace("#", "");
   const full =
@@ -202,6 +205,7 @@ export function HeatTrace({
   speed = 1,
   theme = "dark",
 }: HeatTraceProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const t = THEMES[theme];
@@ -546,7 +550,7 @@ export function HeatTrace({
                     style={{
                       display: "inline-block",
                       opacity: k,
-                      transform: `translateY(${(1 - k) * 0.45}em)`,
+                      transform: `translateY(${(1 - k) * 0.45}em)${glide(midway(k))}`,
                       filter: `blur(${(1 - k) * 6 * s}px)`,
                     }}
                   >

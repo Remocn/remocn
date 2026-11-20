@@ -1,8 +1,8 @@
 "use client";
 
 import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from "remotion";
-
 import { GlassCodeBlock } from "@/components/remocn/glass-code-block";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface GlassCodeWalkProps {
   code?: string;
@@ -49,6 +49,7 @@ export function GlassCodeWalk({
   speed = 1,
   className,
 }: GlassCodeWalkProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame();
 
   const lines = code.split("\n");
@@ -73,33 +74,49 @@ export function GlassCodeWalk({
   const scanStagger = staggerFrames / speed;
   const scanEnd = (lineCount - 1) * scanStagger;
 
-  const linePosition = interpolate(frame, [0, scanEnd], [0, lineCount - 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-  const lower = Math.floor(linePosition);
-  const upper = Math.min(lower + 1, lineCount - 1);
-  const trackedY =
-    lineCenters[lower] +
-    (lineCenters[upper] - lineCenters[lower]) * (linePosition - lower);
-
-  const pinnedX = ANCHOR_SCREEN_X - zoom * anchorWorldX;
-  const pinnedY = TARGET_Y - zoom * trackedY;
-
-  const pullBack = interpolate(
-    frame,
-    [scanEnd, scanEnd + PULL_BACK_FRAMES / speed],
-    [0, 1],
-    {
+  const camera = (f: number) => {
+    const linePosition = interpolate(f, [0, scanEnd], [0, lineCount - 1], {
       extrapolateLeft: "clamp",
       extrapolateRight: "clamp",
-      easing: Easing.inOut(Easing.cubic),
-    },
-  );
+    });
+    const lower = Math.floor(linePosition);
+    const upper = Math.min(lower + 1, lineCount - 1);
+    const trackedY =
+      lineCenters[lower] +
+      (lineCenters[upper] - lineCenters[lower]) * (linePosition - lower);
 
-  const scale = zoom + pullBack * (1 - zoom);
-  const tx = (1 - pullBack) * pinnedX;
-  const ty = (1 - pullBack) * pinnedY;
+    const pinnedX = ANCHOR_SCREEN_X - zoom * anchorWorldX;
+    const pinnedY = TARGET_Y - zoom * trackedY;
+
+    const pullBack = interpolate(
+      f,
+      [scanEnd, scanEnd + PULL_BACK_FRAMES / speed],
+      [0, 1],
+      {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+        easing: Easing.inOut(Easing.cubic),
+      },
+    );
+
+    return {
+      scale: zoom + pullBack * (1 - zoom),
+      tx: (1 - pullBack) * pinnedX,
+      ty: (1 - pullBack) * pinnedY,
+    };
+  };
+  const { scale, tx, ty } = camera(frame);
+  // The camera is moving while its scale step, weighed across the stage, or
+  // its travel is more than a hair on screen.
+  const step = (a: number, b: number) => {
+    const p = camera(a);
+    const q = camera(b);
+    return Math.max(
+      Math.abs(p.scale - q.scale) * STAGE_WIDTH,
+      Math.abs(p.ty - q.ty),
+    );
+  };
+  const moving = step(frame + 1, frame) > 1e-3 || step(frame, frame - 1) > 1e-3;
 
   return (
     <AbsoluteFill className={className} style={{ overflow: "hidden" }}>
@@ -112,6 +129,7 @@ export function GlassCodeWalk({
           height: STAGE_HEIGHT,
           translate: `${tx}px ${ty}px`,
           scale: `${scale}`,
+          transform: glide(moving),
           transformOrigin: "0 0",
         }}
       >

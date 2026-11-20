@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const outfit = loadFont("normal", {
   weights: ["400", "500"],
@@ -52,6 +53,8 @@ const MEASURE_PX = 100;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_MOVE = Easing.bezier(0.7, 0, 0.2, 1);
+const midway = (q: number) => q > 5e-4 && q < 1 - 5e-4;
+
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -276,6 +279,7 @@ export function AnswerFirst({
   speed = 1,
   theme = "dark",
 }: AnswerFirstProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -308,22 +312,37 @@ export function AnswerFirst({
   const my = H * (portrait ? 0.07 : 0.1);
   const nA = layout.answer.length;
 
-  const p = interpolate(t, [moveAt, moveAt + MOVE_LEN], [0, 1], {
-    ...CLAMP,
-    easing: EASE_MOVE,
-  });
-  const creep = interpolate(t, [A_LEN, moveAt], [0, 0.02], CLAMP);
-  const sEnd = F2 / F1;
-  const s = Math.exp(Math.log(sEnd) * p) * (1 + creep * (1 - p));
-
   const visTop = baseline - cap;
   const visBottom = (nA - 1) * PITCH + baseline;
-  const bx0 = W / 2 - (answerW * F1 * s) / 2;
-  const by0 = H / 2 - ((visTop + visBottom) / 2) * F1 * s;
+  const sEnd = F2 / F1;
   const bx1 = W - mx - answerW * F2;
   const by1 = H - my - visBottom * F2;
-  const bx = bx0 + (bx1 - bx0) * p;
-  const by = by0 + (by1 - by0) * p;
+  const geometry = (tt: number) => {
+    const p = interpolate(tt, [moveAt, moveAt + MOVE_LEN], [0, 1], {
+      ...CLAMP,
+      easing: EASE_MOVE,
+    });
+    const creep = interpolate(tt, [A_LEN, moveAt], [0, 0.02], CLAMP);
+    const s = Math.exp(Math.log(sEnd) * p) * (1 + creep * (1 - p));
+    const bx0 = W / 2 - (answerW * F1 * s) / 2;
+    const by0 = H / 2 - ((visTop + visBottom) / 2) * F1 * s;
+    return {
+      p,
+      s,
+      bx: bx0 + (bx1 - bx0) * p,
+      by: by0 + (by1 - by0) * p,
+    };
+  };
+  const { p, s, bx, by } = geometry(t);
+  // The creep and the move chain into each other, so motion is read off the
+  // neighbouring frames: a scale step weighed by the block's width, and the
+  // vertical travel.
+  const blockMoving = [t - speed / k, t + speed / k].some((tt) => {
+    const o = geometry(tt);
+    return (
+      Math.abs(o.s - s) * answerW * F1 > 1e-3 || Math.abs(o.by - by) > 1e-3
+    );
+  });
   const align = p;
 
   const R = F1;
@@ -369,7 +388,7 @@ export function AnswerFirst({
                 letterSpacing: `${TRACK}em`,
                 whiteSpace: "pre",
                 color: fg,
-                transform: `translateY(${((1 - q) * travel).toFixed(2)}px)`,
+                transform: `translateY(${((1 - q) * travel).toFixed(2)}px)${glide(midway(q) && !blockMoving)}`,
               }}
             >
               {w.text}
@@ -417,7 +436,7 @@ export function AnswerFirst({
               letterSpacing: `${Q_TRACK}em`,
               whiteSpace: "pre",
               color: hi,
-              transform: `translateY(${((1 - q) * 1.15 * FQ).toFixed(2)}px)`,
+              transform: `translateY(${((1 - q) * 1.15 * FQ).toFixed(2)}px)${glide(midway(q))}`,
             }}
           >
             {w.text}
@@ -437,7 +456,8 @@ export function AnswerFirst({
             left: 0,
             top: 0,
             transformOrigin: "0 0",
-            transform: `translate(${bx.toFixed(2)}px, ${by.toFixed(2)}px) scale(${s.toFixed(5)})`,
+            // The tilt pivots on the block's top-left corner, which is on screen.
+            transform: `translate(${bx.toFixed(2)}px, ${by.toFixed(2)}px)${glide(blockMoving)} scale(${s.toFixed(5)})`,
           }}
         >
           {answerNodes}

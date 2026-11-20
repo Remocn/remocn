@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["300", "400", "500"],
@@ -252,6 +253,14 @@ function laneCurve(s: number, winner: boolean, index: number) {
   return base - (a * Math.sin(2 * Math.PI * k * s)) / (2 * Math.PI * k) / 4;
 }
 
+const STATEMENT_RE = /^(\d[\d.,]*\s*[×x]?)(.*)$/;
+
+/** Frames after its start until the statement's last glyph has landed. */
+function statementSettle(text: string) {
+  const match = text.match(STATEMENT_RE);
+  return Array.from(match ? match[1] : "").length * 3 + 2 + 22;
+}
+
 /**
  * The statement lands glyph by glyph: the figure first, each character rising
  * out of a soft window, then the rest of the line as one piece.
@@ -272,7 +281,7 @@ function LandingStatement({
   muted: string;
   fontFamily: string;
 }) {
-  const match = text.match(/^(\d[\d.,]*\s*[×x]?)(.*)$/);
+  const match = text.match(STATEMENT_RE);
   const lead = match ? match[1] : "";
   const rest = match ? match[2] : text;
   const chars = Array.from(lead);
@@ -605,6 +614,7 @@ export function BenchmarkRace({
   speed = 1,
   theme = "dark",
 }: BenchmarkRaceProps) {
+  const tilt = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = height / 720;
@@ -636,16 +646,28 @@ export function BenchmarkRace({
   const groupH = headerH + lanes.length * rowH;
 
   // camera: lanes start centered, glide down to make room for the statement
-  const glide = interpolate(t, [hit - 4, hit + 38], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const glideAt = (f: number) =>
+    interpolate(f, [hit - 4, hit + 38], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const glide = glideAt(t);
   const topStart = (height - groupH) / 2;
   const topEnd = height - 104 * u - groupH;
-  const groupTop = topStart + (topEnd - topStart) * glide;
+  // The lanes and the statement are laid out where the glide leaves them; the
+  // glide itself is a transform. Layout rounds a box and a baseline to whole
+  // pixels, so a group eased by `top` clicks down pixel by pixel.
+  const lift = (topStart - topEnd) * (1 - glide);
   const groupScale = 1.04 - 0.04 * glide;
+  const lanesSettle = (lanes.length - 1) * 4 + 20;
+  // The in-out ease starts so flat that a progress test misses its first
+  // frames, so ask whether the glide moves at all.
+  const glideMoving = glideAt(t + 1) !== glide || glide !== glideAt(t - 1);
+  const lanesMoving = glideMoving || (t > 0 && t < lanesSettle);
 
   const st = t - (hit + 2);
+  const statementMoving =
+    glideMoving || (st > 0 && st < statementSettle(statement));
   const stP = interpolate(st, [0, 28], [0, 1], { ...CLAMP, easing: EASE_OUT });
   const statementSize = Math.min(150 * u, width * 0.118);
 
@@ -678,9 +700,9 @@ export function BenchmarkRace({
           style={{
             position: "absolute",
             left: marginX - statementSize * 0.04,
-            top: groupTop - statementSize - 70 * u,
+            top: topEnd - statementSize - 70 * u,
             opacity: stP,
-            transform: `translateY(${(1 - stP) * 14 * u}px)`,
+            transform: `translateY(${lift + (1 - stP) * 14 * u}px)${tilt(statementMoving)}`,
             filter: stP < 0.98 ? `blur(${(1 - stP) * 6 * u}px)` : undefined,
           }}
         >
@@ -700,9 +722,9 @@ export function BenchmarkRace({
             position: "absolute",
             left: marginX,
             right: marginX,
-            top: groupTop,
+            top: topEnd,
             height: groupH,
-            transform: `scale(${groupScale})`,
+            transform: `translateY(${lift}px) scale(${groupScale})${tilt(lanesMoving)}`,
             transformOrigin: "0% 50%",
           }}
         >

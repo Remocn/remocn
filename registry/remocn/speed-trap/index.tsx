@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sora } = loadFont("normal", {
   weights: ["400", "500"],
@@ -139,6 +140,8 @@ function ramp(t: number, from: number, len: number) {
   return interpolate(t, [from, from + len], [0, 1], CLAMP);
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** A short hit: up in 1 frame, eases back over `len`. */
 function kick(d: number, len: number) {
   if (d < 0 || d > len + 1) return 0;
@@ -184,6 +187,7 @@ export function SpeedTrap({
   theme = "dark",
   speed = 1,
 }: SpeedTrapProps) {
+  const glide = useGlide();
   // Starts three frames in, so frame 0 already shows the bar snapping out.
   const t = Math.max(0, useCurrentFrame() - delay) * speed + 3;
   const { width: W, height: H } = useVideoConfig();
@@ -224,8 +228,15 @@ export function SpeedTrap({
   const deltaIn = SLAM(ramp(t, lockAt + 13, 8));
   const compIn = SLAM(ramp(t, lockAt + 16, 10));
 
-  const push = 1 + 0.035 * Easing.bezier(0.65, 0, 0.35, 1)(ramp(t, 0, lockAt));
-  const zoom = push * (1 + 0.012 * lockKick);
+  const zoomAt = (f: number) =>
+    (1 + 0.035 * Easing.bezier(0.65, 0, 0.35, 1)(ramp(f, 0, lockAt))) *
+    (1 + 0.012 * kick(f - lockAt, 9));
+  const zoom = zoomAt(t);
+  // The push and the kick chain into each other, so the camera is tested on
+  // its neighbouring frames rather than on one progress.
+  const camMoving =
+    Math.abs(zoomAt(t + speed) - zoom) > 1e-6 ||
+    Math.abs(zoom - zoomAt(t - speed)) > 1e-6;
 
   const delta = Math.round(value - previous);
   const deltaText = `${delta >= 0 ? "+" : "−"}${Math.abs(delta)} ${unit}`;
@@ -251,7 +262,7 @@ export function SpeedTrap({
           style={{
             position: "absolute",
             inset: 0,
-            transform: `scale(${zoom})`,
+            transform: `scale(${zoom})${glide(camMoving)}`,
             transformOrigin: `${W / 2}px ${barY}px`,
           }}
         >
@@ -423,12 +434,15 @@ export function SpeedTrap({
             );
           })}
 
-          {/* Leading edge while the bar runs. */}
+          {/* Leading edge while the bar runs. It sweeps by a transform: an
+              edge moved by `left` rounds to whole pixels and steps unevenly
+              as the run eases out. */}
           {!locked && run > 0 ? (
             <div
               style={{
                 position: "absolute",
-                left: barX + fillFrac * barW - 3 * u,
+                left: barX - 3 * u,
+                transform: `translateX(${fillFrac * barW}px)`,
                 top: barY - 8 * u,
                 width: 3 * u,
                 height: barH + 16 * u,
@@ -470,7 +484,7 @@ export function SpeedTrap({
               top: barY - 48 * u,
               color: fg,
               opacity: markIn,
-              transform: `translateY(${(1 - markIn) * 10 * u}px)`,
+              transform: `translateY(${(1 - markIn) * 10 * u}px)${glide(midway(ramp(t, lockAt + 8, 8)) && !camMoving)}`,
               whiteSpace: "nowrap",
             }}
           >
@@ -493,7 +507,7 @@ export function SpeedTrap({
                 alignItems: "baseline",
                 gap: 14 * u,
                 paddingTop: 18 * u,
-                transform: `translateY(${-(1 - compIn) * 90 * u}px)`,
+                transform: `translateY(${-(1 - compIn) * 90 * u}px)${glide(midway(ramp(t, lockAt + 16, 10)) && !camMoving)}`,
                 whiteSpace: "nowrap",
               }}
             >

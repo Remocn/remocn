@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const geist = loadGeist("normal", {
   weights: ["400", "500"],
@@ -253,7 +254,18 @@ export function StatInline({
   speed = 1,
   theme = "dark",
 }: StatInlineProps) {
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
+  const now = useCurrentFrame();
+  const at = (f: number) => Math.max(0, f - delay) * speed;
+  const frame = at(now);
+  const glide = useGlide();
+  // `travel` is a text's offset in px as a function of time.
+  const moves = (travel: (f: number) => number) => {
+    const here = travel(frame);
+    return (
+      Math.abs(travel(at(now + 1)) - here) > 1e-3 ||
+      Math.abs(here - travel(at(now - 1))) > 1e-3
+    );
+  };
   const { width: W, height: H } = useVideoConfig();
   const t = THEMES[theme];
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
@@ -321,20 +333,42 @@ export function StatInline({
   const chars = [...value];
   const B = heroFs;
   const k = (fs / heroFs) ** mv;
-  const ox = heroX + (slotX - heroX) * mv;
-  const oy = heroBase + (slotY - heroBase) * mv;
+  // The number is laid out at the size it lands at, in its slot, and carried
+  // from the hero by the group: it rests there with no scale and no move, and
+  // the group never shrinks text below the size it is laid out at.
+  const L = fs;
+  const kk = mv === 1 ? 1 : (k * B) / L;
   const spread = 1 + (ratio - 1) * mv;
+  // The number flies into its slot by the group's translate and scale, which
+  // carry text too, so the drawing leans for as long as either moves.
+  const flight = (f: number) => {
+    const p = interpolate(f, [MOVE, MOVE + MOVE_LEN], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+    return [
+      heroX + (slotX - heroX) * p,
+      heroBase + (slotY - heroBase) * p,
+      (fs / heroFs) ** p * heroFs,
+    ];
+  };
+  const flightNow = flight(frame);
+  const flightMoving = [at(now - 1), at(now + 1)].some((f) =>
+    flight(f).some((v, i) => Math.abs(v - flightNow[i]) > 1e-3),
+  );
 
-  const glyphRise = (i: number) =>
-    interpolate(frame, [i * 2, i * 2 + 20], [1, 0], {
+  const glyphRise = (i: number, f = frame) =>
+    interpolate(f, [i * 2, i * 2 + 20], [1, 0], {
       ...CLAMP,
       easing: EASE_OUT,
     });
 
-  const labelIn = interpolate(frame, [12, 28], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const labelAt = (f: number) =>
+    interpolate(f, [12, 28], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  const labelIn = labelAt(frame);
   const labelOut = interpolate(frame, [MOVE - 2, MOVE + 8], [1, 0], {
     ...CLAMP,
     easing: Easing.bezier(0.55, 0, 1, 0.45),
@@ -346,9 +380,9 @@ export function StatInline({
     const dx = Math.abs(p.x - slotX) / Math.max(1, fs * 3);
     return dRow * 1.5 + dx;
   };
-  const wordRise = (i: number) => {
+  const wordRise = (i: number, f = frame) => {
     const s = MOVE + 17 + orderOf(i) * 2.5;
-    return interpolate(frame, [s, s + 18], [1, 0], {
+    return interpolate(f, [s, s + 18], [1, 0], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -365,6 +399,19 @@ export function StatInline({
     `radial-gradient(45% 40% at ${78 - drift * 5}% ${100 - drift * 3}%, color-mix(in oklab, ${MESH[1]} 45%, transparent) 0%, transparent 72%)`,
     `radial-gradient(40% 35% at ${52 + drift * 3}% 112%, color-mix(in oklab, ${accent} 55%, transparent) 0%, transparent 75%)`,
   ].join(", ");
+
+  // SVG text eased by its `y` or carried by a moving group clicks along pixel
+  // by pixel, so the drawing leans while any of it moves.
+  const moving =
+    flightMoving ||
+    chars.some((_, i) => moves((f) => glyphRise(i, f) * 1.05 * B * k)) ||
+    // The hero holds at three times its layout size, off the pixel grid.
+    mv < 1 ||
+    (Boolean(label) && moves((f) => (1 - labelAt(f)) * labelFs * 0.6)) ||
+    units.some(
+      (u, i) =>
+        u.some((seg) => !seg.value) && moves((f) => wordRise(i, f) * fs * 1.05),
+    );
 
   const stops = t.stops(accent);
   const vw = m.valueW;
@@ -386,17 +433,17 @@ export function StatInline({
           width={W}
           height={H}
           viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
+          style={{ position: "absolute", inset: 0, transform: glide(moving) }}
           aria-hidden
         >
           <defs>
             <linearGradient
               id={`${id}-fill`}
               gradientUnits="userSpaceOnUse"
-              x1={0}
-              y1={-0.78 * B}
-              x2={vw * B}
-              y2={0.1 * B}
+              x1={slotX}
+              y1={slotY - 0.78 * L}
+              x2={slotX + vw * L}
+              y2={slotY + 0.1 * L}
             >
               <stop offset="0" stopColor={stops[0]} />
               <stop offset={0.32 + 0.06 * drift} stopColor={stops[1]} />
@@ -410,22 +457,24 @@ export function StatInline({
                 clipPathUnits="userSpaceOnUse"
               >
                 <rect
-                  x={(m.glyphX[i] * spread - 0.1) * B}
-                  y={-0.86 * B}
-                  width={((m.glyphX[i + 1] ?? vw) - m.glyphX[i] + 0.2) * B}
-                  height={1.12 * B}
+                  x={slotX + (m.glyphX[i] * spread - 0.1) * L}
+                  y={slotY - 0.86 * L}
+                  width={((m.glyphX[i + 1] ?? vw) - m.glyphX[i] + 0.2) * L}
+                  height={1.12 * L}
                 />
               </clipPath>
             ))}
           </defs>
 
-          <g transform={`translate(${ox} ${oy}) scale(${k})`}>
+          <g
+            transform={`translate(${(heroX - slotX) * (1 - mv)} ${(heroBase - slotY) * (1 - mv)}) translate(${slotX} ${slotY}) scale(${kk}) translate(${-slotX} ${-slotY})`}
+          >
             {chars.map((c, i) => (
               <g key={`${c}-${i}`} clipPath={`url(#${id}-g${i})`}>
                 <text
-                  x={m.glyphX[i] * spread * B}
-                  y={glyphRise(i) * 1.05 * B}
-                  fontSize={B}
+                  x={slotX + m.glyphX[i] * spread * L}
+                  y={slotY + glyphRise(i) * 1.05 * L}
+                  fontSize={L}
                   fill={`url(#${id}-fill)`}
                   style={{ fontFamily, fontWeight: 500 }}
                 >

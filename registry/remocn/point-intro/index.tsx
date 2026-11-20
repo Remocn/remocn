@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const face = loadFont("normal", {
   weights: ["400"],
@@ -89,6 +90,8 @@ function sameLayout(a: Layout | null, b: Layout) {
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -125,6 +128,7 @@ export function PointIntro({
   theme = "light",
   speed = 1,
 }: PointIntroProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const t = THEMES[theme];
@@ -194,11 +198,6 @@ export function PointIntro({
     extrapolateRight: "clamp",
   });
   const breathe = Math.sin(EASE_IN_OUT(breath) * Math.PI) * 0.38;
-  const glide = interpolate(frame, [GLIDE, GLIDE + GLIDE_LEN], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-    easing: EASE_IN_OUT,
-  });
   const lastLand = WRITE + (words.length - 1) * stagger + DOT_STEP;
   const settle = interpolate(frame, [GLIDE, lastLand], [0, 1], {
     extrapolateLeft: "clamp",
@@ -210,9 +209,13 @@ export function PointIntro({
     interpolate(settle, [0, 1], [soloScale, 1]) *
     (1 + breathe);
 
-  let dotX = 0;
-  let dotY = 0;
-  if (layout) {
+  const dotAt = (f: number) => {
+    if (!layout) return [0, 0];
+    const glide = interpolate(f, [GLIDE, GLIDE + GLIDE_LEN], [0, 1], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+      easing: EASE_IN_OUT,
+    });
     const stopOffset = layout.stopX - (layout.wordRight.at(-1) ?? 0);
     const startX = (layout.wordLeft[0] ?? 0) - stopOffset;
     const centreX = layout.rowW / 2;
@@ -226,7 +229,7 @@ export function PointIntro({
           ? layout.stopX
           : (layout.wordRight[i] ?? 0) + stopOffset;
       const p = interpolate(
-        frame,
+        f,
         [WRITE + i * stagger, WRITE + i * stagger + DOT_STEP],
         [0, 1],
         {
@@ -238,9 +241,25 @@ export function PointIntro({
       x += (target - prev) * p;
       prev = target;
     });
-    dotX = x;
-    dotY = interpolate(glide, [0, 1], [centreY, baseY]);
-  }
+    return [x, interpolate(glide, [0, 1], [centreY, baseY])];
+  };
+  const [dotX, dotY] = dotAt(frame);
+  // Layout rounds a box's edges to whole pixels, so the point eased by
+  // `left`/`top` clicks along pixel by pixel. While it travels it is laid out
+  // at the full stop and carried there by a transform; at rest it keeps the
+  // plain layout it had.
+  const [restX, restY] = layout
+    ? [layout.stopX, layout.baseline - dot / 2]
+    : [0, 0];
+  const [prevX, prevY] = dotAt(frame - speed);
+  const [nextX, nextY] = dotAt(frame + speed);
+  const dotMoving =
+    Math.max(
+      Math.abs(nextX - dotX),
+      Math.abs(dotX - prevX),
+      Math.abs(nextY - dotY),
+      Math.abs(dotY - prevY),
+    ) > 1e-3;
 
   // The point writes: text exists only behind it, surfacing through a soft
   // edge that ends just past its left side. Once it lands, the edge opens.
@@ -314,7 +333,7 @@ export function PointIntro({
                       display: "inline-block",
                       opacity: p,
                       filter: `blur(${(1 - p) * 10}px)`,
-                      transform: `translateY(${(1 - p) * 0.24}em)`,
+                      transform: `translateY(${(1 - p) * 0.24}em)${glide(midway(p))}`,
                     }}
                   >
                     {w}
@@ -334,14 +353,16 @@ export function PointIntro({
           <div
             style={{
               position: "absolute",
-              left: dotX - dot / 2,
-              top: dotY - dot / 2,
+              left: (dotMoving ? restX : dotX) - dot / 2,
+              top: (dotMoving ? restY : dotY) - dot / 2,
               width: dot,
               height: dot,
               borderRadius: "50%",
               background: accent,
               opacity: layout ? dotIn : 0,
-              transform: `scale(${dotScale})`,
+              transform: dotMoving
+                ? `translate(${dotX - restX}px, ${dotY - restY}px) scale(${dotScale})`
+                : `scale(${dotScale})`,
             }}
           />
           <div
@@ -350,7 +371,7 @@ export function PointIntro({
               left: "50%",
               top: "100%",
               marginTop: fontSize * 0.42,
-              transform: `translate(-50%, ${(1 - subP) * 12}px)`,
+              transform: `translate(-50%, ${(1 - subP) * 12}px)${glide(midway(subP))}`,
               fontSize: subSize,
               letterSpacing: "-0.005em",
               lineHeight: 1.4,

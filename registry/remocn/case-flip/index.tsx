@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const face = loadFont("normal", { weights: ["500"], subsets: ["latin"] });
 
@@ -215,6 +216,7 @@ export function CaseFlip({
   theme = "dark",
   speed = 1,
 }: CaseFlipProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -378,6 +380,16 @@ export function CaseFlip({
   });
 
   const guideYs = [baseline, baseline - xh, baseline - cap];
+  // Moving on any frame that differs from a neighbour: glyphs keep sliding
+  // along the line on the frame a flip lands, so the mark stays on through it.
+  const around = (a: number, b: number) => t + speed > a && t - speed < b;
+  const moving =
+    around(0, 14) ||
+    forms.some(
+      (_, i) =>
+        around(wave1 + i * stagger, wave1 + i * stagger + flip) ||
+        around(wave2 + i * stagger, wave2 + i * stagger + flip),
+    );
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
@@ -386,7 +398,9 @@ export function CaseFlip({
           width={W}
           height={H}
           viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
+          // SVG text can't carry the mark itself: the drawing does, moving
+          // while the line rises in or any glyph flips.
+          style={{ position: "absolute", inset: 0, transform: glide(moving) }}
           aria-hidden
         >
           <defs>

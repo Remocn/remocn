@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const manrope = loadManrope("normal", {
   weights: ["500", "600"],
@@ -207,12 +208,15 @@ function ScaleLayer({
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function Title({
   text,
   size,
   color,
   scale,
   lift,
+  moving,
   logo,
   mark,
   fontFamily,
@@ -222,10 +226,12 @@ function Title({
   color: string;
   scale: number;
   lift: number;
+  moving: boolean;
   logo?: boolean;
   mark?: React.ReactNode;
   fontFamily: string;
 }) {
+  const glide = useGlide();
   const style: React.CSSProperties = {
     fontFamily,
     fontWeight: 500,
@@ -235,7 +241,7 @@ function Title({
     whiteSpace: "nowrap",
     color,
     paddingBottom: 0.06 * size,
-    transform: `translateY(${lift}px) scale(${scale})`,
+    transform: `translateY(${lift}px) scale(${scale})${glide(moving)}`,
   };
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
@@ -311,13 +317,12 @@ export function RingCut({
       break;
     }
   }
-  const settle = SETTLE(
-    interpolate(t, [tReach - 8, tReach + 26], [0, 1], CLAMP),
-  );
+  const settleP = interpolate(t, [tReach - 8, tReach + 26], [0, 1], CLAMP);
+  const settle = SETTLE(settleP);
   const scaleB = 1.07 - 0.07 * settle;
   const liftB = 14 * u * (1 - settle);
-  const driftA =
-    1 + 0.03 * interpolate(t, [0, START + finalAt + 10], [0, 1], CLAMP);
+  const driftP = interpolate(t, [0, START + finalAt + 10], [0, 1], CLAMP);
+  const driftA = 1 + 0.03 * driftP;
   const covered = finalR >= reach + line;
   const drift = interpolate(t, [0, 96], [0, 1], CLAMP);
 
@@ -337,6 +342,7 @@ export function RingCut({
               color={ink ?? stage.aFg}
               scale={driftA}
               lift={0}
+              moving={midway(driftP)}
               fontFamily={fontFamily}
             />
           </ScaleLayer>
@@ -366,6 +372,7 @@ export function RingCut({
                   color={ink ?? stage.endFg}
                   scale={scaleB}
                   lift={liftB}
+                  moving={midway(settleP)}
                   logo={isLogo}
                   mark={logo}
                   fontFamily={fontFamily}

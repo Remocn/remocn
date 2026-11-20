@@ -14,6 +14,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadGeist("normal", {
   weights: ["400", "500"],
@@ -191,6 +192,8 @@ function RemocnLogo({ fontSize, color }: { fontSize: number; color: string }) {
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -224,6 +227,7 @@ export function QuadrantPlot({
   theme = "dark",
   speed = 1,
 }: QuadrantPlotProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
@@ -394,7 +398,7 @@ export function QuadrantPlot({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `translate(${camX}px, ${camY}px) scale(${zoom})`,
+            transform: `translate(${camX}px, ${camY}px) scale(${zoom})${glide(midway(push) || midway(drift))}`,
             transformOrigin: "50% 50%",
           }}
         >

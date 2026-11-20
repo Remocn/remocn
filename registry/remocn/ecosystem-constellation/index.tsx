@@ -2,6 +2,7 @@
 
 import type { ComponentType } from "react";
 import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface EcosystemConstellationProps {
   satelliteCount?: number;
@@ -141,6 +142,7 @@ export function EcosystemConstellation({
   speed = 1,
   className,
 }: EcosystemConstellationProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame() * speed;
   const { fps } = useVideoConfig();
 
@@ -282,7 +284,9 @@ export function EcosystemConstellation({
           fontWeight: 800,
           fontSize: 52,
           letterSpacing: "-0.05em",
-          scale: `${centerScale}`,
+          // The pulse never rests, so the label under it is always marked as
+          // moving; the mark is read from `transform` only.
+          transform: `scale(${centerScale})${glide(true)}`,
           boxShadow: `0 0 60px ${accentColor}66, inset 0 1px 0 rgba(255,255,255,0.3)`,
           border: "1px solid rgba(255,255,255,0.15)",
         }}
@@ -298,8 +302,12 @@ export function EcosystemConstellation({
             key={`sat-${i}`}
             style={{
               position: "absolute",
-              left: s.x,
-              top: s.y,
+              // Laid out at the centre and carried along the orbit by a
+              // transform: layout rounds a box to whole pixels, so a tile
+              // moved by `left`/`top` clicks along its path.
+              left: cx,
+              top: cy,
+              translate: `${s.x - cx}px ${s.y - cy}px`,
               width: 56,
               height: 56,
               marginLeft: -28,
@@ -313,7 +321,6 @@ export function EcosystemConstellation({
               boxShadow: `0 8px 30px ${s.color}66, inset 0 1px 0 rgba(255,255,255,0.18)`,
               border: "1px solid rgba(255,255,255,0.12)",
               opacity: s.visible ? 1 : 0,
-              willChange: "transform",
             }}
           >
             <Logo />

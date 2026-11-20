@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const WEIGHTS = ["100", "200", "300", "400", "500"] as const;
 const barlow = loadFont("normal", {
@@ -162,6 +163,8 @@ function intDigits(v: number, decimals: number) {
   return Math.max(1, Math.floor(shown).toString().length);
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -197,6 +200,7 @@ export function WeightCut({
   speed = 1,
   theme = "dark",
 }: WeightCutProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -339,7 +343,7 @@ export function WeightCut({
             position: "absolute",
             inset: 0,
             opacity: enter,
-            transform: `translateY(${((1 - enter) * F * 0.06).toFixed(2)}px)`,
+            transform: `translateY(${((1 - enter) * F * 0.06).toFixed(2)}px)${glide(midway(enter))}`,
           }}
         >
           {glyphs.map((gl, i) => (
@@ -415,7 +419,7 @@ export function WeightCut({
                 color: fg,
                 textWrap: "balance",
                 opacity: labelP,
-                transform: `translateY(${((1 - labelP) * labelFs * 0.4).toFixed(2)}px)`,
+                transform: `translateY(${((1 - labelP) * labelFs * 0.4).toFixed(2)}px)${glide(midway(labelP))}`,
               }}
             >
               {label}

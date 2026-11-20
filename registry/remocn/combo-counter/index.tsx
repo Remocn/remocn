@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sairaItalic } = loadFont("italic", {
   weights: ["400", "500"],
@@ -168,6 +169,8 @@ function starPath(L: number, w: number) {
   return `M0 ${-L} L${w} ${-w} L${L} 0 L${w} ${w} L0 ${L} L${-w} ${w} L${-L} 0 L${-w} ${-w} Z`;
 }
 
+const midway = (p: number) => p > 0 && p < 1;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -216,6 +219,8 @@ export function ComboCounter({
   theme = "dark",
   speed = 1,
 }: ComboCounterProps) {
+  // `glide` is the meter's move to the poster below.
+  const tilt = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -234,38 +239,66 @@ export function ComboCounter({
     );
   });
   const lastAt = times[times.length - 1] ?? FIRST_HIT;
-  const n = times.filter((h) => t >= h).length;
-  const lastHit = n > 0 ? times[n - 1] : -99;
-  const final = n === hits.length;
 
   // ── Meter ─────────────────────────────────────────────────────────────────
   const numFs = 210 * u;
   const hitFs = 66 * u;
   const comboFs = 30 * u;
   const rateFs = 70 * u;
-  const meterIn = n >= 2 ? OUT(ramp(t, times[1], 6)) : 0;
-  const d = t - lastHit;
-  const hitAmp = final ? 0.24 : 0.08 + 0.012 * n;
-  const pop = 1 + hitAmp * kick(d, final ? 10 : 6);
-  const shakeAmp = (final ? 16 : 3 + 0.9 * n) * u;
-  const sd = Math.floor(d);
-  const shakeK = sd >= 0 && sd < 8 ? (1 - sd / 8) ** 2 : 0;
-  const shx = shakeAmp * shakeK * Math.sin(sd * 2.7 + 0.4);
-  const shy = shakeAmp * 0.5 * shakeK * Math.cos(sd * 3.3);
-
-  // Glide to the poster: the meter block is laid out from its left edge, so
-  // the target x centres an estimate of its width (number + label column).
-  const glide = INOUT(ramp(t, lastAt + GLIDE_DELAY, GLIDE_LEN));
   const digits = String(hits.length).length;
   const blockW = digits * 0.6 * numFs + 0.24 * numFs + 2.1 * hitFs;
   const posterK = 1.65;
-  const gx = interpolate(
-    glide,
-    [0, 1],
-    [0.075 * W, W / 2 - (blockW * posterK) / 2],
-  );
-  const gy = interpolate(glide, [0, 1], [0.47 * H, 0.47 * H]);
-  const gk = interpolate(glide, [0, 1], [1, posterK]);
+
+  // Everything that moves the meter and its text, as a function of the frame,
+  // so the frames either side can tell whether it is moving.
+  const meterAt = (tt: number) => {
+    const n = times.filter((h) => tt >= h).length;
+    const lastHit = n > 0 ? times[n - 1] : -99;
+    const final = n === hits.length;
+    const meterIn = n >= 2 ? OUT(ramp(tt, times[1], 6)) : 0;
+    const d = tt - lastHit;
+    const hitAmp = final ? 0.24 : 0.08 + 0.012 * n;
+    const pop = 1 + hitAmp * kick(d, final ? 10 : 6);
+    const shakeAmp = (final ? 16 : 3 + 0.9 * n) * u;
+    const sd = Math.floor(d);
+    const shakeK = sd >= 0 && sd < 8 ? (1 - sd / 8) ** 2 : 0;
+    const shx = shakeAmp * shakeK * Math.sin(sd * 2.7 + 0.4);
+    const shy = shakeAmp * 0.5 * shakeK * Math.cos(sd * 3.3);
+
+    // Glide to the poster: the meter block is laid out from its left edge, so
+    // the target x centres an estimate of its width (number + label column).
+    const glide = INOUT(ramp(tt, lastAt + GLIDE_DELAY, GLIDE_LEN));
+    const gx = interpolate(
+      glide,
+      [0, 1],
+      [0.075 * W, W / 2 - (blockW * posterK) / 2],
+    );
+    const gy = interpolate(glide, [0, 1], [0.47 * H, 0.47 * H]);
+    const gk = interpolate(glide, [0, 1], [1, posterK]);
+    const rates = ratings.flatMap((r, k) => {
+      const startAt = times[r.from - 1];
+      const endAt =
+        ratings[k + 1] !== undefined
+          ? times[ratings[k + 1].from - 1]
+          : undefined;
+      if (startAt === undefined) return [];
+      return [
+        SLAM(ramp(tt, startAt, 5)),
+        endAt !== undefined ? ramp(tt, endAt, 2) : 0,
+      ];
+    });
+    const sig = [shx, shy, gx, gk, pop, meterIn, ...rates];
+    return { n, meterIn, pop, shx, shy, glide, gx, gy, gk, sig };
+  };
+  const { n, meterIn, pop, shx, shy, glide, gx, gy, gk, sig } = meterAt(t);
+  const stepped = (f: number) =>
+    meterAt(f).sig.some((v, i) => Math.abs(v - sig[i]) > 1e-5);
+  const meterMoving = stepped(t + speed) || stepped(t - speed);
+  // The meter is laid out where the glide to the poster lands and travels
+  // there by a transform all its life: a block moved by `left` rounds its
+  // edges to whole pixels and steps unevenly, and a hand-over between the two
+  // would jump by the rounding.
+  const gxRest = meterAt(lastAt + GLIDE_DELAY + GLIDE_LEN).gx;
   const fillP = OUT(ramp(t, lastAt + FILL_DELAY, FILL_LEN));
   const logoP = OUT(ramp(t, lastAt + LOGO_DELAY, 10));
 
@@ -414,9 +447,10 @@ export function ComboCounter({
           <div
             style={{
               position: "absolute",
-              left: gx,
+              left: gxRest,
               top: gy,
-              transform: `translate(${shx}px, ${shy}px) translateY(-50%) scale(${gk})`,
+              // Covers the number, the labels and the rating inside it.
+              transform: `translateX(${gx - gxRest}px) translate(${shx}px, ${shy}px) translateY(-50%) scale(${gk})${tilt(meterMoving)}`,
               transformOrigin: "0% 50%",
               opacity: meterIn,
             }}
@@ -557,7 +591,7 @@ export function ComboCounter({
             display: "flex",
             justifyContent: "center",
             opacity: logoP,
-            transform: `translateY(${(1 - logoP) * 16 * u}px)`,
+            transform: `translateY(${(1 - logoP) * 16 * u}px)${tilt(midway(logoP))}`,
           }}
         >
           {logo ?? <RemocnLogo fontSize={30 * u} color={c.ink} />}

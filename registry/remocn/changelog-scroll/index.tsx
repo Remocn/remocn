@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadOnest("normal", {
   weights: ["400", "500"],
@@ -129,6 +130,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const THEMES = {
   dark: {
@@ -279,6 +282,8 @@ function RemocnLogo({ fontSize, color }: { fontSize: number; color: string }) {
 function Row({
   entry,
   y,
+  shift,
+  moving,
   left,
   right,
   textLeft,
@@ -290,7 +295,11 @@ function Row({
   fontFamily,
 }: {
   entry: ChangelogEntry;
+  /** Where the row is laid out: its place once the list has settled. */
   y: number;
+  /** How far it is from there right now. */
+  shift: number;
+  moving: boolean;
   left: number;
   right: number;
   textLeft: number;
@@ -301,6 +310,7 @@ function Row({
   c: (typeof THEMES)[keyof typeof THEMES];
   fontFamily: string;
 }) {
+  const glide = useGlide();
   return (
     <div
       style={{
@@ -310,6 +320,10 @@ function Row({
         top: y - rowH / 2,
         height: rowH,
         opacity,
+        // The scroll is a transform, not `top`: layout rounds a baseline to
+        // whole pixels, so the last rows of an eased scroll click into place
+        // pixel by pixel.
+        transform: `translateY(${shift}px)${glide(moving)}`,
       }}
     >
       <div
@@ -402,6 +416,7 @@ export function ChangelogScroll({
   theme = "dark",
   speed = 1,
 }: ChangelogScrollProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -451,8 +466,16 @@ export function ChangelogScroll({
     easing: EASE_OUT,
   });
 
-  const bandH = rowH + (bandBig - rowH) * ex;
+  const bandAt = (e: number) => rowH + (bandBig - rowH) * e;
+  const bandH = bandAt(ex);
+  const bandEnd = bandAt(1);
   const push = (bandH - rowH) / 2;
+  const rowY = (rel: number, apart: number) =>
+    cy + rel * rowH + Math.sign(rel) * apart * Math.min(1, Math.abs(rel));
+  // Not `midway(ex)`: the hero's tracking keeps changing its layout until the
+  // last frame of the expansion, and the lean must not go in such a frame.
+  const expanding = t > expandAt - speed && t < expandEnd + speed;
+  const rowsMoving = (t > 0 && t < landAt) || expanding;
 
   const visible = Math.ceil(H / rowH / 2) + 3;
   const base = Math.round(off);
@@ -461,8 +484,8 @@ export function ChangelogScroll({
     const i = fi + base + k;
     const rel = i - fi - off;
     const entry = entries[((i % n) + n) % n];
-    const y =
-      cy + rel * rowH + Math.sign(rel) * push * Math.min(1, Math.abs(rel));
+    const y = rowY(rel, push);
+    const home = rowY(i - fi, (bandEnd - rowH) / 2);
     const isFocus = i === fi;
     const dim = 1 - land * 0.45;
     const op = intro * (isFocus ? 1 : dim);
@@ -472,7 +495,9 @@ export function ChangelogScroll({
         <Row
           key={`g${i}-${g}`}
           entry={entry}
-          y={y + v * g * 0.05}
+          y={home}
+          shift={y + v * g * 0.05 - home}
+          moving={rowsMoving}
           left={margin}
           right={margin}
           textLeft={textLeft}
@@ -490,7 +515,9 @@ export function ChangelogScroll({
       <Row
         key={`r${i}`}
         entry={entry}
-        y={y}
+        y={home}
+        shift={y - home}
+        moving={rowsMoving}
         left={margin}
         right={margin}
         textLeft={textLeft}
@@ -508,9 +535,11 @@ export function ChangelogScroll({
   const heroLeft = textLeft + (margin - textLeft) * ex;
   const track = ROW_TRACK + (HERO_TRACK - ROW_TRACK) * ex;
   const heroBlockH = heroF * 1.12;
-  const heroCenter = cy + ((dateFont + kickerGap) / 2) * ex;
-  const dateY =
-    cy + (heroCenter - heroBlockH / 2 - kickerGap - dateFont / 2 - cy) * ex;
+  const heroCenterAt = (e: number) => cy + ((dateFont + kickerGap) / 2) * e;
+  const dateYAt = (e: number) =>
+    cy + (heroCenterAt(e) - heroBlockH / 2 - kickerGap - dateFont / 2 - cy) * e;
+  const heroCenter = heroCenterAt(ex);
+  const dateY = dateYAt(ex);
   const bright = land;
   const mixColor = (a: string, b: string, p: number) =>
     `color-mix(in srgb, ${b} ${Math.round(p * 100)}%, ${a})`;
@@ -537,9 +566,13 @@ export function ChangelogScroll({
     const dotInk = onPanel
       ? `color-mix(in oklab, ${PANEL_INK} 45%, transparent)`
       : mixColor(c.row, c.muted, bright);
+    // The hero block is laid out where the expansion leaves it and rides
+    // there by transform, for the same reason as the rows.
+    const metaShift = dateY - dateYAt(1);
     const meta: React.CSSProperties = {
       position: "absolute",
-      top: dateY - rowH / 2,
+      top: dateYAt(1) - rowH / 2,
+      transform: `translateY(${metaShift}px)${glide(expanding)}`,
       height: rowH,
       display: "flex",
       alignItems: "center",
@@ -558,8 +591,8 @@ export function ChangelogScroll({
         <div
           style={{
             position: "absolute",
-            left: heroLeft,
-            top: heroCenter - heroBlockH / 2,
+            left: margin,
+            top: heroCenterAt(1) - heroBlockH / 2,
             height: heroBlockH,
             display: "flex",
             alignItems: "center",
@@ -569,7 +602,7 @@ export function ChangelogScroll({
             letterSpacing: `${track}em`,
             whiteSpace: "nowrap",
             transformOrigin: "0% 50%",
-            transform: `scale(${heroScale})`,
+            transform: `translate(${heroLeft - margin}px, ${heroCenter - heroCenterAt(1)}px) scale(${heroScale})${glide(expanding)}`,
             color: ink,
           }}
         >
@@ -592,7 +625,7 @@ export function ChangelogScroll({
     alignItems: "center",
     gap: 10 * u,
     opacity: chrome,
-    transform: `translateY(${(1 - chrome) * 8 * u}px)`,
+    transform: `translateY(${(1 - chrome) * 8 * u}px)${glide(midway(chrome))}`,
   };
 
   return (
@@ -635,7 +668,11 @@ export function ChangelogScroll({
               position: "absolute",
               left: W * 0.06,
               width: W * 0.88 * bandIn,
-              top: cy + (s * bandH) / 2 - hair / 2,
+              top: cy + (s * bandEnd) / 2 - hair / 2,
+              transform:
+                bandH === bandEnd
+                  ? undefined
+                  : `translateY(${(s * (bandH - bandEnd)) / 2}px)`,
               height: hair,
               background: c.hair,
               opacity: bandHair,

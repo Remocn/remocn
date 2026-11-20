@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const inter = loadInterTight("normal", {
   weights: ["500"],
@@ -211,6 +212,8 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -246,6 +249,7 @@ export function PointExpand({
   speed = 1,
   theme = "dark",
 }: PointExpandProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const p = PALETTES[theme];
@@ -354,20 +358,29 @@ export function PointExpand({
           return null;
         const origin = k > 0 ? at(scenes[k - 1].point) : null;
         const fg = sc.beam ? p.beamFg : (ink ?? p.stageFg);
-        const sink =
+        const sinkAt = (f: number) =>
           k + 1 < count
-            ? interpolate(frame, [expands[k], expands[k] + EXPAND], [0, 1], {
+            ? interpolate(f, [expands[k], expands[k] + EXPAND], [0, 1], {
                 ...CLAMP,
                 easing: EASE_EXPAND,
               })
             : 0;
-        const settle = Math.max(
-          0,
-          interpolate(frame, [starts[k] - 4, starts[k] + 40], [1, 0], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          }),
-        );
+        const settleAt = (f: number) =>
+          Math.max(
+            0,
+            interpolate(f, [starts[k] - 4, starts[k] + 40], [1, 0], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            }),
+          );
+        const sink = sinkAt(frame);
+        const settle = settleAt(frame);
+        const copyScaleAt = (f: number) =>
+          (1 - sinkAt(f) * 0.05 + settleAt(f) * 0.02).toFixed(4);
+        const copyScale = copyScaleAt(frame);
+        const copyMoving =
+          copyScale !== copyScaleAt(frame - 1) ||
+          copyScale !== copyScaleAt(frame + 1);
         const ox = origin ? origin.x : width / 2;
         const oy = origin ? origin.y : height / 2;
         const ground = sc.beam
@@ -445,7 +458,7 @@ export function PointExpand({
                 style={{
                   position: "absolute",
                   inset: 0,
-                  transform: `scale(${(1 - sink * 0.05 + settle * 0.02).toFixed(4)})`,
+                  transform: `scale(${copyScale})${glide(copyMoving)}`,
                   transformOrigin: `${sc.point.x}px ${sc.point.y}px`,
                   opacity: 1 - sink * 0.35,
                 }}
@@ -499,7 +512,7 @@ export function PointExpand({
                             <span
                               style={{
                                 display: "inline-block",
-                                transform: `translateY(${((1 - u) * 118).toFixed(2)}%)`,
+                                transform: `translateY(${((1 - u) * 118).toFixed(2)}%)${glide(midway(u) && !copyMoving)}`,
                               }}
                             >
                               {w}

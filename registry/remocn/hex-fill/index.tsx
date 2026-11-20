@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: brico } = loadFont("normal", {
   weights: ["300", "400"],
@@ -211,6 +212,7 @@ export function HexFill({
   theme = "dark",
   speed = 1,
 }: HexFillProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
@@ -262,11 +264,19 @@ export function HexFill({
   }
   const shown = F > 0 ? Math.round((pct * filled) / F) : 0;
 
-  const push = interpolate(t, [0, fillEnd + 40], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const camScale = 0.985 + 0.025 * push;
+  const camAt = (tt: number) =>
+    0.985 +
+    0.025 *
+      interpolate(tt, [0, fillEnd + 40], [0, 1], {
+        ...CLAMP,
+        easing: EASE_IO,
+      });
+  const camScale = camAt(t);
+  // The push is a long in-out ease, so it counts as moving while the frame's
+  // edge still shifts, not by its progress.
+  const camMoving =
+    Math.abs(camAt(t + speed) - camScale) * width > 1e-3 ||
+    Math.abs(camScale - camAt(Math.max(0, t - speed))) * width > 1e-3;
   const textIn = interpolate(t, [4, 22], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
@@ -299,7 +309,7 @@ export function HexFill({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${camScale})`,
+            transform: `scale(${camScale})${glide(camMoving)}`,
             transformOrigin: "50% 50%",
           }}
         >

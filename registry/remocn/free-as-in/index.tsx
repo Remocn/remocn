@@ -13,6 +13,8 @@ import {
   useVideoConfig,
 } from "remotion";
 
+import { useGlide } from "@/lib/remocn/glide";
+
 const albert = loadFont("normal", {
   weights: ["400", "500"],
   subsets: ["latin"],
@@ -134,6 +136,7 @@ export function FreeAsIn({
   speed = 1,
   theme = "dark",
 }: FreeAsInProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const T = (durationInFrames - delay) * speed;
@@ -185,24 +188,25 @@ export function FreeAsIn({
   const gLine = Fg * GLH;
   const wordBase = portrait ? H * 0.5 + Fw * 0.15 : slotY;
 
-  const wordIn = interpolate(t, [0, 20], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const wordInAt = (tt: number) =>
+    interpolate(tt, [0, 20], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  const wordIn = wordInAt(t);
   const first = 22;
   const tail = hold;
   const step =
     n > 0 ? Math.max(12, Math.min(30, (T - first - tail) / Math.max(1, n))) : 0;
   const startOf = (k: number) => first + k * step;
-  const push = (k: number) =>
-    interpolate(t, [startOf(k), startOf(k) + 12], [0, 1], {
+  const push = (k: number, tt: number) =>
+    interpolate(tt, [startOf(k), startOf(k) + 12], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
-
-  const glossNodes = list.map((s, k) => {
-    const enter = interpolate(
-      t,
+  const enterAt = (k: number, tt: number) =>
+    interpolate(
+      tt,
       [startOf(k) + (k > 0 ? 5 : 0), startOf(k) + (k > 0 ? 21 : 16)],
       [0, 1],
       {
@@ -210,21 +214,39 @@ export function FreeAsIn({
         easing: EASE_OUT,
       },
     );
-    if (enter <= 0) return null;
+  const levelAt = (k: number, tt: number) => {
     let level = 0;
-    for (let j = k + 1; j < n; j++) level += push(j);
+    for (let j = k + 1; j < n; j++) level += push(j, tt);
+    return level;
+  };
+  // Where each line is drawn, as the attributes place it.
+  const wordShiftAt = (tt: number) => (1 - wordInAt(tt)) * Fw * 0.12;
+  const glossYAt = (k: number, tt: number) =>
+    slotY +
+    (portrait ? 1 : -1) * levelAt(k, tt) * gLine +
+    (1 - enterAt(k, tt)) * Fg * 0.7;
+
+  // The lines move by SVG attributes, which can't carry the mark, so the
+  // drawing is marked instead. It counts as moving from the frame before a
+  // line's first step to the frame after its last, so the lean never comes
+  // or goes on the frame a line moves.
+  const movesAround = (at: (tt: number) => number) =>
+    at(t - speed) !== at(t) || at(t) !== at(t + speed);
+  let moving = movesAround(wordShiftAt);
+
+  const glossNodes = list.map((s, k) => {
+    const enter = enterAt(k, t);
+    if (enter <= 0) return null;
+    const level = levelAt(k, t);
     const last = k === n - 1;
     const fade = interpolate(level, [0, 1, 3, 4], [1, 0.38, 0.38, 0], CLAMP);
     if (fade <= 0) return null;
-    const y = portrait
-      ? slotY + level * gLine
-      : slotY - level * gLine + (1 - enter) * Fg * 0.7;
-    const dy = portrait ? (1 - enter) * Fg * 0.7 : 0;
+    moving ||= movesAround((tt) => glossYAt(k, tt));
     return (
       <text
         key={`g${k}`}
         x={gx}
-        y={y + dy}
+        y={glossYAt(k, t)}
         fontSize={Fg}
         fontWeight={400}
         letterSpacing={`${TRACK_GLOSS}em`}
@@ -243,7 +265,7 @@ export function FreeAsIn({
           width={W}
           height={H}
           viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
+          style={{ position: "absolute", inset: 0, transform: glide(moving) }}
           fontFamily={fontFamily}
           aria-hidden
         >
@@ -255,7 +277,7 @@ export function FreeAsIn({
             letterSpacing={`${TRACK_WORD}em`}
             fill={fg}
             opacity={wordIn}
-            transform={`translate(0 ${((1 - wordIn) * Fw * 0.12).toFixed(2)})`}
+            transform={`translate(0 ${wordShiftAt(t).toFixed(2)})`}
           >
             {word}
           </text>

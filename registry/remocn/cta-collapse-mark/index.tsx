@@ -15,6 +15,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -257,6 +258,7 @@ export function CtaCollapseMark({
   ground,
   groundParams,
 }: CtaCollapseMarkProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const m = useMetrics(fontFamily);
@@ -366,6 +368,12 @@ export function CtaCollapseMark({
   const tail = L * 0.04 + wordW - L * 0.025 * 4 + extra * 4;
   const lockW = RwS + reveal * tail;
   const lockL = cx - lockW / 2;
+  // Where the mark settles once the wordmark is out; the ride there is a
+  // transform, since layout would round its box to whole pixels on the way.
+  const lockLRest = cx - (Rw + L * 0.04 + wordW - L * 0.025 * 4) / 2;
+  const rTopRest = cy - Rh / 2;
+  const markDx = lockL - lockLRest;
+  const markDy = rTop - rTopRest;
   const letterX = (i: number) =>
     lockL + RwS + L * 0.04 + wPrefix[i] - L * 0.025 * i + extra * i;
 
@@ -383,13 +391,18 @@ export function CtaCollapseMark({
 
   const merge = ramp(frame, B.merge, 4, MOVE);
   const snap = ramp(frame, B.snap, 5, LIGHT);
-  const punch = interpolate(
-    frame,
-    [B.snap, B.snap + 2, B.snap + 9],
-    [1, 1.05, 1],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: SWAY },
-  );
-  const push = 1 + 0.03 * ramp(frame, 0, B.end, SWAY);
+  const pushAt = (f: number) =>
+    (1 + 0.03 * ramp(f, 0, B.end, SWAY)) *
+    interpolate(f, [B.snap, B.snap + 2, B.snap + 9], [1, 1.05, 1], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+      easing: SWAY,
+    });
+  // The slow push carries every glyph and the wordmark, so its tilt covers
+  // them all; it is on for as long as the push still moves.
+  const pushMoving =
+    Math.abs(pushAt(frame + 1) - pushAt(frame)) > 1e-6 ||
+    Math.abs(pushAt(frame) - pushAt(frame - 1)) > 1e-6;
 
   const ctaFace = manrope.fontFamily;
   const baseOff = (size: number) =>
@@ -463,7 +476,7 @@ export function CtaCollapseMark({
             style={{
               position: "absolute",
               inset: 0,
-              transform: `scale(${push * punch})`,
+              transform: `scale(${pushAt(frame)})${glide(pushMoving)}`,
               transformOrigin: `${cx}px ${cy}px`,
             }}
           >
@@ -543,8 +556,12 @@ export function CtaCollapseMark({
                   key={`f${cell.k.toString()}`}
                   style={{
                     position: "absolute",
-                    left: x - size / 2,
-                    top: y - size / 2,
+                    // The flight is a transform, not `left`/`top`: layout
+                    // rounds a box edge to whole pixels, so a cell eased by
+                    // position steps along pixel by pixel.
+                    left: 0,
+                    top: 0,
+                    transform: `translate(${x - size / 2}px, ${y - size / 2}px)`,
                     width: size,
                     height: size,
                     borderRadius: size * 0.12,
@@ -576,8 +593,12 @@ export function CtaCollapseMark({
                 height={RhS}
                 style={{
                   position: "absolute",
-                  left: lockL,
-                  top: rTop,
+                  left: lockLRest,
+                  top: rTopRest,
+                  transform:
+                    Math.abs(markDx) > 1e-3 || Math.abs(markDy) > 1e-3
+                      ? `translate(${markDx}px, ${markDy}px)`
+                      : undefined,
                   opacity: snap,
                 }}
                 aria-hidden

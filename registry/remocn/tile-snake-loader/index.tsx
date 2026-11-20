@@ -14,6 +14,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -62,6 +63,10 @@ const ramp = (f: number, start: number, dur: number, easing = ENTER) =>
   });
 
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
+
+/** Whether a pixel offset still moves around frame `f`. */
+const moves = (at: (f: number) => number, f: number) =>
+  Math.abs(at(f + 1) - at(f)) > 1e-3 || Math.abs(at(f) - at(f - 1)) > 1e-3;
 
 const DEFAULT_IMAGES = [
   "templates/product-showcase/sculpture.jpg",
@@ -495,6 +500,7 @@ function WindowContent({
   ctaLabel,
   secondaryLabel,
   publishLabel,
+  shortBy,
 }: {
   frame: number;
   fps: number;
@@ -509,8 +515,15 @@ function WindowContent({
   ctaLabel: string;
   secondaryLabel: string;
   publishLabel: string;
+  /** How much narrower the window still is than where it settles. */
+  shortBy: number;
 }) {
   const k = portrait ? 1.55 : 1;
+  // The bar is laid out at the settled width and its centred and right-hand
+  // parts follow the growing window by transform: layout rounds a box edge
+  // to whole pixels, so they would step unevenly as the window widens.
+  const follow = (dx: number) =>
+    Math.abs(dx) < 1e-3 ? undefined : `translateX(${dx}px)`;
   const step = (i: number) => ramp(frame, B.content + i * 3, 13);
   const rise = (i: number) => ({
     opacity: step(i),
@@ -527,7 +540,7 @@ function WindowContent({
         style={{
           position: "absolute",
           left: 0,
-          right: 0,
+          right: -shortBy,
           top: 0,
           height: barH,
           borderBottom: `1px solid ${WIN.hair}`,
@@ -551,7 +564,14 @@ function WindowContent({
             />
           ))}
         </div>
-        <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            justifyContent: "center",
+            transform: follow(-shortBy / 2),
+          }}
+        >
           <div
             style={{
               height: 28 * k,
@@ -589,6 +609,7 @@ function WindowContent({
             display: "flex",
             alignItems: "center",
             boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25)",
+            transform: follow(-shortBy),
           }}
         >
           {publishLabel}
@@ -860,6 +881,7 @@ export function TileSnakeLoader({
   ground,
   groundParams,
 }: TileSnakeLoaderProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -1030,8 +1052,26 @@ export function TileSnakeLoader({
   const winScale = frame >= B.window ? mix(0.965, 1, settle) : 1;
   const boxW = mix(skelW0, winW, grow);
   const boxH = mix(skelH0, winH, grow);
+  const growDx = (winW - boxW) / 2;
+  const growDy = (winH - boxH) / 2;
   const boxR = mix(skelH0 / 2, 20 * k * (portrait ? 0.85 : 1), grow);
   const push = 1 + 0.03 * ramp(frame, B.content, B.end - B.content, SWAY);
+  // One tilt on the stage covers everything that rides a transform: the name
+  // rising in and breaking up, the loading label, and from the window on the
+  // window's settle, its content and the push, which runs to the last frame.
+  const stageMoving =
+    moves((f) => mix(nameSize, 0, ramp(f, B.name, 14)), frame) ||
+    moves(
+      (f) =>
+        chars.reduce(
+          (sum, _, i) =>
+            sum + ramp(f, B.breakAt + i * B.letterStep, 7, EXIT) * nameSize,
+          0,
+        ),
+      frame,
+    ) ||
+    moves((f) => mix(10 * k, 0, ramp(f, B.label - 4, 10)), frame) ||
+    frame >= B.window;
 
   const preset = ground ?? (groundParams ? undefined : c.ground);
   const gParams = groundParams ?? (ground ? undefined : c.groundParams);
@@ -1068,7 +1108,7 @@ export function TileSnakeLoader({
             style={{
               position: "absolute",
               inset: 0,
-              transform: `scale(${push})`,
+              transform: `scale(${push})${glide(stageMoving)}`,
               transformOrigin: "50% 50%",
             }}
           >
@@ -1176,12 +1216,15 @@ export function TileSnakeLoader({
               <div
                 style={{
                   position: "absolute",
-                  left: cx - boxW / 2,
-                  top: cy - boxH / 2,
+                  // Laid out where the window settles; the grow keeps it
+                  // centred by transform, since layout rounds the box edge
+                  // and the text in it to whole pixels on every step.
+                  left: cx - winW / 2,
+                  top: cy - winH / 2,
                   width: boxW,
                   height: boxH,
                   borderRadius: boxR,
-                  transform: `scale(${winScale})`,
+                  transform: `${Math.abs(growDx) < 1e-3 && Math.abs(growDy) < 1e-3 ? "" : `translate(${growDx}px, ${growDy}px) `}scale(${winScale})`,
                   opacity: skelIn,
                 }}
               >
@@ -1220,6 +1263,7 @@ export function TileSnakeLoader({
                       ctaLabel={ctaLabel}
                       secondaryLabel={secondaryLabel}
                       publishLabel={publishLabel}
+                      shortBy={winW - boxW}
                     />
                   </div>
                 ) : null}

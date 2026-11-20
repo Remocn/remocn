@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400"],
@@ -544,6 +545,7 @@ export function ColumnReflow({
   theme = "dark",
   speed = 1,
 }: ColumnReflowProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -591,6 +593,7 @@ export function ColumnReflow({
     easing: EASE_IO,
   });
   const halfW = interpolate(edge, [0, 1], [narrow / 2, wide / 2]) * F;
+  const halfW0 = interpolate(0, [0, 1], [narrow / 2, wide / 2]) * F;
   const halfH =
     (interpolate(tall, [0, 1], [(R - 1) / 2, (T - 1) / 2]) + 0.95) * L;
   const guideIn = interpolate(t, [ENTER + 4, ENTER + 22], [0, 1], {
@@ -621,20 +624,28 @@ export function ColumnReflow({
       />
 
       <ScaleLayer scale={scale}>
-        {[-1, 1].map((side) => (
-          <div
-            key={`g${side}`}
-            style={{
-              position: "absolute",
-              left: cx + side * (halfW + 0.55 * F) - hair / 2,
-              top: cy - 0.36 * F - halfH * guideIn,
-              width: hair,
-              height: halfH * 2 * guideIn,
-              background: c.hair,
-              opacity: guideOut,
-            }}
-          />
-        ))}
+        {[-1, 1].map((side) => {
+          // Eased by `left`, a guide stepped along in uneven whole pixels;
+          // layout holds it at the narrow column and the travel is a
+          // transform.
+          const shift = side * (halfW - halfW0);
+          return (
+            <div
+              key={`g${side}`}
+              style={{
+                position: "absolute",
+                left: cx + side * (halfW0 + 0.55 * F) - hair / 2,
+                top: cy - 0.36 * F - halfH * guideIn,
+                width: hair,
+                height: halfH * 2 * guideIn,
+                transform:
+                  Math.abs(shift) < 1e-3 ? undefined : `translateX(${shift}px)`,
+                background: c.hair,
+                opacity: guideOut,
+              }}
+            />
+          );
+        })}
 
         {words.map((w, i) => {
           const p = placed[i];
@@ -649,14 +660,30 @@ export function ColumnReflow({
             { ...CLAMP, easing: EASE_OUT },
           );
           const lift = (1 - enter) * 0.35 * F;
+          // Each word is laid out where it lands and rides there by a
+          // transform: layout rounds a baseline to whole pixels, so a word
+          // eased by `left`/`top` clicks along pixel by pixel.
+          const rest = progress(p, R, narrowing ? X_START : 1e9);
+          const restX = cx + interpolate(rest.px, [0, 1], [p.x0, p.x1]) * F;
+          const restY = cy + interpolate(rest.py, [0, 1], [p.y0, p.y1]) * L;
+          const dx = x - restX;
+          const dy = y - restY + lift;
+          // The transform stays on at rest too: it carries the mark, and a
+          // word that drops it snaps to the nearest pixel when shown smaller.
+          const travel = `translate(${dx}px, ${dy}px)${glide(
+            (px > 0 && px < 1) ||
+              (py > 0 && py < 1) ||
+              (enter > 0 && enter < 1),
+          )}`;
           if (!w.serif) {
             return (
               <div
                 key={`${i}-${w.core}`}
                 style={{
                   position: "absolute",
-                  left: x,
-                  top: y - BASELINE_SANS * F + lift,
+                  left: restX,
+                  top: restY - BASELINE_SANS * F,
+                  transform: travel,
                   fontFamily,
                   fontWeight: 400,
                   fontSize: F,
@@ -674,8 +701,9 @@ export function ColumnReflow({
           const sF = F * SERIF_SCALE;
           const serifType = {
             position: "absolute",
-            left: x - 0.2 * sF,
-            top: y - BASELINE_SERIF * sF + lift,
+            left: restX - 0.2 * sF,
+            top: restY - BASELINE_SERIF * sF,
+            transform: travel,
             paddingLeft: 0.2 * sF,
             paddingRight: 0.2 * sF,
             fontFamily: serif,
@@ -712,8 +740,9 @@ export function ColumnReflow({
                 <div
                   style={{
                     position: "absolute",
-                    left: x + (serifEm(w.core) + 0.04) * F,
-                    top: y - BASELINE_SANS * F + lift,
+                    left: restX + (serifEm(w.core) + 0.04) * F,
+                    top: restY - BASELINE_SANS * F,
+                    transform: travel,
                     fontFamily,
                     fontWeight: 400,
                     fontSize: F,

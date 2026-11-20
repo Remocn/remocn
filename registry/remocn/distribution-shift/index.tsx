@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -87,6 +88,8 @@ const THEMES = {
     grain: 0.045,
   },
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const AXIS = [-16, 14] as const;
 const RISE = -4;
@@ -217,6 +220,7 @@ export function DistributionShift({
   theme = "dark",
   speed = 1,
 }: DistributionShiftProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
@@ -323,6 +327,31 @@ export function DistributionShift({
   );
   const glowX = ((width * 0.3 + (modeX - width * 0.3) * zoom) / width) * 100;
   const heroScale = 1 + 0.04 * (1 - kick) * (t >= hit ? 1 : 0);
+  const zooming = midway(push) || midway(closer);
+  // The tag follows the marker through the zoom. Layout rounds a box and a
+  // baseline to whole pixels, so it is laid out where it settles and the
+  // ride there is a transform.
+  const tagAt = (mx: number, z: number) => ({
+    x: width * 0.3 + (mx - width * 0.3) * z + 14 * u,
+    y: height * 0.7 + (markTop - height * 0.7) * z - 4 * u,
+  });
+  const tagNow = tagAt(markerX, zoom);
+  const tagRest = tagAt(
+    xOf(Math.exp(lerp(Math.log(before), Math.log(after), 1))),
+    1 + 0.025 + 0.16,
+  );
+  const tagMoving = zooming || midway(morph) || midway(tagIn);
+  const kickAt = (f: number) =>
+    f < hit
+      ? 0
+      : spring({
+          frame: f - hit,
+          fps,
+          config: { damping: 14, stiffness: 180, mass: 0.6 },
+        });
+  const kickMoving =
+    Math.abs(kickAt(t + speed) - kickAt(t)) * 4 > 1e-3 ||
+    Math.abs(kickAt(t) - kickAt(t - speed)) * 4 > 1e-3;
 
   return (
     <AbsoluteFill style={{ background: fill, overflow: "hidden" }}>
@@ -335,7 +364,7 @@ export function DistributionShift({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${zoom})`,
+            transform: `scale(${zoom})${glide(zooming)}`,
             transformOrigin: "30% 70%",
           }}
         >
@@ -501,10 +530,10 @@ export function DistributionShift({
         <div
           style={{
             position: "absolute",
-            left: width * 0.3 + (markerX - width * 0.3) * zoom + 14 * u,
-            top: height * 0.7 + (markTop - height * 0.7) * zoom - 4 * u,
+            left: tagRest.x,
+            top: tagRest.y,
             opacity: tagIn,
-            transform: `translateY(${(1 - tagIn) * 10 * u}px)`,
+            transform: `translate(${tagNow.x - tagRest.x}px, ${tagNow.y - tagRest.y + (1 - tagIn) * 10 * u}px)${glide(tagMoving)}`,
           }}
         >
           <div
@@ -523,7 +552,7 @@ export function DistributionShift({
           </div>
           <div
             style={{
-              transform: `scale(${heroScale})`,
+              transform: `scale(${heroScale})${glide(kickMoving && !tagMoving)}`,
               transformOrigin: "0% 50%",
             }}
           >

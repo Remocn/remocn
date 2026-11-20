@@ -14,6 +14,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -187,6 +188,7 @@ interface Segment {
 }
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+
 function ScaleLayer({
   scale,
   children,
@@ -222,7 +224,9 @@ export function GhostComplete({
   delay = 0,
   speed = 1,
 }: GhostCompleteProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
+  const frame = useCurrentFrame();
+  const t = Math.max(0, frame - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const tall = H > W;
   const u = tall ? W / 1000 : H / 720;
@@ -393,10 +397,18 @@ export function GhostComplete({
     ...CLAMP,
     easing: ENTER,
   });
-  const push = interpolate(t, [0, plan.end + 40], [1, 1.03], {
-    ...CLAMP,
-    easing: MOVE,
-  });
+  const pushAt = (f: number) =>
+    interpolate(Math.max(0, f - delay) * speed, [0, plan.end + 40], [1, 1.03], {
+      ...CLAMP,
+      easing: MOVE,
+    });
+  const push = pushAt(frame);
+  // Whether the push moves is read off the neighbouring frames, weighed by
+  // the distance to the frame's edge.
+  const reach = Math.max(W, H) / 2;
+  const pushing =
+    Math.abs(pushAt(frame + 1) - push) * reach > 1e-3 ||
+    Math.abs(push - pushAt(frame - 1)) * reach > 1e-3;
 
   const caretEl = (
     <span
@@ -510,7 +522,11 @@ export function GhostComplete({
         </>
       ) : null}
       <ScaleLayer scale={scale}>
-        <AbsoluteFill style={{ transform: `scale(${push})` }}>
+        <AbsoluteFill
+          style={{
+            transform: `scale(${push})${glide(pushing)}`,
+          }}
+        >
           <div
             style={{
               position: "absolute",
@@ -580,7 +596,15 @@ export function GhostComplete({
                   position: "absolute",
                   left: 0,
                   right: 0,
-                  bottom: 0,
+                  // Pinned where the grown card leaves it; the ride down as
+                  // lines open is a transform, since layout rounds the
+                  // footer's box and baseline to whole pixels as the card's
+                  // bottom edge eases.
+                  top: finalH - footH,
+                  transform:
+                    Math.abs(cardH - finalH) < 1e-3
+                      ? undefined
+                      : `translateY(${cardH - finalH}px)`,
                   height: footH,
                   borderTop: `1px solid ${c.divider}`,
                   display: "flex",

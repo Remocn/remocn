@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -380,6 +381,7 @@ export function UiCallout({
   groundParams,
   speed = 1,
 }: UiCalloutProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const tall = H > W;
@@ -409,7 +411,8 @@ export function UiCallout({
   const gapBelow = 56 * u;
   const top = tall ? (H - (winH + gapBelow + stackH)) / 2 : (H - winH) / 2;
   const radius = 12 / s;
-  const enter = spring({ frame: frame + 2, fps, config: HEAVY });
+  const enterAt = (f: number) => spring({ frame: f + 2, fps, config: HEAVY });
+  const enter = enterAt(frame);
 
   const targets = callouts.map((c) => ({
     x: left + c.x * s,
@@ -427,8 +430,15 @@ export function UiCallout({
           fps,
           config: MORPH,
         });
-  const drift =
-    1 + 0.03 * CAMERA(clamp(frame / (starts[starts.length - 1] + 70), 0, 1));
+  const driftAt = (f: number) =>
+    1 + 0.03 * CAMERA(clamp(f / (starts[starts.length - 1] + 70), 0, 1));
+  const drift = driftAt(frame);
+  const shifts = (at: (f: number) => number, eps: number) =>
+    Math.abs(at(frame + speed) - at(frame)) > eps ||
+    Math.abs(at(frame) - at(frame - speed)) > eps;
+  // The camera drift and the screenshot's rise carry everything on screen,
+  // so one tilt on the camera covers both.
+  const cameraMoving = shifts(driftAt, 1e-6) || shifts(enterAt, 1e-6);
 
   const content = src ? (
     <Img
@@ -599,7 +609,9 @@ export function UiCallout({
         />
       ) : null}
       <ScaleLayer scale={scale}>
-        <AbsoluteFill style={{ transform: `scale(${drift})` }}>
+        <AbsoluteFill
+          style={{ transform: `scale(${drift})${glide(cameraMoving)}` }}
+        >
           <div
             style={{
               position: "absolute",

@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const grotesk = loadSpaceGrotesk("normal", {
   weights: ["400"],
@@ -177,6 +178,7 @@ export function HotStage({
   speed = 1,
   theme = "dark",
 }: HotStageProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -218,13 +220,13 @@ export function HotStage({
     spent: number;
   };
 
-  const pose = (i: number): Pose | null => {
+  const pose = (i: number, f = t): Pose | null => {
     const start = i === 0 ? 0 : ign(i);
-    if (t < start) return null;
+    if (f < start) return null;
     let y: number;
     let opacity: number;
     if (i === 0) {
-      const e = interpolate(t, [0, ENTER_LEN], [0, 1], {
+      const e = interpolate(f, [0, ENTER_LEN], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       });
@@ -232,15 +234,15 @@ export function HotStage({
       opacity = e;
     } else {
       const s = ign(i);
-      const e = interpolate(t, [s, s + 10], [0, 1], {
+      const e = interpolate(f, [s, s + 10], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       });
-      const pair = interpolate(t, [s, s + 14], [0, 1], {
+      const pair = interpolate(f, [s, s + 14], [0, 1], {
         ...CLAMP,
         easing: EASE_IO,
       });
-      const settle = interpolate(t, [s + 16, s + 38], [0, 1], {
+      const settle = interpolate(f, [s + 16, s + 38], [0, 1], {
         ...CLAMP,
         easing: EASE_IO,
       });
@@ -250,16 +252,16 @@ export function HotStage({
     let spent = 0;
     if (i < last) {
       const s = ign(i + 1);
-      const pair = interpolate(t, [s, s + 14], [0, 1], {
+      const pair = interpolate(f, [s, s + 14], [0, 1], {
         ...CLAMP,
         easing: EASE_IO,
       });
       y += (pitch / 2) * pair;
-      spent = interpolate(t, [s + 6, s + 18], [0, 1], {
+      spent = interpolate(f, [s + 6, s + 18], [0, 1], {
         ...CLAMP,
         easing: EASE_IO,
       });
-      const fall = interpolate(t, [s + 16, s + 40], [0, 1], {
+      const fall = interpolate(f, [s + 16, s + 40], [0, 1], {
         ...CLAMP,
         easing: EASE_FALL,
       });
@@ -379,13 +381,23 @@ export function HotStage({
         {list.map((line, i) => {
           const p = pose(i);
           if (!p) return null;
+          // Layout rounds a baseline to whole pixels, so a line eased by `top`
+          // clicks along pixel by pixel. It is laid out where it settles and
+          // the pairing, settle and fall are a transform on top.
+          const dy = p.y - y0;
+          const yAt = (f: number) => pose(i, f)?.y ?? p.y;
+          const moving =
+            Math.abs(yAt(t + speed) - p.y) > 1e-3 ||
+            Math.abs(p.y - yAt(t - speed)) > 1e-3;
           return (
             <div
               key={`${line}${i}`}
               style={{
                 position: "absolute",
                 left: x0,
-                top: p.y - m.base * F,
+                top: y0 - m.base * F,
+                // Kept at 0 once settled: the lean rides on it.
+                transform: `translateY(${Math.abs(dy) > 1e-3 ? dy : 0}px)${glide(moving)}`,
                 height: F,
                 lineHeight: `${F}px`,
                 whiteSpace: "pre",

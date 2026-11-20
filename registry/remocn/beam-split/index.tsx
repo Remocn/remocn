@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["500"],
@@ -74,6 +75,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 // Cap height and line-box baseline (lineHeight 1) per face.
 const CAP = 0.66;
@@ -180,6 +183,7 @@ function Line({
 
 function Edge({
   y,
+  anchor,
   draw,
   width,
   lw,
@@ -189,6 +193,8 @@ function Edge({
   fall,
 }: {
   y: number;
+  /** While the edge travels: laid out here and carried to `y` by a transform. */
+  anchor?: number;
   draw: number;
   width: number;
   lw: number;
@@ -199,12 +205,17 @@ function Edge({
 }) {
   const fade =
     "linear-gradient(to right, transparent 0%, #000 7%, #000 93%, transparent 100%)";
+  // Layout rounds a strip's edges to whole pixels, so an edge eased by `top`
+  // steps along unevenly; while it travels it sits at `anchor` and the rest of
+  // the way is a transform. At rest it keeps its plain layout.
+  const base = anchor ?? y;
   const strip: React.CSSProperties = {
     position: "absolute",
     left: 0,
     width,
     WebkitMaskImage: fade,
     maskImage: fade,
+    transform: anchor === undefined ? undefined : `translateY(${y - anchor}px)`,
   };
   return (
     <div
@@ -221,7 +232,7 @@ function Edge({
         <div
           style={{
             ...strip,
-            top: y - lw / 2 - fall,
+            top: base - lw / 2 - fall,
             height: fall,
             opacity: glowUp,
             background: `linear-gradient(to top, ${accent}, transparent)`,
@@ -232,7 +243,7 @@ function Edge({
         <div
           style={{
             ...strip,
-            top: y + lw / 2,
+            top: base + lw / 2,
             height: fall,
             opacity: glowDown,
             background: `linear-gradient(to bottom, ${accent}, transparent)`,
@@ -242,7 +253,7 @@ function Edge({
       <div
         style={{
           ...strip,
-          top: y - lw / 2,
+          top: base - lw / 2,
           height: lw,
           background: accent,
         }}
@@ -282,6 +293,7 @@ export function BeamSplit({
   theme = "dark",
   speed = 1,
 }: BeamSplitProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -304,15 +316,33 @@ export function BeamSplit({
 
   const rise = OUT(interpolate(t, [RISE_AT, RISE_END], [0, 1], CLAMP));
   const draw = DRAW(interpolate(t, [BEAM_AT, BEAM_END], [0, 1], CLAMP));
-  const open = MOVE(interpolate(t, [OPEN_AT, OPEN_END], [0, 1], CLAMP));
-  const close = MOVE(interpolate(t, [closeAt, closeEnd], [0, 1], CLAMP));
 
   const G1 = 0.34 * H;
   const G2 = 0.15 * H;
-  const gap = open * (G1 + (G2 - G1) * close);
-  const half = gap / 2;
   const kRes = 0.56;
-  const k = close > 0 ? 1 + (kRes - 1) * close : 1.05 - 0.05 * open;
+  const geometry = (f: number) => {
+    const open = MOVE(interpolate(f, [OPEN_AT, OPEN_END], [0, 1], CLAMP));
+    const close = MOVE(interpolate(f, [closeAt, closeEnd], [0, 1], CLAMP));
+    const gap = open * (G1 + (G2 - G1) * close);
+    const k = close > 0 ? 1 + (kRes - 1) * close : 1.05 - 0.05 * open;
+    return { gap, k };
+  };
+  const { gap, k } = geometry(t);
+  const half = gap / 2;
+  const prev = geometry(t - speed);
+  const next = geometry(t + speed);
+  const stirs = (a: number, b: number, c: number) =>
+    Math.abs(b - a) > 1e-3 || Math.abs(c - b) > 1e-3;
+  const rising = midway(rise);
+  const halvesMoving = !rising && stirs(prev.gap / 2, half, next.gap / 2);
+  // Weighed at the inner line's ends, the furthest its glyphs sit from the
+  // scale's origin.
+  const reachInner = W * 0.35;
+  const innerMoving = stirs(
+    prev.k * reachInner,
+    k * reachInner,
+    next.k * reachInner,
+  );
 
   const moving =
     (t >= BEAM_AT && t < OPEN_END + 8) || (t >= closeAt && t < closeEnd + 8);
@@ -349,13 +379,13 @@ export function BeamSplit({
         <AbsoluteFill
           style={{
             opacity: rise,
-            transform: `translateY(${(1 - rise) * 14 * u}px)`,
+            transform: `translateY(${(1 - rise) * 14 * u}px)${glide(rising)}`,
           }}
         >
           <AbsoluteFill
             style={{
               clipPath: clip(0, cut),
-              transform: `translateY(${-half}px)`,
+              transform: `translateY(${-half}px)${glide(halvesMoving)}`,
             }}
           >
             <Line
@@ -369,7 +399,7 @@ export function BeamSplit({
           <AbsoluteFill
             style={{
               clipPath: clip(cut, H),
-              transform: `translateY(${half}px)`,
+              transform: `translateY(${half}px)${glide(halvesMoving)}`,
             }}
           >
             <Line
@@ -387,7 +417,7 @@ export function BeamSplit({
             <AbsoluteFill style={{ background: band }} />
             <AbsoluteFill
               style={{
-                transform: `scale(${k})`,
+                transform: `scale(${k})${glide(innerMoving)}`,
                 transformOrigin: `50% ${cut}px`,
               }}
             >
@@ -406,6 +436,7 @@ export function BeamSplit({
           <>
             <Edge
               y={cut - half}
+              anchor={halvesMoving ? cut - G1 / 2 : undefined}
               draw={draw}
               width={W}
               lw={lw}
@@ -416,6 +447,7 @@ export function BeamSplit({
             />
             <Edge
               y={cut + half}
+              anchor={halvesMoving ? cut + G1 / 2 : undefined}
               draw={draw}
               width={W}
               lw={lw}

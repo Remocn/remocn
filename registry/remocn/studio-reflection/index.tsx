@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const exa = loadLexendExa("normal", { weights: ["400"], subsets: ["latin"] });
 const geist = loadGeist("normal", { weights: ["400"], subsets: ["latin"] });
@@ -177,6 +178,7 @@ export function StudioReflection({
   speed = 1,
   theme = "dark",
 }: StudioReflectionProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const p = PALETTES[theme];
@@ -265,14 +267,20 @@ export function StudioReflection({
     );
   });
 
-  const push = interpolate(frame, [0, 120], [1.06, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const drift = interpolate(frame, [0, 120], [10 * s, 0], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const pushAt = (f: number) =>
+    interpolate(f, [0, 120], [1.06, 1], { ...CLAMP, easing: EASE_OUT });
+  const driftAt = (f: number) =>
+    interpolate(f, [0, 120], [10 * s, 0], { ...CLAMP, easing: EASE_OUT });
+  const push = pushAt(frame);
+  const drift = driftAt(frame);
+  // The push eases out over the whole clip, so it has no clean progress to
+  // test: it counts as moving while the figure's edge still shifts by a
+  // thousandth of a pixel per frame.
+  const reach = width / 2;
+  const step = (a: number, b: number) =>
+    Math.abs(driftAt(a) - driftAt(b)) + Math.abs(pushAt(a) - pushAt(b)) * reach;
+  const pushing =
+    step(frame + 1, frame) > 1e-3 || step(frame, frame - 1) > 1e-3;
 
   const eyeIn = interpolate(frame, [captionAt, captionAt + 22], [0, 1], {
     ...CLAMP,
@@ -328,7 +336,7 @@ export function StudioReflection({
           style={{
             position: "absolute",
             inset: 0,
-            transform: `translateY(${drift}px) scale(${push})`,
+            transform: `translateY(${drift}px) scale(${push})${glide(pushing)}`,
             transformOrigin: `50% ${(yOf(hz) / height) * 100}%`,
           }}
         >

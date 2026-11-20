@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const inter = loadFont("normal", {
   weights: ["400", "500", "600", "700"],
@@ -146,6 +147,7 @@ const WIN_H = 530;
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 const HAIR = "1px solid rgba(0,0,0,0.07)";
 const IN_OUT = Easing.bezier(0.65, 0, 0.35, 1);
+
 const flex = (s: React.CSSProperties = {}): React.CSSProperties => ({
   display: "flex",
   alignItems: "center",
@@ -1327,6 +1329,7 @@ function IssuesWindow({
   winIn,
   workspace,
   ink,
+  tilted,
 }: {
   accent: string;
   f: number;
@@ -1335,17 +1338,25 @@ function IssuesWindow({
   winIn: number;
   workspace: string;
   ink?: string;
+  /** The camera above already carries the tilt this frame. */
+  tilted: boolean;
 }) {
+  const glide = useGlide();
   const base = palette(dark);
   const p = ink === undefined ? base : { ...base, text: ink };
   let n = 0;
   const rowIn = (): React.CSSProperties => {
-    const s = spring({
-      frame: f - winIn - 3 - n++ * 1.3,
-      fps,
-      config: { damping: 30, stiffness: 260 },
-    });
-    return { opacity: s, transform: `translateY(${(1 - s) * 6}px)` };
+    const at = f - winIn - 3 - n++ * 1.3;
+    const sp = (fr: number) =>
+      spring({ frame: fr, fps, config: { damping: 30, stiffness: 260 } });
+    const s = sp(at);
+    const moving =
+      Math.abs(sp(at + 1) - s) * 6 > 1e-3 ||
+      Math.abs(s - sp(at - 1)) * 6 > 1e-3;
+    return {
+      opacity: s,
+      transform: `translateY(${(1 - s) * 6}px)${glide(moving && !tilted)}`,
+    };
   };
   const nav = (
     label: string,
@@ -1639,6 +1650,7 @@ export function ChaosToOrder({
   speed = 1,
   theme = "dark",
 }: ChaosToOrderProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { fps, width, height } = useVideoConfig();
   const f = frame * speed;
@@ -1660,11 +1672,25 @@ export function ChaosToOrder({
     ...clamp,
     easing: IN_OUT,
   });
-  const win = spring({
-    frame: f - winIn,
-    fps,
-    config: { damping: 200, stiffness: 170 },
-  });
+  const winAt = (fr: number) =>
+    spring({
+      frame: fr - winIn,
+      fps,
+      config: { damping: 200, stiffness: 170 },
+    });
+  const win = winAt(f);
+  // The window spring never lands exactly and the camera eases through a
+  // turn, so both are read off the neighbouring frames, not a progress.
+  const camOf = (fr: number) =>
+    interpolate(fr, [0, camAt, camAt + PULL_LEN + 10], [1, 1.04, 1], {
+      ...clamp,
+      easing: IN_OUT,
+    });
+  const tilted =
+    Math.abs(camOf(f + speed) - cam) > 1.5e-6 ||
+    Math.abs(cam - camOf(f - speed)) > 1.5e-6 ||
+    Math.abs(winAt(f + speed) - win) > 2.5e-5 ||
+    Math.abs(win - winAt(f - speed)) > 2.5e-5;
 
   const pieces = PIECES.map((p, i) => {
     const drop = spring({
@@ -1678,8 +1704,6 @@ export function ChaosToOrder({
       ...clamp,
       easing: IN_OUT,
     });
-    const x = interpolate(pull, [0, 1], [p.x, 640]);
-    const y = interpolate(pull, [0, 1], [p.y, 360]);
     const rot = interpolate(
       pull,
       [0, 1],
@@ -1708,8 +1732,11 @@ export function ChaosToOrder({
         key={i}
         style={{
           position: "absolute",
-          left: x - p.w / 2,
-          top: y - p.h / 2,
+          // Laid out where the piece landed; the pull to the centre is a
+          // transform, since layout rounds a box to whole pixels and a piece
+          // eased by `left`/`top` clicks along.
+          left: p.x - p.w / 2,
+          top: p.y - p.h / 2,
           width: p.w,
           height: p.h,
           opacity,
@@ -1717,7 +1744,7 @@ export function ChaosToOrder({
             pull > 0.25
               ? `blur(${interpolate(pull, [0.25, 0.7], [0, 4], clamp)}px)`
               : undefined,
-          transform: `rotate(${rot}deg) scale(${scale})`,
+          transform: `translate(${(640 - p.x) * pull}px, ${(360 - p.y) * pull}px) rotate(${rot}deg) scale(${scale})`,
           boxShadow: `0 0 0 1px rgba(0,0,0,${dark ? 0.4 : 0.06}), 0 ${2 + lift * 30}px ${6 + lift * 40}px -2px rgba(0,0,0,${a * 0.6}), 0 ${16 + lift * 30}px ${40 + lift * 40}px -12px rgba(0,0,0,${a})`,
           borderRadius: p.kind === "sticky" ? 2 : p.kind === "toast" ? 16 : 10,
         }}
@@ -1755,7 +1782,7 @@ export function ChaosToOrder({
             top: (height - 720 * u) / 2,
             width: 1280,
             height: 720,
-            transform: `scale(${u * cam})`,
+            transform: `scale(${u * cam})${glide(tilted)}`,
             transformOrigin: "640px 360px",
           }}
         >
@@ -1785,6 +1812,7 @@ export function ChaosToOrder({
                 winIn={winIn}
                 workspace={workspace}
                 ink={ink}
+                tilted={tilted}
               />
             )}
           </div>

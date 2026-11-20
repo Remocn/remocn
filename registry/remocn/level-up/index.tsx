@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: hud } = loadFont("normal", {
   weights: ["400", "500"],
@@ -185,6 +186,8 @@ const LAUNCH = [
   { x: 0.34, y: 0.34 },
 ];
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -221,6 +224,7 @@ export function LevelUp({
   theme = "dark",
   speed = 1,
 }: LevelUpProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -273,7 +277,11 @@ export function LevelUp({
   const titleScale =
     interpolate(titleIn, [0, 1], [1.7, 1]) *
     interpolate(duck, [0, 1], [1, 0.36]);
-  const titleY = interpolate(duck, [0, 1], [cy, 0.2 * H]);
+  // The duck to the top is a transform on the title, not `top`: layout
+  // rounds a baseline to whole pixels, so a title eased by `top` clicks up
+  // pixel by pixel. Laid out where it parks.
+  const titleRise = (cy - 0.2 * H) * (1 - duck);
+  const titleMoving = midway(titleIn) || midway(duck);
 
   // ── Big level number ──────────────────────────────────────────────────────
   const numFs = 360 * u;
@@ -285,10 +293,17 @@ export function LevelUp({
   const fromP = from.padStart(len, " ");
   const toP = to.padStart(len, " ");
   const numKick = 1 + 0.045 * kick(t - rollHit);
+  const numMoving = midway(numIn) || (t > rollHit && t < rollHit + 10);
 
   // ── Stat line ─────────────────────────────────────────────────────────────
   const statP = OUT(ramp(t, STAT_AT, 10));
-  const statN = stat.value * OUT(ramp(t, STAT_AT + 2, STAT_LEN));
+  const statAt = (f: number) =>
+    Math.round(stat.value * OUT(ramp(f, STAT_AT + 2, STAT_LEN)));
+  const statN = statAt(t);
+  // The count reflows the centred line sideways in layout; the lean stays on
+  // until the number has stopped, so it never goes in a frame that reflows.
+  const statMoving =
+    midway(statP) || statAt(t + speed) !== statN || statAt(t - speed) !== statN;
   const logoP = OUT(ramp(t, STAT_AT + 6, 10));
 
   // Rays: wedges from an inner radius out, alternating widths and lengths.
@@ -452,7 +467,7 @@ export function LevelUp({
               alignItems: "flex-end",
               justifyContent: "space-between",
               opacity: labelsIn * (1 - labelsOut),
-              transform: `translateY(${(1 - labelsIn) * 16 * u}px)`,
+              transform: `translateY(${(1 - labelsIn) * 16 * u}px)${glide(midway(labelsIn))}`,
               fontFamily,
               fontWeight: 500,
               color: fg,
@@ -544,10 +559,14 @@ export function LevelUp({
             <div
               key={`${i}-${v}`}
               style={{
+                // Layout rounds a box and a baseline to whole pixels, so a
+                // chip flown by `left`/`top` lands on whole pixels and its
+                // steps come out uneven. It is laid out at the bar's centre
+                // and the flight is a transform; a chip is never at rest.
                 position: "absolute",
-                left: x,
-                top: y,
-                transform: `translate(-50%, -50%) scale(${k})`,
+                left: cx,
+                top: cy,
+                transform: `translate(${x - cx}px, ${y - cy}px) translate(-50%, -50%) scale(${k})${glide(true)}`,
                 opacity: op,
                 padding: `${9 * u}px ${18 * u}px ${8 * u}px`,
                 borderRadius: 999,
@@ -574,12 +593,12 @@ export function LevelUp({
               position: "absolute",
               left: 0,
               width: W,
-              top: titleY - titleFs * 0.6,
+              top: 0.2 * H - titleFs * 0.6,
               height: titleFs * 1.2,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              transform: `scale(${titleScale})`,
+              transform: `translateY(${titleRise}px) scale(${titleScale})${glide(titleMoving)}`,
               opacity: ramp(t, BURST_AT, 2),
               fontFamily,
               fontWeight: 500,
@@ -606,7 +625,7 @@ export function LevelUp({
               display: "flex",
               justifyContent: "center",
               opacity: numIn,
-              transform: `translateY(${(1 - numIn) * 50 * u}px) scale(${numKick})`,
+              transform: `translateY(${(1 - numIn) * 50 * u}px) scale(${numKick})${glide(numMoving)}`,
               fontFamily,
               fontWeight: 500,
               fontSize: numFs,
@@ -648,7 +667,7 @@ export function LevelUp({
                     style={{
                       transform: same
                         ? undefined
-                        : `translateY(${-roll * numFs}px)`,
+                        : `translateY(${-roll * numFs}px)${glide(midway(roll))}`,
                     }}
                   >
                     {glyph(a)}
@@ -673,7 +692,7 @@ export function LevelUp({
               alignItems: "baseline",
               gap: 18 * u,
               opacity: statP,
-              transform: `translateY(${(1 - statP) * 22 * u}px)`,
+              transform: `translateY(${(1 - statP) * 22 * u}px)${glide(statMoving)}`,
               fontFamily,
               fontWeight: 500,
               fontSize: 34 * u,
@@ -700,7 +719,7 @@ export function LevelUp({
               >
                 <path d="M9 0 L18 15 L0 15 Z" fill={accent} />
               </svg>
-              +{Math.round(statN)}
+              +{statN}
               {stat.suffix ?? ""}
             </span>
           </div>

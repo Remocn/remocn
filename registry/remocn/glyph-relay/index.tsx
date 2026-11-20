@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -213,6 +214,7 @@ export function GlyphRelay({
   ground,
   groundParams,
 }: GlyphRelayProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const dark = theme === "dark";
@@ -253,6 +255,9 @@ export function GlyphRelay({
   r = mix(r, dotR, shrink);
   const gy = mix(cy, dotY, drop);
   const gx = cx;
+  const dropDy = (cy - dotY) * (1 - drop);
+  const dropTravel =
+    Math.abs(dropDy) < 1e-3 ? undefined : `translateY(${dropDy}px)`;
 
   const sideGap = (fs: number) => fs * 0.13 + r * 0.32;
 
@@ -274,7 +279,12 @@ export function GlyphRelay({
     ? [words3.slice(0, -1).join(" "), words3[words3.length - 1]]
     : [line3];
 
-  const push = 1 + pushBy * ramp(frame, 0, B.end, SWAY);
+  const pushAt = (f: number) => 1 + pushBy * ramp(f, 0, B.end, SWAY);
+  const push = pushAt(frame);
+  // Weighed by the distance from the centre to the furthest text.
+  const pushing = [frame - speed, frame + speed].some(
+    (f) => Math.abs(pushAt(f) - push) * stageW * 0.5 > 1e-3,
+  );
 
   const resolvedGround: GshPresetId | undefined = ground;
   const resolvedParams =
@@ -324,7 +334,7 @@ export function GlyphRelay({
             style={{
               position: "absolute",
               inset: 0,
-              transform: `scale(${push})`,
+              transform: `scale(${push})${glide(pushing)}`,
               transformOrigin: "50% 50%",
               color: fg,
               fontWeight: 300,
@@ -465,7 +475,11 @@ export function GlyphRelay({
               style={{
                 position: "absolute",
                 left: gx - r,
-                top: gy - r,
+                // Laid out where the drop lands; the fall there is a
+                // transform, since layout rounds a box's edges to whole
+                // pixels and `top` clicked it down.
+                top: dotY - r,
+                transform: dropTravel,
                 width: r * 2,
                 height: r * 2,
                 borderRadius: "50%",

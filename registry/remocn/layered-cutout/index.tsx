@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400"],
@@ -359,6 +360,7 @@ export function LayeredCutout({
   speed = 1,
   theme = "light",
 }: LayeredCutoutProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = height / 720;
@@ -369,21 +371,52 @@ export function LayeredCutout({
   const gradientLayer = accentLayer ?? n - 1;
 
   // sheets part in depth, then the camera dollies through the cuts
-  const part = interpolate(t, [0, 72], [0, 1], { ...CLAMP, easing: EASE_IO });
-  const gap = 18 + 182 * part;
-  const push = interpolate(t, [8, 8 + pushDur], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  // land with the core at ~1.25x and the last two cuts framing it
-  const coreDepth = n * 200;
-  const camZ = push * (D0 + coreDepth - D0 / 1.25);
-  const camX = interpolate(push, [0, 1], [46 * u, 0]);
-  const camY = interpolate(push, [0, 1], [-22 * u, 0]);
+  const camera = (f: number) => {
+    const part = interpolate(f, [0, 72], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+    const push = interpolate(f, [8, 8 + pushDur], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+    // land with the core at ~1.25x and the last two cuts framing it
+    const coreDepth = n * 200;
+    const camZ = push * (D0 + coreDepth - D0 / 1.25);
+    const camX = interpolate(push, [0, 1], [46 * u, 0]);
+    const camY = interpolate(push, [0, 1], [-22 * u, 0]);
+    const gap = 18 + 182 * part;
+    const coreScale = D0 / (D0 + n * gap - camZ);
+    return { part, push, camZ, camX, camY, gap, coreScale };
+  };
+  const { part, push, camZ, camX, camY, gap, coreScale } = camera(t);
 
   const depthOf = (i: number) => D0 + i * gap - camZ;
-  const coreDist = depthOf(n);
-  const coreScale = D0 / coreDist;
+
+  // The name rides the camera. That travel is a transform, not `left`/`top`:
+  // layout rounds a box and a baseline to whole pixels, so a block eased by
+  // `top` clicks along pixel by pixel. The tilt covers the scale as well;
+  // a step under 1e-3px at the far end of the tagline counts as rest.
+  const coreAt = (f: number) => {
+    const c = camera(f);
+    return {
+      dx: -c.camX * c.coreScale,
+      dy: -c.camY * c.coreScale,
+      k: c.coreScale,
+    };
+  };
+  const core = coreAt(t);
+  const coreStep = (a: ReturnType<typeof coreAt>) =>
+    Math.max(
+      Math.abs(a.dx - core.dx),
+      Math.abs(a.dy - core.dy),
+      Math.abs(a.k - core.k) * 240 * u,
+    ) > 1e-3;
+  const coreMoving = coreStep(coreAt(t + speed)) || coreStep(coreAt(t - speed));
+  const coreShift =
+    Math.abs(core.dx) < 1e-3 && Math.abs(core.dy) < 1e-3
+      ? ""
+      : `translate(${core.dx}px, ${core.dy}px) `;
 
   const sheets: React.ReactNode[] = [];
   for (let i = n - 1; i >= 0; i--) {
@@ -484,9 +517,9 @@ export function LayeredCutout({
         <div
           style={{
             position: "absolute",
-            left: width / 2 - camX * coreScale,
-            top: height / 2 - camY * coreScale,
-            transform: `translate(-50%, -50%) scale(${coreScale})`,
+            left: width / 2,
+            top: height / 2,
+            transform: `${coreShift}translate(-50%, -50%) scale(${coreScale})${glide(coreMoving)}`,
             display: "flex",
             flexDirection: "column",
             alignItems: "center",

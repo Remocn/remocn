@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -152,6 +153,8 @@ const CAM = Easing.bezier(0.87, 0, 0.13, 1);
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const BEAT = {
   laurel: 4,
@@ -309,6 +312,7 @@ function RollingNumber({
   size: number;
   color: string;
 }) {
+  const glide = useGlide();
   const lh = size * 1.1;
   const travel = lh * 0.3;
   let di = -1;
@@ -353,7 +357,7 @@ function RollingNumber({
               inset: 0,
               textAlign: "center",
               opacity: o,
-              transform: `translateY(${y}px)`,
+              transform: `translateY(${y}px)${glide(midway(s))}`,
             }}
           >
             {val(n)}
@@ -733,7 +737,10 @@ export function RatingLaurel({
   ground,
   groundParams,
 }: RatingLaurelProps) {
-  const frame = Math.max(0, useCurrentFrame() - delay);
+  // `glide` names the card strip's travel below, so the glide mark is `tilt`.
+  const tilt = useGlide();
+  const rawFrame = useCurrentFrame();
+  const frame = Math.max(0, rawFrame - delay);
   const { fps, width, height } = useVideoConfig();
   const f = frame * speed;
   const dark = theme === "dark";
@@ -742,8 +749,16 @@ export function RatingLaurel({
   const tall = height > width;
   const phone = device === "phone" || tall;
 
-  const sp = (at: number, config: typeof CARD) =>
-    spring({ frame: f - at, fps, config });
+  const spAt = (t: number, at: number, config: typeof CARD) =>
+    spring({ frame: t - at, fps, config });
+  const sp = (at: number, config: typeof CARD) => spAt(f, at, config);
+  // Whether a value of time is moving on this frame: springs overshoot and
+  // trail off, so it is read against the neighbouring frames instead of a
+  // progress. Nothing moves while `delay` holds the first frame.
+  const stirs = (at: (t: number) => number, eps = 1e-5) =>
+    rawFrame >= delay &&
+    (Math.abs(at(f + speed) - at(f)) > eps ||
+      Math.abs(at(f) - at(f - speed)) > eps);
   const fadeUp = (at: number, dy = 14): React.CSSProperties => {
     const v = interpolate(f, [at, at + 14], [0, 1], {
       ...clamp,
@@ -751,7 +766,7 @@ export function RatingLaurel({
     });
     return {
       opacity: v,
-      transform: `translateY(${(1 - v) * dy}px)`,
+      transform: `translateY(${(1 - v) * dy}px)${tilt(dy !== 0 && midway(v))}`,
     };
   };
 
@@ -848,8 +863,9 @@ export function RatingLaurel({
       : { x: width * 0.7, y: height / 2 };
     const rise = sp(0, HEAVY);
     const s = width / (tall ? 1080 : 1280);
-    const lineIn = (d: number) =>
-      interpolate(f, [18 + d, 34 + d], [0, 1], { ...clamp, easing: ENTER });
+    const lineAt = (t: number, d: number) =>
+      interpolate(t, [18 + d, 34 + d], [0, 1], { ...clamp, easing: ENTER });
+    const lineIn = (d: number) => lineAt(f, d);
     const barIn = sp(BEAT.cta, CARD);
     return (
       <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
@@ -862,7 +878,9 @@ export function RatingLaurel({
               top: phoneC.y - BH / 2,
               width: BW,
               height: BH,
-              transform: `translateY(${(1 - rise) * height * 0.7}px) scale(${pk * (1 + 0.02 * (f / 270))})`,
+              // The slow push on the phone never rests, so it is always
+              // moving, and it carries every line on the screen.
+              transform: `translateY(${(1 - rise) * height * 0.7}px) scale(${pk * (1 + 0.02 * (f / 270))})${tilt(true)}`,
             }}
           >
             <Phone dark={dark}>
@@ -915,6 +933,9 @@ export function RatingLaurel({
                 >
                   {categories.slice(0, 4).map((cat, i) => {
                     const v = sp(BEAT.categories + i * 3, CHIP);
+                    const settling = stirs((t) =>
+                      spAt(t, BEAT.categories + i * 3, CHIP),
+                    );
                     return (
                       <div
                         key={cat.label}
@@ -923,7 +944,7 @@ export function RatingLaurel({
                           paddingLeft: i === 0 ? 0 : 10,
                           borderLeft: i === 0 ? "none" : `1px solid ${c.hair}`,
                           opacity: Math.min(1, v * 1.5),
-                          transform: `translateY(${(1 - v) * 10}px)`,
+                          transform: `translateY(${(1 - v) * 10}px)${tilt(settling)}`,
                         }}
                       >
                         <div style={{ fontSize: 13, color: c.muted }}>
@@ -1008,7 +1029,7 @@ export function RatingLaurel({
                     justifyContent: "space-between",
                     padding: "18px 22px 0",
                     boxSizing: "border-box",
-                    transform: `translateY(${(1 - barIn) * 112}px)`,
+                    transform: `translateY(${(1 - barIn) * 112}px)${tilt(stirs((t) => spAt(t, BEAT.cta, CARD)))}`,
                   }}
                 >
                   <div style={{ color: c.ink }}>
@@ -1058,7 +1079,7 @@ export function RatingLaurel({
                 fontVariantNumeric: "tabular-nums",
                 ...{
                   opacity: lineIn(0),
-                  transform: `translateY(${(1 - lineIn(0)) * 10}px)`,
+                  transform: `translateY(${(1 - lineIn(0)) * 10}px)${tilt(midway(lineIn(0)))}`,
                 },
               }}
             >
@@ -1073,7 +1094,7 @@ export function RatingLaurel({
                   lineHeight: 1.04,
                   letterSpacing: "-0.04em",
                   textWrap: "balance",
-                  transform: `translateY(${(1 - lineIn(4)) * 105}%)`,
+                  transform: `translateY(${(1 - lineIn(4)) * 105}%)${tilt(stirs((t) => lineAt(t, 4) * 105, 1e-4))}`,
                 }}
               >
                 Rated {rating.toFixed(2)} by the people who{" "}
@@ -1105,15 +1126,23 @@ export function RatingLaurel({
   const winH = 640;
   const winX = (1280 - winW) / 2;
   const winY = (720 - winH) / 2;
-  const cam = interpolate(f, [BEAT.camFrom, BEAT.camTo], [0, 1], {
-    ...clamp,
-    easing: CAM,
-  });
-  const zoom = 1.8 - 0.8 * cam;
   const focusY = winY + 215;
-  const ty = (1 - cam) * (360 - focusY);
-  const winIn = sp(0, HEAVY);
-  const push = 1 + 0.02 * interpolate(f, [BEAT.camTo, 270], [0, 1], clamp);
+  const camAt = (t: number) => {
+    const cam = interpolate(t, [BEAT.camFrom, BEAT.camTo], [0, 1], {
+      ...clamp,
+      easing: CAM,
+    });
+    const zoom = 1.8 - 0.8 * cam;
+    const ty = (1 - cam) * (360 - focusY);
+    const winIn = spAt(t, 0, HEAVY);
+    const push = 1 + 0.02 * interpolate(t, [BEAT.camTo, 270], [0, 1], clamp);
+    return { y: ty + (1 - winIn) * 30, k: zoom * push };
+  };
+  const view = camAt(f);
+  // The whole window rides this camera; the tolerances are those of a line
+  // 500px from the focus.
+  const camMoving =
+    stirs((t) => camAt(t).y, 1e-4) || stirs((t) => camAt(t).k, 1e-7);
   const s = width / 1280;
   return (
     <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
@@ -1134,7 +1163,7 @@ export function RatingLaurel({
             style={{
               position: "absolute",
               inset: 0,
-              transform: `translateY(${ty + (1 - winIn) * 30}px) scale(${zoom * push})`,
+              transform: `translateY(${view.y}px) scale(${view.k})${tilt(camMoving)}`,
               transformOrigin: `640px ${focusY}px`,
             }}
           >
@@ -1225,6 +1254,9 @@ export function RatingLaurel({
               >
                 {categories.map((cat, i) => {
                   const v = sp(BEAT.categories + i * 3, CHIP);
+                  const settling = stirs((t) =>
+                    spAt(t, BEAT.categories + i * 3, CHIP),
+                  );
                   return (
                     <div
                       key={cat.label}
@@ -1236,7 +1268,7 @@ export function RatingLaurel({
                         paddingLeft: i === 0 ? 0 : 20,
                         borderLeft: i === 0 ? "none" : `1px solid ${c.hair}`,
                         opacity: Math.min(1, v * 1.5),
-                        transform: `translateY(${(1 - v) * 10}px)`,
+                        transform: `translateY(${(1 - v) * 10}px)${tilt(settling)}`,
                       }}
                     >
                       <Icon d={ICONS[cat.icon]} size={24} color={c.ink} />

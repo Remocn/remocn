@@ -7,11 +7,14 @@ import type {
 import type React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { ShaderGrainGradient } from "@/components/remocn/shader-grain-gradient";
+import { useGlide } from "@/lib/remocn/glide";
 
 const clampOpts = {
   extrapolateLeft: "clamp" as const,
   extrapolateRight: "clamp" as const,
 };
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const DEFAULT_COLORS = ["#3a3a52", "#4a4a68", "#8f88ae"];
 
@@ -33,6 +36,7 @@ const RippleZoomPresentation: React.FC<
   presentationDirection,
   passedProps,
 }) => {
+  const glide = useGlide();
   const {
     colors = DEFAULT_COLORS,
     colorBack = "#141318",
@@ -46,15 +50,16 @@ const RippleZoomPresentation: React.FC<
   const p = presentationProgress;
 
   if (!entering) {
+    const grow = interpolate(p, [0.3, 0.62], [0, 1], clampOpts);
     const exitStyle: React.CSSProperties = {
       opacity: interpolate(p, [0.35, 0.55], [1, 0], {
         ...clampOpts,
         easing: Easing.bezier(0.42, 0, 0.58, 1),
       }),
-      scale: `${interpolate(p, [0.3, 0.62], [1, 1.6], {
+      transform: `scale(${interpolate(p, [0.3, 0.62], [1, 1.6], {
         ...clampOpts,
         easing: Easing.in(Easing.cubic),
-      })}`,
+      })})${glide(midway(grow))}`,
     };
     return <AbsoluteFill style={exitStyle}>{children}</AbsoluteFill>;
   }
@@ -68,12 +73,14 @@ const RippleZoomPresentation: React.FC<
     easing: Easing.bezier(0.7, 0, 0.3, 1),
   });
 
+  const settle = interpolate(p, [0.42, 0.97], [0, 1], clampOpts);
+  const childScale = interpolate(p, [0.42, 0.97], [0.2, 1], {
+    ...clampOpts,
+    easing: Easing.bezier(0.33, 1, 0.68, 1),
+  });
   const childStyle: React.CSSProperties = {
     opacity: interpolate(p, [0.45, 0.62], [0, 1], clampOpts),
-    scale: `${interpolate(p, [0.42, 0.97], [0.2, 1], {
-      ...clampOpts,
-      easing: Easing.bezier(0.33, 1, 0.68, 1),
-    })}`,
+    transform: `scale(${childScale})${glide(midway(settle))}`,
     filter: `blur(${interpolate(p, [0.42, 0.8], [8, 0], clampOpts)}px)`,
   };
 

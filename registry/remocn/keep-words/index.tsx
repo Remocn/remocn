@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const gloock = loadFont("normal", { weights: ["400"], subsets: ["latin"] });
 
@@ -229,6 +230,7 @@ export function KeepWords({
   speed = 1,
   theme = "dark",
 }: KeepWordsProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const t = frame * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
@@ -300,50 +302,18 @@ export function KeepWords({
     mxEm += emF(`${m}.`) + space;
   });
 
-  const stackOf = (i: number) =>
-    interpolate(t, [stackAt + i * 4, stackAt + i * 4 + STACK_MOVE], [0, 1], {
-      ...CLAMP,
-      easing: EASE_IO,
-    });
+  interface Spec {
+    key: string;
+    text: string;
+    x: number;
+    y: number;
+    size: number;
+    render: number;
+    color: string;
+    opacity: number;
+  }
 
-  const nodes: React.ReactNode[] = [];
-
-  const glyph = (
-    key: string,
-    text: string,
-    x: number,
-    y: number,
-    size: number,
-    renderSize: number,
-    color: string,
-    opacity: number,
-  ) => (
-    <div
-      key={key}
-      style={{
-        position: "absolute",
-        left: 0,
-        top: 0,
-        fontFamily,
-        fontWeight: 400,
-        fontSize: renderSize,
-        lineHeight: `${LH * renderSize}px`,
-        letterSpacing: `${TRACK}em`,
-        whiteSpace: "pre",
-        color,
-        opacity,
-        transformOrigin: "0 0",
-        transform: `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) scale(${(size / renderSize).toFixed(4)})`,
-      }}
-    >
-      {text}
-    </div>
-  );
-
-  beliefs.forEach((b, bi) => {
-    const stackP = stackOf(bi);
-    const s0 = START + bi * seg;
-    const u = t - s0;
+  const laid = beliefs.map((b) => {
     const words = splitBelief(b, fontFamily);
     const F = fitSize(
       words,
@@ -352,112 +322,178 @@ export function KeepWords({
       H * (portrait ? 0.1 : 0.17),
       fontFamily,
     );
-    const lay = balanced(words, boxW / F, fontFamily);
-    const markAt = seg * 0.42;
-    const fallAt = seg * 0.6;
-    const travelAt = seg * 0.66;
-    const travelLen = Math.min(24, seg * 0.3);
-    const mark = interpolate(u, [markAt, markAt + 8], [0, 1], CLAMP);
-    const keyColor = interpolateColors(mark, [0, 1], [fg, hi]);
-
-    if (u > -1) {
-      const stagger = Math.min(2, 22 / Math.max(1, words.length));
-      let order = 0;
-      words.forEach((w, wi) => {
-        const pos = lay.words[wi];
-        const wx = mx + pos.x * F;
-        const wy = boxTop + pos.line * LH * F;
-        const enter = interpolate(
-          u,
-          [order * stagger, order * stagger + 16],
-          [0, 1],
-          {
-            ...CLAMP,
-            easing: EASE_OUT,
-          },
-        );
-        order += 1;
-        w.segs.forEach((sg, si) => {
-          const id = `b${bi}w${wi}s${si}`;
-          if (sg.key < 0) {
-            const fall = interpolate(
-              u,
-              [fallAt + (wi % 4), fallAt + (wi % 4) + 12],
-              [0, 1],
-              { ...CLAMP, easing: EASE_IN },
-            );
-            const op = enter * (1 - fall);
-            if (op <= 0.001) return;
-            nodes.push(
-              glyph(
-                id,
-                sg.text,
-                wx + sg.dx * F,
-                wy + (1 - enter) * F * 0.32 + fall * F * 0.22,
-                F,
-                F,
-                fg,
-                op,
-              ),
-            );
-            return;
-          }
-          const travel = interpolate(
-            u,
-            [travelAt + sg.key * 2, travelAt + sg.key * 2 + travelLen],
-            [0, 1],
-            { ...CLAMP, easing: EASE_IO },
-          );
-          const row = mottoSlots[bi][sg.key];
-          const col = stackSlots[bi][sg.key];
-          const fx = wx + sg.dx * F;
-          const fy = wy + (1 - enter) * F * 0.32;
-          const rx = row.x + (col.x - row.x) * stackP;
-          const ry = row.y + (col.y - row.y) * stackP;
-          const rs = Fm + (Ff - Fm) * stackP;
-          const x = fx + (rx - fx) * travel;
-          const y = fy + (ry - fy) * travel;
-          const size = F + (rs - F) * travel;
-          const render = Math.max(F, Ff);
-          const landed = interpolate(travel, [0.85, 1], [0, 1], CLAMP);
-          const color = interpolateColors(landed, [0, 1], [keyColor, fg]);
-          const finalText =
-            sg.key === 0 ? mottoItems[bi].split(/\s+/)[0] : sg.text;
-          const swap = finalText !== sg.text ? landed : 0;
-          if (swap < 1) {
-            nodes.push(
-              glyph(id, sg.text, x, y, size, render, color, enter * (1 - swap)),
-            );
-          }
-          if (swap > 0) {
-            nodes.push(
-              glyph(`${id}f`, finalText, x, y, size, render, color, swap),
-            );
-          }
-        });
-      });
-    }
-
-    const dotAt = travelAt + (mottoSlots[bi].length - 2) * 2 + travelLen;
-    const dot = interpolate(u, [dotAt - 4, dotAt + 6], [0, 1], CLAMP);
-    if (dot > 0) {
-      const row = mottoSlots[bi][mottoSlots[bi].length - 1];
-      const col = stackSlots[bi][stackSlots[bi].length - 1];
-      const rs = Fm + (Ff - Fm) * stackP;
-      nodes.push(
-        glyph(
-          `b${bi}dot`,
-          ".",
-          row.x + (col.x - row.x) * stackP,
-          row.y + (col.y - row.y) * stackP,
-          rs,
-          Ff,
-          hi,
-          dot,
-        ),
-      );
-    }
+    return { words, F, lay: balanced(words, boxW / F, fontFamily) };
   });
+
+  // Every glyph at time `tt`. The eases here are long and wide (a word flies
+  // from the paragraph into the motto, the motto folds into a stack), so a
+  // progress that reads "done" can still leave a fraction of a pixel to
+  // travel; "moving" compares the drawn geometry with the neighbouring frames.
+  const specsAt = (tt: number): Spec[] => {
+    const out: Spec[] = [];
+    const stackOf = (i: number) =>
+      interpolate(tt, [stackAt + i * 4, stackAt + i * 4 + STACK_MOVE], [0, 1], {
+        ...CLAMP,
+        easing: EASE_IO,
+      });
+    beliefs.forEach((_, bi) => {
+      const stackP = stackOf(bi);
+      const s0 = START + bi * seg;
+      const u = tt - s0;
+      const { words, F, lay } = laid[bi];
+      const markAt = seg * 0.42;
+      const fallAt = seg * 0.6;
+      const travelAt = seg * 0.66;
+      const travelLen = Math.min(24, seg * 0.3);
+      const mark = interpolate(u, [markAt, markAt + 8], [0, 1], CLAMP);
+      const keyColor = interpolateColors(mark, [0, 1], [fg, hi]);
+
+      if (u > -1) {
+        const stagger = Math.min(2, 22 / Math.max(1, words.length));
+        let order = 0;
+        words.forEach((w, wi) => {
+          const pos = lay.words[wi];
+          const wx = mx + pos.x * F;
+          const wy = boxTop + pos.line * LH * F;
+          const enter = interpolate(
+            u,
+            [order * stagger, order * stagger + 16],
+            [0, 1],
+            {
+              ...CLAMP,
+              easing: EASE_OUT,
+            },
+          );
+          order += 1;
+          w.segs.forEach((sg, si) => {
+            const id = `b${bi}w${wi}s${si}`;
+            if (sg.key < 0) {
+              const fall = interpolate(
+                u,
+                [fallAt + (wi % 4), fallAt + (wi % 4) + 12],
+                [0, 1],
+                { ...CLAMP, easing: EASE_IN },
+              );
+              const op = enter * (1 - fall);
+              if (op <= 0.001) return;
+              out.push({
+                key: id,
+                text: sg.text,
+                x: wx + sg.dx * F,
+                y: wy + (1 - enter) * F * 0.32 + fall * F * 0.22,
+                size: F,
+                render: F,
+                color: fg,
+                opacity: op,
+              });
+              return;
+            }
+            const travel = interpolate(
+              u,
+              [travelAt + sg.key * 2, travelAt + sg.key * 2 + travelLen],
+              [0, 1],
+              { ...CLAMP, easing: EASE_IO },
+            );
+            const row = mottoSlots[bi][sg.key];
+            const col = stackSlots[bi][sg.key];
+            const fx = wx + sg.dx * F;
+            const fy = wy + (1 - enter) * F * 0.32;
+            const rx = row.x + (col.x - row.x) * stackP;
+            const ry = row.y + (col.y - row.y) * stackP;
+            const rs = Fm + (Ff - Fm) * stackP;
+            const x = fx + (rx - fx) * travel;
+            const y = fy + (ry - fy) * travel;
+            const size = F + (rs - F) * travel;
+            const render = Math.max(F, Ff);
+            const landed = interpolate(travel, [0.85, 1], [0, 1], CLAMP);
+            const color = interpolateColors(landed, [0, 1], [keyColor, fg]);
+            const finalText =
+              sg.key === 0 ? mottoItems[bi].split(/\s+/)[0] : sg.text;
+            const swap = finalText !== sg.text ? landed : 0;
+            if (swap < 1) {
+              out.push({
+                key: id,
+                text: sg.text,
+                x,
+                y,
+                size,
+                render,
+                color,
+                opacity: enter * (1 - swap),
+              });
+            }
+            if (swap > 0) {
+              out.push({
+                key: `${id}f`,
+                text: finalText,
+                x,
+                y,
+                size,
+                render,
+                color,
+                opacity: swap,
+              });
+            }
+          });
+        });
+      }
+
+      const dotAt = travelAt + (mottoSlots[bi].length - 2) * 2 + travelLen;
+      const dot = interpolate(u, [dotAt - 4, dotAt + 6], [0, 1], CLAMP);
+      if (dot > 0) {
+        const row = mottoSlots[bi][mottoSlots[bi].length - 1];
+        const col = stackSlots[bi][stackSlots[bi].length - 1];
+        const rs = Fm + (Ff - Fm) * stackP;
+        out.push({
+          key: `b${bi}dot`,
+          text: ".",
+          x: row.x + (col.x - row.x) * stackP,
+          y: row.y + (col.y - row.y) * stackP,
+          size: rs,
+          render: Ff,
+          color: hi,
+          opacity: dot,
+        });
+      }
+    });
+    return out;
+  };
+
+  const specs = specsAt(t);
+  const byKey = (list: Spec[]) => new Map(list.map((sp) => [sp.key, sp]));
+  const before = byKey(specsAt(t - speed));
+  const after = byKey(specsAt(t + speed));
+  // A size step moves the far end of the word by the step times its width.
+  const shifted = (a: Spec, b: Spec | undefined) =>
+    b !== undefined &&
+    (Math.abs(a.x - b.x) > 1e-3 ||
+      Math.abs(a.y - b.y) > 1e-3 ||
+      Math.abs(a.size - b.size) * Math.max(LH, emF(a.text)) > 1e-3);
+
+  const nodes = specs.map((sp) => (
+    <div
+      key={sp.key}
+      style={{
+        position: "absolute",
+        left: 0,
+        top: 0,
+        fontFamily,
+        fontWeight: 400,
+        fontSize: sp.render,
+        lineHeight: `${LH * sp.render}px`,
+        letterSpacing: `${TRACK}em`,
+        whiteSpace: "pre",
+        color: sp.color,
+        opacity: sp.opacity,
+        transformOrigin: "0 0",
+        transform: `translate(${sp.x.toFixed(2)}px, ${sp.y.toFixed(2)}px) scale(${(sp.size / sp.render).toFixed(4)})${glide(
+          shifted(sp, before.get(sp.key)) || shifted(sp, after.get(sp.key)),
+        )}`,
+      }}
+    >
+      {sp.text}
+    </div>
+  ));
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>

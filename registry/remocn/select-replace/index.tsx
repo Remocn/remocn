@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const geist = loadGeist("normal", { weights: ["500"], subsets: ["latin"] });
 const serif = loadNewsreader("italic", {
@@ -240,6 +241,8 @@ function plan(text: string, edits: SelectReplaceEdit[], hold: number) {
   return { steps, final: line, end: t - BETWEEN };
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -273,6 +276,7 @@ export function SelectReplace({
   theme = "dark",
   speed = 1,
 }: SelectReplaceProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const t = THEMES[theme];
@@ -339,16 +343,29 @@ export function SelectReplace({
 
   // Line re-centers by easing between each state's centered position.
   const leftFor = (l: Seg[]) => (width - em(measure(l))) / 2;
-  let left = leftFor(states[0].line);
-  for (let i = 1; i < states.length; i++) {
-    const p = interpolate(
-      frame,
-      [states[i].at, states[i].at + RECENTER],
-      [0, 1],
-      { ...CLAMP, easing: EASE_OUT },
-    );
-    left += (leftFor(states[i].line) - leftFor(states[i - 1].line)) * p;
-  }
+  // `settled` lands every started re-centering at once: the place the line
+  // is heading for, and exactly `left` once it is there.
+  const leftAt = (settled: boolean) => {
+    let x = leftFor(states[0].line);
+    for (let i = 1; i < states.length; i++) {
+      const p = settled
+        ? frame >= states[i].at
+          ? 1
+          : 0
+        : interpolate(frame, [states[i].at, states[i].at + RECENTER], [0, 1], {
+            ...CLAMP,
+            easing: EASE_OUT,
+          });
+      x += (leftFor(states[i].line) - leftFor(states[i - 1].line)) * p;
+    }
+    return x;
+  };
+  const left = leftAt(false);
+  // Layout rounds a box to whole pixels, so a line eased by `left` clicks
+  // sideways pixel by pixel. Everything is laid out where the line is
+  // heading and the wrapper carries the rest of the way as a transform.
+  const anchor = leftAt(true);
+  const shift = left - anchor;
 
   const cy = height / 2;
   const lineTop = cy - em(0.5);
@@ -412,7 +429,7 @@ export function SelectReplace({
 
   const lineStyle: React.CSSProperties = {
     position: "absolute",
-    left,
+    left: anchor,
     top: lineTop,
     fontFamily,
     fontWeight,
@@ -473,14 +490,16 @@ export function SelectReplace({
             position: "absolute",
             inset: 0,
             opacity: 0.15 + 0.85 * intro,
-            transform: `translateY(${em(0.12) * (1 - intro)}px)`,
+            transform: `${
+              Math.abs(shift) > 1e-3 ? `translateX(${shift}px) ` : ""
+            }translateY(${em(0.12) * (1 - intro)}px)${glide(midway(intro))}`,
           }}
         >
           {selection ? (
             <div
               style={{
                 position: "absolute",
-                left: left + em(selection.a),
+                left: anchor + em(selection.a),
                 top: barTop,
                 width: Math.max(0, em(selection.b - selection.a)),
                 height: barH,
@@ -504,13 +523,13 @@ export function SelectReplace({
           ) : null}
           {selection
             ? [
-                bar(left + em(selection.a), "a", "top"),
-                bar(left + em(selection.b), "b", "bottom"),
+                bar(anchor + em(selection.a), "a", "top"),
+                bar(anchor + em(selection.b), "b", "bottom"),
               ]
             : null}
           {caretOn && caretAt !== null
             ? bar(
-                left +
+                anchor +
                   em(measure(caretAt)) +
                   // Clear the italic overhang when the caret follows a typed word.
                   (caretAt[caretAt.length - 1]?.serif ? em(0.06) : 0),

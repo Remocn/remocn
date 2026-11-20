@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sora } = loadFont("normal", {
   weights: ["500"],
@@ -212,6 +213,7 @@ export function CounterReveal({
   theme = "dark",
   speed = 1,
 }: CounterRevealProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -233,14 +235,34 @@ export function CounterReveal({
   const lineLeft = W / 2 - (back.width * B) / 2;
   const lineBase = H / 2 + (CAP * B) / 2;
   const end = liftAt + EXIT_LEN;
-  const drift = EASE_IO(interpolate(t, [0, end], [0, 1], CLAMP));
-  const lineShift = (1 - drift) * W * 0.45;
-  const shrink = EASE_IO(interpolate(t, [liftAt - 6, end + 4], [0, 1], CLAMP));
-  const settle = interpolate(t, [end, end + 36], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const lineScale = (1.9 - 0.9 * shrink) * (1 + 0.03 * settle);
+  const lineAt = (f: number) => {
+    const drift = EASE_IO(interpolate(f, [0, end], [0, 1], CLAMP));
+    const shrink = EASE_IO(
+      interpolate(f, [liftAt - 6, end + 4], [0, 1], CLAMP),
+    );
+    const settle = interpolate(f, [end, end + 36], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+    return {
+      shift: (1 - drift) * W * 0.45,
+      scale: (1.9 - 0.9 * shrink) * (1 + 0.03 * settle),
+    };
+  };
+  const { shift: lineShift, scale: lineScale } = lineAt(t);
+  // The back line is SVG text placed by attributes, so its drawing carries
+  // the mark. It counts as moving while the line still moves a thousandth of
+  // a pixel, and also once it holds at 1.03: the lean only stays on a drawing
+  // that moves, and dropping it there would snap the resting line to the
+  // nearest pixel.
+  const lineStep = (f: number) => {
+    const a = lineAt(f);
+    return (
+      Math.abs(a.shift - lineShift) + Math.abs(a.scale - lineScale) * (W / 2)
+    );
+  };
+  const lineMoving =
+    lineStep(t + speed) > 1e-3 || lineStep(t - speed) > 1e-3 || lineScale !== 1;
   const tint = c.tint;
   // Blobs drift a few percent over the shot, deterministic in frame.
   const flow = interpolate(t, [0, counterRevealDuration], [0, 1], CLAMP);
@@ -297,7 +319,11 @@ export function CounterReveal({
           width={W}
           height={H}
           viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: glide(lineMoving),
+          }}
           aria-hidden
         >
           <defs>

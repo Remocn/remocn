@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -104,6 +105,9 @@ const PULL = [84, 128] as const;
 const HIT = 120;
 const DRAW_EASE = Easing.bezier(0.3, 0.05, 0.55, 1);
 
+/** Every camera move has landed by here. */
+const SETTLED = Math.max(DRAW[1], PULL[1], HIT + 22);
+
 const drawProgress = (t: number) =>
   interpolate(t, DRAW, [0, 1], { ...CLAMP, easing: DRAW_EASE });
 
@@ -184,6 +188,7 @@ export function GrowthLine({
   speed = 1,
   theme = "dark",
 }: GrowthLineProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const u = height / 720;
@@ -210,35 +215,57 @@ export function GrowthLine({
     lerp(B, T, f(x)),
   ];
 
-  // Tip progress
-  const prog = drawProgress(t);
-  const [tipWx, tipWy] = world(prog);
+  const camera = (tt: number) => {
+    // Tip progress
+    const prog = drawProgress(tt);
+    const [tipWx, tipWy] = world(prog);
 
-  // Camera: tracks the tip close-up, then pulls back to the whole curve.
-  const pull = interpolate(t, PULL, [0, 1], { ...CLAMP, easing: EASE_IO });
-  const zTrack = interpolate(t, [0, PULL[0]], [2.9, 2.2], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const kick =
-    1 +
-    0.014 *
-      interpolate(t, [HIT, HIT + 4, HIT + 22], [0, 1, 0], {
-        ...CLAMP,
-        easing: EASE_OUT,
-      });
-  const z = lerp(zTrack, 1, pull) * kick;
-  // the tip rides low-left of centre early on, drifting up as the curve steepens
-  const anchorX = width * lerp(0.56, 0.6, prog);
-  const anchorY = height * lerp(0.6, 0.66, prog);
-  const cx = lerp(tipWx, width / 2, pull);
-  const cy = lerp(tipWy, height / 2, pull);
-  const ax = lerp(anchorX, width / 2, pull);
-  const ay = lerp(anchorY, height / 2, pull);
-  const proj = (wx: number, wy: number): [number, number] => [
-    (wx - cx) * z + ax,
-    (wy - cy) * z + ay,
-  ];
+    // Camera: tracks the tip close-up, then pulls back to the whole curve.
+    const pull = interpolate(tt, PULL, [0, 1], { ...CLAMP, easing: EASE_IO });
+    const zTrack = interpolate(tt, [0, PULL[0]], [2.9, 2.2], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+    const kick =
+      1 +
+      0.014 *
+        interpolate(tt, [HIT, HIT + 4, HIT + 22], [0, 1, 0], {
+          ...CLAMP,
+          easing: EASE_OUT,
+        });
+    const z = lerp(zTrack, 1, pull) * kick;
+    // the tip rides low-left of centre early on, drifting up as the curve steepens
+    const anchorX = width * lerp(0.56, 0.6, prog);
+    const anchorY = height * lerp(0.6, 0.66, prog);
+    const cx = lerp(tipWx, width / 2, pull);
+    const cy = lerp(tipWy, height / 2, pull);
+    const ax = lerp(anchorX, width / 2, pull);
+    const ay = lerp(anchorY, height / 2, pull);
+    const proj = (wx: number, wy: number): [number, number] => [
+      (wx - cx) * z + ax,
+      (wy - cy) * z + ay,
+    ];
+    return { prog, tipWx, tipWy, z, cx, cy, ax, ay, proj };
+  };
+  const { prog, tipWx, tipWy, z, cx, cy, ax, ay, proj } = camera(t);
+  // Type that rides the camera is laid out where the camera comes to rest and
+  // carried to its live place by a transform: layout rounds a box and a
+  // baseline to whole pixels, so a label pinned by `left`/`top` to a moving
+  // point clicks along pixel by pixel.
+  const rest = camera(SETTLED);
+  const shift = (x: number, y: number) =>
+    Math.abs(x) < 1e-3 && Math.abs(y) < 1e-3
+      ? ""
+      : `translate(${x}px, ${y}px) `;
+  // A move counts while it changes against either neighbouring frame by more
+  // than a thousandth of a pixel.
+  const stirs = (at: (tt: number) => number) => {
+    const now = at(t);
+    return (
+      Math.abs(at(t + speed) - now) > 1e-3 ||
+      Math.abs(now - at(t - speed)) > 1e-3
+    );
+  };
 
   // Curve path, screen space
   const N = 220;
@@ -254,6 +281,11 @@ export function GrowthLine({
   const [sx0, sy0] = proj(L, B);
   const [sxr] = proj(Rr, B);
   const [tipX, tipY] = proj(tipWx, tipWy);
+  const tipOf = (tt: number) => {
+    const cam = camera(tt);
+    return cam.proj(cam.tipWx, cam.tipWy);
+  };
+  const [restTipX, restTipY] = rest.proj(rest.tipWx, rest.tipWy);
   const fillD = `${d} L${tipX.toFixed(2)} ${sy0.toFixed(2)} L${pts[0][0].toFixed(2)} ${sy0.toFixed(2)} Z`;
   const [, syTop] = proj(L, T);
 
@@ -281,20 +313,30 @@ export function GrowthLine({
     interpolate(t, [HIT - 4, HIT + 2], [1, 0], CLAMP);
 
   // Final hit
-  const hit = spring({
-    frame: t - HIT,
-    fps,
-    config: { damping: 15, stiffness: 170, mass: 0.7 },
-  });
+  const hitAt = (tt: number) =>
+    spring({
+      frame: tt - HIT,
+      fps,
+      config: { damping: 15, stiffness: 170, mass: 0.7 },
+    });
+  const hit = hitAt(t);
   const hitO = interpolate(t, [HIT, HIT + 6], [0, 1], CLAMP);
   const ring = interpolate(t, [HIT, HIT + 26], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const lab = interpolate(t, [HIT + 8, HIT + 28], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const labAt = (tt: number) =>
+    interpolate(tt, [HIT + 8, HIT + 28], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  const lab = labAt(t);
+  // The value block rides the tip, drops in on a spring and settles its
+  // scale; the spring overshoots, so its motion is judged frame to frame. The
+  // label's width is the reach of the scale about the block's right edge.
+  const valueMoving =
+    stirs((tt) => tipOf(tt)[1] + (1 - hitAt(tt)) * 26 * u) ||
+    stirs((tt) => hitAt(tt) * 0.06 * 340 * u);
   const valueSize = 128 * u;
 
   return (
@@ -456,11 +498,17 @@ export function GrowthLine({
         {/* milestone labels: screen-space type, upper-left of the dot */}
         {marks.map((m) => {
           const [mx, my] = proj(...world(m.at));
+          const [rx, ry] = rest.proj(...world(m.at));
           const reach = reachFrame(m.at);
-          const a = interpolate(t, [reach + 1, reach + 14], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
+          const aAt = (tt: number) =>
+            interpolate(tt, [reach + 1, reach + 14], [0, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            });
+          const a = aAt(t);
+          const moving = stirs(
+            (tt) => camera(tt).proj(...world(m.at))[1] + (1 - aAt(tt)) * 10 * u,
+          );
           // labels quiet down once the camera pulls back so the value owns the frame
           const quiet = interpolate(t, [HIT - 6, HIT + 14], [1, 0.55], CLAMP);
           return (
@@ -468,8 +516,8 @@ export function GrowthLine({
               key={m.label}
               style={{
                 position: "absolute",
-                left: mx - 200 * u,
-                top: my - 46 * u,
+                left: rx - 200 * u,
+                top: ry - 46 * u,
                 width: 200 * u + 6 * u,
                 textAlign: "right",
                 fontFamily,
@@ -478,7 +526,7 @@ export function GrowthLine({
                 letterSpacing: "-0.01em",
                 color: fg,
                 opacity: a * quiet,
-                transform: `translateY(${(1 - a) * 10 * u}px)`,
+                transform: `${shift(mx - rx, my - ry)}translateY(${(1 - a) * 10 * u}px)${glide(moving)}`,
                 fontVariantNumeric: "tabular-nums",
                 whiteSpace: "nowrap",
               }}
@@ -492,8 +540,11 @@ export function GrowthLine({
           <div
             style={{
               position: "absolute",
-              left: tipX + 14 * u,
-              top: tipY - 34 * u,
+              left: restTipX + 14 * u,
+              top: restTipY - 34 * u,
+              transform:
+                shift(tipX - restTipX, tipY - restTipY) +
+                  glide(stirs((tt) => tipOf(tt)[1])) || undefined,
               fontFamily,
               fontWeight: 400,
               fontSize: 16 * u,
@@ -512,11 +563,11 @@ export function GrowthLine({
         <div
           style={{
             position: "absolute",
-            right: width - tipX + 78 * u,
-            top: tipY - 16 * u,
+            right: width - restTipX + 78 * u,
+            top: restTipY - 16 * u,
             textAlign: "right",
             opacity: hitO,
-            transform: `translateY(${(1 - hit) * 26 * u}px) scale(${1.06 - 0.06 * hit})`,
+            transform: `${shift(tipX - restTipX, tipY - restTipY)}translateY(${(1 - hit) * 26 * u}px) scale(${1.06 - 0.06 * hit})${glide(valueMoving)}`,
             transformOrigin: "100% 0%",
           }}
         >
@@ -543,7 +594,9 @@ export function GrowthLine({
               letterSpacing: "-0.01em",
               color: p.muted,
               opacity: lab,
-              transform: `translateY(${(1 - lab) * 10 * u}px)`,
+              transform: `translateY(${(1 - lab) * 10 * u}px)${glide(
+                !valueMoving && stirs((tt) => labAt(tt) * 10 * u),
+              )}`,
               whiteSpace: "nowrap",
             }}
           >

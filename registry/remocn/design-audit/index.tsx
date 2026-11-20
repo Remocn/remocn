@@ -16,6 +16,7 @@ import {
   IssueMarks,
   type Measure,
   MeasureMarks,
+  midway,
   progress,
   type RadiusMark,
   type Rect,
@@ -27,6 +28,7 @@ import {
   useAuditFrame,
   VersionChip,
 } from "@/lib/remocn/audit-core";
+import { useGlide } from "@/lib/remocn/glide";
 
 export type DesignAuditMarks = {
   measures?: Measure[];
@@ -118,6 +120,7 @@ function Scene({
   scanColor = designAuditDefaults.scanColor,
   background = designAuditDefaults.background,
 }: DesignAuditProps) {
+  const glide = useGlide();
   const frame = useAuditFrame();
   const demo = !before && !after;
   const redBefore = beforeMarks ?? (demo ? DEMO.before : {});
@@ -143,7 +146,12 @@ function Scene({
     : 0;
   const card = zoomed?.rect ?? { x: 640, y: 360, w: 0, h: 0 };
   const center = { x: card.x + card.w / 2 + 40, y: card.y + card.h / 2 + 46 };
-  const camera = `translate(${(640 - center.x) * zoom}px, ${(360 - center.y) * zoom}px) scale(${1 + zoom * 1.35})`;
+  // The push eases in and out so gently that its first and last frames sit
+  // within a hair of rest, so "moving" is read off the clock, not off `zoom`.
+  const zooming =
+    zoomed !== null &&
+    (midway((frame - T.zoomIn) / 22) || midway((frame - T.zoomOut) / 22));
+  const camera = `translate(${(640 - center.x) * zoom}px, ${(360 - center.y) * zoom}px) scale(${1 + zoom * 1.35})${glide(zooming)}`;
   const fadeOut = (at: number) => easeInOut(frame, [at - 10, at], [1, 0]);
 
   const active =
@@ -160,7 +168,7 @@ function Scene({
         <AbsoluteFill
           style={{
             opacity: enter,
-            transform: `translateY(${(1 - enter) * 18}px) scale(${0.97 + 0.03 * enter})`,
+            transform: `translateY(${(1 - enter) * 18}px) scale(${0.97 + 0.03 * enter})${glide(midway(enter))}`,
           }}
         >
           <SplitAt

@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -620,6 +621,11 @@ function TypedLabel({
             display: "inline-block",
             width: size * 0.09,
             height: size * 1.05,
+            // The caret is taller than the line. Left to size the row, it
+            // lifts the label by a fraction of a pixel on every blink, and
+            // layout rounds that to a full pixel hop on some labels. It
+            // overhangs the line instead, so the text stays where it rests.
+            marginBlock: -size * 0.025,
             marginLeft: size * 0.06,
             background: color,
           }}
@@ -666,6 +672,7 @@ export function NodeTrail({
   ground,
   groundParams,
 }: NodeTrailProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const uid = useId().replace(/:/g, "");
@@ -756,6 +763,18 @@ export function NodeTrail({
 
   const cNow = cam(frame);
   const cPrev = cam(Math.max(0, frame - 1));
+  // Text under a slow camera leans while it moves (see `useGlide`). The camera
+  // chains several moves, so it is tested on its neighbouring frames, in
+  // screen pixels.
+  const camStep = (a: typeof cNow, b: typeof cNow) =>
+    Math.max(
+      Math.abs(a.x - b.x) * a.z,
+      Math.abs(a.y - b.y) * a.z,
+      Math.abs(a.z - b.z) * W,
+    );
+  const camMoving =
+    camStep(cam(frame + 1), cNow) > 1e-3 ||
+    camStep(cNow, cam(frame - 1)) > 1e-3;
   const vx = (cNow.x - cPrev.x) * cNow.z;
   const vy = (cNow.y - cPrev.y) * cNow.z;
   const bx = Math.min(10, Math.abs(vx) * 0.07);
@@ -827,7 +846,7 @@ export function NodeTrail({
             width: W,
             height: H,
             transformOrigin: "0 0",
-            transform: `translate(${W / 2}px, ${H / 2}px) scale(${cNow.z}) translate(${-cNow.x}px, ${-cNow.y}px)`,
+            transform: `translate(${W / 2}px, ${H / 2}px) scale(${cNow.z}) translate(${-cNow.x}px, ${-cNow.y}px)${glide(camMoving)}`,
             filter: blurOn ? `url(#${uid}-mb)` : undefined,
           }}
         >

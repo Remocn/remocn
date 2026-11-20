@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const sora = loadSora("normal", {
   weights: ["400", "500"],
@@ -83,6 +84,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const SORA_500 = [
   222, 303, 452, 702, 652, 864, 702, 264, 382, 382, 568, 592, 266, 506, 266,
@@ -265,6 +268,7 @@ export function CometHeadline({
   speed = 1,
   theme = "dark",
 }: CometHeadlineProps) {
+  const glide = useGlide();
   const raw = Math.max(0, useCurrentFrame() - delay);
   const frame = raw * speed;
   const { width, height, durationInFrames } = useVideoConfig();
@@ -558,7 +562,7 @@ export function CometHeadline({
               color: p.muted,
               textWrap: "balance",
               opacity: subT,
-              transform: `translateY(${(1 - subT) * 14 * s}px)`,
+              transform: `translateY(${(1 - subT) * 14 * s}px)${glide(midway(subT))}`,
               filter: `blur(${(1 - subT) * 6 * s}px)`,
             }}
           >

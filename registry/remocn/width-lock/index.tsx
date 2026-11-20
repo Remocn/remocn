@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const flex = loadVariableFont("oblique 0deg 10deg", { subsets: ["latin"] });
 
@@ -205,6 +206,8 @@ interface Fit {
 
 const NATURAL: Fit = { wdth: 100, extra: 0 };
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -237,6 +240,7 @@ export function WidthLock({
   speed = 1,
   theme = "dark",
 }: WidthLockProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -357,7 +361,12 @@ export function WidthLock({
       ...CLAMP,
       easing: EASE_OUT,
     });
-    return { y: (1 - p) * lineH * 0.34, o: p, blur: (1 - p) * F * 0.05 };
+    return {
+      y: (1 - p) * lineH * 0.34,
+      o: p,
+      blur: (1 - p) * F * 0.05,
+      tilt: glide(midway(p)),
+    };
   };
 
   const band = (row: number, children: React.ReactNode, key: string) => (
@@ -389,7 +398,7 @@ export function WidthLock({
           state,
           `f${idx}`,
           {
-            transform: `translateY(${r.y.toFixed(2)}px)`,
+            transform: `translateY(${r.y.toFixed(2)}px)${r.tilt}`,
             opacity: r.o,
             filter: r.blur > 0.05 ? `blur(${r.blur.toFixed(2)}px)` : undefined,
           },
@@ -432,7 +441,7 @@ export function WidthLock({
           state,
           `w${k}`,
           {
-            transform: `translateY(${r.y.toFixed(2)}px) scaleX(${sx.toFixed(4)})`,
+            transform: `translateY(${r.y.toFixed(2)}px) scaleX(${sx.toFixed(4)})${r.tilt}`,
             opacity: o,
             filter: blur > 0.05 ? `blur(${blur.toFixed(2)}px)` : undefined,
           },

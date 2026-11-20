@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400"],
@@ -258,6 +259,8 @@ function Graticule({
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -290,6 +293,7 @@ export function SignalResolve({
   speed = 1,
   theme = "dark",
 }: SignalResolveProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = height / 720;
@@ -400,15 +404,39 @@ export function SignalResolve({
   const paintX = resolved ? width : Math.max(0, sweepX - band * 0.55);
 
   // ── lockup ────────────────────────────────────────────────────────────
-  const lock = interpolate(t, [160, 188], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const lockAt = (f: number) =>
+    interpolate(f, [160, 188], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const lock = lockAt(t);
   const k = kTrace + (kLock - kTrace) * lock;
   const markW = VB.w * k;
   const markH = VB.h * k;
-  const centerY = interpolate(lock, [0, 1], [traceCenter, height * 0.43]);
-  const baselineY = centerY + markH / 2;
+  // Where the lockup row sits for a given `lock`. The row is laid out where
+  // it lands and rides there by transform all its life: moved by `top`,
+  // layout rounds the word's baseline to whole pixels, and handing it back to
+  // layout when it lands would jump by that rounding.
+  const rowTopAt = (l: number) => {
+    const kl = kTrace + (kLock - kTrace) * l;
+    const cY = interpolate(l, [0, 1], [traceCenter, height * 0.43]);
+    return cY + (VB.h * kl) / 2 - Math.max(VB.h * kl, MANROPE_ASC * fontSize);
+  };
+  const rowTop = rowTopAt(1);
+  // Before the lock the R rests where layout used to round it, on a whole
+  // pixel: its top stroke continues the lead line and stays one crisp pixel.
+  // The fraction that rounding took is handed back over the move.
+  const startDy = Math.round(rowTopAt(0)) - Math.round(rowTop);
+  const settle = startDy - (rowTopAt(0) - rowTop);
+  const rowDyAt = (f: number) => {
+    const l = lockAt(f);
+    return rowTopAt(l) - rowTop + (1 - l) * settle;
+  };
+  const rowDy = rowDyAt(t);
+  // The word beside the R also reflows as the R shrinks, so the lean comes a
+  // frame before the move and goes a frame after it: never on a frame where
+  // layout moves the word too.
+  const locking = rowDyAt(t + speed) !== rowDy || rowDyAt(t - speed) !== rowDy;
   const slide = interpolate(t, [176, 204], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
@@ -612,9 +640,10 @@ export function SignalResolve({
               position: "absolute",
               left: 0,
               right: 0,
-              top: baselineY - Math.max(markH, MANROPE_ASC * fontSize),
+              top: rowTop,
               display: "flex",
               justifyContent: "center",
+              transform: `translateY(${rowDy}px)${glide(locking)}`,
             }}
           >
             <div
@@ -712,7 +741,7 @@ export function SignalResolve({
                 letterSpacing: isSerif ? "-0.005em" : undefined,
                 color: isSerif ? fg : undefined,
                 opacity: word(i),
-                transform: `translateY(${(1 - word(i)) * 10 * u}px)`,
+                transform: `translateY(${(1 - word(i)) * 10 * u}px)${glide(midway(word(i)))}`,
                 filter: `blur(${(1 - word(i)) * 4 * u}px)`,
               }}
             >

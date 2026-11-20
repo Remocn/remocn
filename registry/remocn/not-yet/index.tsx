@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const golos = loadFont("normal", {
   weights: ["400", "500"],
@@ -117,6 +118,7 @@ export function NotYet({
   speed = 1,
   theme = "dark",
 }: NotYetProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -175,20 +177,52 @@ export function NotYet({
     }
   }, [heights, handle]);
 
-  const stepIn = wordLines.map((_, i) =>
-    i === 0
-      ? 1
-      : interpolate(t, [plan.starts[i], plan.starts[i] + STEP_DUR], [0, 1], {
-          ...CLAMP,
-          easing: EASE_STEP,
-        }),
-  );
-  const ages = wordLines.map((_, i) => {
-    let a = 0;
-    for (let j = i + 1; j < wordLines.length; j++) a += stepIn[j];
-    return a;
-  });
+  const stepsAt = (tt: number) =>
+    wordLines.map((_, i) =>
+      i === 0
+        ? 1
+        : interpolate(tt, [plan.starts[i], plan.starts[i] + STEP_DUR], [0, 1], {
+            ...CLAMP,
+            easing: EASE_STEP,
+          }),
+    );
+  const agesOf = (steps: number[]) =>
+    wordLines.map((_, i) => {
+      let a = 0;
+      for (let j = i + 1; j < wordLines.length; j++) a += steps[j];
+      return a;
+    });
+  const stepIn = stepsAt(t);
+  const ages = agesOf(stepIn);
   const scaleOf = (a: number) => interpolate(a, [0, 1], [1, OLD_SCALE], CLAMP);
+  const liftOf = (i: number, steps: number[]) => {
+    if (!heights) return 0;
+    const ag = agesOf(steps);
+    let lift = 0;
+    for (let j = i + 1; j < wordLines.length; j++) {
+      lift += (heights[j] * scaleOf(ag[j]) + gap) * steps[j];
+    }
+    return lift;
+  };
+  // Where a line is headed: every step under way counted as done. At rest it
+  // is the live lift exactly.
+  const landing = stepIn.map((v) => (v > 0 ? 1 : 0));
+  // A line moves while its lift or its scale changes against either
+  // neighbouring frame by more than a thousandth of a pixel.
+  const lineMoving = (i: number) => {
+    const at = (tt: number) => {
+      const steps = stepsAt(tt);
+      return [liftOf(i, steps), scaleOf(agesOf(steps)[i]) * blockW];
+    };
+    const [now, prev, next] = [
+      at(t),
+      at(t - speed * pace),
+      at(t + speed * pace),
+    ];
+    return now.some(
+      (v, k) => Math.abs(next[k] - v) > 1e-3 || Math.abs(v - prev[k]) > 1e-3,
+    );
+  };
 
   const ruleIn = interpolate(t, [0, 22], [0, 1], {
     ...CLAMP,
@@ -228,12 +262,13 @@ export function NotYet({
         {wordLines.map((words, i) => {
           const a = ages[i];
           const sc = scaleOf(a);
-          let lift = 0;
-          if (heights) {
-            for (let j = i + 1; j < wordLines.length; j++) {
-              lift += (heights[j] * scaleOf(ages[j]) + gap) * stepIn[j];
-            }
-          }
+          const lift = liftOf(i, stepIn);
+          // Laid out where the line lands; the climb there is a transform,
+          // since layout rounds a baseline to whole pixels and a line eased by
+          // `bottom` clicks up pixel by pixel.
+          const liftRest = liftOf(i, landing);
+          const climb = liftRest - lift;
+          const moving = lineMoving(i);
           const inkAlpha = interpolate(a, [0, 1], [1, OLD_INK], CLAMP);
           const gone = interpolate(a, [2.2, 3], [1, 0], CLAMP);
           const s0 = plan.starts[i] + (i === 0 ? 0 : STEP_DUR - 6);
@@ -256,16 +291,27 @@ export function NotYet({
                 ...text,
                 position: "absolute",
                 left: margin,
-                bottom: H - baseline + lift,
+                bottom: H - baseline + liftRest,
                 width: blockW,
                 transformOrigin: "0 100%",
-                transform: `scale(${sc.toFixed(4)})`,
+                transform: `${Math.abs(climb) < 1e-3 ? "" : `translateY(${climb}px) `}scale(${sc.toFixed(4)})${glide(moving)}`,
                 opacity: heights ? gone : 0,
                 textWrap: "balance",
               }}
             >
               {words.map((w, wi) => {
                 const p = rise(s0 + 2 + wi * stagger);
+                const riseAt = (tt: number) =>
+                  interpolate(
+                    tt,
+                    [s0 + 2 + wi * stagger, s0 + 2 + wi * stagger + WORD_RISE],
+                    [0, 1],
+                    { ...CLAMP, easing: EASE_OUT },
+                  );
+                const rising =
+                  !moving &&
+                  (Math.abs(riseAt(t + speed * pace) - p) * 0.3 * size > 1e-3 ||
+                    Math.abs(p - riseAt(t - speed * pace)) * 0.3 * size > 1e-3);
                 return (
                   <span
                     key={`${wi}-${w}`}
@@ -274,7 +320,7 @@ export function NotYet({
                       marginRight: "0.24em",
                       color: fg,
                       opacity: p * inkAlpha,
-                      transform: `translateY(${((1 - p) * 0.3).toFixed(3)}em)`,
+                      transform: `translateY(${((1 - p) * 0.3).toFixed(3)}em)${glide(rising)}`,
                     }}
                   >
                     {w}

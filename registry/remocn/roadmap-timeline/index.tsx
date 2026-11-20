@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -201,6 +202,11 @@ const tween = (f: number, a: number, b: number, easing = easeOut) =>
 const clamp = (v: number, lo: number, hi: number) =>
   Math.min(hi, Math.max(lo, v));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+/** Whether a value of the frame moves into or out of `f`. */
+const stirs = (at: (f: number) => number, f: number, eps = 1e-3) =>
+  Math.abs(at(f + 1) - at(f)) > eps || Math.abs(at(f) - at(f - 1)) > eps;
 
 function withAlpha(color: string, alpha: number) {
   const hex = color.replace("#", "");
@@ -423,7 +429,22 @@ function pathAt(keys: Key[], f: number): Pt {
   return keys[keys.length - 1];
 }
 
-function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
+/**
+ * Laid out where the cursor comes to rest (`rest`); the travel to it is a
+ * transform, since layout rounds the box to whole pixels and a slow glide by
+ * `left`/`top` would click along.
+ */
+function Cursor({
+  x,
+  y,
+  rest,
+  press,
+}: {
+  x: number;
+  y: number;
+  rest: Pt;
+  press: number;
+}) {
   return (
     <svg
       width={22}
@@ -431,10 +452,10 @@ function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
       viewBox="0 0 20 24"
       style={{
         position: "absolute",
-        left: x - 2,
-        top: y - 2,
+        left: rest.x - 2,
+        top: rest.y - 2,
         transformOrigin: "2px 2px",
-        transform: `scale(${1 - 0.1 * press})`,
+        transform: `translate(${x - rest.x}px, ${y - rest.y}px) scale(${1 - 0.1 * press})`,
         filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.28))",
         overflow: "visible",
       }}
@@ -495,6 +516,7 @@ export function RoadmapTimeline({
   ground,
   groundParams,
 }: RoadmapTimelineProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const tall = H > W;
@@ -597,23 +619,27 @@ export function RoadmapTimeline({
     x: gx(LIST_W + parsed[dragIdx].s * DAY + grabOffset),
     y: gy(barMidY(dragIdx) + 4),
   };
-  const dragPx = dragAt(frame) * DAY;
   const keys: Key[] = [
     { t: T.cursorIn, x: DW - 90, y: DH - 50 },
     { t: T.grab - 4, ...grab0 },
   ];
-  let cur = pathAt(keys, frame);
-  if (frame > T.grab - 4) cur = { x: grab0.x + dragPx, y: grab0.y };
-  if (frame > T.dragEnd + 4) {
-    const away = tween(frame, T.dragEnd + 6, T.dragEnd + 26, moveEase);
-    cur = {
-      x: grab0.x + dragDays * DAY + 46 * away,
-      y: grab0.y + 64 * away + Math.sin(away * Math.PI) * 6,
-    };
-  }
-  const pressDown = spring({ frame: frame - T.grab, fps, config: CHIP });
-  const pressUp = tween(frame, T.dragEnd + 1, T.dragEnd + 5, exitEase);
-  const press = clamp(pressDown, 0, 1.2) * (1 - pressUp);
+  const cursorAt = (f: number) => {
+    if (f > T.dragEnd + 4) {
+      const away = tween(f, T.dragEnd + 6, T.dragEnd + 26, moveEase);
+      return {
+        x: grab0.x + dragDays * DAY + 46 * away,
+        y: grab0.y + 64 * away + Math.sin(away * Math.PI) * 6,
+      };
+    }
+    if (f > T.grab - 4) return { x: grab0.x + dragAt(f) * DAY, y: grab0.y };
+    return pathAt(keys, f);
+  };
+  const cur = cursorAt(frame);
+  const curRest = cursorAt(1e9);
+  const pressAt = (f: number) =>
+    clamp(spring({ frame: f - T.grab, fps, config: CHIP }), 0, 1.2) *
+    (1 - tween(f, T.dragEnd + 1, T.dragEnd + 5, exitEase));
+  const press = pressAt(frame);
   const cursorIn = tween(frame, T.cursorIn, T.cursorIn + 6);
   const hover = tween(frame, T.grab - 6, T.grab - 1);
   const lifted = press;
@@ -625,11 +651,33 @@ export function RoadmapTimeline({
 
   const enter = spring({ frame, fps, config: HEAVY });
   const camT = tween(frame, 66, 98, inOut);
+  // The rise never quite lands, so ask the px themselves whether they move;
+  // the zoom is measured at the panel's far edge.
+  const camMoving =
+    stirs((f) => (1 - spring({ frame: f, fps, config: HEAVY })) * 48, frame) ||
+    stirs((f) => tween(f, 66, 98, inOut) * 0.05 * (DW / 2), frame);
+  const tipMoving =
+    stirs(
+      (f) => 4 * spring({ frame: f - T.dragStart, fps, config: CHIP }),
+      frame,
+    ) && !camMoving;
+  const tipSlide =
+    shifts[dragIdx] === finalShifts[dragIdx] ? 0 : shifts[dragIdx] * DAY;
+  const msMoving =
+    stirs(
+      (f) => 12 * spring({ frame: f - T.milestone, fps, config: CHIP }),
+      frame,
+    ) && !camMoving;
   const sweep = tween(frame, T.sweep, T.sweep + 20, inOut);
   const todayIdx = di(today);
   const todayDay = sweep * todayIdx;
-  const todayX = LIST_W + (todayDay + 0.5) * DAY;
+  const todayRestX = LIST_W + (todayIdx + 0.5) * DAY;
   const toast = spring({ frame: frame - T.toast, fps, config: CARD });
+  const toastMoving =
+    stirs(
+      (f) => 14 * spring({ frame: f - T.toast, fps, config: CARD }),
+      frame,
+    ) && !camMoving;
   const ms = spring({ frame: frame - T.milestone, fps, config: CHIP });
   const msIdx = di(milestone.date);
   const msRow = parsed.length;
@@ -709,7 +757,7 @@ export function RoadmapTimeline({
               position: "absolute",
               inset: 0,
               transformOrigin: `${DW / 2}px ${DH / 2}px`,
-              transform: `scale(${0.95 + 0.05 * camT}) translateY(${(1 - enter) * 48}px)`,
+              transform: `scale(${0.95 + 0.05 * camT}) translateY(${(1 - enter) * 48}px)${glide(camMoving)}`,
               opacity: clamp(enter * 1.6, 0, 1),
             }}
           >
@@ -939,7 +987,7 @@ export function RoadmapTimeline({
                         gap: 10,
                         padding: "0 14px 0 16px",
                         boxSizing: "border-box",
-                        transform: `translateY(${(1 - a) * 6}px)`,
+                        transform: `translateY(${(1 - a) * 6}px)${glide(midway(a) && !camMoving)}`,
                       }}
                     >
                       <StatusIcon
@@ -977,7 +1025,7 @@ export function RoadmapTimeline({
                             position: "absolute",
                             right: 0,
                             opacity: 1 - swap,
-                            transform: `translateY(${-5 * swap}px)`,
+                            transform: `translateY(${-5 * swap}px)${glide(midway(swap) && !camMoving)}`,
                           }}
                         >
                           {oldEnd}
@@ -988,7 +1036,7 @@ export function RoadmapTimeline({
                               position: "absolute",
                               right: 0,
                               opacity: swap,
-                              transform: `translateY(${5 * (1 - swap)}px)`,
+                              transform: `translateY(${5 * (1 - swap)}px)${glide(midway(swap) && !camMoving)}`,
                             }}
                           >
                             {newEnd}
@@ -1054,7 +1102,14 @@ export function RoadmapTimeline({
               <div
                 style={{
                   position: "absolute",
-                  left: todayX,
+                  // Layout rounds the line to whole pixels, so a sweep by
+                  // `left` steps unevenly; layout holds it on today and the
+                  // sweep is a translate that ends at exactly 0.
+                  left: todayRestX,
+                  transform:
+                    sweep < 1
+                      ? `translateX(${(sweep - 1) * todayIdx * DAY}px)`
+                      : undefined,
                   top: HEAD_H + TOOL_H + 28,
                   bottom: 0,
                   width: 1,
@@ -1164,19 +1219,27 @@ export function RoadmapTimeline({
                 const x = barX(i);
                 const w = barW(i);
                 const prog = clamp(p.progress ?? 0, 0, 1);
+                // Laid out on whichever date it rests on; the slide between
+                // them is a transform, because layout rounds the bar's edges
+                // and baseline to whole pixels.
+                const anchor =
+                  shifts[i] === finalShifts[i] ? finalShifts[i] : 0;
+                const slide = (shifts[i] - anchor) * DAY;
+                const rising =
+                  isDrag && stirs((f) => 1.5 * pressAt(f), frame) && !camMoving;
                 return (
                   <div
                     key={p.name}
                     style={{
                       position: "absolute",
-                      left: x,
+                      left: x - slide,
                       top: barMidY(i) - BAR_H / 2,
                       width: Math.max(12, w * grow),
                       height: BAR_H,
                       borderRadius: 8,
                       overflow: "hidden",
                       opacity: clamp(grow * 4, 0, 1),
-                      transform: `translateY(${-1.5 * lift}px)`,
+                      transform: `translateX(${slide}px) translateY(${-1.5 * lift}px)${glide(rising)}`,
                       zIndex: isDrag ? 3 : 2,
                     }}
                   >
@@ -1274,7 +1337,7 @@ export function RoadmapTimeline({
                   width: 16,
                   height: 16,
                   opacity: clamp(ms * 3, 0, 1),
-                  transform: `translateY(${(1 - Math.min(ms, 1)) * -12}px) scale(${0.7 + 0.3 * ms})`,
+                  transform: `translateY(${(1 - Math.min(ms, 1)) * -12}px) scale(${0.7 + 0.3 * ms})${glide(msMoving)}`,
                 }}
               >
                 <svg width={16} height={16} viewBox="0 0 16 16">
@@ -1307,9 +1370,11 @@ export function RoadmapTimeline({
               <div
                 style={{
                   position: "absolute",
-                  left: barX(dragIdx) + barW(dragIdx) / 2,
+                  // It rides the dragged bar: laid out where the bar is
+                  // laid out, carried by the same slide.
+                  left: barX(dragIdx) - tipSlide + barW(dragIdx) / 2,
                   top: barMidY(dragIdx) - BAR_H / 2 - 34,
-                  transform: `translateX(-50%) translateY(${(1 - tipIn) * 4}px) scale(${0.96 + 0.04 * tipIn})`,
+                  transform: `translateX(${tipSlide}px) translateX(-50%) translateY(${(1 - tipIn) * 4}px) scale(${0.96 + 0.04 * tipIn})${glide(tipMoving)}`,
                   transformOrigin: "50% 100%",
                   opacity: tip,
                   background: pal.dark ? "#2A2B2F" : "#1C1D21",
@@ -1337,7 +1402,7 @@ export function RoadmapTimeline({
                   position: "absolute",
                   left: PANEL.w / 2,
                   bottom: 22,
-                  transform: `translateX(-50%) translateY(${(1 - toast) * 14}px)`,
+                  transform: `translateX(-50%) translateY(${(1 - toast) * 14}px)${glide(toastMoving)}`,
                   opacity: clamp(toast * 1.5, 0, 1),
                   display: "flex",
                   alignItems: "center",
@@ -1402,7 +1467,7 @@ export function RoadmapTimeline({
               </div>
             </div>
             <div style={{ opacity: cursorIn }}>
-              <Cursor x={cur.x} y={cur.y} press={press} />
+              <Cursor x={cur.x} y={cur.y} rest={curRest} press={press} />
             </div>
           </div>
         </div>

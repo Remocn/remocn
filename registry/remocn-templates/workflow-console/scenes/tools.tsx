@@ -1,9 +1,10 @@
 import { Interactive } from "remotion";
 import type { SceneProps } from "../content";
-import { move, toolRunExit, typed } from "../motion";
+import { midway, move, toolRunExit, typed, useGlide } from "../motion";
 import { mono } from "../ui";
 
 export function ToolRun({ scene, t }: SceneProps) {
+  const glide = useGlide();
   const local = t - 16.8;
   const exit = toolRunExit(t);
   return (
@@ -24,7 +25,7 @@ export function ToolRun({ scene, t }: SceneProps) {
         lineHeight: "16px",
         opacity: move(local, 0, 0.22) * (1 - exit),
         clipPath: `inset(${exit * 100}% 0 0 0)`,
-        scale: move(local, 0, 2.5, 0.93, 1.02),
+        transform: `scale(${move(local, 0, 2.5, 0.93, 1.02)})${glide(midway(move(local, 0, 2.5)))}`,
       }}
     >
       {scene.tools.map((text, i) => (

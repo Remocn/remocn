@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const outfit = loadFont("normal", {
   weights: ["400", "500"],
@@ -56,6 +57,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const IN_LEN = 14;
 const IN_STAGGER = 4;
@@ -297,6 +300,7 @@ export function OutOfContext({
   speed = 1,
   theme = "dark",
 }: OutOfContextProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -332,19 +336,37 @@ export function OutOfContext({
   const f0 = visual(layout.claimLines, layout.claimW);
   const f1 = visual(layout.lineCount, layout.blockW);
 
-  const p = interpolate(t, [PULL_AT, PULL_AT + pullLen], [0, 1], {
-    ...CLAMP,
-    easing: EASE_CAM,
-  });
-  const creep = interpolate(t, [IN_LEN, PULL_AT], [0, 0.018], CLAMP);
-  const s = Math.exp(Math.log(sEnd) * p) * (1 + creep * (1 - p));
-  const fx = f0.x + (f1.x - f0.x) * p;
-  const fy = f0.y + (f1.y - f0.y) * p;
-  const camera = `translate(${(W / 2).toFixed(2)}px, ${(H / 2).toFixed(2)}px) scale(${s.toFixed(5)}) translate(${(-fx).toFixed(2)}px, ${(-fy).toFixed(2)}px)`;
+  const cameraAt = (tt: number) => {
+    const p = interpolate(tt, [PULL_AT, PULL_AT + pullLen], [0, 1], {
+      ...CLAMP,
+      easing: EASE_CAM,
+    });
+    const creep = interpolate(tt, [IN_LEN, PULL_AT], [0, 0.018], CLAMP);
+    return {
+      s: Math.exp(Math.log(sEnd) * p) * (1 + creep * (1 - p)),
+      fx: f0.x + (f1.x - f0.x) * p,
+      fy: f0.y + (f1.y - f0.y) * p,
+    };
+  };
+  const { s, fx, fy } = cameraAt(t);
+  // A step of the camera, weighed by the ~1000px from the frame's centre to
+  // the furthest text.
+  const dt = speed / k;
+  const step = (a: { s: number; fx: number; fy: number }) =>
+    Math.abs(a.s - s) * 1000 + Math.abs(a.fx - fx) + Math.abs(a.fy - fy);
+  const cameraMoving =
+    step(cameraAt(t + dt)) > 1e-3 || step(cameraAt(t - dt)) > 1e-3;
+  // The tilt pivots on the frame's centre: the camera's origin sits far off
+  // screen under the zoom.
+  const camera = `translate(${(W / 2).toFixed(2)}px, ${(H / 2).toFixed(2)}px)${glide(cameraMoving)} scale(${s.toFixed(5)}) translate(${(-fx).toFixed(2)}px, ${(-fy).toFixed(2)}px)`;
 
   const clipTop = (baseline - 1.0) * R;
   const clipH = 1.3 * R;
   const travel = 1.15 * R;
+  // The rise is hundreds of pixels long, so its ease-out tail still moves a
+  // word by a fraction of a pixel after the progress counts as done; it is
+  // weighed in px.
+  const rising = (r: number) => r > 0 && (1 - r) * travel > 1e-3;
 
   const lineIn = (li: number) =>
     interpolate(t, [li * IN_STAGGER, li * IN_STAGGER + IN_LEN], [0, 1], {
@@ -417,7 +439,7 @@ export function OutOfContext({
                           left: (w.x + 0.2) * R,
                           top: -clipTop,
                           color: w.rest ? hi : fg,
-                          transform: `translateY(${((1 - r) * travel).toFixed(2)}px)`,
+                          transform: `translateY(${((1 - r) * travel).toFixed(2)}px)${glide(rising(r) && !cameraMoving)}`,
                         }}
                       >
                         {w.text}
@@ -432,7 +454,7 @@ export function OutOfContext({
                       top: -clipTop,
                       color: fg,
                       opacity: 1 - drop,
-                      transform: `translateY(${((1 - q) * travel + drop * 0.5 * R).toFixed(2)}px)`,
+                      transform: `translateY(${((1 - q) * travel + drop * 0.5 * R).toFixed(2)}px)${glide((rising(q) || midway(drop)) && !cameraMoving)}`,
                     }}
                   >
                     .

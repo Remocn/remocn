@@ -21,6 +21,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -250,6 +251,7 @@ export function CardPushLine({
   delay = 0,
   speed = 1,
 }: CardPushLineProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -540,6 +542,11 @@ export function CardPushLine({
     const labelF = 15 * u;
     const push = interpolate(f, [0, durationInFrames], [1, 1.03], CLAMP);
     const tiltY = -9 * (1 - Math.min(1, cardSp(f)));
+    // Layout rounds a box to whole pixels, so a card eased in by `left` steps
+    // pixel by pixel; layout holds its resting place and the slide in is a
+    // transform, dropped once the spring's leftover is under 0.001px.
+    const cardDx = cardLeft(f) - restLeft;
+    const cardSlide = Math.abs(cardDx) > 1e-3 ? `translateX(${cardDx}px) ` : "";
 
     const card = (
       <div
@@ -555,14 +562,14 @@ export function CardPushLine({
         <div
           style={{
             position: "absolute",
-            left: cardLeft(f),
+            left: restLeft,
             top: H / 2 - CH / 2,
             width: CW,
             height: CH,
             borderRadius: 24 * u,
             background: c.card,
             boxShadow: `inset 0 0 0 1px ${c.border}, inset ${(1.5 * u).toFixed(2)}px 0 0 rgba(${c.rim},${(0.9 * rim).toFixed(3)}), ${c.shadow}`,
-            transform: `perspective(${(W * 1.6).toFixed(0)}px) rotateY(${tiltY.toFixed(3)}deg)`,
+            transform: `${cardSlide}perspective(${(W * 1.6).toFixed(0)}px) rotateY(${tiltY.toFixed(3)}deg)`,
             transformOrigin: "0% 50%",
           }}
         >
@@ -760,7 +767,13 @@ export function CardPushLine({
             <feGaussianBlur stdDeviation={`${cardBlur.toFixed(2)} 0`} />
           </filter>
         </svg>
-        <AbsoluteFill style={{ transform: `scale(${push.toFixed(5)})` }}>
+        {/* The push never rests, and Chrome parks a glyph raster on a whole
+            pixel for as long as the matrix is axis-aligned, so text under it
+            would click along pixel by pixel; the glide mark leans it off
+            that grid. */}
+        <AbsoluteFill
+          style={{ transform: `scale(${push.toFixed(5)})${glide(true)}` }}
+        >
           {sentence}
           {card}
         </AbsoluteFill>

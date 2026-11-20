@@ -15,6 +15,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const geist = loadGeist("normal", {
   weights: ["300", "400", "500"],
@@ -91,6 +92,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 interface Token {
   text: string;
@@ -293,6 +296,7 @@ export function PromptRestyle({
   speed = 1,
   theme = "dark",
 }: PromptRestyleProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -344,15 +348,28 @@ export function PromptRestyle({
     lead: lerp(S0.lead, S2.lead, k2),
   };
   const F = layout.F;
-  const size = st.size * F;
+  // Layout would round every baseline of the growing headline to whole pixels
+  // and the lines would click apart, and a block handed back to layout between
+  // steps would jump by the rounding. So the block is laid out once, at the
+  // style the last step lands on, and reaches the live size by `scale`; each
+  // line takes the leading change as a translate. Both come to exactly nothing
+  // once the last step has landed.
+  const restyling = (k: number) => k > 0 && k < 1;
+  const refSize = lerp(lerp(S0.size, S1.size, 1), S2.size, 1);
+  const refLead = lerp(S0.lead, S2.lead, 1);
+  const restyled = restyling(k1) || restyling(k2);
+  const fit = st.size / refSize;
+  const size = refSize * F;
   const ink = interpolateColors(k1, [0, 1], [c.draft, inkProp ?? c.ink]);
   const enterIn = interpolate(t, [0, 12], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
 
-  const lineH = size * st.lead;
+  const lineH = size * refLead;
   const blockH = lineH * layout.lines.length;
+  const lineShift = (li: number) =>
+    size * (st.lead - refLead) * (li + 0.5 - layout.lines.length / 2);
   const centerY = H * 0.46;
 
   const sansStyle: React.CSSProperties = {
@@ -397,7 +414,7 @@ export function PromptRestyle({
             lineHeight: `${lineH}px`,
             whiteSpace: "pre",
             opacity: 1 - k3,
-            transform: `translateY(${(-k3 * roll).toFixed(2)}px)`,
+            transform: `translateY(${(-k3 * roll).toFixed(2)}px)${glide(midway(k3) && !restyled)}`,
           }}
         >
           {text}
@@ -421,7 +438,7 @@ export function PromptRestyle({
             WebkitBackgroundClip: "text",
             backgroundClip: "text",
             color: "transparent",
-            transform: `translateY(${((1 - k3) * roll).toFixed(2)}px)`,
+            transform: `translateY(${((1 - k3) * roll).toFixed(2)}px)${glide(midway(k3) && !restyled)}`,
           }}
         >
           {text}
@@ -468,7 +485,7 @@ export function PromptRestyle({
           color: c.muted,
           whiteSpace: "pre",
           opacity: show * (1 - gone),
-          transform: `translateY(${(-gone * monoSize * 1.2).toFixed(2)}px)`,
+          transform: `translateY(${(-gone * monoSize * 1.2).toFixed(2)}px)${glide(midway(gone))}`,
         }}
       >
         <span style={{ color: accent }}>›</span>
@@ -503,7 +520,7 @@ export function PromptRestyle({
             width: W,
             top: centerY - blockH / 2,
             opacity: enterIn,
-            transform: `translateY(${((1 - enterIn) * F * 0.15).toFixed(2)}px)`,
+            transform: `translateY(${((1 - enterIn) * F * 0.15).toFixed(2)}px) scale(${fit})${glide(restyled || (enterIn > 0 && enterIn < 1))}`,
             fontSize: size,
             lineHeight: `${lineH}px`,
           }}
@@ -516,6 +533,10 @@ export function PromptRestyle({
                 justifyContent: "center",
                 height: lineH,
                 whiteSpace: "pre",
+                transform:
+                  lineShift(li) !== 0
+                    ? `translateY(${lineShift(li)}px)`
+                    : undefined,
               }}
             >
               {line.map((tk, ti) => {

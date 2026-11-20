@@ -14,6 +14,8 @@ import {
   FLOW_MUTED,
   FLOW_YELLOW,
   FONT_SERIF,
+  stirring,
+  useGlide,
 } from "../foundation";
 
 function FlowithLogo({ size }: { size: number }) {
@@ -50,17 +52,24 @@ function WordReveal({
   index,
   f,
   fps,
+  step,
 }: {
   word: string;
   index: number;
   f: number;
   fps: number;
+  step: number;
 }) {
-  const reveal = spring({
-    frame: f - index * STAGGER,
-    fps,
-    config: { damping: 18, stiffness: 110 },
-  });
+  const glide = useGlide();
+  const revealAt = (g: number) =>
+    spring({
+      frame: g - index * STAGGER,
+      fps,
+      config: { damping: 18, stiffness: 110 },
+    });
+  const reveal = revealAt(f);
+  // 60% of the word's height, about 55px.
+  const rising = stirring((g) => revealAt(g) * 55, f, step);
   const ty = interpolate(reveal, [0, 1], [60, 0]);
   const blur = interpolate(reveal, [0, 1], [6, 0]);
 
@@ -88,8 +97,8 @@ function WordReveal({
           display: "inline-block",
           color,
           translate: `0 ${ty}%`,
+          transform: glide(rising),
           filter: blur > 0.05 ? `blur(${blur}px)` : undefined,
-          willChange: "transform, filter",
         }}
       >
         {word}
@@ -101,17 +110,23 @@ function WordReveal({
 export function Positioning({ speed = 1 }: { speed?: number }) {
   const f = useCurrentFrame() * speed;
   const { fps } = useVideoConfig();
+  const glide = useGlide();
 
   const headlineOpacity = interpolate(f, [55, 70], [1, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
 
-  const lockupReveal = spring({
-    frame: f - 70,
-    fps,
-    config: { damping: 22, stiffness: 95 },
-  });
+  const lockupRevealAt = (g: number) =>
+    spring({
+      frame: g - 70,
+      fps,
+      config: { damping: 22, stiffness: 95 },
+    });
+  const lockupReveal = lockupRevealAt(f);
+  // The lockup's far edge sits about 200px from the centre it scales about;
+  // a twelfth of that is the whole zoom.
+  const lockupZooming = stirring((g) => lockupRevealAt(g) * 24, f, speed);
   const lockupOpacity = interpolate(f, [68, 84], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
@@ -125,7 +140,6 @@ export function Positioning({ speed = 1 }: { speed?: number }) {
           alignItems: "center",
           justifyContent: "center",
           opacity: headlineOpacity,
-          willChange: "opacity",
         }}
       >
         <div
@@ -142,7 +156,14 @@ export function Positioning({ speed = 1 }: { speed?: number }) {
           }}
         >
           {WORDS.map((word, i) => (
-            <WordReveal key={word} word={word} index={i} f={f} fps={fps} />
+            <WordReveal
+              key={word}
+              word={word}
+              index={i}
+              f={f}
+              fps={fps}
+              step={speed}
+            />
           ))}
         </div>
       </AbsoluteFill>
@@ -153,8 +174,8 @@ export function Positioning({ speed = 1 }: { speed?: number }) {
           justifyContent: "center",
           opacity: lockupOpacity,
           scale: `${lockupScale}`,
+          transform: glide(lockupZooming),
           transformOrigin: "center",
-          willChange: "transform, opacity",
         }}
       >
         <div

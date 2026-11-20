@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -280,6 +281,8 @@ function Grain({ opacity }: { opacity: number }) {
 }
 
 /** The counter digits slide up by one on every landing. */
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function Counter({
   value,
   since,
@@ -294,6 +297,7 @@ function Counter({
   /** Top → bottom stops painted through the digits. */
   fill: readonly string[];
 }) {
+  const glide = useGlide();
   const p = interpolate(since, [0, 12], [0, 1], { ...CLAMP, easing: EASE_OUT });
   const prev = String(value - 1);
   const next = String(value);
@@ -340,7 +344,7 @@ function Counter({
                   position: "absolute",
                   left: 0,
                   top: 0,
-                  transform: `translateY(${-p * fontSize}px)`,
+                  transform: `translateY(${-p * fontSize}px)${glide(midway(p))}`,
                   opacity: 1 - p,
                 }}
               >
@@ -352,7 +356,7 @@ function Counter({
                   position: "absolute",
                   left: 0,
                   top: 0,
-                  transform: `translateY(${(1 - p) * fontSize}px)`,
+                  transform: `translateY(${(1 - p) * fontSize}px)${glide(midway(p))}`,
                   opacity: p,
                 }}
               >
@@ -403,6 +407,7 @@ export function DotGlobe({
   speed = 1,
   theme = "dark",
 }: DotGlobeProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = height / 720;
@@ -652,8 +657,12 @@ export function DotGlobe({
             key={`l${ri}`}
             style={{
               position: "absolute",
-              left: bx + 12 * u,
-              top: by - 9 * u,
+              // The pin rides the spinning globe and never rests while its
+              // label shows, so the label is carried by a transform, tilted
+              // the whole time: `left`/`top` would round its baseline to
+              // whole pixels and click it along.
+              left: 0,
+              top: 0,
               fontFamily,
               fontSize: 13 * u,
               fontWeight: 500,
@@ -661,7 +670,7 @@ export function DotGlobe({
               color: fg,
               whiteSpace: "nowrap",
               opacity: labelO,
-              transform: `translateX(${(1 - labelO) * -6 * u}px)`,
+              transform: `translate(${bx + 12 * u + (1 - labelO) * -6 * u}px, ${by - 9 * u}px)${glide(true)}`,
               textShadow: `0 0 ${6 * u}px ${fill}, 0 0 ${2 * u}px ${fill}`,
             }}
           >
@@ -673,16 +682,22 @@ export function DotGlobe({
   });
 
   const value = count - routes.length + landed;
-  const textP = (d: number) =>
-    interpolate(t, [6 + d, 34 + d], [0, 1], { ...CLAMP, easing: EASE_OUT });
+  const textP = (d: number, at = t) =>
+    interpolate(at, [6 + d, 34 + d], [0, 1], { ...CLAMP, easing: EASE_OUT });
   const marginX = width * 0.094;
   const bigSize = Math.min(168 * u, width * 0.13);
   const smallSize = 40 * u;
   const dotFill = `rgb(${th.dot[0]},${th.dot[1]},${th.dot[2]})`;
 
+  // The ease-out's tail still crosses pixels after `midway` calls it done, so
+  // the rise is tested frame to frame in px.
+  const lift = (d: number, at = t) => (1 - textP(d, at)) * 18 * u;
+  const lifting = (d: number) =>
+    Math.abs(lift(d, t + speed) - lift(d)) > 1e-3 ||
+    Math.abs(lift(d) - lift(d, t - speed)) > 1e-3;
   const textItem = (d: number): React.CSSProperties => ({
     opacity: textP(d),
-    transform: `translateY(${(1 - textP(d)) * 18 * u}px)`,
+    transform: `translateY(${lift(d)}px)${glide(lifting(d))}`,
   });
 
   return (

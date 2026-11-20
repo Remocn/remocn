@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -281,6 +282,7 @@ export function AreaCompare({
   theme = "dark",
   speed = 1,
 }: AreaCompareProps) {
+  const tilt = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
@@ -340,6 +342,7 @@ export function AreaCompare({
   );
 
   const valueSize = Math.max(30 * u, 104 * u * (r / R0));
+  const valueEnd = Math.max(30 * u, 104 * u * (Rf / R0));
   const fitsInside = Rf * 2 >= 118 * u;
   const insideAlpha = fitsInside
     ? 1
@@ -348,6 +351,13 @@ export function AreaCompare({
     ...CLAMP,
     easing: EASE_IO,
   });
+  // While the shape shrinks, the value's font size eases and the label above
+  // it folds away, which moves the value's baseline by layout, pixel by
+  // pixel. For those frames the block is laid out once at its landed size
+  // and the value scales and rides by transform; at rest it is plain layout.
+  const folding = (s > 0 && s < 1) || (eyebrowAlpha > 0 && eyebrowAlpha < 1);
+  const valueK = valueSize / valueEnd;
+  const fold = 17 * u * eyebrowAlpha;
   const afterTagIn = interpolate(t, [T_LAND - 4, T_LAND + 14], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
@@ -371,10 +381,25 @@ export function AreaCompare({
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const breathe = interpolate(t, [0, T_LAND + 90], [1.025, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const breatheAt = (at: number) =>
+    interpolate(at, [0, T_LAND + 90], [1.025, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const breathe = breatheAt(t);
+  const breatheStep = (at: number) =>
+    Math.abs(breatheAt(at) - breatheAt(at - speed));
+  const breathing = Math.max(breatheStep(t), breatheStep(t + speed)) > 0;
+  // Layout rounds a box and a baseline to whole pixels, so the shape and its
+  // labels are laid out where they land and ride there by transform:
+  // `slide` is the glide across, `drop` how far the shrinking shape's
+  // centre still sits above its landed one. Both are exactly 0 at rest.
+  const slide = (width / 2 - gxEnd) * (1 - glide);
+  const drop = (R0 - Rf) * (1 - s);
+  const shift = (dx: number, dy = 0) =>
+    Math.abs(dx) < 1e-3 && Math.abs(dy) < 1e-3
+      ? ""
+      : `translate(${dx}px, ${dy}px) `;
   const cornerR = (side: number) => side * 0.1;
 
   const shapePath = (cx: number, ccy: number, rad: number) =>
@@ -390,6 +415,7 @@ export function AreaCompare({
 
   const ghost = shapePath(gx, gy, R0);
   const body = shapePath(gx, cy, r);
+  const landed = shapePath(gxEnd, bottom - Rf, Rf);
   const enterScale = 0.96 + 0.04 * enter;
 
   return (
@@ -402,7 +428,7 @@ export function AreaCompare({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${breathe})`,
+            transform: `scale(${breathe})${tilt(breathing)}`,
             transformOrigin: "50% 50%",
           }}
         >
@@ -428,14 +454,14 @@ export function AreaCompare({
           <div
             style={{
               position: "absolute",
-              left: body.x,
-              top: body.y,
+              left: landed.x,
+              top: landed.y,
               width: body.w,
               height: body.h,
               borderRadius: body.rx,
               overflow: "hidden",
               opacity: enter,
-              transform: `scale(${enterScale})`,
+              transform: `${shift(slide - drop, -2 * drop)}scale(${enterScale})`,
               transformOrigin: `${gx - body.x}px ${bottom - body.y}px`,
               background: `linear-gradient(180deg, ${p.fillTop}, ${p.fillBottom})`,
             }}
@@ -453,9 +479,9 @@ export function AreaCompare({
           <div
             style={{
               position: "absolute",
-              left: gx,
+              left: gxEnd,
               top: gy - R0 + 34 * u,
-              transform: "translateX(-50%)",
+              transform: `${shift(slide)}translateX(-50%)`,
               display: "flex",
               alignItems: "baseline",
               gap: 10 * u,
@@ -483,9 +509,9 @@ export function AreaCompare({
           <div
             style={{
               position: "absolute",
-              left: gx,
-              top: cy,
-              transform: `translate(-50%, -50%) scale(${enterScale})`,
+              left: gxEnd,
+              top: bottom - Rf,
+              transform: `${shift(slide, -drop)}translate(-50%, -50%) scale(${enterScale})`,
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
@@ -500,9 +526,17 @@ export function AreaCompare({
                 fontWeight: 500,
                 color: p.muted,
                 opacity: eyebrowAlpha,
-                marginBottom: 6 * u * eyebrowAlpha,
+                marginBottom: folding ? undefined : 6 * u * eyebrowAlpha,
                 height: 28 * u * eyebrowAlpha,
                 overflow: "hidden",
+                ...(folding
+                  ? {
+                      position: "absolute" as const,
+                      left: "50%",
+                      top: "50%",
+                      transform: `translate(-50%, ${-fold - 0.56 * valueSize}px)`,
+                    }
+                  : null),
               }}
             >
               {label}
@@ -511,11 +545,14 @@ export function AreaCompare({
               style={{
                 fontFamily,
                 fontWeight: 400,
-                fontSize: valueSize * 1.12,
+                fontSize: (folding ? valueEnd : valueSize) * 1.12,
                 lineHeight: 1,
                 letterSpacing: "-0.02em",
                 fontVariantNumeric: "tabular-nums",
                 color: onFill,
+                transform: folding
+                  ? `translateY(${fold}px) scale(${valueK})`
+                  : undefined,
               }}
             >
               {formatValue(value, unit)}
@@ -525,9 +562,9 @@ export function AreaCompare({
           <div
             style={{
               position: "absolute",
-              left: gx,
+              left: gxEnd,
               top: bottom - Rf * 2 - 14 * u,
-              transform: `translate(-50%, -100%) translateY(${(1 - afterTagIn) * 6 * u}px)`,
+              transform: `${shift(slide)}translate(-50%, -100%) translateY(${(1 - afterTagIn) * 6 * u}px)`,
               fontFamily: sans,
               fontSize: 18 * u,
               fontWeight: 500,
@@ -544,9 +581,9 @@ export function AreaCompare({
           <div
             style={{
               position: "absolute",
-              left: gx + Rf + 16 * u,
+              left: gxEnd + Rf + 16 * u,
               top: bottom - Rf,
-              transform: `translateY(-50%) translateX(${(1 - outsideIn) * -6 * u}px)`,
+              transform: `${shift(slide)}translateY(-50%) translateX(${(1 - outsideIn) * -6 * u}px)`,
               display: "flex",
               flexDirection: "column",
               gap: 2 * u,

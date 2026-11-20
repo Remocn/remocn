@@ -3,7 +3,7 @@
 import { AbsoluteFill, interpolate, Sequence, useCurrentFrame } from "remotion";
 import { SoftBlurIn } from "@/components/remocn/soft-blur-in";
 import type { ProductHeroContent, TemplateTheme } from "./foundation";
-import { CAMERA_TRAVEL_EASE, Camera } from "./foundation";
+import { CAMERA_TRAVEL_EASE, Camera, stirring } from "./foundation";
 
 export interface ProductHeroProps {
   content: ProductHeroContent;
@@ -18,11 +18,13 @@ export function ProductHero({ content, theme, speed = 1 }: ProductHeroProps) {
   const f = useCurrentFrame() * speed;
   const vertical = content.entrance === "per-character-rise";
 
-  const travel = interpolate(f, [0, TRAVEL], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-    easing: CAMERA_TRAVEL_EASE,
-  });
+  const travelAt = (g: number) =>
+    interpolate(g, [0, TRAVEL], [0, 1], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+      easing: CAMERA_TRAVEL_EASE,
+    });
+  const travel = travelAt(f);
   const scale = interpolate(travel, [0, 1], [6.5, 1]);
   const pan = interpolate(travel, [0, 1], [120, 0]);
   const blur = interpolate(f, [0, 10, TRAVEL], [16, 6, 0], {
@@ -37,6 +39,8 @@ export function ProductHero({ content, theme, speed = 1 }: ProductHeroProps) {
         x={vertical ? 0 : -pan}
         y={vertical ? pan : 0}
         blur={blur}
+        // The zoom covers 5.5x over half the frame's width.
+        moving={stirring((g) => travelAt(g) * 5.5 * 960, f, speed)}
       >
         <AbsoluteFill
           style={{ alignItems: "center", justifyContent: "center" }}

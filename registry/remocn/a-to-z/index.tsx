@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const unbounded = loadFont("normal", {
   weights: ["400", "500"],
@@ -228,6 +229,16 @@ function flickDurations(count: number) {
   });
 }
 
+// Layout rounds a baseline to whole pixels, so a line rolled by `top` clicks
+// along pixel by pixel; the roll is a transform on the line instead, marked
+// so its text leans while it moves. The transform stays on at rest, at 0, so
+// the mark is there on every frame the line is shown.
+const lift = (y: number, glide: Glide) => {
+  const moving = Math.abs(y) >= 1e-3;
+  return `translateY(${moving ? y : 0}px)${glide(moving)}`;
+};
+type Glide = ReturnType<typeof useGlide>;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -259,6 +270,7 @@ export function AToZ({
   speed = 1,
   theme = "dark",
 }: AToZProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const dark = theme === "dark";
@@ -467,8 +479,15 @@ export function AToZ({
             key={k}
             style={{
               position: "absolute",
-              ...(portrait ? { left: 0 } : { right: 0 }),
-              top: textTop + y,
+              // As wide as the window, the letter aligned to its side: the
+              // lean reads a box's laid-out width as a whole number, which on
+              // a box one letter wide is off enough to lean a resting letter,
+              // and to drop the lean again when the flick swaps the letter.
+              left: 0,
+              right: 0,
+              textAlign: portrait ? "left" : "right",
+              top: textTop,
+              transform: lift(y, glide),
               height: lineBox,
               lineHeight: `${lineBox}px`,
               fontFamily,
@@ -500,8 +519,11 @@ export function AToZ({
           key={k}
           style={{
             position: "absolute",
+            // Across the window, for the same reason as the letter.
             left: 0,
-            top: (m.tall + 0.05 - m.asc) * size + y,
+            right: 0,
+            top: (m.tall + 0.05 - m.asc) * size,
+            transform: lift(y, glide),
             height: lineBox,
             lineHeight: `${lineBox}px`,
             fontFamily,

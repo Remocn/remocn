@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sora } = loadFont("normal", {
   weights: ["300", "400", "500"],
@@ -314,6 +315,7 @@ export function LaunchDate({
   speed = 1,
   theme = "dark",
 }: LaunchDateProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = height / 720;
@@ -358,6 +360,11 @@ export function LaunchDate({
     y: cy + (gy - fy) * s,
   });
   const gridOrigin = toScreen(0, 0);
+  // Where the camera leaves the grid once the push lands. The grid is laid
+  // out there and the camera's travel is a transform: layout rounds a box and
+  // a baseline to whole pixels, so a grid eased by `left`/`top` steps.
+  const gridRestX = cx - heroGX * S;
+  const gridRestY = cy - heroGY * S;
   const dof = interpolate(push, [0.35, 1], [0, 2.4 * u], CLAMP);
   const linesOut = interpolate(t, [86, 104], [1, 0], CLAMP);
   const headOut = interpolate(t, [60, 84], [1, 0], CLAMP);
@@ -385,6 +392,9 @@ export function LaunchDate({
   const heroY = interpolate(hand, [0, 1], [heroCell.y, lockCY]);
   const heroFont = interpolate(hand, [0, 1], [heroFont0, F]);
   const heroWeight = fontWeight;
+  // The day is laid out once at its lockup size and slot; the ride there and
+  // the growth are a transform, for the same reason as the grid.
+  const heroK = heroFont / F;
   const heroTrack = interpolate(hand, [0, 1], [-0.02, -0.06]);
   const heroAppear = interpolate(
     t,
@@ -515,6 +525,9 @@ export function LaunchDate({
 
   // a slow push that never quite stops, so the hold stays alive
   const drift = interpolate(t, [90, 195], [1, 1.035], CLAMP);
+  // The camera moves until 90 and the drift takes over from there, so the
+  // whole foreground is in motion from the first frame to the last.
+  const moving = t > 0 && t < 195;
   const headIn = interpolate(t, [4, 26], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
@@ -535,7 +548,7 @@ export function LaunchDate({
       />
 
       <ScaleLayer scale={scale}>
-        <AbsoluteFill style={{ transform: `scale(${drift})` }}>
+        <AbsoluteFill style={{ transform: `scale(${drift})${glide(moving)}` }}>
           {echoO > 0 ? (
             <svg
               width={width}
@@ -594,12 +607,12 @@ export function LaunchDate({
           <div
             style={{
               position: "absolute",
-              left: gridOrigin.x,
-              top: gridOrigin.y,
+              left: gridRestX,
+              top: gridRestY,
               width: gridW,
               height: gridH,
               transformOrigin: "0 0",
-              transform: `scale(${s})`,
+              transform: `translate(${gridOrigin.x - gridRestX}px, ${gridOrigin.y - gridRestY}px) scale(${s})`,
               filter: dof > 0.05 ? `blur(${dof / s}px)` : undefined,
             }}
           >
@@ -723,8 +736,8 @@ export function LaunchDate({
           <div
             style={{
               position: "absolute",
-              left: heroX - F * 2,
-              top: heroY - F,
+              left: daySlotX - F * 2,
+              top: lockCY - F,
               width: F * 4,
               height: F * 2,
               display: "flex",
@@ -732,14 +745,21 @@ export function LaunchDate({
               justifyContent: "center",
               fontFamily,
               fontWeight: heroWeight,
-              fontSize: heroFont,
+              fontSize: F,
               lineHeight: 1,
               letterSpacing: `${heroTrack}em`,
               fontVariantNumeric: "tabular-nums",
               color: fg,
               opacity: heroAppear * heroLit,
+              transform:
+                hand < 1
+                  ? `translate(${heroX - daySlotX}px, ${heroY - lockCY}px) scale(${heroK})${glide(t > 0)}`
+                  : undefined,
+              // the filter is drawn before the scale, so its radius is undone
               filter:
-                dof > 0.05 && hand < 0.01 ? `blur(${dof * 0.15}px)` : undefined,
+                dof > 0.05 && hand < 0.01
+                  ? `blur(${(dof * 0.15) / heroK}px)`
+                  : undefined,
             }}
           >
             {pad(launchDay)}

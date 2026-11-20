@@ -10,6 +10,7 @@ import {
   type SpeakerCaption,
   useCaptions,
 } from "@/lib/remocn/caption-core";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface CaptionSpeakerProps extends CaptionBaseProps {
   captions: SpeakerCaption[];
@@ -26,6 +27,8 @@ const RISE_EM = 0.14;
 const REVEAL_MS = 100;
 const LEGIBILITY_SHADOW =
   "0 2px 3px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.35)";
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const enterEasing = Easing.bezier(0.2, 0.8, 0.2, 1);
 
@@ -46,6 +49,7 @@ export function CaptionSpeaker({
   shadow = true,
   className,
 }: CaptionSpeakerProps) {
+  const glide = useGlide();
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
@@ -105,7 +109,7 @@ export function CaptionSpeaker({
         lineHeight: 1.2,
         textAlign: "center",
         opacity: Math.min(enter, exit),
-        transform: `translateY(${(1 - enter) * RISE_EM}em)`,
+        transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
       }}
     >
       {groupCaptionWords(state.tokens).map((word, w) => (

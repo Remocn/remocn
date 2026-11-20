@@ -14,6 +14,8 @@ import {
   FLOW_MUTED,
   FLOW_YELLOW,
   FONT,
+  stirring,
+  useGlide,
 } from "../foundation";
 
 type ChecklistRow = { label: string; highlighted?: boolean };
@@ -139,7 +141,6 @@ function ChecklistPill({
           : "0 8px 22px rgba(30, 28, 22, 0.06)",
         translate: `${tx}px`,
         opacity,
-        willChange: "transform, opacity",
       }}
     >
       <FlagIcon color={row.highlighted ? FLOW_INK : FLOW_MUTED} />
@@ -164,13 +165,16 @@ function DetailCard({
   icon,
   reveal,
   width,
+  moving,
 }: {
   title: string;
   rows: DetailRow[];
   icon: "check" | "doc";
   reveal: number;
   width: number;
+  moving: boolean;
 }) {
+  const glide = useGlide();
   const ty = interpolate(reveal, [0, 1], [26, 0]);
   const scale = interpolate(reveal, [0, 1], [0.96, 1]);
   const opacity = interpolate(reveal, [0, 1], [0, 1]);
@@ -186,9 +190,9 @@ function DetailCard({
         padding: "22px 26px 18px",
         translate: `0 ${ty}px`,
         scale: `${scale}`,
+        transform: glide(moving),
         opacity,
         transformOrigin: "left top",
-        willChange: "transform, opacity",
       }}
     >
       <div
@@ -269,7 +273,6 @@ function Cursor({ x, y, opacity }: { x: number; y: number; opacity: number }) {
         top: y,
         opacity,
         filter: "drop-shadow(0 3px 5px rgba(30,28,22,0.25))",
-        willChange: "left, top",
       }}
       aria-hidden
     >
@@ -288,16 +291,18 @@ export function TaskMgmt({ speed = 1 }: { speed?: number }) {
   const f = useCurrentFrame() * speed;
   const { fps } = useVideoConfig();
 
-  const cardAReveal = spring({
-    frame: f - 42,
-    fps,
-    config: { damping: 18, stiffness: 120 },
-  });
-  const cardBReveal = spring({
-    frame: f - 80,
-    fps,
-    config: { damping: 18, stiffness: 120 },
-  });
+  const revealAt = (start: number) => (g: number) =>
+    spring({
+      frame: g - start,
+      fps,
+      config: { damping: 18, stiffness: 120 },
+    });
+  const cardAReveal = revealAt(42)(f);
+  const cardBReveal = revealAt(80)(f);
+  // A card rises 26px and grows 4% from its corner, about 400px away at the
+  // far end; the springs have no set duration, so the test is on the value.
+  const rising = (start: number) =>
+    stirring((g) => revealAt(start)(g) * (26 + 0.04 * 400), f, speed);
 
   const conn1 = interpolate(f, [28, 54], [0, 1], {
     extrapolateLeft: "clamp",
@@ -375,6 +380,7 @@ export function TaskMgmt({ speed = 1 }: { speed?: number }) {
           icon="check"
           reveal={cardAReveal}
           width={380}
+          moving={rising(42)}
         />
       </div>
 
@@ -385,6 +391,7 @@ export function TaskMgmt({ speed = 1 }: { speed?: number }) {
           icon="doc"
           reveal={cardBReveal}
           width={380}
+          moving={rising(80)}
         />
       </div>
 

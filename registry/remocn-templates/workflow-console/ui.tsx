@@ -122,12 +122,17 @@ export function Command({
   const gap = size * 0.6;
   const available = Math.max(1, width - 44 - arrowWidth - gap);
   const fade = 1 - move(t, end - 0.18, end);
+  // The field opens from its centre, but the box that lays it out stays at
+  // the open width. Centred on a growing width, layout would walk the prompt
+  // and the caret left in whole pixels; the frame takes its width from the
+  // margin and the line rides in on a transform instead.
+  const closed = (420 - width) / 2;
   return (
     <Center style={{ opacity: fade }}>
       <Interactive.Div
         name="Typed command"
         style={{
-          width,
+          width: 420,
           height: size * 2.5,
           overflow: "hidden",
           position: "relative",
@@ -143,7 +148,7 @@ export function Command({
             position: "absolute",
             inset: 0,
             border: "0.75px solid #3b536c",
-            marginInline: 10,
+            marginInline: 10 + closed,
           }}
         />
         <div
@@ -154,6 +159,7 @@ export function Command({
             alignItems: "center",
             gap,
             overflow: "hidden",
+            transform: closed ? `translateX(${closed}px)` : undefined,
           }}
         >
           <span

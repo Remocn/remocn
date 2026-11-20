@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -379,6 +380,7 @@ export function ThreeSteps({
   theme = "dark",
   speed = 1,
 }: ThreeStepsProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = Math.min(W / 1280, H / 720);
@@ -433,10 +435,17 @@ export function ThreeSteps({
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const cam = interpolate(t, [0, done + 60], [1, 1.025], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const camAt = (at: number) =>
+    interpolate(at, [0, done + 60], [1, 1.025], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const cam = camAt(t);
+  // The push is a long in-out ease, flat at both ends: the tilt follows how
+  // far the text furthest from the origin really moves per frame.
+  const camStep = (at: number) =>
+    Math.abs(camAt(at) - camAt(at - speed)) * W * 0.55;
+  const camMoving = Math.max(camStep(t), camStep(t + speed)) > 1e-3;
   const stroke = Math.max(1, u);
   const railId = `rail${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
@@ -451,7 +460,10 @@ export function ThreeSteps({
       ) : null}
       <ScaleLayer scale={scale}>
         <AbsoluteFill
-          style={{ transform: `scale(${cam})`, transformOrigin: "45% 45%" }}
+          style={{
+            transform: `scale(${cam})${glide(camMoving)}`,
+            transformOrigin: "45% 45%",
+          }}
         >
           <div
             style={{

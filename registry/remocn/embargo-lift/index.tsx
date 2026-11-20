@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const shoulders = loadFont("normal", {
   weights: ["400", "500"],
@@ -143,6 +144,8 @@ function useMetrics(texts: string[], fontFamily: string, fontWeight: number) {
   return state && state.key === key ? state.m : null;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -175,6 +178,7 @@ export function EmbargoLift({
   speed = 1,
   theme = "dark",
 }: EmbargoLiftProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -262,7 +266,7 @@ export function EmbargoLift({
           left,
           top: boxTop(base, size),
           opacity: p,
-          transform: `translateY(${dy.toFixed(2)}px)`,
+          transform: `translateY(${dy.toFixed(2)}px)${glide(midway(p))}`,
           color: fg,
         }}
       >
@@ -331,7 +335,7 @@ export function EmbargoLift({
         top: boxTop(slugBase, slugSize) - slugClipTop,
         color: fg,
         opacity: o,
-        transform: `translateY(${y.toFixed(2)}px)`,
+        transform: `translateY(${y.toFixed(2)}px)${glide(midway(flip))}`,
       }}
     >
       {text}

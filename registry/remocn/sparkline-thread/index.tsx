@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: mono } = loadMono("normal", {
   weights: ["400"],
@@ -53,6 +54,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 // gradients.sh "beam" palette: bg #02030a, [#f4f7ff, #8fb4ff, #3d5bff, #1a1660].
 // It lives only in the hero series (stroke + area); everything else stays neutral.
@@ -217,6 +220,7 @@ export function SparklineThread({
   speed = 1,
   theme = "dark",
 }: SparklineThreadProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const u = height / 720;
@@ -556,7 +560,7 @@ export function SparklineThread({
               textTransform: "uppercase",
               color: p.muted,
               opacity: labIn,
-              transform: `translateY(${(1 - labIn) * 8 * u}px)`,
+              transform: `translateY(${(1 - labIn) * 8 * u}px)${glide(midway(labIn))}`,
               whiteSpace: "nowrap",
             }}
           >

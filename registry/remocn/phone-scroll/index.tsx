@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -1173,6 +1174,7 @@ export function PhoneScroll({
   ground,
   groundParams,
 }: PhoneScrollProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { fps, width, height } = useVideoConfig();
   const f = frame * speed;
@@ -1225,6 +1227,8 @@ export function PhoneScroll({
     interpolate(f, [16 + d, 32 + d], [0, 1], { ...clamp, easing: ENTER });
   const eyeIn = interpolate(f, [12, 26], [0, 1], { ...clamp, easing: LIGHT });
   const push = interpolate(f, [0, 120], [1, 1.03], clamp);
+  // The push holds the phone and the headline, so its mark covers both.
+  const pushing = f > 0 && f < 120;
 
   const content = children ? (
     <div style={{ width: SW }}>{children}</div>
@@ -1278,7 +1282,10 @@ export function PhoneScroll({
       </svg>
       <ScaleLayer scale={scale}>
         <AbsoluteFill
-          style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
+          style={{
+            transform: `scale(${push})${glide(pushing)}`,
+            transformOrigin: "50% 50%",
+          }}
         >
           <div
             style={{

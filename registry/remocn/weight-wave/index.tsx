@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadVariableFont("normal", {
   subsets: ["latin"],
@@ -126,6 +127,8 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -161,6 +164,7 @@ export function WeightWave({
   theme = "dark",
   speed = 1,
 }: WeightWaveProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -241,7 +245,7 @@ export function WeightWave({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            transform: `scale(${1 + push * 0.025})`,
+            transform: `scale(${1 + push * 0.025})${glide(midway(push))}`,
             transformOrigin: "50% 50%",
           }}
         >

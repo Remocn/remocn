@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -257,6 +258,7 @@ export function RulerScrub({
   theme = "dark",
   speed = 1,
 }: RulerScrubProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = height / 720;
@@ -288,11 +290,31 @@ export function RulerScrub({
   const vel = (scrubAt(t) - scrubAt(t - 1)) * gap;
   const ghost = interpolate(Math.abs(vel), [8 * u, 60 * u], [0, 1], CLAMP);
 
-  const lift = interpolate(t, [scrubLength + 6, scrubLength + 38], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const liftAt = (f: number) =>
+    interpolate(f, [scrubLength + 6, scrubLength + 38], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const lift = liftAt(t);
+  // Whether `value(f)`, in px, moves by more than a thousandth of a pixel
+  // into or out of this frame. The eases here are flat at their ends, so a
+  // progress threshold would drop the tilt while text still crosses pixels.
+  const moves = (value: (f: number) => number) =>
+    Math.abs(value(t) - value(t - speed)) > 1e-3 ||
+    Math.abs(value(t + speed) - value(t)) > 1e-3;
   const rulerY = interpolate(lift, [0, 1], [height * 0.56, height * 0.68]);
+  // Layout rounds a box and a baseline to whole pixels, so the ruler stays
+  // laid out where it waits through the scrub and the lift is a transform,
+  // there all its life: exactly 0 before it starts, and never handed back to
+  // layout, which would snap its labels by what the rounding takes.
+  const rulerY0 = height * 0.56;
+  const liftPx = (f: number) => height * 0.12 * liftAt(f);
+  // Its labels scrub sideways by layout right up to the lift and into it, so
+  // they lean from the first frame: a lean that came on with the lift would
+  // jump them on a frame where they already move.
+  const rulerShift = `translateY(${liftPx(t)}px)${glide(
+    moves(liftPx) || moves((f) => scrubAt(f) * gap),
+  )}`;
   const centerLit = interpolate(
     t,
     [scrubLength - 4, scrubLength + 2],
@@ -315,10 +337,17 @@ export function RulerScrub({
   const heroScale0 = labelSize / heroSize;
   const heroStartY = rulerY - height * 0.098 - labelSize * 0.5;
   const heroEndY = height * 0.34;
-  const heroY = interpolate(lift, [0, 1], [heroStartY, heroEndY]);
-  const heroScale =
-    interpolate(lift, [0, 1], [heroScale0, 1]) *
-    interpolate(t, [scrubLength + 38, scrubLength + 110], [1, 1.02], CLAMP);
+  // The hero is laid out where it lands and rides up by transform.
+  const heroDrop = (heroStartY - heroEndY) * (1 - lift);
+  const heroScaleAt = (f: number) =>
+    interpolate(liftAt(f), [0, 1], [heroScale0, 1]) *
+    interpolate(f, [scrubLength + 38, scrubLength + 110], [1, 1.02], CLAMP);
+  const heroScale = heroScaleAt(t);
+  // Weighed by half the hero's width, its furthest glyph from the centre;
+  // the climb moves with `lift`.
+  const heroMoving =
+    moves((f) => heroScaleAt(f) * heroSize * 1.2) ||
+    moves((f) => (heroStartY - heroEndY) * (1 - liftAt(f)));
   const heroWeight = interpolate(lift, [0, 1], [450, 500]);
   const sheen = interpolate(
     t,
@@ -330,10 +359,13 @@ export function RulerScrub({
   const markTop = -height * 0.075 * (1 + centerLit * 0.35) - 6 * u;
   const markBottom = height * 0.034;
 
-  const labelIn = interpolate(t, [scrubLength + 30, scrubLength + 54], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const labelInAt = (f: number) =>
+    interpolate(f, [scrubLength + 30, scrubLength + 54], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  const labelIn = labelInAt(t);
+  const labelMoving = moves((f) => (1 - labelInAt(f)) * 14 * u);
 
   const ghosts = [0.5, 1];
   const fade =
@@ -374,9 +406,10 @@ export function RulerScrub({
           style={{
             position: "absolute",
             left: 0,
-            top: rulerY - height * 0.25,
+            top: rulerY0 - height * 0.25,
             width,
             height: height * 0.3,
+            transform: rulerShift,
             opacity: enter,
             maskImage: fade,
             WebkitMaskImage: fade,
@@ -427,7 +460,8 @@ export function RulerScrub({
           style={{
             position: "absolute",
             left: width / 2 - u,
-            top: rulerY + markTop,
+            top: rulerY0 + markTop,
+            transform: rulerShift,
             width: 2 * u,
             height: markBottom - markTop,
             background: accent,
@@ -439,7 +473,8 @@ export function RulerScrub({
           style={{
             position: "absolute",
             left: width / 2 - 4.5 * u,
-            top: rulerY + markBottom - 4.5 * u,
+            top: rulerY0 + markBottom - 4.5 * u,
+            transform: rulerShift,
             width: 9 * u,
             height: 9 * u,
             borderRadius: 9 * u,
@@ -454,8 +489,9 @@ export function RulerScrub({
             position: "absolute",
             left: 0,
             width,
-            top: heroY,
+            top: heroEndY,
             height: 0,
+            transform: `translateY(${heroDrop}px)`,
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
@@ -476,7 +512,7 @@ export function RulerScrub({
               backgroundClip: "text",
               padding: "0.08em 0.06em",
               whiteSpace: "nowrap",
-              transform: `scale(${heroScale})`,
+              transform: `scale(${heroScale})${glide(heroMoving)}`,
             }}
           >
             {text(steps)}
@@ -497,7 +533,7 @@ export function RulerScrub({
             letterSpacing: "-0.015em",
             color: fg,
             opacity: labelIn,
-            transform: `translateY(${(1 - labelIn) * 14 * u}px)`,
+            transform: `translateY(${(1 - labelIn) * 14 * u}px)${glide(labelMoving)}`,
           }}
         >
           {label}

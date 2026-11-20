@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -274,6 +275,8 @@ const hash = (n: number) => {
   return s - Math.floor(s);
 };
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
@@ -397,6 +400,7 @@ function SnapCounter({
   changedAt: number[];
   frame: number;
 }) {
+  const glide = useGlide();
   let d = 0;
   const digits = value.replace(/\D/g, "").length;
   return (
@@ -419,7 +423,7 @@ function SnapCounter({
             key={i}
             style={{
               display: "inline-block",
-              transform: `translateY(${(1 - p) * 60}%)`,
+              transform: `translateY(${(1 - p) * 60}%)${glide(midway(p))}`,
               opacity: 0.2 + 0.8 * p,
             }}
           >
@@ -467,6 +471,7 @@ export function WorldSignups({
   ground,
   groundParams,
 }: WorldSignupsProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const pal = palette(theme);
@@ -474,8 +479,14 @@ export function WorldSignups({
   const tall = H > W * 1.2;
   const D = tall ? { w: 800, h: 1422 } : { w: 1280, h: 720 };
   const s = Math.min(W / D.w, H / D.h);
-  const sp = (at: number, config: object) =>
-    spring({ frame: frame - at, fps, config });
+  const spAt = (f: number, at: number, config: object) =>
+    spring({ frame: f - at, fps, config });
+  const sp = (at: number, config: object) => spAt(frame, at, config);
+  // The springs here overshoot, so "still moving" is read off the
+  // neighbouring frames rather than off a progress value.
+  const moved = (at: (f: number) => number) =>
+    Math.abs(at(frame + 1) - at(frame)) > 1e-5 ||
+    Math.abs(at(frame) - at(frame - 1)) > 1e-5;
 
   const WIN = tall
     ? { x: 40, y: 340, w: 720, h: 1010 }
@@ -572,6 +583,7 @@ export function WorldSignups({
       ),
   );
   const maxCountry = Math.max(...countryTotals);
+  const counterIn = tween(frame, 4, 18);
 
   const counter = (size: number, labelSize: number, onStage: boolean) => (
     <div>
@@ -608,7 +620,7 @@ export function WorldSignups({
       >
         <div
           style={{
-            transform: `translateY(${(1 - tween(frame, 4, 18)) * 100}%)`,
+            transform: `translateY(${(1 - counterIn) * 100}%)${glide(midway(counterIn))}`,
           }}
         >
           <SnapCounter value={fmt(count)} changedAt={changedAt} frame={frame} />
@@ -673,7 +685,7 @@ export function WorldSignups({
               position: "absolute",
               inset: 0,
               transformOrigin: `${WIN.x + mapLeft + MAP_W / 2}px ${WIN.y + mapTop + mapH / 2}px`,
-              transform: `scale(${1 + 0.03 * cam})`,
+              transform: `scale(${1 + 0.03 * cam})${glide(midway(cam))}`,
             }}
           >
             {tall ? (
@@ -689,7 +701,7 @@ export function WorldSignups({
                 width: WIN.w,
                 height: WIN.h,
                 opacity: winA,
-                transform: `translateY(${(1 - win) * 48}px) scale(${0.97 + 0.03 * win})`,
+                transform: `translateY(${(1 - win) * 48}px) scale(${0.97 + 0.03 * win})${glide(midway(win))}`,
                 transformOrigin: "50% 100%",
                 borderRadius: 16,
                 background: pal.win,
@@ -797,6 +809,8 @@ export function WorldSignups({
                 );
                 if (frame < e.at + 1 || out >= 1) return null;
                 const p = project(e.lon, e.lat);
+                const chipMoving =
+                  moved((f) => spAt(f, e.at + 1, CHIP)) || midway(out);
                 return (
                   <div
                     key={`label-${e.name}`}
@@ -804,7 +818,7 @@ export function WorldSignups({
                       position: "absolute",
                       left: mapLeft + p.x,
                       top: mapTop + p.y - 14,
-                      transform: `translate(-50%, -100%) translateY(${(1 - a) * 8 - out * 6}px) scale(${0.8 + 0.2 * a})`,
+                      transform: `translate(-50%, -100%) translateY(${(1 - a) * 8 - out * 6}px) scale(${0.8 + 0.2 * a})${glide(chipMoving)}`,
                       transformOrigin: "50% 100%",
                       opacity: clamp(a * 2, 0, 1) * (1 - out),
                       display: "flex",
@@ -857,7 +871,7 @@ export function WorldSignups({
                         flex: 1,
                         minWidth: 0,
                         opacity: a,
-                        transform: `translateY(${(1 - a) * 8}px)`,
+                        transform: `translateY(${(1 - a) * 8}px)${glide(midway(a))}`,
                       }}
                     >
                       <div
@@ -963,12 +977,23 @@ export function WorldSignups({
               >
                 {events.map((e, k) => {
                   if (e.at > frame) return null;
-                  let y = 0;
-                  for (let j = k + 1; j < events.length; j++) {
-                    if (events[j].at <= frame)
-                      y += ROW * sp(events[j].at, CARD);
-                  }
+                  // Each newer signup pushes this row one slot down. Layout
+                  // holds the slot the row is heading for and the way there
+                  // is a transform: a row eased by `top` has its box and its
+                  // baselines rounded to whole pixels and clicks down.
+                  const yAt = (f: number) => {
+                    let sum = 0;
+                    for (let j = k + 1; j < events.length; j++) {
+                      if (events[j].at <= f)
+                        sum += ROW * spAt(f, events[j].at, CARD);
+                    }
+                    return sum;
+                  };
+                  const y = yAt(frame);
                   if (y > ROW * 8) return null;
+                  const slot =
+                    ROW *
+                    events.filter((n, j) => j > k && n.at <= frame).length;
                   const a = tween(frame, e.at + 1, e.at + 10);
                   const hl = 1 - tween(frame, e.at + 6, e.at + 30, moveEase);
                   return (
@@ -978,7 +1003,8 @@ export function WorldSignups({
                         position: "absolute",
                         left: -10,
                         right: -10,
-                        top: y,
+                        top: slot,
+                        transform: `translateY(${y - slot}px)${glide(moved(yAt))}`,
                         height: ROW - 6,
                         display: "flex",
                         alignItems: "center",
@@ -999,7 +1025,7 @@ export function WorldSignups({
                           alignItems: "center",
                           gap: 14,
                           opacity: a,
-                          transform: `translateY(${(1 - a) * -8}px)`,
+                          transform: `translateY(${(1 - a) * -8}px)${glide(midway(a))}`,
                         }}
                       >
                         <Avatar name={e.name} size={34} />

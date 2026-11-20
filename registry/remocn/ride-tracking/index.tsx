@@ -16,6 +16,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -93,6 +94,8 @@ const CAMERA = Easing.bezier(0.87, 0, 0.13, 1);
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 const hash = (n: number) => {
   const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
   return x - Math.floor(x);
@@ -758,6 +761,7 @@ export function RideTracking({
   ground,
   groundParams,
 }: RideTrackingProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { fps, width, height } = useVideoConfig();
   const f = frame * speed;
@@ -775,10 +779,17 @@ export function RideTracking({
   const phoneCx = tall ? W / 2 : W * 0.68;
   const phoneCy = tall ? H - 30 - (BH * k) / 2 : H / 2;
 
+  const spAt = (t: number, at: number, config: Partial<typeof CARD> = CARD) =>
+    spring({ frame: t - at, fps, config });
   const sp = (at: number, config: Partial<typeof CARD> = CARD) =>
-    spring({ frame: f - at, fps, config });
+    spAt(f, at, config);
+  // The springs here overshoot and stack, so "still moving" is read off the
+  // neighbouring frames rather than off a progress value.
+  const moved = (at: (t: number) => number) =>
+    Math.abs(at(f + 1) - at(f)) > 1e-5 || Math.abs(at(f) - at(f - 1)) > 1e-5;
   const rise = sp(0, HEAVY);
-  const camS = interpolate(f, [0, 270], [1, 1.03], clamp);
+  const camP = interpolate(f, [0, 270], [0, 1], clamp);
+  const camS = 1 + 0.03 * camP;
 
   const prog = (t: number) =>
     interpolate(t, [DRIVE_AT, driveEnd], [0, 1], { ...clamp, easing: MOVE });
@@ -817,20 +828,25 @@ export function RideTracking({
   const camX = overview.x + (target.x - overview.x) * m;
   const camY = overview.y + (target.y - overview.y) * m;
   const zoom = interpolate(m, [0, 1], [0.6, 0.98]) + arrive * 0.2;
+  // The camera trails the car by up to 12 frames, so it outlasts the drive.
+  const mapMoving =
+    midway(m) || midway(d) || midway(prog(f - 12)) || midway(arrive);
+  const phoneTilt = midway(camP) || midway(rise);
 
   const stepAt = (n: number) => {
     for (let t = DRIVE_AT; t <= driveEnd; t++) if (prog(t) >= n / eta) return t;
     return driveEnd;
   };
   const steps = Array.from({ length: eta - 1 }, (_, i) => stepAt(i + 1));
-  const roll = steps.reduce((a, at) => a + sp(at, CARD), 0);
+  const rollAt = (t: number) =>
+    steps.reduce((a, at) => a + spAt(t, at, CARD), 0);
+  const roll = rollAt(f);
   const etaLabels = Array.from({ length: eta - 1 }, (_, i) => `${eta - i}`);
   const arrived = f >= driveEnd;
   const arrivedIn = sp(driveEnd, CHIP);
   const swap = Math.min(1, sp(driveEnd, { damping: 200 }));
   const sheetIn = sp(10, CARD);
   const pinIn = sp(DRAW_END - 6, CHIP);
-  const rows = [0, 1].map((i) => sp(18 + i * 4, CARD));
 
   const dash = `${Math.max(0.001, ROUTE_LEN * draw - s)} ${ROUTE_LEN * 3}`;
   const pulses = [0, 22, 44].map((off) => {
@@ -840,10 +856,23 @@ export function RideTracking({
 
   const row: React.CSSProperties = { display: "flex", alignItems: "center" };
   const pillX = FOCUS.x + (PICKUP.x - camX) * zoom;
-  const rise8 = (v: number): React.CSSProperties => ({
-    opacity: Math.min(1, v * 1.4),
-    transform: `translateY(${(1 - v) * 16}px)`,
-  });
+  const pillY = FOCUS.y + (PICKUP.y - camY) * zoom - 24 * zoom * pinIn - 38;
+  // Where the pill ends up once the camera has settled on the arrival. Layout
+  // rounds a box and a baseline to whole pixels, so a pill that tracks the map
+  // through `left`/`top` clicks along; it is laid out here and the way here is
+  // a transform.
+  const stop = routePoint(ROUTE_LEN);
+  const pillRest = {
+    x: FOCUS.x + (PICKUP.x - stop.x) * 0.78 * 1.18,
+    y: FOCUS.y + (PICKUP.y - stop.y) * 0.78 * 1.18 - 24 * 1.18 - 38,
+  };
+  const rise8 = (at: number): React.CSSProperties => {
+    const v = sp(at, CARD);
+    return {
+      opacity: Math.min(1, v * 1.4),
+      transform: `translateY(${(1 - v) * 16}px)${glide(moved((t) => spAt(t, at, CARD)))}`,
+    };
+  };
 
   const beats = [0, DRIVE_AT - 4, driveEnd];
   const copyLine = (i: number) => {
@@ -869,7 +898,7 @@ export function RideTracking({
           left: 0,
           right: 0,
           top: 0,
-          transform: `translateY(${(1 - pin) * 70 - pout * 50}%)`,
+          transform: `translateY(${(1 - pin) * 70 - pout * 50}%)${glide(midway(pin) || midway(pout))}`,
           opacity: pin * (1 - pout),
         }}
       >
@@ -936,7 +965,7 @@ export function RideTracking({
               fontWeight: 400,
               color: c.copyMuted,
               fontVariantNumeric: "tabular-nums",
-              ...rise8(sp(20, CARD)),
+              ...rise8(20),
             }}
           >
             {arrived
@@ -950,14 +979,22 @@ export function RideTracking({
               top: phoneCy - BH / 2,
               width: BW,
               height: BH,
-              transform: `translateY(${(1 - rise) * H * 0.9}px) scale(${k * camS})`,
+              // The camera drift never rests inside its window, so the tilt
+              // holds for all of it and covers every label in the phone.
+              transform: `translateY(${(1 - rise) * H * 0.9}px) scale(${k * camS})${glide(phoneTilt)}`,
             }}
           >
             <Phone c={c}>
               <svg
                 width={SW}
                 height={SH}
-                style={{ position: "absolute", inset: 0 }}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  // The map's labels move by SVG attributes, which the mark
+                  // can't ride on; the drawing carries it instead.
+                  transform: glide(mapMoving).trim(),
+                }}
                 fontFamily={fontFamily}
               >
                 <defs>
@@ -1090,10 +1127,9 @@ export function RideTracking({
               <div
                 style={{
                   position: "absolute",
-                  left: pillX,
-                  top:
-                    FOCUS.y + (PICKUP.y - camY) * zoom - 24 * zoom * pinIn - 38,
-                  transform: `translateX(-50%) scale(${pinIn})`,
+                  left: pillRest.x,
+                  top: pillRest.y,
+                  transform: `translate(${pillX - pillRest.x}px, ${pillY - pillRest.y}px) translateX(-50%) scale(${pinIn})${glide(mapMoving || moved((t) => spAt(t, DRAW_END - 6, CHIP)))}`,
                   transformOrigin: "50% 100%",
                   opacity: interpolate(
                     Math.min(pillX, SW - pillX),
@@ -1168,7 +1204,7 @@ export function RideTracking({
                   boxShadow: dark
                     ? "0 0 0 1px rgba(255,255,255,0.07)"
                     : "0 -1px 0 rgba(0,0,0,0.04), 0 -12px 32px -8px rgba(0,0,0,0.14)",
-                  transform: `translateY(${(1 - sheetIn) * 340}px)`,
+                  transform: `translateY(${(1 - sheetIn) * 340}px)${glide(moved((t) => spAt(t, 10, CARD)))}`,
                   padding: "8px 20px 0",
                   boxSizing: "border-box",
                   color: c.text,
@@ -1196,7 +1232,7 @@ export function RideTracking({
                           position: "absolute",
                           inset: 0,
                           opacity: isArr ? swap : 1 - swap,
-                          transform: `translateY(${isArr ? (1 - swap) * 10 : -swap * 8}px)`,
+                          transform: `translateY(${isArr ? (1 - swap) * 10 : -swap * 8}px)${glide(midway(swap))}`,
                         }}
                       >
                         <div
@@ -1241,7 +1277,11 @@ export function RideTracking({
                           "linear-gradient(180deg, transparent, #000 22%, #000 78%, transparent)",
                       }}
                     >
-                      <div style={{ transform: `translateY(${-roll * 52}px)` }}>
+                      <div
+                        style={{
+                          transform: `translateY(${-roll * 52}px)${glide(moved(rollAt))}`,
+                        }}
+                      >
                         {[...etaLabels, "1"].map((l, i) => (
                           <div
                             key={`${l}${i}`}
@@ -1315,7 +1355,7 @@ export function RideTracking({
                     margin: "20px -20px 16px",
                   }}
                 />
-                <div style={{ ...row, gap: 12, ...rise8(rows[0]) }}>
+                <div style={{ ...row, gap: 12, ...rise8(18) }}>
                   <div style={{ flexShrink: 0 }}>
                     <Portrait uid={uid} />
                   </div>
@@ -1373,9 +1413,7 @@ export function RideTracking({
                     </div>
                   </div>
                 </div>
-                <div
-                  style={{ ...row, gap: 10, marginTop: 22, ...rise8(rows[1]) }}
-                >
+                <div style={{ ...row, gap: 10, marginTop: 22, ...rise8(22) }}>
                   <div
                     style={{
                       flex: 1,

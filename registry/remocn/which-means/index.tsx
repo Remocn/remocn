@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const geologica = loadFont("normal", {
   weights: ["400", "500"],
@@ -222,6 +223,7 @@ export function WhichMeans({
   speed = 1,
   theme = "dark",
 }: WhichMeansProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -303,8 +305,20 @@ export function WhichMeans({
   const stepAt = (k: number) =>
     k <= 0 ? FIRST_AT : FIRST_AT + FIRST_READ + (k - 1) * period;
 
+  const easeAt = (tt: number, from: number, dur: number, curve = EASE_OUT) =>
+    interpolate(tt, [from, from + dur], [0, 1], { ...CLAMP, easing: curve });
   const ease = (from: number, dur: number, curve = EASE_OUT) =>
-    interpolate(t, [from, from + dur], [0, 1], { ...CLAMP, easing: curve });
+    easeAt(t, from, dur, curve);
+  // A move counts while its offset in px changes against either neighbouring
+  // frame by more than a thousandth of a pixel: the eases' tails still cross
+  // pixels after their progress is all but settled.
+  const stirs = (at: (tt: number) => number) => {
+    const now = at(t);
+    return (
+      Math.abs(at(t + speed) - now) > 1e-3 ||
+      Math.abs(now - at(t - speed)) > 1e-3
+    );
+  };
 
   const hingeY = portrait ? H * 0.57 : H * 0.5;
   const hingeF = F * HINGE_EM;
@@ -334,7 +348,9 @@ export function WhichMeans({
           lineHeight: 1,
           color: hi,
           opacity: labelIn,
-          transform: `translateY(${((1 - labelIn) * labelF * 0.6).toFixed(2)}px)`,
+          transform: `translateY(${((1 - labelIn) * labelF * 0.6).toFixed(2)}px)${glide(
+            stirs((tt) => easeAt(tt, NAME_AT + 4, 14) * labelF * 0.6),
+          )}`,
           whiteSpace: "pre",
         }}
       >
@@ -365,13 +381,16 @@ export function WhichMeans({
         }}
       >
         {line.map((w, wi) => {
-          const e = ease(NAME_AT + (li * 2 + wi) * 3, 16);
+          const at = NAME_AT + (li * 2 + wi) * 3;
+          const e = ease(at, 16);
           return (
             <span
               key={w}
               style={{
                 display: "inline-block",
-                transform: `translateY(${((1 - e) * nameF * 1.1).toFixed(2)}px)`,
+                transform: `translateY(${((1 - e) * nameF * 1.1).toFixed(2)}px)${glide(
+                  stirs((tt) => easeAt(tt, at, 16) * nameF * 1.1),
+                )}`,
               }}
             >
               {wi > 0 ? ` ${w}` : w}
@@ -385,6 +404,7 @@ export function WhichMeans({
   const renderClause = (
     k: number,
     top: number,
+    lift: (tt: number) => number,
     opacity: number,
     color: string,
     writeAt: number,
@@ -394,6 +414,8 @@ export function WhichMeans({
     const cl = clauses[k];
     const last = k === n - 1;
     let wordIndex = 0;
+    const dy = lift(t);
+    const moving = stirs(lift);
     return (
       <div
         key={`clause-${k}`}
@@ -401,6 +423,7 @@ export function WhichMeans({
           position: "absolute",
           left: colX,
           top,
+          transform: `translateY(${Math.abs(dy) < 1e-3 ? 0 : dy}px)${glide(moving)}`,
           width: colW + F,
           opacity,
           color,
@@ -427,7 +450,8 @@ export function WhichMeans({
         {cl.lines.map((line, li) => (
           <div key={line.join(" ")}>
             {line.map((w, wi) => {
-              const e = ease(writeAt + wordIndex++ * stagger, WORD_IN);
+              const at = writeAt + wordIndex++ * stagger;
+              const e = ease(at, WORD_IN);
               const isEnd =
                 li === cl.lines.length - 1 && wi === line.length - 1;
               return (
@@ -436,7 +460,10 @@ export function WhichMeans({
                   style={{
                     display: "inline-block",
                     opacity: e,
-                    transform: `translateY(${((1 - e) * F * 0.45).toFixed(2)}px)`,
+                    transform: `translateY(${((1 - e) * F * 0.45).toFixed(2)}px)${glide(
+                      !moving &&
+                        stirs((tt) => easeAt(tt, at, WORD_IN) * F * 0.45),
+                    )}`,
                   }}
                 >
                   {wi > 0 ? ` ${w}` : w}
@@ -467,7 +494,8 @@ export function WhichMeans({
   };
 
   const s1 = stepAt(1);
-  const c0Slot = n > 1 ? ease(s1, CENTER_TO_SLOT, EASE_MOVE) : 0;
+  const c0SlotAt = (tt: number) =>
+    n > 1 ? easeAt(tt, s1, CENTER_TO_SLOT, EASE_MOVE) : 0;
 
   for (let k = 0; k < n; k++) {
     const enter = stepAt(k);
@@ -477,7 +505,12 @@ export function WhichMeans({
     const promoting = k >= 1 && k + 1 < n;
     const isLast = k === n - 1;
 
+    // Each clause is laid out where its last move lands and travels by a
+    // transform all its life: layout rounds a baseline to whole pixels, so a
+    // clause eased by `top` clicks up pixel by pixel, and one handed back to
+    // layout jumps.
     let top: number;
+    let from = (_tt: number) => 0;
     let opacity = 1;
     let writeAt: number;
     let endDot = 1;
@@ -486,25 +519,32 @@ export function WhichMeans({
     if (k === 0) {
       writeAt = enter;
       const centred = hingeY - clauses[0].h / 2;
-      top = centred + (causeTop(0) - centred) * c0Slot;
+      const slotted = causeTop(0);
+      top = n > 1 ? slotted : centred;
+      if (n > 1) from = (tt) => (centred - slotted) * (1 - c0SlotAt(tt));
       opacity = 1 - (1 - DIM) * ease(s1 + 2, 14);
       endDot = n > 1 ? 1 - ease(s1, 10) : 1;
     } else {
       writeAt = k === 1 ? enter + 4 : enter + WRITE_AFTER_RISE;
       top = effectTop;
       if (promoting) {
-        const rise = ease(promoteAt, RISE, EASE_MOVE);
-        top = effectTop + (causeTop(k) - effectTop) * rise;
+        const riseAt = (tt: number) => easeAt(tt, promoteAt, RISE, EASE_MOVE);
+        const slotted = causeTop(k);
+        top = slotted;
+        from = (tt) => (effectTop - slotted) * (1 - riseAt(tt));
         opacity = 1 - (1 - DIM) * ease(promoteAt + 4, 14);
         endDot = 1 - ease(promoteAt + 4, 10);
         ellipsis = ease(promoteAt + RISE - 4, 10);
       }
     }
 
+    let lift = from;
     if (k + 2 < n) {
       const exit = ease(leaveAt, EXIT, EASE_MOVE);
       if (exit >= 1) continue;
-      top -= exit * F * 0.9;
+      const travel = from;
+      lift = (tt) =>
+        travel(tt) - easeAt(tt, leaveAt, EXIT, EASE_MOVE) * F * 0.9;
       opacity *= 1 - exit;
     }
 
@@ -516,7 +556,9 @@ export function WhichMeans({
         )
       : fg;
 
-    nodes.push(renderClause(k, top, opacity, color, writeAt, endDot, ellipsis));
+    nodes.push(
+      renderClause(k, top, lift, opacity, color, writeAt, endDot, ellipsis),
+    );
   }
 
   if (n > 1) {

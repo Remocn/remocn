@@ -1,6 +1,7 @@
 "use client";
 
 import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface TopDownLettersProps {
   text: string;
@@ -23,6 +24,7 @@ export function TopDownLetters({
   speed = 1,
   className,
 }: TopDownLettersProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame() * speed;
 
   const chars = Array.from(text);
@@ -73,7 +75,7 @@ export function TopDownLetters({
                 backfaceVisibility: "hidden",
                 transformOrigin: "50% 55%",
                 opacity,
-                translate: `0 ${y}px`,
+                transform: `translateY(${y}px)${glide(local > 0 && local < charTravelFrames)}`,
               }}
             >
               {char}

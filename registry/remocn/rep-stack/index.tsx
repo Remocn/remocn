@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -215,6 +216,7 @@ export function RepStack({
   theme = "dark",
   speed = 1,
 }: RepStackProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -239,13 +241,16 @@ export function RepStack({
   const baseline = (H + cap) / 2;
   const n = Math.max(2, Math.round(reps));
 
-  const run = RUN(interpolate(t, [0, runLength], [0, 1], CLAMP));
-  const settle = SETTLE(
-    interpolate(t, [runLength, runLength + SETTLE_LEN], [0, 1], CLAMP),
-  );
   // Rows still to travel, in pitches. It starts between two rows, so the
   // first frame is mid-pass, ends a hair past the gate, then settles.
-  const left = (n + 0.45) * (1 - run) - OVERSHOOT * run + OVERSHOOT * settle;
+  const leftAt = (f: number) => {
+    const run = RUN(interpolate(f, [0, runLength], [0, 1], CLAMP));
+    const settle = SETTLE(
+      interpolate(f, [runLength, runLength + SETTLE_LEN], [0, 1], CLAMP),
+    );
+    return (n + 0.45) * (1 - run) - OVERSHOOT * run + OVERSHOOT * settle;
+  };
+  const left = leftAt(t);
   const dim = DIM(interpolate(t, [dimAt, dimAt + DIM_LEN], [0, 1], CLAMP));
   const echoOpacity = 1 - (1 - c.echo) * dim;
 
@@ -260,6 +265,11 @@ export function RepStack({
     if (y > -0.2 * pitch && y - cap < H + 0.2 * pitch) rows.push(r);
   }
 
+  // Rows stepped by `y` would click along pixel by pixel; the drawing is
+  // marked, so it leans while they run.
+  const running =
+    Math.abs(leftAt(t + speed) - left) > 1e-9 ||
+    Math.abs(left - leftAt(t - speed)) > 1e-9;
   const typeProps = {
     x,
     fontFamily,
@@ -275,7 +285,11 @@ export function RepStack({
           width={W}
           height={H}
           viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: glide(running).trim(),
+          }}
           aria-label={text}
           role="img"
         >

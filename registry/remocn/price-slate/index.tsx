@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["300", "400"],
@@ -177,6 +178,8 @@ function reel(
   return digit - turns * (1 - k);
 }
 
+const midway = (p: number) => p > 0 && p < 1;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -213,6 +216,7 @@ export function PriceSlate({
   speed = 1,
   theme = "dark",
 }: PriceSlateProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -355,6 +359,51 @@ export function PriceSlate({
     });
   };
 
+  // Every vertical px the SVG text travels at time `tt` (lead lift, old price
+  // size, mark lifts, reel offsets), mirroring renderPrice, so the tilt on the
+  // <svg> stays on exactly while some glyph run still moves.
+  const svgTravel = (tt: number) => {
+    const mm = EASE_IO(Math.max(0, Math.min(1, (tt - MOVE_AT) / MOVE_LEN)));
+    const size = P + (S - P) * mm;
+    const li = interpolate(tt, [-6, 12], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+    const out = [size, (1 - li) * 0.2 * S];
+    const prices = [
+      { L: oldL, sz: size, start: 0, len: 20, n: 7, lag: -8 },
+      { L: newL, sz: P, start: REEL_AT, len: reelLength, n: turns, lag: 0 },
+    ];
+    for (const { L, sz, start, len, n, lag } of prices) {
+      const step = (CAP + 0.26) * sz;
+      let di = 0;
+      L.glyphs.forEach((g, i) => {
+        if (!isDigit(g.ch)) {
+          const k = interpolate(
+            tt,
+            [start + lag + i * 2, start + lag + 12 + i * 2],
+            [0, 1],
+            { ...CLAMP, easing: EASE_OUT },
+          );
+          out.push((1 - k) * 0.35 * sz);
+          return;
+        }
+        const s0 = start + di * 3;
+        const extra = n + di * 2;
+        di++;
+        out.push(reel(tt, s0, len + di * 2, Number(g.ch), extra) * step);
+      });
+    }
+    return out;
+  };
+  const travelNow = svgTravel(t);
+  const travelPrev = svgTravel(t - speed);
+  const travelNext = svgTravel(t + speed);
+  const svgMoving = travelNow.some(
+    (v, i) =>
+      Math.abs(v - travelPrev[i]) > 1e-3 || Math.abs(travelNext[i] - v) > 1e-3,
+  );
+
   const newCap = CAP * P;
   const oldCap = CAP * oldSize;
   const strikeY = baseline - oldCap * 0.44;
@@ -369,7 +418,12 @@ export function PriceSlate({
           width={W}
           height={H}
           viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            // the SVG paints no background, so a tilt shows no seam
+            transform: glide(svgMoving).trim(),
+          }}
           role="img"
           aria-label={`${lead} ${price}, was ${was}`}
         >
@@ -577,7 +631,7 @@ export function PriceSlate({
             alignItems: "baseline",
             gap: 12 * u,
             opacity: rise(-8),
-            transform: `translateY(${(1 - rise(-8)) * 10 * u}px)`,
+            transform: `translateY(${(1 - rise(-8)) * 10 * u}px)${glide(midway(rise(-8)))}`,
             lineHeight: 1,
           }}
         >
@@ -626,7 +680,7 @@ export function PriceSlate({
             letterSpacing: "-0.01em",
             color: p.muted,
             opacity: rise(landAt - 2),
-            transform: `translateY(${(1 - rise(landAt - 2)) * 12 * u}px)`,
+            transform: `translateY(${(1 - rise(landAt - 2)) * 12 * u}px)${glide(midway(rise(landAt - 2)))}`,
             lineHeight: 1,
           }}
         >
@@ -650,7 +704,7 @@ export function PriceSlate({
             letterSpacing: "-0.005em",
             color: fg,
             opacity: rise(landAt + 6),
-            transform: `translateY(${(1 - rise(landAt + 6)) * 12 * u}px)`,
+            transform: `translateY(${(1 - rise(landAt + 6)) * 12 * u}px)${glide(midway(rise(landAt + 6)))}`,
             lineHeight: 1,
           }}
         >

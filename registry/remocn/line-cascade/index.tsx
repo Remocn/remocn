@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -392,6 +393,7 @@ export function LineCascade({
   speed = 1,
   theme = "dark",
 }: LineCascadeProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -645,7 +647,10 @@ export function LineCascade({
               position: "absolute",
               left: 0,
               right: 0,
-              top: floorY + gapBelow + (1 - capIn) * 10 * u,
+              // The rise is a transform: layout rounds a baseline to whole
+              // pixels, so a caption eased by `top` clicks up pixel by pixel.
+              top: floorY + gapBelow,
+              transform: `translateY(${(1 - capIn) * 10 * u}px)${glide(capIn > 0 && capIn < 1)}`,
               textAlign: "center",
               fontFamily,
               fontWeight,

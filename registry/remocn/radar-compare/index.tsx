@@ -14,6 +14,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadSans("normal", {
   weights: ["400", "500"],
@@ -112,6 +113,7 @@ const DEFAULT_BRAND = [0.94, 0.88, 0.7, 0.86, 0.9, 0.96];
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
+
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -218,7 +220,10 @@ export function RadarCompare({
   theme = "dark",
   speed = 1,
 }: RadarCompareProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
+  const frame = useCurrentFrame();
+  const tAt = (f: number) => Math.max(0, f - delay) * speed;
+  const t = tAt(frame);
   const { width, height, fps } = useVideoConfig();
   const gid = `rc${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const u = Math.min(width / 1280, height / 720);
@@ -240,8 +245,14 @@ export function RadarCompare({
 
   const R = height * 0.28;
   const cy = height * 0.5;
-  const move = interpolate(t, [86, 118], [0, 1], { ...CLAMP, easing: EASE_IO });
-  const cx = interpolate(move, [0, 1], [width * 0.5, width * 0.335]);
+  const centreAt = (tt: number) =>
+    interpolate(
+      interpolate(tt, [86, 118], [0, 1], { ...CLAMP, easing: EASE_IO }),
+      [0, 1],
+      [width * 0.5, width * 0.335],
+    );
+  const cx = centreAt(t);
+  const cxRest = centreAt(Infinity);
 
   const ang = (i: number) => (i / n) * TAU;
   const pt = (r: number, a: number) => ({
@@ -257,8 +268,15 @@ export function RadarCompare({
       .join(" ")} Z`;
 
   const stage = interpolate(t, [0, 8], [0, 1], CLAMP);
-  const push = interpolate(t, [0, 150], [0, 1], { ...CLAMP, easing: EASE_IO });
-  const scale = 0.965 + 0.035 * push;
+  const scaleAt = (tt: number) =>
+    0.965 +
+    0.035 * interpolate(tt, [0, 150], [0, 1], { ...CLAMP, easing: EASE_IO });
+  const scale = scaleAt(t);
+  // The push eases in and out slowly; it moves while the furthest text, some
+  // 700px from the centre, shifts by more than a thousandth of a pixel.
+  const pushing =
+    Math.abs(scaleAt(tAt(frame + 1)) - scale) * 700 > 1e-3 ||
+    Math.abs(scale - scaleAt(tAt(frame - 1))) * 700 > 1e-3;
 
   const compPts = comp.map((v) => v * R);
   let perim = 0;
@@ -311,7 +329,12 @@ export function RadarCompare({
     <AbsoluteFill style={{ background: fill, overflow: "hidden" }}>
       <ScaleLayer scale={size}>
         <AbsoluteFill
-          style={{ transform: `scale(${scale})`, transformOrigin: "50% 50%" }}
+          style={{
+            // The push runs under every other move, so this one tilt covers
+            // the labels and the captions as well.
+            transform: `scale(${scale})${glide(pushing)}`,
+            transformOrigin: "50% 50%",
+          }}
         >
           <svg
             width={width}
@@ -471,7 +494,15 @@ export function RadarCompare({
               ...CLAMP,
               easing: EASE_OUT,
             });
-            const q = pt(R + (22 + 6 * (1 - k)) * u, a);
+            const at = (kk: number, x: number) => {
+              const r = R + (22 + 6 * (1 - kk)) * u;
+              return { x: x + r * Math.sin(a), y: cy - r * Math.cos(a) };
+            };
+            // Laid out where the label settles; the drift out and the slide
+            // with the chart are a transform, since layout rounds a baseline
+            // to whole pixels and the label would click along.
+            const q = at(k, cx);
+            const rest = at(1, cxRest);
             const sx = Math.sin(a);
             const sy = -Math.cos(a);
             const won = mine[i] > comp[i];
@@ -480,9 +511,9 @@ export function RadarCompare({
                 key={`l${ax}`}
                 style={{
                   position: "absolute",
-                  left: q.x,
-                  top: q.y,
-                  transform: `translate(${-50 + sx * 50}%, ${-50 + sy * 50}%)`,
+                  left: rest.x,
+                  top: rest.y,
+                  transform: `translate(${q.x - rest.x}px, ${q.y - rest.y}px) translate(${-50 + sx * 50}%, ${-50 + sy * 50}%)`,
                   fontFamily,
                   fontWeight: 500,
                   fontSize: 17 * u,

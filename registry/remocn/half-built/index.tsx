@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const golos = loadFont("normal", {
   weights: ["400", "500"],
@@ -72,6 +73,8 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
+const moving = (p: number) => p > 0 && p < 1;
+
 interface Unit {
   key: string;
   text: string;
@@ -128,6 +131,7 @@ export function HalfBuilt({
   speed = 1,
   theme = "dark",
 }: HalfBuiltProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -243,7 +247,8 @@ export function HalfBuilt({
       whiteSpace: "nowrap",
       marginRight: "0.24em",
       opacity: p,
-      transform: `translateY(${((1 - p) * 0.28).toFixed(3)}em)`,
+      // Unrounded: a travel snapped to 0.001em stalls and then jumps.
+      transform: `translateY(${(1 - p) * 0.28}em)${glide(moving(p))}`,
     };
     if (u.plan < 0) {
       return (
@@ -301,7 +306,9 @@ export function HalfBuilt({
             color: hi,
             whiteSpace: "nowrap",
             opacity: tagP * (1 - done),
-            transform: `translateY(${((1 - tagP) * 0.5).toFixed(3)}em)`,
+            transform: `translateY(${(1 - tagP) * 0.5}em)${glide(
+              moving(tagP) && !moving(p),
+            )}`,
           }}
         >
           {u.when}

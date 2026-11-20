@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -90,14 +91,24 @@ const clamp = (v: number, lo: number, hi: number) =>
 const ramp = (frame: number, from: number, len: number, curve = MOVE) =>
   curve(clamp((frame - from) / len, 0, 1));
 
+// Chrome parks a glyph raster on a whole pixel vertically for as long as the
+// matrix is axis-aligned, so text under a slow transform clicks along pixel by
+// pixel. The transforms that carry text are marked, so it leans off that grid
+// while they move.
+/** A spring leaves a sub-pixel tail behind; none of it once it's invisible. */
+const px = (v: number) => (Math.abs(v) < 1e-3 ? 0 : v);
+
 function ThemeToggle({
   theme,
   k,
+  kRest,
   hover,
   press,
 }: {
   theme: MockTheme;
   k: number;
+  /** Where the knob comes to rest; its slide there is a transform. */
+  kRest: number;
   hover: number;
   press: number;
 }) {
@@ -129,8 +140,11 @@ function ThemeToggle({
       <div
         style={{
           position: "absolute",
-          left: 2 + k * SEG,
+          left: 2 + kRest * SEG,
           top: 2,
+          transform: px((k - kRest) * SEG)
+            ? `translateX(${(k - kRest) * SEG}px)`
+            : undefined,
           width: SEG,
           height: 28,
           borderRadius: 7,
@@ -235,6 +249,7 @@ export function ThemeFlip({
   ground,
   groundParams,
 }: ThemeFlipProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const tall = H > W * 1.2;
@@ -249,8 +264,11 @@ export function ThemeFlip({
 
   const s = tall ? (W * 0.9) / sw : (W * 0.76) / sw;
   const left = (W - sw * s) / 2;
-  const enter = spring({ frame: frame + 2, fps, config: HEAVY });
-  const top = (tall ? H * 0.47 : H * 0.13) + (1 - enter) * 0.06 * H;
+  const enterAt = (f: number) => spring({ frame: f + 2, fps, config: HEAVY });
+  const enter = enterAt(frame);
+  const topRest = tall ? H * 0.47 : H * 0.13;
+  const rise = (1 - enter) * 0.06 * H;
+  const top = topRest + rise;
   const toStage = (x: number, y: number) => ({
     x: left + x * s,
     y: top + y * s,
@@ -266,6 +284,8 @@ export function ThemeFlip({
     : 0;
   const knob = fwd - bwd;
   const k = startTheme === "dark" ? 1 - knob : knob;
+  const knobRest = reverse ? 0 : 1;
+  const kRest = startTheme === "dark" ? 1 - knobRest : knobRest;
   const hover =
     ramp(frame, clickAt - 6, 4, ENTER) * (1 - ramp(frame, clickAt + 2, 3)) +
     (reverse
@@ -290,19 +310,25 @@ export function ThemeFlip({
   const p1 = WIPE(clamp((frame - clickAt - 2) / FLOOD, 0, 1));
   const p2 = reverse ? WIPE(clamp((frame - REV_CLICK - 2) / FLOOD, 0, 1)) : 0;
 
-  const z =
-    ramp(frame, 2, 28, CAMERA) -
-    ramp(frame, clickAt + 6, 32, CAMERA) +
+  const zAt = (f: number) =>
+    ramp(f, 2, 28, CAMERA) -
+    ramp(f, clickAt + 6, 32, CAMERA) +
     (reverse
-      ? ramp(frame, REV, 22, CAMERA) - ramp(frame, REV_CLICK + 6, 32, CAMERA)
+      ? ramp(f, REV, 22, CAMERA) - ramp(f, REV_CLICK + 6, 32, CAMERA)
       : 0);
+  const z = zAt(frame);
+  const shifts = (at: (f: number) => number, eps: number) =>
+    Math.abs(at(frame + speed) - at(frame)) > eps ||
+    Math.abs(at(frame) - at(frame - speed)) > eps;
+  const cameraMoving = shifts(zAt, 1e-6);
+  const riseMoving = shifts(enterAt, 1e-6);
   const Z = 1 + (zoom - 1) * z;
   const aim = tall ? { x: W * 0.62, y: H * 0.5 } : { x: W * 0.6, y: H * 0.32 };
   const shot = {
     x: focus.x + (aim.x - focus.x) * z,
     y: focus.y + (aim.y - focus.y) * z,
   };
-  const camera = `translate(${shot.x - focus.x * Z}px, ${shot.y - focus.y * Z}px) scale(${Z})`;
+  const camera = `translate(${shot.x - focus.x * Z}px, ${shot.y - focus.y * Z}px) scale(${Z})${glide(cameraMoving)}`;
 
   const startPt = { x: W * 0.74, y: tall ? H * 0.82 : H * 0.92 };
   const park = { x: flipPt.x + 70 * u, y: flipPt.y + 90 * u };
@@ -328,6 +354,13 @@ export function ThemeFlip({
     cur = { x: cur.x - away2 * 30 * u, y: cur.y + away2 * 70 * u };
   }
 
+  // Where the cursor parks at the end: its layout home, so the glide there
+  // is a transform. Taken with the window landed, like the rest frames.
+  const flipRest = { x: flipPt.x, y: flipPt.y - rise };
+  const curRest = reverse
+    ? { x: backPt.x - 30 * u, y: backPt.y - rise + 70 * u }
+    : { x: flipRest.x + 70 * u, y: flipRest.y + 90 * u };
+
   const shown = clamp(p1 - p2, 0, 1);
   const word = (idx: 0 | 1) =>
     themes[idx] === "dark" ? "Dark mode" : "Light mode";
@@ -336,7 +369,13 @@ export function ThemeFlip({
     const src = idx === 0 ? fromSrc : toSrc;
     const node = idx === 0 ? from : to;
     const toggle = (
-      <ThemeToggle theme={theme} k={k} hover={hover} press={press} />
+      <ThemeToggle
+        theme={theme}
+        k={k}
+        kRest={kRest}
+        hover={hover}
+        press={press}
+      />
     );
     return (
       <div
@@ -428,11 +467,13 @@ export function ThemeFlip({
             style={{
               position: "absolute",
               left,
-              top,
+              // Layout holds the window where it lands; the rise in is a
+              // transform, since layout rounds it to whole pixels.
+              top: topRest,
               width: sw,
               height: sh,
               transformOrigin: "0 0",
-              transform: `scale(${s})`,
+              transform: `${px(rise) ? `translateY(${rise}px) ` : ""}scale(${s})${glide(riseMoving)}`,
               borderRadius: 14,
               overflow: "hidden",
               opacity: interpolate(enter, [0, 0.3], [0, 1], {
@@ -471,8 +512,12 @@ export function ThemeFlip({
             <div
               style={{
                 position: "absolute",
-                left: cur.x - 2 * u,
-                top: cur.y - 2 * u,
+                left: curRest.x - 2 * u,
+                top: curRest.y - 2 * u,
+                transform:
+                  px(cur.x - curRest.x) || px(cur.y - curRest.y)
+                    ? `translate(${cur.x - curRest.x}px, ${cur.y - curRest.y}px)`
+                    : undefined,
                 opacity: interpolate(frame, [6, 12], [0, 1], {
                   extrapolateLeft: "clamp",
                   extrapolateRight: "clamp",
@@ -525,7 +570,7 @@ export function ThemeFlip({
                       left: 0,
                       top: 0,
                       opacity: vis,
-                      transform: `translateY(${(1 - vis) * (idx === 1 ? 1 : -1) * (shown > 0.5 === (idx === 1) ? 1 : 0.6) * 0.03 * H}px)`,
+                      transform: `translateY(${(1 - vis) * (idx === 1 ? 1 : -1) * (shown > 0.5 === (idx === 1) ? 1 : 0.6) * 0.03 * H}px)${glide(vis > 0 && vis < 1)}`,
                       filter: `blur(${(1 - vis) * 8}px)`,
                     }}
                   >

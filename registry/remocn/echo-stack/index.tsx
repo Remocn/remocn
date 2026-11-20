@@ -3,6 +3,7 @@
 import { loadFont } from "@remotion/google-fonts/Inter";
 import { useId } from "react";
 import { Easing, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: INTER } = loadFont("normal", {
   weights: ["100", "900"],
@@ -156,6 +157,7 @@ export function EchoStack({
   speed = echoStackDefaults.speed,
   className,
 }: EchoStackProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame();
   const { fps, height } = useVideoConfig();
   const unit = height / 720;
@@ -222,7 +224,9 @@ export function EchoStack({
               color: echoColor || color,
               filter: `url(#${outlineId})`,
               opacity: row.opacity,
-              transform: `translate(-50%, calc(-50% + ${row.position * pitch}px))`,
+              // The echoes drift for as long as the scene runs, so they
+              // never rest.
+              transform: `translate(-50%, calc(-50% + ${row.position * pitch}px))${glide(true)}`,
             }}
           >
             {text}
@@ -236,7 +240,9 @@ export function EchoStack({
             opacity: main.opacity,
             filter:
               main.blur > 0.05 ? `blur(${main.blur * unit}px)` : undefined,
-            transform: `scale(${main.scale})`,
+            transform: `scale(${main.scale})${glide(
+              main.scale > 1 && main.scale < 1.04,
+            )}`,
           }}
         >
           {text}

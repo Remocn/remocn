@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const gabarito = loadFont("normal", {
   weights: ["400", "500"],
@@ -59,6 +60,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (q: number) => q > 5e-4 && q < 1 - 5e-4;
 
 interface Metrics {
   roles: number;
@@ -168,6 +171,7 @@ export function CrewOfOne({
   speed = 1,
   theme = "dark",
 }: CrewOfOneProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const t = frame * speed;
@@ -211,21 +215,30 @@ export function CrewOfOne({
   const rollEnd = Math.max(rollStart + (n - 1) * 10, D * 0.6);
   const step = n > 1 ? (rollEnd - rollStart) / (n - 1) : 1;
   const move = Math.min(13, step * 0.55);
-  let p = 0;
-  for (let k = 1; k < n; k++) {
-    const s = rollStart + (k - 1) * step + (step - move);
-    p += interpolate(t, [s, s + move], [0, 1], { ...CLAMP, easing: EASE_IO });
-  }
   const cStart = rollEnd + 12;
   const cLen = 24;
-  const gather = interpolate(t, [cStart, cStart + cLen], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const intro = interpolate(t, [0, introEnd], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const drivers = (tt: number) => {
+    let p = 0;
+    for (let k = 1; k < n; k++) {
+      const s = rollStart + (k - 1) * step + (step - move);
+      p += interpolate(tt, [s, s + move], [0, 1], {
+        ...CLAMP,
+        easing: EASE_IO,
+      });
+    }
+    const gather = interpolate(tt, [cStart, cStart + cLen], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+    const intro = interpolate(tt, [0, introEnd], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+    return { p, gather, intro };
+  };
+  const { p, gather, intro } = drivers(t);
+  const before = drivers((frame - 1) * speed);
+  const after = drivers((frame + 1) * speed);
   const nameIn = interpolate(t, [8, 26], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
@@ -249,11 +262,24 @@ export function CrewOfOne({
     textAlign: "right",
   };
 
+  const rowY = (i: number, q: ReturnType<typeof drivers>) => {
+    const rollY = (i - q.p) * LS + (1 - q.intro) * LS * 0.9;
+    const stackY = stackTop + i * LS2;
+    return rollY + (stackY - rollY) * q.gather;
+  };
+
   const nodes: React.ReactNode[] = list.map((r, i) => {
     const d = i - p;
-    const rollY = d * LS + (1 - intro) * LS * 0.9;
+    const y = rowY(i, { p, gather, intro });
     const stackY = stackTop + i * LS2;
-    const y = rollY + (stackY - rollY) * gather;
+    // Layout rounds a box and a baseline to whole pixels, so a row eased by
+    // `top` clicks along pixel by pixel. It is laid out in its stack slot,
+    // where it ends up, and gets everywhere else by a transform. One layout
+    // position for its whole life: handing a row from the transform back to
+    // layout at each hold would jump it by what layout rounds off.
+    const moving =
+      Math.abs(rowY(i, after) - y) > 1e-3 ||
+      Math.abs(y - rowY(i, before)) > 1e-3;
     const ad = Math.abs(d);
     const rollA =
       interpolate(ad, [0, 0.55, 1, 2.6], [1, 0.42, 0.3, 0], CLAMP) * intro;
@@ -263,7 +289,8 @@ export function CrewOfOne({
         key={`r${i}`}
         style={{
           ...roleStyle,
-          top: top(baseline + y, F),
+          top: top(baseline + stackY, F),
+          transform: `translateY(${y - stackY}px)${glide(moving)}`,
           opacity: a,
         }}
       >
@@ -298,7 +325,7 @@ export function CrewOfOne({
               fontSize: NF,
               letterSpacing: `${NAME_TRACK}em`,
               color: hi,
-              transform: `translateY(${((1 - nameIn) * NF * 1.3).toFixed(2)}px)`,
+              transform: `translateY(${((1 - nameIn) * NF * 1.3).toFixed(2)}px)${glide(midway(nameIn))}`,
             }}
           >
             {name}

@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 // Manrope is the remocn.dev brand face: 600 for the logo's "emocn" (the brand
 // asset), 500 for any other name set next to a custom mark.
@@ -199,6 +200,7 @@ export function RippleMark({
   theme = "dark",
   speed = 1,
 }: RippleMarkProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -342,10 +344,16 @@ export function RippleMark({
     neutral[bucket].push(circle(x, y, r));
   }
 
-  const cam = interpolate(t, [0, PAN_AT + PAN_DUR + 40], [1.04, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const camAt = (f: number) =>
+    interpolate(f, [0, PAN_AT + PAN_DUR + 40], [1.04, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const cam = camAt(t);
+  // The ease is flat at both ends, so the test is on the scale itself.
+  const camMoving =
+    Math.abs(camAt(t + speed) - cam) > 2e-6 ||
+    Math.abs(cam - camAt(t - speed)) > 2e-6;
   const wordLeft = markLeft + px + markW + gap;
   const baseline = markTop + markH;
   const letters = word.split("");
@@ -365,7 +373,10 @@ export function RippleMark({
         />
       ) : null}
       <AbsoluteFill
-        style={{ transform: `scale(${cam})`, transformOrigin: "50% 50%" }}
+        style={{
+          transform: `scale(${cam})${glide(camMoving)}`,
+          transformOrigin: "50% 50%",
+        }}
       >
         <svg
           width={W}

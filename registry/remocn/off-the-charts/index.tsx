@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -59,6 +60,7 @@ const DEFAULT_DATA: OffTheChartsDatum[] = [
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const PUSH = Easing.bezier(0.45, 0, 0.3, 1);
+
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -162,6 +164,7 @@ export function OffTheCharts({
   speed = 1,
   theme = "dark",
 }: OffTheChartsProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const u = height / 720;
@@ -223,27 +226,36 @@ export function OffTheCharts({
   const accentV = rows[ai].value;
   const breaks = accentV > max;
   const pressTo = breaks ? max : accentV;
-  const phaseA = interpolate(t, [RISE, pressAt], [0, pressTo], {
-    ...CLAMP,
-    easing: PUSH,
-  });
-  const tension = breaks
-    ? interpolate(t, [pressAt, breakAt], [0, 7 * u], {
-        ...CLAMP,
-        easing: Easing.bezier(0.55, 0, 1, 0.45),
-      })
-    : 0;
-  const release = spring({
-    frame: t - breakAt,
-    fps,
-    config: { damping: 15, stiffness: 120, mass: 0.8 },
-  });
-  const broken = breaks && t >= breakAt;
-  const aH = broken
-    ? lerp(max * px + 7 * u, accentV * px, release)
-    : phaseA * px + tension;
+  const barAt = (f: number) => {
+    const phaseA = interpolate(f, [RISE, pressAt], [0, pressTo], {
+      ...CLAMP,
+      easing: PUSH,
+    });
+    const tension = breaks
+      ? interpolate(f, [pressAt, breakAt], [0, 7 * u], {
+          ...CLAMP,
+          easing: Easing.bezier(0.55, 0, 1, 0.45),
+        })
+      : 0;
+    const release = spring({
+      frame: f - breakAt,
+      fps,
+      config: { damping: 15, stiffness: 120, mass: 0.8 },
+    });
+    const broken = breaks && f >= breakAt;
+    const aH = broken
+      ? lerp(max * px + 7 * u, accentV * px, release)
+      : phaseA * px + tension;
+    return { tension, broken, aH };
+  };
+  const { tension, broken, aH } = barAt(t);
   const aVal = aH / px;
-  const aTop = bottom - aH;
+  // The counter rides the bar's top the whole time it shows. Placed by `top`,
+  // layout rounded its baseline to whole pixels, so the climb stepped unevenly;
+  // layout holds it at the bar's foot and the climb is a transform.
+  const counterMoving =
+    Math.abs(barAt(t + 1).aH - aH) > 1e-3 ||
+    Math.abs(aH - barAt(t - 1).aH) > 1e-3;
 
   const snap = breaks
     ? spring({
@@ -263,11 +275,23 @@ export function OffTheCharts({
   const slashDx = slashLen * 0.36;
 
   const hitAt = breakAt + 14;
-  const hero = spring({
-    frame: t - hitAt,
-    fps,
-    config: { damping: 16, stiffness: 150, mass: 0.7 },
-  });
+  const heroAt = (f: number) =>
+    spring({
+      frame: f - hitAt,
+      fps,
+      config: { damping: 16, stiffness: 150, mass: 0.7 },
+    });
+  // The hero rides the bar's top, and the bar settles on a long spring tail.
+  // Layout rounds a baseline to whole pixels, so riding it by `top` clicked
+  // the figure down pixel by pixel; layout holds the settled top instead and
+  // the ride is a transform.
+  const restH = (breaks ? accentV : pressTo) * px;
+  const heroLift = (f: number) =>
+    restH - barAt(f).aH + (1 - heroAt(f)) * 18 * u;
+  const lift = heroLift(t);
+  const heroMoving =
+    Math.abs(heroLift(t + 1) - lift) > 1e-3 ||
+    Math.abs(lift - heroLift(t - 1)) > 1e-3;
   const heroO = interpolate(t, [hitAt, hitAt + 7], [0, 1], CLAMP);
   const cap = interpolate(t, [hitAt + 8, hitAt + 24], [0, 1], {
     ...CLAMP,
@@ -504,7 +528,11 @@ export function OffTheCharts({
             position: "absolute",
             left: aX,
             width: bw,
-            top: aTop + 10 * u,
+            top: bottom + 10 * u,
+            transform:
+              aH > 1e-3
+                ? `translateY(${-aH}px)${glide(counterMoving)}`
+                : undefined,
             textAlign: "center",
             fontFamily,
             fontWeight: 500,
@@ -524,9 +552,9 @@ export function OffTheCharts({
           style={{
             position: "absolute",
             left: aX + bw + 30 * u,
-            top: aTop - 10 * u,
+            top: bottom - restH - 10 * u,
             opacity: heroO,
-            transform: `translateY(${(1 - hero) * 18 * u}px)`,
+            transform: `translateY(${lift}px)${glide(heroMoving)}`,
           }}
         >
           <div

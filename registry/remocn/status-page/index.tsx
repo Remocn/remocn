@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -202,7 +203,21 @@ function RemocnLogo({ fontSize, color }: { fontSize: number; color: string }) {
   );
 }
 
-function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
+/**
+ * Laid out at `anchor` and carried to (x, y) by a transform: layout rounds a
+ * box to whole pixels, so a cursor eased by `left`/`top` clicks along.
+ */
+function Cursor({
+  x,
+  y,
+  anchor,
+  press,
+}: {
+  x: number;
+  y: number;
+  anchor: { x: number; y: number };
+  press: number;
+}) {
   return (
     <svg
       width={26}
@@ -210,10 +225,10 @@ function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
       viewBox="0 0 20 24"
       style={{
         position: "absolute",
-        left: x - 2,
-        top: y - 2,
+        left: anchor.x - 2,
+        top: anchor.y - 2,
         transformOrigin: "2px 2px",
-        transform: `scale(${1 - 0.04 * press})`,
+        transform: `translate(${x - anchor.x}px, ${y - anchor.y}px) scale(${1 - 0.04 * press})`,
         filter:
           "drop-shadow(0 1px 1px rgba(0,0,0,0.25)) drop-shadow(0 6px 10px rgba(0,0,0,0.2))",
         overflow: "visible",
@@ -315,6 +330,7 @@ export function StatusPage({
   ground,
   groundParams,
 }: StatusPageProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const portrait = height > width;
@@ -481,7 +497,11 @@ export function StatusPage({
               position: "absolute",
               inset: 0,
               transformOrigin: "0 0",
-              transform: `translate(${L.stageW / 2 - focus.x * camS}px, ${L.stageH / 2 - focus.y * camS}px) scale(${camS})`,
+              // Chrome parks a glyph raster on a whole pixel vertically for as
+              // long as the matrix is axis-aligned, so text under a slow
+              // transform clicks along. The camera never stops drifting, so
+              // it is marked as moving on every frame.
+              transform: `translate(${L.stageW / 2 - focus.x * camS}px, ${L.stageH / 2 - focus.y * camS}px) scale(${camS})${glide(true)}`,
             }}
           >
             <div
@@ -812,8 +832,10 @@ export function StatusPage({
               <div
                 style={{
                   position: "absolute",
-                  left: tipPos.x - tipArrow,
-                  top: tipPos.y - L.barH / 2 - 14 - 104,
+                  // Parked over the first bar; the slide to the second is a
+                  // transform, for the same reason as the cursor's travel.
+                  left: pA.x - tipArrow,
+                  top: pA.y - L.barH / 2 - 14 - 104,
                   width: L.tipW,
                   height: 104,
                   boxSizing: "border-box",
@@ -826,7 +848,7 @@ export function StatusPage({
                     : "0 2px 4px rgba(0,0,0,0.08), 0 18px 40px -10px rgba(0,0,0,0.38)",
                   opacity: clamp(tip * 1.6),
                   transformOrigin: `${tipArrow}px 100%`,
-                  transform: `translateY(${(1 - tip) * 10}px) scale(${0.92 + 0.08 * tip})`,
+                  transform: `translate(${(pB.x - pA.x) * toB}px, ${(pB.y - pA.y) * toB + (1 - tip) * 10}px) scale(${0.92 + 0.08 * tip})`,
                 }}
               >
                 <div style={{ position: "relative", height: "100%" }}>
@@ -915,7 +937,12 @@ export function StatusPage({
 
             {cursorO > 0.01 ? (
               <div style={{ opacity: cursorO }}>
-                <Cursor x={cur.x} y={cur.y} press={press} />
+                <Cursor
+                  x={cur.x}
+                  y={cur.y}
+                  anchor={{ x: pA.x + 2, y: pA.y + 4 }}
+                  press={press}
+                />
               </div>
             ) : null}
           </div>

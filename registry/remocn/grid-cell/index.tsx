@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const geist = loadGeist("normal", {
   weights: ["400"],
@@ -83,6 +84,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const T = {
   gridStart: 2,
@@ -162,6 +165,7 @@ export function GridCell({
   speed = 1,
   theme = "dark",
 }: GridCellProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -435,7 +439,7 @@ export function GridCell({
             color: c.muted,
             opacity: labelIn,
             filter: `blur(${(1 - labelIn) * 6 * s}px)`,
-            transform: `translateY(${(1 - labelIn) * 6 * s}px)`,
+            transform: `translateY(${(1 - labelIn) * 6 * s}px)${glide(midway(labelIn))}`,
           }}
         >
           <span

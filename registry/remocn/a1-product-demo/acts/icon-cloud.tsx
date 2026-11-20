@@ -17,6 +17,8 @@ import {
   FLOW_YELLOW,
   FONT,
   FONT_SERIF,
+  stirring,
+  useGlide,
 } from "../foundation";
 
 type ChipKind =
@@ -191,29 +193,46 @@ function ChipNode({
   f,
   fps,
   converge,
+  step,
 }: {
   chip: Chip;
   f: number;
   fps: number;
-  converge: number;
+  converge: (f: number) => number;
+  step: number;
 }) {
-  const enter = spring({
-    frame: f - chip.delay,
-    fps,
-    config: { damping: 18, stiffness: 90 },
-  });
+  const glide = useGlide();
+  const place = (g: number) => {
+    const enter = spring({
+      frame: g - chip.delay,
+      fps,
+      config: { damping: 18, stiffness: 90 },
+    });
 
-  const orbit = 0.05 * Math.sin(f / 45 + chip.phase);
-  const cos = Math.cos(orbit);
-  const sin = Math.sin(orbit);
-  const ox = chip.dx * cos - chip.dy * sin;
-  const oy = chip.dx * sin + chip.dy * cos;
+    const orbit = 0.05 * Math.sin(g / 45 + chip.phase);
+    const cos = Math.cos(orbit);
+    const sin = Math.sin(orbit);
+    const ox = chip.dx * cos - chip.dy * sin;
+    const oy = chip.dx * sin + chip.dy * cos;
 
-  const ex = chip.sx + (ox - chip.sx) * enter;
-  const ey = chip.sy + (oy - chip.sy) * enter;
+    const ex = chip.sx + (ox - chip.sx) * enter;
+    const ey = chip.sy + (oy - chip.sy) * enter;
 
-  const x = ex * (1 - converge);
-  const y = ey * (1 - converge);
+    const c = converge(g);
+    return {
+      enter,
+      x: ex * (1 - c),
+      y: ey * (1 - c),
+      scale: (0.86 + enter * 0.14) * (1 - c * 0.32),
+    };
+  };
+  const { enter, x, y, scale } = place(f);
+  // The chip's label rides the drift, so it tilts for as long as anything
+  // moves; the scale counts at the far end of the widest chip.
+  const moving =
+    stirring((g) => place(g).x, f, step) ||
+    stirring((g) => place(g).y, f, step) ||
+    stirring((g) => place(g).scale * 120, f, step);
 
   const blur = interpolate(enter, [0, 1], [6, 0]);
   const opacityIn = interpolate(f, [chip.delay, chip.delay + 12], [0, 1], {
@@ -224,19 +243,23 @@ function ChipNode({
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const scale = (0.86 + enter * 0.14) * (1 - converge * 0.32);
 
   return (
     <div
       style={{
         position: "absolute",
-        left: `calc(50% + ${x}px)`,
-        top: `calc(50% + ${y}px)`,
-        translate: "-50% -50%",
+        // Layout rounds a box and a baseline to whole pixels, so the chip is
+        // laid out at the centre and its drift is a transform.
+        left: "50%",
+        top: "50%",
+        translate:
+          x === 0 && y === 0
+            ? "-50% -50%"
+            : `calc(-50% + ${x}px) calc(-50% + ${y}px)`,
         scale: `${scale}`,
+        transform: glide(moving),
         opacity: opacityIn * opacityOut,
         filter: blur > 0.05 ? `blur(${blur}px)` : undefined,
-        willChange: "transform, filter, opacity",
       }}
     >
       <div
@@ -273,18 +296,25 @@ function HeadWord({
   index,
   f,
   fps,
+  step,
 }: {
   text: string;
   index: number;
   f: number;
   fps: number;
+  step: number;
 }) {
-  const reveal = spring({
-    frame: f - index * 4,
-    fps,
-    config: { damping: 18, stiffness: 110 },
-  });
+  const glide = useGlide();
+  const revealAt = (g: number) =>
+    spring({
+      frame: g - index * 4,
+      fps,
+      config: { damping: 18, stiffness: 110 },
+    });
+  const reveal = revealAt(f);
   const ty = interpolate(reveal, [0, 1], [70, 0]);
+  // 70% of a 60px line is about 45px of travel.
+  const rising = stirring((g) => revealAt(g) * 45, f, step);
   const blur = interpolate(reveal, [0, 1], [7, 0]);
   const color = interpolateColors(reveal, [0, 1], [FLOW_MUTED, FLOW_INK]);
 
@@ -301,8 +331,8 @@ function HeadWord({
           display: "inline-block",
           color,
           translate: `0 ${ty}%`,
+          transform: glide(rising),
           filter: blur > 0.05 ? `blur(${blur}px)` : undefined,
-          willChange: "transform, filter",
         }}
       >
         {text}
@@ -314,12 +344,14 @@ function HeadWord({
 export function IconCloud({ speed = 1 }: { speed?: number }) {
   const f = useCurrentFrame() * speed;
   const { fps } = useVideoConfig();
+  const glide = useGlide();
 
-  const converge = interpolate(f, [92, 138], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-    easing: Easing.inOut(Easing.cubic),
-  });
+  const converge = (g: number) =>
+    interpolate(g, [92, 138], [0, 1], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+      easing: Easing.inOut(Easing.cubic),
+    });
 
   const lineAOpacity = interpolate(f, [90, 110], [1, 0], {
     extrapolateLeft: "clamp",
@@ -329,11 +361,14 @@ export function IconCloud({ speed = 1 }: { speed?: number }) {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const lineBReveal = spring({
-    frame: f - 102,
-    fps,
-    config: { damping: 20, stiffness: 100 },
-  });
+  const lineBRevealAt = (g: number) =>
+    spring({
+      frame: g - 102,
+      fps,
+      config: { damping: 20, stiffness: 100 },
+    });
+  const lineBReveal = lineBRevealAt(f);
+  const lineBRising = stirring((g) => lineBRevealAt(g) * 34, f, speed);
   const lineBTy = interpolate(lineBReveal, [0, 1], [34, 0]);
   const lineBBlur = interpolate(lineBReveal, [0, 1], [8, 0]);
 
@@ -347,6 +382,7 @@ export function IconCloud({ speed = 1 }: { speed?: number }) {
             f={f}
             fps={fps}
             converge={converge}
+            step={speed}
           />
         ))}
       </AbsoluteFill>
@@ -364,12 +400,11 @@ export function IconCloud({ speed = 1 }: { speed?: number }) {
             fontSize: 60,
             fontWeight: 400,
             letterSpacing: "-0.01em",
-            willChange: "opacity",
           }}
         >
           <StarLogo size={48} />
           {LINE_WORDS.map((w, i) => (
-            <HeadWord key={w} text={w} index={i} f={f} fps={fps} />
+            <HeadWord key={w} text={w} index={i} f={f} fps={fps} step={speed} />
           ))}
         </div>
 
@@ -378,13 +413,13 @@ export function IconCloud({ speed = 1 }: { speed?: number }) {
             position: "absolute",
             opacity: lineBOpacity,
             translate: `0 ${lineBTy}px`,
+            transform: glide(lineBRising),
             filter: lineBBlur > 0.05 ? `blur(${lineBBlur}px)` : undefined,
             fontFamily: FONT_SERIF,
             fontSize: 60,
             fontWeight: 400,
             letterSpacing: "-0.01em",
             color: FLOW_INK,
-            willChange: "transform, filter, opacity",
           }}
         >
           in one place

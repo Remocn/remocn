@@ -16,6 +16,7 @@ import {
   useVideoConfig,
 } from "remotion";
 import { MaskRevealUp } from "@/components/remocn/mask-reveal-up";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface TemplateMeta {
   fps: number;
@@ -99,11 +100,30 @@ export const FLOW_GREEN_TOP = "#4F6B2A";
 export const FLOW_GREEN_MID = "#8DA03E";
 export const FLOW_GREEN_LOW = "#C5C86A";
 
+export { useGlide };
+
+/**
+ * Whether a value of the frame changes between neighbouring frames by more
+ * than `eps` (px). Springs without a set duration and sums of several moves
+ * have no clean progress to test, so the test looks at the value itself.
+ */
+export const stirring = (
+  at: (f: number) => number,
+  f: number,
+  step = 1,
+  eps = 1e-3,
+) =>
+  Math.abs(at(f + step) - at(f)) > eps || Math.abs(at(f) - at(f - step)) > eps;
+
+export const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 export interface CameraProps {
   x?: number;
   y?: number;
   scale?: number;
   blur?: number;
+  /** Whether the shot travels on this frame, so the text in it glides. */
+  moving?: boolean;
   children: ReactNode;
 }
 
@@ -112,16 +132,18 @@ export function Camera({
   y = 0,
   scale = 1,
   blur = 0,
+  moving = false,
   children,
 }: CameraProps) {
+  const glide = useGlide();
   return (
     <AbsoluteFill
       style={{
         translate: `${x}px ${y}px`,
         scale: `${scale}`,
+        transform: glide(moving),
         transformOrigin: "center",
         filter: blur > 0.01 ? `blur(${blur}px)` : undefined,
-        willChange: "transform, filter",
       }}
     >
       {children}
@@ -143,6 +165,7 @@ type CameraCraneUpProps = Record<string, never>;
 const CameraCraneUpPresentation: FC<
   TransitionPresentationComponentProps<CameraCraneUpProps>
 > = ({ children, presentationProgress, presentationDirection }) => {
+  const glide = useGlide();
   const p = presentationProgress;
   const blur = interpolate(p, [0, 0.5, 1], [0, 7, 0]);
   const translateY =
@@ -152,8 +175,8 @@ const CameraCraneUpPresentation: FC<
     <AbsoluteFill
       style={{
         translate: `0 ${translateY}%`,
+        transform: glide(midway(p)),
         filter: `blur(${blur}px)`,
-        willChange: "transform, filter",
       }}
     >
       {children}
@@ -175,6 +198,7 @@ const SpatialPushPresentation: FC<
   presentationDirection,
   passedProps,
 }) => {
+  const glide = useGlide();
   const p = presentationProgress;
   const { direction } = passedProps;
   const blur = interpolate(p, [0, 0.5, 1], [0, 5, 0]);
@@ -186,8 +210,8 @@ const SpatialPushPresentation: FC<
       <AbsoluteFill
         style={{
           scale: `${scale}`,
+          transform: glide(midway(p)),
           filter: `brightness(${brightness}) blur(${blur}px)`,
-          willChange: "transform, filter",
         }}
       >
         {children}
@@ -202,9 +226,9 @@ const SpatialPushPresentation: FC<
   return (
     <AbsoluteFill
       style={{
-        transform: `translate${axis}(${offset}%)`,
+        // A push on x alone needs no tilt, only one on y does.
+        transform: `translate${axis}(${offset}%)${glide(axis === "Y" && midway(p))}`,
         filter: `blur(${blur}px)`,
-        willChange: "transform, filter",
       }}
     >
       {children}

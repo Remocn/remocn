@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -213,6 +214,7 @@ export function TiltSettleList({
   ground,
   groundParams,
 }: TiltSettleListProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const t = THEMES[theme];
@@ -262,10 +264,17 @@ export function TiltSettleList({
   const tx = -W * 0.06 * fly;
   const sc = 1 + 0.12 * fly;
 
-  const push = interpolate(frame, [0, beat("end")], [1, 1.04], {
-    ...CLAMP,
-    easing: EASE_CAMERA,
-  });
+  const pushAt = (f: number) =>
+    interpolate(f, [0, beat("end")], [1, 1.04], {
+      ...CLAMP,
+      easing: EASE_CAMERA,
+    });
+  const push = pushAt(frame);
+  // The camera's ease is very flat at both ends, so "moving" is the scale step
+  // weighed at the frame's edge, against the neighbouring frames.
+  const pushMoving =
+    Math.abs(pushAt(frame + speed) - push) * W * 0.5 > 1e-3 ||
+    Math.abs(push - pushAt(frame - speed)) * W * 0.5 > 1e-3;
   const steps = Math.max(
     0,
     Math.min(lines.length - 1, Math.floor((frame - beat("step")) / step) + 1),
@@ -319,7 +328,9 @@ export function TiltSettleList({
         </filter>
       </svg>
       <ScaleLayer scale={scale}>
-        <AbsoluteFill style={{ transform: `scale(${push})` }}>
+        <AbsoluteFill
+          style={{ transform: `scale(${push})${glide(pushMoving)}` }}
+        >
           <div
             style={{
               position: "absolute",
@@ -538,19 +549,31 @@ export function TiltSettleList({
                       backgroundColor: fg,
                     }}
                   />
+                  {/* The knob rides the track by a transform, not `left`:
+                      layout rounds a box to whole pixels, so a knob eased by
+                      `left` steps along pixel by pixel. The carrier spans the
+                      track, so its own-width percent is the track's. */}
                   <div
                     style={{
                       position: "absolute",
-                      left: `${progress * 100}%`,
-                      top: "50%",
-                      width: S * 0.016,
-                      height: S * 0.016,
-                      marginLeft: -S * 0.008,
-                      marginTop: -S * 0.008,
-                      borderRadius: 99,
-                      backgroundColor: fg,
+                      inset: 0,
+                      transform: `translateX(${progress * 100}%)`,
                     }}
-                  />
+                  >
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: 0,
+                        top: "50%",
+                        width: S * 0.016,
+                        height: S * 0.016,
+                        marginLeft: -S * 0.008,
+                        marginTop: -S * 0.008,
+                        borderRadius: 99,
+                        backgroundColor: fg,
+                      }}
+                    />
+                  </div>
                 </div>
                 <div
                   style={{

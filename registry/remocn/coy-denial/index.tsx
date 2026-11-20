@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const funnel = loadFont("normal", {
   weights: ["400", "500"],
@@ -236,6 +237,8 @@ function buildLayout(
   return { says, asides, F, FA, portrait };
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -265,6 +268,7 @@ export function CoyDenial({
   speed = 1,
   theme = "dark",
 }: CoyDenialProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -360,7 +364,7 @@ export function CoyDenial({
                 letterSpacing: `${TRACK}em`,
                 whiteSpace: "pre",
                 color: fg,
-                transform: `translateY(${dy.toFixed(2)}px)`,
+                transform: `translateY(${dy}px)${glide(midway(q) || midway(out))}`,
               }}
             >
               {w.text}
@@ -401,7 +405,7 @@ export function CoyDenial({
               whiteSpace: "pre",
               color: hi,
               opacity: q * asideFade,
-              transform: `translateY(${((1 - q) * FA * 0.35).toFixed(2)}px)`,
+              transform: `translateY(${(1 - q) * FA * 0.35}px)${glide(midway(q))}`,
             }}
           >
             {w.text}

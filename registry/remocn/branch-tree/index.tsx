@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -204,6 +205,7 @@ export function BranchTree({
   theme = "dark",
   speed = 1,
 }: BranchTreeProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
@@ -314,7 +316,8 @@ export function BranchTree({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${push})`,
+            // The push covers the labels inside it, which ride it all along.
+            transform: `scale(${push})${glide(t > 0 && t < 140)}`,
             transformOrigin: "45% 50%",
             opacity: stage,
           }}

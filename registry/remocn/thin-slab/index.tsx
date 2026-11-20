@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const display = loadInterTight("normal", {
   weights: ["400", "500"],
@@ -136,6 +137,8 @@ function autoCallout(before: number, after: number) {
   return `${after < before ? "−" : "+"}${pct}%`;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function Roll({
   text,
   progressIn,
@@ -147,6 +150,7 @@ function Roll({
   progressOut?: number;
   style: React.CSSProperties;
 }) {
+  const glide = useGlide();
   return (
     <div
       style={{
@@ -159,7 +163,9 @@ function Roll({
       <div
         style={{
           ...style,
-          transform: `translateY(${(1 - progressIn) * 150 - progressOut * 150}%)`,
+          transform: `translateY(${(1 - progressIn) * 150 - progressOut * 150}%)${glide(
+            midway(progressIn) || midway(progressOut),
+          )}`,
           whiteSpace: "nowrap",
         }}
       >
@@ -212,6 +218,7 @@ export function ThinSlab({
   speed = 1,
   theme = "dark",
 }: ThinSlabProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const t = THEMES[theme];
@@ -374,7 +381,7 @@ export function ThinSlab({
             letterSpacing: "-0.01em",
             color: t.muted,
             opacity: titleIn,
-            transform: `translateY(${(1 - titleIn) * 10 * s}px)`,
+            transform: `translateY(${(1 - titleIn) * 10 * s}px)${glide(midway(titleIn))}`,
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
@@ -539,7 +546,7 @@ export function ThinSlab({
               right: portrait ? width - (left + slabW) : undefined,
               top: portrait ? slabCy + tMax / 2 + 26 * s : slabCy,
               transform: portrait
-                ? `translateY(${(1 - calloutIn) * 12 * s}px)`
+                ? `translateY(${(1 - calloutIn) * 12 * s}px)${glide(midway(calloutIn))}`
                 : `translate(${(1 - calloutIn) * -10 * s}px, -50%)`,
               opacity: calloutIn,
               fontFamily,

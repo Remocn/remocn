@@ -7,6 +7,7 @@ import {
   useContext,
 } from "react";
 import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 /**
  * Shared kit behind the design-review family (redline-measure, audit-boxes,
@@ -742,6 +743,9 @@ function usePop(delay: number) {
   return progress(useAuditFrame(), delay, 12);
 }
 
+/** Whether a 0..1 progress is strictly under way: the frames to mark as moving. */
+export const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function Layer({ children }: { children: ReactNode }) {
   return (
     <svg
@@ -783,6 +787,7 @@ export function Pill({
   anchor?: Side;
   ink?: string;
 }) {
+  const glide = useGlide();
   const pop = usePop(delay);
   const shift = {
     center: "translate(-50%, -50%)",
@@ -800,7 +805,7 @@ export function Pill({
         position: "absolute",
         left: x,
         top: y,
-        transform: `${shift} scale(${0.7 + 0.3 * pop})`,
+        transform: `${shift} scale(${0.7 + 0.3 * pop})${glide(midway(pop))}`,
         opacity: Math.min(1, pop * 1.4),
         background: color,
         color: ink,
@@ -1038,6 +1043,7 @@ export function TokenChip({
   swatch: string;
   delay?: number;
 }) {
+  const glide = useGlide();
   const pop = usePop(delay);
   return (
     <div
@@ -1045,7 +1051,7 @@ export function TokenChip({
         position: "absolute",
         left: x,
         top: y,
-        transform: `translate(-50%, -50%) translateY(${(1 - pop) * 6}px)`,
+        transform: `translate(-50%, -50%) translateY(${(1 - pop) * 6}px)${glide(midway(pop))}`,
         opacity: Math.min(1, pop * 1.4),
         display: "flex",
         alignItems: "center",
@@ -1140,7 +1146,10 @@ export function ScanBand({
           position: "absolute",
           left: x,
           width: w,
-          top: y - trail,
+          // Layout rounds a box edge to a whole pixel, so a band swept by
+          // `top` steps down the screen; the sweep is a transform instead.
+          top: 0,
+          transform: `translateY(${y - trail}px)`,
           height: trail,
           background: `linear-gradient(to bottom, transparent, ${color}2E)`,
         }}
@@ -1150,7 +1159,8 @@ export function ScanBand({
           position: "absolute",
           left: x,
           width: w,
-          top: y - 1,
+          top: 0,
+          transform: `translateY(${y - 1}px)`,
           height: 2,
           background: color,
           boxShadow: `0 0 12px 1px ${color}`,

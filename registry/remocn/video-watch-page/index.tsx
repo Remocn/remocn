@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -98,6 +99,9 @@ const CL = {
   extrapolateRight: "clamp",
 } as const;
 const clamp = (v: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v));
+
+// Moving on every frame a progress changes, however little.
+const midway = (p: number) => p > 0 && p < 1;
 
 function rgb(c: string): [number, number, number] {
   const hex = c.replace("#", "");
@@ -272,14 +276,19 @@ function along(keys: Key[], f: number) {
   return { x: last.x, y: last.y };
 }
 
+// Laid out where the pointer ends up and carried there by a transform:
+// layout rounds the box to whole pixels, so a pointer eased by `left`/`top`
+// steps over them on its slow approaches.
 function Cursor({
   x,
   y,
+  rest,
   press,
   opacity,
 }: {
   x: number;
   y: number;
+  rest: { x: number; y: number };
   press: number;
   opacity: number;
 }) {
@@ -291,11 +300,11 @@ function Cursor({
       aria-hidden
       style={{
         position: "absolute",
-        left: x - 2,
-        top: y - 2,
+        left: rest.x - 2,
+        top: rest.y - 2,
         overflow: "visible",
         opacity,
-        transform: `scale(${1 - press * 0.12})`,
+        transform: `translate(${x - rest.x}px, ${y - rest.y}px) scale(${1 - press * 0.12})`,
         transformOrigin: "2px 2px",
         filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
         zIndex: 60,
@@ -348,7 +357,17 @@ const TRACKS = [
 ] as const;
 const WORDS = ["Ship", "it", "today."];
 
-function EditorScene({ frame, accent }: { frame: number; accent: string }) {
+function EditorScene({
+  frame,
+  accent,
+  carried,
+}: {
+  frame: number;
+  accent: string;
+  /** Something above already moves, so the window needs no motion of its own. */
+  carried: boolean;
+}) {
+  const glide = useGlide();
   const push = 1 + 0.035 * clamp(frame / 300);
   const head = ((frame * 0.0022 + 0.31) % 1) * 1;
   const word = Math.floor(frame / 9) % WORDS.length;
@@ -377,7 +396,7 @@ function EditorScene({ frame, accent }: { frame: number; accent: string }) {
           background: "#FFFFFF",
           boxShadow:
             "0 0 0 1px rgba(255,255,255,0.1), 0 24px 60px rgba(0,0,0,0.55)",
-          transform: `scale(${push})`,
+          transform: `scale(${push})${glide(!carried && midway(frame / 300))}`,
           transformOrigin: "50% 40%",
           color: "#1C1C1F",
           fontSize: 11,
@@ -579,8 +598,11 @@ function EditorScene({ frame, accent }: { frame: number; accent: string }) {
               position: "absolute",
               top: 4,
               bottom: 4,
-              left: `calc(12px + ${head} * (100% - 24px))`,
+              left: 12,
               width: 1.5,
+              // Layout rounds a box's edges to whole pixels, so the playhead
+              // travels on a transform; the timeline is the window's width.
+              transform: `translateX(${head * (win.w - 24)}px)`,
               background: "#E5484D",
             }}
           >
@@ -639,6 +661,7 @@ export function VideoWatchPage({
   ground,
   groundParams,
 }: VideoWatchPageProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const dark = theme === "dark";
@@ -687,11 +710,18 @@ export function VideoWatchPage({
         spring({ frame: frame - at - 5, fps, config: CHIP }),
     );
 
-  const winIn = sp(0, HEAVY);
+  const winAt = (f: number) => spring({ frame: f, fps, config: HEAVY });
+  const winIn = winAt(frame);
   const cam = interpolate(frame, [LIKE_CLICK, END], [1, 1.03], {
     ...CL,
     easing: CAMERA,
   });
+  // While the window settles in or the camera pushes, the window moves the
+  // text under it; in between, the parts that keep moving say so themselves.
+  const carrying =
+    Math.abs(winAt(frame + 1) - winIn) > 1e-5 ||
+    Math.abs(winIn - winAt(frame - 1)) > 1e-5 ||
+    midway(interpolate(frame, [LIKE_CLICK, END], [0, 1], CL));
 
   const seconds = 30 + frame / 30;
   const vt = clamp(seconds / DURATION);
@@ -751,7 +781,7 @@ export function VideoWatchPage({
     `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
   const lineI = TRANSCRIPT.reduce((a, l, i) => (seconds >= l.at ? i : a), 0);
 
-  const inner = (f: number) =>
+  const inner = (f: number, carried: boolean) =>
     children ? (
       <div style={{ position: "absolute", inset: 0 }}>{children}</div>
     ) : src ? (
@@ -766,9 +796,9 @@ export function VideoWatchPage({
         }}
       />
     ) : (
-      <EditorScene frame={f} accent={accent} />
+      <EditorScene frame={f} accent={accent} carried={carried} />
     );
-  const scaled = (w: number, f: number) => (
+  const scaled = (w: number, f: number, carried: boolean, moving = false) => (
     <div
       style={{
         position: "absolute",
@@ -776,11 +806,11 @@ export function VideoWatchPage({
         top: 0,
         width: 836,
         height: 470,
-        transform: `scale(${w / 836})`,
+        transform: `scale(${w / 836})${glide(moving)}`,
         transformOrigin: "0 0",
       }}
     >
-      {inner(f)}
+      {inner(f, carried)}
     </div>
   );
 
@@ -850,7 +880,7 @@ export function VideoWatchPage({
               top: L.win.y,
               width: L.win.w,
               height: L.win.h,
-              transform: `translateY(${(1 - winIn) * 80}px) scale(${(0.96 + 0.04 * winIn) * cam})`,
+              transform: `translateY(${(1 - winIn) * 80}px) scale(${(0.96 + 0.04 * winIn) * cam})${glide(carrying)}`,
               transformOrigin: "50% 60%",
               opacity: Math.min(1, winIn * 2),
             }}
@@ -923,7 +953,7 @@ export function VideoWatchPage({
                     : "0 0 0 1px rgba(0,0,0,0.08)",
                 }}
               >
-                {scaled(PW, frame)}
+                {scaled(PW, frame, carrying)}
                 <div
                   style={{
                     position: "absolute",
@@ -939,11 +969,14 @@ export function VideoWatchPage({
                 <div
                   style={{
                     position: "absolute",
-                    left: 14 + clamp(hoverT * barW - 80, 0, barW - 160),
+                    left: 14,
                     top: PH - 52 - 132,
                     width: 160,
                     opacity: hover,
-                    transform: `translateY(${(1 - hover) * 8}px) scale(${0.94 + 0.06 * hover})`,
+                    // The preview follows the pointer on a transform, not on
+                    // `left`: layout rounds its box and its label to whole
+                    // pixels. It never rests while it shows.
+                    transform: `translateX(${clamp(hoverT * barW - 80, 0, barW - 160)}px) translateY(${(1 - hover) * 8}px) scale(${0.94 + 0.06 * hover})${glide(!carrying && hover > 0)}`,
                     transformOrigin: "50% 100%",
                   }}
                 >
@@ -959,7 +992,13 @@ export function VideoWatchPage({
                         "0 0 0 1.5px rgba(255,255,255,0.9), 0 10px 24px rgba(0,0,0,0.45)",
                     }}
                   >
-                    {scaled(160, Math.round(hoverT * 900))}
+                    {scaled(
+                      160,
+                      Math.round(hoverT * 900),
+                      true,
+                      // The scene in the preview scrubs with the pointer.
+                      hover > 0,
+                    )}
                   </div>
                   <div
                     style={{
@@ -1360,6 +1399,7 @@ export function VideoWatchPage({
             <Cursor
               x={cur.x}
               y={cur.y}
+              rest={keys[keys.length - 1]}
               press={curPress}
               opacity={ease(8, 16)}
             />

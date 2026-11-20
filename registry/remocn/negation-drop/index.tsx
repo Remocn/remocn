@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const barlow = loadFont("normal", { weights: ["500"], subsets: ["latin"] });
 
@@ -211,6 +212,7 @@ export function NegationDrop({
   speed = 1,
   theme = "dark",
 }: NegationDropProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -251,44 +253,67 @@ export function NegationDrop({
   });
 
   const flipAt = (i: number) => dropAt + i * stagger;
-  const close = rows.map((_, i) =>
-    spring({
-      frame: t - flipAt(i) - CLOSE_DELAY,
-      fps,
-      config: { damping: 15, stiffness: 150, mass: 0.8 },
-    }),
-  );
+  const closeAt = (tt: number) =>
+    rows.map((_, i) =>
+      spring({
+        frame: tt - flipAt(i) - CLOSE_DELAY,
+        fps,
+        config: { damping: 15, stiffness: 150, mass: 0.8 },
+      }),
+    );
+  const close = closeAt(t);
 
   const padX = W * (portrait ? 0.035 : 0.025);
   const measureW = W - padX * 2;
-  const fitF = lineEm.map(
-    (l, i) => measureW / Math.max(0.3, l.full - l.drop * close[i]),
-  );
   const restF = lineEm.map((l) => measureW / Math.max(0.3, l.full - l.drop));
   const maxBlockH = H * (portrait ? 0.72 : 0.9);
   const restH = restF.reduce((a, f) => a + f * LINE_H, 0);
   const k = Math.min(1, maxBlockH / Math.max(1, restH));
-  const sizes = fitF.map((f) => f * k);
-  const blockH = sizes.reduce((a, f) => a + f * LINE_H, 0);
-  const blockTop = (H - blockH) / 2 + (sizes[0] ?? 0) * 0.04;
+  const layoutAt = (cl: number[]) => {
+    const sizes = lineEm.map(
+      (l, i) => (measureW / Math.max(0.3, l.full - l.drop * cl[i])) * k,
+    );
+    const blockH = sizes.reduce((a, f) => a + f * LINE_H, 0);
+    let y = (H - blockH) / 2 + (sizes[0] ?? 0) * 0.04;
+    const tops = sizes.map((f) => {
+      const top = y;
+      y += f * LINE_H;
+      return top;
+    });
+    return { sizes, tops };
+  };
+  const now = layoutAt(close);
+  const sizes = now.sizes;
+  // While a line closes up, every line resizes and the block recentres. Font
+  // size and `top` are layout, rounded to whole pixels, so the lines would
+  // click, and a line handed back to layout when it stops would jump. So each
+  // line is laid out at its closed size and place for its whole life and
+  // carried to the live one by a transform.
+  const rest = layoutAt(rows.map(() => 1));
+  const drift = (g: ReturnType<typeof layoutAt>) =>
+    Math.max(
+      ...g.sizes.map(
+        (f, i) =>
+          Math.abs(f - sizes[i]) * 1.5 + Math.abs(g.tops[i] - now.tops[i]),
+      ),
+    );
+  const closing =
+    drift(layoutAt(closeAt(t + 1))) > 1e-3 ||
+    drift(layoutAt(closeAt(t - 1))) > 1e-3;
+  // The springs never quite reach 1; once every line has closed and nothing
+  // moves, the leftover (well under a thousandth of a pixel) is dropped.
+  const closed = !closing && close.every((cl) => cl > 0.5);
 
-  let lineTop = blockTop;
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <ScaleLayer scale={scale}>
         {rows.map((r, i) => {
-          const F = sizes[i];
-          const top = lineTop;
-          lineTop += F * LINE_H;
-          const enter = interpolate(
-            t,
-            [
-              ENTER_AT + i * ENTER_STAGGER,
-              ENTER_AT + i * ENTER_STAGGER + ENTER_LEN,
-            ],
-            [0, 1],
-            { ...CLAMP, easing: EASE_OUT },
-          );
+          const live = sizes[i];
+          const F = rest.sizes[i];
+          const top = rest.tops[i];
+          // Room on both sides so the clip never trims a line laid out at
+          // its closed size, which is wider than the live one.
+          const ox = W;
           const f0 = flipAt(i);
           const tint = interpolate(t, [f0 - 8, f0 - 1], [0, 1], CLAMP);
           const fall = interpolate(t, [f0, f0 + FALL_LEN], [0, 1], {
@@ -302,6 +327,7 @@ export function NegationDrop({
             { ...CLAMP, easing: EASE_OUT },
           );
           const clipTop = top - F * 0.2;
+          const liveClipTop = now.tops[i] - live * 0.2;
           const baseY = top + m.baseline * F;
           const clipBottom = baseY + F * 0.1;
           const lineW = (lineEm[i].full - lineEm[i].drop * close[i]) * F;
@@ -316,9 +342,10 @@ export function NegationDrop({
             for (const p of word) {
               const pw = wOf(p.text) * F;
               const shift = passedDrop ? -lineEm[i].drop * F * close[i] : 0;
+              const fallY = fall * F * 0.95;
               const style: React.CSSProperties = {
                 position: "absolute",
-                left: left + x + shift,
+                left: ox + left + x + shift,
                 top: top - clipTop,
                 height: F,
                 lineHeight: `${F}px`,
@@ -327,7 +354,7 @@ export function NegationDrop({
               };
               if (p.kind === "drop") {
                 style.color = interpolateHex(fg, c.dim, tint);
-                style.transform = `translateY(${(fall * F * 0.95).toFixed(2)}px)`;
+                style.transform = `translateY(${fallY.toFixed(2)}px)${glide(fall > 0 && fall < 1 && !closing)}`;
                 passedDrop = true;
               }
               if (p.kind === "keep" && lit > 0) {
@@ -337,13 +364,20 @@ export function NegationDrop({
                     key={`b${wi}`}
                     style={{
                       position: "absolute",
-                      left: left + x - bpad,
+                      // The box sits where the closed line centres it and
+                      // rides the recentring as a transform: its edge would
+                      // round to whole pixels in `left`.
+                      left:
+                        ox +
+                        (W - (lineEm[i].full - lineEm[i].drop) * F) / 2 +
+                        x -
+                        bpad,
                       top: baseY - m.capTop * F - bpad - clipTop,
                       width: pw + bpad * 2,
                       height: m.capTop * F + bpad * 2,
                       background: block,
                       transformOrigin: "0 50%",
-                      transform: `scaleX(${lit.toFixed(4)})`,
+                      transform: `translateX(${closed ? 0 : (-lineEm[i].drop * F * (1 - close[i])) / 2}px) scaleX(${lit.toFixed(4)})`,
                     }}
                   />,
                 );
@@ -357,14 +391,32 @@ export function NegationDrop({
             }
           });
 
+          const enterY = (tt: number) =>
+            (1 -
+              interpolate(
+                tt,
+                [
+                  ENTER_AT + i * ENTER_STAGGER,
+                  ENTER_AT + i * ENTER_STAGGER + ENTER_LEN,
+                ],
+                [0, 1],
+                { ...CLAMP, easing: EASE_OUT },
+              )) *
+            (clipBottom - clipTop + F * 0.05);
+          const rising =
+            Math.abs(enterY(t + 1) - enterY(t)) > 1e-3 ||
+            Math.abs(enterY(t) - enterY(t - 1)) > 1e-3;
+
           return (
             <div
               key={i}
               style={{
                 position: "absolute",
-                left: 0,
-                width: W,
+                left: -ox,
+                width: W + 2 * ox,
                 top: clipTop,
+                transformOrigin: "50% 0",
+                transform: `translateY(${closed ? 0 : liveClipTop - clipTop}px) scale(${closed ? 1 : live / F})${glide(closing)}`,
                 height: clipBottom - clipTop,
                 overflow: "hidden",
                 fontFamily,
@@ -377,7 +429,7 @@ export function NegationDrop({
                 style={{
                   position: "absolute",
                   inset: 0,
-                  transform: `translateY(${((1 - enter) * (clipBottom - clipTop + F * 0.05)).toFixed(2)}px)`,
+                  transform: `translateY(${enterY(t).toFixed(2)}px)${glide(rising && !closing)}`,
                 }}
               >
                 {pieces}

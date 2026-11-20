@@ -15,6 +15,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -295,6 +296,7 @@ export function GlyphBlockDecode({
   speed = 1,
   seed = 7,
 }: GlyphBlockDecodeProps) {
+  const glide = useGlide();
   const rawFrame = Math.max(0, useCurrentFrame() - delay);
   const frame = rawFrame * speed;
   const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
@@ -554,6 +556,17 @@ export function GlyphBlockDecode({
     }
 
     const f = frame;
+    const pushAt = (rf: number) =>
+      interpolate(rf, [0, durationInFrames], [1, 1.04], {
+        ...CLAMP,
+        easing: CAMERA,
+      });
+    const push = pushAt(rawFrame);
+    // The push carries every glyph, so its tilt covers them; a glyph tilts on
+    // its own only while the push holds still.
+    const pushMoving =
+      Math.abs(pushAt(rawFrame + 1) - push) * 1000 > 1e-3 ||
+      Math.abs(push - pushAt(rawFrame - 1)) * 1000 > 1e-3;
     const ruleH = Math.max(2, urlSize * 0.07);
     const ruleY = urlY + urlSize * 0.62;
 
@@ -641,14 +654,18 @@ export function GlyphBlockDecode({
           key={`t${ti}`}
           style={{
             position: "absolute",
-            left: x - w / 2,
-            top: y - h / 2,
+            // Layout rounds a box to whole pixels, so a tile flown in by
+            // left/top clicks along; it is laid out on its home spot and
+            // the flight is a transform. Rotation and scale still pivot on
+            // the moved box's centre, as before.
+            left: t.x,
+            top: t.y,
             width: w,
             height: h,
             borderRadius: radius,
             overflow: "hidden",
             opacity: op * (t.sat ? 0.9 : 1),
-            transform: `rotate(${rot.toFixed(2)}deg) scale(${scale.toFixed(4)})`,
+            transform: `translate(${x - w / 2 - t.x}px, ${y - h / 2 - t.y}px) rotate(${rot.toFixed(2)}deg) scale(${scale.toFixed(4)})`,
             boxShadow: t.rule && d >= 0 ? "none" : `${c.shadow}, ${c.hairline}`,
             filter: t.blur > 0 ? `blur(${t.blur.toFixed(2)}px)` : undefined,
             zIndex: t.sat ? 1 : 3,
@@ -692,7 +709,7 @@ export function GlyphBlockDecode({
             fontWeight: ch.weight,
             color: ch.url && !flicking ? c.muted : color,
             opacity: flicking ? 0.9 : 1,
-            transform: `translateY(${((1 - settle) * ch.size * 0.03).toFixed(2)}px)`,
+            transform: `translateY(${((1 - settle) * ch.size * 0.03).toFixed(2)}px)${glide(!pushMoving && settle > 5e-4 && settle < 1 - 5e-4)}`,
             zIndex: 2,
           }}
         >
@@ -701,14 +718,10 @@ export function GlyphBlockDecode({
       );
     });
 
-    const push = interpolate(rawFrame, [0, durationInFrames], [1, 1.04], {
-      ...CLAMP,
-      easing: CAMERA,
-    });
     content = (
       <AbsoluteFill
         style={{
-          transform: `scale(${push.toFixed(5)})`,
+          transform: `scale(${push.toFixed(5)})${glide(pushMoving)}`,
           transformOrigin: "50% 50%",
         }}
       >

@@ -14,6 +14,8 @@ import {
   useVideoConfig,
 } from "remotion";
 
+import { useGlide } from "@/lib/remocn/glide";
+
 const gloock = loadFont("normal", { weights: ["400"], subsets: ["latin"] });
 
 export interface FinePrintUpProps {
@@ -159,6 +161,8 @@ function fitSize(
   return lo;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -188,6 +192,7 @@ export function FinePrintUp({
   speed = 1,
   theme = "dark",
 }: FinePrintUpProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const t = frame * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
@@ -258,28 +263,32 @@ export function FinePrintUp({
     lh: number,
     color: string,
     opacity: number,
-  ) => (
-    <div
-      key={key}
-      style={{
-        position: "absolute",
-        left: 0,
-        top: 0,
-        fontFamily,
-        fontWeight: 400,
-        fontSize: renderSize,
-        lineHeight: `${lh * renderSize}px`,
-        letterSpacing: `${TRACK}em`,
-        whiteSpace: "pre",
-        color,
-        opacity,
-        transformOrigin: "0 0",
-        transform: `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) scale(${(size / renderSize).toFixed(4)})`,
-      }}
-    >
-      {s}
-    </div>
-  );
+    moving: boolean,
+  ) => {
+    const k = size / renderSize;
+    return (
+      <div
+        key={key}
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          fontFamily,
+          fontWeight: 400,
+          fontSize: renderSize,
+          lineHeight: `${lh * renderSize}px`,
+          letterSpacing: `${TRACK}em`,
+          whiteSpace: "pre",
+          color,
+          opacity,
+          transformOrigin: "0 0",
+          transform: `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) scale(${k.toFixed(4)})${glide(moving)}`,
+        }}
+      >
+        {s}
+      </div>
+    );
+  };
 
   lines.forEach((_, i) => {
     const s0 = stepAt(i);
@@ -287,13 +296,14 @@ export function FinePrintUp({
     const { F, lay } = heads[i];
     const fl = fineLays[i];
     const pick = interpolate(u, [-2, 6], [0, 1], CLAMP);
-    const exit =
+    const exitAt = (tt: number) =>
       i < n - 1
-        ? interpolate(t, [stepAt(i + 1), stepAt(i + 1) + 12], [0, 1], {
+        ? interpolate(tt, [stepAt(i + 1), stepAt(i + 1) + 12], [0, 1], {
             ...CLAMP,
             easing: Easing.bezier(0.55, 0, 1, 0.45),
           })
         : 0;
+    const exit = exitAt(t);
     if (exit >= 1) return;
 
     const markOp = interpolate(u, [4, 14], [1, 0], CLAMP) * intro;
@@ -309,6 +319,7 @@ export function FinePrintUp({
           FINE_LH,
           interpolateColors(pick, [0, 1], [c.muted, hi]),
           markOp,
+          false,
         ),
       );
     }
@@ -321,16 +332,30 @@ export function FinePrintUp({
       const fy = fineTops[i] + fw.line * FINE_LH * fs;
       const hx = mx + hw.x * F;
       const hy = headTop + hw.line * LH * F;
-      const move = interpolate(
-        u,
-        [6 + wi * stagger, 6 + wi * stagger + travel],
-        [0, 1],
-        { ...CLAMP, easing: EASE_IO },
-      );
       const fyScaled = fy + (FINE_LH - LH) * fs * 0.5;
-      const x = fx + (hx - fx) * move;
-      const y = fyScaled + (hy - fyScaled) * move - exit * F * 0.18;
-      const size = fs + (F - fs) * move;
+      const geometry = (tt: number) => {
+        const mv = interpolate(
+          tt - s0,
+          [6 + wi * stagger, 6 + wi * stagger + travel],
+          [0, 1],
+          { ...CLAMP, easing: EASE_IO },
+        );
+        return {
+          move: mv,
+          x: fx + (hx - fx) * mv,
+          y: fyScaled + (hy - fyScaled) * mv - exitAt(tt) * F * 0.18,
+          size: fs + (F - fs) * mv,
+        };
+      };
+      const { move, x, y, size } = geometry(t);
+      // The in-out ease creeps for a few frames at each end, still enough to
+      // cross a pixel, so motion is read off the neighbouring frames.
+      const moving = [geometry(t - 1), geometry(t + 1)].some(
+        (o) =>
+          Math.abs(o.x - x) > 1e-3 ||
+          Math.abs(o.y - y) > 1e-3 ||
+          Math.abs(o.size - size) > 1e-4,
+      );
       const land = interpolate(move, [0.7, 1], [0, 1], CLAMP);
       const flyColor = interpolateColors(pick, [0, 1], [c.muted, hi]);
       const baseColor = interpolateColors(land, [0, 1], [flyColor, fg]);
@@ -345,6 +370,7 @@ export function FinePrintUp({
           LH,
           baseColor,
           intro * (1 - exit),
+          moving,
         ),
       );
     });
@@ -369,6 +395,7 @@ export function FinePrintUp({
           FINE_LH,
           c.muted,
           closeIn,
+          midway(closeIn),
         ),
       );
     });

@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -56,6 +57,8 @@ const ramp = (f: number, start: number, dur: number, easing = ENTER) =>
   });
 
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 function Chevron({ dir, color }: { dir: "l" | "r"; color: string }) {
   return (
@@ -174,6 +177,7 @@ export function CalendarPick({
   ground,
   groundParams,
 }: CalendarPickProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const dark = theme === "dark";
@@ -207,40 +211,88 @@ export function CalendarPick({
   const cellY = gridTop + pick.row * rowH;
   const inset = 5;
 
-  const enter = spring({ frame: frame - B.enter, fps, config: CARD });
+  // The camera at any frame, so a frame can tell whether it moves by comparing
+  // with its neighbours.
+  const camAt = (f: number) => {
+    const enter = spring({ frame: f - B.enter, fps, config: CARD });
+    const zoom = ramp(f, B.zoom, 36, CAM);
+    const pullBack = spring({ frame: f - B.pull, fps, config: HEAVY });
+    const Z =
+      mix(mix(1, zMax, zoom), zRest, pullBack) *
+      (1 + 0.025 * ramp(f, B.pull + 20, B.end - B.pull - 20, Easing.linear)) *
+      (portrait ? 1.25 : 1);
+    const focusX = mix(W / 2, cellX + colW * (0.5 + spanCols / 2), zoom);
+    const focusY = mix(H / 2, cellY + rowH / 2, zoom);
+    const fX = mix(
+      focusX,
+      mix(W / 2, cellX + colW / 2, portrait ? 0.05 : 0.7),
+      pullBack,
+    );
+    const fY = mix(focusY, mix(H / 2, cellY + rowH / 2, 0.7), pullBack);
+    return {
+      Z,
+      fX,
+      fY,
+      cardX: screenX - fX * Z - cardLeft,
+      cardY: screenY - fY * Z + mix(160, 0, enter) - cardTop,
+      rotX: mix(22, 0, enter) + mix(0, 7, zoom) * (1 - pullBack) + 3 * pullBack,
+      rotZ: mix(-5, 0, enter) + mix(0, -1.5, zoom) * (1 - pullBack),
+      rotY: mix(0, -8, zoom) * (1 - pullBack) - 4 * pullBack,
+    };
+  };
   const enterBlur = mix(10, 0, ramp(frame, B.enter, 15));
-  const zoom = ramp(frame, B.zoom, 36, CAM);
-  const pullBack = spring({ frame: frame - B.pull, fps, config: HEAVY });
   const zMax = portrait ? 1.9 : 1.75;
   const zRest = portrait ? 1.06 : 1.5;
-  const Z =
-    mix(mix(1, zMax, zoom), zRest, pullBack) *
-    (1 + 0.025 * ramp(frame, B.pull + 20, B.end - B.pull - 20, Easing.linear)) *
-    (portrait ? 1.25 : 1);
   const spanCols = Math.min(3, 6 - pick.col);
-  const focusX = mix(W / 2, cellX + colW * (0.5 + spanCols / 2), zoom);
-  const focusY = mix(H / 2, cellY + rowH / 2, zoom);
-  const fX = mix(
-    focusX,
-    mix(W / 2, cellX + colW / 2, portrait ? 0.05 : 0.7),
-    pullBack,
-  );
-  const fY = mix(focusY, mix(H / 2, cellY + rowH / 2, 0.7), pullBack);
   const screenX = stageW / 2;
   const screenY = portrait ? 1180 : 372;
-  const rotX =
-    mix(22, 0, enter) + mix(0, 7, zoom) * (1 - pullBack) + 3 * pullBack;
-  const rotZ = mix(-5, 0, enter) + mix(0, -1.5, zoom) * (1 - pullBack);
-  const rotY = mix(0, -8, zoom) * (1 - pullBack) - 4 * pullBack;
+  // Where the card sits while the camera holds on the picked day, its longest
+  // rest. Layout rounds a box to whole pixels, so a card steered by `left` and
+  // `top` clicks along under the camera; it is laid out here and the camera
+  // move is a transform.
+  const zHold = zMax * (portrait ? 1.25 : 1);
+  const cardLeft =
+    screenX - mix(W / 2, cellX + colW * (0.5 + spanCols / 2), 1) * zHold;
+  const cardTop = screenY - mix(H / 2, cellY + rowH / 2, 1) * zHold;
+  const cam = camAt(frame);
+  const { Z, fX, fY, cardX, cardY, rotX, rotY, rotZ } = cam;
+  // The text sits up to about a card width from the focus, so a step in the
+  // camera's scale or angle is weighed by that distance. Steps far under a
+  // pixel still add up to one across a slow start, so any step counts.
+  const camMoving = [frame - speed, frame + speed].some((f) => {
+    const o = camAt(f);
+    const reach = W * Z;
+    return (
+      Math.abs(o.cardX - cardX) > 1e-6 ||
+      Math.abs(o.cardY - cardY) > 1e-6 ||
+      Math.abs(o.Z - Z) * W > 1e-6 ||
+      (Math.abs(o.rotX - rotX) +
+        Math.abs(o.rotY - rotY) +
+        Math.abs(o.rotZ - rotZ)) *
+        (Math.PI / 180) *
+        reach >
+        1e-6
+    );
+  });
+
+  // Text under the camera rests in a 3D turn, where the grid it would snap to
+  // is gone, so it is marked only while something moves it; a mark at rest
+  // would lean it there and redraw a frame the untouched code draws level.
+  const underCamera = (moving: boolean) => (moving ? glide(true) : "");
 
   const cStart = { x: W + 120, y: H + 80 };
   const cEnd = { x: cellX + colW * 0.56, y: cellY + rowH * 0.5 };
   const cP = ramp(frame, B.cursor, 24, MOVE);
   const cPrev = ramp(frame - 1, B.cursor, 24, MOVE);
   const exitP = ramp(frame, B.commit, 18, MOVE);
-  const cX = mix(cStart.x, cEnd.x, cP) + 46 * exitP;
-  const cY =
-    mix(cStart.y, cEnd.y, cP) - Math.sin(Math.PI * cP) * 46 + 52 * exitP;
+  const cursorAt = (p: number, e: number) => ({
+    x: mix(cStart.x, cEnd.x, p) + 46 * e,
+    y: mix(cStart.y, cEnd.y, p) - Math.sin(Math.PI * p) * 46 + 52 * e,
+  });
+  const cNow = cursorAt(cP, exitP);
+  // The pointer is laid out on the day it clicks and flies there by transform,
+  // for the same reason as the card below.
+  const cHold = cursorAt(1, 0);
   const cBlur = Math.min(3, Math.abs(cP - cPrev) * 900 * 0.03);
   const clickDip = spring({ frame: frame - B.click, fps, config: CHIP });
   const clickUp = spring({ frame: frame - B.click - 4, fps, config: CHIP });
@@ -300,7 +352,7 @@ export function CalendarPick({
           borderRadius: 14,
           background: weekend ? "transparent" : tile,
           opacity: appear,
-          transform: `translateY(${mix(10, 0, appear)}px) scale(${scale})`,
+          transform: `translateY(${mix(10, 0, appear)}px) scale(${scale})${underCamera(midway(appear))}`,
         }}
       >
         {isPick ? (
@@ -467,7 +519,7 @@ export function CalendarPick({
                   letterSpacing: "-0.045em",
                   fontWeight: 300,
                   color: ink,
-                  transform: `translateY(${mix(110, 0, titleIn)}%)`,
+                  transform: `translateY(${mix(110, 0, titleIn)}%)${glide(midway(titleIn))}`,
                 }}
               >
                 {title}
@@ -477,12 +529,12 @@ export function CalendarPick({
           <div
             style={{
               position: "absolute",
-              left: screenX - fX * Z,
-              top: screenY - fY * Z + mix(160, 0, enter),
+              left: cardLeft,
+              top: cardTop,
               width: W,
               height: H,
               transformOrigin: "0 0",
-              transform: `scale(${Z})`,
+              transform: `translate(${cardX}px, ${cardY}px) scale(${Z})`,
               opacity: ramp(frame, -6, 8),
               filter: enterBlur > 0.3 ? `blur(${enterBlur}px)` : undefined,
             }}
@@ -493,7 +545,7 @@ export function CalendarPick({
                 inset: 0,
                 transformStyle: "preserve-3d",
                 transformOrigin: `${fX}px ${fY}px`,
-                transform: `rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg)`,
+                transform: `rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg)${underCamera(camMoving)}`,
               }}
             >
               <div
@@ -674,12 +726,12 @@ export function CalendarPick({
               <div
                 style={{
                   position: "absolute",
-                  left: cX,
-                  top: cY,
+                  left: cHold.x,
+                  top: cHold.y,
                   opacity:
                     ramp(frame, B.cursor, 4) *
                     (1 - ramp(frame, B.commit + 6, 9)),
-                  transform: `scale(${press})`,
+                  transform: `translate(${cNow.x - cHold.x}px, ${cNow.y - cHold.y}px) scale(${press})`,
                   transformOrigin: "20% 15%",
                   filter: cBlur > 0.3 ? `blur(${cBlur}px)` : undefined,
                   display: frame >= B.cursor ? "block" : "none",

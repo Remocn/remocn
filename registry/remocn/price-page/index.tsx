@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const albert = loadFont("normal", {
   weights: ["400", "500"],
@@ -65,6 +66,9 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const shifts = (at: (df: number) => number) =>
+  Math.abs(at(1) - at(0)) > 1e-3 || Math.abs(at(0) - at(-1)) > 1e-3;
 
 function useWidths(keys: string[], fontFamily: string) {
   const key = [fontFamily, ...keys].join("\u0001");
@@ -139,7 +143,10 @@ export function PricePage({
   speed = 1,
   theme = "dark",
 }: PricePageProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
+  const frame = useCurrentFrame();
+  const glide = useGlide();
+  const tAt = (df: number) => Math.max(0, frame + df - delay) * speed;
+  const t = tAt(0);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const T = durationInFrames * speed;
   const c = THEMES[theme];
@@ -216,42 +223,86 @@ export function PricePage({
   const lastExit = n > 0 ? intro + (n - 1) * gap : intro;
   const landAt = lastExit + 8;
 
-  const presence = rows.map((_, i) =>
-    interpolate(t, [exitAt[i] + 7, exitAt[i] + 18], [1, 0], {
+  // The vertical layout at time `tt`, so each line can tell motion from
+  // rest by its neighbouring frames.
+  const geo = (tt: number) => {
+    const presence = rows.map((_, i) =>
+      interpolate(tt, [exitAt[i] + 7, exitAt[i] + 18], [1, 0], {
+        ...CLAMP,
+        easing: EASE_IO,
+      }),
+    );
+    const listH = presence.reduce((a, p) => a + p * lineH, 0);
+    const grow = interpolate(tt, [landAt - 6, landAt + 14], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
-    }),
-  );
-  const listH = presence.reduce((a, p) => a + p * lineH, 0);
-  const grow = interpolate(t, [landAt - 6, landAt + 14], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const contentH = labelH + listH + grow * (priceH + noteH);
-  const top = H / 2 - contentH / 2;
-  const listTop = top + labelH;
-
-  const labelIn = interpolate(t, [0, 16], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-
-  const lineNodes = rows.map((s, i) => {
-    let rank = 0;
-    for (let j = 0; j < i; j++) rank += presence[j];
-    const base = listTop + rank * lineH + F * 0.93;
-    const enter = interpolate(t, [3 + i * 3, 19 + i * 3], [0, 1], {
+    });
+    const contentH = labelH + listH + grow * (priceH + noteH);
+    const top = H / 2 - contentH / 2;
+    const listTop = top + labelH;
+    const labelIn = interpolate(tt, [0, 16], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
+    });
+    const lineY = rows.map((_, i) => {
+      let rank = 0;
+      for (let j = 0; j < i; j++) rank += presence[j];
+      const enter = interpolate(tt, [3 + i * 3, 19 + i * 3], [0, 1], {
+        ...CLAMP,
+        easing: EASE_OUT,
+      });
+      return {
+        base: listTop + rank * lineH + F * 0.93,
+        enter,
+        dy: (1 - enter) * F * 0.45,
+      };
+    });
+    const priceIn = interpolate(tt, [landAt, landAt + 20], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+    const noteIn = interpolate(tt, [landAt + 12, landAt + 30], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+    return {
+      top,
+      listH,
+      labelIn,
+      lineY,
+      priceIn,
+      noteIn,
+      priceBase: listTop + listH + Fp * 0.82,
+      noteBase: listTop + listH + priceH + Fn * 1.35,
+    };
+  };
+  const g = geo(t);
+  const near = (df: number) => (df === 0 ? g : geo(tAt(df)));
+  const { top, labelIn, priceIn, noteIn, priceBase, noteBase } = g;
+  const labelY = (o: ReturnType<typeof geo>) =>
+    o.top + Fs + (1 - o.labelIn) * Fs * 0.4;
+  const priceY = (o: ReturnType<typeof geo>) =>
+    o.priceBase + (1 - o.priceIn) * Fp * 0.22;
+  const noteY = (o: ReturnType<typeof geo>) =>
+    o.noteBase + (1 - o.noteIn) * Fn * 0.5;
+
+  // SVG text is placed by attributes, which cannot carry the glide mark, so
+  // the drawing as a whole carries it while any of its lines moves.
+  let moving = false;
+  const lineNodes = rows.map((s, i) => {
+    const { base, enter, dy } = g.lineY[i];
+    const lineMoving = shifts((df) => {
+      const l = near(df).lineY[i];
+      return l.base + l.dy;
     });
     const out = interpolate(t, [exitAt[i], exitAt[i] + EXIT_LEN], [0, 1], {
       ...CLAMP,
       easing: EASE_EXIT,
     });
     if (out >= 1) return null;
+    moving ||= lineMoving;
     const lw = adv(400, s, TRACK_LINE) * F;
     const dx = out * (W - right + lw + F);
-    const dy = (1 - enter) * F * 0.45;
     return (
       <text
         key={`l${i}`}
@@ -270,16 +321,10 @@ export function PricePage({
     );
   });
 
-  const priceIn = interpolate(t, [landAt, landAt + 20], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const noteIn = interpolate(t, [landAt + 12, landAt + 30], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const priceBase = listTop + listH + Fp * 0.82;
-  const noteBase = listTop + listH + priceH + Fn * 1.35;
+  moving ||=
+    shifts((df) => labelY(near(df))) ||
+    (priceIn > 0 && shifts((df) => priceY(near(df)))) ||
+    (Boolean(note) && noteIn > 0 && shifts((df) => noteY(near(df))));
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
@@ -288,7 +333,7 @@ export function PricePage({
           width={W}
           height={H}
           viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
+          style={{ position: "absolute", inset: 0, transform: glide(moving) }}
           fontFamily={fontFamily}
           aria-hidden
         >

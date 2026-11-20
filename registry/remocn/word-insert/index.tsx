@@ -9,6 +9,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["500"],
@@ -455,6 +456,7 @@ export function WordInsert({
   theme = "dark",
   speed = 1,
 }: WordInsertProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -540,6 +542,10 @@ export function WordInsert({
     let y = 0;
     let opacity = 1;
     let rise = 0;
+    // Whether the word changes lines on this beat: only vertical travel
+    // takes text off the grid, so a word that slides along its line needs
+    // no mark to move.
+    let climbs = false;
     let content: ReactNode = null;
     // Inserted words carry the gradient for the rest of the shot.
     const born = tr.bornAt > 0;
@@ -557,6 +563,7 @@ export function WordInsert({
     } else if (ia !== null && ib !== null) {
       x = la.x[ia] + (lb.x[ib] - la.x[ia]) * p;
       y = la.y[ia] + (lb.y[ib] - la.y[ia]) * p;
+      climbs = la.y[ia] !== lb.y[ib];
       const from = la.tokens[ia];
       const to = lb.tokens[ib];
       if (from === to || p >= 1) {
@@ -597,11 +604,13 @@ export function WordInsert({
       const from = tr.virtualFrom[cur] ?? { x: lb.x[ib], y: lb.y[ib] };
       x = from.x + (lb.x[ib] - from.x) * p;
       y = from.y + (lb.y[ib] - from.y) * p;
+      climbs = from.y !== lb.y[ib];
       content = lb.tokens[ib];
     } else if (ia !== null) {
       const to = tr.virtualTo[cur] ?? { x: la.x[ia], y: la.y[ia] };
       x = la.x[ia] + (to.x - la.x[ia]) * p;
       y = la.y[ia] + (to.y - la.y[ia]) * p;
+      climbs = la.y[ia] !== to.y;
       const out = interpolate(
         t,
         [startOf(cur), startOf(cur) + MOVE * 0.45],
@@ -625,13 +634,26 @@ export function WordInsert({
     }
     if (born && typeof content === "string") content = paint(content, x);
 
+    // Layout rounds a box and a baseline to whole pixels, so a word slid by
+    // `left`/`top` clicks along pixel by pixel, and one handed between layout
+    // and a transform jumps. Each word is laid out once, where it last rests,
+    // and carried there by a transform all its life.
+    const moving = (climbs && p > 0 && p < 1) || rise !== 0;
+    let home = layouts.length - 1;
+    while (home > 0 && tr.idx[home] === null) home -= 1;
+    const hi = tr.idx[home] ?? 0;
+    const dx = x - layouts[home].x[hi];
+    const dy = y + rise - layouts[home].y[hi];
+    const em = (v: number) => (Math.abs(v) < 1e-6 ? 0 : v);
+
     words.push(
       <div
         key={tr.key}
         style={{
           position: "absolute",
-          left: `${x}em`,
-          top: `${y - ASC + rise}em`,
+          left: `${layouts[home].x[hi]}em`,
+          top: `${layouts[home].y[hi] - ASC}em`,
+          transform: `translate(${em(dx)}em, ${em(dy)}em)${glide(moving)}`,
           opacity,
           color: ink ?? c.fg,
           whiteSpace: "pre",

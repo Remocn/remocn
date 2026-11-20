@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["500"],
@@ -78,6 +79,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const THEMES = {
   dark: {
@@ -171,6 +174,7 @@ export function PassSwap({
   theme = "dark",
   speed = 1,
 }: PassSwapProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -368,7 +372,7 @@ export function PassSwap({
         ) : (
           lineBox(current, done ? index + 1 : index, {
             opacity: index === 0 && !done ? intro : 1,
-            transform: `translateX(${done ? toOffset : 0}px) translateY(${index === 0 && !done ? (1 - intro) * 14 * u : 0}px)`,
+            transform: `translateX(${done ? toOffset : 0}px) translateY(${index === 0 && !done ? (1 - intro) * 14 * u : 0}px)${glide(index === 0 && !done && midway(intro))}`,
             filter:
               index === 0 && !done && intro < 1
                 ? `blur(${(1 - intro) * 10 * u}px)`
@@ -379,12 +383,15 @@ export function PassSwap({
         {passing && (
           <div
             style={{
+              // Laid out once at the frame's left edge; the sweep is a
+              // transform, since layout rounds the object's edges to whole
+              // pixels and it would step along unevenly.
               position: "absolute",
-              left: cx - ow / 2,
-              top: cy - oh / 2,
+              left: -ow / 2,
+              top: H / 2 - oh / 2,
               width: ow,
               height: oh,
-              transform: `rotate(${tilt}deg)`,
+              transform: `translate(${cx}px, ${cy - H / 2}px) rotate(${tilt}deg)`,
               filter: blur > 0.4 ? `url(#${blurId})` : undefined,
             }}
           >

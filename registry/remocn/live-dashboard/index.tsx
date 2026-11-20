@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -378,6 +379,7 @@ export function LiveDashboard({
   ground,
   groundParams,
 }: LiveDashboardProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width;
@@ -477,15 +479,24 @@ export function LiveDashboard({
       />
     );
 
-  const win = spring({ frame: frame - B.window, fps, config: HEAVY });
+  const winAt = (f: number) =>
+    spring({ frame: f - B.window, fps, config: HEAVY });
+  const win = winAt(frame);
   const winFade = interpolate(frame, [B.window, B.window + 12], [0, 1], {
     ...clamp,
     easing: ENTER,
   });
-  const camera = interpolate(frame, [0, 190], [1, 1.03], {
-    ...clamp,
-    easing: CAMERA,
-  });
+  const cameraAt = (f: number) =>
+    interpolate(f, [0, 190], [1, 1.03], { ...clamp, easing: CAMERA });
+  const camera = cameraAt(frame);
+  // The window carries the whole dashboard, so one tilt on it covers every
+  // line inside while it rises or the camera creeps in.
+  const stirs = (at: (f: number) => number, eps: number) =>
+    Math.abs(at(frame + 1) - at(frame)) > eps ||
+    Math.abs(at(frame) - at(frame - 1)) > eps;
+  const winMoving =
+    stirs((f) => (1 - winAt(f)) * 70, 5e-4) ||
+    stirs((f) => (0.95 + 0.05 * winAt(f)) * cameraAt(f), 1e-6);
   const rise = (at: number): React.CSSProperties => {
     const s = interpolate(frame, [at, at + 14], [0, 1], {
       ...clamp,
@@ -575,7 +586,7 @@ export function LiveDashboard({
               display: "flex",
               opacity: winFade,
               transformOrigin: "50% 40%",
-              transform: `translateY(${(1 - win) * 70}px) scale(${(0.95 + 0.05 * win) * camera})`,
+              transform: `translateY(${(1 - win) * 70}px) scale(${(0.95 + 0.05 * win) * camera})${glide(winMoving)}`,
             }}
           >
             {RAIL ? (

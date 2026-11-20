@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const archivo = loadVariableFont("normal", { subsets: ["latin"] });
 
@@ -208,6 +209,8 @@ function layout(str: string, adv: Record<string, number>): Glyph[] {
   });
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -241,6 +244,7 @@ export function RomanEdition({
   speed = 1,
   theme = "dark",
 }: RomanEditionProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -304,10 +308,15 @@ export function RomanEdition({
   const tagSize = portrait ? W * 0.06 : H * 0.058;
   const tagAt = lastAt + 8;
 
+  // A glyph rising in or out is laid out on the line and travels by a
+  // transform: `top` rounds the baseline to whole pixels, so the rise came
+  // out in uneven steps. The transform stays at rest, as `translateY(0px)`,
+  // so the line is never handed back to layout.
   const glyphStyle = (x: number, y: number, opacity: number) => ({
     position: "absolute" as const,
     left: W / 2 + x * F,
-    top: lineTop - bandTop + y,
+    top: lineTop - bandTop,
+    transform: `translateY(${y}px)${glide(y !== 0)}`,
     fontFamily,
     fontVariationSettings: FVS_NUMERAL,
     fontSize: F,
@@ -421,7 +430,7 @@ export function RomanEdition({
               fontSize: smallSize,
               color: fg,
               opacity: intro,
-              transform: `translateY(${((1 - intro) * smallSize * 0.6).toFixed(2)}px)`,
+              transform: `translateY(${((1 - intro) * smallSize * 0.6).toFixed(2)}px)${glide(midway(intro))}`,
             }}
           >
             {eyebrow}
@@ -438,7 +447,7 @@ export function RomanEdition({
               fontFeatureSettings: '"tnum" 1',
               color: spot,
               opacity: intro,
-              transform: `translateY(${((1 - intro) * smallSize * 0.6).toFixed(2)}px)`,
+              transform: `translateY(${((1 - intro) * smallSize * 0.6).toFixed(2)}px)${glide(midway(intro))}`,
             }}
           >
             {numLabel}
@@ -471,7 +480,7 @@ export function RomanEdition({
                     style={{
                       display: "inline-block",
                       opacity: p,
-                      transform: `translateY(${((1 - p) * tagSize * 0.6).toFixed(2)}px)`,
+                      transform: `translateY(${((1 - p) * tagSize * 0.6).toFixed(2)}px)${glide(midway(p))}`,
                     }}
                   >
                     {w}

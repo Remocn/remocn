@@ -9,6 +9,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export type ExplodedViewColors = {
   background: string;
@@ -73,6 +74,7 @@ export function ExplodedView({
   labelColor,
   speed = explodedViewDefaults.speed,
 }: ExplodedViewProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame();
   const { width, height, fps } = useVideoConfig();
   const baseColors = { ...explodedViewDefaults.colors, ...colorOverrides };
@@ -82,7 +84,8 @@ export function ExplodedView({
     label: labelColor ?? baseColors.label,
   };
   const n = Math.round(Math.min(6, Math.max(2, layers)));
-  const t = (frame * speed * 30) / fps;
+  const tAt = (f: number) => (f * speed * 30) / fps;
+  const t = tAt(frame);
 
   const side = height * 0.36;
   const thick = height * 0.036;
@@ -95,43 +98,52 @@ export function ExplodedView({
   const pts = (list: (readonly [number, number])[]) =>
     list.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
 
-  const close = spring({
-    frame: t - CLOSE,
-    fps: 30,
-    config: { damping: 26, stiffness: 320, mass: 0.8 },
-  });
-  // Top slab leaves first; bottom one barely waits.
-  const spread = Array.from({ length: n }, (_, i) => {
-    const fromTop = n - 1 - i;
-    const open = spring({
-      frame: t - OPEN - fromTop * 1.5,
+  // The stack at time `tt`, so a label can tell motion from rest.
+  const stack = (tt: number) => {
+    const close = spring({
+      frame: tt - CLOSE,
       fps: 30,
-      config: { damping: 12, stiffness: 110 },
+      config: { damping: 26, stiffness: 320, mass: 0.8 },
     });
-    return Math.max(0, open * (1 - close));
-  });
-  const offsets: number[] = [];
-  let z = 0;
-  for (let i = 0; i < n; i++) {
-    offsets.push(z);
-    z += thick + (i < n - 1 ? gap * Math.max(spread[i + 1], 0) : 0);
-  }
-  const total = z;
-  // The click: a short downward knock once the slabs meet again.
-  const knock =
-    interpolate(t, [CLOSE + 5, CLOSE + 7, CLOSE + 12], [0, 1, 0], {
-      ...clamp,
-      easing: Easing.out(Easing.quad),
-    }) *
-    height *
-    0.008;
-  const baseY = cy + side * 0.02 + total / 2 + knock;
+    // Top slab leaves first; bottom one barely waits.
+    const spread = Array.from({ length: n }, (_, i) => {
+      const fromTop = n - 1 - i;
+      const open = spring({
+        frame: tt - OPEN - fromTop * 1.5,
+        fps: 30,
+        config: { damping: 12, stiffness: 110 },
+      });
+      return Math.max(0, open * (1 - close));
+    });
+    const offsets: number[] = [];
+    let z = 0;
+    for (let i = 0; i < n; i++) {
+      offsets.push(z);
+      z += thick + (i < n - 1 ? gap * Math.max(spread[i + 1], 0) : 0);
+    }
+    const total = z;
+    // The click: a short downward knock once the slabs meet again.
+    const knock =
+      interpolate(tt, [CLOSE + 5, CLOSE + 7, CLOSE + 12], [0, 1, 0], {
+        ...clamp,
+        easing: Easing.out(Easing.quad),
+      }) *
+      height *
+      0.008;
+    return { offsets, baseY: cy + side * 0.02 + total / 2 + knock };
+  };
+  const { offsets, baseY } = stack(t);
+  const prev = stack(tAt(frame - 1));
+  const next = stack(tAt(frame + 1));
   const labelOut = interpolate(t, [CLOSE - 5, CLOSE], [1, 0], clamp);
   const labelX = width * 0.66;
   const fontSize = height * 0.042;
 
   const slabs: React.ReactNode[] = [];
   const leaders: React.ReactNode[] = [];
+  // The labels are SVG text placed by attributes, so the drawing carries the
+  // mark, moving while any label rides its slab.
+  let labelsMoving = false;
   for (let i = 0; i < n; i++) {
     const fromTop = n - 1 - i;
     const hot = fromTop === highlight;
@@ -219,6 +231,13 @@ export function ExplodedView({
       }) * labelOut;
     const ax = cx + anchor[0] + height * 0.012;
     const ay = baseY + anchor[1];
+    // anchor[1] is -(z0 + z1) / 2, which only moves with the slab's offset
+    const ayAt = (s: { offsets: number[]; baseY: number }) =>
+      s.baseY - s.offsets[i] - thick / 2;
+    const moving =
+      Math.abs(ayAt(next) - ay) > 1e-3 || Math.abs(ay - ayAt(prev)) > 1e-3;
+    // A label still hidden needs no lean, and the lean turns the slabs too.
+    labelsMoving ||= moving && show > 0;
     const length = (labelX - ax) * draw * labelOut;
     leaders.push(
       <g key={`l${i}`}>
@@ -276,7 +295,11 @@ export function ExplodedView({
         width={width}
         height={height}
         viewBox={`0 0 ${width} ${height}`}
-        style={{ position: "absolute", inset: 0 }}
+        style={{
+          position: "absolute",
+          inset: 0,
+          transform: glide(labelsMoving),
+        }}
         aria-hidden
       >
         <ellipse

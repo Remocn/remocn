@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadSans("normal", {
   weights: ["400", "500"],
@@ -88,6 +89,12 @@ const THEMES = {
 } as const;
 
 type Palette = (typeof THEMES)[keyof typeof THEMES];
+
+const midway = (p: number) => p > 0 && p < 1;
+/** Whether `at` changes between this frame and either neighbour. */
+const moves = (at: (t: number) => number, t: number, step: number) =>
+  Math.abs(at(t + step) - at(t)) > 1e-3 ||
+  Math.abs(at(t) - at(t - step)) > 1e-3;
 
 function polar(deg: number, r: number) {
   const a = (deg * Math.PI) / 180;
@@ -299,6 +306,7 @@ function Headline({
   fontWeight: number;
   stagger: number;
 }) {
+  const glide = useGlide();
   const lines = title.split("\n").map((l) => l.split(/\s+/).filter(Boolean));
   const flat = lines.flat();
   const hit = flat.indexOf(String(minutes));
@@ -340,7 +348,7 @@ function Headline({
                 <span
                   style={{
                     display: "inline-block",
-                    transform: `translateY(${(1 - k) * 135}%)`,
+                    transform: `translateY(${(1 - k) * 135}%)${glide(midway(k))}`,
                     color: fg,
                     ...(accentWord
                       ? {
@@ -401,6 +409,8 @@ export function ClockSweep({
   theme = "dark",
   speed = 1,
 }: ClockSweepProps) {
+  // `glide` is the camera's move to the left here.
+  const tilt = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = height / 720;
@@ -420,23 +430,42 @@ export function ClockSweep({
   const value = total * sweep + kick;
 
   const r = Math.min(height * 0.29, width * 0.19);
-  const glide = interpolate(t, [70, 104], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
   const leftX = width * 0.255;
-  const push =
-    interpolate(t, [20, 66], [0, 1], { ...CLAMP, easing: EASE_IO }) *
-    (1 - glide);
   const focus = polar(total * 3, r * 0.62);
-  const pushS = 1 + push * 0.32;
-  const cx =
-    interpolate(glide, [0, 1], [width / 2, leftX]) - focus.x * (pushS - 1);
-  const cy = height / 2 - focus.y * (pushS - 1);
-  const dialScale =
-    interpolate(t, [0, 30], [1.04, 1], { ...CLAMP, easing: EASE_OUT }) *
-    pushS *
-    interpolate(t, [104, 170], [1, 1.015], CLAMP);
+  const camera = (tt: number) => {
+    const glide = interpolate(tt, [70, 104], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+    const push =
+      interpolate(tt, [20, 66], [0, 1], { ...CLAMP, easing: EASE_IO }) *
+      (1 - glide);
+    const pushS = 1 + push * 0.32;
+    return {
+      glide,
+      cx:
+        interpolate(glide, [0, 1], [width / 2, leftX]) - focus.x * (pushS - 1),
+      cy: height / 2 - focus.y * (pushS - 1),
+      dialScale:
+        interpolate(tt, [0, 30], [1.04, 1], { ...CLAMP, easing: EASE_OUT }) *
+        pushS *
+        interpolate(tt, [104, 170], [1, 1.015], CLAMP),
+    };
+  };
+  const { glide, cx, cy, dialScale } = camera(t);
+  // Dial and headline are laid out where they settle, left of centre; the
+  // push and the glide there are a transform, since layout rounds a box and
+  // a baseline to whole pixels and both would step along.
+  const dx = cx - leftX;
+  const dy = cy - height / 2;
+  const shift =
+    Math.abs(dx) > 1e-3 || Math.abs(dy) > 1e-3
+      ? `translate(${dx}px, ${dy}px) `
+      : "";
+  const dialMoving =
+    moves((tt) => camera(tt).cx, t, speed) ||
+    moves((tt) => camera(tt).cy, t, speed) ||
+    moves((tt) => camera(tt).dialScale * r, t, speed);
 
   const secs = total * sweep * 60;
   const mm = Math.floor(secs / 60);
@@ -449,9 +478,13 @@ export function ClockSweep({
   const readLit = interpolate(t, [66, 72], [0, 1], CLAMP);
 
   const headSize = Math.min(height * 0.098, width * 0.055);
-  const headLeft = cx + r * 1.36;
   const headW = width - (leftX + r * 1.36) - width * 0.03;
-  const headDrift = interpolate(t, [76, 170], [0, -6 * u], CLAMP);
+  const driftAt = (tt: number) =>
+    interpolate(tt, [76, 170], [0, -6 * u], CLAMP);
+  const headDrift = driftAt(t);
+  const headMoving =
+    moves((tt) => camera(tt).cx, t, speed) ||
+    moves((tt) => camera(tt).cy + driftAt(tt), t, speed);
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
@@ -468,11 +501,11 @@ export function ClockSweep({
         <div
           style={{
             position: "absolute",
-            left: cx,
-            top: cy,
+            left: leftX,
+            top: height / 2,
             width: 0,
             height: 0,
-            transform: `scale(${dialScale})`,
+            transform: `${shift}scale(${dialScale})${tilt(dialMoving)}`,
           }}
         >
           <Dial
@@ -506,10 +539,10 @@ export function ClockSweep({
         <div
           style={{
             position: "absolute",
-            left: headLeft,
+            left: leftX + r * 1.36,
             width: headW,
-            top: cy,
-            transform: `translateY(calc(-50% + ${headDrift}px))`,
+            top: height / 2,
+            transform: `${shift}translateY(calc(-50% + ${headDrift}px))${tilt(headMoving)}`,
           }}
         >
           <Headline

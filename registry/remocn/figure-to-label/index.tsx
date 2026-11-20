@@ -14,6 +14,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -321,6 +322,7 @@ export function FigureToLabel({
   ground,
   groundParams,
 }: FigureToLabelProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -379,8 +381,11 @@ export function FigureToLabel({
     const colE = Math.min(1, Math.max(0, col));
     const startX = cardX + padX;
     const startY = cardY;
-    const figX = startX + (finX - startX) * col;
-    const figY = startY + (finY - startY) * col;
+    // The figure is laid out where it lands and travels there by transform:
+    // layout rounds a box and a baseline to whole pixels, so a figure eased
+    // by `left`/`top` clicks along pixel by pixel.
+    const figDx = (startX - finX) * (1 - col);
+    const figDy = (startY - finY) * (1 - col);
     const figS = 1 + (Fi / Fg - 1) * col;
     const moveBlur = Math.min(6, Math.abs(col - colPrev) * 60);
 
@@ -411,16 +416,20 @@ export function FigureToLabel({
       (finY + (boxH * Fi) / Fg / 2 - (cardY + cardH / 2)) * col;
     const cardH2 = cardH * (1 - colE) + boxH * figS * colE;
     const cardIntro = (1 - Math.min(1, Math.max(0, cardIn))) * H * 0.03;
+    const cardDy = cardCy - cardH2 / 2 + cardIntro - cardY;
 
     const card = (
       <div
         style={{
           position: "absolute",
           left: cardCx - cardW / 2,
-          top: cardCy - cardH2 / 2 + cardIntro,
+          // Laid out where it rests before the collapse; the intro rise and
+          // the collapse travel by transform, since layout rounds a box edge
+          // to whole pixels and an eased `top` steps unevenly.
+          top: cardY,
           width: cardW,
           height: cardH2,
-          transform: `scaleX(${cardScaleX.toFixed(4)})`,
+          transform: `${Math.abs(cardDy) < 1e-3 ? "" : `translateY(${cardDy}px) `}scaleX(${cardScaleX.toFixed(4)})`,
           borderRadius: Fg * 0.07,
           background: c.card,
           boxShadow: c.cardShadow,
@@ -502,12 +511,12 @@ export function FigureToLabel({
       <div
         style={{
           position: "absolute",
-          left: figX,
-          top: figY,
+          left: finX,
+          top: finY,
           width: figW,
           height: boxH,
           transformOrigin: "0 0",
-          transform: `scale(${figS.toFixed(5)})`,
+          transform: `translate(${figDx}px, ${figDy}px) scale(${figS.toFixed(5)})`,
           filter: moveBlur > 0.1 ? `blur(${moveBlur.toFixed(2)}px)` : undefined,
         }}
       >
@@ -720,7 +729,9 @@ export function FigureToLabel({
     content = (
       <AbsoluteFill
         style={{
-          transform: `scale(${push.toFixed(5)})`,
+          // The push never rests, so it marks everything in it as moving.
+          // Unrounded: a scale rounded to 1e-5 parks between steps as well.
+          transform: `scale(${push})${glide(true)}`,
         }}
       >
         {card}

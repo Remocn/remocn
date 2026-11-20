@@ -18,6 +18,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -103,6 +104,7 @@ const GLIDE = Easing.bezier(0.83, 0, 0.17, 1);
 const OPEN = Easing.bezier(0.32, 0.72, 0, 1);
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
 const ramp = (p: number, range: readonly [number, number], easing = MORPH) =>
   interpolate(p, [range[0], range[1]], [0, 1], { ...CLAMP, easing });
 
@@ -471,6 +473,7 @@ function SceneA({
   delay: number;
   speed: number;
 }) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const L = urlLayout(W, H, url);
@@ -500,7 +503,7 @@ function SceneA({
       <ScaleLayer scale={fgScale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${push})`,
+            transform: `scale(${push})${glide(frame < A_LEN)}`,
             transformOrigin: `${L.caretX}px ${L.cy}px`,
           }}
         >
@@ -633,6 +636,7 @@ function SceneB({
   fgScale: number;
   speed: number;
 }) {
+  const glide = useGlide();
   const frame = useCurrentFrame() * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const P = promptLayout(W, H);
@@ -692,7 +696,7 @@ function SceneB({
       <ScaleLayer scale={fgScale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${push})`,
+            transform: `scale(${push})${glide(frame < B_LEN)}`,
             transformOrigin: `${P.caretX}px ${P.caretY}px`,
             fontFamily,
           }}

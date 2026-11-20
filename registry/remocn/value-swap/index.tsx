@@ -2,6 +2,7 @@
 
 import type React from "react";
 import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const clampOpts = {
   extrapolateLeft: "clamp" as const,
@@ -28,6 +29,7 @@ export function ValueSwap({
   style,
 }: ValueSwapProps) {
   const frame = useCurrentFrame();
+  const glide = useGlide();
   const ats = Array.isArray(at) ? at : [at];
   const d = direction === "down" ? -distance : distance;
   const count = Math.min(values.length, ats.length + 1);
@@ -54,6 +56,7 @@ export function ValueSwap({
         const opacity = pIn * (1 - pOut);
         if (opacity <= 0.001) return null;
         const y = (1 - pIn) * d + pOut * -d;
+        const moving = (pIn > 0 && pIn < 1) || (pOut > 0 && pOut < 1);
         return (
           <span
             key={`${i}-${value}`}
@@ -63,7 +66,7 @@ export function ValueSwap({
               top: 0,
               whiteSpace: "nowrap",
               opacity,
-              translate: `0 ${y}px`,
+              transform: `translateY(${y}px)${glide(moving)}`,
             }}
           >
             {value}

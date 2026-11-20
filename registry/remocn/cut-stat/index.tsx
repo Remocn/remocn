@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const instrument = loadInstrument("normal", {
   weights: ["400", "500"],
@@ -92,6 +93,8 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function estimateEm(text: string) {
   let w = 0;
   for (const ch of text) {
@@ -172,6 +175,7 @@ export function CutStat({
   speed = 1,
   theme = "dark",
 }: CutStatProps) {
+  const glide = useGlide();
   const raw = Math.max(0, useCurrentFrame() - delay);
   const frame = raw * speed;
   const { width, height, durationInFrames } = useVideoConfig();
@@ -256,6 +260,13 @@ export function CutStat({
         : cut < 1
           ? 1
           : 0.35 + flash * 0.65;
+
+  // The edge sweeps by a transform from where the cut ends: an edge moved by
+  // `left` rounds to whole pixels and steps unevenly. Within 1/128px of that
+  // place the old layout path is kept, so the settled edge is untouched.
+  const edgeRest = along * (1 - v / 100);
+  const edgeTravel = Math.abs(edgePos - edgeRest) >= 1 / 128;
+  const edgeAt = edgeTravel ? edgeRest : edgePos;
 
   const release = interpolate(frame, [53, 69], [0, 1], {
     ...CLAMP,
@@ -344,7 +355,7 @@ export function CutStat({
         <span
           style={{
             gridArea: "1 / 1",
-            transform: `translateY(${-swapT * 110}%)`,
+            transform: `translateY(${-swapT * 110}%)${glide(midway(swapT))}`,
           }}
         >
           {fromLabel}
@@ -352,7 +363,7 @@ export function CutStat({
         <span
           style={{
             gridArea: "1 / 1",
-            transform: `translateY(${(1 - swapT) * 110}%)`,
+            transform: `translateY(${(1 - swapT) * 110}%)${glide(midway(swapT))}`,
           }}
         >
           {toLabel}
@@ -469,7 +480,7 @@ export function CutStat({
                       <span
                         style={{
                           display: "inline-block",
-                          transform: `translateY(${(1 - t) * 105}%)`,
+                          transform: `translateY(${(1 - t) * 105}%)${glide(midway(t))}`,
                         }}
                       >
                         {w}
@@ -490,7 +501,7 @@ export function CutStat({
                   textTransform: "uppercase",
                   color: p.muted,
                   opacity: capT,
-                  transform: `translateY(${(1 - capT) * 8 * u}px)`,
+                  transform: `translateY(${(1 - capT) * 8 * u}px)${glide(midway(capT))}`,
                 }}
               >
                 {caption}
@@ -518,8 +529,11 @@ export function CutStat({
         style={{
           position: "absolute",
           ...(portrait
-            ? { left: 0, right: 0, top: edgePos - 1 * u, height: 2 * u }
-            : { top: 0, bottom: 0, left: edgePos - 1 * u, width: 2 * u }),
+            ? { left: 0, right: 0, top: edgeAt - 1 * u, height: 2 * u }
+            : { top: 0, bottom: 0, left: edgeAt - 1 * u, width: 2 * u }),
+          transform: edgeTravel
+            ? `${portrait ? "translateY" : "translateX"}(${edgePos - edgeRest}px)`
+            : undefined,
           background: p.edge,
           opacity: edgeO * intro,
           zIndex: 3,

@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const rubik = loadFont("normal", {
   weights: ["400", "500"],
@@ -152,6 +153,8 @@ function prefixes(text: string): string[] {
   return out;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -183,6 +186,7 @@ export function TldrOnTop({
   speed = 1,
   theme = "dark",
 }: TldrOnTopProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -250,23 +254,42 @@ export function TldrOnTop({
   const STEP = Math.min(30, Math.max(18, (span - READ - 110) / list.length));
   const insertAt = (k: number) => READ + k * STEP;
   const OPEN = 18;
-  const opens = heights.map((_, k) =>
-    interpolate(t, [insertAt(k), insertAt(k) + OPEN], [0, 1], {
-      ...CLAMP,
-      easing: EASE_IN_OUT,
-    }),
-  );
+  const opensAt = (tt: number) =>
+    heights.map((_, k) =>
+      interpolate(tt, [insertAt(k), insertAt(k) + OPEN], [0, 1], {
+        ...CLAMP,
+        easing: EASE_IN_OUT,
+      }),
+    );
+  const opens = opensAt(t);
   const headTotal = heights.reduce((a, h, k) => a + h * opens[k], 0);
-  const gapNow = headGap * opens[0];
   const restTop = mY + heights.reduce((a, h) => a + h, 0) + headGap;
   const sliverTop = Math.min(H - wallRowH * 3.4, restTop + H * 0.12);
   const pushStart = insertAt(heights.length - 1) + OPEN - 4;
-  const push = interpolate(t, [pushStart, pushStart + 26], [0, 1], {
-    ...CLAMP,
-    easing: Easing.bezier(0.5, 0, 0.2, 1),
-  });
-  const wallTop =
-    mY + headTotal + gapNow + Math.max(0, sliverTop - restTop) * push;
+  const wallAt = (tt: number) => {
+    const o = opensAt(tt);
+    const push = interpolate(tt, [pushStart, pushStart + 26], [0, 1], {
+      ...CLAMP,
+      easing: Easing.bezier(0.5, 0, 0.2, 1),
+    });
+    return (
+      mY +
+      heights.reduce((a, h, k) => a + h * o[k], 0) +
+      headGap * o[0] +
+      Math.max(0, sliverTop - restTop) * push
+    );
+  };
+  const wallTop = wallAt(t);
+  // The wall is pushed down by the blocks opening above it. Moved by `top`,
+  // layout rounds every baseline to whole pixels and the paragraph clicks
+  // down, so it is laid out once, at the last place, and travels by transform
+  // all its life: handing it to layout between pushes would snap it by the
+  // rounding difference on that frame.
+  const wallEnd = wallAt(Number.POSITIVE_INFINITY);
+  const wallRide = wallTop - wallEnd;
+  const wallMoving =
+    Math.abs(wallAt(t + speed) - wallTop) > 1e-3 ||
+    Math.abs(wallTop - wallAt(t - speed)) > 1e-3;
 
   const wallIn = interpolate(t, [0, 16], [0, 1], {
     ...CLAMP,
@@ -343,7 +366,7 @@ export function TldrOnTop({
           style={{
             paddingTop: k === 0 ? 0 : F * 0.06,
             opacity: reveal,
-            transform: `translateY(${((1 - reveal) * -h * 0.35).toFixed(2)}px)`,
+            transform: `translateY(${((1 - reveal) * -h * 0.35).toFixed(2)}px)${glide(midway(reveal))}`,
           }}
         >
           {content}
@@ -360,7 +383,7 @@ export function TldrOnTop({
           style={{
             position: "absolute",
             left: mX,
-            top: wallTop,
+            top: wallEnd,
             width: colW,
             fontFamily,
             fontWeight: 400,
@@ -369,7 +392,7 @@ export function TldrOnTop({
             letterSpacing: "-0.005em",
             color: fg,
             opacity: wallIn * dim,
-            transform: `translateY(${((1 - wallIn) * s).toFixed(2)}px)`,
+            transform: `translateY(${(Math.abs(wallRide) < 1e-3 ? 0 : wallRide) + Number(((1 - wallIn) * s).toFixed(2))}px)${glide(wallMoving || midway(wallIn))}`,
             textWrap: "pretty",
           }}
         >

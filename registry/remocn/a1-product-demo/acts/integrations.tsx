@@ -7,13 +7,21 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { FLOW_BG, FLOW_BORDER, FLOW_YELLOW, FONT } from "../foundation";
+import {
+  FLOW_BG,
+  FLOW_BORDER,
+  FLOW_YELLOW,
+  FONT,
+  stirring,
+  useGlide,
+} from "../foundation";
 
 const ICONS = ["github", "figma", "flowith", "notion", "slack"] as const;
 
 export function Integrations({ speed = 1 }: { speed?: number }) {
   const f = useCurrentFrame() * speed;
   const { fps } = useVideoConfig();
+  const glide = useGlide();
 
   const lineGrow = interpolate(f, [6, 28], [0, 1], {
     extrapolateLeft: "clamp",
@@ -51,11 +59,16 @@ export function Integrations({ speed = 1 }: { speed?: number }) {
           }}
         />
         {ICONS.map((kind, i) => {
-          const pop = spring({
-            frame: f - 6 - i * 5,
-            fps,
-            config: { damping: 14, stiffness: 170 },
-          });
+          const popAt = (g: number) =>
+            spring({
+              frame: g - 6 - i * 5,
+              fps,
+              config: { damping: 14, stiffness: 170 },
+            });
+          const pop = popAt(f);
+          // The spring overshoots, so the test is on the scale itself,
+          // weighed at the corner of the mark.
+          const popping = stirring((g) => popAt(g) * 70, f, speed);
           const center = kind === "flowith";
           const size = center ? 128 : 100;
           return (
@@ -64,6 +77,7 @@ export function Integrations({ speed = 1 }: { speed?: number }) {
               style={{
                 position: "relative",
                 scale: `${pop}`,
+                transform: glide(popping),
                 transformOrigin: "center",
               }}
             >

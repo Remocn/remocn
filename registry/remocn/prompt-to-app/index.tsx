@@ -4,15 +4,18 @@ import { loadFont } from "@remotion/google-fonts/Geist";
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import type React from "react";
-import { useId } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
+  continueRender,
+  delayRender,
   Easing,
   interpolate,
   spring,
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -144,10 +147,20 @@ const tween = (f: number, a: number, b: number, easing = enterE) =>
   interpolate(f, [a, b], [0, 1], { ...clampX, easing });
 
 type SpringCfg = { mass?: number; damping: number; stiffness?: number };
+
+/** Whether a value of the frame moves into or out of `f`. */
+const stirs = (at: (f: number) => number, f: number, eps = 1e-3) =>
+  Math.abs(at(f + 1) - at(f)) > eps || Math.abs(at(f) - at(f - 1)) > eps;
 const HEAVY: SpringCfg = { mass: 1, damping: 26, stiffness: 120 };
 const CARD: SpringCfg = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP: SpringCfg = { mass: 0.5, damping: 12, stiffness: 200 };
 const MORPH: SpringCfg = { damping: 200 };
+
+const THREAD_TOP = 20;
+const FILES_GAP = 14;
+// Taller than any block of the thread; scales a block's progress to px for the
+// test that picks the frames on which something is still opening.
+const BLOCK_REACH = 100;
 
 const REMOCN_R_PATH =
   "M 0.01 0.81 C 0.01 1.73, 0.36 2.79, 1.09 4.13 C 4.91 11.04, 13.45 17.16, 21.7 18.9 C 22.94 19.16, 23.18 19.16, 51.39 19.27 C 76.07 19.36, 80.02 19.4, 81.32 19.57 C 89.89 20.69, 96.2 24.68, 99.38 31.01 C 103.19 38.56, 102.53 50.1, 97.91 57.07 C 94.66 61.96, 89.68 64.99, 83.26 66 C 82.81 66.07, 70.18 66.83, 55.2 67.69 C 24.82 69.43, 27.03 69.23, 24.18 70.4 C 19.9 72.15, 14.84 75.7, 10.65 79.89 C 4.86 85.68, 1.3 91.91, 0.25 98.13 C 0.12 98.85, 0.08 103.13, 0.04 116.66 L 0 134.26 9.5 134.26 L 19 134.26 19.05 119.41 C 19.1 103.27, 19.08 103.82, 19.82 101.04 C 21.79 93.65, 27.86 88.75, 36.45 87.63 C 37.23 87.53, 39.41 87.5, 43.57 87.53 C 50.12 87.59, 50.75 87.65, 53.22 88.45 C 56.61 89.56, 59.67 91.86, 62.02 95.07 C 62.52 95.76, 69.35 103.85, 77.2 113.07 C 85.04 122.28, 91.63 130.04, 91.85 130.32 C 92.07 130.59, 92.5 131.34, 92.82 131.97 C 93.52 133.35, 94.11 133.93, 95.06 134.13 C 95.5 134.23, 98.97 134.26, 106.36 134.23 L 117.01 134.19 100.82 113.07 C 91.91 101.45, 84.52 91.78, 84.39 91.57 C 83.36 89.89, 83.66 87.53, 85.09 86 C 85.79 85.25, 86.36 84.94, 88.07 84.38 C 96.18 81.72, 104.15 76.62, 109.97 70.36 C 120.59 58.93, 124.06 44.32, 119.44 30.43 C 114.59 15.81, 101.93 4.02, 87.64 0.83 C 83.93 0.01, 88.09 0.08, 41.85 0.04 L 0.01 0 0.01 0.81 Z";
@@ -374,7 +387,25 @@ function Spinner({
   );
 }
 
-function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
+function Cursor({
+  x,
+  y,
+  rest,
+  press,
+}: {
+  x: number;
+  y: number;
+  rest: { x: number; y: number };
+  press: number;
+}) {
+  // Eased by `left`/`top`, the cursor stepped in uneven whole pixels; layout
+  // holds it on the button it clicks and the travel is a transform.
+  const dx = x - rest.x;
+  const dy = y - rest.y;
+  const travel =
+    Math.abs(dx) < 1e-3 && Math.abs(dy) < 1e-3
+      ? ""
+      : `translate(${dx}px, ${dy}px) `;
   return (
     <svg
       width={22}
@@ -382,10 +413,10 @@ function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
       viewBox="0 0 20 24"
       style={{
         position: "absolute",
-        left: x - 2,
-        top: y - 2,
+        left: rest.x - 2,
+        top: rest.y - 2,
         transformOrigin: "2px 2px",
-        transform: `scale(${1 - 0.12 * press})`,
+        transform: `${travel}scale(${1 - 0.12 * press})`,
         filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.28))",
         overflow: "visible",
         zIndex: 5,
@@ -417,12 +448,111 @@ function arc(
   };
 }
 
-function Grow({ p, children }: { p: number; children: React.ReactNode }) {
+// A block that opens by its grid row pushes the rest of the thread by layout,
+// and layout rounds every baseline and box edge it moves: each line clicks
+// along pixel by pixel. While any block is opening, the thread is laid out
+// with all of them fully open (`held`) and the travel is on transforms: this
+// one is clipped to its open part and lifted by what the blocks above it
+// still hide. A block at rest is the plain grid row.
+//
+// A lone `${p}fr` row under 1fr takes `p` of the content's height for the
+// grid, then only `p` of that for the row itself: the block is `p` tall and
+// shows the top `p * p` of its content. The clip keeps that.
+function Grow({
+  p,
+  held,
+  lift = 0,
+  heightRef,
+  children,
+}: {
+  p: number;
+  held?: boolean;
+  lift?: number;
+  heightRef?: (el: HTMLDivElement | null) => void;
+  children: React.ReactNode;
+}) {
   return (
-    <div style={{ display: "grid", gridTemplateRows: `${p}fr` }}>
-      <div style={{ minHeight: 0, overflow: "hidden" }}>{children}</div>
+    <div
+      style={{
+        display: "grid",
+        gridTemplateRows: held ? "1fr" : `${p}fr`,
+        transform: held && lift ? `translateY(${lift}px)` : undefined,
+      }}
+    >
+      <div
+        ref={heightRef}
+        style={{
+          minHeight: 0,
+          overflow: "hidden",
+          clipPath: held
+            ? `inset(0 0 ${Math.max(0, 1 - p * p) * 100}% 0)`
+            : undefined,
+        }}
+      >
+        {children}
+      </div>
     </div>
   );
+}
+
+/**
+ * Used heights of the bound elements, read after layout while `on`: the thread
+ * is laid out fully open then, so each block reports its natural height.
+ */
+function useHeights(on: boolean, fontFamily: string) {
+  const nodes = useRef(new Map<string, HTMLElement>());
+  const binders = useRef(new Map<string, (el: HTMLElement | null) => void>());
+  const [heights, setHeights] = useState<Record<string, number>>({});
+  // A frame rendered on its own lays text out in the fallback face first, and
+  // a paragraph wraps differently there. The frame waits for the typeface and
+  // renders once more, so the heights below are read from the real lines.
+  const [fontsIn, setFontsIn] = useState(false);
+  const [handle] = useState(() => delayRender("prompt-to-app: fonts"));
+  useEffect(() => {
+    let live = true;
+    Promise.all([
+      geist.waitUntilDone(),
+      document.fonts.load(`400 15px "${fontFamily}"`),
+    ])
+      .catch(() => undefined)
+      .then(() => {
+        if (live) setFontsIn(true);
+      });
+    return () => {
+      live = false;
+    };
+  }, [fontFamily]);
+  // Released from an effect rather than next to `setFontsIn`: by then the
+  // render with the typeface in is committed, heights included.
+  useEffect(() => {
+    if (fontsIn) continueRender(handle);
+    return () => continueRender(handle);
+  }, [fontsIn, handle]);
+  // No dependency list: every render while `on` reads again. The computed
+  // height is in layout px, whatever scale sits above, and a layout effect
+  // runs before the frame is painted.
+  useLayoutEffect(() => {
+    if (!on) return;
+    const next: Record<string, number> = {};
+    let changed = false;
+    for (const [key, el] of nodes.current) {
+      next[key] = Number.parseFloat(getComputedStyle(el).height) || 0;
+      if (next[key] !== heights[key]) changed = true;
+    }
+    if (changed) setHeights((before) => ({ ...before, ...next }));
+  });
+  const bind = (key: string) => {
+    let binder = binders.current.get(key);
+    if (!binder) {
+      binder = (el) => {
+        if (el) nodes.current.set(key, el);
+        else nodes.current.delete(key);
+      };
+      binders.current.set(key, binder);
+    }
+    return binder;
+  };
+  return [bind, heights] as const;
 }
 
 function Skeleton({
@@ -1013,6 +1143,7 @@ export function PromptToApp({
   ground,
   groundParams,
 }: PromptToAppProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const tall = H > W;
@@ -1025,21 +1156,28 @@ export function PromptToApp({
   const file = (i: number) => tl.file(i);
   const sp = (at: number, config: SpringCfg, durationInFrames?: number) =>
     spring({ frame: frame - at, fps, config, durationInFrames });
+  const spAt = (f: number, at: number, config: SpringCfg) =>
+    spring({ frame: f - at, fps, config });
 
   const chatIn = sp(0, HEAVY);
   const dock = sp(tl.send - 6, HEAVY);
   const pvIn = sp(tl.send - 2, HEAVY);
   const chatW = L.chat.w * L.chat.s;
   const chatH = L.chat.h * L.chat.s;
-  const chatX = interpolate(
-    dock,
-    [0, 1],
-    [tall ? L.chat.x : (L.w - chatW) / 2, L.chat.x],
+  // The chat docks by a transform, laid out where it docks: layout rounds a
+  // box and a baseline to whole pixels, so a window eased by `left`/`top`
+  // clicks along. The dock spring never quite lands, so the leftover is
+  // dropped once it is under a thousandth of a pixel.
+  const dockPx = Math.hypot(
+    (tall ? L.chat.x : (L.w - chatW) / 2) - L.chat.x,
+    (tall ? (L.h - chatH) / 2 : L.chat.y) - L.chat.y,
   );
-  const chatY = interpolate(
-    dock,
-    [0, 1],
-    [tall ? (L.h - chatH) / 2 : L.chat.y, L.chat.y],
+  const undock = (v: number) => (Math.abs(v) < 1e-3 ? 0 : v);
+  const chatDX = undock(
+    ((tall ? L.chat.x : (L.w - chatW) / 2) - L.chat.x) * (1 - dock),
+  );
+  const chatDY = undock(
+    ((tall ? (L.h - chatH) / 2 : L.chat.y) - L.chat.y) * (1 - dock),
   );
   const typed = Math.max(
     0,
@@ -1049,12 +1187,20 @@ export function PromptToApp({
   const sendScale =
     1 - 0.06 * (sp(tl.send - 2, MORPH, 3) - sp(tl.send + 1, CHIP));
   const emptyOut = tween(frame, tl.send + 1, tl.send + 6, exitE);
-  const bubble = sp(tl.send, MORPH);
-  const thinkIn = sp(tl.think, MORPH);
+  const opening = (at: number) =>
+    frame >= at &&
+    stirs((f) => (f >= at ? BLOCK_REACH * spAt(f, at, MORPH) : 0), frame);
+  // A spring never quite lands, and a grid row left a hair short is laid out
+  // 1/64px short: on a half-pixel resting place that puts everything under it
+  // a whole pixel off, made up two seconds later in one hop. Past its last
+  // stir a block is simply open.
+  const grown = (at: number) => (opening(at) ? spAt(frame, at, MORPH) : 1);
+  const bubble = grown(tl.send);
+  const thinkIn = grown(tl.think);
   const thinking = frame < tl.planAt;
-  const planIn = sp(tl.planAt - 2, MORPH);
-  const filesIn = (i: number) => sp(file(i).start - 2, MORPH);
-  const doneIn = sp(tl.doneMsg, MORPH);
+  const planIn = grown(tl.planAt - 2);
+  const filesIn = (i: number) => grown(file(i).start - 2);
+  const doneIn = grown(tl.doneMsg);
   const ready =
     tween(frame, tl.think, tl.think + 6) *
     (1 - tween(frame, file(0).start - 4, file(0).start + 2, exitE));
@@ -1076,10 +1222,60 @@ export function PromptToApp({
   const popOp = tween(frame, tl.deployed + 2, tl.deployed + 6);
   const urlSwap = tween(frame, tl.deployed, tl.deployed + 8);
 
-  const cam = interpolate(frame, [0, tl.end], [1, 1.025], {
-    ...clampX,
-    easing: camE,
-  });
+  const camAt = (f: number) =>
+    interpolate(f, [0, tl.end], [1, 1.025], { ...clampX, easing: camE });
+  const cam = camAt(frame);
+  // Asked of the px at the frame's far side: the push eases in and out so
+  // gently that its progress says "moving" long after the picture rests.
+  const camMoving = stirs((f) => camAt(f) * 1000, frame, 2e-3);
+  const chatMoving =
+    !camMoving &&
+    (stirs((f) => 40 * spAt(f, 0, HEAVY), frame) ||
+      stirs((f) => dockPx * spAt(f, tl.send - 6, HEAVY), frame));
+  const pvMoving =
+    !camMoving && stirs((f) => 56 * spAt(f, tl.send - 2, HEAVY), frame);
+  const popMoving =
+    !camMoving && stirs((f) => 6 * spAt(f, tl.deployed + 2, CHIP), frame);
+
+  // The thread's opening blocks from the top down, each with the frame it
+  // mounts on. See `Grow` for what `held` switches.
+  const blocks = [
+    { key: "bubble", at: tl.send },
+    { key: "think", at: tl.think },
+    { key: "plan", at: tl.planAt - 2 },
+    ...files
+      .slice(1, 4)
+      .map((_, i) => ({ key: `file${i + 1}`, at: file(i + 1).start - 2 })),
+    { key: "done", at: tl.doneMsg },
+  ];
+  const held = blocks.some((b) => opening(b.at));
+  const [bind, heights] = useHeights(held, fontFamily);
+  const natural = (key: string) => heights[key] ?? 0;
+  /** What a block still hides, in px. */
+  const shut = (key: string) => {
+    const b = blocks.find((it) => it.key === key);
+    return b && frame >= b.at ? natural(key) * (1 - grown(b.at)) : 0;
+  };
+  const shutAboveFiles = shut("bubble") + shut("think") + shut("plan");
+  const shutRows = (before: number) => {
+    let sum = 0;
+    for (let i = 1; i < before; i += 1) sum += shut(`file${i}`);
+    return sum;
+  };
+  const filesOn = frame >= file(0).start - 2;
+  // The thread sits at the top of its pane until it outgrows it, then sticks
+  // to the bottom. Laid out fully open it may already overflow while the real
+  // one still fits, so it is put back where the real one would be.
+  const threadFull =
+    THREAD_TOP +
+    blocks.reduce((sum, b) => sum + (frame >= b.at ? natural(b.key) : 0), 0) +
+    (filesOn ? FILES_GAP + natural("file0") : 0);
+  const threadNow = threadFull - blocks.reduce((s, b) => s + shut(b.key), 0);
+  const threadDY = held
+    ? Math.min(0, natural("pane") - threadNow) -
+      Math.min(0, natural("pane") - threadFull)
+    : 0;
+  const threadTilt = glide(held && !camMoving && !chatMoving);
 
   const composerText = sent ? "" : prompt.slice(0, typed);
   const caretOn = !sent && Math.floor(frame / 8) % 2 === 0;
@@ -1128,19 +1324,19 @@ export function PromptToApp({
             style={{
               position: "absolute",
               inset: 0,
-              transform: `scale(${cam})`,
+              transform: `scale(${cam})${glide(camMoving)}`,
               transformOrigin: `${(target.x / L.w) * 100}% ${(target.y / L.h) * 100}%`,
             }}
           >
             <div
               style={{
                 position: "absolute",
-                left: chatX,
-                top: chatY,
+                left: L.chat.x,
+                top: L.chat.y,
                 width: L.chat.w,
                 height: L.chat.h,
                 transformOrigin: "0 0",
-                transform: `translateY(${(1 - chatIn) * 40}px) scale(${L.chat.s})`,
+                transform: `${chatDX || chatDY ? `translate(${chatDX}px, ${chatDY}px) ` : ""}translateY(${(1 - chatIn) * 40}px) scale(${L.chat.s})${glide(chatMoving)}`,
                 opacity: Math.min(1, chatIn * 1.6),
               }}
             >
@@ -1175,6 +1371,7 @@ export function PromptToApp({
                   <Icon name="chevDown" color={pal.faint} size={14} />
                 </div>
                 <div
+                  ref={bind("pane")}
                   style={{
                     flex: 1,
                     minHeight: 0,
@@ -1185,9 +1382,18 @@ export function PromptToApp({
                     padding: "0 22px",
                   }}
                 >
-                  <div style={{ marginBottom: "auto", paddingTop: 20 }}>
+                  <div
+                    style={{
+                      marginBottom: "auto",
+                      paddingTop: THREAD_TOP,
+                      transform:
+                        threadDY || threadTilt
+                          ? `translateY(${threadDY}px)${threadTilt}`
+                          : undefined,
+                    }}
+                  >
                     {frame >= tl.send ? (
-                      <Grow p={bubble}>
+                      <Grow p={bubble} held={held} heightRef={bind("bubble")}>
                         <div
                           style={{
                             marginLeft: 28,
@@ -1206,7 +1412,12 @@ export function PromptToApp({
                       </Grow>
                     ) : null}
                     {frame >= tl.think ? (
-                      <Grow p={thinkIn}>
+                      <Grow
+                        p={thinkIn}
+                        held={held}
+                        lift={-shut("bubble")}
+                        heightRef={bind("think")}
+                      >
                         <div
                           style={{
                             display: "flex",
@@ -1248,7 +1459,12 @@ export function PromptToApp({
                       </Grow>
                     ) : null}
                     {frame >= tl.planAt - 2 ? (
-                      <Grow p={planIn}>
+                      <Grow
+                        p={planIn}
+                        held={held}
+                        lift={-shut("bubble") - shut("think")}
+                        heightRef={bind("plan")}
+                      >
                         <div
                           style={{
                             marginTop: 10,
@@ -1278,12 +1494,16 @@ export function PromptToApp({
                     {frame >= file(0).start - 2 ? (
                       <div
                         style={{
-                          marginTop: 14,
+                          marginTop: FILES_GAP,
                           opacity: tween(
                             frame,
                             file(0).start - 2,
                             file(0).start + 4,
                           ),
+                          transform:
+                            held && shutAboveFiles
+                              ? `translateY(${-shutAboveFiles}px)`
+                              : undefined,
                         }}
                       >
                         {files.slice(0, 4).map((f, i) => {
@@ -1296,7 +1516,13 @@ export function PromptToApp({
                           const ok = sp(file(i).done, CHIP);
                           if (i > 0 && frame < file(i).start - 2) return null;
                           return (
-                            <Grow key={f} p={i === 0 ? 1 : filesIn(i)}>
+                            <Grow
+                              key={f}
+                              p={i === 0 ? 1 : filesIn(i)}
+                              held={held}
+                              lift={-shutRows(i)}
+                              heightRef={bind(`file${i}`)}
+                            >
                               <div
                                 style={{
                                   display: "flex",
@@ -1370,7 +1596,12 @@ export function PromptToApp({
                       </div>
                     ) : null}
                     {frame >= tl.doneMsg ? (
-                      <Grow p={doneIn}>
+                      <Grow
+                        p={doneIn}
+                        held={held}
+                        lift={-shutAboveFiles - shutRows(4)}
+                        heightRef={bind("done")}
+                      >
                         <div
                           style={{
                             marginTop: 12,
@@ -1513,7 +1744,7 @@ export function PromptToApp({
                 width: PVW,
                 height: L.pvH,
                 transformOrigin: "0 0",
-                transform: `translateY(${(1 - pvIn) * 56}px) scale(${L.pv.s})`,
+                transform: `translateY(${(1 - pvIn) * 56}px) scale(${L.pv.s})${glide(pvMoving)}`,
                 opacity: Math.min(1, pvIn * 1.6),
               }}
             >
@@ -1711,7 +1942,7 @@ export function PromptToApp({
                       boxShadow: pal.popShadow,
                       padding: 6,
                       opacity: popOp,
-                      transform: `translateY(${(1 - pop) * -6}px) scale(${0.94 + 0.06 * pop})`,
+                      transform: `translateY(${(1 - pop) * -6}px) scale(${0.94 + 0.06 * pop})${glide(popMoving)}`,
                       transformOrigin: `${316 - DEPLOY.w / 2}px 0`,
                     }}
                   >
@@ -1788,7 +2019,12 @@ export function PromptToApp({
 
             {cursorOp > 0 ? (
               <div style={{ opacity: cursorOp }}>
-                <Cursor x={cur.x} y={cur.y} press={press} />
+                <Cursor
+                  x={cur.x}
+                  y={cur.y}
+                  rest={arc(L.cursorFrom, target, 1)}
+                  press={press}
+                />
               </div>
             ) : null}
           </div>

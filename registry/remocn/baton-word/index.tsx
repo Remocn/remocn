@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const syne = loadFont("normal", {
   weights: ["400", "500"],
@@ -185,6 +186,8 @@ function splitPunct(word: string) {
   return { core: word.slice(0, word.length - punct.length), punct };
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -224,6 +227,7 @@ export function BatonWord({
   speed = 1,
   theme = "dark",
 }: BatonWordProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -378,7 +382,7 @@ export function BatonWord({
               top: L.F * 0.12,
               color: leadColor,
               opacity: 1 - q,
-              transform: `translateY(${y.toFixed(2)}px)`,
+              transform: `translateY(${y.toFixed(2)}px)${glide(midway(p) || midway(q))}`,
             }}
           >
             {pw.word}
@@ -436,6 +440,13 @@ export function BatonWord({
     if (qOut >= 1) continue;
     const color = interpolateColors(lit, [0, 1], [fg, hi]);
 
+    const masked = go <= 0 || qOut > 0;
+    // All its life the baton is laid out where it lands, at the size it lands
+    // at, and the travel and growth are a transform: layout rounds a baseline
+    // to whole pixels, so a word carried by `left`/`top` or grown by
+    // `font-size` clicks along pixel by pixel, and one handed from a
+    // transform back to layout jumps by the rounding when it stops.
+    const Fl = B.F;
     const aChars = Array.from(a.core);
     const bChars = Array.from(b.core);
     const same = aChars.length === bChars.length;
@@ -444,10 +455,10 @@ export function BatonWord({
     const glyphs: React.ReactNode[] = [];
     if (same) {
       aChars.forEach((ch, i) => {
-        const gx = (pa[i] + (pb[i] - pa[i]) * swap) * F;
+        const gx = (pa[i] + (pb[i] - pa[i]) * swap) * Fl;
         if (ch === bChars[i]) {
           glyphs.push(
-            <span key={`g${i}`} style={{ ...textStyle(F), left: gx, top: 0 }}>
+            <span key={`g${i}`} style={{ ...textStyle(Fl), left: gx, top: 0 }}>
               {ch}
             </span>,
           );
@@ -455,13 +466,13 @@ export function BatonWord({
           glyphs.push(
             <span
               key={`ga${i}`}
-              style={{ ...textStyle(F), left: gx, top: 0, opacity: 1 - swap }}
+              style={{ ...textStyle(Fl), left: gx, top: 0, opacity: 1 - swap }}
             >
               {ch}
             </span>,
             <span
               key={`gb${i}`}
-              style={{ ...textStyle(F), left: gx, top: 0, opacity: swap }}
+              style={{ ...textStyle(Fl), left: gx, top: 0, opacity: swap }}
             >
               {bChars[i]}
             </span>,
@@ -472,25 +483,25 @@ export function BatonWord({
       glyphs.push(
         <span
           key="wa"
-          style={{ ...textStyle(F), left: 0, top: 0, opacity: 1 - swap }}
+          style={{ ...textStyle(Fl), left: 0, top: 0, opacity: 1 - swap }}
         >
           {a.core}
         </span>,
         <span
           key="wb"
-          style={{ ...textStyle(F), left: 0, top: 0, opacity: swap }}
+          style={{ ...textStyle(Fl), left: 0, top: 0, opacity: swap }}
         >
           {b.core}
         </span>,
       );
     }
-    const coreW = (m.em[a.core] + (m.em[b.core] - m.em[a.core]) * swap) * F;
+    const coreW = (m.em[a.core] + (m.em[b.core] - m.em[a.core]) * swap) * Fl;
     if (a.punct && punctOut > 0) {
       glyphs.push(
         <span
           key="pa"
           style={{
-            ...textStyle(F),
+            ...textStyle(Fl),
             left: coreW,
             top: 0,
             opacity: punctOut,
@@ -507,7 +518,7 @@ export function BatonWord({
         <span
           key="pb"
           style={{
-            ...textStyle(F),
+            ...textStyle(Fl),
             left: coreW,
             top: 0,
             opacity: pIn2,
@@ -521,42 +532,41 @@ export function BatonWord({
 
     const dropY = qOut * B.F * 0.14;
     const riseY = (1 - pIn) * A.F * 1.2;
-    const masked = go <= 0 || qOut > 0;
     const maskL = go <= 0 ? A : B;
-    const inner = (
+    // Exactly 0 where it lands, so the word rests there as layout puts it.
+    const dx = (x0 - x1) * (1 - go);
+    const dy = go < 1 ? (y0 - y1) * (1 - go) - arc : 0;
+    // The mask is a clip in the frame's own coordinates rather than a box the
+    // word is laid out in, so the word keeps one layout position.
+    const clipTop = y - maskL.F * 0.12;
+    const clipBottom = H - clipTop - maskL.F * (LH + 0.3);
+    nodes.push(
       <div
+        key={`b${k}`}
         style={{
           position: "absolute",
-          left: masked ? 0 : x,
-          top: masked ? maskL.F * 0.12 : y,
-          width: 1,
-          height: F * LH,
-          color,
-          opacity: 1 - qOut,
-          transform: `translateY(${(riseY + dropY).toFixed(2)}px)`,
+          inset: 0,
+          clipPath: masked
+            ? `inset(${clipTop}px ${-x}px ${clipBottom}px ${x}px)`
+            : undefined,
         }}
       >
-        {glyphs}
-      </div>
-    );
-    nodes.push(
-      masked ? (
         <div
-          key={`b${k}`}
           style={{
             position: "absolute",
-            left: x,
-            top: y - maskL.F * 0.12,
-            width: W,
-            height: maskL.F * (LH + 0.3),
-            overflow: "hidden",
+            left: x1,
+            top: y1,
+            width: 1,
+            height: Fl * LH,
+            color,
+            opacity: 1 - qOut,
+            transform: `translate(${dx}px, ${dy}px) translateY(${(riseY + dropY).toFixed(2)}px) scale(${F / Fl})${glide((go > 0 && go < 1) || midway(pIn) || midway(qOut))}`,
+            transformOrigin: "0 0",
           }}
         >
-          {inner}
+          {glyphs}
         </div>
-      ) : (
-        <div key={`b${k}`}>{inner}</div>
-      ),
+      </div>,
     );
   }
 

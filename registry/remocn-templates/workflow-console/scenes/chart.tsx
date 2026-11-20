@@ -1,8 +1,16 @@
-import { Interactive } from "remotion";
+import { Interactive, useVideoConfig } from "remotion";
 import type { SceneProps } from "../content";
-import { barHeights, chartBarGrowth, move } from "../motion";
+import { barHeights, chartBarGrowth, move, useGlide } from "../motion";
+
+// The zoom and the bars have no clean progress (eased products, staggered
+// windows), so a value moves on any frame where it differs from a neighbour.
+const changing = (at: (u: number) => number, t: number, step: number) =>
+  at(t + step) !== at(t) || at(t) !== at(t - step);
 
 export function PerformanceChart({ scene, t }: SceneProps) {
+  const glide = useGlide();
+  const { fps } = useVideoConfig();
+  const step = 1 / fps;
   const bars = scene.bars;
   const heights = barHeights(
     bars.map((bar) => bar.value),
@@ -11,6 +19,8 @@ export function PerformanceChart({ scene, t }: SceneProps) {
   );
   const width = 286 / bars.length;
   const exit = move(t, 40.7, 40.8);
+  const zoomAt = (u: number) => move(u, 38.8, 40.4, 0.88, 1.05);
+  const zooming = changing(zoomAt, t, step);
   return (
     <Interactive.Div
       name="Performance chart"
@@ -22,8 +32,9 @@ export function PerformanceChart({ scene, t }: SceneProps) {
         height: 189,
         background: "#14263a",
         opacity: move(t, 38.8, 39),
-        transform: `translate3d(0, 0, 0) scale(${move(t, 38.8, 40.4, 0.88, 1.05)})`,
-        willChange: "transform",
+        // The layer `will-change` made is gone: it slid one texture that
+        // differed from tab to tab in a split render.
+        transform: `scale(${zoomAt(t)})${glide(zooming)}`,
         transformOrigin: "50% 65%",
         overflow: "hidden",
         clipPath: `inset(0 ${exit * 100}% 0 0)`,
@@ -54,6 +65,11 @@ export function PerformanceChart({ scene, t }: SceneProps) {
       >
         {bars.map((bar, i) => {
           const growth = chartBarGrowth(t, i);
+          const rising = changing(
+            (u) => heights[i] * (1 - chartBarGrowth(u, i)),
+            t,
+            step,
+          );
           return (
             <div
               key={`${bar.label}-${i}`}
@@ -73,9 +89,8 @@ export function PerformanceChart({ scene, t }: SceneProps) {
                   inset: 0,
                   background: i === 0 ? "#3a526a" : scene.accent,
                   boxShadow: "inset 0 1px #ffffff30",
-                  transform: `translate3d(0, 0, 0) scaleY(${growth})`,
+                  transform: `scaleY(${growth})`,
                   transformOrigin: "50% 100%",
-                  willChange: "transform",
                 }}
               />
               <div
@@ -83,8 +98,7 @@ export function PerformanceChart({ scene, t }: SceneProps) {
                   padding: "5px 4px",
                   fontSize: Math.min(6.5, width / 9),
                   whiteSpace: "nowrap",
-                  transform: `translate3d(0, ${heights[i] * (1 - growth)}px, 0)`,
-                  willChange: "transform",
+                  transform: `translateY(${heights[i] * (1 - growth)}px)${glide(rising)}`,
                 }}
               >
                 {bar.label}

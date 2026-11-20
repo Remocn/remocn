@@ -136,12 +136,15 @@ function FileFace({
   h,
   idx,
   fontFamily,
+  rest,
 }: {
   file: DropFile;
   w: number;
   h: number;
   idx: number;
   fontFamily: string;
+  /** Side of the square slot the card settles into. */
+  rest: number;
 }) {
   const m = Math.min(w, h);
   if (file.kind === "image") {
@@ -214,6 +217,11 @@ function FileFace({
   const sheet = file.kind === "sheet";
   const tag = sheet ? "#1f9d63" : "#e5484d";
   const ext = file.name.split(".").pop()?.toUpperCase() ?? "";
+  // The face is laid out once, in the settled square, and the card's flight
+  // from fan to slot reaches it as a transform: layout rounds a box and a
+  // baseline to whole pixels, so a face pinned by percentages of a card that
+  // shrinks clicks along pixel by pixel.
+  const k = m / rest;
   return (
     <div
       style={{
@@ -226,57 +234,78 @@ function FileFace({
       <div
         style={{
           position: "absolute",
-          left: "11%",
-          top: "11%",
-          width: m * 0.3,
-          height: m * 0.3,
-          borderRadius: m * 0.07,
-          background: tag,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          left: 0,
+          top: 0,
+          width: rest,
+          height: rest,
         }}
       >
-        <svg viewBox="0 0 24 24" width={m * 0.19} height={m * 0.19} aria-hidden>
-          <g
-            fill="none"
-            stroke="#ffffff"
-            strokeWidth={1.8}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            {sheet ? (
-              <path d="M4.5 4.5h15v15h-15zM4.5 9.5h15M4.5 14.5h15M10 9.5v10" />
-            ) : (
-              <>
-                <path d="M6 2.8h7.6L18.5 7.7v13.5H6z" />
-                <path d="M13.3 2.8v5.2h5.2M9 13h6M9 16.5h4" />
-              </>
-            )}
-          </g>
-        </svg>
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          left: "11%",
-          right: "6%",
-          bottom: "9%",
-          lineHeight: 1.25,
-          whiteSpace: "nowrap",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-        }}
-      >
-        <div style={{ fontSize: m * 0.16, color: "#20232c" }}>{file.name}</div>
         <div
           style={{
-            fontSize: m * 0.145,
-            color: "rgba(32,35,44,0.55)",
-            fontVariantNumeric: "tabular-nums",
+            position: "absolute",
+            left: "11%",
+            top: "11%",
+            width: rest * 0.3,
+            height: rest * 0.3,
+            borderRadius: rest * 0.07,
+            transform: `translate(${0.11 * (w - rest)}px, ${0.11 * (h - rest)}px) scale(${k})`,
+            transformOrigin: "0 0",
+            background: tag,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          {file.size ? `${ext} · ${file.size}` : ext}
+          <svg
+            viewBox="0 0 24 24"
+            width={rest * 0.19}
+            height={rest * 0.19}
+            aria-hidden
+          >
+            <g
+              fill="none"
+              stroke="#ffffff"
+              strokeWidth={1.8}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              {sheet ? (
+                <path d="M4.5 4.5h15v15h-15zM4.5 9.5h15M4.5 14.5h15M10 9.5v10" />
+              ) : (
+                <>
+                  <path d="M6 2.8h7.6L18.5 7.7v13.5H6z" />
+                  <path d="M13.3 2.8v5.2h5.2M9 13h6M9 16.5h4" />
+                </>
+              )}
+            </g>
+          </svg>
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            left: "11%",
+            bottom: "9%",
+            width: (0.83 * w) / k,
+            transform: `translate(${0.11 * (w - rest)}px, ${0.91 * (h - rest)}px) scale(${k})`,
+            transformOrigin: "0 100%",
+            lineHeight: 1.25,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          <div style={{ fontSize: rest * 0.16, color: "#20232c" }}>
+            {file.name}
+          </div>
+          <div
+            style={{
+              fontSize: rest * 0.145,
+              color: "rgba(32,35,44,0.55)",
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            {file.size ? `${ext} · ${file.size}` : ext}
+          </div>
         </div>
       </div>
     </div>
@@ -422,8 +451,14 @@ export function MultiFileDrop({
   const cardH = baseH + grow * (slot + 16 * u);
   const groupH = headH + headGap + baseH + slot + 16 * u;
   const groupTop = (stageH - groupH) / 2 + (portrait ? 150 : 14);
-  const cardTop =
-    groupTop + headH + headGap + (1 - grow) * (slot + 16 * u) * 0.5;
+  const cardTopRest = groupTop + headH + headGap;
+  const cardTop = cardTopRest + (1 - grow) * (slot + 16 * u) * 0.5;
+  const cardHRest = baseH + slot + 16 * u;
+  // How far the grown card's insides still sit from where they come to rest.
+  // The card grows by its height, but its own travel and what rides on it
+  // are transforms: layout rounds a box and a baseline to whole pixels, so a
+  // prompt eased by `top` clicks down pixel by pixel.
+  const unGrown = (1 - grow) * (slot + 16 * u);
 
   const headIn = ramp(frame, B.head, 15);
   const cardIn = spring({ frame: frame - B.card, fps, config: HEAVY });
@@ -480,6 +515,10 @@ export function MultiFileDrop({
     mix(fanCy + curDY, sendY + 8 * u, curGo) +
     curLeave * 46 * u -
     Math.sin(Math.PI * Math.min(1, curLeave)) * 10 * u;
+  // Where the cursor waits on the send button; its travel is a transform
+  // from there, as with the card.
+  const curRestX = sendX + 6 * u;
+  const curRestY = cardTopRest + cardHRest - pad - footH / 2 + 8 * u;
   const sendPress = Math.max(
     0,
     spring({ frame: frame - B.send + 2, fps, config: CHIP }) -
@@ -575,14 +614,14 @@ export function MultiFileDrop({
               style={{
                 position: "absolute",
                 left: cardX,
-                top: cardTop,
+                top: cardTopRest,
                 width: cardW,
                 height: cardH,
                 borderRadius: 20 * u,
                 background: surface,
                 boxShadow: `0 0 0 1px ${dropZone > 0 ? `color-mix(in oklab, ${accent} ${Math.round(dropZone * 85)}%, ${ring})` : ring}, 0 0 0 ${4 * u * dropZone}px color-mix(in oklab, ${accent} ${Math.round(dropZone * 20)}%, transparent), ${shadow}`,
                 opacity: cardIn,
-                transform: `translateY(${mix(40 * u, 0, cardIn)}px)`,
+                transform: `translateY(${unGrown * 0.5 + mix(40 * u, 0, cardIn)}px)`,
               }}
             >
               <div
@@ -615,8 +654,9 @@ export function MultiFileDrop({
                   position: "absolute",
                   left: pad,
                   right: pad,
-                  top: pad + grow * (slot + 16 * u),
+                  top: pad + slot + 16 * u,
                   height: textH,
+                  transform: unGrown ? `translateY(${-unGrown}px)` : undefined,
                   fontSize,
                   lineHeight: `${lh}px`,
                   color: ink,
@@ -630,8 +670,9 @@ export function MultiFileDrop({
                   position: "absolute",
                   left: pad,
                   right: pad,
-                  bottom: pad,
+                  top: cardHRest - pad - footH,
                   height: footH,
+                  transform: unGrown ? `translateY(${-unGrown}px)` : undefined,
                   display: "flex",
                   alignItems: "center",
                   gap: 10 * u,
@@ -797,16 +838,21 @@ export function MultiFileDrop({
                 },
               );
               const lift = 1 - go;
+              // Laid out in its slot; the flight there is a transform, for
+              // the same reason as the card's growth above.
+              const dx = (1 - go) * (fx - slotX(i) - (fanW - slot) / 2);
+              const dy =
+                (1 - go) * (fy - slotY - (fanH - slot) / 2) + unGrown * 0.5;
               return (
                 <div
                   key={f.name}
                   style={{
                     position: "absolute",
-                    left: x - w / 2,
-                    top: y - h / 2,
+                    left: slotX(i) - slot / 2,
+                    top: cardTopRest + pad,
                     width: w,
                     height: h,
-                    transform: `rotate(${r}deg) scale(${punch})`,
+                    transform: `translate(${dx}px, ${dy}px) rotate(${r}deg) scale(${punch})`,
                     borderRadius: mix(14, 12, go) * u,
                     overflow: "hidden",
                     outline: `1px solid ${dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
@@ -839,12 +885,19 @@ export function MultiFileDrop({
                       h={h}
                       idx={i}
                       fontFamily={fontFamily}
+                      rest={slot}
                     />
                   </div>
                   <div
                     style={{
                       position: "absolute",
-                      inset: 0,
+                      // Centred in the slot and carried to the card's centre
+                      // by a transform while the card still shrinks.
+                      left: 0,
+                      top: 0,
+                      width: slot,
+                      height: slot,
+                      transform: `translate(${(w - slot) / 2}px, ${(h - slot) / 2}px)`,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -864,9 +917,9 @@ export function MultiFileDrop({
             <div
               style={{
                 position: "absolute",
-                left: curX,
-                top: curY,
-                transform: `scale(${1 - 0.04 * curPress})`,
+                left: curRestX,
+                top: curRestY,
+                transform: `translate(${curX - curRestX}px, ${curY - curRestY}px) scale(${1 - 0.04 * curPress})`,
                 transformOrigin: "4px 3px",
                 opacity: ramp(frame, B.fly + 2, 6),
                 zIndex: 30,

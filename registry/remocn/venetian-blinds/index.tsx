@@ -6,6 +6,7 @@ import type {
 } from "@remotion/transitions";
 import type React from "react";
 import { AbsoluteFill, Easing, interpolate, useVideoConfig } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export type VenetianBlindsDirection = "top-down" | "bottom-up" | "center";
 
@@ -53,6 +54,7 @@ const VenetianBlindsPresentation: React.FC<
   presentationDirection,
   passedProps,
 }) => {
+  const glide = useGlide();
   const { width, height } = useVideoConfig();
   const { slats, stagger, direction, shadeColor } = {
     ...venetianBlindsDefaults,
@@ -67,7 +69,11 @@ const VenetianBlindsPresentation: React.FC<
       easing: Easing.out(Easing.cubic),
     });
     return (
-      <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      <AbsoluteFill
+        style={{
+          transform: `scale(${scale})${glide(p > 0 && p < 1)}`,
+        }}
+      >
         {children}
       </AbsoluteFill>
     );
@@ -107,7 +113,12 @@ const VenetianBlindsPresentation: React.FC<
               height: bottom - top + (i < count - 1 ? 1 : 0),
               overflow: "hidden",
               transformOrigin: "50% 50%",
-              transform: `rotateX(${angle}deg)`,
+              // Each slat carries a copy of the scene. A copy whose slat has
+              // not turned yet rests flat, and shown at a size that is not
+              // whole it rests off the pixel grid: marked, it is drawn off
+              // the grid before the turn as during it, so it does not snap
+              // when the turn starts.
+              transform: `rotateX(${angle}deg)${glide(local > 0 && local < 1)}`,
               backfaceVisibility: "hidden",
               opacity: fade,
             }}

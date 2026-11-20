@@ -19,6 +19,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -255,6 +256,7 @@ export function CaretDolly({
   delay = 0,
   speed = 1,
 }: CaretDollyProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -427,14 +429,34 @@ export function CaretDolly({
   if (layout && cams.length > 0) {
     const L = layout;
     const f = frame;
-    const cam = cams[Math.min(cams.length - 1, Math.floor(f))];
-    const prev =
-      cams[Math.max(0, Math.min(cams.length - 1, Math.floor(f) - 1))];
-    const push =
-      f >= pullEnd
-        ? interpolate(f, [pullEnd, durationInFrames], [1, 1.03], CLAMP)
+    const camAt = (ff: number) =>
+      cams[Math.max(0, Math.min(cams.length - 1, Math.floor(ff)))];
+    const pushAt = (ff: number) =>
+      ff >= pullEnd
+        ? interpolate(ff, [pullEnd, durationInFrames], [1, 1.03], CLAMP)
         : 1;
+    const cam = camAt(f);
+    const prev = camAt(Math.floor(f) - 1);
+    const push = pushAt(f);
     const s = cam.s * push;
+    // Where the card's two corners land on screen at frame `ff`: the camera
+    // moves the text through them, so the glide mark moves while either one moves.
+    const cornersAt = (ff: number) => {
+      const k = camAt(ff).s * pushAt(ff);
+      const { x, y } = camAt(ff);
+      return [
+        W / 2 + (L.cardX - x) * k,
+        H / 2 + (L.cardY - y) * k,
+        W / 2 + (L.cardX + L.cardW - x) * k,
+        H / 2 + (L.cardY + L.cardH - y) * k,
+      ];
+    };
+    const here = cornersAt(f);
+    const before = cornersAt(f - speed);
+    const after = cornersAt(f + speed);
+    const camMoving = here.some(
+      (v, i) => Math.abs(after[i] - v) > 1e-3 || Math.abs(v - before[i]) > 1e-3,
+    );
     const zoomV = Math.abs(Math.log(cam.s) - Math.log(prev.s));
     const panV = Math.abs(cam.x - prev.x) * cam.s;
     const zoomBlur = Math.min(7, zoomV * 26);
@@ -521,13 +543,19 @@ export function CaretDolly({
       easing: LIGHT_IN,
     });
     const u = L.u;
-    const pop = (at: number) =>
+    const popAt = (at: number, ff: number) =>
       spring({
-        frame: f - at,
+        frame: ff - at,
         fps,
         config: { mass: 0.5, damping: 12, stiffness: 200 },
       });
+    const pop = (at: number) => popAt(at, f);
     const toolIn = [0, 1, 2, 3, 4].map((i) => pop(pullEnd - 8 + i * 2));
+    // The chip's label pops in on a spring that overshoots, so it is moving
+    // while its printed scale differs from a neighbouring frame's.
+    const chipAt = (ff: number) => popAt(pullEnd - 6, ff).toFixed(4);
+    const chipMoving =
+      chipAt(f + speed) !== chipAt(f) || chipAt(f) !== chipAt(f - speed);
     const armed = interpolate(f, [postEnd, postEnd + 4], [0, 1], CLAMP);
     const PRESS = { mass: 0.5, damping: 14, stiffness: 260 };
     const dip =
@@ -611,7 +639,7 @@ export function CaretDolly({
               alignItems: "center",
               gap: 6 * u,
               whiteSpace: "pre",
-              transform: `scale(${toolIn[1].toFixed(4)})`,
+              transform: `scale(${toolIn[1].toFixed(4)})${glide(chipMoving)}`,
               transformOrigin: "0% 50%",
             }}
           >
@@ -719,7 +747,7 @@ export function CaretDolly({
           width: W,
           height: H,
           transformOrigin: "0 0",
-          transform: `translate(${(W / 2).toFixed(2)}px, ${(H / 2).toFixed(2)}px) scale(${s.toFixed(5)}) translate(${(-cam.x).toFixed(3)}px, ${(-cam.y).toFixed(3)}px)`,
+          transform: `translate(${(W / 2).toFixed(2)}px, ${(H / 2).toFixed(2)}px) scale(${s.toFixed(5)}) translate(${(-cam.x).toFixed(3)}px, ${(-cam.y).toFixed(3)}px)${glide(camMoving)}`,
         }}
       >
         {card}
@@ -759,9 +787,11 @@ export function CaretDolly({
           height={curSize}
           style={{
             position: "absolute",
-            left: curX - curSize * 0.17,
-            top: curY - curSize * 0.1,
-            transform: `scale(${(1 - 0.12 * click).toFixed(4)})`,
+            // Laid out where the cursor enters; its travel is a transform,
+            // since layout would round the eased box to whole pixels.
+            left: sx0 - curSize * 0.17,
+            top: sy0 - curSize * 0.1,
+            transform: `translate(${curX - sx0}px, ${curY - sy0}px) scale(${(1 - 0.12 * click).toFixed(4)})`,
             transformOrigin: "17% 10%",
             filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.28))",
           }}

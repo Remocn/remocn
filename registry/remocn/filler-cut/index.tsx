@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const grotesk = loadSchibsted("normal", {
   weights: ["400", "500"],
@@ -278,6 +279,8 @@ function Grain({ opacity }: { opacity: number }) {
 
 const lerp = (a: number, b: number, p: number) => a + (b - a) * p;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const shade = (a: string, b: string, p: number) =>
   p <= 0
     ? b
@@ -325,6 +328,7 @@ export function FillerCut({
   speed = 1,
   theme = "dark",
 }: FillerCutProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -489,6 +493,9 @@ export function FillerCut({
   };
   const fill = `linear-gradient(100deg, ${c.stops[0]} 0%, ${c.stops[1]} 55%, ${accent} 100%)`;
 
+  // Frames a to b and the frame either side: the lean must not go in a frame
+  // that still changes the layout (tracking, the line shifting sideways).
+  const between = (a: number, b: number) => t > a - speed && t < b + speed;
   const els: React.ReactNode[] = [];
   P.tokens.forEach((tk, i) => {
     const spoken = interpolate(
@@ -497,6 +504,8 @@ export function FillerCut({
       [0, 1],
       { ...CLAMP, easing: EASE_OUT },
     );
+    const rising =
+      t > SPEAK_AT + i * speakPer && t < SPEAK_AT + i * speakPer + 8;
     const survivor = tk.keep >= 0;
     if (!survivor) {
       const col = collapse[i];
@@ -517,7 +526,7 @@ export function FillerCut({
             color: shade(c.filler, c.muted, markP),
             opacity: spoken * (1 - col) ** 0.6,
             transformOrigin: "0% 50%",
-            transform: `translateY(${((1 - spoken) * sA * 0.4).toFixed(2)}px) scaleX(${(1 - col).toFixed(4)})`,
+            transform: `translateY(${((1 - spoken) * sA * 0.4).toFixed(2)}px) scaleX(${(1 - col).toFixed(4)})${glide(rising || between(cutAt, cutEnd))}`,
           }}
         >
           {tk.said}
@@ -527,7 +536,6 @@ export function FillerCut({
     }
     const q = tk.keep;
     const p = setP;
-    const size = lerp(sA, sC, p);
     const up = reY[i] < cutDone.ys[i] - 1;
     const preX =
       reflowP > 0
@@ -537,21 +545,36 @@ export function FillerCut({
       reflowP > 0
         ? lerp(cutDone.ys[i], reY[i], up ? reflowLate : reflowEarly)
         : live.ys[i];
-    const x = lerp(preX, headX[q], p);
-    const yMid = lerp(preY, headY[q], setY);
     const head = p >= 0.5;
     const hi = isHi(q);
+    const lift = ((1 - spoken) * sA * 0.4).toFixed(2);
+    // Layout would round the word's box and baseline to whole pixels on every
+    // frame as `top` and `fontSize` move, and handing it from a transform back
+    // to layout at a stop snaps it to the nearest pixel. So it is laid out once,
+    // where it finally rests (the headline's place and size), and every place
+    // on the way, the spoken line and the reflow included, is a transform. The
+    // travel is written as a share of what is left, so it is exactly 0 there.
+    const k = 1 + ((sA - sC) * (1 - p)) / sC;
+    const dx = (preX - headX[q]) * (1 - p);
+    const dy =
+      (preY - headY[q]) * (1 - setY) - (sA - sC) * (1 - p) * 0.5 + Number(lift);
+    const wordMoving =
+      rising ||
+      between(cutAt, cutEnd) ||
+      between(reflowAt, reflowAt + REFLOW_LEN) ||
+      between(setAt, setAt + SET_LEN);
     const textStyle: React.CSSProperties = {
       position: "absolute",
-      left: x,
-      top: yMid - size * 0.5,
+      left: headX[q],
+      top: headY[q] - sC * 0.5,
       fontFamily,
       fontWeight: head ? fontWeight : 400,
-      fontSize: size,
-      lineHeight: `${size}px`,
+      fontSize: sC,
+      lineHeight: `${sC}px`,
       letterSpacing: `${lerp(SPEAK_TRACK, HEAD_TRACK, p)}em`,
       whiteSpace: "pre",
-      transform: `translateY(${((1 - spoken) * sA * 0.4).toFixed(2)}px)`,
+      transformOrigin: "0 0",
+      transform: `translate(${dx}px, ${dy}px) scale(${k})${glide(wordMoving)}`,
       opacity: spoken,
     };
     const wordInk = shade(fg, c.muted, markP);
@@ -589,7 +612,9 @@ export function FillerCut({
         style={{
           position: "absolute",
           left: headX[q],
-          top: headY[q] - sC * 0.5 + (1 - a) * sC * 0.3,
+          // The rise is a transform, for the same reason as the words above.
+          top: headY[q] - sC * 0.5,
+          transform: `translateY(${(1 - a) * sC * 0.3}px)${glide(midway(a))}`,
           fontFamily,
           fontWeight,
           fontSize: sC,

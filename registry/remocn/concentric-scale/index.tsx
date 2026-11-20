@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sora } = loadFont("normal", {
   weights: ["300", "400", "500"],
@@ -164,6 +165,8 @@ function RingLabel({
   opacity,
   shift,
   fontFamily,
+  moving,
+  settled,
 }: {
   x: number;
   y: number;
@@ -174,17 +177,30 @@ function RingLabel({
   opacity: number;
   shift: number;
   fontFamily: string;
+  /** The label is riding its ring or changing size this frame. */
+  moving: boolean;
+  /** Where it ends and the size it ends at. */
+  settled: { x: number; y: number; size: number };
 }) {
+  const glide = useGlide();
+  // A label rides its ring on left/top and shrinks by font size, and layout
+  // rounds a box and a baseline to whole pixels, so it clicks along pixel by
+  // pixel. It is laid out once where it ends, at the size it ends at, and
+  // carried and scaled about its corner by a transform all its life: handed
+  // back to layout at rest it would jump to the nearest pixel.
+  const k = size / settled.size;
+  const box = settled.size;
   return (
     <div
       style={{
         position: "absolute",
-        left: x,
-        top: y,
-        transform: `translate(calc(-100% + ${shift}px), -100%)`,
+        left: settled.x,
+        top: settled.y,
+        transformOrigin: "0 0",
+        transform: `translate(${x - settled.x}px, ${y - settled.y}px) scale(${k})${glide(moving)} translate(calc(-100% + ${shift / k}px), -100%)`,
         display: "flex",
         alignItems: "baseline",
-        gap: size * 0.32,
+        gap: box * 0.32,
         whiteSpace: "nowrap",
         opacity,
       }}
@@ -193,7 +209,7 @@ function RingLabel({
         style={{
           fontFamily,
           fontWeight: 500,
-          fontSize: size,
+          fontSize: box,
           letterSpacing: "-0.03em",
           fontVariantNumeric: "tabular-nums",
           color,
@@ -206,7 +222,7 @@ function RingLabel({
           style={{
             fontFamily,
             fontWeight: 400,
-            fontSize: size * 0.78,
+            fontSize: box * 0.78,
             color: sub,
           }}
         >
@@ -247,6 +263,7 @@ export function ConcentricScale({
   theme = "dark",
   speed = 1,
 }: ConcentricScaleProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
@@ -262,37 +279,98 @@ export function ConcentricScale({
   const SWEEP = 30;
   const HIT = T_FINAL + SWEEP;
 
-  let lc = 0;
-  for (let k = 1; k < last; k++) {
-    lc += interpolate(t, [startOf(k) + 12, startOf(k) + 40], [0, 1], {
+  const lcAt = (tt: number) => {
+    let lc = 0;
+    for (let k = 1; k < last; k++) {
+      lc += interpolate(tt, [startOf(k) + 12, startOf(k) + 40], [0, 1], {
+        ...CLAMP,
+        easing: EASE_IO,
+      });
+    }
+    return (
+      lc +
+      interpolate(tt, [T_FINAL + 8, HIT + 22], [0, 0.14], {
+        ...CLAMP,
+        easing: EASE_IO,
+      })
+    );
+  };
+  const cxAt = (tt: number) => {
+    const pan = interpolate(tt, [T_FINAL + 16, HIT + 18], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
-  }
-  lc += interpolate(t, [T_FINAL + 8, HIT + 22], [0, 0.14], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-
-  const pan = interpolate(t, [T_FINAL + 16, HIT + 18], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const cx = interpolate(pan, [0, 1], [width * 0.5, width * 0.34]);
+    return interpolate(pan, [0, 1], [width * 0.5, width * 0.34]);
+  };
+  const cx = cxAt(t);
   const cy = height * 0.5;
   const RH = height * 0.38;
-  const screenR = (x: number) => RH * G ** (x - 1 - lc);
+  const screenRAt = (x: number, tt: number) => RH * G ** (x - 1 - lcAt(tt));
+  const screenR = (x: number) => screenRAt(x, t);
 
-  const ringX = (k: number) => {
+  const ringXAt = (k: number, tt: number) => {
     if (k === last) return k;
     const s = startOf(k);
-    const e = interpolate(t, [s, s + 28], [0, 1], {
+    const e = interpolate(tt, [s, s + 28], [0, 1], {
       ...CLAMP,
       easing: EASE_RING,
     });
     const from = k === 1 ? -2.6 : k - 1;
     return from + (k - from) * e;
   };
+  const ringX = (k: number) => ringXAt(k, t);
+
+  // Where each ring's label sits and how big it is; label 0 is the centre's.
+  const labelAt = (k: number, tt: number) => {
+    const ox = cxAt(tt);
+    if (k === 0)
+      return {
+        x: ox - 10 * u,
+        y: cy - 10 * u,
+        size:
+          interpolate(tt, [startOf(1), startOf(1) + 20], [40, 20], {
+            ...CLAMP,
+            easing: EASE_IO,
+          }) * u,
+        shift: 0,
+      };
+    const s = startOf(k);
+    const a = interpolate(tt, [s + 10, s + 26], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+    const r = screenRAt(ringXAt(k, tt), tt);
+    const newer = interpolate(
+      tt,
+      [startOf(k + 1), startOf(k + 1) + 20],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_IO,
+      },
+    );
+    return {
+      x: ox + r * Math.sin(NODE_A) - 10 * u,
+      y: cy - r * Math.cos(NODE_A) - 8 * u,
+      size: (28 - 8 * newer) * u,
+      shift: (1 - a) * 10 * u,
+    };
+  };
+  const labelMoves = (k: number) => {
+    const now = labelAt(k, t);
+    return [labelAt(k, t - 1), labelAt(k, t + 1)].some(
+      (o) =>
+        Math.abs(o.x - now.x) > 1e-3 ||
+        Math.abs(o.y - now.y) > 1e-3 ||
+        Math.abs(o.size - now.size) > 1e-4 ||
+        Math.abs(o.shift - now.shift) > 1e-3,
+    );
+  };
+  const label = (k: number) => ({
+    ...labelAt(k, t),
+    moving: labelMoves(k),
+    settled: labelAt(k, Number.MAX_SAFE_INTEGER),
+  });
 
   const dotIn = interpolate(t, [2, 16], [0, 1], { ...CLAMP, easing: EASE_OUT });
   const sweep = interpolate(t, [T_FINAL, HIT], [0, 1], {
@@ -307,10 +385,15 @@ export function ConcentricScale({
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const sub = interpolate(t, [HIT + 10, HIT + 30], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const subAt = (tt: number) =>
+    interpolate(tt, [HIT + 10, HIT + 30], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  const sub = subAt(t);
+  const subMoving =
+    Math.abs(subAt(t + 1) - sub) * 8 * u > 1e-3 ||
+    Math.abs(sub - subAt(t - 1)) * 8 * u > 1e-3;
   const settle = interpolate(t, [T_FINAL, T_FINAL + 20], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
@@ -504,15 +587,8 @@ export function ConcentricScale({
         </svg>
 
         <RingLabel
-          x={cx - 10 * u}
-          y={cy - 10 * u}
+          {...label(0)}
           step={list[0]}
-          size={
-            interpolate(t, [startOf(1), startOf(1) + 20], [40, 20], {
-              ...CLAMP,
-              easing: EASE_IO,
-            }) * u
-          }
           color={fg}
           sub={p.muted}
           fontFamily={fontFamily}
@@ -520,7 +596,6 @@ export function ConcentricScale({
             ...CLAMP,
             easing: EASE_OUT,
           })}
-          shift={0}
         />
         {rings.map((k) => {
           const s = startOf(k);
@@ -529,30 +604,15 @@ export function ConcentricScale({
             easing: EASE_OUT,
           });
           if (a <= 0) return null;
-          const r = screenR(ringX(k));
-          const newer = interpolate(
-            t,
-            [startOf(k + 1), startOf(k + 1) + 20],
-            [0, 1],
-            {
-              ...CLAMP,
-              easing: EASE_IO,
-            },
-          );
-          const qx = cx + r * Math.sin(NODE_A) - 10 * u;
-          const qy = cy - r * Math.cos(NODE_A) - 8 * u;
           return (
             <RingLabel
               key={`l${k}`}
-              x={qx}
-              y={qy}
+              {...label(k)}
               step={list[k]}
-              size={(28 - 8 * newer) * u}
               color={fg}
               sub={p.muted}
               fontFamily={fontFamily}
               opacity={a}
-              shift={(1 - a) * 10 * u}
             />
           );
         })}
@@ -599,7 +659,7 @@ export function ConcentricScale({
                 color: p.muted,
                 whiteSpace: "nowrap",
                 opacity: sub,
-                transform: `translateY(${(1 - sub) * 8 * u}px)`,
+                transform: `translateY(${(1 - sub) * 8 * u}px)${glide(subMoving)}`,
               }}
             >
               <span

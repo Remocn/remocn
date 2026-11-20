@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 // The italic face is set by `fontStyle` on the same family.
 loadNewsreader("italic", {
@@ -513,6 +514,7 @@ export function SlitReveal({
   grain = true,
   speed = 1,
 }: SlitRevealProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -579,6 +581,8 @@ export function SlitReveal({
     easing: Easing.bezier(0.55, 0, 1, 0.45),
   });
   const titleOpacity = tIn * (1 - tOut);
+  const titleMoving =
+    (tIn > 0 && (1 - tIn) * 10 * u > 1e-3) || (tOut > 0 && tOut < 1);
   // "… remocn" sets the last word as the real logo.
   const words = title.trim().split(/\s+/);
   const titleLogo = words[words.length - 1]?.toLowerCase() === "remocn";
@@ -647,7 +651,7 @@ export function SlitReveal({
         <AbsoluteFill style={{ clipPath: `inset(${inset})` }}>
           <AbsoluteFill
             style={{
-              transform: `translate${sideways ? "X" : "Y"}(${sceneShift}px) scale(${sceneScale})`,
+              transform: `translate${sideways ? "X" : "Y"}(${sceneShift}px) scale(${sceneScale})${glide(settle > 0 && settle < 1)}`,
               filter: `blur(${sceneBlur}px) brightness(${sceneDim})`,
             }}
           >
@@ -702,7 +706,7 @@ export function SlitReveal({
               gap: 14 * u,
               color: ink ?? "#EDEDEF",
               opacity: titleOpacity,
-              transform: `translateY(${interpolate(tIn, [0, 1], [10 * u, 0]) - tOut * 8 * u}px)`,
+              transform: `translateY(${interpolate(tIn, [0, 1], [10 * u, 0]) - tOut * 8 * u}px)${glide(titleMoving)}`,
               filter: `blur(${(1 - tIn) * 8 * u + tOut * 4 * u}px)`,
             }}
           >

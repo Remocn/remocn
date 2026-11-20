@@ -20,6 +20,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -347,6 +348,7 @@ export function PhraseListBridge({
   ground,
   groundParams,
 }: PhraseListBridgeProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -477,7 +479,7 @@ export function PhraseListBridge({
       const jRightCx = portrait ? cx : cx + total / 2 - (rw * F1) / 2;
       const leftCx = jLeftCx + (cx - jLeftCx) * sp1;
       const rightCx = jRightCx + (cx - jRightCx) * sp1;
-      return { F, topY, botY, leftCx, rightCx, rect, scale, morph, cl };
+      return { F, topY, botY, leftCx, rightCx, rect, scale, morph, cl, openH };
     };
 
     const L = layout(frame);
@@ -486,27 +488,41 @@ export function PhraseListBridge({
     const vx = Math.abs(L.leftCx - P.leftCx);
     const tb = Math.min(6, vy * 0.22);
     const tx = Math.min(6, vx * 0.22);
-    blurItems.push({ id: `${uid}t`, x: tx, y: tb });
-    blurItems.push({ id: `${uid}b`, x: tx, y: tb });
+    // The phrase is laid out once at its settled size and reaches its live
+    // size and place by transform: layout rounds a baseline to whole pixels,
+    // so a phrase eased by `top` and `fontSize` clicks along pixel by pixel.
+    // Blur radii are in the scaled space, so they're divided back by `k`.
+    const FR = F3;
+    const k = L.F / FR;
+    const restGapY = (rh * chipScale) / 2 + F3 * 0.34 + F3 / 2;
+    blurItems.push({ id: `${uid}t`, x: tx / k, y: tb / k });
+    blurItems.push({ id: `${uid}b`, x: tx / k, y: tb / k });
 
     const phrase = (
       text: string,
       ccx: number,
       ccy: number,
+      restCy: number,
       startAt: number,
       fid: string,
     ) => {
       const parts = text.split(" ").filter(Boolean);
       const wEm = m(text, 300);
+      const restLeft = cx - (wEm * FR) / 2;
+      const restTop = restCy - FR / 2;
+      const dx = ccx - (wEm * L.F) / 2 - restLeft;
+      const dy = ccy - L.F / 2 - restTop;
       return (
         <div
           style={{
             position: "absolute",
-            left: ccx - (wEm * L.F) / 2,
-            top: ccy - L.F / 2,
+            left: restLeft,
+            top: restTop,
+            transform: `translate(${dx}px, ${dy}px) scale(${k})`,
+            transformOrigin: "0 0",
             fontFamily,
             fontWeight: 300,
-            fontSize: L.F,
+            fontSize: FR,
             lineHeight: 1,
             letterSpacing: `${TRACK}em`,
             whiteSpace: "pre",
@@ -536,7 +552,9 @@ export function PhraseListBridge({
                     transform: `translateY(${((1 - e) * 0.9).toFixed(4)}em)`,
                     opacity: Math.min(1, e * 1.6),
                     filter:
-                      e < 1 ? `blur(${((1 - e) * 5).toFixed(2)}px)` : undefined,
+                      e < 1
+                        ? `blur(${(((1 - e) * 5) / k).toFixed(2)}px)`
+                        : undefined,
                   }}
                 >
                   {w}
@@ -736,7 +754,21 @@ export function PhraseListBridge({
     );
 
     const rect = L.rect;
-    const hlY = pad + (hlPos + 1) * rh;
+    const fold = 1 - L.morph;
+    const shift = (x: number, y: number) =>
+      Math.abs(x) < 1e-3 && Math.abs(y) < 1e-3
+        ? undefined
+        : `translate(${x}px, ${y}px)`;
+    // The folding panel and the highlight ride by transform too, measured
+    // from where they land so the shift is exactly 0 there.
+    const rectShift = shift(
+      (-(pw - hugW) * fold) / 2,
+      (-(L.openH - rh) * fold) / 2,
+    );
+    const pickTop = pad + (pick + 1) * rh;
+    const innerShift = shift(pad * fold, pickTop * fold);
+    const hlRestY = pickTop;
+    const hlShift = shift(0, (hlPos - pick) * rh);
     const radius = radiusOuter + (rh / 2 - radiusOuter) * L.morph;
     const hlRadius = radiusInner + (rh / 2 - radiusInner) * L.morph;
     const glow = picked * (1 - L.morph * 0.4);
@@ -758,8 +790,11 @@ export function PhraseListBridge({
         <div
           style={{
             position: "absolute",
-            left: -rect.w / 2,
-            top: -rect.h / 2,
+            // Laid out where the chip settles; the ride there as the panel
+            // folds is a transform, for the same reason as the phrase.
+            left: -hugW / 2,
+            top: -rh / 2,
+            transform: rectShift,
             width: rect.w,
             height: rect.h,
             borderRadius: radius,
@@ -775,8 +810,9 @@ export function PhraseListBridge({
           <div
             style={{
               position: "absolute",
-              left: -rect.x,
-              top: -rect.y,
+              left: -pad,
+              top: -pad - (pick + 1) * rh,
+              transform: innerShift,
               width: pw,
               height: fullH,
             }}
@@ -785,7 +821,8 @@ export function PhraseListBridge({
               style={{
                 position: "absolute",
                 left: pad,
-                top: hlY,
+                top: hlRestY,
+                transform: hlShift,
                 width: pw - pad * 2 + (hugW - (pw - pad * 2)) * L.morph,
                 height: rh,
                 borderRadius: hlRadius,
@@ -807,15 +844,17 @@ export function PhraseListBridge({
     content = (
       <AbsoluteFill
         style={{
-          transform: `scale(${push.toFixed(5)})`,
+          // The push never rests, so neither does the tilt.
+          transform: `scale(${push.toFixed(5)})${glide(true)}`,
         }}
       >
         {panel}
-        {phrase(left, L.leftCx, L.topY, 0, `${uid}t`)}
+        {phrase(left, L.leftCx, L.topY, cy - restGapY, 0, `${uid}t`)}
         {phrase(
           right,
           L.rightCx,
           L.botY,
+          cy + restGapY,
           left.split(" ").filter(Boolean).length * stagger,
           `${uid}b`,
         )}

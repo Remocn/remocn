@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const inter = loadInterTight("normal", {
   weights: ["400", "500"],
@@ -89,6 +90,8 @@ const FLAT_SCALE = 0.05;
 const COOL = 11;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
+
+const midway = (p: number) => p > 0 && p < 1;
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -260,6 +263,7 @@ export function PulseLine({
   speed = 1,
   theme = "dark",
 }: PulseLineProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -374,14 +378,12 @@ export function PulseLine({
     const left = (W - lw * F) / 2 + g.x * F;
     const baseY = top0 + g.line * LINE_GAP * F + m.baseline * F;
 
-    let y = 0;
     let heat = 0;
     let alive = 0;
     let hlOn = 0;
     for (let b = 0; b < nBeats; b++) {
       const s = front(b) - g.strip;
       if (s < -0.5) continue;
-      y += ecg(s);
       const since = (s - R_AT) / V;
       if (since > -1.5) {
         heat = Math.max(
@@ -394,10 +396,34 @@ export function PulseLine({
       if (b === nBeats - 1 && g.hl)
         hlOn = interpolate(since, [0, 12], [0, 1], CLAMP);
     }
-    const spike = Math.max(0, y) / WAVE[2].a;
-    const sy = FLAT_SCALE + (1 - FLAT_SCALE) * alive + spike * 0.22 * alive;
-    const sx = 1 - spike * 0.06;
-    const dy = -y * F * (lines.length > 1 ? 0.8 : 1) * amplitude;
+    const poseAt = (tt: number) => {
+      let py = 0;
+      let pa = 0;
+      for (let b = 0; b < nBeats; b++) {
+        const ps = -1 + (tt - beatAt(b)) * V - g.strip;
+        if (ps < -0.5) continue;
+        py += ecg(ps);
+        if (b === 0)
+          pa = interpolate(ps, [R_AT - 0.35, R_AT + 0.25], [0, 1], CLAMP);
+      }
+      const k = Math.max(0, py) / WAVE[2].a;
+      return {
+        dy: -py * F * (lines.length > 1 ? 0.8 : 1) * amplitude,
+        sx: 1 - k * 0.06,
+        sy: FLAT_SCALE + (1 - FLAT_SCALE) * pa + k * 0.22 * pa,
+      };
+    };
+    const { dy, sx, sy } = poseAt(t);
+    // The furthest glyph edge sits about F from the origin, so a scale step
+    // is weighed by F to compare it with the 1e-3px used for the lift.
+    const shifts = (o: ReturnType<typeof poseAt>) =>
+      Math.abs(o.dy - dy) > 1e-3 ||
+      Math.abs(o.sx - sx) * F > 1e-3 ||
+      Math.abs(o.sy - sy) * F > 1e-3;
+    const moving = shifts(poseAt(t + 1)) || shifts(poseAt(t - 1));
+    // Two decimals park the glyph on a 0.01px grid; while it moves the full
+    // value goes through, at rest the string is what it always was.
+    const fix = (v: number, d: number) => (moving ? `${v}` : v.toFixed(d));
     const ink = alive > 0.02 ? fg : c.flat;
     const restInk = mixHex(c.flat, fg, alive);
     const col =
@@ -415,7 +441,9 @@ export function PulseLine({
       lineHeight: `${F}px`,
       whiteSpace: "pre",
       transformOrigin: `${((g.adv / 2) * F).toFixed(2)}px ${(m.baseline * F).toFixed(2)}px`,
-      transform: `translateY(${dy.toFixed(2)}px) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})`,
+      // The tilt goes ahead of the scale: behind it, a glyph squashed to
+      // `FLAT_SCALE` squashes the lean too, and the raster snaps again.
+      transform: `translateY(${fix(dy, 2)}px)${glide(moving)} scale(${fix(sx, 4)}, ${fix(sy, 4)})`,
     };
     nodes.push(
       <div key={`g${i}`} style={{ ...style, color: col }}>
@@ -481,7 +509,7 @@ export function PulseLine({
               lineHeight: 1.2,
               color: c.muted,
               opacity: capP,
-              transform: `translateY(${((1 - capP) * capSize * 0.7).toFixed(2)}px)`,
+              transform: `translateY(${midway(capP) ? (1 - capP) * capSize * 0.7 : ((1 - capP) * capSize * 0.7).toFixed(2)}px)${glide(midway(capP))}`,
             }}
           >
             {caption}

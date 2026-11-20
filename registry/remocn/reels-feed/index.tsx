@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -78,6 +79,7 @@ const DT = 240;
 
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 const glide = Easing.bezier(0.65, 0, 0.35, 1);
+
 const ENTER = Easing.bezier(0.32, 0.72, 0, 1);
 const EXIT = Easing.bezier(0.55, 0, 1, 0.45);
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
@@ -1143,6 +1145,8 @@ export function ReelsFeed({
   ground,
   groundParams,
 }: ReelsFeedProps) {
+  // `glide` names an easing in this file, so the glide mark is `tilt`.
+  const tilt = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { fps, width, height } = useVideoConfig();
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
@@ -1196,6 +1200,7 @@ export function ReelsFeed({
       easing: EXIT,
     });
     if (inn <= 0 || out >= 1) return null;
+    const moving = inn < 1 || out > 0;
     return (
       <div
         key={chapters[i]}
@@ -1221,7 +1226,7 @@ export function ReelsFeed({
               letterSpacing: "-0.045em",
               color: ink ?? c.over,
               textWrap: "balance",
-              transform: `translateY(${(1 - inn) * 105 - out * 40}%)`,
+              transform: `translateY(${(1 - inn) * 105 - out * 40}%)${tilt(moving)}`,
               opacity: 1 - out,
             }}
           >
@@ -1434,7 +1439,9 @@ export function ReelsFeed({
             top: phoneC.y - BH / 2,
             width: BW,
             height: BH,
-            transform: `translateY(${(1 - rise) * height * 0.8}px) scale(${k * (1 + 0.02 * (f / 300))})`,
+            // The phone keeps creeping in for the whole video, so it is never
+            // at rest; it carries everything on screen.
+            transform: `translateY(${(1 - rise) * height * 0.8}px) scale(${k * (1 + 0.02 * (f / 300))})${tilt(true)}`,
           }}
         >
           <div
@@ -1717,7 +1724,7 @@ export function ReelsFeed({
                   opacity:
                     interpolate(open, [0, 0.12], [0, 1], clamp) *
                     (1 - swipe * 0.7),
-                  transform: `translate(${(ringX - SW / 2) * (1 - open)}px, ${(ringY - SH / 2) * (1 - open) - swipe * SH * 0.35}px) scale(${(0.18 + 0.82 * open) * (1 - swipe * 0.08)})`,
+                  transform: `translate(${(ringX - SW / 2) * (1 - open)}px, ${(ringY - SH / 2) * (1 - open) - swipe * SH * 0.35}px) scale(${(0.18 + 0.82 * open) * (1 - swipe * 0.08)})${tilt((open > 0 && open < 1) || (swipe > 0 && swipe < 1))}`,
                 }}
               >
                 <div
@@ -2082,8 +2089,10 @@ export function ReelsFeed({
             <div
               style={{
                 position: "absolute",
-                left: tap.x - 22,
-                top: tap.y - 22,
+                // Eased by `left`/`top`, the finger clicked along pixel by
+                // pixel; the travel is a transform instead.
+                left: -22,
+                top: -22,
                 width: 44,
                 height: 44,
                 borderRadius: 22,
@@ -2091,7 +2100,7 @@ export function ReelsFeed({
                 border: "2px solid rgba(255,255,255,0.9)",
                 boxShadow: "0 4px 14px rgba(0,0,0,0.25)",
                 opacity: tapOpacity,
-                transform: `scale(${tapScale})`,
+                transform: `translate(${tap.x}px, ${tap.y}px) scale(${tapScale})`,
                 zIndex: 35,
               }}
             />

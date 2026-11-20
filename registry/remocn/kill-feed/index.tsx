@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: chakra } = loadFont("normal", {
   weights: ["500"],
@@ -177,6 +178,10 @@ function Crosshair({ size, color }: { size: number; color: string }) {
   );
 }
 
+// Clamped ramps, exactly 0 or 1 at rest; their eased tails still move a few
+// hundredths of a pixel a frame, so any value in between counts.
+const midway = (p: number) => p > 0 && p < 1;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -216,6 +221,7 @@ export function KillFeed({
   theme = "dark",
   speed = 1,
 }: KillFeedProps) {
+  const glide = useGlide();
   // Starts three frames in, so frame 0 already has the first line on its way.
   const t = Math.max(0, useCurrentFrame() - delay) * speed + 3;
   const { width: W, height: H } = useVideoConfig();
@@ -245,6 +251,8 @@ export function KillFeed({
       killKick * 2 * u * Math.sin(t * 3.1)) *
     shake;
   const shakeY = bandKick * 5 * u * Math.cos(t * 3.3) * shake;
+  // Only the band's kick shakes on y; the kill kicks are sideways.
+  const shaking = bandKick > 0 && shake !== 0;
 
   // ── Feed ──────────────────────────────────────────────────────────────────
   const lineH = 74 * u;
@@ -279,7 +287,7 @@ export function KillFeed({
           style={{
             position: "absolute",
             inset: 0,
-            transform: `translate(${shakeX}px, ${shakeY}px)`,
+            transform: `translate(${shakeX}px, ${shakeY}px)${glide(shaking)}`,
           }}
         >
           {/* Kill feed, top right. New lines join at the bottom. */}
@@ -409,7 +417,7 @@ export function KillFeed({
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "flex-end",
-                    transform: `translate(${(1 - inP) * 40 * u}px, ${(1 - inP - outP) * calloutH}px)`,
+                    transform: `translate(${(1 - inP) * 40 * u}px, ${(1 - inP - outP) * calloutH}px)${glide(midway(inP) || midway(outP))}`,
                     opacity: 1 - outP,
                   }}
                 >
@@ -512,7 +520,7 @@ export function KillFeed({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  transform: `translateX(${textX}px) scale(${textScale})`,
+                  transform: `translateX(${textX}px) scale(${textScale})${glide(midway(textIn) && !shaking)}`,
                   fontFamily: fontFamily === chakra ? chakraItalic : fontFamily,
                   fontStyle: "italic",
                   fontWeight: 500,
@@ -543,7 +551,7 @@ export function KillFeed({
                 justifyContent: "center",
                 gap: 22 * u,
                 opacity: capIn,
-                transform: `translateY(${(1 - capIn) * 16 * u}px)`,
+                transform: `translateY(${(1 - capIn) * 16 * u}px)${glide(midway(capIn))}`,
               }}
             >
               {logo ?? <RemocnLogo fontSize={46 * u} color={fg} />}

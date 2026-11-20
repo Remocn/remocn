@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const roman = loadFont("normal", {
   weights: ["400", "500"],
@@ -216,6 +217,7 @@ export function Verbed({
   speed = 1,
   theme = "dark",
 }: VerbedProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames: T } = useVideoConfig();
   const c = THEMES[theme];
@@ -332,17 +334,30 @@ export function Verbed({
     L = layout();
   }
 
-  const rise = (start: number, dur = 16) =>
-    interpolate(t, [start, start + dur], [0, 1], {
+  const riseAt = (x: number, start: number, dur = 16) =>
+    interpolate(x, [start, start + dur], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
+  const rise = (start: number, dur = 16) => riseAt(t, start, dur);
+  // The ease-out tail is long, so "moving" is judged on the travel in px
+  // against the neighbouring frames, not on the progress.
+  const dt = 1 / pace;
+  const stirs = (px: (x: number) => number) => {
+    const now = px(t);
+    return (
+      Math.abs(px(t + dt) - now) > 1e-3 || Math.abs(now - px(t - dt)) > 1e-3
+    );
+  };
+  const rising = (start: number, dur: number, travel: number) =>
+    stirs((x) => (1 - riseAt(x, start, dur)) * travel);
 
   const word = (
     text: string,
     key: string,
     p: number,
     size: number,
+    moving: boolean,
     extra?: React.CSSProperties,
   ) => (
     <span
@@ -351,7 +366,7 @@ export function Verbed({
         display: "inline-block",
         whiteSpace: "pre",
         opacity: p,
-        transform: `translateY(${((1 - p) * size * 0.4).toFixed(2)}px)`,
+        transform: `translateY(${((1 - p) * size * 0.4).toFixed(2)}px)${glide(moving)}`,
         ...extra,
       }}
     >
@@ -360,10 +375,12 @@ export function Verbed({
   );
 
   const TURN = turnAt;
-  const turn = interpolate(t, [TURN, TURN + 18], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const turnOf = (x: number) =>
+    interpolate(x, [TURN, TURN + 18], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const turn = turnOf(t);
   const verbIn = rise(TURN + 4, 18);
 
   const headP = rise(0, 20);
@@ -424,6 +441,8 @@ export function Verbed({
   );
 
   const nounScale = 1 - (1 - BACK) * turn;
+  // Weighed at the far end of the sense, where the scale moves text most.
+  const nounMoving = stirs((x) => (1 - BACK) * turnOf(x) * blockW);
   const nounShift = (L.numW * turn) / nounScale;
   const nounAlpha = 1 - (1 - DIM) * turn;
 
@@ -455,12 +474,14 @@ export function Verbed({
         }}
       >
         {row.map((w, wi) => {
-          const p = rise(start + n++ * stagger, 14);
+          const s = start + n++ * stagger;
+          const p = rise(s, 14);
           return word(
             wi < row.length - 1 ? `${w} ` : w,
             `${keyBase}${li}-${wi}`,
             p,
             Fd,
+            rising(s, 14, Fd * 0.4) && !(keyBase === "n" && nounMoving),
             colorOf ? { color: colorOf(w) } : undefined,
           );
         })}
@@ -514,7 +535,7 @@ export function Verbed({
               letterSpacing: `${HEAD_TRACK}em`,
               whiteSpace: "pre",
               opacity: headP,
-              transform: `translateY(${((1 - headP) * Fh * 0.18).toFixed(2)}px)`,
+              transform: `translateY(${((1 - headP) * Fh * 0.18).toFixed(2)}px)${glide(rising(0, 20, Fh * 0.18))}`,
             }}
           >
             {headword}
@@ -542,7 +563,9 @@ export function Verbed({
             top: sensesTop,
             width: 0,
             height: 0,
-            transform: `scale(${nounScale.toFixed(4)})`,
+            // Rounded only at rest: a scale stepped by 1e-4 moves the far end
+            // of the sense in steps of a sixth of a pixel while it shrinks.
+            transform: `scale(${nounMoving ? nounScale : nounScale.toFixed(4)})${glide(nounMoving)}`,
             transformOrigin: "0 0",
             opacity: nounAlpha,
           }}
@@ -567,7 +590,7 @@ export function Verbed({
             top: verbTop,
             color: hi,
             opacity: verbIn,
-            transform: `translateY(${((1 - verbIn) * Fd * 0.4).toFixed(2)}px)`,
+            transform: `translateY(${((1 - verbIn) * Fd * 0.4).toFixed(2)}px)${glide(rising(TURN + 4, 18, Fd * 0.4))}`,
           }}
         >
           2.

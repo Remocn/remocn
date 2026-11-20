@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["400", "500"],
@@ -202,6 +203,8 @@ function restAngle(d: Domino, next: Domino, psi: number) {
   return best;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -233,6 +236,7 @@ export function DominoRun({
   theme = "dark",
   speed = 1,
 }: DominoRunProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
@@ -358,7 +362,7 @@ export function DominoRun({
               opacity: reveal,
               filter:
                 reveal < 0.99 ? `blur(${(1 - reveal) * 10 * u}px)` : undefined,
-              transform: `translateY(${(1 - reveal) * 22 * u}px)`,
+              transform: `translateY(${(1 - reveal) * 22 * u}px)${glide(midway(reveal))}`,
             }}
           >
             {value}
@@ -379,7 +383,7 @@ export function DominoRun({
                 color: p.muted,
                 whiteSpace: "nowrap",
                 opacity: capIn,
-                transform: `translateY(${(1 - capIn) * 8 * u}px)`,
+                transform: `translateY(${(1 - capIn) * 8 * u}px)${glide(midway(capIn))}`,
               }}
             >
               <span

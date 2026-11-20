@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const inter = loadVariableFont("normal", { subsets: ["latin"] });
 
@@ -149,6 +150,8 @@ function ScaleLayer({
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function envelope(since: number, release: number) {
   if (since < 0) return 0;
   const attack = Math.min(1, (since + 1) / 2);
@@ -175,6 +178,7 @@ export function BeatCount({
   speed = 1,
   theme = "dark",
 }: BeatCountProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -201,12 +205,11 @@ export function BeatCount({
   const n = Math.max(1, Math.round(beats));
   const beatLen = (fps * 60) / Math.max(30, bpm);
   const lastBeat = FIRST_BEAT + (n - 1) * beatLen;
-  const k =
-    t < FIRST_BEAT
+  const beatOf = (f: number) =>
+    f < FIRST_BEAT
       ? -1
-      : Math.min(n - 1, Math.floor((t - FIRST_BEAT) / beatLen));
-  const beatT = FIRST_BEAT + Math.max(0, k) * beatLen;
-  const isLast = k === n - 1;
+      : Math.min(n - 1, Math.floor((f - FIRST_BEAT) / beatLen));
+  const k = beatOf(t);
 
   const shown = k < 0 ? from : from + ((value - from) * (k + 1)) / n;
   const text = `${prefix}${format(
@@ -215,17 +218,28 @@ export function BeatCount({
   )}${suffix}`;
 
   const release = Math.max(2, beatLen * 0.26);
-  let d = k < 0 ? 0 : envelope(t - beatT, release) * punch;
-  if (isLast) {
-    const since = t - lastBeat;
-    const back = spring({
-      frame: since - 2,
-      fps,
-      config: { damping: 9, stiffness: 120, mass: 0.8 },
-    });
-    const attack = Math.min(1, (since + 1) / 2);
-    d = LAST_DUCK * (since < 2 ? attack : 1 - back);
-  }
+  const duckAt = (f: number) => {
+    const b = beatOf(f);
+    if (b === n - 1) {
+      const since = f - lastBeat;
+      const back = spring({
+        frame: since - 2,
+        fps,
+        config: { damping: 9, stiffness: 120, mass: 0.8 },
+      });
+      const attack = Math.min(1, (since + 1) / 2);
+      return LAST_DUCK * (since < 2 ? attack : 1 - back);
+    }
+    return b < 0
+      ? 0
+      : envelope(f - (FIRST_BEAT + b * beatLen), release) * punch;
+  };
+  const d = duckAt(t);
+  // The squash decays and springs without a clean end, so the test is on
+  // the squash itself, against the neighbouring frames.
+  const squashing =
+    Math.abs(duckAt(t + speed) - d) > 2e-6 ||
+    Math.abs(d - duckAt(t - speed)) > 2e-6;
   const duck = Math.max(0, Math.min(1, d / LAST_DUCK));
   const sy = 1 - d;
   const wght = fontWeight + (WGHT.duck - fontWeight) * duck;
@@ -240,10 +254,15 @@ export function BeatCount({
   const boxTop = baseY - m.baseline * F;
   const labelFs = (portrait ? 50 : 32) * s;
 
-  const enter = interpolate(t, [0, ENTER_LEN], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const enterAt = (f: number) =>
+    interpolate(f, [0, ENTER_LEN], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  const enter = enterAt(t);
+  // The rise lands a frame before the first beat squashes the figure, so the
+  // tilt holds through the landing frame instead of blinking off for it.
+  const entering = enter !== enterAt(t - speed) || enter !== enterAt(t + speed);
   const labelP = interpolate(
     t,
     [FIRST_BEAT + beatLen, FIRST_BEAT + beatLen + 16],
@@ -273,7 +292,7 @@ export function BeatCount({
             color: fg,
             opacity: enter,
             transformOrigin: `100% ${(m.baseline * F).toFixed(1)}px`,
-            transform: `translateY(${((1 - enter) * F * 0.08).toFixed(2)}px) scaleY(${sy.toFixed(4)})`,
+            transform: `translateY(${((1 - enter) * F * 0.08).toFixed(2)}px) scaleY(${sy.toFixed(4)})${glide(squashing || entering)}`,
           }}
         >
           {text}
@@ -294,7 +313,7 @@ export function BeatCount({
               textWrap: "balance",
               color: spot,
               opacity: labelP,
-              transform: `translateY(${((1 - labelP) * labelFs * 0.5).toFixed(2)}px)`,
+              transform: `translateY(${((1 - labelP) * labelFs * 0.5).toFixed(2)}px)${glide(midway(labelP))}`,
             }}
           >
             {label}

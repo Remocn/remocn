@@ -14,6 +14,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -113,6 +114,14 @@ const CLAMP = {
 
 type Rect = { x: number; y: number; w: number; h: number };
 
+// Layout rounds a box and a baseline to whole pixels, so anything eased by
+// `left`/`top` steps along pixel by pixel. Moves are laid out at the resting
+// place and carried by this translate, which is dropped once it is spent.
+const shift = (dx: number, dy: number) =>
+  Math.abs(dx) > 1e-3 || Math.abs(dy) > 1e-3
+    ? `translate(${dx}px, ${dy}px) `
+    : "";
+
 function ArrowIcon({ size, color }: { size: number; color: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
@@ -148,6 +157,7 @@ function Header({
   size,
   pad,
   w,
+  dw = 0,
   ink,
 }: {
   left: ReactNode;
@@ -155,6 +165,8 @@ function Header({
   size: number;
   pad: number;
   w?: number;
+  /** How far the panel is wider than where it settles. */
+  dw?: number;
   ink: string;
 }) {
   const fit =
@@ -164,7 +176,9 @@ function Header({
       style={{
         position: "absolute",
         left: pad,
-        right: pad,
+        // Laid out at the settled width; the right label rides the panel's
+        // change of width as a transform, not as a reflow.
+        right: pad + dw,
         top: pad * 0.8,
         display: "flex",
         alignItems: "center",
@@ -187,7 +201,14 @@ function Header({
       >
         {left}
       </span>
-      <span style={{ opacity: fit }}>{right}</span>
+      <span
+        style={{
+          opacity: fit,
+          transform: Math.abs(dw) > 1e-3 ? `translateX(${dw}px)` : undefined,
+        }}
+      >
+        {right}
+      </span>
     </div>
   );
 }
@@ -231,6 +252,7 @@ export function PanelSplit({
   delay = 0,
   speed = 1,
 }: PanelSplitProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const t = THEMES[theme];
@@ -257,12 +279,6 @@ export function PanelSplit({
   const F = portrait
     ? { c1: 0.58, c3: 0.52, l2: 0.66, l3: 0.58, r2: 0.5, r3: 0.42 }
     : { c1: 0.6, c3: 0.44, l2: 0.64, l3: 0.56, r2: 0.5, r3: 0.62 };
-  const c = 1 - (1 - F.c1) * s1 - (F.c1 - F.c3) * s3;
-  const rL = 1 - (1 - F.l2) * s2 - (F.l2 - F.l3) * s3;
-  const rR = 1 - (1 - F.r2) * s2b - (F.r2 - F.r3) * s3;
-  const gc = G * Math.min(1, s1 * 1.6);
-  const gl = G * Math.min(1, s2 * 1.6);
-  const gr = G * Math.min(1, s2b * 1.6);
 
   const UL = portrait ? R.h : R.w;
   const VL = portrait ? R.w : R.h;
@@ -284,15 +300,31 @@ export function PanelSplit({
       ? { x: R.x + b0, y: R.y + a0, w: b1 - b0, h: a1 - a0 }
       : { x: R.x + a0, y: R.y + b0, w: a1 - a0, h: b1 - b0 };
   };
-  const P1 = toRect(0, 0, c, rL, 0, gc / 2, 0, gl / 2);
-  const P2 = toRect(c, 0, 1, rR, gc / 2, 0, 0, gr / 2);
-  const P3 = toRect(0, rL, c, 1, 0, gc / 2, gl / 2, 0);
-  const P4 = toRect(c, rR, 1, 1, gc / 2, 0, gr / 2, 0);
+  const panelsAt = (s1: number, s2: number, s2b: number, s3: number) => {
+    const c = 1 - (1 - F.c1) * s1 - (F.c1 - F.c3) * s3;
+    const rL = 1 - (1 - F.l2) * s2 - (F.l2 - F.l3) * s3;
+    const rR = 1 - (1 - F.r2) * s2b - (F.r2 - F.r3) * s3;
+    const gc = G * Math.min(1, s1 * 1.6);
+    const gl = G * Math.min(1, s2 * 1.6);
+    const gr = G * Math.min(1, s2b * 1.6);
+    return [
+      toRect(0, 0, c, rL, 0, gc / 2, 0, gl / 2),
+      toRect(c, 0, 1, rR, gc / 2, 0, 0, gr / 2),
+      toRect(0, rL, c, 1, 0, gc / 2, gl / 2, 0),
+      toRect(c, rR, 1, 1, gc / 2, 0, gr / 2, 0),
+    ];
+  };
+  const [P1, P2, P3, P4] = panelsAt(s1, s2, s2b, s3);
+  // Where the split settles; the panels are laid out there.
+  const rest = panelsAt(1, 1, 1, 1);
 
   const openIn = sp(-10, HEAVY);
   const cam =
     (0.84 + 0.16 * sp(beat("dolly"), HEAVY)) *
     interpolate(frame, [0, beat("end")], [1, 1.025]);
+  // The camera never stops pushing in, and it carries every panel, so one
+  // tilt on it covers all the text that scales or rises inside them.
+  const camMoving = frame < beat("end");
   const payPunch = interpolate(
     frame,
     [beat("payoff"), beat("payoff") + 3, beat("payoff") + 12],
@@ -305,11 +337,17 @@ export function PanelSplit({
   const preset = ground ?? (groundParams ? undefined : t.preset);
   const gParams = groundParams ?? (ground ? undefined : t.groundParams);
 
-  const panelStyle = (r: Rect, extra?: React.CSSProperties) =>
+  const panelStyle = (
+    r: Rect,
+    at: Rect,
+    extra?: React.CSSProperties,
+    then = "",
+  ) =>
     ({
       position: "absolute",
-      left: r.x,
-      top: r.y,
+      left: at.x,
+      top: at.y,
+      transform: `${shift(r.x - at.x, r.y - at.y)}${then}`.trim() || undefined,
       width: Math.max(0, r.w),
       height: Math.max(0, r.h),
       borderRadius: radius,
@@ -319,7 +357,16 @@ export function PanelSplit({
       ...extra,
     }) as React.CSSProperties;
 
-  const k1 = 0.62 + 0.38 * Math.min(P1.w / R.w, P1.h / R.h);
+  const k1Of = (r: Rect) => 0.62 + 0.38 * Math.min(r.w / R.w, r.h / R.h);
+  const k1 = k1Of(P1);
+  // The first panel's content box grows and shrinks with the split. Its
+  // bottom- and right-anchored children are laid out against the settled box
+  // and ride the difference as a transform, so layout never rounds the move.
+  const innerW = P1.w / k1;
+  const innerH = P1.h / k1;
+  const innerWRest = rest[0].w / k1Of(rest[0]);
+  const innerHRest = rest[0].h / k1Of(rest[0]);
+  const dH1 = innerH - innerHRest;
   const heroFont = (portrait ? 46 : 44) * u;
   const lineIn = (i: number) =>
     interpolate(frame, [-12 + i * 3, 1 + i * 3], [0, 1], {
@@ -327,6 +374,9 @@ export function PanelSplit({
       easing: TYPE_IN,
     });
   const tile = Math.min((P1.h / k1) * 0.4, 200 * u);
+  const tileRest = Math.min(innerHRest * 0.4, 200 * u);
+  const tileLeft = innerWRest - pad - tileRest;
+  const tileDx = innerW - pad - innerW * 0.16 * (1 - s1) - tile - tileLeft;
   const tileIn = sp(-4, CARD);
 
   const p2In = sp(beat("split1") + 6, CARD);
@@ -341,6 +391,9 @@ export function PanelSplit({
   );
   const playX = pad;
   const playY = P4.h - pad - 40 * u;
+  const playYRest = rest[3].h - pad - 40 * u;
+  const dH2 = P2.h - rest[1].h;
+  const dH3 = P3.h - rest[2].h;
   const floodMax = Math.hypot(P4.w, P4.h) * 1.05;
   const pillPop = sp(beat("payoff") - 2, CHIP);
 
@@ -363,11 +416,11 @@ export function PanelSplit({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${cam}) translateY(${(1 - openIn) * H * 0.06}px)`,
+            transform: `scale(${cam}) translateY(${(1 - openIn) * H * 0.06}px)${glide(camMoving)}`,
             opacity: Math.min(1, openIn * 1.6),
           }}
         >
-          <div style={panelStyle(P1)}>
+          <div style={panelStyle(P1, rest[0])}>
             <div
               style={{
                 position: "absolute",
@@ -408,7 +461,8 @@ export function PanelSplit({
                 style={{
                   position: "absolute",
                   left: pad,
-                  bottom: pad * 1.1,
+                  bottom: pad * 1.1 + dH1,
+                  transform: shift(0, dH1).trim() || undefined,
                   fontSize: heroFont,
                   lineHeight: 1.06,
                   letterSpacing: "-0.035em",
@@ -441,13 +495,13 @@ export function PanelSplit({
               <div
                 style={{
                   position: "absolute",
-                  right: pad + (P1.w / k1) * 0.16 * (1 - s1),
+                  left: tileLeft,
                   top: pad * 0.8 + label * 2.4,
                   width: tile,
                   height: tile,
                   borderRadius: tile * 0.22,
                   overflow: "hidden",
-                  transform: `scale(${0.7 + 0.3 * tileIn}) rotate(${(1 - tileIn) * -6}deg)`,
+                  transform: `${shift(tileDx, 0)}scale(${0.7 + 0.3 * tileIn}) rotate(${(1 - tileIn) * -6}deg)`,
                   opacity: Math.min(1, tileIn * 1.5),
                   boxShadow: `0 ${10 * u}px ${30 * u}px ${shadow(0.6)}`,
                 }}
@@ -468,12 +522,13 @@ export function PanelSplit({
             </div>
           </div>
           {P2.w > 2 && P2.h > 2 ? (
-            <div style={panelStyle(P2)}>
+            <div style={panelStyle(P2, rest[1])}>
               <Header
                 ink={t.ink}
                 size={label}
                 pad={pad}
                 w={P2.w}
+                dw={P2.w - rest[1].w}
                 left={<span>{labels[1]}</span>}
                 right={
                   <span style={{ display: "flex" }}>
@@ -514,7 +569,8 @@ export function PanelSplit({
                   position: "absolute",
                   left: pad,
                   right: pad,
-                  bottom: pad * 0.9,
+                  bottom: pad * 0.9 + dH2,
+                  transform: shift(0, dH2).trim() || undefined,
                   display: "flex",
                   justifyContent: "space-between",
                   fontFamily,
@@ -545,12 +601,13 @@ export function PanelSplit({
             </div>
           ) : null}
           {P3.w > 2 && P3.h > 2 ? (
-            <div style={panelStyle(P3)}>
+            <div style={panelStyle(P3, rest[2])}>
               <Header
                 ink={t.ink}
                 size={label}
                 pad={pad}
                 w={P3.w}
+                dw={P3.w - rest[2].w}
                 left={<span>{labels[2]}</span>}
                 right={<span>02</span>}
               />
@@ -559,8 +616,8 @@ export function PanelSplit({
                   position: "absolute",
                   left: pad,
                   right: pad,
-                  bottom: pad * 1.1,
-                  transform: `translateY(${(1 - p3In) * P3.h * 0.5}px)`,
+                  bottom: pad * 1.1 + dH3,
+                  transform: `${shift(0, dH3)}translateY(${(1 - p3In) * P3.h * 0.5}px)`,
                   opacity: Math.min(1, p3In * 1.4),
                 }}
               >
@@ -602,9 +659,12 @@ export function PanelSplit({
           ) : null}
           {P4.w > 2 && P4.h > 2 ? (
             <div
-              style={panelStyle(P4, {
-                transform: `scale(${1 + payPunch * 0.025})`,
-              })}
+              style={panelStyle(
+                P4,
+                rest[3],
+                undefined,
+                `scale(${1 + payPunch * 0.025})`,
+              )}
             >
               <div
                 style={{
@@ -619,6 +679,7 @@ export function PanelSplit({
                 size={label}
                 pad={pad}
                 w={P4.w}
+                dw={P4.w - rest[3].w}
                 left={
                   <span
                     style={{
@@ -644,27 +705,40 @@ export function PanelSplit({
                 const cw = Math.min(P4.w * 0.36, P4.h * 0.6);
                 const ch = cw * 1.28;
                 const off = [-1, 1, 0][i] as number;
-                const x =
-                  P4.w * 0.56 +
-                  off * cw * (0.42 + 0.2 * fan) +
+                const lift = i === 2 ? -0.04 : 0.04;
+                // Laid out where the fan settles in the settled panel; the
+                // slide in, the fan out and the panel's own resize are a
+                // transform, since layout rounds a box's edges to whole
+                // pixels and the card would step along.
+                const R4 = rest[3];
+                const cwR = Math.min(R4.w * 0.36, R4.h * 0.6);
+                const chR = cwR * 1.28;
+                const xRest = R4.w * 0.56 + off * cwR * 0.62;
+                const yRest = R4.h * 0.5 + chR * lift;
+                const dx =
+                  (P4.w - R4.w) * 0.56 +
+                  off * (cw * (0.42 + 0.2 * fan) - cwR * 0.62) +
                   (1 - e) * P4.w * 0.6;
-                const y = P4.h * 0.5 + (i === 2 ? -ch * 0.04 : ch * 0.04);
+                const dy = (P4.h - R4.h) * 0.5 + (ch - chR) * lift;
+                const kRaw = cw / cwR;
+                const k = Math.abs(kRaw - 1) > 1e-6 ? kRaw : 1;
                 const rot = off * (5 + 4 * fan) + (1 - e) * 14;
                 return (
                   <div
                     key={`c-${ii}`}
                     style={{
                       position: "absolute",
-                      left: x - cw / 2,
-                      top: y - ch / 2,
-                      width: cw,
-                      height: ch,
-                      borderRadius: cw * 0.07,
+                      left: xRest - cwR / 2,
+                      top: yRest - chR / 2,
+                      width: cwR,
+                      height: chR,
+                      borderRadius: cwR * 0.07,
                       overflow: "hidden",
-                      transform: `rotate(${rot}deg) scale(${i === 2 ? 1.06 + 0.04 * fan : 1})`,
+                      transform: `${shift(dx, dy)}rotate(${rot}deg) scale(${(i === 2 ? 1.06 + 0.04 * fan : 1) * k})`,
                       opacity: Math.min(1, e * 1.5),
                       zIndex: i === 2 ? 2 : 1,
-                      boxShadow: `0 ${4 * u}px ${10 * u}px rgba(0,0,20,0.28), 0 ${22 * u}px ${44 * u}px rgba(0,0,20,0.3)`,
+                      // The shadow is drawn inside the scale; undo it there.
+                      boxShadow: `0 ${(4 * u) / k}px ${(10 * u) / k}px rgba(0,0,20,0.28), 0 ${(22 * u) / k}px ${(44 * u) / k}px rgba(0,0,20,0.3)`,
                     }}
                   >
                     <Img
@@ -682,7 +756,7 @@ export function PanelSplit({
                 style={{
                   position: "absolute",
                   left: playX,
-                  top: playY,
+                  top: playYRest,
                   height: 40 * u,
                   display: "flex",
                   alignItems: "center",
@@ -700,7 +774,7 @@ export function PanelSplit({
                   fontFamily,
                   fontSize: label * 1.04,
                   color: floodR > 0.05 ? "#0c0c10" : `rgba(${t.ink},0.9)`,
-                  transform: `scale(${0.9 + 0.1 * pillPop})`,
+                  transform: `${shift(0, playY - playYRest)}scale(${0.9 + 0.1 * pillPop})`,
                   transformOrigin: "20% 50%",
                   opacity: Math.min(1, p4In(0) * 1.4),
                   zIndex: 3,

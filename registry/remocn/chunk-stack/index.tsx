@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const nunito = loadFont("normal", {
   weights: ["500"],
@@ -138,6 +139,8 @@ function useMetrics(words: string[], fontFamily: string, fontWeight: number) {
   return metrics;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -173,6 +176,7 @@ export function ChunkStack({
   speed = 1,
   theme = "dark",
 }: ChunkStackProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -263,14 +267,30 @@ export function ChunkStack({
     const x1 = W / 2;
     const y1 = stackTop + k * LEAD * stackSize;
     const size = lineSize + (stackSize - lineSize) * d;
-    const cx = x0 + (x1 - x0) * d;
-    const by = y0 + (y1 - y0) * dv;
+    // Layout rounds a box and a baseline to whole pixels, so a word carried
+    // by `left`/`top` clicks along. Each word is laid out on its stack line
+    // and the whole trip there is a transform. While the sentence sits still
+    // as one line, it keeps the line's own layout, which is where it rested.
+    const parked = rise === 1 && openAll === 0 && d === 0 && dv === 0;
+    const ax = parked ? x0 : x1;
+    const ay = parked ? y0 : y1;
+    const dx = parked ? 0 : (x0 - x1) * (1 - d);
     const q = impact(t - start - DROP_LEN);
+    const squashing =
+      Math.abs(impact(t - start - DROP_LEN + speed) - q) * lh > 1e-2 ||
+      Math.abs(q - impact(t - start - DROP_LEN - speed)) * lh > 1e-2;
     const sx = 1 + 0.08 * q;
     const sy = 1 - 0.12 * q;
     const s = size / R;
     const wpx = m.words[k] * R;
     const risePx = (1 - rise) * lineSize * 1.3;
+    const dy = parked ? 0 : (y0 - y1) * (1 - dv) + risePx;
+    const travel =
+      Math.abs(dx) < 1e-3 && Math.abs(dy) < 1e-3
+        ? ""
+        : `translate(${dx}px, ${dy}px) `;
+    const moving =
+      midway(rise) || midway(openAll) || midway(dv) || midway(d) || squashing;
 
     if (k === hlIndex) {
       const pp = interpolate(
@@ -318,8 +338,8 @@ export function ChunkStack({
         key={`w${k}`}
         style={{
           position: "absolute",
-          left: cx - wpx / 2,
-          top: by - bo + risePx,
+          left: ax - wpx / 2,
+          top: ay - bo,
           width: wpx,
           height: lh,
           fontFamily,
@@ -329,7 +349,7 @@ export function ChunkStack({
           letterSpacing: `${TRACK}em`,
           whiteSpace: "pre",
           color: hlOn > 0.5 ? c.pillInk : fg,
-          transform: `scale(${(s * sx).toFixed(4)}, ${(s * sy).toFixed(4)})`,
+          transform: `${travel}scale(${(s * sx).toFixed(4)}, ${(s * sy).toFixed(4)})${glide(moving)}`,
           transformOrigin: `50% ${bo.toFixed(1)}px`,
         }}
       >

@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -479,6 +480,7 @@ export function StreakReward({
   ground,
   groundParams,
 }: StreakRewardProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay);
   const { fps, width, height } = useVideoConfig();
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
@@ -494,16 +496,37 @@ export function StreakReward({
   const phoneCx = tall ? W / 2 : W * 0.68;
   const phoneCy = tall ? H - 40 - (BH * k) / 2 : H / 2;
 
-  const sp = (at: number, config: object = CARD) =>
-    spring({ frame: f - at, fps, config });
-  const ease = (a: number, b: number, e = ENTER) =>
-    interpolate(f, [a, b], [0, 1], { ...clamp, easing: e });
+  const spAt = (x: number, at: number, config: object = CARD) =>
+    spring({ frame: x - at, fps, config });
+  const easeAt = (x: number, a: number, b: number, e = ENTER) =>
+    interpolate(x, [a, b], [0, 1], { ...clamp, easing: e });
+  const sp = (at: number, config: object = CARD) => spAt(f, at, config);
+  const ease = (a: number, b: number, e = ENTER) => easeAt(f, a, b, e);
+  // Springs and slow eases have long tails, so "moving" compares a value in
+  // px with the neighbouring frames instead of trusting a progress.
+  const stirs = (px: (x: number) => number, limit = 1e-3) => {
+    const now = px(f);
+    return (
+      Math.abs(px(f + speed) - now) > limit ||
+      Math.abs(now - px(f - speed)) > limit
+    );
+  };
 
   const rise = sp(BEAT.phone, HEAVY);
-  const cam = interpolate(f, [BEAT.medal, BEAT.end], [1, 1.035], {
-    ...clamp,
-    easing: CAMERA,
-  });
+  const camAt = (x: number) =>
+    interpolate(x, [BEAT.medal, BEAT.end], [1, 1.035], {
+      ...clamp,
+      easing: CAMERA,
+    });
+  const cam = camAt(f);
+  // Weighed at the phone's far corner, half its height from the centre.
+  const phoneMoving = stirs(
+    (x) => (1 - spAt(x, BEAT.phone, HEAVY)) * H * 0.9 + camAt(x) * k * (BH / 2),
+  );
+  // Inside the phone a px is k * u on screen; the spring tails there are
+  // long, so the cut-off sits at the 2e-3 screen px a resting frame allows.
+  const inner = (px: (x: number) => number) =>
+    !phoneMoving && stirs((x) => px(x) * k * u, 2e-3);
 
   const flameIn = sp(BEAT.flame, CARD);
   const roll = sp(BEAT.today + 2, CARD);
@@ -515,6 +538,9 @@ export function StreakReward({
   const filled = Math.min(days.length, streak);
   const todayIdx = filled - 1;
   const noteSwap = ease(BEAT.note, BEAT.note + 12, MOVE);
+  const noteMoving = inner(
+    (x) => easeAt(x, BEAT.note, BEAT.note + 12, MOVE) * 10,
+  );
   const swap = sp(BEAT.swap, MORPH);
 
   const medalIn = sp(BEAT.medal, CARD);
@@ -534,12 +560,18 @@ export function StreakReward({
   const ty =
     interpolate(touchPath, [0, 1], [640, 778]) -
     Math.sin(touchPath * Math.PI) * 26;
+  const txEnd = SW / 2 + 36;
+  const tyEnd = 778;
 
   const copyLine = (i: number) => {
     const inAt = i === 0 ? BEAT.number + 4 : BEAT.line2;
     const outAt = i === 0 ? BEAT.line2 - 6 : undefined;
-    const pin = ease(inAt, inAt + 16);
-    const pout = outAt === undefined ? 0 : ease(outAt, outAt + 8, EXIT);
+    const pinAt = (x: number) => easeAt(x, inAt, inAt + 16);
+    const poutAt = (x: number) =>
+      outAt === undefined ? 0 : easeAt(x, outAt, outAt + 8, EXIT);
+    const pin = pinAt(f);
+    const pout = poutAt(f);
+    const moving = stirs((x) => ((1 - pinAt(x)) * 60 - poutAt(x) * 40) * 2);
     if (pin <= 0 || pout >= 1) return null;
     return (
       <div
@@ -549,7 +581,7 @@ export function StreakReward({
           left: 0,
           right: 0,
           top: 0,
-          transform: `translateY(${(1 - pin) * 60 - pout * 40}%)`,
+          transform: `translateY(${(1 - pin) * 60 - pout * 40}%)${glide(moving)}`,
           opacity: pin * (1 - pout),
           filter: `blur(${(1 - pin) * 6 + pout * 4}px)`,
         }}
@@ -633,7 +665,7 @@ export function StreakReward({
               top: phoneCy - BH / 2,
               width: BW,
               height: BH,
-              transform: `translateY(${(1 - rise) * H * 0.9}px) scale(${k * cam})`,
+              transform: `translateY(${(1 - rise) * H * 0.9}px) scale(${k * cam})${glide(phoneMoving)}`,
             }}
           >
             <Phone c={c}>
@@ -681,7 +713,13 @@ export function StreakReward({
                 >
                   <div
                     style={{
-                      transform: `translateY(${-roll * 128 + (1 - numIn) * 30}px)`,
+                      transform: `translateY(${-roll * 128 + (1 - numIn) * 30}px)${glide(
+                        inner(
+                          (x) =>
+                            -spAt(x, BEAT.today + 2) * 128 +
+                            (1 - easeAt(x, BEAT.number, BEAT.number + 14)) * 30,
+                        ),
+                      )}`,
                     }}
                   >
                     <div>{streak - 1}</div>
@@ -710,7 +748,9 @@ export function StreakReward({
                     right: 28,
                     top: 474,
                     opacity: Math.min(1, weekIn * 1.6),
-                    transform: `translateY(${(1 - weekIn) * 24}px)`,
+                    transform: `translateY(${(1 - weekIn) * 24}px)${glide(
+                      inner((x) => (1 - spAt(x, BEAT.week)) * 24),
+                    )}`,
                   }}
                 >
                   <div
@@ -793,7 +833,7 @@ export function StreakReward({
                         position: "absolute",
                         inset: 0,
                         opacity: 1 - noteSwap,
-                        transform: `translateY(${-noteSwap * 10}px)`,
+                        transform: `translateY(${-noteSwap * 10}px)${glide(noteMoving)}`,
                       }}
                     >
                       {note}
@@ -803,7 +843,7 @@ export function StreakReward({
                         position: "absolute",
                         inset: 0,
                         opacity: noteSwap,
-                        transform: `translateY(${(1 - noteSwap) * 10}px)`,
+                        transform: `translateY(${(1 - noteSwap) * 10}px)${glide(noteMoving)}`,
                       }}
                     >
                       {doneNote}
@@ -963,7 +1003,19 @@ export function StreakReward({
                   fontWeight: 400,
                   zIndex: 10,
                   opacity: Math.min(1, ctaIn * 1.6),
-                  transform: `translateY(${(1 - ctaIn) * 30}px) scale(${1 - 0.04 * Math.max(0, pressK)})`,
+                  transform: `translateY(${(1 - ctaIn) * 30}px) scale(${1 - 0.04 * Math.max(0, pressK)})${glide(
+                    inner(
+                      (x) =>
+                        (1 - spAt(x, BEAT.today + 12)) * 30 +
+                        0.04 *
+                          Math.max(
+                            0,
+                            spAt(x, BEAT.press, CHIP) -
+                              spAt(x, BEAT.press + 5, CHIP),
+                          ) *
+                          SW,
+                    ),
+                  )}`,
                   boxShadow: `0 10px 24px -10px color-mix(in oklab, ${accent} 70%, transparent)`,
                 }}
               >
@@ -972,8 +1024,10 @@ export function StreakReward({
               <div
                 style={{
                   position: "absolute",
-                  left: tx - 22,
-                  top: ty - 22,
+                  // Laid out where the path ends; the travel there is a
+                  // transform, since layout rounds a box to whole pixels.
+                  left: txEnd - 22,
+                  top: tyEnd - 22,
                   width: 44,
                   height: 44,
                   borderRadius: 22,
@@ -981,7 +1035,7 @@ export function StreakReward({
                   boxShadow:
                     "0 0 0 1.5px rgba(255,255,255,0.85), 0 4px 14px rgba(0,0,0,0.22)",
                   opacity: touchO,
-                  transform: `scale(${1 - 0.18 * Math.max(0, pressK)})`,
+                  transform: `translate(${tx - txEnd}px, ${ty - tyEnd}px) scale(${1 - 0.18 * Math.max(0, pressK)})`,
                   zIndex: 35,
                 }}
               />

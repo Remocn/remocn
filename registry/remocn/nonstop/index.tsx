@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const redHat = loadFont("normal", {
   weights: ["400", "500"],
@@ -172,6 +173,8 @@ function useMetrics(states: Token[][], label: string, family: string) {
   return state && state.key === key ? state.m : null;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -203,6 +206,7 @@ export function Nonstop({
   speed = 1,
   theme = "dark",
 }: NonstopProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -284,6 +288,7 @@ export function Nonstop({
     opacity: number,
     color: string,
     extra?: React.CSSProperties,
+    moving = false,
   ) => (
     <div
       key={key}
@@ -300,7 +305,8 @@ export function Nonstop({
         letterSpacing: `${TRACK}em`,
         color,
         opacity,
-        transform: `translateY(${dy.toFixed(2)}px)`,
+        // Unrounded: a value rounded to 0.01px parks the glyph as well.
+        transform: `translateY(${dy}px)${glide(moving)}`,
         ...extra,
       }}
     >
@@ -331,7 +337,7 @@ export function Nonstop({
         nodes.push(
           glyph(`${id}-a`, ta.ch, x, 0, 1 - swap, color, {
             transformOrigin: `${((zeroW * F) / 2).toFixed(2)}px ${(base - boxTop).toFixed(2)}px`,
-            transform: `scale(${sx.toFixed(4)}, ${sy.toFixed(4)})`,
+            transform: `scale(${sx.toFixed(4)}, ${sy.toFixed(4)})${glide(midway(p))}`,
           }),
         );
         if (swap > 0) nodes.push(glyph(`${id}-b`, tb.ch, x, 0, swap, color));
@@ -365,10 +371,28 @@ export function Nonstop({
               }}
             >
               {out < 1
-                ? glyph(`${id}-a`, ta.ch, x, -travel * out, 1, color)
+                ? glyph(
+                    `${id}-a`,
+                    ta.ch,
+                    x,
+                    -travel * out,
+                    1,
+                    color,
+                    undefined,
+                    midway(out),
+                  )
                 : null}
               {inn > 0
-                ? glyph(`${id}-b`, tb.ch, x, travel * (1 - inn), 1, color)
+                ? glyph(
+                    `${id}-b`,
+                    tb.ch,
+                    x,
+                    travel * (1 - inn),
+                    1,
+                    color,
+                    undefined,
+                    midway(inn),
+                  )
                 : null}
             </div>
           </div>,
@@ -377,18 +401,39 @@ export function Nonstop({
     } else if (ta) {
       if (ta.ch === " ") continue;
       const x = leftA + A.x[id] * F;
-      nodes.push(glyph(`${id}-a`, ta.ch, x, -rise * p, 1 - p, color));
+      nodes.push(
+        glyph(
+          `${id}-a`,
+          ta.ch,
+          x,
+          -rise * p,
+          1 - p,
+          color,
+          undefined,
+          midway(p),
+        ),
+      );
     } else if (tb) {
       if (tb.ch === " ") continue;
       const x = leftB + B.x[id] * F;
       let q = p;
+      let moving = midway(p);
       if (id === "N") {
-        q = interpolate(t, [boardAt, boardAt + SHRINK], [0, 1], {
-          ...CLAMP,
-          easing: EASE_OUT,
-        });
+        const qAt = (f: number) =>
+          interpolate(f, [boardAt, boardAt + SHRINK], [0, 1], {
+            ...CLAMP,
+            easing: EASE_OUT,
+          });
+        q = qAt(t);
+        // The ease-out tail still crosses pixels at a full glyph's rise, so
+        // the tilt follows the travel itself, not the progress.
+        moving =
+          Math.abs(qAt(t + 1) - q) * rise > 1e-3 ||
+          Math.abs(q - qAt(t - 1)) * rise > 1e-3;
       }
-      nodes.push(glyph(`${id}-b`, tb.ch, x, rise * (1 - q), q, color));
+      nodes.push(
+        glyph(`${id}-b`, tb.ch, x, rise * (1 - q), q, color, undefined, moving),
+      );
     }
   }
 
@@ -408,7 +453,7 @@ export function Nonstop({
             color: fg,
             whiteSpace: "pre",
             opacity: lineIn,
-            transform: `translateY(${((1 - lineIn) * L * 0.8).toFixed(2)}px)`,
+            transform: `translateY(${(1 - lineIn) * L * 0.8}px)${glide(midway(lineIn))}`,
           }}
         >
           {label}
@@ -424,7 +469,7 @@ export function Nonstop({
             style={{
               position: "absolute",
               inset: 0,
-              transform: `translateY(${((1 - lineIn) * F * 1.3).toFixed(2)}px)`,
+              transform: `translateY(${(1 - lineIn) * F * 1.3}px)${glide(midway(lineIn))}`,
             }}
           >
             {nodes}

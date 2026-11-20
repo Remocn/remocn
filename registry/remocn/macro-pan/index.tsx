@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["400"],
@@ -214,6 +215,7 @@ export function MacroPan({
   theme = "dark",
   speed = 1,
 }: MacroPanProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -250,31 +252,55 @@ export function MacroPan({
   const fy1 = baseline - (endsOnMark ? 0.08 * F : xh * 0.5);
 
   const s0 = (H * 1.55) / xh;
-  const pan = interpolate(t, [0, panLen], [0, 1], { ...CLAMP, easing: PAN });
-  const sPan = s0 * (1 - 0.12 * pan);
   const sEnd = s0 * 0.88;
-  const pull = interpolate(t, [panLen, panLen + pullLen], [0, 1], {
-    ...CLAMP,
-    easing: PULL,
-  });
-  const push = interpolate(
-    t,
-    [panLen + pullLen, panLen + pullLen + 50],
-    [0, 1],
-    { ...CLAMP, easing: Easing.bezier(0.33, 0, 0.67, 1) },
-  );
-
-  let transform: string;
-  if (pull <= 0) {
-    const fx = fx0 + (fx1 - fx0) * pan;
-    const fy = fy0 + (fy1 - fy0) * pan;
-    transform = `translate(${W / 2} ${H / 2}) scale(${sPan}) translate(${-fx} ${-fy})`;
-  } else {
+  const px = (W / 2 - fx1 * sEnd) / (1 - sEnd);
+  const py = (H / 2 - fy1 * sEnd) / (1 - sEnd);
+  /** The camera at time `tt`, and where the two ends of the line land. */
+  const camera = (tt: number) => {
+    const pan = interpolate(tt, [0, panLen], [0, 1], { ...CLAMP, easing: PAN });
+    const pull = interpolate(tt, [panLen, panLen + pullLen], [0, 1], {
+      ...CLAMP,
+      easing: PULL,
+    });
+    const push = interpolate(
+      tt,
+      [panLen + pullLen, panLen + pullLen + 50],
+      [0, 1],
+      { ...CLAMP, easing: Easing.bezier(0.33, 0, 0.67, 1) },
+    );
+    if (pull <= 0) {
+      const sPan = s0 * (1 - 0.12 * pan);
+      const fx = fx0 + (fx1 - fx0) * pan;
+      const fy = fy0 + (fy1 - fy0) * pan;
+      return {
+        str: `translate(${W / 2} ${H / 2}) scale(${sPan}) translate(${-fx} ${-fy})`,
+        ends: [lineX, lineX + layout.total * F].map((x) => [
+          W / 2 + (x - fx) * sPan,
+          H / 2 + (baseline - fy) * sPan,
+        ]),
+      };
+    }
     const s = Math.exp(Math.log(sEnd) * (1 - pull)) * (1 + push * 0.012);
-    const px = (W / 2 - fx1 * sEnd) / (1 - sEnd);
-    const py = (H / 2 - fy1 * sEnd) / (1 - sEnd);
-    transform = `translate(${px} ${py}) scale(${s}) translate(${-px} ${-py})`;
-  }
+    return {
+      str: `translate(${px} ${py}) scale(${s}) translate(${-px} ${-py})`,
+      ends: [lineX, lineX + layout.total * F].map((x) => [
+        px + (x - px) * s,
+        py + (baseline - py) * s,
+      ]),
+    };
+  };
+  const frame = useCurrentFrame();
+  const tAt = (f: number) => Math.max(0, f - delay) * speed;
+  const cam = camera(t);
+  // The camera eases in and out slowly, so it counts as moving from the first
+  // thousandth of a pixel either end of the line travels on screen.
+  const camMoving = [camera(tAt(frame - 1)), camera(tAt(frame + 1))].some((o) =>
+    o.ends.some(
+      ([x, y], k) =>
+        Math.abs(x - cam.ends[k][0]) > 1e-3 ||
+        Math.abs(y - cam.ends[k][1]) > 1e-3,
+    ),
+  );
 
   const labelIn = interpolate(t, [4, 22], [0, 1], {
     ...CLAMP,
@@ -300,7 +326,11 @@ export function MacroPan({
           width={W}
           height={H}
           viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: glide(camMoving),
+          }}
           aria-hidden
         >
           <defs>
@@ -317,7 +347,7 @@ export function MacroPan({
               ))}
             </linearGradient>
           </defs>
-          <g transform={transform}>
+          <g transform={cam.str}>
             {layout.chars.map((ch, i) =>
               ch === " " ? null : (
                 <text
@@ -361,7 +391,7 @@ export function MacroPan({
             background: background ?? c.bg,
             color: c.muted,
             opacity: labelIn,
-            transform: `translateY(${(1 - labelIn) * 8 * u}px)`,
+            transform: `translateY(${(1 - labelIn) * 8 * u}px)${glide(labelIn > 0 && labelIn < 1)}`,
           }}
         >
           <span style={{ color: ink ?? c.fg }}>{index}</span>

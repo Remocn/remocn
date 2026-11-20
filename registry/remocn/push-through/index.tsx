@@ -6,6 +6,7 @@ import type {
 } from "@remotion/transitions";
 import type React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const clampOpts = {
   extrapolateLeft: "clamp" as const,
@@ -17,6 +18,8 @@ export type PushThroughProps = {
   blur?: number;
 };
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const PushThroughPresentation: React.FC<
   TransitionPresentationComponentProps<PushThroughProps>
 > = ({
@@ -25,20 +28,22 @@ const PushThroughPresentation: React.FC<
   presentationDirection,
   passedProps,
 }) => {
+  const glide = useGlide();
   const { zoom = 2.4, blur = 14 } = passedProps;
   const entering = presentationDirection === "entering";
   const p = presentationProgress;
 
   if (!entering) {
+    const k = interpolate(p, [0, 0.65], [1, zoom], {
+      ...clampOpts,
+      easing: Easing.in(Easing.cubic),
+    });
     const exitStyle: React.CSSProperties = {
       opacity: interpolate(p, [0.4, 0.62], [1, 0], {
         ...clampOpts,
         easing: Easing.bezier(0.42, 0, 0.58, 1),
       }),
-      scale: `${interpolate(p, [0, 0.65], [1, zoom], {
-        ...clampOpts,
-        easing: Easing.in(Easing.cubic),
-      })}`,
+      transform: `scale(${k})${glide(midway(p))}`,
       filter: `blur(${interpolate(p, [0.15, 0.6], [0, blur], clampOpts)}px)`,
     };
     return <AbsoluteFill style={exitStyle}>{children}</AbsoluteFill>;
@@ -46,10 +51,10 @@ const PushThroughPresentation: React.FC<
 
   const childStyle: React.CSSProperties = {
     opacity: interpolate(p, [0.3, 0.5], [0, 1], clampOpts),
-    scale: `${interpolate(p, [0.3, 0.88, 1], [0.68, 1.02, 1], {
+    transform: `scale(${interpolate(p, [0.3, 0.88, 1], [0.68, 1.02, 1], {
       ...clampOpts,
       easing: Easing.out(Easing.cubic),
-    })}`,
+    })})${glide(midway(p))}`,
     filter: `blur(${interpolate(p, [0.3, 0.75], [blur * 0.7, 0], clampOpts)}px)`,
   };
 

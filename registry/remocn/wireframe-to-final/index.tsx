@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: mono } = loadFont("normal", {
   weights: ["400", "500"],
@@ -298,6 +299,8 @@ function mixHex(a: string, b: string, t: number) {
 const INOUT = Easing.bezier(0.65, 0, 0.35, 1);
 const OUT = Easing.bezier(0.22, 1, 0.36, 1);
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 // Timeline (frames at speed 1).
 const FRAME_DRAW = [2, 28];
 const DIM_DRAW = [12, 36];
@@ -397,6 +400,7 @@ export function WireframeToFinal({
   captions = ["Idea", "Product"],
   measurements = ["1440", "900", "288"],
 }: WireframeToFinalProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
@@ -444,10 +448,14 @@ export function WireframeToFinal({
     ...clamp,
     easing: INOUT,
   });
-  const push = interpolate(frame, [96, 230], [1, 1.05], {
-    ...clamp,
-    easing: INOUT,
-  });
+  const pushAt = (f: number) =>
+    interpolate(f, [96, 230], [1, 1.05], { ...clamp, easing: INOUT });
+  const push = pushAt(frame);
+  // The slow in-out push creeps at its start; weigh each step by how far
+  // the furthest text sits from the origin.
+  const pushing =
+    Math.abs(pushAt(frame + speed) - push) * width * 0.6 > 1e-3 ||
+    Math.abs(push - pushAt(frame - speed)) * width * 0.6 > 1e-3;
   const gridIn = interpolate(frame, [0, 14], [0.55, 1], clamp);
   const drift = interpolate(frame, [SWEEP[0], 230], [0, 1], clamp);
   const gridOp = gridIn * (1 - after * 0.55);
@@ -509,7 +517,10 @@ export function WireframeToFinal({
       />
       <ScaleLayer scale={scale}>
         <AbsoluteFill
-          style={{ transform: `scale(${push})`, transformOrigin: "50% 48%" }}
+          style={{
+            transform: `scale(${push})${glide(pushing)}`,
+            transformOrigin: "50% 48%",
+          }}
         >
           {/* pixel-glass underglow: the finished screen sits on a band of colour */}
           <div
@@ -935,6 +946,7 @@ function Caption({
   accent: string;
   fontFamily: string;
 }) {
+  const glide = useGlide();
   if (!captions[0] && !captions[1]) return null;
   const row = (n: number, text: string, p: number) => (
     <div
@@ -946,7 +958,7 @@ function Caption({
         gap: 10 * k,
         whiteSpace: "nowrap",
         opacity: p,
-        transform: `translateY(${(1 - p) * (n === 1 ? -8 : 8) * k}px)`,
+        transform: `translateY(${(1 - p) * (n === 1 ? -8 : 8) * k}px)${glide(midway(p))}`,
       }}
     >
       <span style={{ color: accent }}>{`0${n + 1}`}</span>

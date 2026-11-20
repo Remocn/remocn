@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -192,6 +193,7 @@ export function GravityGrid({
   speed = 1,
   theme = "dark",
 }: GravityGridProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = height / 720;
@@ -337,7 +339,14 @@ export function GravityGrid({
   const horizonY = height / 2 - f * Math.tan(pitch);
   const scaleAtBottom = f / bottom.zc / (height * 0.072);
   const lift = (1 - lockIn) * 14 * u;
-  const markSize = 62 * u * scaleAtBottom;
+  // The lockup grows with the camera the whole time. Its font sizes and gaps
+  // would reflow it frame by frame, and layout rounds every baseline to whole
+  // pixels, so it is laid out once at the camera's unit size and grown by a
+  // transform instead. A logo you pass in keeps its own size, so that lockup
+  // keeps the original layout.
+  const lockK = logo ? 1 : scaleAtBottom;
+  const lockS = logo ? scaleAtBottom : 1;
+  const markSize = 62 * u * lockS;
   const glowR = height * 0.34;
   const ringRx = height * 0.42 * (0.9 + 0.1 * lockIn) * (1 + ripAmp * 0.25);
   const ringRy = ringRx * Math.max(0.2, Math.sin(pitch) * 0.62);
@@ -416,14 +425,19 @@ export function GravityGrid({
       {/* the mass: a bright accent bead that sinks and becomes the light */}
       <div
         style={{
+          // The bead falls and shrinks the whole time it shows. A box on
+          // left/top/width/height snaps its edges to whole pixels, so it is
+          // laid out once at a unit size and carried by a transform.
           position: "absolute",
-          left: massS.x - massR,
-          top: massS.y - massR,
-          width: massR * 2,
-          height: massR * 2,
+          left: 0,
+          top: 0,
+          width: 2 * u,
+          height: 2 * u,
           borderRadius: "50%",
           background: accent,
-          boxShadow: `0 0 ${massR * 3}px ${massR}px ${mixA(accent, 0.45)}`,
+          boxShadow: `0 0 ${3 * u}px ${u}px ${mixA(accent, 0.45)}`,
+          transformOrigin: "0 0",
+          transform: `translate(${massS.x - massR}px, ${massS.y - massR}px) scale(${massR / u})`,
           opacity: massO,
         }}
       />
@@ -432,14 +446,18 @@ export function GravityGrid({
       <ScaleLayer scale={scale}>
         <div
           style={{
+            // The camera carries the name the whole time. Layout rounds a box
+            // and a baseline to whole pixels, so riding on left/top it clicks
+            // pixel by pixel; the ride is a transform, tilted while it shows.
             position: "absolute",
-            left: bottom.x,
-            top: bottom.y,
-            transform: `translate(-50%, -50%) translateY(${lift}px)`,
+            left: 0,
+            top: 0,
+            transformOrigin: "0 0",
+            transform: `translate(${bottom.x}px, ${bottom.y + lift}px) scale(${lockK})${glide(lockIn > 0)} translate(-50%, -50%)`,
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            gap: 14 * u * scaleAtBottom,
+            gap: 14 * u * lockS,
           }}
         >
           <div
@@ -459,9 +477,9 @@ export function GravityGrid({
               position: "relative",
               display: "flex",
               alignItems: "center",
-              gap: 10 * u * scaleAtBottom,
+              gap: 10 * u * lockS,
               opacity: lockIn,
-              filter: `blur(${(1 - lockIn) * 6 * u}px)`,
+              filter: `blur(${((1 - lockIn) * 6 * u) / lockK}px)`,
               transform: `scale(${0.94 + lockIn * 0.06})`,
             }}
           >
@@ -491,11 +509,11 @@ export function GravityGrid({
                 position: "relative",
                 fontFamily,
                 fontWeight: 400,
-                fontSize: 18 * u * scaleAtBottom,
+                fontSize: 18 * u * lockS,
                 letterSpacing: "0em",
                 color: pal.muted,
                 opacity: capIn,
-                transform: `translateY(${(1 - capIn) * 8 * u}px)`,
+                transform: `translateY(${((1 - capIn) * 8 * u) / lockK}px)`,
                 whiteSpace: "nowrap",
               }}
             >

@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const bricolage = loadVariableFont("normal", { subsets: ["latin"] });
 
@@ -230,6 +231,7 @@ export function ShedWeight({
   speed = 1,
   theme = "dark",
 }: ShedWeightProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -292,12 +294,20 @@ export function ShedWeight({
             [0, 1],
             { ...CLAMP, easing: EASE_IN_OUT },
           );
-          const rise = interpolate(
-            t,
-            [startAt[k], startAt[k] + RISE_LEN],
-            [0, 1],
-            { ...CLAMP, easing: EASE_OUT },
-          );
+          const riseAt = (tt: number) =>
+            interpolate(tt, [startAt[k], startAt[k] + RISE_LEN], [0, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            });
+          const rise = riseAt(t);
+          const offsetAt = (tt: number) =>
+            ((1 - riseAt(tt)) * size * 1.05).toFixed(2);
+          const offset = offsetAt(t);
+          // The ease-out tail still moves a cut this big by a tenth of a
+          // pixel after its progress reads as done: the tilt runs for as long
+          // as the printed offset changes.
+          const rising =
+            offsetAt(t + speed) !== offset || offsetAt(t - speed) !== offset;
           const ruleH = last
             ? Math.max(2, size * 0.014)
             : Math.max(1, Math.min(2, size * 0.02));
@@ -339,7 +349,7 @@ export function ShedWeight({
                     fontVariationSettings: fvs(opsz, fontWeight),
                     letterSpacing: `${track}em`,
                     color: ink ?? c.ink,
-                    transform: `translateY(${((1 - rise) * size * 1.05).toFixed(2)}px)`,
+                    transform: `translateY(${offset}px)${glide(rising)}`,
                   }}
                 >
                   {text}

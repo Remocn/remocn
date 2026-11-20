@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: geist } = loadFont("normal", {
   weights: ["500"],
@@ -149,6 +150,7 @@ export function ScrubReveal({
   speed = 1,
   theme = "dark",
 }: ScrubRevealProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -184,6 +186,9 @@ export function ScrubReveal({
       ...CLAMP,
     },
   );
+
+  // The climb hands over to the drift, which outlasts the default length.
+  const moving = frame > SCROLL_START && frame < SCROLL_END + late + 90;
 
   const size = Math.round(Math.min(W * 0.064, H * 0.114));
   const measure = Math.min(W * 0.8, size * 13.2);
@@ -264,7 +269,7 @@ export function ScrubReveal({
             left: (W - measure) / 2,
             top: H / 2,
             width: measure,
-            transform: `translateY(calc(-50% + ${climb + tail}px))`,
+            transform: `translateY(calc(-50% + ${climb + tail}px))${glide(moving)}`,
             fontFamily,
             fontWeight,
             fontSize: size,

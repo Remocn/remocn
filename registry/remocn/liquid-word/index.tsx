@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -280,6 +281,7 @@ export function LiquidWord({
   theme = "dark",
   speed = 1,
 }: LiquidWordProps) {
+  const glide = useGlide();
   // The beat sheet is written for a melt at frame 12; another shifts all of it.
   const t = Math.max(0, useCurrentFrame() - delay) * speed - (meltAt - MELT_AT);
   const { width: W, height: H } = useVideoConfig();
@@ -403,7 +405,15 @@ export function LiquidWord({
           width={W}
           height={H}
           viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            // Letters placed by SVG attributes can't carry the mark, so the
+            // drawing does. It counts as moving for the whole liquid phase: the
+            // goo wobbles every frame, and a lean dropped while the letters
+            // hold between slump and rise would snap them to the pixel grid.
+            transform: glide(liquid),
+          }}
           role="img"
           aria-label={t < POOL_END ? from : to}
         >

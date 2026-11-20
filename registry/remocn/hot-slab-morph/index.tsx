@@ -17,6 +17,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -587,6 +588,7 @@ function SceneA({
   delay: number;
   look: SceneLook;
 }) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const L = layout(W, H);
@@ -601,6 +603,10 @@ function SceneA({
   const push = interpolate(frame, [0, A_LEN], [1, 1.03], CLAMP);
   const rowH = (ph * H - 64 * u) / TEMPLATES.length;
   const hoverY = mix(0, 2, hover) * rowH;
+  // Layout rounds a box to whole pixels, so a highlight eased by `top` clicks
+  // down pixel by pixel. Layout holds the nearer row; the glide is a transform.
+  const hoverHome = hover < 0.5 ? 0 : 2 * rowH;
+  const hoverDy = hover < 0.5 ? hoverY : (hover - 1) * 2 * rowH;
   const fs = 19 * u;
 
   return (
@@ -616,7 +622,12 @@ function SceneA({
         />
       </Ground>
       <ScaleLayer scale={scale}>
-        <AbsoluteFill style={{ transform: `scale(${push})` }}>
+        <AbsoluteFill
+          style={{
+            // The push spans the whole scene, so this tilt covers every line.
+            transform: `scale(${push})${glide(frame > 0 && frame < A_LEN)}`,
+          }}
+        >
           <Heading
             text={line}
             palette={palette}
@@ -674,8 +685,12 @@ function SceneA({
                   position: "absolute",
                   left: 0,
                   right: 0,
-                  top: hoverY,
+                  top: hoverHome,
                   height: rowH,
+                  transform:
+                    Math.abs(hoverDy) < 1e-3
+                      ? undefined
+                      : `translateY(${hoverDy}px)`,
                   borderRadius: 10 * u,
                   backgroundColor: palette.row,
                   boxShadow: `inset 0 0 0 1px ${palette.hairline}`,
@@ -757,6 +772,7 @@ function SceneB({
   groundParams?: Partial<GradientParams>;
   look: SceneLook;
 }) {
+  const glide = useGlide();
   const frame = useCurrentFrame() * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const L = layout(W, H);
@@ -790,7 +806,11 @@ function SceneB({
         />
       </Ground>
       <ScaleLayer scale={scale}>
-        <AbsoluteFill style={{ transform: `scale(${push})` }}>
+        <AbsoluteFill
+          style={{
+            transform: `scale(${push})${glide(frame > 0 && frame < B_LEN)}`,
+          }}
+        >
           <Heading
             text={line}
             palette={palette}

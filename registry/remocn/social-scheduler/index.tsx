@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -141,6 +142,7 @@ const tween = (f: number, a: number, b: number, easing = enterEase) =>
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const clamp = (v: number, lo: number, hi: number) =>
   Math.min(hi, Math.max(lo, v));
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
@@ -193,10 +195,13 @@ function Cursor({ x, y, scale }: { x: number; y: number; scale: number }) {
       viewBox="0 0 20 24"
       style={{
         position: "absolute",
-        left: x - 2,
-        top: y - 2,
+        // The pointer travels by transform, not `left`/`top`: layout rounds a
+        // box to whole pixels, so a cursor eased by layout clicks along its
+        // arc pixel by pixel.
+        left: -2,
+        top: -2,
         transformOrigin: "2px 2px",
-        transform: `scale(${scale})`,
+        transform: `translate(${x}px, ${y}px) scale(${scale})`,
         filter: "drop-shadow(0 3px 6px rgba(0,0,0,0.3))",
         overflow: "visible",
       }}
@@ -502,6 +507,7 @@ export function SocialScheduler({
   ground,
   groundParams,
 }: SocialSchedulerProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const base = palette(theme);
@@ -513,8 +519,14 @@ export function SocialScheduler({
   const tall = H > W * 1.2;
   const D = tall ? { w: 800, h: 1422 } : { w: 1280, h: 720 };
   const s = Math.min(W / D.w, H / D.h);
-  const sp = (at: number, config: object) =>
-    spring({ frame: frame - at, fps, config });
+  const spAt = (f: number, at: number, config: object) =>
+    spring({ frame: f - at, fps, config });
+  const sp = (at: number, config: object) => spAt(frame, at, config);
+  // For a spring that overshoots, progress alone can't say when it has come
+  // to rest, so the neighbouring frames do.
+  const moves = (at: (f: number) => number) =>
+    Math.abs(at(frame + 1) - at(frame)) > 1e-5 ||
+    Math.abs(at(frame) - at(frame - 1)) > 1e-5;
 
   const slot = slots[clamp(pick, 0, slots.length - 1)] ?? DEFAULT_SLOTS[1];
   const [slotDay, slotTime = ""] = slot.label.split(" ");
@@ -643,8 +655,9 @@ export function SocialScheduler({
     if (frame >= t0) cur = arcTo(a, b, sp(t0, CARD));
   }
   const clicks = [T.media, T.time, T.slot, T.sched];
-  const pressOf = (c: number) =>
-    clamp(sp(c - 3, CHIP) - sp(c + 2, CHIP), 0, 1.2);
+  const pressAt = (c: number, f: number) =>
+    clamp(spAt(f, c - 3, CHIP) - spAt(f, c + 2, CHIP), 0, 1.2);
+  const pressOf = (c: number) => pressAt(c, frame);
   const press = Math.max(...clicks.map(pressOf));
   const cursorA =
     tween(frame, T.cursorIn, T.cursorIn + 6) *
@@ -725,7 +738,7 @@ export function SocialScheduler({
           ? "inset 0 1px 0 rgba(255,255,255,0.18), 0 1px 2px rgba(17,19,24,0.2)"
           : `inset 0 0 0 1px ${pal.ring}`,
         opacity: enabled ? 1 : 0.45,
-        transform: `scale(${1 - 0.04 * pressOf(c)})`,
+        transform: `scale(${1 - 0.04 * pressOf(c)})${glide(moves((f) => pressAt(c, f)))}`,
       }}
     >
       {content}
@@ -734,6 +747,7 @@ export function SocialScheduler({
 
   const thumbW = PV_CARD.w;
   const thumbH = Math.round(Math.min(thumbW * 0.5, tall ? 240 : 136));
+  const thumbGrow = (thumbH + 14) * clamp(mediaGrow, 0, 1);
 
   return (
     <AbsoluteFill
@@ -784,7 +798,10 @@ export function SocialScheduler({
               position: "absolute",
               inset: 0,
               transformOrigin: `${target.x + COL_W / 2}px ${target.y + CARD_H / 2}px`,
-              transform: `scale(${1 + 0.035 * cam})`,
+              // The push-in runs from the click on Schedule to the last
+              // frame, so its tilt also covers the board, the flying card
+              // and the toast, which all move inside that window.
+              transform: `scale(${1 + 0.035 * cam})${glide(midway(cam))}`,
             }}
           >
             {tall ? (
@@ -807,7 +824,7 @@ export function SocialScheduler({
                 >
                   <div
                     style={{
-                      transform: `translateY(${(picked ? 1 - pickLabel : 1 - tween(frame, 4, 18)) * 100}%)`,
+                      transform: `translateY(${(picked ? 1 - pickLabel : 1 - tween(frame, 4, 18)) * 100}%)${glide(picked ? moves((f) => spAt(f, T.slot + 2, CHIP)) : midway(tween(frame, 4, 18)))}`,
                     }}
                   >
                     {picked ? slot.label : "Draft"}
@@ -894,7 +911,14 @@ export function SocialScheduler({
                           style={{
                             position: "absolute",
                             left: colX(i),
-                            top: COL_Y + (k + down) * (CARD_H + CARD_GAP),
+                            top: COL_Y + k * (CARD_H + CARD_GAP),
+                            // Making room is a transform, not `top`: layout
+                            // rounds a box and a baseline to whole pixels,
+                            // so a card eased by `top` clicks down pixel by
+                            // pixel.
+                            transform: down
+                              ? `translateY(${down * (CARD_H + CARD_GAP)}px)`
+                              : undefined,
                           }}
                         >
                           {qCard(p)}
@@ -916,9 +940,11 @@ export function SocialScheduler({
               <div
                 style={{
                   position: "absolute",
-                  left: flyPos.x,
-                  top: flyPos.y,
-                  transform: `scale(${1 + 0.18 * (1 - clamp(fly, 0, 1))})`,
+                  // Laid out in its slot; the flight there is a transform,
+                  // for the same reason as the cards making room.
+                  left: target.x,
+                  top: target.y,
+                  transform: `translate(${flyPos.x - target.x}px, ${flyPos.y - target.y}px) scale(${1 + 0.18 * (1 - clamp(fly, 0, 1))})`,
                   transformOrigin: "0 0",
                   opacity: tween(frame, T.land - 4, T.land + 2),
                   zIndex: 3,
@@ -941,7 +967,7 @@ export function SocialScheduler({
                   width: COMP.w,
                   height: COMP.h,
                   opacity: compInA * (1 - compOut),
-                  transform: `translateY(${(1 - compIn) * 56 + compOut * 28}px) scale(${(0.96 + 0.04 * compIn) * (1 - 0.08 * compOut)})`,
+                  transform: `translateY(${(1 - compIn) * 56 + compOut * 28}px) scale(${(0.96 + 0.04 * compIn) * (1 - 0.08 * compOut)})${glide(midway(compIn) || midway(compOut))}`,
                   transformOrigin: "50% 60%",
                   zIndex: 4,
                 }}
@@ -1057,9 +1083,9 @@ export function SocialScheduler({
                     {frame >= T.media + 2 ? (
                       <div
                         style={{
-                          width: TILE * clamp(mediaGrow, 0, 1),
+                          width: TILE,
                           height: TILE,
-                          transform: `scale(${0.7 + 0.3 * mediaIn})`,
+                          transform: `scale(${0.7 + 0.3 * mediaIn})${glide(moves((f) => spAt(f, T.media + 2, CARD)))}`,
                           transformOrigin: "0 50%",
                           opacity: clamp(mediaIn * 2, 0, 1),
                         }}
@@ -1087,7 +1113,11 @@ export function SocialScheduler({
                         gap: 8,
                         fontSize: 16,
                         color: pal.muted,
-                        transform: `scale(${1 - 0.04 * pressOf(T.media)})`,
+                        // The tile beside it is laid out at full width; the
+                        // room it makes as it grows is a transform here, as
+                        // layout would round this box to whole pixels on the
+                        // way.
+                        transform: `translateX(${frame >= T.media + 2 ? -TILE * (1 - clamp(mediaGrow, 0, 1)) : 0}px) scale(${1 - 0.04 * pressOf(T.media)})${glide(moves((f) => pressAt(T.media, f)))}`,
                       }}
                     >
                       <Icon name="image" color={pal.muted} size={20} />
@@ -1157,25 +1187,35 @@ export function SocialScheduler({
                     >
                       {body}
                     </div>
-                    <div
-                      style={{
-                        height: (thumbH + 14) * clamp(mediaGrow, 0, 1),
-                        overflow: "hidden",
-                      }}
-                    >
+                    {/* The thumbnail opens out of flow, and the row under it
+                        gives way by transform: pushed by a growing sibling,
+                        layout would round it to whole pixels on the way. Its
+                        bottom margin grows the card by the same amount. */}
+                    <div style={{ position: "relative" }}>
                       <div
                         style={{
-                          paddingTop: 14,
-                          opacity: clamp(mediaIn, 0, 1),
+                          position: "absolute",
+                          left: 0,
+                          right: 0,
+                          top: 0,
+                          height: thumbGrow,
+                          overflow: "hidden",
                         }}
                       >
-                        <Media
-                          w={thumbW - 32}
-                          h={thumbH}
-                          accent={accent}
-                          src={mediaSrc}
-                          radius={10}
-                        />
+                        <div
+                          style={{
+                            paddingTop: 14,
+                            opacity: clamp(mediaIn, 0, 1),
+                          }}
+                        >
+                          <Media
+                            w={thumbW - 32}
+                            h={thumbH}
+                            accent={accent}
+                            src={mediaSrc}
+                            radius={10}
+                          />
+                        </div>
                       </div>
                     </div>
                     <div
@@ -1183,7 +1223,11 @@ export function SocialScheduler({
                         display: "flex",
                         justifyContent: "space-between",
                         marginTop: 14,
+                        marginBottom: thumbGrow,
                         padding: "0 4px",
+                        transform: thumbGrow
+                          ? `translateY(${thumbGrow}px)`
+                          : undefined,
                       }}
                     >
                       {(
@@ -1228,7 +1272,7 @@ export function SocialScheduler({
                         style={{
                           display: "inline-block",
                           transform: picked
-                            ? `translateY(${(1 - pickLabel) * 8}px)`
+                            ? `translateY(${(1 - pickLabel) * 8}px)${glide(moves((f) => spAt(f, T.slot + 2, CHIP)))}`
                             : undefined,
                         }}
                       >
@@ -1257,7 +1301,7 @@ export function SocialScheduler({
                       boxShadow: pal.popShadow,
                       padding: "12px 6px 6px",
                       opacity: popA,
-                      transform: `translateY(${(1 - popIn) * 10}px) scale(${0.94 + 0.06 * popIn})`,
+                      transform: `translateY(${(1 - popIn) * 10}px) scale(${0.94 + 0.06 * popIn})${glide(moves((f) => spAt(f, T.time + 2, CARD)))}`,
                       transformOrigin: "20% 100%",
                     }}
                   >

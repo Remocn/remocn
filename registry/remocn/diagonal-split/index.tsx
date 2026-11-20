@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["500"],
@@ -188,7 +189,10 @@ function Scene({
       <ScaleLayer scale={scale}>
         {typeof content === "string" ? (
           <AbsoluteFill
-            style={{ alignItems: "center", justifyContent: "center" }}
+            style={{
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
             <div
               style={{
@@ -228,6 +232,7 @@ export function DiagonalSplit({
   theme = "dark",
   speed = 1,
 }: DiagonalSplitProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -242,18 +247,26 @@ export function DiagonalSplit({
   const cy = H / 2;
   const L = 2 * (W + H);
 
-  const seam = SEAM(interpolate(t, [SEAM_AT, SEAM_END], [0, 1], CLAMP));
+  const seamP = interpolate(t, [SEAM_AT, SEAM_END], [0, 1], CLAMP);
+  const seam = SEAM(seamP);
   const slideEnd = SLIDE_AT + move;
-  const slide = SLIDE(interpolate(t, [SLIDE_AT, slideEnd], [0, 1], CLAMP));
+  const slideP = interpolate(t, [SLIDE_AT, slideEnd], [0, 1], CLAMP);
+  const slide = SLIDE(slideP);
+  // The halves part on both axes while the seam opens and they slide away.
+  const halvesMoving = (seamP > 0 && seamP < 1) || (slideP > 0 && slideP < 1);
   const reachN = (W * Math.abs(nx) + H * Math.abs(ny)) / 2;
   const travel = 0.32 * W * slide;
   const gap = 18 * u * seam + 2.3 * reachN * slide;
   const bandOut = BAND_OUT(interpolate(t, [24, 42], [0, 1], CLAMP));
   const band = 18 * u * seam * (1 - bandOut);
-  const settle = SETTLE(
-    interpolate(t, [SLIDE_AT, slideEnd + 18], [0, 1], CLAMP),
-  );
-  const bScale = 1.05 - 0.05 * settle;
+  const scaleAt = (f: number) =>
+    1.05 -
+    0.05 * SETTLE(interpolate(f, [SLIDE_AT, slideEnd + 18], [0, 1], CLAMP));
+  const bScale = scaleAt(t);
+  const bReach = W / 2;
+  const bMoving =
+    Math.abs(scaleAt(t + speed) - bScale) * bReach > 1e-3 ||
+    Math.abs(bScale - scaleAt(t - speed)) * bReach > 1e-3;
   const gone = slide >= 0.999;
   const deg = -angle;
 
@@ -281,7 +294,7 @@ export function DiagonalSplit({
     return (
       <AbsoluteFill
         style={{
-          transform: `translate(${tx}px, ${ty}px)`,
+          transform: `translate(${tx}px, ${ty}px)${glide(halvesMoving)}`,
           filter:
             seam > 0
               ? `drop-shadow(${nx * side * 8 * u}px ${ny * side * 8 * u}px ${22 * u}px ${stage.shadow})`
@@ -334,7 +347,7 @@ export function DiagonalSplit({
         overflow: "hidden",
       }}
     >
-      <AbsoluteFill style={{ transform: `scale(${bScale})` }}>
+      <AbsoluteFill style={{ transform: `scale(${bScale})${glide(bMoving)}` }}>
         <Scene
           content={to}
           tone={stage.b}

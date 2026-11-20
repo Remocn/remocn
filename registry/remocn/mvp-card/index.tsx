@@ -9,6 +9,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: antonio } = loadFont("normal", {
   weights: ["400", "500"],
@@ -182,6 +183,8 @@ function kick(d: number, len = 8) {
   return k * k;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -221,6 +224,7 @@ export function MvpCard({
   theme = "dark",
   speed = 1,
 }: MvpCardProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed + 1;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -268,7 +272,17 @@ export function MvpCard({
   const kickerIn = OUT(ramp(t, 13, 10));
   const lettersAt = (i: number) => 5 + i * 3;
   const lastLetter = lettersAt(letters.length - 1) + 5;
-  const hit = Math.max(kick(t - 4, 8), kick(t - lastLetter, 9) * 0.8);
+  const hitAt = (tt: number) =>
+    Math.max(kick(tt - 4, 8), kick(tt - lastLetter, 9) * 0.8);
+  const hit = hitAt(t);
+  // The hits jump up in one frame and ease back, with no clean progress:
+  // compare the zoom with the neighbouring frames, weighed by the reach from
+  // the centre to the far corner of the copy. While it moves its tilt covers
+  // everything inside, so the inner movers skip theirs.
+  const reach = Math.hypot(W, H) / 2;
+  const hitting =
+    Math.abs(hitAt(t + speed) - hit) * 0.012 * reach > 1e-3 ||
+    Math.abs(hit - hitAt(t - speed)) * 0.012 * reach > 1e-3;
   const drift = interpolate(t, [0, 120], [0, 8], CLAMP);
 
   const statAt = (i: number) => 18 + i * stagger;
@@ -281,7 +295,7 @@ export function MvpCard({
           style={{
             position: "absolute",
             inset: 0,
-            transform: `scale(${1 + 0.012 * hit})`,
+            transform: `scale(${1 + 0.012 * hit})${glide(hitting)}`,
           }}
         >
           {/* Kicker and event line, top right. */}
@@ -380,7 +394,7 @@ export function MvpCard({
               top: cardY,
               width: cardW,
               height: cardH,
-              transform: `translateY(${cardLift}px) scale(${cardScale})`,
+              transform: `translateY(${cardLift}px) scale(${cardScale})${glide(midway(settle) && !hitting)}`,
               clipPath: `inset(${50 * (1 - open)}% 0 ${50 * (1 - open)}% 0)`,
             }}
           >
@@ -491,6 +505,9 @@ export function MvpCard({
                 const shown = `${v.toFixed(dec)}${s.suffix ?? ""}`;
                 const rowIn = OUT(ramp(t, at - 2, 8));
                 const land = kick(t - at - statLen, 9);
+                const landing =
+                  kick(t + speed - at - statLen, 9) !== land ||
+                  kick(t - speed - at - statLen, 9) !== land;
                 return (
                   <div
                     key={`${i}-${s.label}`}
@@ -508,7 +525,7 @@ export function MvpCard({
                           ? `${1.5 * u}px solid ${c.rule}`
                           : "none",
                       opacity: rowIn,
-                      transform: `translateY(${(1 - rowIn) * 16 * u}px)`,
+                      transform: `translateY(${(1 - rowIn) * 16 * u}px)${glide(midway(rowIn) && !hitting)}`,
                     }}
                   >
                     <div
@@ -521,7 +538,7 @@ export function MvpCard({
                         fontVariantNumeric: "tabular-nums",
                         color: fg,
                         paddingTop: 4 * u,
-                        transform: `scale(${1 + 0.06 * land})`,
+                        transform: `scale(${1 + 0.06 * land})${glide(landing && !hitting)}`,
                         transformOrigin: "left center",
                       }}
                     >

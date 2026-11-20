@@ -19,6 +19,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const LATIN = { subsets: ["latin"] as ["latin"] };
 // Every face stays at 500 or lighter: the cycle is about letterforms, not weight.
@@ -120,6 +121,8 @@ const SILK = {
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -265,6 +268,7 @@ export function FontCycle({
   theme = "dark",
   speed = 1,
 }: FontCycleProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -337,6 +341,9 @@ export function FontCycle({
     easing: EASE_IO,
   });
   const silk = SILK[theme];
+  // The zoom jumps to 1.035 on the landing frame itself, where settle is
+  // still 0, so the word counts as moving from that frame.
+  const wordMoving = midway(enter) || (landed && settle < 1 - 5e-4);
   const inkL = cx - (m.width / 2) * size * 1.04;
   const inkW = m.width * size * 1.04;
 
@@ -347,7 +354,13 @@ export function FontCycle({
           width={W}
           height={H}
           viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
+          // The word moves by SVG attributes, which can't carry the mark,
+          // so the drawing is marked instead.
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: glide(wordMoving),
+          }}
           aria-hidden
         >
           <defs>

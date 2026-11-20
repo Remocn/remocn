@@ -2,6 +2,7 @@
 
 import { type CSSProperties, useMemo } from "react";
 import { Easing, random, useCurrentFrame, useVideoConfig } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export type AgentRunTheme = "light" | "dark";
 
@@ -1980,9 +1981,12 @@ function Spinner({
   );
 }
 
+type Glide = ReturnType<typeof useGlide>;
+
 function spanStyle(
   span: AgentRunSpan,
   palette: AgentRunPalette,
+  glide: Glide,
 ): CSSProperties {
   if (span.kind === "bold") return { fontWeight: 600 };
   if (span.kind === "code") {
@@ -2014,7 +2018,7 @@ function spanStyle(
       fontVariantNumeric: "tabular-nums",
       verticalAlign: "middle",
       opacity: span.opacity,
-      transform: `scale(${span.scale})`,
+      transform: `scale(${span.scale})${glide(span.scale !== 1)}`,
     };
   }
   if (span.kind === "punct" || span.kind === "comment") {
@@ -2024,9 +2028,13 @@ function spanStyle(
   return {};
 }
 
-function renderSpans(spans: readonly AgentRunSpan[], palette: AgentRunPalette) {
+function renderSpans(
+  spans: readonly AgentRunSpan[],
+  palette: AgentRunPalette,
+  glide: Glide,
+) {
   return spans.map((span, index) => (
-    <span key={index} style={spanStyle(span, palette)}>
+    <span key={index} style={spanStyle(span, palette, glide)}>
       {span.fragments.map((fragment, part) => (
         <span
           key={part}
@@ -2048,6 +2056,7 @@ function AnswerBlock({
   block: AgentRunBlockState;
   palette: AgentRunPalette;
 }) {
+  const glide = useGlide();
   if (block.kind === "code") {
     return (
       <div
@@ -2097,7 +2106,7 @@ function AnswerBlock({
               color: palette.fg,
             }}
           >
-            {renderSpans(line.spans, palette)}
+            {renderSpans(line.spans, palette, glide)}
           </div>
         ))}
       </div>
@@ -2141,11 +2150,11 @@ function AnswerBlock({
                 fontSize: block.styled ? spec.size : BODY_SIZE,
                 fontWeight: Math.round(400 + 200 * block.morph),
                 lineHeight: 1.25,
-                transform: `scale(${round(scale)})`,
+                transform: `scale(${round(scale)})${glide(block.styled && block.morph > 0 && block.morph < 1)}`,
                 transformOrigin: "0 50%",
               }}
             >
-              {renderSpans(line.spans, palette)}
+              {renderSpans(line.spans, palette, glide)}
             </span>
           </div>
         ))}
@@ -2182,7 +2191,7 @@ function AnswerBlock({
             whiteSpace: "pre",
           }}
         >
-          {renderSpans(line.spans, palette)}
+          {renderSpans(line.spans, palette, glide)}
         </div>
       ))}
     </div>
@@ -2250,10 +2259,14 @@ function Header({
 function Bubble({
   bubble,
   palette,
+  carried,
 }: {
   bubble: AgentRunState["bubble"];
   palette: AgentRunPalette;
+  /** An outer mover already carries the tilt. */
+  carried: boolean;
 }) {
+  const glide = useGlide();
   return (
     <div
       style={{
@@ -2267,7 +2280,7 @@ function Bubble({
         lineHeight: `${BUBBLE_LINE}px`,
         whiteSpace: "pre",
         opacity: bubble.opacity,
-        transform: `translateY(${bubble.lift}px)`,
+        transform: `translateY(${bubble.lift}px)${glide(bubble.lift !== 0 && bubble.opacity > 0 && !carried)}`,
       }}
     >
       {bubble.lines.map((line, index) => (
@@ -2280,10 +2293,14 @@ function Bubble({
 function Status({
   status,
   palette,
+  carried,
 }: {
   status: AgentRunState["status"];
   palette: AgentRunPalette;
+  /** An outer mover already carries the tilt. */
+  carried: boolean;
 }) {
+  const glide = useGlide();
   if (!status.visible) return null;
   return (
     <div
@@ -2324,7 +2341,7 @@ function Status({
             left: 0,
             color: palette.muted,
             opacity: status.swap,
-            transform: `translateY(${status.lift}px)`,
+            transform: `translateY(${status.lift}px)${glide(status.lift !== 0 && !carried)}`,
           }}
         >
           {status.thought}
@@ -2341,6 +2358,7 @@ function Plan({
   plan: NonNullable<AgentRunState["plan"]>;
   palette: AgentRunPalette;
 }) {
+  const glide = useGlide();
   return (
     <div
       style={{
@@ -2390,7 +2408,7 @@ function Plan({
                 whiteSpace: "pre",
               }}
             >
-              {renderSpans(line.spans, palette)}
+              {renderSpans(line.spans, palette, glide)}
             </div>
           ))}
         </div>
@@ -2403,6 +2421,7 @@ function chipStyle(
   palette: AgentRunPalette,
   pop: { opacity: number; scale: number },
   padding: string,
+  glide: Glide,
 ): CSSProperties {
   return {
     display: "inline-flex",
@@ -2419,7 +2438,7 @@ function chipStyle(
     fontVariantNumeric: "tabular-nums",
     whiteSpace: "nowrap",
     opacity: pop.opacity,
-    transform: `scale(${pop.scale})`,
+    transform: `scale(${pop.scale})${glide(pop.scale !== 1)}`,
   };
 }
 
@@ -2432,6 +2451,7 @@ function ToolRow({
   row: AgentRunRowState;
   palette: AgentRunPalette;
 }) {
+  const glide = useGlide();
   const chips = row.chips.filter((chip) => chip.visible);
   return (
     <div
@@ -2505,14 +2525,14 @@ function ToolRow({
           {chips.map((chip, index) => (
             <span
               key={`${index}-${chip.label}`}
-              style={chipStyle(palette, chip, "0 9px 0 7px")}
+              style={chipStyle(palette, chip, "0 9px 0 7px", glide)}
             >
               <Icon name={chip.icon} size={12} color={palette.subtle} />
               {chip.label}
             </span>
           ))}
           {row.more?.visible ? (
-            <span style={chipStyle(palette, row.more, "0 9px")}>
+            <span style={chipStyle(palette, row.more, "0 9px", glide)}>
               {`+${row.more.count}`}
             </span>
           ) : null}
@@ -2560,6 +2580,7 @@ export function AgentRun({
   speed = agentRunDefaults.speed,
   className,
 }: AgentRunProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame();
   const { width, height, fps } = useVideoConfig();
   const model = useMemo(
@@ -2569,6 +2590,12 @@ export function AgentRun({
   const state = getAgentRunState(frame, model, { fps, speed });
   const palette = getAgentRunPalette(theme, accentColor);
   const { panel } = state;
+  const scrollAt = (f: number) =>
+    round(getAgentRunScroll(getAgentRunTime(f, { fps, speed }), model.scroll));
+  const scrolling =
+    scrollAt(frame - 1) !== state.scroll ||
+    scrollAt(frame + 1) !== state.scroll;
+  const rising = panel.lift !== 0;
 
   return (
     <div className={className} style={{ position: "absolute", inset: 0 }}>
@@ -2591,7 +2618,7 @@ export function AgentRun({
             boxSizing: "border-box",
             overflow: "hidden",
             opacity: panel.opacity,
-            transform: `translateY(${panel.lift}px)`,
+            transform: `translateY(${panel.lift}px)${glide(rising)}`,
             background: palette.panel,
             border: `1px solid ${palette.border}`,
             borderRadius: 18,
@@ -2616,11 +2643,19 @@ export function AgentRun({
                 top: 0,
                 left: PAD_X,
                 width: COLUMN,
-                transform: `translateY(${-state.scroll}px)`,
+                transform: `translateY(${-state.scroll}px)${glide(scrolling && !rising)}`,
               }}
             >
-              <Bubble bubble={state.bubble} palette={palette} />
-              <Status status={state.status} palette={palette} />
+              <Bubble
+                bubble={state.bubble}
+                palette={palette}
+                carried={rising || scrolling}
+              />
+              <Status
+                status={state.status}
+                palette={palette}
+                carried={rising || scrolling}
+              />
               {state.plan ? <Plan plan={state.plan} palette={palette} /> : null}
               {state.tools ? (
                 <Tools tools={state.tools} palette={palette} />

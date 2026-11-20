@@ -10,6 +10,7 @@ import {
   groupCaptionWords,
   useCaptions,
 } from "@/lib/remocn/caption-core";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface CaptionOutlineProps extends CaptionBaseProps {
   activeColor?: string;
@@ -21,6 +22,8 @@ const ENTER_MS = 160;
 const EXIT_MS = 220;
 const RISE_EM = 0.14;
 const SWITCH_MS = 70;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const enterEasing = Easing.bezier(0.2, 0.8, 0.2, 1);
 
@@ -41,6 +44,7 @@ export function CaptionOutline({
   strokeWidth = 0.12,
   className,
 }: CaptionOutlineProps) {
+  const glide = useGlide();
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
@@ -94,7 +98,7 @@ export function CaptionOutline({
         WebkitTextStroke: `${strokeWidth * 2}em ${strokeColor}`,
         paintOrder: "stroke fill",
         opacity: Math.min(enter, exit),
-        transform: `translateY(${(1 - enter) * RISE_EM}em)`,
+        transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
       }}
     >
       {words.map((word, w) => (

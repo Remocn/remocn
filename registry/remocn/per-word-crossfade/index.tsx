@@ -1,6 +1,7 @@
 "use client";
 
 import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface PerWordCrossfadeProps {
   fromText: string;
@@ -12,6 +13,12 @@ export interface PerWordCrossfadeProps {
   className?: string;
 }
 
+// Chrome parks a glyph raster on a whole pixel vertically for as long as the
+// matrix is axis-aligned, so text under a slow transform clicks along pixel by
+// pixel. Each word's transform is marked so it leans off that grid while it
+// moves.
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 export function PerWordCrossfade({
   fromText,
   toText,
@@ -21,6 +28,7 @@ export function PerWordCrossfade({
   speed = 1,
   className,
 }: PerWordCrossfadeProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame() * speed;
 
   const fromWords = fromText.split(" ");
@@ -91,7 +99,7 @@ export function PerWordCrossfade({
                   marginRight: "0.25em",
                   transformOrigin: "50% 55%",
                   opacity,
-                  translate: `0 ${y}px`,
+                  transform: `translateY(${y}px)${glide(midway(y / -6))}`,
                 }}
               >
                 {word}
@@ -139,7 +147,7 @@ export function PerWordCrossfade({
                   marginRight: "0.25em",
                   transformOrigin: "50% 55%",
                   opacity,
-                  translate: `0 ${y}px`,
+                  transform: `translateY(${y}px)${glide(midway(1 - y / 8))}`,
                 }}
               >
                 {word}

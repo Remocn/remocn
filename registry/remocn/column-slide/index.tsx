@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["400", "500"],
@@ -55,6 +56,11 @@ const SLIDE = Easing.bezier(0.72, 0, 0.18, 1);
 const SETTLE = Easing.bezier(0.22, 1, 0.36, 1);
 
 const TRACK = -0.035;
+
+// Layout rounds a box and a baseline to whole pixels, so a scene eased by
+// `top` clicks along pixel by pixel; the slide is a transform instead, and
+// nothing at all once it sits at 0.
+const slideY = (y: number) => (y === 0 ? undefined : `translateY(${y}px)`);
 
 /** gradients.sh palettes: "beam" (dark) and "pixel-glass" (light). */
 const STAGES = {
@@ -172,6 +178,8 @@ function Scene({
   scale,
   fontFamily,
   fontWeight,
+  glide,
+  scaling,
 }: {
   W: number;
   H: number;
@@ -185,6 +193,8 @@ function Scene({
   scale: number;
   fontFamily: string;
   fontWeight: number;
+  glide: (moving: boolean) => string;
+  scaling: boolean;
 }) {
   const label: React.CSSProperties = {
     position: "absolute",
@@ -200,7 +210,9 @@ function Scene({
     whiteSpace: "nowrap",
     color,
     paddingBottom: 0.12 * size,
-    transform: `scale(${scale})`,
+    // The mark sits on the label, not the scene: the headline rides the
+    // slide and the drift, and the ground needs no lean.
+    transform: `scale(${scale})${glide(top !== 0 || scaling)}`,
     transformOrigin: `${W / 2}px ${0.56 * size}px`,
   };
   return (
@@ -208,7 +220,8 @@ function Scene({
       style={{
         position: "absolute",
         left,
-        top,
+        top: 0,
+        transform: slideY(top),
         width: W,
         height: H,
         background,
@@ -236,6 +249,7 @@ export function ColumnSlide({
   grain = true,
   speed = 1,
 }: ColumnSlideProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -245,9 +259,20 @@ export function ColumnSlide({
 
   const fsA = Math.min(128 * u, (0.8 * W) / widthEm(from));
   const fsB = Math.min(140 * u, (0.8 * W) / widthEm(to));
-  const driftA = 1 + 0.03 * SLIDE(interpolate(t, [0, LAND], [0, 1], CLAMP));
-  const settle = SETTLE(interpolate(t, [LAND - 14, SETTLE_END], [0, 1], CLAMP));
-  const scaleB = 1.05 - 0.05 * settle;
+  const driftAt = (f: number) =>
+    1 + 0.03 * SLIDE(interpolate(f, [0, LAND], [0, 1], CLAMP));
+  const scaleAt = (f: number) =>
+    1.05 -
+    0.05 * SETTLE(interpolate(f, [LAND - 14, SETTLE_END], [0, 1], CLAMP));
+  const driftA = driftAt(t);
+  const scaleB = scaleAt(t);
+  // Weighed by the distance from the label's centre to its far end.
+  const changes = (at: (f: number) => number) =>
+    [t - speed, t + speed].some(
+      (f) => Math.abs(at(f) - at(t)) * W * 0.5 > 1e-3,
+    );
+  const driftingA = changes(driftAt);
+  const settlingB = changes(scaleAt);
   const seam = Math.max(2, 3 * u);
 
   const lightA = `radial-gradient(ellipse 80% 90% at 24% 0%, ${stage.light}, transparent 70%)`;
@@ -297,6 +322,8 @@ export function ColumnSlide({
               size={fsA}
               color={ink ?? stage.fg}
               scale={driftA * scale}
+              glide={glide}
+              scaling={driftingA}
               fontFamily={fontFamily}
               fontWeight={fontWeight}
             />
@@ -313,6 +340,8 @@ export function ColumnSlide({
               size={fsB}
               color={ink ?? stage.toFg}
               scale={scaleB * scale}
+              glide={glide}
+              scaling={settlingB}
               fontFamily={fontFamily}
               fontWeight={fontWeight}
             />
@@ -323,7 +352,8 @@ export function ColumnSlide({
                 position: "absolute",
                 left: 0,
                 right: 0,
-                top: c.up ? c.seamY : c.seamY - seam,
+                top: 0,
+                transform: slideY(c.up ? c.seamY : c.seamY - seam),
                 height: seam,
                 background: accent,
               }}
@@ -334,7 +364,8 @@ export function ColumnSlide({
               style={{
                 position: "absolute",
                 left: 0,
-                top: c.yA,
+                top: 0,
+                transform: slideY(c.yA),
                 width: Math.max(1, u),
                 height: H,
                 background: stage.dim,

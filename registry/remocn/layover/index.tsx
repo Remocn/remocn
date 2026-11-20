@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const redHat = loadFont("normal", {
   weights: ["400", "500"],
@@ -56,6 +57,10 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+// Every tween here is a clamped interpolate, exact at both ends; words rise
+// a whole line height, so even its last 1e-4 is a visible step.
+const midway = (p: number) => p > 0 && p < 1;
 
 const A_IN = 0;
 const WORD_STAGGER = 3;
@@ -147,6 +152,7 @@ export function Layover({
   speed = 1,
   theme = "dark",
 }: LayoverProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -202,26 +208,32 @@ export function Layover({
   const landAt = arriveAt(n);
   const fracs = Array.from({ length: n + 2 }, (_, k) => k / (n + 1));
 
-  let progress = 0;
-  for (let k = 0; k <= n; k++) {
-    const p = interpolate(t, [legStart(k), arriveAt(k)], [0, 1], {
-      ...CLAMP,
-      easing: EASE_LEG,
-    });
-    progress = p > 0 ? fracs[k] + p * (fracs[k + 1] - fracs[k]) : progress;
-  }
-  const rx = rx0 + (rx3 - rx0) * progress;
-  const base = baseA + (baseB - baseA) * progress;
-  const lift =
-    interpolate(t, [LIFT - 6, LIFT + 4], [0, 1], CLAMP) *
-    (1 - interpolate(t, [landAt - 8, landAt], [0, 1], CLAMP));
-  const touch =
-    t > landAt
-      ? Math.sin(Math.min(1, (t - landAt) / SETTLE) * Math.PI) *
-        F *
-        0.025 *
-        (1 - Math.min(1, (t - landAt) / SETTLE))
-      : 0;
+  // Where the travelling word stands at time `tt`: its right edge and the
+  // top of its box.
+  const carry = (tt: number) => {
+    let progress = 0;
+    for (let k = 0; k <= n; k++) {
+      const p = interpolate(tt, [legStart(k), arriveAt(k)], [0, 1], {
+        ...CLAMP,
+        easing: EASE_LEG,
+      });
+      progress = p > 0 ? fracs[k] + p * (fracs[k + 1] - fracs[k]) : progress;
+    }
+    const lift =
+      interpolate(tt, [LIFT - 6, LIFT + 4], [0, 1], CLAMP) *
+      (1 - interpolate(tt, [landAt - 8, landAt], [0, 1], CLAMP));
+    const touch =
+      tt > landAt
+        ? Math.sin(Math.min(1, (tt - landAt) / SETTLE) * Math.PI) *
+          F *
+          0.025 *
+          (1 - Math.min(1, (tt - landAt) / SETTLE))
+        : 0;
+    return {
+      x: rx0 + (rx3 - rx0) * progress,
+      y: boxTop(baseA + (baseB - baseA) * progress) - lift * F * 0.04 + touch,
+    };
+  };
 
   const textStyle = (size: number): React.CSSProperties => ({
     position: "absolute",
@@ -265,7 +277,7 @@ export function Layover({
             position: "relative",
             top: F * 0.1,
             color: fg,
-            transform: `translateY(${((1 - p) * F * 1.4).toFixed(2)}px)`,
+            transform: `translateY(${(1 - p) * F * 1.4}px)${glide(midway(p))}`,
           }}
         >
           {wd}
@@ -292,7 +304,7 @@ export function Layover({
           position: "relative",
           top: F * 0.1,
           color: fg,
-          transform: `translateY(${((1 - toIn) * F * 1.4).toFixed(2)}px)`,
+          transform: `translateY(${(1 - toIn) * F * 1.4}px)${glide(midway(toIn))}`,
         }}
       >
         {to}
@@ -301,7 +313,18 @@ export function Layover({
   );
 
   if (t >= LIFT - 6) {
-    let xRight = rx - m.w[word] * F;
+    // Layout rounds a box and a baseline to whole pixels, so a word carried
+    // by `left`/`top` clicks along pixel by pixel, and jumps where layout
+    // takes over from a transform. Each part is laid out once, where the
+    // word finally lands, and carried there by a transform all its life.
+    const rest = carry(Number.POSITIVE_INFINITY);
+    const now = carry(t);
+    const dx = Math.abs(now.x - rest.x) >= 1e-3 ? now.x - rest.x : 0;
+    const dy = Math.abs(now.y - rest.y) >= 1e-3 ? now.y - rest.y : 0;
+    const step = (a: { x: number; y: number }) =>
+      Math.abs(a.x - now.x) > 1e-5 || Math.abs(a.y - now.y) > 1e-5;
+    const travel = step(carry(t - speed)) || step(carry(t + speed));
+    let xRight = rest.x - m.w[word] * F;
     const parts: { s: string; x: number; p: number }[] = [
       { s: word, x: xRight, p: 1 },
     ];
@@ -324,10 +347,10 @@ export function Layover({
           style={{
             ...textStyle(F),
             left: part.x,
-            top: boxTop(base) - lift * F * 0.04 + touch,
+            top: rest.y,
             color: hi,
             opacity: part.p,
-            transform: `translateY(${(-(1 - part.p) * F * 0.55).toFixed(2)}px)`,
+            transform: `translate(${dx}px, ${dy - (1 - part.p) * F * 0.55}px)${glide(travel || midway(part.p))}`,
           }}
         >
           {part.s}

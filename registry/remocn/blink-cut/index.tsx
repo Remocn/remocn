@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["400", "500"],
@@ -294,6 +295,8 @@ const CENTERED: BlinkLayout[] = [
   "crop-left",
 ];
 
+const midway = (q: number) => q > 5e-4 && q < 1 - 5e-4;
+
 export function BlinkCut({
   words = DEFAULT_WORDS,
   framesPerWord = 6,
@@ -311,6 +314,7 @@ export function BlinkCut({
   speed = 1,
   theme = "dark",
 }: BlinkCutProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -415,7 +419,7 @@ export function BlinkCut({
                 letterSpacing: "-0.01em",
                 color: c.muted,
                 opacity: lineIn,
-                transform: `translateY(${(1 - lineIn) * H * 0.012}px)`,
+                transform: `translateY(${(1 - lineIn) * H * 0.012}px)${glide(midway(lineIn))}`,
               }}
             >
               {line}
@@ -482,7 +486,7 @@ export function BlinkCut({
           lineHeight: 0.9,
           ...ink,
           whiteSpace: "nowrap",
-          transform: `${vertical} scale(${scale})`,
+          transform: `${vertical} scale(${scale})${glide(drift > 0)}`,
           transformOrigin: origin,
         }}
       >

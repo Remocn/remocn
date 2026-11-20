@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const kaku = loadZenKaku("normal", {
   weights: ["400", "500"],
@@ -70,6 +71,8 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 function group(n: number) {
   const s = String(Math.max(0, Math.floor(n)));
@@ -182,6 +185,7 @@ export function FuchidoriCount({
   speed = 1,
   theme = "dark",
 }: FuchidoriCountProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -278,11 +282,20 @@ export function FuchidoriCount({
     return { ch, cx, i };
   });
 
-  const rise = interpolate(t, [RISE_AT, RISE_AT + RISE_LEN], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const riseY = (1 - rise) * F * 0.7;
+  const riseAt = (f: number) =>
+    (
+      (1 -
+        interpolate(f, [RISE_AT, RISE_AT + RISE_LEN], [0, 1], {
+          ...CLAMP,
+          easing: EASE_OUT,
+        })) *
+      F *
+      0.7
+    ).toFixed(2);
+  const riseY = riseAt(t);
+  // The rise is drawn to 1/100 px: it still moves on the frames where its
+  // progress is already within a hair of 1, so it is compared as drawn.
+  const rising = riseAt(t - speed) !== riseY || riseAt(t + speed) !== riseY;
 
   const layer = (
     key: string,
@@ -358,7 +371,7 @@ export function FuchidoriCount({
                 lineHeight: `${labelSize * 1.4}px`,
                 color: red,
                 whiteSpace: "pre",
-                transform: `translateY(${(-(1 - labelP) * (H - marginY * 2) * 0.25).toFixed(2)}px)`,
+                transform: `translateY(${(-(1 - labelP) * (H - marginY * 2) * 0.25).toFixed(2)}px)${glide(midway(labelP))}`,
                 opacity: labelP,
               }}
             >
@@ -384,7 +397,7 @@ export function FuchidoriCount({
               position: "absolute",
               left: 0,
               top: -clipTop,
-              transform: `translateY(${riseY.toFixed(2)}px) scale(${(1 + press).toFixed(4)})`,
+              transform: `translateY(${riseY}px) scale(${(1 + press).toFixed(4)})${glide(press > 0 || rising)}`,
               transformOrigin: `${pressX.toFixed(1)}px ${baseY - (m.cap * F) / 2}px`,
               overflow: "visible",
             }}

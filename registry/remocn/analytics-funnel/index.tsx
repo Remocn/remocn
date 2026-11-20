@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -205,7 +206,21 @@ function Icon({
   );
 }
 
-function Cursor({ x, y, scale }: { x: number; y: number; scale: number }) {
+/**
+ * Laid out at `rest`; the ride from (x, y) is a transform, since layout
+ * rounds the box to whole pixels and a cursor eased by `left`/`top` steps.
+ */
+function Cursor({
+  x,
+  y,
+  rest,
+  scale,
+}: {
+  x: number;
+  y: number;
+  rest: { x: number; y: number };
+  scale: number;
+}) {
   return (
     <svg
       width={24}
@@ -213,10 +228,10 @@ function Cursor({ x, y, scale }: { x: number; y: number; scale: number }) {
       viewBox="0 0 20 24"
       style={{
         position: "absolute",
-        left: x - 2,
-        top: y - 2,
+        left: rest.x - 2,
+        top: rest.y - 2,
         transformOrigin: "2px 2px",
-        transform: `scale(${scale})`,
+        transform: `translate(${x - rest.x}px, ${y - rest.y}px) scale(${scale})`,
         filter: "drop-shadow(0 3px 6px rgba(0,0,0,0.3))",
         overflow: "visible",
       }}
@@ -281,6 +296,7 @@ export function AnalyticsFunnel({
   ground,
   groundParams,
 }: AnalyticsFunnelProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const themePal = palette(theme);
@@ -333,6 +349,9 @@ export function AnalyticsFunnel({
   const tipA = tween(frame, T.tip, T.tip + 8);
   const tt = clamp(tooltipStep, 0, n - 1);
   const cam = tween(frame, 20, T.end, camEase);
+  // The window springs in until the camera push takes over, and the push runs
+  // to the last frame, so the foreground never stands still in between.
+  const moving = frame > 0 && frame < T.end;
 
   const TOG_W = 236;
   const togX = WIN.w - PAD - TOG_W;
@@ -340,6 +359,12 @@ export function AnalyticsFunnel({
   const hoverPt = {
     x: WIN.x + colX(tt) + BAR_W * 0.6,
     y: WIN.y + yOf(ofFirst(tt) * 0.55),
+  };
+  // hoverPt follows the bar while it morphs; the cursor is laid out where
+  // that bar ends, so its box never moves by layout
+  const cursorRest = {
+    x: hoverPt.x,
+    y: WIN.y + yOf((steps[tt].variant / (steps[0].variant || 1)) * 100 * 0.55),
   };
   const startPt = { x: D.w * 0.86, y: D.h + 40 };
   const leg1 = sp(T.cursorIn, HEAVY);
@@ -476,7 +501,7 @@ export function AnalyticsFunnel({
               position: "absolute",
               inset: 0,
               transformOrigin: `${WIN.x + tipX}px ${WIN.y + tipY + 120}px`,
-              transform: `scale(${1 + 0.035 * cam})`,
+              transform: `scale(${1 + 0.035 * cam})${glide(moving)}`,
             }}
           >
             {tall ? (
@@ -603,7 +628,10 @@ export function AnalyticsFunnel({
                         style={{
                           position: "absolute",
                           top: 3,
-                          left: 3 + 14 * toggleOn,
+                          // laid out where the switch lands; the slide
+                          // there is a transform, as with the cursor
+                          left: 17,
+                          transform: `translateX(${(toggleOn - 1) * 14}px)`,
                           width: 16,
                           height: 16,
                           borderRadius: 99,
@@ -836,6 +864,12 @@ export function AnalyticsFunnel({
 
                 {steps.map((st, i) => {
                   const x = colX(i);
+                  // Laid out over the bar it ends on; its rise with the bar
+                  // is a transform, as with the cursor.
+                  const labTop =
+                    yOf((steps[i].variant / (steps[0].variant || 1)) * 100) -
+                    30;
+                  const labRise = yOf(ofFirst(i) * grow[i]) - 30 - labTop;
                   const lab = tween(
                     frame,
                     T.bars + i * 3 + 6,
@@ -849,7 +883,11 @@ export function AnalyticsFunnel({
                           left: x,
                           width: BAR_W,
                           textAlign: "center",
-                          top: yOf(ofFirst(i) * grow[i]) - 30,
+                          top: labTop,
+                          transform:
+                            Math.abs(labRise) > 1e-3
+                              ? `translateY(${labRise}px)`
+                              : undefined,
                           opacity: lab,
                           fontSize: 16,
                           color: pal.text,
@@ -986,7 +1024,12 @@ export function AnalyticsFunnel({
               </div>
             </div>
             <div style={{ opacity: cursorA }}>
-              <Cursor x={cur.x} y={cur.y} scale={cursorScale} />
+              <Cursor
+                x={cur.x}
+                y={cur.y}
+                rest={cursorRest}
+                scale={cursorScale}
+              />
             </div>
           </div>
         </div>

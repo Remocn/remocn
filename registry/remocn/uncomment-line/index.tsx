@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const geist = loadGeist("normal", {
   weights: ["500"],
@@ -166,6 +167,7 @@ export function UncommentLine({
   speed = 1,
   theme = "dark",
 }: UncommentLineProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -215,7 +217,12 @@ export function UncommentLine({
     const textLeft = margin + markEm * F * (1 - o);
     const h = F * 1.3;
     const top = baseY - F * 1.05;
+    // The rise is a transform, not `top`: layout rounds a baseline to whole
+    // pixels, so a line eased by `top` clicks up pixel by pixel. It stays at
+    // zero once risen: the mark rides on it, and text that lost its transform
+    // at rest would snap to the pixel grid.
     const drop = (1 - r) * h;
+    const rise = `translateY(${drop > 1e-3 ? drop : 0}px)${glide(drop > 1e-3)}`;
     const color = i === hl ? spot : fg;
     const markOpacity = 1 - interpolate(o, [0, 0.6], [0, 1], CLAMP);
     return (
@@ -235,7 +242,8 @@ export function UncommentLine({
               style={{
                 position: "absolute",
                 left: F * 0.05 - o * markEm * F * 0.6,
-                top: F * 1.05 - m.baseM * M + drop,
+                top: F * 1.05 - m.baseM * M,
+                transform: rise,
                 height: M,
                 lineHeight: `${M}px`,
                 fontFamily: geistMono.fontFamily,
@@ -264,7 +272,8 @@ export function UncommentLine({
             style={{
               position: "absolute",
               left: F * 0.05,
-              top: F * 1.05 - m.base * F + drop,
+              top: F * 1.05 - m.base * F,
+              transform: rise,
               height: F,
               lineHeight: `${F}px`,
               fontFamily,

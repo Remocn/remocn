@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const hanken = loadHanken("normal", {
   weights: ["500"],
@@ -169,6 +170,10 @@ function wrapRows(
   return rows;
 }
 
+// The rise is a clamped tween, exactly 0 or 1 at rest; its eased tail still
+// moves a few hundredths of a pixel a frame, so any value in between counts.
+const midway = (p: number) => p > 0 && p < 1;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -201,6 +206,7 @@ export function IndentSteps({
   speed = 1,
   theme = "dark",
 }: IndentStepsProps) {
+  const glide = useGlide();
   // The exit stays pinned to the end of the clip, so it reads the undelayed frame.
   const now = useCurrentFrame();
   const raw = Math.max(0, now - delay);
@@ -402,6 +408,17 @@ export function IndentSteps({
           if (r <= 0) return null;
           const out = leave(ri);
           const pos = indent(row.line);
+          // Layout rounds the row's clip box to whole pixels, so a tab eased
+          // by `left` steps sideways. The row is laid out at the indent it is
+          // heading for and carried there by a transform; at rest it takes
+          // the plain layout.
+          const goal =
+            outdent > 0 || row.line === 0
+              ? 0
+              : frame >= tabAt(row.line)
+                ? row.line
+                : row.line - 1;
+          const dx = (pos - goal) * tab * fs;
           const parts: [string, boolean][] = row.hl
             ? [
                 [row.text.slice(0, row.hl[0]), false],
@@ -414,8 +431,10 @@ export function IndentSteps({
               key={`l${ri}`}
               style={{
                 position: "absolute",
-                left: x0 + pos * tab * fs,
+                left: x0 + goal * tab * fs,
                 top: top + ri * lh,
+                transform:
+                  Math.abs(dx) < 1e-3 ? undefined : `translateX(${dx}px)`,
                 height: lh,
                 overflow: "hidden",
                 paddingRight: "0.1em",
@@ -430,7 +449,8 @@ export function IndentSteps({
             >
               <div
                 style={{
-                  transform: `translateY(${((1 - r) * 100 - out * 100).toFixed(2)}%)`,
+                  // Unrounded: a rounded offset steps the same way.
+                  transform: `translateY(${(1 - r) * 100 - out * 100}%)${glide(midway(r) || midway(out))}`,
                 }}
               >
                 {parts.map(([text, hl], k) =>

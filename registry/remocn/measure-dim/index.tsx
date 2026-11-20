@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const manrope = loadManrope("normal", {
   weights: ["400", "500", "600"],
@@ -231,6 +232,23 @@ function Arrow({
             background: color,
           }}
         />
+      </div>
+      {/* The head rides out on a transform across the full span: placed at
+          the edge of the growing line, layout would round it to whole
+          pixels and it would click outward. */}
+      <div
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          top: "50%",
+          height: 0,
+          transform:
+            k < 1
+              ? `translateX(${(side === "left" ? 1 : -1) * (1 - k) * 100}%)`
+              : undefined,
+        }}
+      >
         <svg
           width={head}
           height={wing * 2}
@@ -392,6 +410,7 @@ export function MeasureDim({
   theme = "dark",
   speed = 1,
 }: MeasureDimProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = Math.min(W / 1280, H / 720);
@@ -432,7 +451,19 @@ export function MeasureDim({
   const ghostLabelIn = EASE_OUT(
     interpolate(t, [GHOST_AT + 10, GHOST_AT + 24], [0, 1], CLAMP),
   );
-  const push = EASE_IO(interpolate(t, [0, ARR_B + 60], [0, 1], CLAMP));
+  const pushAt = (tt: number) =>
+    0.985 + 0.015 * EASE_IO(interpolate(tt, [0, ARR_B + 60], [0, 1], CLAMP));
+  const push = pushAt(t);
+  // The push carries everything but the background, so it takes the tilt
+  // while its scale still moves text at the frame's edge.
+  const pushMoving =
+    t > 0 &&
+    Math.max(
+      Math.abs(pushAt(t + speed) - push),
+      Math.abs(push - pushAt(t - speed)),
+    ) *
+      (W / 2) >
+      1e-3;
   const drift = interpolate(t, [0, 140], [0, 1], CLAMP);
 
   // gradients.sh "limb" (#160c3a → #4b2bd6 → #8a8bff → #e9ecff) with the accent woven in.
@@ -471,7 +502,7 @@ export function MeasureDim({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${0.985 + 0.015 * push})`,
+            transform: `scale(${push})${glide(pushMoving)}`,
           }}
         >
           <div

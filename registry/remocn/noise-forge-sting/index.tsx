@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -340,6 +341,7 @@ export function NoiseForgeSting({
   ground,
   groundParams,
 }: NoiseForgeStingProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -437,7 +439,8 @@ export function NoiseForgeSting({
           style={{
             alignItems: "center",
             justifyContent: "center",
-            transform: `scale(${push * punch})`,
+            // The camera push runs the whole sting, so the tilt does too.
+            transform: `scale(${push * punch})${glide(frame < B.end)}`,
           }}
         >
           <div

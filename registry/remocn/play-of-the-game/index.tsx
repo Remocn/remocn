@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: saira } = loadFont("normal", {
   weights: ["500"],
@@ -230,6 +231,7 @@ export function PlayOfTheGame({
   theme = "dark",
   speed = 1,
 }: PlayOfTheGameProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed + 4;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -294,6 +296,7 @@ export function PlayOfTheGame({
   const plateLean = plateH * SLANT;
 
   const sweep = INOUT(ramp(t, SWEEP_AT, SWEEP_LEN));
+  const shaking = sh.x !== 0 || sh.y !== 0 || sh2.x !== 0 || sh2.y !== 0;
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
@@ -301,7 +304,9 @@ export function PlayOfTheGame({
         style={{
           position: "absolute",
           inset: 0,
-          transform: `translate(${sh.x + sh2.x}px, ${sh.y + sh2.y}px)`,
+          // The tail of a shake is a fraction of a pixel, which would land
+          // the text a whole pixel off for a frame.
+          transform: `translate(${sh.x + sh2.x}px, ${sh.y + sh2.y}px)${glide(shaking)}`,
         }}
       >
         {/* Late sweep: wide light bars pass behind everything. */}
@@ -439,7 +444,13 @@ export function PlayOfTheGame({
                       position: ghost ? "absolute" : "relative",
                       left: 0,
                       top: 0,
-                      transform: `scale(${nameScale(tt)})`,
+                      // Once the hit shakes the scene, the shake's tilt
+                      // covers the slam: one tilt per chain.
+                      transform: `scale(${nameScale(tt)})${glide(
+                        !shaking &&
+                          (nameScale(tt + speed) !== nameScale(tt) ||
+                            nameScale(tt - speed) !== nameScale(tt)),
+                      )}`,
                       opacity: op,
                       paddingTop: logoFs * 0.04,
                     }}

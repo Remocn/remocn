@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const redHat = loadFont("normal", {
   weights: ["400", "500"],
@@ -115,6 +116,8 @@ function useMetrics(texts: string[], family: string) {
   return state && state.key === key + family ? state.m : null;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -145,6 +148,7 @@ export function OnApproach({
   speed = 1,
   theme = "dark",
 }: OnApproachProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -199,6 +203,7 @@ export function OnApproach({
         })
       : 1;
   const moving = k > 0 && g < 1;
+  const growing = moving && g > 0;
   const from = Math.max(0, k - 1);
   const to = k;
   const size = moving ? sizes[from] + (sizes[to] - sizes[from]) * g : sizes[k];
@@ -225,17 +230,27 @@ export function OnApproach({
     easing: EASE_OUT,
   });
 
-  const base = baseOf(size);
+  // An animated font size would move the baseline inside its own box by
+  // layout, a pixel at a time. So the lead is laid out once, at the size it
+  // finally rests at, and scaled to the live one about its cap line, which
+  // stays put. One layout for its whole life: a hand-over between layout and
+  // a transform would jump by the rounding between them.
+  const leadSize = sizes[last];
+  const leadTop = boxTop(baseOf(leadSize), leadSize);
+  const leadK = size / leadSize;
   const nodes: React.ReactNode[] = [];
   nodes.push(
     <div
       key="lead"
       style={{
-        ...textStyle(size, ink ?? c.ink),
+        ...textStyle(leadSize, ink ?? c.ink),
         left: marginX,
-        top: boxTop(base, size),
+        top: leadTop,
         opacity: intro,
-        transform: `translateY(${((1 - intro) * size * 0.6).toFixed(2)}px)`,
+        transform: `translateY(${((1 - intro) * size * 0.6).toFixed(2)}px) scale(${leadK})${glide(
+          midway(intro) || growing,
+        )}`,
+        transformOrigin: `0 ${capTop - leadTop}px`,
       }}
     >
       {lead}
@@ -250,11 +265,16 @@ export function OnApproach({
     return { x: marginX + m.w[leadSp] * s, base: b };
   };
 
+  // The same goes for a tail: its whole layout is proportional to the size
+  // about the start of the cap line, so it is laid out at the size it rests
+  // at and scaled about that point while the size grows.
   const tail = (idx: number, s: number, p: number, dir: 1 | -1) => {
-    const pos = tailPos(idx, s);
-    const clipTop = pos.base - (m.cap + 0.12) * s;
-    const clipH = (m.cap + 0.12 + m.desc * 0.9) * s;
-    const dy = dir * (1 - p) * (m.cap + 0.3) * s;
+    const ls = sizes[idx];
+    const kk = s / ls;
+    const pos = tailPos(idx, ls);
+    const clipTop = pos.base - (m.cap + 0.12) * ls;
+    const clipH = (m.cap + 0.12 + m.desc * 0.9) * ls;
+    const dy = dir * (1 - p) * (m.cap + 0.3) * ls;
     return (
       <div
         key={`tail-${idx}-${dir}`}
@@ -265,14 +285,18 @@ export function OnApproach({
           top: clipTop,
           height: clipH,
           overflow: "hidden",
+          transform: growing ? `scale(${kk})` : undefined,
+          transformOrigin: growing
+            ? `${marginX}px ${capTop - clipTop}px`
+            : undefined,
         }}
       >
         <div
           style={{
-            ...textStyle(s, hi),
+            ...textStyle(ls, hi),
             left: pos.x,
-            top: boxTop(pos.base, s) - clipTop,
-            transform: `translateY(${dy.toFixed(2)}px)`,
+            top: boxTop(pos.base, ls) - clipTop,
+            transform: `translateY(${dy.toFixed(2)}px)${glide(midway(p) || growing)}`,
           }}
         >
           {list[idx]}

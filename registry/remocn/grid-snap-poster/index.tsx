@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: geist } = loadGeist("normal", {
   weights: ["400", "500"],
@@ -269,6 +270,7 @@ export function GridSnapPoster({
   theme = "dark",
   speed = 1,
 }: GridSnapPosterProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -330,10 +332,18 @@ export function GridSnapPoster({
   };
 
   const bodyF = 18 * u;
-  const push = interpolate(t, [GRID_FADE, GRID_FADE + 70], [1, 1.012], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const pushAt = (tt: number) =>
+    interpolate(tt, [GRID_FADE, GRID_FADE + 70], [1, 1.012], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  const push = pushAt(t);
+  // A slow in-out ease: weighed in px across the frame, not by progress, so
+  // the tilt holds while the type under it still creeps.
+  const pushStep = (a: number, b: number) =>
+    Math.abs(pushAt(a) - pushAt(b)) * H;
+  const pushing =
+    pushStep(t + speed, t) > 1e-3 || pushStep(t, t - speed) > 1e-3;
 
   const guide = (i: number) => {
     const s = snaps[i];
@@ -369,7 +379,10 @@ export function GridSnapPoster({
       />
       <ScaleLayer scale={scale}>
         <AbsoluteFill
-          style={{ transform: `scale(${push})`, transformOrigin: "40% 50%" }}
+          style={{
+            transform: `scale(${push})${glide(pushing)}`,
+            transformOrigin: "40% 50%",
+          }}
         >
           <div style={{ position: "absolute", inset: 0, opacity: gridFade }}>
             {Array.from({ length: COLS }, (_, i) => {

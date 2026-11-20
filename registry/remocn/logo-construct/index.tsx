@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: mono } = loadMono("normal", {
   weights: ["400", "500"],
@@ -222,6 +223,7 @@ export function LogoConstruct({
   speed = 1,
   theme = "light",
 }: LogoConstructProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = height / 720;
@@ -264,6 +266,21 @@ export function LogoConstruct({
   const tx = width / 2 - camX * s;
   const ty = height / 2 - camY * s;
   const px = (n: number) => n / s; // screen px -> units at the current zoom
+  // Chrome parks a glyph raster on a whole pixel vertically for as long as the
+  // matrix is axis-aligned, so the labels and the name under the slow camera
+  // click along pixel by pixel. SVG text can't carry the mark, so the drawing
+  // carries it, moving while the camera moves.
+  // The pull starts as the drift ends and both ease in or out there, so the
+  // motion is read off the neighbouring frames rather than off progress.
+  const drivers = (f: number) => [
+    interpolate(f, [0, 120], [0, 1], CLAMP),
+    interpolate(f, [120, 168], [0, 1], { ...CLAMP, easing: EASE_IO }),
+    interpolate(f, [160, 260], [0, 1], { ...CLAMP, easing: EASE_IO }),
+  ];
+  const now = drivers(t);
+  const camMoving = [drivers(t - speed), drivers(t + speed)].some((d) =>
+    d.some((v, i) => v !== now[i]),
+  );
 
   // visible range in units, for grid + infinite guides
   const vx0 = (0 - tx) / s;
@@ -444,7 +461,7 @@ export function LogoConstruct({
       <svg
         width={width}
         height={height}
-        style={{ position: "absolute", inset: 0 }}
+        style={{ position: "absolute", inset: 0, transform: glide(camMoving) }}
         aria-hidden
       >
         <defs>

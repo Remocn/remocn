@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -146,7 +147,10 @@ export function HookPunch({
   groundParams,
   speed = 1,
 }: HookPunchProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
+  const frame = useCurrentFrame();
+  const at = (f: number) => Math.max(0, f - delay) * speed;
+  const t = at(frame);
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
   const stage =
@@ -167,54 +171,116 @@ export function HookPunch({
   const base = tall ? W * 0.56 : H;
   const u = Math.min(W / 1280, H / 720);
 
-  const slam = (at: number, from: number) => {
-    const p = spring({ frame: t - at, fps, config: CARD });
+  const bigFs = 0.43 * base;
+  const leadFs = 0.11 * base;
+  const payFs = 0.56 * base;
+
+  // Every transform on the words, as a function of time, so the camera can
+  // tell whether anything under it is still moving.
+  const geometry = (t: number) => {
+    const slam = (at: number, from: number) => {
+      const p = spring({ frame: t - at, fps, config: CARD });
+      return {
+        scale: from + (1 - from) * p,
+        blur: Math.max(0, 1 - p) ** 2 * 18,
+        opacity: ramp(t, at - 1, 2),
+      };
+    };
+
+    const bump = Math.max(
+      kick(t - beats.stop - 4),
+      kick(t - beats.scroll - 4),
+      1.3 * kick(t - beats.pay - 4),
+    );
+    const s1 = shake(t - beats.stop - 4, 6 * u, 0.4);
+    const s2 = shake(t - beats.scroll - 4, 5 * u, 2.1);
+    const s3 = shake(t - beats.pay - 4, 8 * u, 4.2);
+    const camScale = 1 + 0.03 * bump;
+
+    const pStop = slam(beats.stop, 1.5);
+    const pScroll = slam(beats.scroll, 1.5);
+    const shove = 1 - spring({ frame: t - beats.scroll, fps, config: HEAVY });
+    const creep1 = interpolate(t, [beats.scroll + 6, beats.whip], [1, 1.04], {
+      ...CLAMP,
+      easing: CAMERA,
+    });
+    const whip = EXIT(ramp(t, beats.whip, beats.whipLen));
+    const line1Scale = creep1 * (1 + 1.6 * whip);
+    const line1Blur = 22 * whip;
+    const line1Opacity = 1 - ramp(t, beats.whip + 3, beats.whipLen - 3);
+
+    const lead2 = spring({ frame: t - beats.lead, fps, config: HEAVY });
+    const leadScale = 0.6 + 0.4 * lead2;
+    const leadBlur = Math.max(0, 1 - lead2) * 16;
+    const leadOpacity = ramp(t, beats.lead, 3);
+    const pPay = slam(beats.pay, 1.6);
+    const creep2 = interpolate(t, [beats.pay + 6, beats.pay + 62], [1, 1.035], {
+      ...CLAMP,
+      easing: CAMERA,
+    });
     return {
-      scale: from + (1 - from) * p,
-      blur: Math.max(0, 1 - p) ** 2 * 18,
-      opacity: ramp(t, at - 1, 2),
+      s1,
+      s2,
+      s3,
+      camScale,
+      pStop,
+      pScroll,
+      shove,
+      line1Scale,
+      line1Blur,
+      line1Opacity,
+      leadScale,
+      leadBlur,
+      leadOpacity,
+      pPay,
+      creep2,
     };
   };
-
-  const bump = Math.max(
-    kick(t - beats.stop - 4),
-    kick(t - beats.scroll - 4),
-    1.3 * kick(t - beats.pay - 4),
+  const {
+    s1,
+    s2,
+    s3,
+    camScale,
+    pStop,
+    pScroll,
+    shove,
+    line1Scale,
+    line1Blur,
+    line1Opacity,
+    leadScale,
+    leadBlur,
+    leadOpacity,
+    pPay,
+    creep2,
+  } = geometry(t);
+  // Scales are weighed over the frame width, so both terms are in px.
+  const pose = (tt: number) => {
+    const g = geometry(tt);
+    return [
+      g.s1.x + g.s2.x + g.s3.x,
+      g.s1.y + g.s2.y + g.s3.y,
+      ...[
+        g.camScale,
+        g.line1Scale,
+        g.pStop.scale,
+        g.pScroll.scale,
+        g.leadScale,
+        g.pPay.scale,
+        g.creep2,
+      ].map((k) => k * W),
+      g.shove * bigFs,
+    ];
+  };
+  const here = pose(t);
+  const before = pose(at(frame - 1));
+  const after = pose(at(frame + 1));
+  const moving = here.some(
+    (v, k) => Math.abs(after[k] - v) > 1e-3 || Math.abs(v - before[k]) > 1e-3,
   );
-  const s1 = shake(t - beats.stop - 4, 6 * u, 0.4);
-  const s2 = shake(t - beats.scroll - 4, 5 * u, 2.1);
-  const s3 = shake(t - beats.pay - 4, 8 * u, 4.2);
-  const camScale = 1 + 0.03 * bump;
-
-  const pStop = slam(beats.stop, 1.5);
-  const pScroll = slam(beats.scroll, 1.5);
-  const shove = 1 - spring({ frame: t - beats.scroll, fps, config: HEAVY });
-  const creep1 = interpolate(t, [beats.scroll + 6, beats.whip], [1, 1.04], {
-    ...CLAMP,
-    easing: CAMERA,
-  });
-  const whip = EXIT(ramp(t, beats.whip, beats.whipLen));
-  const line1Scale = creep1 * (1 + 1.6 * whip);
-  const line1Blur = 22 * whip;
-  const line1Opacity = 1 - ramp(t, beats.whip + 3, beats.whipLen - 3);
-
-  const lead2 = spring({ frame: t - beats.lead, fps, config: HEAVY });
-  const leadScale = 0.6 + 0.4 * lead2;
-  const leadBlur = Math.max(0, 1 - lead2) * 16;
-  const leadOpacity = ramp(t, beats.lead, 3);
-  const pPay = slam(beats.pay, 1.6);
-  const creep2 = interpolate(t, [beats.pay + 6, beats.pay + 62], [1, 1.035], {
-    ...CLAMP,
-    easing: CAMERA,
-  });
 
   const rise = LIGHT(ramp(t, beats.rise, 26));
   const veil = c.veilFrom + (c.veilTo - c.veilFrom) * rise;
   const groundShift = (0.06 + (1 - rise) * 0.14) * H;
-
-  const bigFs = 0.43 * base;
-  const leadFs = 0.11 * base;
-  const payFs = 0.56 * base;
 
   const word = (
     text: string,
@@ -266,7 +332,7 @@ export function HookPunch({
           style={{
             position: "absolute",
             inset: 0,
-            transform: `translate(${s1.x + s2.x + s3.x}px, ${s1.y + s2.y + s3.y}px) scale(${camScale})`,
+            transform: `translate(${s1.x + s2.x + s3.x}px, ${s1.y + s2.y + s3.y}px) scale(${camScale})${glide(moving)}`,
             transformOrigin: "50% 50%",
             color: ink ?? c.ink,
           }}

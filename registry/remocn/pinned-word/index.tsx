@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const sans = loadSans("normal", { weights: ["500"], subsets: ["latin"] });
 const serif = loadSerif("italic", { weights: ["400"], subsets: ["latin"] });
@@ -222,6 +223,7 @@ export function PinnedWord({
   speed = 1,
   theme = "dark",
 }: PinnedWordProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -297,14 +299,18 @@ export function PinnedWord({
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const openL = interpolate(t, [INTRO_LINE, INTRO_LINE + 20], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const openR = interpolate(t, [INTRO_LINE + 3, INTRO_LINE + 23], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const openAt = (f: number, from: number) =>
+    interpolate(f, [from, from + 20], [0, 1], { ...CLAMP, easing: EASE_OUT });
+  const openL = openAt(t, INTRO_LINE);
+  const openR = openAt(t, INTRO_LINE + 3);
+  // Whether the rows' transforms change on this frame: a flick, or the
+  // intro's rise of the first row.
+  const rowsMoving = [t - speed, t + speed].some(
+    (f) =>
+      posAt(f) !== pos ||
+      openAt(f, INTRO_LINE) !== openL ||
+      openAt(f, INTRO_LINE + 3) !== openR,
+  );
 
   const nearest = Math.min(n - 1, Math.max(0, Math.round(pos)));
   const pinVisible = parts[nearest].found ? 1 : 0;
@@ -347,10 +353,16 @@ export function PinnedWord({
   const sansTop = (base: number) => base - F * 0.8;
   const serifTop = (base: number) => base - F * PIN_SCALE * 0.78;
 
+  // Layout rounds a baseline to whole pixels, so a row flicked by `top`
+  // steps along. Every row is laid out where it rests on the pin and the
+  // flick (and the intro's rise) is a transform, exactly 0 at rest; it stays
+  // on at rest, so the row is never handed back to layout.
+  const ride = (dy: number) => `translateY(${dy}px)${glide(rowsMoving)}`;
   const rows = list.map((_, i) => {
     const d = i - pos;
     if (Math.abs(d) > 1.05) return null;
-    const base = baseY + d * pitch;
+    const base = baseY;
+    const dy = d * pitch;
     const p = parts[i];
     const w = widths[i];
     const o = Math.max(0, (1 - Math.min(1, Math.abs(d))) * 1.15 - 0.15);
@@ -366,6 +378,7 @@ export function PinnedWord({
             ...sansStyle,
             left: W / 2 - (w.left * F) / 2,
             top: sansTop(base),
+            transform: ride(dy),
             opacity: o,
           }}
         >
@@ -391,7 +404,8 @@ export function PinnedWord({
             <div
               style={{
                 ...centred,
-                top: sansTop(base - rowGap * PIN_SCALE) + (1 - kl) * F * 0.4,
+                top: sansTop(base - rowGap * PIN_SCALE),
+                transform: ride(dy + (1 - kl) * F * 0.4),
                 opacity: o * kl,
               }}
             >
@@ -403,6 +417,7 @@ export function PinnedWord({
               ...serifStyle(pinW),
               left: pinX + (pinW - w.token * F) / 2,
               top: serifTop(base),
+              transform: ride(dy),
               opacity: copyO * 0.55,
             }}
           >
@@ -414,6 +429,7 @@ export function PinnedWord({
                 ...sansStyle,
                 left: pinX + pinW + F * 0.04,
                 top: sansTop(base),
+                transform: ride(dy),
                 opacity: o * kr,
               }}
             >
@@ -424,7 +440,8 @@ export function PinnedWord({
             <div
               style={{
                 ...centred,
-                top: sansTop(base + rowGap) - (1 - kr) * F * 0.4,
+                top: sansTop(base + rowGap),
+                transform: ride(dy - (1 - kr) * F * 0.4),
                 opacity: o * kr,
               }}
             >
@@ -453,6 +470,7 @@ export function PinnedWord({
                 ...sansStyle,
                 left: pinX - w.left * F + (1 - kl) * w.left * F,
                 top: sansTop(base),
+                transform: ride(dy),
                 opacity: o * Math.min(1, kl * 1.6),
               }}
             >
@@ -465,6 +483,7 @@ export function PinnedWord({
             ...serifStyle(pinW),
             left: pinX + (pinW - w.token * F) / 2,
             top: serifTop(base),
+            transform: ride(dy),
             opacity: copyO * 0.55,
           }}
         >
@@ -486,6 +505,7 @@ export function PinnedWord({
                 ...sansStyle,
                 left: -clipGap - (1 - kr) * w.right * F,
                 top: sansTop(base),
+                transform: ride(dy),
                 opacity: o * Math.min(1, kr * 1.6),
               }}
             >
@@ -530,7 +550,7 @@ export function PinnedWord({
                 wordIn < 1
                   ? `blur(${((1 - wordIn) * 12 * s).toFixed(2)}px)`
                   : undefined,
-              transform: `scale(${(0.94 + 0.06 * wordIn).toFixed(4)})`,
+              transform: `scale(${0.94 + 0.06 * wordIn})${glide(wordIn > 0 && wordIn < 1)}`,
               backgroundPosition: `${bgShift.toFixed(2)}px 0`,
             }}
           >

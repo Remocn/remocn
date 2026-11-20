@@ -15,6 +15,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -262,6 +263,7 @@ export function StatRail({
   ground,
   groundParams,
 }: StatRailProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const beat = (n: BeatName) =>
     beatAt(n) + (n === "tagline" ? 0 : hold - beatAt("shrink"));
@@ -349,7 +351,12 @@ export function StatRail({
         timeScale={0.5}
       />
       <ScaleLayer scale={scale}>
-        <AbsoluteFill style={{ transform: `scale(${push})` }}>
+        {/* Chrome parks a glyph raster on a whole pixel vertically for as
+            long as the matrix is axis-aligned, so text under a slow
+            transform clicks along pixel by pixel. The push never rests, so
+            it is marked as moving on every frame and the text of every card,
+            the tagline and the logo below leans off that grid. */}
+        <AbsoluteFill style={{ transform: `scale(${push})${glide(true)}` }}>
           <div
             style={{
               position: "absolute",
@@ -364,7 +371,11 @@ export function StatRail({
           >
             {stats.map((s, i) => {
               const enter = sp(beat("railIn") + i * 3, CARD);
-              const y = slotY - railTop + (i - idx) * pitch;
+              // Laid out in the slot the rail settles on; the scroll there is
+              // a transform, since layout rounds a baseline to whole pixels
+              // and `top` would click the cards along pixel by pixel.
+              const y = slotY - railTop + (i - last) * pitch;
+              const scroll = (last - idx) * pitch;
               const a = Math.max(0, 1 - Math.abs(idx - i));
               const isPay = i === last;
               const p = isPay ? payColor : 0;
@@ -390,7 +401,7 @@ export function StatRail({
                     position: "absolute",
                     left: railX,
                     top: y,
-                    transform: `translateY(-50%) translateY(${(1 - enter) * H * 0.08}px) scale(${scale})`,
+                    transform: `translateY(-50%) translateY(${(Math.abs(scroll) < 1e-3 ? 0 : scroll) + (1 - enter) * H * 0.08}px) scale(${scale})`,
                     transformOrigin: "0% 50%",
                     opacity: enter,
                   }}
@@ -465,8 +476,11 @@ export function StatRail({
           <div
             style={{
               position: "absolute",
-              left: rect.x,
-              top: rect.y,
+              // Pinned where it lands and carried there by a transform, for
+              // the same reason as the cards; only its size is layout.
+              left: endRect.x,
+              top: endRect.y,
+              transform: `translate(${rect.x - endRect.x}px, ${rect.y - endRect.y}px)`,
               width: rect.w,
               height: rect.h,
               borderRadius: radius,
@@ -506,10 +520,12 @@ export function StatRail({
             <div
               style={{
                 position: "absolute",
-                left: "50%",
-                top: "50%",
+                // Centred by a transform rather than `50%` of a box whose
+                // size animates, which layout would round.
+                left: 0,
+                top: 0,
                 width: startRect.w,
-                transform: `translate(-50%, -50%) scale(${contentScale})`,
+                transform: `translate(${rect.w / 2}px, ${rect.h / 2}px) translate(-50%, -50%) scale(${contentScale})`,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",

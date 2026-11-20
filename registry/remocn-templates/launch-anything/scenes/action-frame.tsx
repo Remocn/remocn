@@ -1,23 +1,29 @@
 import { Img } from "remotion";
 import type { SceneProps } from "../content";
-import { actionFrame, smooth, tween } from "../motion";
+import { actionFrame, smooth, tween, useGlide } from "../motion";
 
 export const actionBackground = "linear-gradient(#f3edde, #faf6ec 75%)";
 
 export function ActionFrame({ scene, t }: SceneProps) {
+  const glide = useGlide();
   const shape = actionFrame(t);
+  // Laid out where the frame ends up, centred on x = 240; the slide in and
+  // the move to the centre are a translate, because layout rounds a box to
+  // whole pixels and an eased `left` clicks along them. The travel is
+  // horizontal only, so the type on it needs no tilt for it.
+  const travel = shape.x - 240;
   const aperture = tween(t, 6.7, 7.33, 0, 1, smooth);
   return (
     <div
       style={{
         position: "absolute",
-        left: shape.x - shape.width / 2,
+        left: 240 - shape.width / 2,
         top: shape.y - shape.height / 2,
         width: shape.width,
         height: shape.height,
         borderRadius: shape.radius,
         opacity: shape.enter,
-        transform: `scale(${1 - 0.07 * shape.press})`,
+        transform: `${travel === 0 ? "" : `translateX(${travel}px) `}scale(${1 - 0.07 * shape.press})${glide(shape.pressing)}`,
         overflow: "hidden",
         background:
           "linear-gradient(135deg, #fbf8ee 10%, #f5f1e5 36%, #d9dfc8 70%, #90a47f 100%)",

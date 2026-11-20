@@ -11,6 +11,7 @@ import {
   useCaptions,
   useCaptionWordRects,
 } from "@/lib/remocn/caption-core";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface CaptionKnockoutProps extends Omit<CaptionBaseProps, "color"> {
   plateColor?: string;
@@ -61,6 +62,7 @@ export function CaptionKnockout({
   radius = 0.16,
   className,
 }: CaptionKnockoutProps) {
+  const glide = useGlide();
   const maskId = `caption-knockout-${useId().replace(/[^a-zA-Z0-9-]/g, "")}`;
   const state = useCaptions({
     captions,
@@ -100,7 +102,7 @@ export function CaptionKnockout({
         textAlign: "center",
         padding: `${PAD_Y_EM}em ${PAD_X_EM}em`,
         opacity: Math.min(enter, exit),
-        transform: `translateY(${(1 - enter) * RISE_EM}em)`,
+        transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(enter > 5e-4 && enter < 1 - 5e-4)}`,
       }}
     >
       {rects && (

@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const bitter = loadFont("normal", {
   weights: ["400", "500"],
@@ -61,6 +62,8 @@ const RULE_Y = 1.02;
 const FIRST_FILL = 42;
 const FILL_GAP = 32;
 const MOTION_TAIL = 24;
+
+const midway = (q: number) => q > 5e-4 && q < 1 - 5e-4;
 
 interface Tok {
   text: string;
@@ -210,6 +213,7 @@ export function PitchBlanks({
   speed = 1,
   theme = "dark",
 }: PitchBlanksProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames: T } = useVideoConfig();
   const c = THEMES[theme];
@@ -291,8 +295,8 @@ export function PitchBlanks({
   });
 
   const fillAt = (b: number) => firstFill + b * fillGap;
-  const fillP = (b: number) =>
-    interpolate(t, [fillAt(b), fillAt(b) + 14], [0, 1], {
+  const fillP = (b: number, tt = t) =>
+    interpolate(tt, [fillAt(b), fillAt(b) + 14], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
@@ -302,19 +306,33 @@ export function PitchBlanks({
       easing: EASE_OUT,
     });
 
-  const curW = toks.map((tk, i) =>
-    tk.blank >= 0
-      ? emptyW[i] + (fullW[i] - emptyW[i]) * fillP(tk.blank)
-      : fullW[i],
-  );
-  const xs: number[] = [];
-  let x = 0;
-  toks.forEach((tk, i) => {
-    if (i === starts[lineOf[i]]) x = 0;
-    else if (!tk.attach) x += space;
-    xs.push(x);
-    x += curW[i];
-  });
+  const widthsAt = (tt: number) =>
+    toks.map((tk, i) =>
+      tk.blank >= 0
+        ? emptyW[i] + (fullW[i] - emptyW[i]) * fillP(tk.blank, tt)
+        : fullW[i],
+    );
+  const xsAt = (widths: number[]) => {
+    const out: number[] = [];
+    let x = 0;
+    toks.forEach((tk, i) => {
+      if (i === starts[lineOf[i]]) x = 0;
+      else if (!tk.attach) x += space;
+      out.push(x);
+      x += widths[i];
+    });
+    return out;
+  };
+  const curW = widthsAt(t);
+  const xs = xsAt(curW);
+  // A blank that fills pushes the rest of its line along by `left`, and
+  // layout rounds a rule's edges to whole pixels, so a pushed rule stepped in
+  // uneven pixels. While it is pushed it is laid out where the line ends up
+  // and the push is a transform; standing still it keeps its plain layout.
+  const dt = speed / pace;
+  const xsNext = xsAt(widthsAt(t + dt));
+  const xsPrev = xsAt(widthsAt(t - dt));
+  const xsEnd = xsAt(widthsAt(1e9));
 
   const pitch = PITCH * Fs;
   const blockH = (starts.length - 1) * pitch + BOX * Fs + Fs * 0.5;
@@ -355,7 +373,7 @@ export function PitchBlanks({
                   letterSpacing: `${TRACK}em`,
                   whiteSpace: "pre",
                   opacity: p,
-                  transform: `translateY(${((1 - p) * Fs * 0.3).toFixed(2)}px)`,
+                  transform: `translateY(${((1 - p) * Fs * 0.3).toFixed(2)}px)${glide(midway(p))}`,
                 }}
               >
                 {tk.text}
@@ -372,18 +390,22 @@ export function PitchBlanks({
           });
           const f = fillP(tk.blank);
           const wp = wordP(tk.blank);
+          const pushed =
+            Math.abs(xsNext[i] - xs[i]) * Fs > 1e-3 ||
+            Math.abs(xs[i] - xsPrev[i]) * Fs > 1e-3;
+          const ruleLeft = pushed ? mx + xsEnd[i] * Fs : left;
           return (
             <div key={`b${i}`}>
               <div
                 style={{
                   position: "absolute",
-                  left,
+                  left: ruleLeft,
                   top: top + RULE_Y * Fs,
                   width: w,
                   height: ruleH,
                   background: interpolateColors(f, [0, 1], [fg, hi]),
                   opacity: 0.4 + 0.6 * f,
-                  transform: `scaleX(${draw.toFixed(4)})`,
+                  transform: `${pushed ? `translateX(${left - ruleLeft}px) ` : ""}scaleX(${draw.toFixed(4)})`,
                   transformOrigin: "0 50%",
                 }}
               />
@@ -399,7 +421,7 @@ export function PitchBlanks({
                   letterSpacing: `${TRACK}em`,
                   whiteSpace: "pre",
                   opacity: wp,
-                  transform: `translateY(${((1 - wp) * Fs * 0.42).toFixed(2)}px)`,
+                  transform: `translateY(${((1 - wp) * Fs * 0.42).toFixed(2)}px)${glide(midway(wp))}`,
                 }}
               >
                 {tk.text}

@@ -1,8 +1,17 @@
 import type { SceneProps } from "../content";
-import { contraction, key, money, ramp, tween } from "../motion";
+import {
+  contraction,
+  key,
+  midway,
+  money,
+  ramp,
+  tween,
+  useGlide,
+} from "../motion";
 import { Chevron, Layer, lightMuted as muted } from "../ui";
 
 export function Slider({ t, theme, content }: SceneProps) {
+  const glide = useGlide();
   const label = t < 8.65;
   const barW =
     t < 10.4833
@@ -28,6 +37,9 @@ export function Slider({ t, theme, content }: SceneProps) {
   const detailAlpha = ramp(t, 9.15, 9.4) * (1 - ramp(t, 10.3, 10.56));
   const uiScale = key(t, [9.3, 9.55, 9.8, 10.3], [1.6, 1.1, 1, 0.93]);
   const roll = tween(t, 8.18, 8.55, 0, 1, (v) => v);
+  // Layout rounds a baseline to whole pixels of the 480×270 stage, which is
+  // then scaled up, so the words roll by a transform instead of `top`.
+  const rolling = glide(midway(roll));
   const knobSize = barH * 0.77;
   return (
     <>
@@ -68,10 +80,20 @@ export function Slider({ t, theme, content }: SceneProps) {
               overflow: "visible",
             }}
           >
-            <Layer y={-roll * 35} style={{ opacity: 1 - roll }}>
+            <Layer
+              style={{
+                opacity: 1 - roll,
+                transform: `translateY(${-roll * 35}px)${rolling}`,
+              }}
+            >
               Market
             </Layer>
-            <Layer y={(1 - roll) * 35} style={{ opacity: roll }}>
+            <Layer
+              style={{
+                opacity: roll,
+                transform: `translateY(${(1 - roll) * 35}px)${rolling}`,
+              }}
+            >
               Limit
             </Layer>
           </div>
@@ -113,7 +135,8 @@ export function Slider({ t, theme, content }: SceneProps) {
             x={240}
             y={135}
             style={{
-              transform: `scale(${uiScale})`,
+              // `uiScale` runs key to key without a hold from 9.3 to 10.3.
+              transform: `scale(${uiScale})${glide(midway(ramp(t, 9.3, 10.3)))}`,
               opacity: detailAlpha,
               color: "#28281f",
               fontSize: 9,

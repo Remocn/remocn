@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const archivo = loadVariableFont("normal", { subsets: ["latin"] });
 
@@ -136,6 +137,8 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
+const midway = (p: number) => p > 0 && p < 1;
+
 function place(d: string, ox: number, oy: number, k: number): string {
   const tokens = d.split(" ").filter(Boolean);
   const out: string[] = [];
@@ -234,6 +237,7 @@ export function SingleStroke({
   speed = 1,
   theme = "dark",
 }: SingleStrokeProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -364,7 +368,7 @@ export function SingleStroke({
                 letterSpacing: "-0.03em",
                 whiteSpace: "pre",
                 opacity: unitP,
-                transform: `translateY(${((1 - unitP) * unitSize * 0.3).toFixed(2)}px)`,
+                transform: `translateY(${((1 - unitP) * unitSize * 0.3).toFixed(2)}px)${glide(midway(unitP))}`,
               }}
             >
               {unit}
@@ -397,7 +401,7 @@ export function SingleStroke({
                       style={{
                         display: "inline-block",
                         opacity: q,
-                        transform: `translateY(${((1 - q) * labelSize * 0.6).toFixed(2)}px)`,
+                        transform: `translateY(${((1 - q) * labelSize * 0.6).toFixed(2)}px)${glide(midway(q))}`,
                       }}
                     >
                       {w}

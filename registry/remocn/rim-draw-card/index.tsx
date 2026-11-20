@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -168,6 +169,7 @@ export function RimDrawCard({
   ground,
   groundParams,
 }: RimDrawCardProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const dark = theme === "dark";
@@ -247,6 +249,11 @@ export function RimDrawCard({
 
   const letters = Array.from(line);
   const n = letters.length;
+  // One tilt on the push layer covers all the text: the line rising in, then
+  // from the chip on the card's arrival, its items and the push itself, which
+  // runs to the last frame.
+  const riseEnd = B.words + Math.floor((n - 1) / 3) + 14;
+  const stageMoving = (frame > B.words && frame < riseEnd) || frame >= B.chip;
 
   const resolvedGround: GshPresetId =
     ground ?? (dark ? "film-blue" : "paper-crease");
@@ -295,7 +302,7 @@ export function RimDrawCard({
             style={{
               position: "absolute",
               inset: 0,
-              transform: `scale(${push})`,
+              transform: `scale(${push})${glide(stageMoving)}`,
               transformOrigin: "50% 50%",
             }}
           >
@@ -340,10 +347,16 @@ export function RimDrawCard({
             <div
               style={{
                 position: "absolute",
-                left: stageW / 2 - cw / 2 + offX,
-                top: stageH / 2 - ch / 2 + offY,
+                left: stageW / 2 - cw / 2,
+                top: stageH / 2 - ch / 2,
                 width: cw,
                 height: ch,
+                // The pan is a transform: layout would step the card's edges
+                // and every line in it a pixel at a time.
+                transform:
+                  Math.abs(offX) > 1e-3 || Math.abs(offY) > 1e-3
+                    ? `translate(${offX}px, ${offY}px)`
+                    : undefined,
               }}
             >
               <div

@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -106,6 +107,18 @@ const hash = (n: number) => {
   const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
   return x - Math.floor(x);
 };
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+/** Whether a value changes between `t` and either of its neighbours. */
+const differs = (
+  at: (t: number) => number,
+  t: number,
+  before: number,
+  after: number,
+) => Math.abs(at(after) - at(t)) > 1e-5 || Math.abs(at(t) - at(before)) > 1e-5;
+// A spring never quite arrives. Under a thousandth of a pixel the leftover is
+// dropped, so a landed box is laid out with no transform at all.
+const landed = (px: number) => (Math.abs(px) < 1e-3 ? 0 : px);
 function withAlpha(color: string, alpha: number) {
   const hex = color.replace("#", "");
   const full = hex.length === 3 ? hex.replace(/(.)/g, "$1$1") : hex;
@@ -250,7 +263,24 @@ function Icon({
   );
 }
 
-function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
+/**
+ * The pointer, laid out at `x`/`y` where it comes to rest and carried `dx`/`dy`
+ * from there by a transform: layout rounds a box to whole pixels, so a cursor
+ * eased by `left`/`top` creeps into each stop one pixel at a time.
+ */
+function Cursor({
+  x,
+  y,
+  dx,
+  dy,
+  press,
+}: {
+  x: number;
+  y: number;
+  dx: number;
+  dy: number;
+  press: number;
+}) {
   return (
     <svg
       width={24}
@@ -261,7 +291,7 @@ function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
         left: x - 1.4,
         top: y - 1.4,
         transformOrigin: "1px 1px",
-        transform: `scale(${1 - 0.12 * press})`,
+        transform: `${dx || dy ? `translate(${dx}px, ${dy}px) ` : ""}scale(${1 - 0.12 * press})`,
         filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.35))",
         overflow: "visible",
         zIndex: 40,
@@ -292,15 +322,23 @@ const sp = (t: number, delay: number, damping = 16, stiffness = 120) =>
 function SceneArt({
   scene,
   t,
+  before,
+  after,
   accent,
   art,
 }: {
   scene: EditorScene;
   t: number;
+  /** Scene time one frame earlier and one later; equal to `t` on a still. */
+  before: number;
+  after: number;
   accent: string;
   art: ArtCopy;
 }) {
+  const glide = useGlide();
   const abs: React.CSSProperties = { position: "absolute", inset: 0 };
+  const moving = (delay: number, damping: number, stiffness: number) =>
+    differs((x) => sp(x, delay, damping, stiffness), t, before, after);
   if (scene === "logo") {
     const m = sp(t, 0, 11, 130);
     const w = sp(t, 7, 18, 110);
@@ -327,7 +365,7 @@ function SceneArt({
           <div
             style={{
               opacity: clamp01(m * 2),
-              transform: `translateY(${(1 - w) * 10}px) scale(${0.82 + m * 0.18})`,
+              transform: `translateY(${(1 - w) * 10}px) scale(${0.82 + m * 0.18})${glide(moving(0, 11, 130) || moving(7, 18, 110))}`,
             }}
           >
             {art.logo ?? <RemocnLogo fontSize={44} color="#fff" />}
@@ -375,7 +413,7 @@ function SceneArt({
             padding: "11px 12px",
             boxSizing: "border-box",
             opacity: card,
-            transform: `translateY(${(1 - card) * 26}px)`,
+            transform: `translateY(${(1 - card) * 26}px)${glide(moving(0, 17, 110))}`,
           }}
         >
           <div style={{ fontSize: 7.5, color: "#7a7f8c", fontWeight: 400 }}>
@@ -454,7 +492,7 @@ function SceneArt({
             color: "#14161c",
             fontWeight: 400,
             opacity: chip,
-            transform: `translateY(${(1 - chip) * -10}px) scale(${0.9 + chip * 0.1})`,
+            transform: `translateY(${(1 - chip) * -10}px) scale(${0.9 + chip * 0.1})${glide(moving(26, 14, 140))}`,
           }}
         >
           <div
@@ -498,7 +536,7 @@ function SceneArt({
           fontWeight: 300,
           letterSpacing: "-0.03em",
           opacity: a,
-          transform: `translateY(${(1 - a) * 14}px)`,
+          transform: `translateY(${(1 - a) * 14}px)${glide(moving(0, 18, 120))}`,
         }}
       >
         {art.headline}
@@ -509,7 +547,7 @@ function SceneArt({
           color: "rgba(255,255,255,0.6)",
           marginTop: 5,
           opacity: b,
-          transform: `translateY(${(1 - b) * 10}px)`,
+          transform: `translateY(${(1 - b) * 10}px)${glide(moving(6, 18, 120))}`,
         }}
       >
         in minutes, not weeks.
@@ -520,7 +558,7 @@ function SceneArt({
           gap: 6,
           marginTop: 14,
           opacity: c,
-          transform: `scale(${0.94 + c * 0.06})`,
+          transform: `scale(${0.94 + c * 0.06})${glide(moving(12, 12, 150))}`,
         }}
       >
         <div
@@ -553,16 +591,25 @@ function SceneArt({
 function Scene({
   scene,
   t,
+  before = t,
+  after = t,
   accent,
   w,
   art,
+  carried = false,
 }: {
   scene: EditorScene;
   t: number;
+  before?: number;
+  after?: number;
   accent: string;
   w: number;
   art: ArtCopy;
+  /** Something above (the camera, the window) is moving the scene. */
+  carried?: boolean;
 }) {
+  const glide = useGlide();
+  const k = w / 320;
   return (
     <div
       style={{
@@ -578,11 +625,20 @@ function Scene({
           position: "absolute",
           width: 320,
           height: 180,
-          transform: `scale(${w / 320})`,
+          // A thumbnail draws the scene at a third of its size or less; its
+          // text leans by what that size needs while something carries it.
+          transform: `scale(${k})${glide(carried && k < 0.6)}`,
           transformOrigin: "0 0",
         }}
       >
-        <SceneArt scene={scene} t={t} accent={accent} art={art} />
+        <SceneArt
+          scene={scene}
+          t={t}
+          before={before}
+          after={after}
+          accent={accent}
+          art={art}
+        />
       </div>
     </div>
   );
@@ -634,23 +690,35 @@ function ClipBlock({
   clip,
   w,
   h,
+  hRest,
   accent,
   selected,
   glow,
   art,
+  carried,
 }: {
   clip: EditorClip;
   w: number;
   h: number;
+  /** Height the block settles at; its filmstrip is laid out for this one. */
+  hRest: number;
   accent: string;
   selected: boolean;
   glow: number;
   art: ArtCopy;
+  carried: boolean;
 }) {
   const band = Math.min(24, h * 0.42);
   const fh = h - band;
   const tw = (fh * 16) / 9;
   const n = Math.max(1, Math.ceil(w / tw));
+  // The filmstrip is laid out once, at the settled height, and follows a
+  // block that is still changing size by a transform. Sized from the live
+  // height it would reflow every frame, and layout rounds each of its frames
+  // and baselines to whole pixels.
+  const bandRest = Math.min(24, hRest * 0.42);
+  const fhRest = hRest - bandRest;
+  const twRest = (fhRest * 16) / 9;
   return (
     <div
       style={{
@@ -663,7 +731,20 @@ function ClipBlock({
         boxShadow: `0 0 0 ${glow * 2}px ${withAlpha(accent, glow)}`,
       }}
     >
-      <div style={{ display: "flex", height: fh, marginTop: band }}>
+      <div
+        style={{
+          position: "absolute",
+          left: 0,
+          top: bandRest,
+          display: "flex",
+          height: fhRest,
+          transformOrigin: "0 0",
+          transform:
+            h === hRest
+              ? undefined
+              : `translateY(${band - bandRest}px) scale(${fh / fhRest})`,
+        }}
+      >
         {Array.from({ length: n }, (_, k) => (
           <div
             key={k}
@@ -676,8 +757,9 @@ function ClipBlock({
               scene={clip.scene}
               t={1.2 + k * 0.5}
               accent={accent}
-              w={tw}
+              w={twRest}
               art={art}
+              carried={carried}
             />
           </div>
         ))}
@@ -828,6 +910,7 @@ export function TimelineEditor({
   ground,
   groundParams,
 }: TimelineEditorProps) {
+  const glide = useGlide();
   const f = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width * 1.2;
@@ -869,8 +952,15 @@ export function TimelineEditor({
   const scrubFr = scrubPts.map(
     (_, i) => SCRUB_AT + 2 + ((SCRUB_END - SCRUB_AT - 2) * i) / list.length,
   );
-  const p = interpolate(f, scrubFr, scrubPts, { ...clamp, easing: MOVE });
+  const pAt = (t: number) =>
+    interpolate(t, scrubFr, scrubPts, { ...clamp, easing: MOVE });
+  const p = pAt(f);
   const headX = TX + p * PPS;
+  // The playhead is laid out where the scrub leaves it and gets there by a
+  // transform, for the same reason as the cursor.
+  const headRest = TX + scrubPts[scrubPts.length - 1] * PPS;
+  const headShift = landed(headX - headRest);
+  const still = (at: (t: number) => number) => !differs(at, f, f - 1, f + 1);
 
   type Key = { t: number; x: number; y: number };
   const startPt = { x: L.win.w * 0.62, y: L.win.h + 60 };
@@ -913,6 +1003,7 @@ export function TimelineEditor({
     return keys[keys.length - 1];
   };
   const cur = cursorAt(f);
+  const curRest = keys[keys.length - 1];
   const pressAt = (k: number, release: number) => {
     if (f < k - 3) return 0;
     if (f < k) return interpolate(f, [k - 3, k], [0, 1], clamp);
@@ -962,6 +1053,11 @@ export function TimelineEditor({
   const titleFlash = flashes[flashes.length - 1].v;
   const titleIn = spring({ frame: f - TITLE_AT, fps, config: CARD });
   const audioIn = spring({ frame: f - AUDIO_AT, fps, config: CARD });
+  // Both clips sit in their lanes in layout and drop in by a transform:
+  // layout rounds a box and a baseline to whole pixels, so a clip settling by
+  // `top` clicks into place.
+  const titleDrop = landed(-(1 - titleIn) * 30);
+  const audioRise = landed((1 - audioIn) * 30);
   const wave = interpolate(f, [AUDIO_AT + 2, AUDIO_AT + 30], [0, 1], {
     ...clamp,
     easing: ENTER,
@@ -974,9 +1070,11 @@ export function TimelineEditor({
   const lastPlaced = list.findLastIndex((_, i) => placed(i));
   const preview = f < SCRUB_AT && lastPlaced >= 0;
   const shown = preview ? lastPlaced : active;
-  const shownT = preview
-    ? (f - T[lastPlaced].drop) / 30 + 0.05
-    : p - (starts[shown] ?? 0);
+  const shownAt = (t: number) =>
+    preview
+      ? (t - T[lastPlaced].drop) / 30 + 0.05
+      : pAt(t) - (starts[shown] ?? 0);
+  const shownT = shownAt(f);
   const monIn = preview
     ? interpolate(f - T[lastPlaced].drop, [0, 6], [0.35, 1], {
         ...clamp,
@@ -1002,19 +1100,23 @@ export function TimelineEditor({
   const btnPress = pressAt(CLICK_AT, CLICK_AT);
   const exporting = f >= CLICK_AT && f < DONE_AT;
 
-  const enter = spring({ frame: f, fps, config: HEAVY });
-  const camA = interpolate(
-    f,
-    [12, 42, lastDrop + 6, SCRUB_AT + 4],
-    [1, 1.04, 1.04, 1],
-    { ...clamp, easing: CAMERA },
-  );
-  const camB = interpolate(f, [CLICK_AT - 24, CLICK_AT + 4], [1, 1.05], {
-    ...clamp,
-    easing: CAMERA,
-  });
+  const enterAt = (t: number) => spring({ frame: t, fps, config: HEAVY });
+  const enter = enterAt(f);
+  const camAt = (t: number) =>
+    t > CLICK_AT - 30
+      ? interpolate(t, [CLICK_AT - 24, CLICK_AT + 4], [1, 1.05], {
+          ...clamp,
+          easing: CAMERA,
+        })
+      : interpolate(
+          t,
+          [12, 42, lastDrop + 6, SCRUB_AT + 4],
+          [1, 1.04, 1.04, 1],
+          { ...clamp, easing: CAMERA },
+        );
   const exportPhase = f > CLICK_AT - 30;
-  const cam = exportPhase ? camB : camA;
+  const cam = camAt(f);
+  const carried = !still(camAt) || !still(enterAt);
   const origin = exportPhase
     ? `${L.win.x + L.win.w - 120}px ${L.win.y + 80}px`
     : `${L.win.x + 300}px ${L.win.y + L.tlTop + 100}px`;
@@ -1064,7 +1166,7 @@ export function TimelineEditor({
             style={{
               position: "absolute",
               inset: 0,
-              transform: `scale(${cam})`,
+              transform: `scale(${cam})${glide(!still(camAt))}`,
               transformOrigin: origin,
             }}
           >
@@ -1084,7 +1186,7 @@ export function TimelineEditor({
                   ...clamp,
                   easing: ENTER_SOFT,
                 }),
-                transform: `translateY(${(1 - enter) * 40}px) scale(${0.97 + 0.03 * enter})`,
+                transform: `translateY(${(1 - enter) * 40}px) scale(${0.97 + 0.03 * enter})${glide(!still(enterAt))}`,
               }}
             >
               <div
@@ -1128,7 +1230,7 @@ export function TimelineEditor({
                   justifyContent: "center",
                   gap: 8,
                   fontSize: 17,
-                  transform: `scale(${1 - 0.04 * btnPress})`,
+                  transform: `scale(${1 - 0.04 * btnPress})${glide(midway(btnPress))}`,
                 }}
               >
                 <Icon
@@ -1196,6 +1298,7 @@ export function TimelineEditor({
                           accent={accent}
                           w={L.thumb.w}
                           art={art}
+                          carried={carried}
                         />
                       ) : (
                         <div style={{ padding: "0 6px", marginTop: 10 }}>
@@ -1307,9 +1410,12 @@ export function TimelineEditor({
                     <Scene
                       scene={list[shown].scene}
                       t={shownT}
+                      before={shownAt(f - 1)}
+                      after={shownAt(f + 1)}
                       accent={accent}
                       w={L.mon.w}
                       art={art}
+                      carried={carried}
                     />
                   </div>
                 ) : (
@@ -1344,7 +1450,7 @@ export function TimelineEditor({
                         ...clamp,
                         easing: ENTER,
                       }),
-                      transform: `translateY(${interpolate(titleOn, [0, 0.4], [10, 0], { ...clamp, easing: ENTER })}px)`,
+                      transform: `translateY(${interpolate(titleOn, [0, 0.4], [10, 0], { ...clamp, easing: ENTER })}px)${glide(titleOn > 0 && titleOn < 0.4 && !still(pAt))}`,
                     }}
                   >
                     {title}
@@ -1459,7 +1565,8 @@ export function TimelineEditor({
                   style={{
                     position: "absolute",
                     left: TX + TITLE_SPAN.start * PPS,
-                    top: L.v2.y + 3 - (1 - titleIn) * 30,
+                    top: L.v2.y + 3,
+                    transform: `translateY(${titleDrop}px)${glide(titleDrop !== 0)}`,
                     width: TITLE_SPAN.len * PPS,
                     height: L.v2.h - 6,
                     borderRadius: 8,
@@ -1486,7 +1593,8 @@ export function TimelineEditor({
                   style={{
                     position: "absolute",
                     left: TX,
-                    top: L.a1.y + 3 + (1 - audioIn) * 30,
+                    top: L.a1.y + 3,
+                    transform: `translateY(${audioRise}px)${glide(audioRise !== 0)}`,
                     width: total * PPS,
                     height: L.a1.h - 6,
                     borderRadius: 8,
@@ -1551,23 +1659,30 @@ export function TimelineEditor({
                     key={list[i].name}
                     style={{
                       position: "absolute",
-                      left: r.x,
-                      top: r.y,
+                      // In flight the clip is laid out in its slot and
+                      // carried under the cursor by a transform; `left`/`top`
+                      // would step it there pixel by pixel.
+                      left: r.flying ? slot[i].x : r.x,
+                      top: r.flying ? slot[i].y : r.y,
                       zIndex: r.flying ? 30 : 5,
                       filter: r.flying
                         ? "drop-shadow(0 18px 30px rgba(0,0,0,0.45))"
                         : undefined,
-                      transform: r.flying ? "rotate(-1.5deg)" : undefined,
+                      transform: r.flying
+                        ? `translate(${r.x - slot[i].x}px, ${r.y - slot[i].y}px) rotate(-1.5deg)`
+                        : undefined,
                     }}
                   >
                     <ClipBlock
                       clip={list[i]}
                       w={r.w}
                       h={r.h}
+                      hRest={clipH}
                       accent={accent}
                       selected={!r.flying && i === shown && f >= SCRUB_AT}
                       glow={flashes[i].v}
                       art={art}
+                      carried={carried && !r.flying}
                     />
                   </div>
                 ) : null,
@@ -1576,10 +1691,13 @@ export function TimelineEditor({
                 <div
                   style={{
                     position: "absolute",
-                    left: headX - 0.75,
+                    left: headRest - 0.75,
                     top: L.rulerY + 4,
                     width: 1.5,
                     height: tlEnd - L.rulerY,
+                    transform: headShift
+                      ? `translateX(${headShift}px)`
+                      : undefined,
                     background: accent,
                     zIndex: 20,
                     opacity: interpolate(f, [SCRUB_AT - 6, SCRUB_AT], [0, 1], {
@@ -1616,7 +1734,7 @@ export function TimelineEditor({
                     boxSizing: "border-box",
                     zIndex: 35,
                     opacity: clamp01(pop * 1.4),
-                    transform: `translateY(${(1 - pop) * -10}px) scale(${0.95 + pop * 0.05})`,
+                    transform: `translateY(${(1 - pop) * -10}px) scale(${0.95 + pop * 0.05})${glide(!still((t) => spring({ frame: t - CLICK_AT - 2, fps, config: CARD })))}`,
                     transformOrigin: "80% 0",
                     fontVariantNumeric: "tabular-nums",
                   }}
@@ -1741,7 +1859,13 @@ export function TimelineEditor({
               ) : null}
             </div>
             {f >= 4 ? (
-              <Cursor x={L.win.x + cur.x} y={L.win.y + cur.y} press={press} />
+              <Cursor
+                x={L.win.x + curRest.x}
+                y={L.win.y + curRest.y}
+                dx={cur.x - curRest.x}
+                dy={cur.y - curRest.y}
+                press={press}
+              />
             ) : null}
           </div>
         </div>

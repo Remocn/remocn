@@ -14,6 +14,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -55,6 +56,12 @@ const ramp = (f: number, start: number, dur: number, easing = ENTER) =>
   });
 
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
+
+/** A layout shift as a transform, or nothing once it is under a thousandth. */
+const shift = (dx: number, dy = 0) =>
+  Math.abs(dx) < 1e-3 && Math.abs(dy) < 1e-3
+    ? undefined
+    : `translate(${dx}px, ${dy}px)`;
 
 interface Metrics {
   width: (s: string) => number;
@@ -222,7 +229,9 @@ export function MacroTabName({
   delay = 0,
   speed = 1,
 }: MacroTabNameProps) {
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
+  const raw = useCurrentFrame();
+  const frame = Math.max(0, raw - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const m = useMetrics(fontFamily);
   const dark = theme === "dark";
@@ -284,11 +293,23 @@ export function MacroTabName({
   const caretW = Math.max(2, F * 0.04);
   const chipW = padX + iconS + gap + textW + caretW + xGap + xS + padX;
   const chipL = cx - chipW / 2;
-  const textL = chipL + padX + iconS + gap;
+  // The pieces around the growing chip are laid out where the typed name
+  // leaves them and ride there by transform: layout rounds a box to whole
+  // pixels, so a tab eased by `left` clicks sideways pixel by pixel.
+  const chipWRest = chipW - textW + full;
+  const chipLRest = cx - chipWRest / 2;
+  const slide = (textW - full) / 2;
+  const textL = chipLRest + padX + iconS + gap;
 
+  const pushAt = (f: number) =>
+    mix(1.14, 1, ramp(f, B.focus, 16, FOCUS)) *
+    (1 + 0.04 * ramp(f, 16, B.end - 16, SWAY));
   const focus = ramp(frame, B.focus, 16, FOCUS);
-  const push =
-    mix(1.14, 1, focus) * (1 + 0.04 * ramp(frame, 16, B.end - 16, SWAY));
+  const push = pushAt(frame);
+  const pushNear = (r: number) => pushAt(Math.max(0, r - delay) * speed);
+  const pushMoving =
+    Math.abs(pushNear(raw + 1) - push) > 1e-6 ||
+    Math.abs(push - pushNear(raw - 1)) > 1e-6;
   const blurAll = (1 - focus) * 7;
 
   const caretVis =
@@ -322,7 +343,7 @@ export function MacroTabName({
     (s) => F * (0.86 + 0.3) + m.width(s) * F + padX * 2,
   );
   const nbGap = F * 0.22;
-  let nx = chipL - nbGap;
+  let nx = chipLRest - nbGap;
   const neighborX = neighborW
     .slice()
     .reverse()
@@ -333,7 +354,7 @@ export function MacroTabName({
       return x;
     })
     .reverse();
-  const plusX = chipL + chipW + F * 0.5;
+  const plusX = chipLRest + chipWRest + F * 0.5;
   const titleK = ramp(frame, B.resolve + 4, 12, FOCUS);
   const docLines = portrait ? docBody : docBody.slice(0, 1);
 
@@ -367,6 +388,8 @@ export function MacroTabName({
     0,
   );
   const curIn = ramp(frame, -12, 8);
+  const curParkX = cx + chipWRest * 0.36;
+  const curParkY = curRest.y;
 
   const resolvedGround: GshPresetId | undefined =
     ground ?? (dark ? undefined : "paper-crease");
@@ -420,7 +443,7 @@ export function MacroTabName({
             style={{
               position: "absolute",
               inset: 0,
-              transform: `scale(${push})`,
+              transform: `scale(${push})${glide(pushMoving)}`,
               transformOrigin: `${cx}px ${cy}px`,
               filter: blurAll > 0.05 ? `blur(${blurAll}px)` : undefined,
             }}
@@ -577,6 +600,7 @@ export function MacroTabName({
                   whiteSpace: "nowrap",
                   filter: `blur(${i === lead.length - 1 ? 3.5 : 6}px)`,
                   opacity: i === lead.length - 1 ? 0.75 : 0.5,
+                  transform: shift(-slide),
                 }}
               >
                 <FileIcon size={F * 0.86} color={soft} />
@@ -592,6 +616,7 @@ export function MacroTabName({
                 height: F * 0.8,
                 filter: "blur(3.5px)",
                 opacity: 0.7,
+                transform: shift(slide),
               }}
             >
               <svg
@@ -624,10 +649,11 @@ export function MacroTabName({
             <div
               style={{
                 position: "absolute",
-                left: chipL + padX,
+                left: chipLRest + padX,
                 top: cy - iconS / 2,
                 width: iconS,
                 height: iconS,
+                transform: shift(-slide),
               }}
             >
               <div
@@ -683,6 +709,7 @@ export function MacroTabName({
                 top: cy - chipH / 2,
                 width: textW + caretW + F * 0.04,
                 height: chipH,
+                transform: shift(-slide),
               }}
             >
               {chars.map((ch, i) => {
@@ -733,8 +760,9 @@ export function MacroTabName({
               height={xS}
               style={{
                 position: "absolute",
-                left: chipL + chipW - padX - xS,
+                left: chipLRest + chipWRest - padX - xS,
                 top: cy - xS / 2,
+                transform: shift(slide),
               }}
               aria-hidden
             >
@@ -749,10 +777,12 @@ export function MacroTabName({
             <div
               style={{
                 position: "absolute",
-                left: curX,
-                top: curY,
+                // Same reason as the tab pieces: the glide is a transform
+                // from where the cursor parks, not `left`/`top`.
+                left: curParkX,
+                top: curParkY,
                 opacity: curIn,
-                transform: `scale(${1 - 0.04 * curPress})`,
+                transform: `translate(${curX - curParkX}px, ${curY - curParkY}px) scale(${1 - 0.04 * curPress})`,
                 transformOrigin: "20% 15%",
               }}
             >

@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const familjen = loadFamiljen("normal", {
   weights: ["400", "500"],
@@ -134,6 +135,8 @@ function useMetrics(
   return state && state.key === key ? state.m : null;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -165,6 +168,7 @@ export function TimesTurn({
   speed = 1,
   theme = "dark",
 }: TimesTurnProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
@@ -217,6 +221,8 @@ export function TimesTurn({
     ...CLAMP,
     easing: EASE_IN_OUT,
   });
+  const swellRaw = (t - SWELL_AT) / (SWELL_END - SWELL_AT);
+  const swelling = swellRaw > 0 && swellRaw < 1;
   const swell = interpolate(t, [SWELL_AT, SWELL_END], [0, 1], {
     ...CLAMP,
     easing: EASE_IN_OUT,
@@ -243,7 +249,6 @@ export function TimesTurn({
   const base0 = numBox.y + numBox.h / 2 + (m.figH * F0) / 2;
   const baseY = base0 + (base1 - base0) * swell;
   const digitsLeft = numBox.x + pad;
-  const lineTop = baseY - m.baseOff * F;
 
   const rise = (k: number) =>
     interpolate(t, [RISE_AT + k * 2, RISE_AT + k * 2 + RISE_LEN], [0, 1], {
@@ -265,6 +270,29 @@ export function TimesTurn({
   const maskTop = baseY - m.figH * F - F * 0.12;
   const maskH = m.figH * F + F * 0.16;
 
+  // An animated font size moves the baseline inside its own box by layout,
+  // and the mask's `top` rounds as well. So the figure is laid out once at
+  // its final size and scaled to the live one about the digits' left end on
+  // the baseline, all its life: handed back to layout at rest, it would jump
+  // by what the rounding takes.
+  const FL = F1;
+  const baseL = base1;
+  const maskTopL = baseL - m.figH * FL - FL * 0.12;
+  const maskHL = m.figH * FL + FL * 0.16;
+  const lineTopL = baseL - m.baseOff * FL;
+  // Exactly 1 once swollen, where the figure rests on its own layout.
+  const k = swell === 1 ? 1 : F / FL;
+  const swellDy = baseY - maskTopL + (maskTopL - baseL) * k;
+  // the unit sits past the digits at the small size, so the clip box is
+  // widened to keep its right edge at the frame edge once scaled down
+  const maskW = numBox.w / k;
+  const swellMove = `translate(${(digitsLeft - numBox.x) * (1 - k)}px, ${
+    Math.abs(swellDy) > 1e-6 ? swellDy : 0
+  }px) scale(${k})${glide(swelling)}`;
+  const digitsDy = (1 - digitsRise) * maskHL;
+  const unitDy = (1 - unitRise) * maskHL + pctOut * maskHL;
+  const skew = `skewX(${(-lean).toFixed(2)}deg)`;
+
   const quietInk = `color-mix(in srgb, ${fg} 42%, ${field})`;
   const quietSign = `color-mix(in srgb, ${c.inkOnAccent} 45%, ${hot})`;
   const signInk = transparent ? fg : c.inkOnAccent;
@@ -275,8 +303,8 @@ export function TimesTurn({
     position: "absolute" as const,
     fontFamily,
     fontWeight,
-    fontSize: F,
-    lineHeight: `${F}px`,
+    fontSize: FL,
+    lineHeight: `${FL}px`,
     letterSpacing: `${TRACK}em`,
     whiteSpace: "pre" as const,
   };
@@ -351,19 +379,23 @@ export function TimesTurn({
           style={{
             position: "absolute",
             left: numBox.x,
-            width: numBox.w,
-            top: maskTop,
-            height: maskH,
+            width: maskW,
+            top: maskTopL,
+            height: maskHL,
             overflow: "hidden",
+            transform: swellMove,
+            transformOrigin: "0 0",
           }}
         >
           <div
             style={{
               ...textStyle,
               left: digitsLeft - numBox.x,
-              top: lineTop - maskTop + (1 - digitsRise) * maskH,
-              transform: `skewX(${(-lean).toFixed(2)}deg)`,
-              transformOrigin: `0 ${(m.baseOff * F).toFixed(1)}px`,
+              // the rise is a transform, not `top`: layout rounds a baseline
+              // to whole pixels, so the figure would click up pixel by pixel
+              top: lineTopL - maskTopL,
+              transform: `translateY(${digitsDy}px) ${skew}${glide(midway(digitsRise) && !swelling)}`,
+              transformOrigin: `0 ${(m.baseOff * FL).toFixed(1)}px`,
             }}
           >
             <span style={{ position: "relative", display: "inline-block" }}>
@@ -387,13 +419,12 @@ export function TimesTurn({
             <div
               style={{
                 ...textStyle,
-                left: digitsLeft - numBox.x + (m.digits + GAP) * F,
-                top:
-                  lineTop - maskTop + (1 - unitRise) * maskH + pctOut * maskH,
+                left: digitsLeft - numBox.x + (m.digits + GAP) * FL,
+                top: lineTopL - maskTopL,
                 color: quietInk,
                 opacity: 1 - pctOut * pctOut,
-                transform: `skewX(${(-lean).toFixed(2)}deg)`,
-                transformOrigin: `0 ${(m.baseOff * F).toFixed(1)}px`,
+                transform: `translateY(${unitDy}px) ${skew}${glide((midway(unitRise) || midway(pctOut)) && !swelling)}`,
+                transformOrigin: `0 ${(m.baseOff * FL).toFixed(1)}px`,
               }}
             >
               {before}
@@ -432,7 +463,7 @@ export function TimesTurn({
                   style={{
                     display: "inline-block",
                     opacity: p,
-                    transform: `translateY(${((1 - p) * labelFs * 0.7).toFixed(2)}px)`,
+                    transform: `translateY(${((1 - p) * labelFs * 0.7).toFixed(2)}px)${glide(midway(p))}`,
                   }}
                 >
                   {w}

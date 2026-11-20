@@ -15,6 +15,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -292,6 +293,7 @@ export function FigureReels({
   ground,
   groundParams,
 }: FigureReelsProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -442,7 +444,11 @@ export function FigureReels({
       const boxH = lh * 1.7;
       const boxPad = (boxH - lh) / 2;
       for (let q = base - 1; q <= base + 2; q++) {
-        const off = (q - p) * lh;
+        // Layout rounds a baseline to whole pixels, so a digit rolled by
+        // `top` clicks pixel by pixel. Layout holds the whole-digit place and
+        // the fraction of the roll is a transform.
+        const off = (q - base) * lh;
+        const roll = (base - p) * lh;
         const d = ((q % 10) + 10) % 10;
         nodes.push(
           <div
@@ -453,6 +459,8 @@ export function FigureReels({
               right: 0,
               top: boxPad + off,
               height: lh,
+              transform:
+                Math.abs(roll) < 1e-3 ? undefined : `translateY(${roll}px)`,
               opacity:
                 (leading && d === 0 && q <= 0 ? 0 : 1) *
                 Math.max(0, Math.min(1, 1.15 - Math.abs(q - p) * 1.15)),
@@ -575,7 +583,13 @@ export function FigureReels({
           style={{
             position: "absolute",
             left: cx - tw / 2,
-            top: ccy - th / 2,
+            // Laid out at the reel's home; the slide in from off frame is a
+            // transform, since layout would round its edges to whole pixels.
+            top: ccy0 - th / 2,
+            transform:
+              Math.abs(ccy - ccy0) < 1e-3
+                ? undefined
+                : `translateY(${ccy - ccy0}px)`,
             width: tw,
             height: th,
             opacity: reelOpacity,
@@ -665,7 +679,9 @@ export function FigureReels({
             width: W,
             height: H,
             transformOrigin: "0 0",
-            transform: `translate(${cx}px, ${cy}px) scale(${Z.toFixed(5)}) translate(${-cx}px, ${-cy}px)`,
+            // The push never rests, so the text under it is marked as moving
+            // on every frame.
+            transform: `translate(${cx}px, ${cy}px) scale(${Z.toFixed(5)}) translate(${-cx}px, ${-cy}px)${glide(true)}`,
           }}
         >
           {reel(topImgs, topCy, -1, 0, "rt")}

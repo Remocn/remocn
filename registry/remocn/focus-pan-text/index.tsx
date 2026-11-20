@@ -339,6 +339,7 @@ export function FocusPanText({
     return f;
   };
   const f = focusAt(frame);
+  const fRest = focusAt(payoffAt + BEAT.payoffMove + BEAT.meta + BEAT.hold);
   const vel = Math.abs(f - focusAt(frame - 1));
   const motionBlur = Math.min(4 * u, vel * 9 * u);
 
@@ -355,7 +356,16 @@ export function FocusPanText({
   const rx = 14 - 6 * settle;
   const ry = 16 - 7 * settle;
   const rz = -2.4 + 1.2 * settle;
-  const panX = -(f / Math.max(1, rows.length - 1)) * F * 0.28;
+  const panOf = (at: number) => -(at / Math.max(1, rows.length - 1)) * F * 0.28;
+  // Layout rounds a baseline to whole pixels, so text panned by `left`/`top`
+  // clicks along as the focus eases in. The block is laid out where the focus
+  // comes to rest and the pan is a transform on top.
+  const panDx = panOf(f) - panOf(fRest);
+  const panDy = -(f - fRest) * LH;
+  const pan =
+    Math.abs(panDx) < 1e-3 && Math.abs(panDy) < 1e-3
+      ? undefined
+      : `translate(${panDx}px, ${panDy}px)`;
   const hinge = W * (portrait ? 0.1 : 0.085);
   const zoom = 1 + 0.045 * push;
 
@@ -409,8 +419,9 @@ export function FocusPanText({
         <div
           style={{
             position: "absolute",
-            left: hinge + panX,
-            top: H * 0.5 - (f + 0.5) * LH,
+            left: hinge + panOf(fRest),
+            top: H * 0.5 - (fRest + 0.5) * LH,
+            transform: pan,
             fontFamily,
             fontWeight,
             fontSize: F,

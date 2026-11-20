@@ -9,6 +9,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: mono } = loadFont("normal", {
   weights: ["400", "500"],
@@ -98,6 +99,14 @@ const THEMES = {
   },
 } as const;
 
+/** Whether any of the pixel values `at` returns moves around `t`. */
+function moves(at: (t: number) => number[], t: number, step: number) {
+  const [a, b, c] = [at(t - step), at(t), at(t + step)];
+  return b.some(
+    (v, i) => Math.abs(c[i] - v) > 1e-3 || Math.abs(v - a[i]) > 1e-3,
+  );
+}
+
 function ramp(t: number, from: number, len: number) {
   return interpolate(t, [from, from + len], [0, 1], CLAMP);
 }
@@ -145,6 +154,7 @@ export function ShotClock({
   theme = "dark",
   speed = 1,
 }: ShotClockProps) {
+  const glide = useGlide();
   // Starts two frames in, so frame 0 already shows the drop.
   const t = Math.max(0, useCurrentFrame() - delay) * speed + 2;
   const { width: W, height: H } = useVideoConfig();
@@ -187,34 +197,50 @@ export function ShotClock({
   const lightY = clockCY - 0.5 * clockFs - 34 * u;
   const barY = clockCY + 0.5 * clockFs + 18 * u;
 
-  const drop = SLAM(ramp(t, DROP_AT, 9));
+  const dropAt = (tt: number) => SLAM(ramp(tt, DROP_AT, 9));
+  const drop = dropAt(t);
   const draw = SLAM(ramp(t, DROP_AT + 2, 12));
   const labelsIn = ramp(t, 5, 8);
-  const redKick = kick(t - redAt, 8);
-  const buzzKick = kick(t - buzzAt, 10);
   const flash = buzzed ? kick(t - buzzAt, 9) : 0;
 
   // Shrink to the poster position under the light.
-  const shrink = MOVE(ramp(t, buzzAt + hold, SHRINK_LEN));
   const posterScale = 0.38;
   const posterCY = 150 * u;
-  // A slow push-in while the clock runs down builds the pressure.
-  const push = Easing.bezier(
-    0.65,
-    0,
-    0.35,
-    1,
-  )(ramp(t, TICK_AT, buzzAt - TICK_AT));
-  const groupScale =
-    interpolate(shrink, [0, 1], [1 + 0.07 * push, posterScale]) *
-    (1 + 0.03 * redKick + 0.04 * buzzKick);
-  const groupDY = interpolate(shrink, [0, 1], [0, posterCY - clockCY]);
+  const groupAt = (tt: number) => {
+    const shrink = MOVE(ramp(tt, buzzAt + hold, SHRINK_LEN));
+    // A slow push-in while the clock runs down builds the pressure.
+    const push = Easing.bezier(
+      0.65,
+      0,
+      0.35,
+      1,
+    )(ramp(tt, TICK_AT, buzzAt - TICK_AT));
+    const scale =
+      interpolate(shrink, [0, 1], [1 + 0.07 * push, posterScale]) *
+      (1 + 0.03 * kick(tt - redAt, 8) + 0.04 * kick(tt - buzzAt, 10));
+    const dy = interpolate(shrink, [0, 1], [0, posterCY - clockCY]);
+    return { shrink, scale, dy };
+  };
+  const { shrink, scale: groupScale, dy: groupDY } = groupAt(t);
   const sideFade = 1 - ramp(shrink, 0, 0.4);
+  const groupMoving = moves(
+    (tt) => {
+      const g = groupAt(tt);
+      return [g.dy, g.scale * W, (1 - dropAt(tt)) * 90 * u];
+    },
+    t,
+    speed,
+  );
 
   const titleAt = buzzAt + hold + SHRINK_LEN - 4;
+  const titleScaleAt = (tt: number) =>
+    (1.22 - 0.22 * SLAM(ramp(tt, titleAt, 7))) *
+    (1 + 0.025 * kick(tt - (titleAt + 3), 8));
+  const subAt = (tt: number) => SLAM(ramp(tt, titleAt + 4, 9));
   const titleIn = SLAM(ramp(t, titleAt, 7));
-  const subIn = SLAM(ramp(t, titleAt + 4, 9));
-  const titleHit = kick(t - (titleAt + 3), 8);
+  const subIn = subAt(t);
+  const titleMoving = moves((tt) => [titleScaleAt(tt) * W], t, speed);
+  const subMoving = moves((tt) => [(1 - subAt(tt)) * 36 * u], t, speed);
 
   const clockColor = red ? alarm : fg;
   const lightOn = buzzed;
@@ -255,7 +281,7 @@ export function ShotClock({
           style={{
             position: "absolute",
             inset: 0,
-            transform: `translateY(${groupDY}px) scale(${groupScale})`,
+            transform: `translateY(${groupDY}px) scale(${groupScale})${glide(groupMoving)}`,
             transformOrigin: `${cx}px ${clockCY}px`,
           }}
         >
@@ -380,7 +406,7 @@ export function ShotClock({
             display: "flex",
             justifyContent: "center",
             opacity: ramp(titleIn, 0, 0.25),
-            transform: `scale(${(1.22 - 0.22 * titleIn) * (1 + 0.025 * titleHit)})`,
+            transform: `scale(${titleScaleAt(t)})${glide(titleMoving)}`,
             transformOrigin: `${cx}px ${100 * u}px`,
           }}
         >
@@ -418,7 +444,7 @@ export function ShotClock({
             color: fg,
             whiteSpace: "nowrap",
             opacity: subIn,
-            transform: `translateY(${(1 - subIn) * 36 * u}px)`,
+            transform: `translateY(${(1 - subIn) * 36 * u}px)${glide(subMoving)}`,
           }}
         >
           {subtitle}

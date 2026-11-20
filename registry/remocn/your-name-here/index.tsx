@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const lexend = loadFont("normal", {
   weights: ["300", "400", "500"],
@@ -151,6 +152,8 @@ function balanced(
 
 const splitWords = (s: string) => s.split(/\s+/).filter(Boolean);
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -183,6 +186,7 @@ export function YourNameHere({
   speed = 1,
   theme = "dark",
 }: YourNameHereProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const Tt = Math.max(0, durationInFrames - delay) * speed;
@@ -318,7 +322,7 @@ export function YourNameHere({
               style={{
                 display: "inline-block",
                 opacity: e,
-                transform: `translateY(${((1 - e) * fs * 0.28).toFixed(2)}px)`,
+                transform: `translateY(${((1 - e) * fs * 0.28).toFixed(2)}px)${glide(midway(e))}`,
               }}
             >
               {word}
@@ -379,7 +383,7 @@ export function YourNameHere({
             fontWeight: 500,
             letterSpacing: `${TRACK}em`,
             opacity: brandIn,
-            transform: `translateY(${((1 - brandIn) * fs * 0.28).toFixed(2)}px)`,
+            transform: `translateY(${((1 - brandIn) * fs * 0.28).toFixed(2)}px)${glide(midway(brandIn))}`,
           }}
         >
           {glyph("{", 0, {
@@ -402,7 +406,13 @@ export function YourNameHere({
               style={{
                 position: "absolute",
                 left: 0,
-                top: clipPad + out * fs * 0.55,
+                // Both words travel by transform, not `top`: layout rounds a
+                // baseline to whole pixels, so a word eased by `top` clicks.
+                top: clipPad,
+                transform:
+                  out > 0
+                    ? `translateY(${out * fs * 0.55}px)${glide(midway(out))}`
+                    : undefined,
                 height: lineH,
                 lineHeight: `${lineH}px`,
                 whiteSpace: "pre",
@@ -416,7 +426,11 @@ export function YourNameHere({
               style={{
                 position: "absolute",
                 left: 0,
-                top: clipPad + (1 - rise) * fs * 0.45,
+                top: clipPad,
+                transform:
+                  rise < 1
+                    ? `translateY(${(1 - rise) * fs * 0.45}px)${glide(midway(rise))}`
+                    : undefined,
                 height: lineH,
                 lineHeight: `${lineH}px`,
                 whiteSpace: "pre",
@@ -448,7 +462,7 @@ export function YourNameHere({
               letterSpacing: `${NOTE_TRACK}em`,
               color: fg,
               opacity: noteE,
-              transform: `translateY(${((1 - noteE) * fN * 0.6).toFixed(2)}px)`,
+              transform: `translateY(${((1 - noteE) * fN * 0.6).toFixed(2)}px)${glide(midway(noteE))}`,
             }}
           >
             {note}

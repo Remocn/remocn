@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 // Manrope: small labels (500) and the remocn.dev logo (600, the brand asset).
 const { fontFamily: sans } = loadManrope("normal", {
@@ -53,6 +54,8 @@ export interface PaperPlaneProps {
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -635,7 +638,10 @@ export function PaperPlane({
   speed = 1,
   theme = "light",
 }: PaperPlaneProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
+  const frame = useCurrentFrame();
+  const tAt = (f: number) => Math.max(0, f - delay) * speed;
+  const t = tAt(frame);
   const transparent = background === "transparent";
   const { width, height } = useVideoConfig();
   const u = height / 720;
@@ -705,23 +711,38 @@ export function PaperPlane({
   const tilt = 0.95 + Math.sin(t / 21) * 0.08;
 
   // camera: follows the plane with a soft lag, then settles on the lockup
-  let lagX = 0;
-  let lagY = 0;
-  for (let k = 0; k < 6; k++) {
-    const p = sampleTrack(track, sAt(t - 6 - k * 3));
-    lagX += p.x / 6;
-    lagY += p.y / 6;
-  }
   const softMax = (a: number, b: number, k: number) =>
     (a + b + Math.sqrt((a - b) ** 2 + k * k)) / 2;
-  const settle = interpolate(t, [land - 60, land + 6], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const followX = softMax(lagX + 0.08 * W, 0, 180 * u);
-  const camX = followX + (2 * D - followX) * settle;
-  const camY = lagY * 0.28 * (1 - settle);
-  const zoom = 1 + 0.035 * settle;
+  const cameraAt = (time: number) => {
+    let lagX = 0;
+    let lagY = 0;
+    for (let k = 0; k < 6; k++) {
+      const p = sampleTrack(track, sAt(time - 6 - k * 3));
+      lagX += p.x / 6;
+      lagY += p.y / 6;
+    }
+    const settle = interpolate(time, [land - 60, land + 6], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+    const followX = softMax(lagX + 0.08 * W, 0, 180 * u);
+    return {
+      camX: followX + (2 * D - followX) * settle,
+      camY: lagY * 0.28 * (1 - settle),
+      zoom: 1 + 0.035 * settle,
+    };
+  };
+  const { camX, camY, zoom } = cameraAt(t);
+  // The camera eases onto the lockup slowly, so it counts as moving while any
+  // text on screen, at most ~800px from the centre, shifts by a thousandth of
+  // a pixel between frames.
+  const camMoving = [cameraAt(tAt(frame - 1)), cameraAt(tAt(frame + 1))].some(
+    (o) =>
+      Math.abs(o.camX - camX) * zoom +
+        Math.abs(o.camY - camY) * zoom +
+        Math.abs(o.zoom - zoom) * 800 >
+      1e-3,
+  );
 
   // landing: the plane folds itself into the accent dot
   const morph = interpolate(t, [land - 14, land], [0, 1], {
@@ -801,7 +822,7 @@ export function PaperPlane({
   });
   const rise = (p: number) => ({
     opacity: p,
-    transform: `translateY(${(1 - p) * 16 * u}px)`,
+    transform: `translateY(${(1 - p) * 16 * u}px)${glide(midway(p) && !camMoving)}`,
   });
 
   const shadowBlur = (2 + height3d * 5) * u;
@@ -850,7 +871,7 @@ export function PaperPlane({
             top: height / 2,
             width: 0,
             height: 0,
-            transform: `scale(${zoom}) translate(${-camX}px, ${-camY}px)`,
+            transform: `scale(${zoom}) translate(${-camX}px, ${-camY}px)${glide(camMoving)}`,
           }}
         >
           {/* stop 1: write */}

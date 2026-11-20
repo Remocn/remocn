@@ -1,6 +1,7 @@
 "use client";
 
 import { Easing, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface ScaleDownFadeProps {
   text: string;
@@ -11,6 +12,8 @@ export interface ScaleDownFadeProps {
   className?: string;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 export function ScaleDownFade({
   text,
   fontSize = 72,
@@ -19,6 +22,7 @@ export function ScaleDownFade({
   speed = 1,
   className,
 }: ScaleDownFadeProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame() * speed;
   const { durationInFrames } = useVideoConfig();
 
@@ -42,6 +46,15 @@ export function ScaleDownFade({
   });
 
   const opacity = enterP * (1 - exitP);
+  // Raw progress, not the eased one: the enter curve flattens out long before
+  // the text stops crossing pixels.
+  const clamp = {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  } as const;
+  const moving =
+    midway(interpolate(frame, [0, enterDurFrames], [0, 1], clamp)) ||
+    midway(interpolate(frame, [exitStart, durationInFrames], [0, 1], clamp));
 
   const yEnter = interpolate(frame, [0, enterDurFrames], [8, 0], {
     extrapolateLeft: "clamp",
@@ -99,8 +112,7 @@ export function ScaleDownFade({
           display: "inline-block",
           transformOrigin: "50% 50%",
           opacity,
-          translate: `0 ${y}px`,
-          scale: `${scale}`,
+          transform: `translateY(${y}px) scale(${scale})${glide(moving)}`,
         }}
       >
         {text}

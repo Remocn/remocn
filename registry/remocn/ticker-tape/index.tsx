@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -346,6 +347,12 @@ function QuoteView({
   );
 }
 
+// Chrome parks a glyph raster on a whole pixel vertically for as long as the
+// matrix is axis-aligned, so text under a slow transform clicks along pixel by
+// pixel. The transforms that carry text are marked, so it leans off that grid
+// while they move; SVG text can't carry the mark itself, so the drawing does.
+const midway = (p: number) => p > 0 && p < 1;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -395,6 +402,7 @@ export function TickerTape({
   speed = 1,
   theme = "dark",
 }: TickerTapeProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -458,10 +466,12 @@ export function TickerTape({
   const heroQ = heroRow.placed.find((q) => q.hero) as Placed;
 
   // poster scale and position
-  const rise = interpolate(t, [RISE_AT, RISE_AT + RISE_LEN], [0, 1], {
-    ...CLAMP,
-    easing: Easing.bezier(0.7, 0, 0.2, 1),
-  });
+  const riseAt = (f: number) =>
+    interpolate(f, [RISE_AT, RISE_AT + RISE_LEN], [0, 1], {
+      ...CLAMP,
+      easing: Easing.bezier(0.7, 0, 0.2, 1),
+    });
+  const rise = riseAt(t);
   const posterScale = Math.min((W * 0.74) / heroQ.w, (H * 0.36) / heroRow.fs);
   const scale = 1 + (posterScale - 1) * rise;
   const heroBaseline0 = baselines[heroRowIdx];
@@ -469,10 +479,12 @@ export function TickerTape({
   const heroCy1 = H * 0.46;
   const heroCy = heroCy0 + (heroCy1 - heroCy0) * rise;
 
-  const clear = interpolate(t, [RISE_AT - 4, RISE_AT + 20], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IN,
-  });
+  const clearAt = (f: number) =>
+    interpolate(f, [RISE_AT - 4, RISE_AT + 20], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IN,
+    });
+  const clear = clearAt(t);
   const caption = (d: number) =>
     interpolate(
       t,
@@ -508,7 +520,14 @@ export function TickerTape({
           width={W}
           height={H}
           viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            // The bands never stop sliding, so a lean that came with the
+            // poster's rise and went with it would snap their text by up to
+            // half a pixel on the way; the drawing counts as moving always.
+            transform: glide(true),
+          }}
           role="img"
           aria-label={`${heroSym} ${price} ${change >= 0 ? "up" : "down"} ${fmtChg(change)}`}
         >
@@ -698,7 +717,7 @@ export function TickerTape({
           <div
             style={{
               opacity: caption(0),
-              transform: `translateY(${(1 - caption(0)) * 12 * u}px)`,
+              transform: `translateY(${(1 - caption(0)) * 12 * u}px)${glide(midway(caption(0)))}`,
             }}
           >
             {logo ??
@@ -732,7 +751,7 @@ export function TickerTape({
               alignItems: "center",
               gap: 9 * u,
               opacity: caption(6),
-              transform: `translateY(${(1 - caption(6)) * 12 * u}px)`,
+              transform: `translateY(${(1 - caption(6)) * 12 * u}px)${glide(midway(caption(6)))}`,
             }}
           >
             <div

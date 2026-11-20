@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -85,6 +86,8 @@ const THEMES = {
     grain: 0.045,
   },
 } as const;
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 const BAR_IN = 10;
 const MOVE = 36;
@@ -167,6 +170,7 @@ export function NumberSplit({
   theme = "dark",
   speed = 1,
 }: NumberSplitProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = Math.min(W / 1280, H / 720);
@@ -238,13 +242,16 @@ export function NumberSplit({
     ...CLAMP,
     easing: EASE_IO,
   });
-  const cam = interpolate(t, [0, treeAt + 90], [1, 1.025], {
+  const camP = interpolate(t, [0, treeAt + 90], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
+  const cam = 1 + 0.025 * camP;
 
   const heroScale = 1 + (heroF1 / heroF0 - 1) * mv;
-  const heroTop = heroTop0 + (heroTop1 - heroTop0) * mv;
+  // Layout rounds a baseline to whole pixels, so a hero eased by `top` clicks
+  // up pixel by pixel; it is laid out where it lands and travels by transform.
+  const heroLift = (heroTop0 - heroTop1) * (1 - mv);
   const labelF = 44 * u;
   const labelW = label.length * 0.43 * labelF;
   const lockShift = -((labelW + 22 * u) / 2) * labelIn;
@@ -292,17 +299,20 @@ export function NumberSplit({
       />
       <ScaleLayer scale={scale}>
         <AbsoluteFill
-          style={{ transform: `scale(${cam})`, transformOrigin: "50% 45%" }}
+          style={{
+            transform: `scale(${cam})${glide(midway(camP) || midway(mv))}`,
+            transformOrigin: "50% 45%",
+          }}
         >
           <div
             style={{
               position: "absolute",
               left: 0,
               right: 0,
-              top: heroTop,
+              top: heroTop1,
               display: "flex",
               justifyContent: "center",
-              transform: `translateX(${lockShift}px)`,
+              transform: `translate(${lockShift}px, ${heroLift}px)`,
             }}
           >
             <div

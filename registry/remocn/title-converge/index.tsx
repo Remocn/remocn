@@ -9,6 +9,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500", "600"],
@@ -205,6 +206,7 @@ export function TitleConverge({
   speed = 1,
 }: TitleConvergeProps) {
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
   const c = THEMES[theme];
@@ -264,12 +266,18 @@ export function TitleConverge({
   );
 
   const s0 = zoom;
-  const cam = interpolate(t, [0, converge], [0, 1], {
-    ...CLAMP,
-    easing: CAMERA,
-  });
-  const push = interpolate(t, [converge, converge + 70], [0, 1], CLAMP);
-  const s = Math.exp(Math.log(s0) * (1 - cam)) * (1 + push * 0.014);
+  const camAt = (tt: number) =>
+    interpolate(tt, [0, converge], [0, 1], { ...CLAMP, easing: CAMERA });
+  const scaleAt = (tt: number) =>
+    Math.exp(Math.log(s0) * (1 - camAt(tt))) *
+    (1 + interpolate(tt, [converge, converge + 70], [0, 1], CLAMP) * 0.014);
+  const cam = camAt(t);
+  const s = scaleAt(t);
+  // The drawing is marked as moving while the camera moves. The step is
+  // weighed at ~700px, the furthest the word reaches from the centre.
+  const zooming =
+    Math.abs(scaleAt(t + 1) - s) * 700 > 1e-3 ||
+    Math.abs(s - scaleAt(t - 1)) * 700 > 1e-3;
   // Start framed on the middle of the word, a touch above centre.
   const focusY = -topH * 0.12 * (1 - cam);
 
@@ -307,7 +315,7 @@ export function TitleConverge({
           width={W}
           height={H}
           viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
+          style={{ position: "absolute", inset: 0, transform: glide(zooming) }}
           aria-hidden
         >
           <g transform={`translate(${W / 2} ${H / 2}) scale(${s})`}>

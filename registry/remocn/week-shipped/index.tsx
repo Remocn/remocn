@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const unbounded = loadFont("normal", {
   weights: ["400", "500"],
@@ -197,6 +198,7 @@ export function WeekShipped({
   speed = 1,
   theme = "dark",
 }: WeekShippedProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const dark = theme === "dark";
@@ -310,7 +312,11 @@ export function WeekShipped({
           style={{
             position: "absolute",
             left: 0,
-            top: base - size * m.asc - winTop + shift * winH * 1.04,
+            // The roll is a transform, there at rest too: layout rounds a
+            // baseline to whole pixels, so a line eased by `top` clicks along,
+            // and one handed back to layout at rest jumps.
+            top: base - size * m.asc - winTop,
+            transform: `translateY(${shift * winH * 1.04}px)${glide(shift !== 0)}`,
             height: lineBox,
             lineHeight: `${lineBox}px`,
             fontFamily,

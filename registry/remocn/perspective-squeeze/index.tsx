@@ -1,6 +1,7 @@
 "use client";
 
 import { Easing, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 type Corners = [
   [number, number],
@@ -136,36 +137,45 @@ export function PerspectiveSqueeze({
   upperScaleY = [100, 35.8, 64, 45, 110, 100],
   fill = "#ffffff",
 }: PerspectiveSqueezeProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame();
   const { width: compWidth, height: compHeight } = useVideoConfig();
   const stageScale = Math.min(compWidth / width, compHeight / height);
 
   const squishEase = Easing.bezier(0.6, 0, 0.4, 1);
 
-  const scaleAt = (track: number[]) =>
-    interpolate(frame, scaleKeyframes, track, {
+  const scaleAt = (track: number[], f = frame) =>
+    interpolate(f, scaleKeyframes, track, {
       extrapolateLeft: "clamp",
       extrapolateRight: "clamp",
       easing: squishEase,
     }) / 100;
 
-  const cornersAt = (mid: Corners, end: Corners): Corners => {
+  const cornersAt = (mid: Corners, end: Corners, f = frame): Corners => {
     const [k0, k1, k2] = cornerKeyframes;
-    if (frame <= k0) return cornersRest;
-    if (frame >= k2) return end;
-    if (frame <= k1) {
+    if (f <= k0) return cornersRest;
+    if (f >= k2) return end;
+    if (f <= k1) {
       return lerpCorners(
         cornersRest,
         mid,
-        squishEase((frame - k0) / Math.max(k1 - k0, 1)),
+        squishEase((f - k0) / Math.max(k1 - k0, 1)),
       );
     }
-    return lerpCorners(
-      mid,
-      end,
-      squishEase((frame - k1) / Math.max(k2 - k1, 1)),
-    );
+    return lerpCorners(mid, end, squishEase((f - k1) / Math.max(k2 - k1, 1)));
   };
+
+  // On its first frame the pin is flat and the squeezed text sits on whole
+  // pixels; the mark keeps it off that grid on every frame something moves.
+  const poseAt = (f: number) =>
+    JSON.stringify([
+      cornersAt(upperCornersMid, upperCornersEnd, f),
+      cornersAt(lowerCornersMid, lowerCornersEnd, f),
+      scaleAt(upperScaleY, f),
+      scaleAt(lowerScaleY, f),
+    ]);
+  const pose = poseAt(frame);
+  const moving = pose !== poseAt(frame - 1) || pose !== poseAt(frame + 1);
 
   const upperScale = scaleAt(upperScaleY);
   const lowerScale = scaleAt(lowerScaleY);
@@ -208,7 +218,7 @@ export function PerspectiveSqueeze({
         width: blockWidth,
         height: blockHeight,
         transformOrigin: "0 0",
-        transform: cornerPinMatrix(cornersRest, corners),
+        transform: `${cornerPinMatrix(cornersRest, corners)}${glide(moving)}`,
       }}
     >
       <svg

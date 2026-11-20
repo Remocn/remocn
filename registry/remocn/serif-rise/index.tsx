@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const gothic = loadVariableFont("normal", { subsets: ["latin"] });
 
@@ -324,6 +325,7 @@ export function SerifRise({
   speed = 1,
   theme = "dark",
 }: SerifRiseProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
@@ -438,13 +440,19 @@ export function SerifRise({
     progress.forEach(({ ch, ctrs, serif }, i) => {
       const idx = gi + i;
       const gxPx = left + xs[i] * F;
-      const rise = interpolate(
-        t,
-        [idx * stagger, idx * stagger + RISE_LEN],
-        [0, 1],
-        { ...CLAMP, easing: EASE_OUT },
-      );
+      const riseAt = (tt: number) =>
+        interpolate(tt, [idx * stagger, idx * stagger + RISE_LEN], [0, 1], {
+          ...CLAMP,
+          easing: EASE_OUT,
+        });
+      const rise = riseAt(t);
       const dy = (1 - rise) * F * 0.9;
+      // The ease-out tail still crosses pixels after `rise` is all but 1, so
+      // the glyph counts as moving while its drop changes against either
+      // neighbouring frame.
+      const moving =
+        Math.abs(riseAt(t + speed) - rise) * F * 0.9 > 1e-3 ||
+        Math.abs(rise - riseAt(t - speed)) * F * 0.9 > 1e-3;
       glyphNodes.push(
         <div
           key={`m${r}-${i}`}
@@ -470,7 +478,7 @@ export function SerifRise({
               fontStyle: "normal",
               fontSize: F,
               fontVariationSettings: fvs(CTRS_MAX * ctrs),
-              transform: `translateY(${dy.toFixed(2)}px)`,
+              transform: `translateY(${dy.toFixed(2)}px)${glide(moving)}`,
               color: colorFor(i),
             }}
           >

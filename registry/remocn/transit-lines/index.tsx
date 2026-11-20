@@ -13,6 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -171,6 +172,8 @@ const CLAMP = {
 } as const;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
+
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 const DRAW_EASE = Easing.bezier(0.42, 0, 0.22, 1);
 
 const DRAW_LEN = 38;
@@ -325,6 +328,7 @@ export function TransitLines({
   theme = "dark",
   speed = 1,
 }: TransitLinesProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const u = Math.min(W / 1280, H / 720);
@@ -624,7 +628,7 @@ export function TransitLines({
               color: p.muted,
               marginBottom: 10 * u,
               opacity: kickerIn,
-              transform: `translateY(${(1 - kickerIn) * 6 * u}px)`,
+              transform: `translateY(${(1 - kickerIn) * 6 * u}px)${glide(midway(kickerIn))}`,
             }}
           >
             {kicker}

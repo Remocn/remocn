@@ -22,6 +22,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -709,13 +710,20 @@ function SceneA({
   delay: number;
   look: SceneLook;
 }) {
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
+  const glide = useGlide();
+  const raw = useCurrentFrame();
+  const frame = Math.max(0, raw - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const L = layout(W, H);
   const [sx, sy, sw, sh] = L.subject;
   const u = Math.min(W, H) / 720;
   const lift = spring({ frame: frame - A_BEATS.window, fps, config: HEAVY });
-  const push = interpolate(frame, [0, A_LEN], [1, 1.035], CLAMP);
+  const pushAt = (r: number) =>
+    interpolate(Math.max(0, r - delay) * speed, [0, A_LEN], [1, 1.035], CLAMP);
+  const push = pushAt(raw);
+  // The push carries the window and everything in it, so its tilt covers
+  // the window's own rise as well.
+  const pushMoving = pushAt(raw + 1) !== push || pushAt(raw - 1) !== push;
   const chat = interpolate(frame, [A_BEATS.chat, A_BEATS.chat + 12], [0, 1], {
     ...CLAMP,
     easing: ENTER,
@@ -741,7 +749,9 @@ function SceneA({
         />
       </Ground>
       <ScaleLayer scale={scale}>
-        <AbsoluteFill style={{ transform: `scale(${push})` }}>
+        <AbsoluteFill
+          style={{ transform: `scale(${push})${glide(pushMoving)}` }}
+        >
           <div
             style={{
               position: "absolute",
@@ -1116,12 +1126,18 @@ function SceneB({
   logo?: React.ReactNode;
   look: SceneLook;
 }) {
-  const frame = useCurrentFrame() * speed;
+  const glide = useGlide();
+  const raw = useCurrentFrame();
+  const frame = raw * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const L = layout(W, H);
   const u = Math.min(W, H) / 720;
   const fs = L.tall ? W * 0.105 : W * 0.06;
   const pu = L.tall ? W / 480 : u;
+  const pushAt = (r: number) =>
+    interpolate(r * speed, [0, B_LEN], [1.02, 1.05], CLAMP);
+  const pushMoving =
+    pushAt(raw + 1) !== pushAt(raw) || pushAt(raw - 1) !== pushAt(raw);
   const settle = interpolate(frame, [B_BEATS.line, B_BEATS.settle], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.45, 0, 0.25, 1),
@@ -1146,7 +1162,8 @@ function SceneB({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${push})`,
+            // Covers the line and the pill riding up inside it.
+            transform: `scale(${push})${glide(pushMoving)}`,
             transformOrigin: `${L.to[0] * 100}% ${L.to[1] * 100}%`,
           }}
         >

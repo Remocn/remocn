@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export type OrbitLockProps = {
   /** Lockup revealed after the moons collide with the core. Falls back to a placeholder "remocn" lockup. */
@@ -38,6 +39,7 @@ export const orbitLockDefaults = {
 };
 
 const IMPACT = 30;
+
 const TURNS = 1.9;
 const TRAIL = 10;
 const TRAIL_STEP = 0.4;
@@ -135,6 +137,7 @@ export function OrbitLock(props: OrbitLockProps) {
     tilt,
     speed,
   } = { ...orbitLockDefaults, ...props };
+  const glide = useGlide();
   const uid = `orbit-lock-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const frame = useCurrentFrame();
   const { width, height, fps } = useVideoConfig();
@@ -175,11 +178,20 @@ export function OrbitLock(props: OrbitLockProps) {
   );
   const orbitR = core + (outer - core) * (1 - Easing.in(Easing.cubic)(p));
 
-  const pop = spring({
-    frame: t - IMPACT - 3,
-    fps,
-    config: { damping: 11, stiffness: 170, mass: 0.7 },
-  });
+  const popAt = (f: number) =>
+    spring({
+      frame: f - IMPACT - 3,
+      fps,
+      config: { damping: 11, stiffness: 170, mass: 0.7 },
+    });
+  const pop = popAt(t);
+  // The spring overshoots and never quite lands, so "moving" for the tilt is
+  // a scale step over 4e-6, about a thousandth of a pixel at the lockup's
+  // edge.
+  const step = Math.max(0, speed);
+  const popMoving =
+    Math.abs(popAt(t + step) - pop) * 0.45 > 4e-6 ||
+    Math.abs(pop - popAt(t - step)) * 0.45 > 4e-6;
 
   const bodies = Array.from({ length: count }, (_, i) => {
     const head = moonAt(t, i, count, outer, core, tiltRad);
@@ -289,7 +301,7 @@ export function OrbitLock(props: OrbitLockProps) {
           alignItems: "center",
           justifyContent: "center",
           opacity: interpolate(t, [IMPACT + 3, IMPACT + 6], [0, 1], clamp),
-          transform: `scale(${0.55 + 0.45 * pop})`,
+          transform: `scale(${0.55 + 0.45 * pop})${glide(popMoving)}`,
         }}
       >
         {children ?? (

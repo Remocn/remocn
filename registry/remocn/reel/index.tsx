@@ -76,6 +76,10 @@ export function Reel({
                 objectFit: "cover",
                 objectPosition,
                 scale: `${imgScale}`,
+                // A photograph, no text: on its own layer Chrome scales one
+                // decoded texture. Without it the resampling quality depends
+                // on what the tab drew before, and a render split over
+                // several tabs shimmers across the whole picture.
                 willChange: "transform",
               }}
             />

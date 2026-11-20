@@ -11,6 +11,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: mono } = loadFont("normal", {
   weights: ["400"],
@@ -143,6 +144,8 @@ function Ground({ t, p, accent }: { t: number; p: Palette; accent: string }) {
   );
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function Content({
   t,
   title,
@@ -162,6 +165,7 @@ function Content({
   ink?: string;
   fontFamily: string;
 }) {
+  const glide = useGlide();
   const { width, height } = useVideoConfig();
   const u = height / 720;
   const rise = (d: number) =>
@@ -178,7 +182,7 @@ function Content({
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        transform: `scale(${1 + 0.02 * (1 - settle)})`,
+        transform: `scale(${1 + 0.02 * (1 - settle)})${glide(settle > 0 && settle < 1)}`,
       }}
     >
       {kicker ? (
@@ -192,7 +196,7 @@ function Content({
             color: ink ?? p.fg,
             marginBottom: size * 0.06,
             opacity: rise(0),
-            transform: `translateY(${(1 - rise(0)) * 24 * u}px)`,
+            transform: `translateY(${(1 - rise(0)) * 24 * u}px)${glide(midway(rise(0)))}`,
           }}
         >
           {kicker}
@@ -220,7 +224,7 @@ function Content({
           color: ink ?? "transparent",
           whiteSpace: "pre",
           opacity: rise(3),
-          transform: `translateY(${(1 - rise(3)) * 40 * u}px)`,
+          transform: `translateY(${(1 - rise(3)) * 40 * u}px)${glide(midway(rise(3)))}`,
         }}
       >
         {title}

@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["500"],
@@ -226,6 +227,7 @@ export function TileWave({
   speed = 1,
   theme = "dark",
 }: TileWaveProps) {
+  const glide = useGlide();
   const t = useCurrentFrame() * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -333,7 +335,12 @@ export function TileWave({
             top: 0,
             width: W,
             height: H,
-            transform: `scale(${s})`,
+            // Chrome parks a glyph raster on a whole pixel vertically while
+            // the matrix is axis-aligned, so the headline inside a growing
+            // tile clicks; the mark lets it lean off that grid. A tile on this
+            // path is always mid-scale (the hold below 0.14 is a plain div),
+            // so it is always moving.
+            transform: `scale(${s})${glide(true)}`,
             transformOrigin: `${x + cw / 2}px ${y + ch / 2}px`,
             clipPath: `inset(${ins} round ${(radius / s).toFixed(2)}px)`,
           }}

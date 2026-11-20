@@ -9,6 +9,7 @@ import {
   useVideoConfig,
 } from "remotion";
 import { Caret } from "@/components/remocn/caret";
+import { useGlide } from "@/lib/remocn/glide";
 import { useTypewriter } from "@/lib/remocn-ui";
 
 const { fontFamily: SANS_FAMILY } = loadBodyFont();
@@ -227,6 +228,7 @@ export function ClaudeChat({
   accentColor = "#D97757",
   speed = 1,
 }: ClaudeChatProps) {
+  const glide = useGlide();
   const frame = useCurrentFrame();
   const { width, height, fps } = useVideoConfig();
   const t = THEMES.light;
@@ -246,6 +248,18 @@ export function ClaudeChat({
 
   const intro = introBounceIn(frame * speed, fps);
   const cardFade = fadeUpAt(frame * speed, [6, 22]);
+  // The bounce is a spring that never quite lands, so the card's own px (its
+  // rise, and its scale at the far edge) are held against the neighbouring
+  // frames.
+  const cardAt = (f: number) => {
+    const a = introBounceIn(f * speed, fps);
+    return [a.translateY + fadeUpAt(f * speed, [6, 22]).translateY, a.scale];
+  };
+  const stirs = (a: number[], b: number[]) =>
+    Math.abs(a[0] - b[0]) > 1e-3 || Math.abs(a[1] - b[1]) * 430 > 1e-3;
+  const cardMoving =
+    stirs(cardAt(frame), cardAt(frame - 1)) ||
+    stirs(cardAt(frame), cardAt(frame + 1));
 
   const cardWidth = 860;
   const cardLeft = (refW - cardWidth) / 2;
@@ -276,8 +290,7 @@ export function ClaudeChat({
             borderRadius: 24,
             boxShadow: "0 8px 30px -12px rgba(31,30,29,0.12)",
             opacity: cardFade.opacity,
-            translate: `0 ${cardFade.translateY + intro.translateY}px`,
-            scale: `${intro.scale}`,
+            transform: `translateY(${cardFade.translateY + intro.translateY}px) scale(${intro.scale})${glide(cardMoving)}`,
             transformOrigin: "center top",
           }}
         >

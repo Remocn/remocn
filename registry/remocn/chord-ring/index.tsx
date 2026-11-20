@@ -14,6 +14,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadSans("normal", {
   weights: ["400", "500"],
@@ -160,6 +161,8 @@ const CHORD_STAGGER = 2.2;
 const CHORD_LEN = 16;
 const TAU = Math.PI * 2;
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 function pt(cx: number, cy: number, r: number, a: number) {
   return { x: cx + r * Math.sin(a), y: cy - r * Math.cos(a) };
 }
@@ -261,6 +264,7 @@ export function ChordRing({
   theme = "dark",
   speed = 1,
 }: ChordRingProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
@@ -368,10 +372,25 @@ export function ChordRing({
     ...CLAMP,
     easing: EASE_OUT,
   });
+  const pushP = interpolate(t, [0, 160], [0, 1], CLAMP);
   const push = interpolate(t, [0, 160], [0.965, 1.005], {
     ...CLAMP,
     easing: EASE_IO,
   });
+  // The push carries everything, names and caption included, so its tilt
+  // covers them while it runs.
+  const pushMoving = midway(pushP);
+  const landAt = (tt: number) =>
+    spring({
+      frame: tt - capT,
+      fps,
+      config: { damping: 18, stiffness: 150, mass: 0.8 },
+    }) *
+    14 *
+    u;
+  const landMoving =
+    Math.abs(landAt(t + speed) - landAt(t)) > 1e-3 ||
+    Math.abs(landAt(t) - landAt(t - speed)) > 1e-3;
   const stage = interpolate(t, [0, 8], [0.5, 1], CLAMP);
   const hair = Math.max(1, 1.4 * u);
   const disc = hole * 0.9;
@@ -394,7 +413,7 @@ export function ChordRing({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `scale(${push})`,
+            transform: `scale(${push})${glide(pushMoving)}`,
             transformOrigin: "50% 50%",
             opacity: stage,
           }}
@@ -480,6 +499,18 @@ export function ChordRing({
             });
             const r = R + sw / 2 + 18 * u + (1 - a) * -6 * u;
             const q = pt(cx, cy, r, s.mid);
+            // Laid out where the name settles once the ring has stopped
+            // turning; the slide out and the turn are a transform, since
+            // layout rounds a baseline to a whole pixel and the name would
+            // step along it.
+            const mid = s.mid - (spinDeg * Math.PI) / 180;
+            const home = pt(cx, cy, R + sw / 2 + 18 * u, mid);
+            const dx = q.x - home.x;
+            const dy = q.y - home.y;
+            const travel =
+              Math.abs(dx) > 1e-3 || Math.abs(dy) > 1e-3
+                ? `translate(${dx}px, ${dy}px) `
+                : "";
             const sx = Math.sin(s.mid);
             const cyv = -Math.cos(s.mid);
             const vertical = Math.abs(sx) < 0.3;
@@ -491,9 +522,9 @@ export function ChordRing({
                 key={s.label}
                 style={{
                   position: "absolute",
-                  left: q.x,
-                  top: q.y,
-                  transform: `translate(${tx}%, ${ty}%)`,
+                  left: home.x,
+                  top: home.y,
+                  transform: `${travel}translate(${tx}%, ${ty}%)`,
                   opacity: a * (isBrand ? 1 : 1 - 0.5 * dim),
                   fontFamily,
                   fontWeight: 400,
@@ -539,7 +570,7 @@ export function ChordRing({
                 color: "#FFFFFF",
                 opacity: landO,
                 filter: blur > 0.01 ? `blur(${blur * 8 * u}px)` : undefined,
-                transform: `translateY(${(1 - land) * 14 * u}px)`,
+                transform: `translateY(${(1 - land) * 14 * u}px)${glide(landMoving && !pushMoving)}`,
               }}
             >
               {lead}

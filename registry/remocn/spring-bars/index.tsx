@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["400", "500"],
@@ -128,6 +129,10 @@ function barPath(x: number, base: number, w: number, h: number, r: number) {
   return `M ${x} ${base} L ${x} ${top + rr} Q ${x} ${top} ${x + rr} ${top} L ${x + w - rr} ${top} Q ${x + w} ${top} ${x + w} ${top + rr} L ${x + w} ${base} Z`;
 }
 
+// Clamped tweens, exactly 0 or 1 at rest; their eased tails still move a few
+// hundredths of a pixel a frame, so any value in between counts.
+const midway = (p: number) => p > 0 && p < 1;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -161,6 +166,7 @@ export function SpringBars({
   theme = "dark",
   speed = 1,
 }: SpringBarsProps) {
+  const glide = useGlide();
   const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
@@ -346,7 +352,7 @@ export function SpringBars({
               opacity: labelIn,
               filter:
                 labelIn < 0.99 ? `blur(${(1 - labelIn) * 8 * u}px)` : undefined,
-              transform: `translateY(${(1 - labelIn) * 18 * u}px)`,
+              transform: `translateY(${(1 - labelIn) * 18 * u}px)${glide(midway(labelIn))}`,
             }}
           >
             {value}
@@ -361,7 +367,7 @@ export function SpringBars({
                 letterSpacing: "-0.01em",
                 color: p.muted,
                 opacity: capIn,
-                transform: `translateY(${(1 - capIn) * 8 * u}px)`,
+                transform: `translateY(${(1 - capIn) * 8 * u}px)${glide(midway(capIn))}`,
                 display: "flex",
                 alignItems: "center",
                 gap: 10 * u,

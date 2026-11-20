@@ -10,6 +10,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: condensed } = loadFont("normal", {
   weights: ["500"],
@@ -155,6 +156,8 @@ function kick(d: number) {
   return k * k;
 }
 
+const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
+
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -190,6 +193,7 @@ export function ScoreBug({
   theme = "dark",
   speed = 1,
 }: ScoreBugProps) {
+  const glide = useGlide();
   // Starts two frames in, so frame 0 already shows the core opening.
   const t = Math.max(0, useCurrentFrame() - delay) * speed + 2;
   const { width: W, height: H } = useVideoConfig();
@@ -228,8 +232,14 @@ export function ScoreBug({
 
   // Every hit nudges the panel up in scale for a beat.
   const hits = [5, ...goalAt.map((g) => g + 2)];
-  const bump = hits.reduce((a, h) => Math.max(a, kick(t - h)), 0);
-  const panelScale = 1 + 0.022 * bump;
+  const bumpAt = (at: number) =>
+    hits.reduce((a, h) => Math.max(a, kick(at - h)), 0);
+  const panelScale = 1 + 0.022 * bumpAt(t);
+  // The kick has no clean progress, so the panel counts as moving whenever
+  // its edge steps against either neighbouring frame.
+  const bumping =
+    Math.abs(bumpAt(t + speed) - bumpAt(t)) * 0.022 * W > 1e-3 ||
+    Math.abs(bumpAt(t) - bumpAt(t - speed)) * 0.022 * W > 1e-3;
 
   // Home digit: which goal is flipping, and how far.
   let home = 0;
@@ -281,7 +291,7 @@ export function ScoreBug({
   const bandVisible = t >= bandAt && bandOut < 1;
   const bandY = bandTop;
 
-  const digit = (n: number, y: number, key: string) => (
+  const digit = (n: number, y: number, moving: boolean, key: string) => (
     <div
       key={key}
       style={{
@@ -290,7 +300,7 @@ export function ScoreBug({
         right: 0,
         top: 0,
         height: panelH,
-        transform: `translateY(${y}px)`,
+        transform: `translateY(${y}px)${glide(moving && !bumping)}`,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -317,7 +327,7 @@ export function ScoreBug({
           style={{
             position: "absolute",
             inset: 0,
-            transform: `scale(${panelScale})`,
+            transform: `scale(${panelScale})${glide(bumping)}`,
             transformOrigin: `${W / 2}px ${panelY + panelH / 2}px`,
           }}
         >
@@ -339,7 +349,7 @@ export function ScoreBug({
                 top: 0,
                 width: coreW,
                 height: tabH,
-                transform: `translateY(${(1 - tabUp) * (tabH + gap)}px)`,
+                transform: `translateY(${(1 - tabUp) * (tabH + gap)}px)${glide(midway(tabUp) && !bumping)}`,
                 background: c.tab,
                 display: "flex",
                 alignItems: "center",
@@ -480,10 +490,10 @@ export function ScoreBug({
             >
               {flipP < 1 && prev >= 0
                 ? [
-                    digit(prev, -flipP * panelH, "out"),
-                    digit(home, (1 - flipP) * panelH, "in"),
+                    digit(prev, -flipP * panelH, midway(flipP), "out"),
+                    digit(home, (1 - flipP) * panelH, midway(flipP), "in"),
                   ]
-                : digit(home, dropIn, "now")}
+                : digit(home, dropIn, midway(digitIn), "now")}
             </div>
             <div
               style={{
@@ -506,7 +516,7 @@ export function ScoreBug({
                 overflow: "hidden",
               }}
             >
-              {digit(awayScore, dropIn, "away")}
+              {digit(awayScore, dropIn, midway(digitIn), "away")}
             </div>
           </div>
 
@@ -531,7 +541,7 @@ export function ScoreBug({
                     alignItems: "center",
                     gap: 12 * u,
                     height: rowH,
-                    transform: `translateY(${-(1 - p) * rowH}px)`,
+                    transform: `translateY(${-(1 - p) * rowH}px)${glide(midway(p))}`,
                     fontFamily,
                     fontWeight: 500,
                     fontSize: 30 * u,

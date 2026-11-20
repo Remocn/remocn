@@ -1,6 +1,7 @@
 "use client";
 
 import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 
 export interface SpringScaleInProps {
   text: string;
@@ -24,6 +25,7 @@ export function SpringScaleIn({
   className,
 }: SpringScaleInProps) {
   const frame = useCurrentFrame() * speed;
+  const glide = useGlide();
 
   const words = text.split(" ");
   const wordDurationFrames = 11;
@@ -76,7 +78,8 @@ export function SpringScaleIn({
                 marginRight: "0.25em",
                 transformOrigin: "50% 50%",
                 opacity,
-                scale: `${scale}`,
+                // The window, not the value: the ease overshoots past 1.
+                transform: `scale(${scale})${glide(local > 0 && local < wordDurationFrames)}`,
               }}
             >
               {word}

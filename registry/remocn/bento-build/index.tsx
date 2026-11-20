@@ -12,6 +12,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -122,6 +123,7 @@ const DEFAULT_TILES: BentoTile[] = [
 
 const BUILD_STAGGER = 3;
 const HIGHLIGHT_START = 46;
+
 const HIGHLIGHT_LEN = 30;
 const ENTER = Easing.bezier(0.32, 0.72, 0, 1);
 const LIGHT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -709,6 +711,7 @@ export function BentoBuild({
   ground,
   groundParams,
 }: BentoBuildProps) {
+  const glide = useGlide();
   const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width;
@@ -729,13 +732,13 @@ export function BentoBuild({
   const cellH = (gridH - gap * (rowCount - 1)) / Math.max(1, rowCount);
 
   const buildEnd = stagger * tiles.length + 26;
-  const focusOf = (i: number) => {
+  const focusOf = (i: number, fr = frame) => {
     let v = 0;
     highlightOrder.forEach((idx, k) => {
       if (idx !== i) return;
       const s = HIGHLIGHT_START + k * hold;
       v += interpolate(
-        frame,
+        fr,
         [s - 5, s + 5, s + hold - 5, s + hold + 5],
         [0, 1, 1, 0],
         { ...CL, easing: MOVE },
@@ -749,21 +752,45 @@ export function BentoBuild({
     focus.reduce((a, b) => a + b, 0),
   );
 
-  const camIn = interpolate(frame, [0, buildEnd + 6], [0.97, 1], {
-    extrapolateRight: "clamp",
-    easing: LIGHT,
-  });
-  let camX = 0;
-  let camY = 0;
-  placed.forEach((p, i) => {
-    const cx =
-      padX + p.col * (cellW + gap) + (p.cols * cellW + (p.cols - 1) * gap) / 2;
-    const cy =
-      top + p.row * (cellH + gap) + (p.rows * cellH + (p.rows - 1) * gap) / 2;
-    camX += focus[i] * (width / 2 - cx) * 0.05;
-    camY += focus[i] * (height / 2 - cy) * 0.05;
-  });
-  const camScale = camIn * (1 + 0.02 * anyFocus);
+  const camAt = (fr: number) => {
+    const fs = tiles.map((_, i) => focusOf(i, fr));
+    const camIn = interpolate(fr, [0, buildEnd + 6], [0.97, 1], {
+      extrapolateRight: "clamp",
+      easing: LIGHT,
+    });
+    let x = 0;
+    let y = 0;
+    placed.forEach((p, i) => {
+      const cx =
+        padX +
+        p.col * (cellW + gap) +
+        (p.cols * cellW + (p.cols - 1) * gap) / 2;
+      const cy =
+        top + p.row * (cellH + gap) + (p.rows * cellH + (p.rows - 1) * gap) / 2;
+      x += fs[i] * (width / 2 - cx) * 0.05;
+      y += fs[i] * (height / 2 - cy) * 0.05;
+    });
+    const k =
+      camIn *
+      (1 +
+        0.02 *
+          Math.min(
+            1,
+            fs.reduce((a, b) => a + b, 0),
+          ));
+    return { x, y, k };
+  };
+  const { x: camX, y: camY, k: camScale } = camAt(frame);
+  const camStep = (a: number, b: number) => {
+    const p = camAt(a);
+    const q = camAt(b);
+    return (
+      Math.abs(p.x - q.x) > 1e-5 ||
+      Math.abs(p.y - q.y) > 1e-5 ||
+      Math.abs(p.k - q.k) > 1e-7
+    );
+  };
+  const camMoving = camStep(frame, frame + 1) || camStep(frame - 1, frame);
 
   const eyeIn = interpolate(frame, [0, 12], [0, 1], { ...CL, easing: LIGHT });
   const headIn = interpolate(frame, [2, 18], [0, 1], { ...CL, easing: ENTER });
@@ -791,7 +818,9 @@ export function BentoBuild({
       <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            transform: `translate(${camX}px, ${camY}px) scale(${camScale})`,
+            // The camera carries the heading and every tile, so its mark
+            // covers their text while it eases.
+            transform: `translate(${camX}px, ${camY}px) scale(${camScale})${glide(camMoving)}`,
             transformOrigin: "50% 55%",
           }}
         >
@@ -854,7 +883,12 @@ export function BentoBuild({
             const tilt =
               (hash(i + 7) > 0.5 ? 1 : -1) * (1.5 + hash(i + 3) * 1.5);
 
-            const move = spring({ frame: frame - at, fps, config: CARD });
+            const moveAt = (fr: number) =>
+              spring({ frame: fr - at, fps, config: CARD });
+            const move = moveAt(frame);
+            const tileMoving =
+              Math.abs(moveAt(frame + 1) - move) > 1e-5 ||
+              Math.abs(move - moveAt(frame - 1)) > 1e-5;
             const lockAt = at + 12;
             const click = interpolate(
               frame,
@@ -904,7 +938,7 @@ export function BentoBuild({
                     move < 0.99
                       ? `blur(${Math.max(0, 1 - move) * 6}px)`
                       : undefined,
-                  transform: `translate(${tx}px, ${ty}px) rotate(${rot}deg) scale(${sc * lift})`,
+                  transform: `translate(${tx}px, ${ty}px) rotate(${rot}deg) scale(${sc * lift})${glide(tileMoving)}`,
                 }}
               >
                 <div
