@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export interface ExtrudePopProps {
@@ -42,7 +43,7 @@ export function ExtrudePop({
   faceColor = "#ffffff",
 }: ExtrudePopProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
 
   const fit = useMemo(() => {
     if (typeof document === "undefined") return 1;

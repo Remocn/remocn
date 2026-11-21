@@ -3,15 +3,8 @@
 import { loadFont } from "@remotion/google-fonts/Figtree";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -809,8 +802,8 @@ export function NowPlaying({
   groundParams,
 }: NowPlayingProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay);
-  const { fps, width, height } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { fps, width, height } = useSceneConfig();
   const f = frame * speed;
   const mini = variant === "mini";
   const t = f - (mini ? MINI_OFFSET : 0);

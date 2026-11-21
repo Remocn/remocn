@@ -2,14 +2,8 @@
 
 import { loadFont } from "@remotion/google-fonts/HankenGrotesk";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -472,8 +466,8 @@ export function WorldSignups({
   groundParams,
 }: WorldSignupsProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const pal = palette(theme);
   const fg = ink ?? pal.text;
   const tall = H > W * 1.2;

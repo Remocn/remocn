@@ -4,13 +4,8 @@ import { loadFont } from "@remotion/google-fonts/Geist";
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadFont("normal", {
@@ -163,9 +158,9 @@ export function SplitFlash({
   theme = "dark",
   speed = 1,
 }: SplitFlashProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
   const glide = useGlide();
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 

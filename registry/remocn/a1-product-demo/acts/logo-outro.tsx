@@ -1,12 +1,7 @@
 "use client";
 
-import {
-  AbsoluteFill,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import {
   FLOW_BG,
   FLOW_INK,
@@ -43,8 +38,8 @@ function FlowithLogo({ size }: { size: number }) {
 }
 
 export function LogoOutro({ speed = 1 }: { speed?: number }) {
-  const f = useCurrentFrame() * speed;
-  const { fps } = useVideoConfig();
+  const f = useSceneFrame() * speed;
+  const { fps } = useSceneConfig();
   const glide = useGlide();
 
   const revealAt = (g: number) =>

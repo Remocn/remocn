@@ -45,7 +45,7 @@ export const MyVideo = () => (
 );
 ```
 
-The composition needs to be as long as the sequencer: the total is the sum of every scene's `durationInFrames`, falling back to `config.sceneFrames` for scenes that don't set one.
+The composition needs to be as long as the sequencer: the total is the sum of every scene's `durationInFrames`, falling back to `config.sceneFrames` for scenes that don't set one. Those are 30 fps frames, so a 60 fps composition needs twice the sum.
 
 ## Axis
 
@@ -56,7 +56,7 @@ The composition needs to be as long as the sequencer: the total is the sum of ev
 A slide hands the stage over with no overlap, which means a scene whose first reveal starts at its own frame 0 arrives **empty** and rides in as a blank card — the exact slideshow feel this grammar exists to avoid. Lead the scene's internal clock so its opening element is already on screen and moving when the scene slides in:
 
 ```tsx
-const Claim = ({ start, lead = 18 }: { start: number; lead?: number }) => {
+const Claim = ({ start, lead = 36 }: { start: number; lead?: number }) => {
   const f = useCurrentFrame() - start + lead;
   return <YourContent frame={f} />;
 };

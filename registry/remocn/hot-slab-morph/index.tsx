@@ -9,14 +9,12 @@ import {
 } from "@remotion/transitions";
 import type React from "react";
 import { useId } from "react";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+  useCompositionFrames,
+  useSceneConfig,
+  useSceneFrame,
+} from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -191,7 +189,7 @@ const HotSlabMorphPresentation: React.FC<
   presentationDurationInFrames,
   passedProps,
 }) => {
-  const { width: W, height: H, fps } = useVideoConfig();
+  const { width: W, height: H, fps } = useSceneConfig();
   const o = { ...hotSlabMorphDefaults, ...passedProps };
   const frames = Math.max(2, presentationDurationInFrames);
   const s = slabState(presentationProgress, frames, fps, o);
@@ -533,7 +531,7 @@ function Heading({
   appear: number;
   fontFamily: string;
 }) {
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const L = layout(W, H);
   const fs = L.tall ? W * 0.085 : W * 0.046;
   return (
@@ -589,8 +587,8 @@ function SceneA({
   look: SceneLook;
 }) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const L = layout(W, H);
   const u = L.tall ? W / 600 : H / 720;
   const [px, py, pw, ph] = L.panel;
@@ -773,8 +771,8 @@ function SceneB({
   look: SceneLook;
 }) {
   const glide = useGlide();
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const frame = useSceneFrame() * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const L = layout(W, H);
   const u = L.tall ? W / 600 : H / 720;
   const [ix, iy, iw, ih] = L.input;
@@ -1018,14 +1016,17 @@ export function HotSlabMorphDemo({
   groundParamsB,
   transition,
 }: HotSlabMorphDemoProps) {
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const base = THEMES[theme];
   const themed = accent ? { ...base, accent } : base;
   const palette = ink ? { ...themed, ink } : themed;
   const L = layout(W, H);
   const look: SceneLook = { fontFamily, background, scale, speed };
   // Speed scales the series itself so the transition keeps pace with the scenes.
-  const len = (f: number) => Math.max(1, Math.round(f / speed));
+  // Remotion counts a series in the composition's own frames; the lengths
+  // here are written on the 30 fps timeline the scenes run on.
+  const toFrames = useCompositionFrames();
+  const len = (f: number) => Math.max(1, toFrames(f / speed));
   // The slab morphs between the panels where the scale layer draws them.
   const scaled = (r: Rect): Rect =>
     scale === 1
@@ -1044,7 +1045,9 @@ export function HotSlabMorphDemo({
       }}
     >
       <TransitionSeries>
-        <TransitionSeries.Sequence durationInFrames={delay + len(A_LEN)}>
+        <TransitionSeries.Sequence
+          durationInFrames={toFrames(delay) + len(A_LEN)}
+        >
           <SceneA
             line={lineA}
             searchLabel={searchLabel}

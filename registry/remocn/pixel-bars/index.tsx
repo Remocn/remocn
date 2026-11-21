@@ -2,13 +2,8 @@
 
 import { loadFont } from "@remotion/google-fonts/SpaceGrotesk";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: grotesk } = loadFont("normal", {
@@ -147,8 +142,8 @@ export function PixelBars({
   speed = 1,
 }: PixelBarsProps) {
   const glide = useGlide();
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const pal = THEMES[theme];

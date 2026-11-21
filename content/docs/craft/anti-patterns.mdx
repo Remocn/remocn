@@ -11,10 +11,10 @@ Every component has a natural length. Budget the `Sequence` around it — under-
 animation off mid-motion, over-budgeting leaves dead air.
 
 ```tsx
-// ❌ blur-out-up needs ~90f, gets cut at 30
-<Sequence durationInFrames={30}><BlurOutUp text="Launch" /></Sequence>
+// ❌ blur-out-up needs ~180f at 60 fps, gets cut at 60
+<Sequence durationInFrames={60}><BlurOutUp text="Launch" /></Sequence>
 // ✅
-<Sequence durationInFrames={90}><BlurOutUp text="Launch" /></Sequence>
+<Sequence durationInFrames={180}><BlurOutUp text="Launch" /></Sequence>
 ```
 
 Natural lengths for every component are listed in
@@ -31,12 +31,12 @@ Transitions are presentations for `@remotion/transitions` — pass them to
 <SceneB />
 // ✅
 <TransitionSeries>
-  <TransitionSeries.Sequence durationInFrames={70}><SceneA /></TransitionSeries.Sequence>
+  <TransitionSeries.Sequence durationInFrames={140}><SceneA /></TransitionSeries.Sequence>
   <TransitionSeries.Transition
-    timing={linearTiming({ durationInFrames: 26 })}
+    timing={linearTiming({ durationInFrames: 52 })}
     presentation={whipPan()}
   />
-  <TransitionSeries.Sequence durationInFrames={70}><SceneB /></TransitionSeries.Sequence>
+  <TransitionSeries.Sequence durationInFrames={140}><SceneB /></TransitionSeries.Sequence>
 </TransitionSeries>
 ```
 
@@ -53,7 +53,7 @@ Primitives (`remocn-ui`) are state-based and have **no `speed`**. Drive them wit
 
 ## Wrong canvas size
 
-The standard composition is `1280×720 @ 30fps`. Components are laid out for it. Don't invent
+The standard composition is `1280×720 @ 60fps`. Components are laid out for it. Don't invent
 `1920×1080` and wonder why things are off-center.
 
 ## Animating layout properties
@@ -62,8 +62,8 @@ Animate `transform` (and individual `translate` / `scale`), never `top` / `left`
 `height` — layout animation reflows every frame and breaks split layouts.
 
 ```tsx
-// ❌ left: interpolate(frame, [0,30], [0,200])
-// ✅ transform: `translateX(${interpolate(frame,[0,30],[0,200])}px)`
+// ❌ left: interpolate(frame, [0,60], [0,200])
+// ✅ transform: `translateX(${interpolate(frame,[0,60],[0,200])}px)`
 ```
 
 ## Non-deterministic code

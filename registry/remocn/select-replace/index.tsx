@@ -10,9 +10,8 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const geist = loadGeist("normal", { weights: ["500"], subsets: ["latin"] });
@@ -277,8 +276,8 @@ export function SelectReplace({
   speed = 1,
 }: SelectReplaceProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width, height } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const t = THEMES[theme];
   const stage = background === "transparent" ? undefined : (background ?? t.bg);
   const measure = useMeasurer(fontFamily, fontWeight);

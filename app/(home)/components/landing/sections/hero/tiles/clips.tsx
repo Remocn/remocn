@@ -6,8 +6,9 @@ import {
   lazy,
   Suspense,
 } from "react";
-import { AbsoluteFill, Freeze, Sequence, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Freeze, Sequence } from "remotion";
 import registry from "@/lib/previews";
+import { useCompositionFrames, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { cn } from "@/lib/utils";
 import { previewManifest } from "@/registry/__manifest__";
 import { LANDING_SCENES } from "../../../scenes";
@@ -97,7 +98,8 @@ export function Clip({
   canvas?: Box;
   anchor?: "center" | "bottom-left";
 }) {
-  const local = useCurrentFrame();
+  const toFrames = useCompositionFrames();
+  const local = useSceneFrame();
   const preview = previewOf(spec.name);
   if (!preview || !loaderOf(spec.name)) {
     return <AbsoluteFill style={{ background: spec.background }} />;
@@ -137,11 +139,11 @@ export function Clip({
           spec.background === "transparent" && "[&>*>*]:!bg-transparent",
         )}
       >
-        <Freeze frame={frame}>
+        <Freeze frame={toFrames(frame)}>
           <Sequence
             width={width}
             height={height}
-            durationInFrames={spec.end === "run" ? 100000 : native}
+            durationInFrames={toFrames(spec.end === "run" ? 100000 : native)}
           >
             {Ready ? (
               <Ready {...preview.defaults} {...spec.props} />

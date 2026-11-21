@@ -5,13 +5,13 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useAutoplay } from "@/app/(home)/components/use-autoplay";
 import registry from "@/lib/previews";
+import { sitePreview } from "@/lib/previews/site-preview";
 import type { ShaderPresetItem } from "@/lib/shader-presets";
-import { previewManifest } from "@/registry/__manifest__";
 import { CopyButton } from "./copy-button";
 
 export function ShaderPresetCard({ item }: { item: ShaderPresetItem }) {
   const entry = registry[item.name];
-  const preview = previewManifest[item.name];
+  const preview = sitePreview(item.name);
   const playerRef = useRef<PlayerRef>(null);
   const { containerRef } = useAutoplay(playerRef);
   // The Player mounts after hydration: on the server its lazyComponent would

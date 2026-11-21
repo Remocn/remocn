@@ -2,15 +2,9 @@
 
 import { loadFont as loadSans } from "@remotion/google-fonts/Manrope";
 import { useState } from "react";
-import {
-  AbsoluteFill,
-  Img,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Img, interpolate, spring } from "remotion";
 import { Confetti } from "@/components/remocn/confetti";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export interface FollowerNotification {
@@ -260,8 +254,8 @@ export function XFollowersOverview({
   speed = 1,
 }: XFollowersOverviewProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
-  const { durationInFrames, width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { durationInFrames, width, height, fps } = useSceneConfig();
   const t = THEMES.light;
   const isVertical = orientation === "vertical";
 

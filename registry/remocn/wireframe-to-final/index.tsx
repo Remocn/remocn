@@ -4,14 +4,8 @@ import { loadFont } from "@remotion/google-fonts/IBMPlexMono";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: mono } = loadFont("normal", {
@@ -401,8 +395,8 @@ export function WireframeToFinal({
   measurements = ["1440", "900", "288"],
 }: WireframeToFinalProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width, height } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const P = PALETTE[theme];
   const stage =

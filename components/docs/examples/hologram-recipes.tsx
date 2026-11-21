@@ -1,8 +1,9 @@
 "use client";
 
 import type React from "react";
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, interpolate } from "remotion";
 import { CanvasSceneA } from "@/components/docs/examples/canvas-scenes";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { Hologram } from "@/registry/remocn/hologram";
 
 const MONO =
@@ -75,7 +76,7 @@ function HudDial({
 }
 
 export function HudFrame({ children }: { children: React.ReactNode }) {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const sweep = Math.floor((frame / CYCLE) * 10) % 10;
 
   return (
@@ -228,7 +229,7 @@ export function HologramConsoleExampleScene() {
 }
 
 export function HologramBootExampleScene() {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const unstable = interpolate(frame, [0, 34, 76, 96], [1, 0, 0, 1]);
 
   return (

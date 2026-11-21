@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { Easing, useCurrentFrame, useVideoConfig } from "remotion";
+import { Easing } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export type CodeMorphTheme = "dark" | "light";
@@ -1218,10 +1219,10 @@ export function CodeMorph({
   speed = codeMorphDefaults.speed,
   className,
 }: CodeMorphProps) {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   // `glide` is taken by the easing above.
   const tilt = useGlide();
-  const { width, height, fps } = useVideoConfig();
+  const { width, height, fps } = useSceneConfig();
   const layout = useMemo(() => {
     const shape = { steps, fontSize, lineNumbers, filename, windowDots };
     return getCodeMorphLayout({ ...shape, width, height });

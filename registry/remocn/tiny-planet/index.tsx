@@ -1,14 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  random,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, random } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type TinyPlanetColors = {
   sky: string;
@@ -96,8 +90,8 @@ export function TinyPlanet({
   groundColor,
   speed = tinyPlanetDefaults.speed,
 }: TinyPlanetProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const baseColors = { ...tinyPlanetDefaults.colors, ...colorOverrides };
   const colors = {
     ...baseColors,

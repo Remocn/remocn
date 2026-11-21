@@ -10,9 +10,8 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const urbanist = loadVariableFont("normal", { subsets: ["latin"] });
@@ -184,8 +183,8 @@ export function BugDock({
   theme = "dark",
 }: BugDockProps) {
   const glide = useGlide();
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const blue = normalizeHex(accent, c.blue);

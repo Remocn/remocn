@@ -43,11 +43,11 @@ export const Headline = () => (
 );
 ```
 
-At 30 fps the default shows **Your** during the first second and **product**
-during the second. Give the composition at least 60 frames; 75 frames includes
-a short final hold. Animation timing is measured in frames. For N words,
-allocate at least `(N - 1) * wordDuration + 0.6 * wordDuration` frames, then add
-any hold you need.
+The default shows **Your** during the first second and **product** during the
+second. Give a 60 fps composition at least 120 frames; 150 frames includes a
+short final hold. Animation timing is measured in 30 fps frames. For N words,
+allocate at least `(N - 1) * wordDuration + 0.6 * wordDuration` of them, twice
+that at 60 fps, then add any hold you need.
 
 Space-separated text plays word by word. Use newlines to keep phrases together:
 `text={"Your product\nOne clear story"}`. Blank lines are ignored.

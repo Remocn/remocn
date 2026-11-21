@@ -8,9 +8,8 @@ import {
   Easing,
   interpolate,
   interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: INTER } = loadFont("normal", {
@@ -207,8 +206,8 @@ export function SelectionSnap({
   className,
 }: SelectionSnapProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
-  const { fps, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps, height } = useSceneConfig();
   const unit = height / 720;
   const t = getSelectionSnapTime(frame, { fps, speed });
   const state = getSelectionSnapState(t);

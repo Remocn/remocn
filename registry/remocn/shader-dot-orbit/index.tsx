@@ -2,12 +2,8 @@
 
 import { DotOrbit, type DotOrbitProps } from "@paper-design/shaders-react";
 import { useCallback, useState } from "react";
-import {
-  continueRender,
-  delayRender,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { continueRender, delayRender } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const NEUTRAL_COLORS = ["#4a4a68", "#52527a", "#3a3a5c"];
 
@@ -23,8 +19,8 @@ export function ShaderDotOrbit({
   className,
   ...rest
 }: ShaderDotOrbitProps) {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps, width, height } = useSceneConfig();
 
   const [handle] = useState(() => delayRender("shader-dot-orbit"));
   const gate = useCallback(

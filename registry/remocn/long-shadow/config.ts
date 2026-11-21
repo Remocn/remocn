@@ -46,6 +46,8 @@ export const longShadowConfig: ComponentConfig = {
   },
   durationInFrames: 70,
   fps: FPS,
+  // Does not hold 60 fps in the browser yet (`audit:playback`: paint).
+  previewFps: 30,
   compositionWidth: W,
   compositionHeight: H,
   previewBackdrop: { type: "color", value: "#FFFFFF" },

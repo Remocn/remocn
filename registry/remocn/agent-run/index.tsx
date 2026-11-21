@@ -1,7 +1,8 @@
 "use client";
 
 import { type CSSProperties, useMemo } from "react";
-import { Easing, random, useCurrentFrame, useVideoConfig } from "remotion";
+import { Easing, random } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export type AgentRunTheme = "light" | "dark";
@@ -2581,8 +2582,8 @@ export function AgentRun({
   className,
 }: AgentRunProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const model = useMemo(
     () => getAgentRunModel(run, { seed, compression, width, height }),
     [run, seed, compression, width, height],

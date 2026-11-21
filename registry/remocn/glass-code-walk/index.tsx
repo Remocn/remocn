@@ -1,7 +1,8 @@
 "use client";
 
-import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { GlassCodeBlock } from "@/components/remocn/glass-code-block";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export interface GlassCodeWalkProps {
@@ -50,7 +51,7 @@ export function GlassCodeWalk({
   className,
 }: GlassCodeWalkProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
 
   const lines = code.split("\n");
   const lineCount = lines.length;

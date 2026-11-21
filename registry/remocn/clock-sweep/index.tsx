@@ -5,13 +5,8 @@ import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import { loadFont as loadMono } from "@remotion/google-fonts/JetBrainsMono";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadSans("normal", {
@@ -411,8 +406,8 @@ export function ClockSweep({
 }: ClockSweepProps) {
   // `glide` is the camera's move to the left here.
   const tilt = useGlide();
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width, height } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const u = height / 720;
   const p: Palette = THEMES[theme];
   const fg = ink ?? p.fg;

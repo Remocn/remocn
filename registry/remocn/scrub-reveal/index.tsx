@@ -4,14 +4,8 @@ import { loadFont } from "@remotion/google-fonts/Geist";
 import { loadVariableFont } from "@remotion/google-fonts/Newsreader";
 import type React from "react";
 import { useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: geist } = loadFont("normal", {
@@ -151,8 +145,8 @@ export function ScrubReveal({
   theme = "dark",
 }: ScrubRevealProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const late = scrub - (SCROLL_END - SCROLL_START);
 

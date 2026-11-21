@@ -48,8 +48,8 @@ export const MyScene = () => (
 
 `delay` is counted from the start of the enclosing `Sequence`, so the scene
 plays untouched for `delay` frames and the collapse runs for the next
-`durationInFrames`. Budget both: a `Sequence` that ends before
-`delay + durationInFrames` cuts away mid-collapse.
+`durationInFrames`. Both count 30 fps frames. Budget both: at 60 fps a `Sequence`
+that ends before `(delay + durationInFrames) * 2` cuts away mid-collapse.
 
 The default 18 frames is a hard power cut. Stretch it toward 30 and the line
 hangs long enough to read as a tube giving up rather than being switched.

@@ -10,9 +10,8 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const SANS = loadSans("normal", { weights: ["500"], subsets: ["latin"] });
@@ -503,8 +502,8 @@ export function GlassCapsule({
   theme = "dark",
 }: GlassCapsuleProps) {
   const tilt = useGlide();
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width, height, durationInFrames } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, durationInFrames } = useSceneConfig();
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
   const stage =

@@ -53,7 +53,7 @@ deterministic and cheap after the first.
 
 ## Timing
 
-At 30 fps, `speed={1}` and `framesPerGeneration={5}`:
+In 30 fps frames, at `speed={1}` and `framesPerGeneration={5}`:
 
 | Frames | Motion |
 | --- | --- |
@@ -64,7 +64,8 @@ At 30 fps, `speed={1}` and `framesPerGeneration={5}`:
 | every 5 frames | The next generation starts |
 
 The simulation runs for as long as the composition: it precomputes
-`durationInFrames × speed / framesPerGeneration` generations. It has no loop
+`durationInFrames × speed / framesPerGeneration` generations, with
+`durationInFrames` counted at 30 fps. It has no loop
 point. Over a long run the board can settle into still lifes and blinkers;
 try another `seed` or a higher `density` if a seed calms down too early.
 

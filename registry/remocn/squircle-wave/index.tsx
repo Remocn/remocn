@@ -1,14 +1,8 @@
 "use client";
 
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface SquircleWaveProps {
   /** Colour of the wave's leading edge just behind the crest. */
@@ -202,10 +196,10 @@ export function SquircleWave({
   speed = 1,
   theme = "dark",
 }: SquircleWaveProps) {
-  const f = Math.max(0, useCurrentFrame() - delay) * speed;
+  const f = Math.max(0, useSceneFrame() - delay) * speed;
   const waveEnd = WAVE_START + sweep;
   const ANGLE = (angle * Math.PI) / 180;
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const p = THEMES[theme];
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");

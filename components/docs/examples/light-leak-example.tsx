@@ -5,6 +5,7 @@ import {
   CanvasSceneA,
   CanvasSceneB,
 } from "@/components/docs/examples/canvas-scenes";
+import { useCompositionFrames } from "@/lib/remocn/frame-rate";
 import {
   type LightLeakProps,
   lightLeak,
@@ -37,20 +38,21 @@ export function LightLeakExampleScene({
   leakColor,
   blowoutColor,
 }: LightLeakExampleProps) {
+  const toFrames = useCompositionFrames();
   return (
     <TransitionSeries>
-      <TransitionSeries.Sequence durationInFrames={70}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(70)}>
         <CanvasSceneA />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
-        timing={linearTiming({ durationInFrames: 20 })}
+        timing={linearTiming({ durationInFrames: toFrames(20) })}
         presentation={lightLeak({
           origin,
           intensity,
           colors: paletteOf(leakColor, blowoutColor),
         })}
       />
-      <TransitionSeries.Sequence durationInFrames={70}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(70)}>
         <CanvasSceneB />
       </TransitionSeries.Sequence>
     </TransitionSeries>
@@ -77,14 +79,14 @@ import { lightLeak } from "@/components/remocn/light-leak";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 20 })}
+      timing={linearTiming({ durationInFrames: 40 })}
       presentation={lightLeak({ origin: "${origin}", intensity: ${intensity}${colors} })}
     />
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

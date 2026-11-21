@@ -4,15 +4,8 @@ import { loadFont } from "@remotion/google-fonts/Geist";
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -662,8 +655,8 @@ export function VideoWatchPage({
   groundParams,
 }: VideoWatchPageProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width, height, fps } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const dark = theme === "dark";
   const pal = dark ? DARK : LIGHT;
   const fg = ink ?? pal.text;

@@ -3,14 +3,8 @@
 import { loadFont } from "@remotion/google-fonts/Fraunces";
 import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
@@ -218,8 +212,8 @@ export function KerningSnap({
   speed = 1,
 }: KerningSnapProps) {
   const glide = useGlide();
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = THEMES[theme];
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);

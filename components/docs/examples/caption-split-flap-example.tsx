@@ -1,7 +1,8 @@
 "use client";
 
-import { AbsoluteFill, useVideoConfig } from "remotion";
+import { AbsoluteFill } from "remotion";
 import { previewCaptions } from "@/components/docs/examples/caption-fixture";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 import { CaptionSplitFlap } from "@/registry/remocn/caption-split-flap";
 
 interface CaptionSplitFlapExampleProps {
@@ -23,7 +24,7 @@ export function CaptionSplitFlapExampleScene({
   combineTokensWithinMilliseconds,
   holdMs,
 }: CaptionSplitFlapExampleProps) {
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   return (
     <AbsoluteFill
       style={{

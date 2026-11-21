@@ -11,9 +11,8 @@ import {
   interpolate,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -606,9 +605,9 @@ export function UrlBarCta({
   groundParams,
 }: UrlBarCtaProps) {
   const glide = useGlide();
-  const raw = useCurrentFrame();
+  const raw = useSceneFrame();
   const frame = Math.max(0, raw - delay) * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const { width: W, height: H, fps } = useSceneConfig();
   const portrait = H > W;
   const u = portrait ? W / 760 : Math.min(W / 1280, H / 720);
   const pal = palette(theme);

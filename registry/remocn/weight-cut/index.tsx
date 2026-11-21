@@ -10,9 +10,8 @@ import {
   Easing,
   interpolate,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const WEIGHTS = ["100", "200", "300", "400", "500"] as const;
@@ -201,8 +200,8 @@ export function WeightCut({
   theme = "dark",
 }: WeightCutProps) {
   const glide = useGlide();
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = THEMES[theme];
   const spot = accent ?? c.accent;
   const fg = ink ?? c.ink;

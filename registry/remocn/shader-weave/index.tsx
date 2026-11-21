@@ -1,12 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  continueRender,
-  delayRender,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { continueRender, delayRender } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 // A woven substrate — warp and weft threads crossing on a domain-warped grid,
 // interlacing over/under like real cloth, with a slow sheen of light travelling
@@ -163,8 +159,8 @@ export function ShaderWeave({
   speed = 1,
   className,
 }: ShaderWeaveProps) {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps, width, height } = useSceneConfig();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stateRef = useRef<GlState | null>(null);
   const [handle] = useState(() => delayRender("shader-weave"));

@@ -2,6 +2,7 @@
 
 import { linearTiming, TransitionSeries } from "@remotion/transitions";
 import { AbsoluteFill } from "remotion";
+import { useCompositionFrames } from "@/lib/remocn/frame-rate";
 import { iconScatter } from "@/registry/remocn/icon-scatter";
 
 const FONT_FAMILY =
@@ -44,16 +45,17 @@ export function IconScatterExampleScene({
   coverColor,
   flyDistance,
 }: IconScatterExampleProps) {
+  const toFrames = useCompositionFrames();
   return (
     <TransitionSeries>
-      <TransitionSeries.Sequence durationInFrames={70}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(70)}>
         <Scene label="Scene A" background="#0a0a0a" />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
-        timing={linearTiming({ durationInFrames: 40 })}
+        timing={linearTiming({ durationInFrames: toFrames(40) })}
         presentation={iconScatter({ count, color, coverColor, flyDistance })}
       />
-      <TransitionSeries.Sequence durationInFrames={70}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(70)}>
         <Scene label="Scene B" background="#141318" />
       </TransitionSeries.Sequence>
     </TransitionSeries>
@@ -72,14 +74,14 @@ import { iconScatter } from "@/components/remocn/icon-scatter";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 40 })}
+      timing={linearTiming({ durationInFrames: 80 })}
       presentation={iconScatter({ count: ${count}, color: "${color}", coverColor: "${coverColor}", flyDistance: ${flyDistance} })}
     />
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

@@ -2,13 +2,8 @@
 
 import { linearTiming, TransitionSeries } from "@remotion/transitions";
 import { type CSSProperties, type ReactNode, useEffect } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  Sequence,
-  useCurrentFrame,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, Sequence } from "remotion";
+import { useCompositionFrames, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { focusPull } from "@/registry/remocn/focus-pull";
 import { pushThrough } from "@/registry/remocn/push-through";
 import { rippleZoom } from "@/registry/remocn/ripple-zoom";
@@ -47,6 +42,7 @@ function swayAt(frame: number, centers: number[], amount: number) {
   return amount * Math.sin((2 * Math.PI * t) / 16) * Math.exp(-t / 11);
 }
 
+/** `frames` is the transition's length in the composition's own frames. */
 function transition(cut: Cut, frames: number, key: string) {
   const timing = linearTiming({ durationInFrames: frames });
   switch (cut.kind) {
@@ -102,6 +98,7 @@ function transition(cut: Cut, frames: number, key: string) {
 }
 
 function ReelContent({ reel }: { reel: Reel }) {
+  const toFrames = useCompositionFrames();
   const tf = reel.transitionFrames;
   const items: ReactNode[] = [];
   const clips = [...reel.clips, reel.clips[0]];
@@ -112,10 +109,10 @@ function ReelContent({ reel }: { reel: Reel }) {
     items.push(
       <TransitionSeries.Sequence
         key={`s-${i}`}
-        durationInFrames={Math.max(1, duration)}
+        durationInFrames={toFrames(Math.max(1, duration))}
       >
         {first ? (
-          <Sequence from={-tf}>
+          <Sequence from={toFrames(-tf)}>
             <Clip spec={spec} />
           </Sequence>
         ) : (
@@ -124,7 +121,7 @@ function ReelContent({ reel }: { reel: Reel }) {
       </TransitionSeries.Sequence>,
     );
     if (!last && tf > 0) {
-      items.push(transition(reel.cuts[i], tf, `t-${i}`));
+      items.push(transition(reel.cuts[i], toFrames(tf), `t-${i}`));
     }
   });
   return <TransitionSeries>{items}</TransitionSeries>;
@@ -156,14 +153,15 @@ function hardCut() {
 }
 
 function HardCutContent({ reel, extend = 0 }: { reel: Reel; extend?: number }) {
+  const toFrames = useCompositionFrames();
   const centers = cutCenters(reel);
   return (
     <>
       {[...reel.clips, reel.clips[0]].map((spec, i) => (
         <Sequence
           key={`${spec.name}-${i}`}
-          from={centers[i]}
-          durationInFrames={reel.beat + extend}
+          from={toFrames(centers[i])}
+          durationInFrames={toFrames(reel.beat + extend)}
         >
           <Clip spec={spec} />
         </Sequence>
@@ -211,7 +209,7 @@ function Shell({
 }
 
 function ReelMode({ config, reel }: { config: HeroTilesConfig; reel: Reel }) {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const rotate =
     config.video.tilt + swayAt(frame, cutCenters(reel), config.video.sway);
   return (
@@ -225,7 +223,7 @@ function ReelMode({ config, reel }: { config: HeroTilesConfig; reel: Reel }) {
 }
 
 function MorphMode({ config, reel }: { config: HeroTilesConfig; reel: Reel }) {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const centers = cutCenters(reel);
   const tf = Math.max(reel.transitionFrames, 1);
   const shapes = [...reel.clips, reel.clips[0]].map((spec) => spec.radius);
@@ -256,7 +254,7 @@ function MorphMode({ config, reel }: { config: HeroTilesConfig; reel: Reel }) {
 }
 
 function FlipMode({ config, reel }: { config: HeroTilesConfig; reel: Reel }) {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const centers = cutCenters(reel);
   const half = Math.max(Math.round(reel.transitionFrames / 2), 1);
   let angle = 0;
@@ -296,7 +294,8 @@ function deckPose(slot: number, tilt: number) {
 }
 
 function DeckMode({ config, reel }: { config: HeroTilesConfig; reel: Reel }) {
-  const frame = useCurrentFrame();
+  const toFrames = useCompositionFrames();
+  const frame = useSceneFrame();
   const centers = cutCenters(reel);
   const tf = Math.max(reel.transitionFrames, 1);
   const depth = config.video.deckDepth;
@@ -364,7 +363,7 @@ function DeckMode({ config, reel }: { config: HeroTilesConfig; reel: Reel }) {
             opacity: 1 - fly,
           }}
         >
-          <Sequence from={centers[index] - reel.beat}>
+          <Sequence from={toFrames(centers[index] - reel.beat)}>
             <Clip spec={outgoing} />
           </Sequence>
         </Shell>

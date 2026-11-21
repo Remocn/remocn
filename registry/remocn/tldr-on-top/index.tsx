@@ -9,9 +9,8 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const rubik = loadFont("normal", {
@@ -187,8 +186,8 @@ export function TldrOnTop({
   theme = "dark",
 }: TldrOnTopProps) {
   const glide = useGlide();
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;

@@ -1,7 +1,8 @@
 "use client";
 
 import { useId } from "react";
-import { interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface ChromaticWaveProps {
   className?: string;
@@ -139,8 +140,8 @@ export function ChromaticWave({
   glassPasses = 3,
   channelOrder = ["blue", "green", "red"],
 }: ChromaticWaveProps) {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps } = useSceneConfig();
   const filterId = useId();
   const seconds = frame / fps;
 

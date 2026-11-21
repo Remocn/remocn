@@ -18,6 +18,8 @@ const UNDOCUMENTED: Record<string, string> = {
   "canvas-presentation": "shared html-in-canvas scaffolding lib",
   "caption-core": "shared caption paging and timing lib",
   glide: "shared lib that keeps moving text off the pixel grid",
+  "frame-rate":
+    "shared lib that keeps timings in 30 fps frames at any frame rate",
   brush: "ribbon primitive consumed by the ink marks, not used on its own",
   "select-item": "folds into the select page",
   "dropdown-menu-item": "folds into the dropdown-menu page",
@@ -374,6 +376,32 @@ describe("previews are built outside the site's bundler", () => {
     const { previewNames } = await import("@/registry/__names__");
 
     expect<string[]>([...previewNames]).toEqual(Object.keys(registry));
+  });
+});
+
+describe("components count time on the 30 fps timeline", () => {
+  // Timings in the registry are 30 fps frames. Read through Remotion's own
+  // hooks they change meaning with the composition's frame rate, so a
+  // component reads the frame and the config from `@/lib/remocn/frame-rate`.
+  // Templates carry their own frame rate and convert it themselves.
+  it("no component reads the frame or the config straight from remotion", () => {
+    const offenders = ["remocn", "remocn-ui", "remocn-icons"]
+      .flatMap((space) => [
+        ...new Glob(`registry/${space}/**/*.{ts,tsx}`).scanSync("."),
+      ])
+      .filter(
+        (file) =>
+          !file.includes("/__tests__/") &&
+          !/\.test\.tsx?$/.test(file) &&
+          !file.startsWith("registry/remocn/frame-rate/"),
+      )
+      .filter((file) =>
+        /import\s*\{[^}]*\b(useCurrentFrame|useVideoConfig)\b[^}]*\}\s*from\s*"remotion"/.test(
+          readFileSync(file, "utf8"),
+        ),
+      );
+
+    expect(offenders).toEqual([]);
   });
 });
 

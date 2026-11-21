@@ -52,7 +52,7 @@ renders are deterministic.
 
 ## Timing
 
-At 30 fps, `speed={1}` and the defaults:
+In 30 fps frames, at `speed={1}` and the defaults:
 
 | Frames | Motion |
 | --- | --- |
@@ -66,7 +66,7 @@ The square-root schedule moves the reveal front outward at a steady radial
 speed, so the dense center does not flash in at once. The build is complete
 at `growFrames + 14` frames, 74 at the defaults; after
 that the pulse repeats every `pulseFrames` frames for as long as the
-`Sequence` runs. The docs preview shows two pulses, 165 frames. Divide by
+`Sequence` runs. The docs preview shows two pulses, 330 frames at 60 fps. Divide by
 `speed` for faster playback; `rotation` is in degrees per second and scales
 with `speed` as well.
 

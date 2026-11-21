@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useCurrentFrame } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import { DEFAULT_STEP, paperJitter } from "@/lib/remocn/stop-motion";
 
@@ -25,7 +25,7 @@ export function PaperWobble({
   style,
 }: PaperWobbleProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const pose = (f: number) => {
     const j = paperJitter(f, seed, { amp, rotAmp, step });
     return `translate(${j.x}px, ${j.y}px) rotate(${j.rot}deg)`;

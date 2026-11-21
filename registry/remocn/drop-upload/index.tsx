@@ -3,14 +3,8 @@
 import { loadFont as loadInstrument } from "@remotion/google-fonts/InstrumentSans";
 import { loadFont as loadJetBrains } from "@remotion/google-fonts/JetBrainsMono";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -208,8 +202,8 @@ export function DropUpload({
   delay = 0,
   speed: rate = 1,
 }: DropUploadProps) {
-  const frame = Math.max(0, useCurrentFrame() - delay) * rate;
-  const { width, height, fps } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * rate;
+  const { width, height, fps } = useSceneConfig();
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
   const stageW = portrait ? 760 : 1280;

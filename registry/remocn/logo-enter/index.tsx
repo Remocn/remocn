@@ -1,13 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import {
-  AbsoluteFill,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface Logo {
   mark: ReactNode;
@@ -88,8 +83,8 @@ export function LogoEnter({
   stagger = 7,
   speed = 1,
 }: LogoEnterProps) {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps } = useSceneConfig();
   const isVertical = orientation === "vertical";
 
   return (

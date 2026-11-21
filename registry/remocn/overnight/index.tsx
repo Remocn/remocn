@@ -9,9 +9,8 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const afacad = loadFont("normal", {
@@ -173,9 +172,9 @@ export function Overnight({
   theme = "dark",
 }: OvernightProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay);
+  const frame = Math.max(0, useSceneFrame() - delay);
   const t = frame * speed;
-  const { width: W, height: H, durationInFrames: T } = useVideoConfig();
+  const { width: W, height: H, durationInFrames: T } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const ground =

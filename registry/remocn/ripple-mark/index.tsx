@@ -3,13 +3,8 @@
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { getLength, getPointAtLength, getSubpaths } from "@remotion/paths";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 // Manrope is the remocn.dev brand face: 600 for the logo's "emocn" (the brand
@@ -201,8 +196,8 @@ export function RippleMark({
   speed = 1,
 }: RippleMarkProps) {
   const glide = useGlide();
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const pal = THEMES[theme];

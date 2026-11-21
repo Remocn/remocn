@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { Easing, useCurrentFrame, useVideoConfig } from "remotion";
+import { Easing } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export type KeystrokePlatform = "mac" | "windows";
@@ -931,8 +932,8 @@ export function Keystroke({
   className,
 }: KeystrokeProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const timeline = useMemo(
     () => getKeystrokeTimeline({ steps, platform, linger, fps }),
     [steps, platform, linger, fps],

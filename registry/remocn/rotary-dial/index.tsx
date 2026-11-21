@@ -2,14 +2,8 @@
 
 import { loadFont } from "@remotion/google-fonts/SpaceGrotesk";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -256,9 +250,9 @@ export function RotaryDial({
   speed = 1,
 }: RotaryDialProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const t = Math.max(0, frame - delay) * speed;
-  const { width: VW, height: VH, fps } = useVideoConfig();
+  const { width: VW, height: VH, fps } = useSceneConfig();
   const tall = VH > VW;
   const u = tall ? VW / 760 : Math.min(VW / 1280, VH / 720);
   const p = THEMES[theme];

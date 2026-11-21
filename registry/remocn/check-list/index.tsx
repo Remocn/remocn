@@ -1,7 +1,6 @@
 "use client";
-
-import { useCurrentFrame } from "remotion";
 import { Handwrite, handwriteDuration } from "@/components/remocn/handwrite";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { DEFAULT_STEP, hashRange, steppedRamp } from "@/lib/remocn/stop-motion";
 
 const easeOutCubic = (t: number) => 1 - (1 - t) ** 3;
@@ -227,7 +226,7 @@ export function CheckList({
   seed = "checklist",
   step = DEFAULT_STEP,
 }: CheckListProps) {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const entries = normalizeCheckListItems(items);
   const schedule = checkListSchedule(entries, {
     delay,

@@ -6,13 +6,8 @@ import type {
 } from "@remotion/transitions";
 import type React from "react";
 import { useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  random,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, random } from "remotion";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export type HyperspaceProps = {
@@ -83,7 +78,7 @@ function Starfield({
   opacity: number;
   stride: number;
 }) {
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   const cx = width / 2;
   const cy = height / 2;
   const diag = Math.hypot(width, height) / 2;
@@ -147,7 +142,7 @@ const HyperspacePresentation: React.FC<
     flashColor,
   } = { ...hyperspaceDefaults, ...passedProps };
   const glide = useGlide();
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   const diag = Math.hypot(width, height) / 2;
   const p = presentationProgress;
 

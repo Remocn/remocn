@@ -2,14 +2,8 @@
 
 import { loadFont as loadRubik } from "@remotion/google-fonts/Rubik";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -180,8 +174,8 @@ export function MenuPick({
   groundParams,
 }: MenuPickProps) {
   const glide = useGlide();
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const list = options.length > 0 ? options : ["Start"];

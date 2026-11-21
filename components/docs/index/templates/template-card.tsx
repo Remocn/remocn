@@ -1,8 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { CopyButton } from "@/components/docs/copy-button";
+import { sitePreview } from "@/lib/previews/site-preview";
 import { cn } from "@/lib/utils";
-import { previewManifest } from "@/registry/__manifest__";
 import templatesRegistry from "@/registry/remocn-templates/registry.json";
 import { docsSource, getEntry, getPage, loadDocsSource } from "../data";
 import { TemplatePoster } from "./template-poster";
@@ -50,7 +50,7 @@ export async function TemplateCard({
   const url = `/docs/templates/${name}`;
   const entry = getEntry(url);
   const vibe = getPage(`/docs/templates/${name}`)?.data.vibe;
-  const preview = previewManifest[name];
+  const preview = sitePreview(name);
   const deps =
     (templatesRegistry.items as RegistryItem[]).find(
       (item) => item.name === name,

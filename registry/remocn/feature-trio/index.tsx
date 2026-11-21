@@ -3,13 +3,8 @@
 import { loadFont as loadBricolage } from "@remotion/google-fonts/BricolageGrotesque";
 import { loadFont as loadGeist } from "@remotion/google-fonts/Geist";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const bricolage = loadBricolage("normal", {
@@ -158,8 +153,8 @@ export function FeatureTrio({
   theme = "dark",
 }: FeatureTrioProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width, height, durationInFrames } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, durationInFrames } = useSceneConfig();
   const p = PALETTES[theme];
   const fg = ink ?? p.fg;
   const list = items.slice(0, 4);

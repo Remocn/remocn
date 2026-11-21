@@ -3,13 +3,8 @@
 import { loadFont } from "@remotion/google-fonts/Geist";
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import { type ReactNode, useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
@@ -615,8 +610,8 @@ export function BenchmarkRace({
   theme = "dark",
 }: BenchmarkRaceProps) {
   const tilt = useGlide();
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width, height } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const u = height / 720;
   const th: Theme = THEMES[theme];
   const fg = ink ?? th.fg;

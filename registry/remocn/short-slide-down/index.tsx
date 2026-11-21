@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export interface ShortSlideDownProps {
@@ -29,7 +30,7 @@ export function ShortSlideDown({
   className,
 }: ShortSlideDownProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame() * speed;
+  const frame = useSceneFrame() * speed;
 
   const words = useMemo(() => text.split(" "), [text]);
   const n = words.length;

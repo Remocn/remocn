@@ -10,9 +10,8 @@ import {
   interpolate,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -174,9 +173,9 @@ export function GridToApp({
   groundParams,
 }: GridToAppProps) {
   const glide = useGlide();
-  const clock = useCurrentFrame() - delay;
+  const clock = useSceneFrame() - delay;
   const frame = Math.max(0, clock) * speed;
-  const { width, height, fps } = useVideoConfig();
+  const { width, height, fps } = useSceneConfig();
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
   const stageW = portrait ? 720 : 1280;

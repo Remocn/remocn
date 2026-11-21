@@ -12,9 +12,8 @@ import {
   random,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
@@ -297,9 +296,9 @@ export function GlyphBlockDecode({
   seed = 7,
 }: GlyphBlockDecodeProps) {
   const glide = useGlide();
-  const rawFrame = Math.max(0, useCurrentFrame() - delay);
+  const rawFrame = Math.max(0, useSceneFrame() - delay);
   const frame = rawFrame * speed;
-  const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;

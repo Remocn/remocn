@@ -11,9 +11,8 @@ import {
   interpolate,
   interpolateColors,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadSans("normal", {
@@ -221,10 +220,10 @@ export function RadarCompare({
   speed = 1,
 }: RadarCompareProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const tAt = (f: number) => Math.max(0, f - delay) * speed;
   const t = tAt(frame);
-  const { width, height, fps } = useVideoConfig();
+  const { width, height, fps } = useSceneConfig();
   const gid = `rc${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];

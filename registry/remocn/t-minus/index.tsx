@@ -3,13 +3,8 @@
 import { loadFont } from "@remotion/google-fonts/IBMPlexMono";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: mono } = loadFont("normal", {
@@ -243,8 +238,8 @@ export function TMinus({
   speed = 1,
 }: TMinusProps) {
   const glide = useGlide();
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const u = Math.min(W / 1280, H / 720);

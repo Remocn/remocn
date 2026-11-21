@@ -4,14 +4,8 @@ import { loadFont } from "@remotion/google-fonts/BricolageGrotesque";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
@@ -562,7 +556,7 @@ function PlaceholderScene({
   logo?: React.ReactNode;
   scale: number;
 }) {
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const tones = palette(tone, accent);
   const c = ink === undefined ? tones : { ...tones, fg: ink };
@@ -744,8 +738,8 @@ export function ColorBars({
   grain = true,
 }: ColorBarsProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const n = Math.round(Math.min(6, Math.max(4, colors?.length ?? bars)));
   const fills = colors?.length ? colors : barColors(n, accent, theme);

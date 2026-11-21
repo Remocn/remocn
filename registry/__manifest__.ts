@@ -11,6 +11,8 @@ import type { BackdropFill } from "@/registry/remocn/backdrop";
 export interface PreviewManifestEntry {
   durationInFrames: number;
   fps: number;
+  /** Set when the site plays this preview below its usual frame rate. */
+  previewFps?: number;
   compositionWidth: number;
   compositionHeight: number;
   previewBackdrop?: BackdropFill;
@@ -887,6 +889,7 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
     fps: 30,
     compositionWidth: 1280,
     compositionHeight: 720,
+    previewFps: 30,
     defaults: {
       theme: "dark",
       prefix: "+",
@@ -1001,6 +1004,7 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
     fps: 30,
     compositionWidth: 1280,
     compositionHeight: 720,
+    previewFps: 30,
     defaults: {
       theme: "dark",
       title: "Launch films, made in code",
@@ -2591,6 +2595,7 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
     fps: 30,
     compositionWidth: 1280,
     compositionHeight: 720,
+    previewFps: 30,
     defaults: {
       theme: "dark",
       title: "Changelog",
@@ -4617,6 +4622,7 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
     fps: 30,
     compositionWidth: 1280,
     compositionHeight: 720,
+    previewFps: 30,
     defaults: {
       theme: "dark",
       name: "remocn",
@@ -5531,6 +5537,7 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
     fps: 30,
     compositionWidth: 1280,
     compositionHeight: 720,
+    previewFps: 30,
     defaults: {
       theme: "dark",
       name: "Remocn Studio",
@@ -8205,6 +8212,7 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
     fps: 30,
     compositionWidth: 1280,
     compositionHeight: 720,
+    previewFps: 30,
     defaults: {
       label: "Everything, one shortcut away",
       material: "dark",
@@ -8442,6 +8450,7 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
     fps: 30,
     compositionWidth: 1280,
     compositionHeight: 720,
+    previewFps: 30,
     defaults: {
       theme: "light",
       tagline: "Launch films, cut from components.",
@@ -8584,6 +8593,7 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
     fps: 30,
     compositionWidth: 1280,
     compositionHeight: 720,
+    previewFps: 30,
     previewBackdrop: {
       type: "color",
       value: "#141318",
@@ -9055,6 +9065,7 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
     fps: 30,
     compositionWidth: 1280,
     compositionHeight: 720,
+    previewFps: 30,
     previewBackdrop: {
       type: "color",
       value: "#FFFFFF",
@@ -11503,6 +11514,7 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
     fps: 30,
     compositionWidth: 1280,
     compositionHeight: 720,
+    previewFps: 30,
     defaults: {
       queries: [
         "launch video ideas",
@@ -12086,6 +12098,7 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
     fps: 30,
     compositionWidth: 1280,
     compositionHeight: 720,
+    previewFps: 30,
     defaults: {
       theme: "dark",
       name: "remocn",
@@ -15648,6 +15661,7 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
     fps: 30,
     compositionWidth: 1280,
     compositionHeight: 720,
+    previewFps: 30,
     defaults: {
       theme: "dark",
       name: "Lumen Studio",
@@ -15741,6 +15755,7 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
     fps: 30,
     compositionWidth: 1280,
     compositionHeight: 720,
+    previewFps: 30,
     defaults: {
       theme: "dark",
       projectName: "Launch video",
@@ -16704,6 +16719,7 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
     fps: 30,
     compositionWidth: 1280,
     compositionHeight: 720,
+    previewFps: 30,
     defaults: {
       theme: "dark",
       accent: "#3B5BFD",
@@ -16821,6 +16837,7 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
     fps: 30,
     compositionWidth: 1280,
     compositionHeight: 720,
+    previewFps: 30,
     defaults: {
       theme: "dark",
       label: "on the waitlist",

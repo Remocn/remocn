@@ -1,6 +1,7 @@
 "use client";
 
-import { AbsoluteFill, useCurrentFrame } from "remotion";
+import { AbsoluteFill } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import {
   CrumpleToss,
   crumpleTossLanding,
@@ -74,7 +75,7 @@ export function CrumpleTossExampleScene({
   seed?: string;
   step?: number;
 }) {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const pose = crumpleTossPose({
     frame,
     at,

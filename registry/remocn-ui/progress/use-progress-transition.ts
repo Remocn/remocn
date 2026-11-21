@@ -1,7 +1,6 @@
 "use client";
-
-import { useCurrentFrame } from "remotion";
 import type { ProgressStyle } from "@/components/remocn/progress";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { clamp01, type EasingName, easings } from "@/lib/remocn-ui";
 
 export interface ProgressStep {
@@ -31,7 +30,7 @@ export function useProgressTransition(
   opts: ProgressTransitionOptions = {},
 ): ProgressStyle {
   const { speed = 1 } = opts;
-  const raw = useCurrentFrame() * speed;
+  const raw = useSceneFrame() * speed;
   return progressValueAt(steps, raw, opts);
 }
 

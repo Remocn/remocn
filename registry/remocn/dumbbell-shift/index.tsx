@@ -4,14 +4,8 @@ import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadFont } from "@remotion/google-fonts/SchibstedGrotesk";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
@@ -204,9 +198,9 @@ export function DumbbellShift({
   speed = 1,
 }: DumbbellShiftProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const t = Math.max(0, frame - delay) * speed;
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;

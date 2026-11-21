@@ -5,13 +5,8 @@ import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadFont } from "@remotion/google-fonts/SpaceGrotesk";
 import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
@@ -455,8 +450,8 @@ export function NumberMosaic({
   theme = "dark",
 }: NumberMosaicProps) {
   const glide = useGlide();
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width, height } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const u = height / 720;
   const p: Palette = THEMES[theme];
   const fg = inkProp ?? p.fg;

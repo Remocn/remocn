@@ -2,12 +2,8 @@
 
 import { Water, type WaterProps } from "@paper-design/shaders-react";
 import { useCallback, useState } from "react";
-import {
-  continueRender,
-  delayRender,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { continueRender, delayRender } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface ShaderWaterProps extends Omit<WaterProps, "frame" | "ref"> {}
 
@@ -21,8 +17,8 @@ export function ShaderWater({
   className,
   ...rest
 }: ShaderWaterProps) {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps, width, height } = useSceneConfig();
 
   const [handle] = useState(() => delayRender("shader-water"));
   const gate = useCallback(

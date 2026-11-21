@@ -2,12 +2,8 @@
 
 import { SmokeRing, type SmokeRingProps } from "@paper-design/shaders-react";
 import { useCallback, useState } from "react";
-import {
-  continueRender,
-  delayRender,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { continueRender, delayRender } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const NEUTRAL_COLORS = ["#c8c8d0"];
 
@@ -24,8 +20,8 @@ export function ShaderSmokeRing({
   className,
   ...rest
 }: ShaderSmokeRingProps) {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps, width, height } = useSceneConfig();
 
   const [handle] = useState(() => delayRender("shader-smoke-ring"));
   const gate = useCallback(

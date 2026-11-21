@@ -4,14 +4,8 @@ import { loadFont as loadSans } from "@remotion/google-fonts/InstrumentSans";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadSans("normal", {
@@ -223,8 +217,8 @@ export function UptimeStrip({
   speed = 1,
 }: UptimeStripProps) {
   const tilt = useGlide();
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width, height } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;

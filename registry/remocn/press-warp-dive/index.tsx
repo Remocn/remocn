@@ -16,9 +16,12 @@ import {
   interpolate,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import {
+  useCompositionFrames,
+  useSceneConfig,
+  useSceneFrame,
+} from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -135,7 +138,7 @@ const PressWarpDivePresentation: React.FC<
   presentationDirection,
   passedProps,
 }) => {
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const o = { ...pressWarpDiveDefaults, ...passedProps };
   const st = diveState(presentationProgress, W, H, o);
   const map = useMemo(() => pinchMap(), []);
@@ -566,8 +569,8 @@ function SceneA({
   look: SceneLook;
 }) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const L = layout(W, H);
   const { u } = L;
   const [cx, cy, cw, ch] = L.card;
@@ -863,8 +866,8 @@ function SceneB({
   look: SceneLook;
 }) {
   const glide = useGlide();
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const frame = useSceneFrame() * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const tall = H > W * 1.1;
   const u = tall ? W / 600 : H / 720;
   const emerge = spring({ frame: frame - B_BEATS.emerge, fps, config: HEAVY });
@@ -1176,14 +1179,17 @@ export function PressWarpDiveDemo({
   groundParamsB,
   transition,
 }: PressWarpDiveDemoProps) {
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const base = THEMES[theme];
   const themed = accent ? { ...base, accent } : base;
   const palette = ink ? { ...themed, ink, headB: ink } : themed;
   const L = layout(W, H);
   const look: SceneLook = { fontFamily, background, scale, speed };
   // Speed scales the series itself so the transition keeps pace with the scenes.
-  const len = (f: number) => Math.max(1, Math.round(f / speed));
+  // Remotion counts a series in the composition's own frames; the lengths
+  // here are written on the 30 fps timeline the scenes run on.
+  const toFrames = useCompositionFrames();
+  const len = (f: number) => Math.max(1, toFrames(f / speed));
   // The dive starts from the button where the scale layer draws it.
   const at = (v: number) => (scale === 1 ? v : 0.5 + (v - 0.5) * scale);
   return (
@@ -1194,7 +1200,9 @@ export function PressWarpDiveDemo({
       }}
     >
       <TransitionSeries>
-        <TransitionSeries.Sequence durationInFrames={delay + len(A_LEN)}>
+        <TransitionSeries.Sequence
+          durationInFrames={toFrames(delay) + len(A_LEN)}
+        >
           <SceneA
             palette={palette}
             heading={heading}

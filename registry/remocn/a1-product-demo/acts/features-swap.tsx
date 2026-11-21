@@ -1,6 +1,7 @@
 "use client";
 
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import {
   FLOW_BG,
   FLOW_INK,
@@ -21,7 +22,7 @@ const SLOT_W = 256;
 const FONT_SIZE = 56;
 
 export function FeaturesSwap({ speed = 1 }: { speed?: number }) {
-  const f = useCurrentFrame() * speed;
+  const f = useSceneFrame() * speed;
   const glide = useGlide();
 
   const lineReveal = interpolate(f, [0, 14], [0, 1], clamp);

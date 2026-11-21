@@ -1,6 +1,7 @@
 "use client";
 
-import { interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export interface InfiniteBentoPanProps {
@@ -429,8 +430,8 @@ export function InfiniteBentoPan({
   className,
 }: InfiniteBentoPanProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame() * speed;
-  const { durationInFrames, width, height } = useVideoConfig();
+  const frame = useSceneFrame() * speed;
+  const { durationInFrames, width, height } = useSceneConfig();
 
   const maxX = SUPER_W - width;
   const maxY = SUPER_H - height;

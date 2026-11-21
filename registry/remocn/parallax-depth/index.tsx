@@ -2,14 +2,8 @@
 
 import type React from "react";
 import { useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  random,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, random } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type ParallaxDepthLayer = {
   /** Full-frame content of the layer. Leave room past the edges for the truck. */
@@ -91,7 +85,7 @@ function hillPath(
 }
 
 function useLandscape(colors: ParallaxDepthColors, seed: number) {
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   return useMemo<ParallaxDepthLayer[]>(() => {
     const svg = (children: React.ReactNode) => (
       <svg
@@ -153,8 +147,8 @@ export function ParallaxDepth({
   seed = parallaxDepthDefaults.seed,
   speed = parallaxDepthDefaults.speed,
 }: ParallaxDepthProps) {
-  const frame = useCurrentFrame();
-  const { width, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, fps } = useSceneConfig();
   const baseColors = { ...parallaxDepthDefaults.colors, ...colorOverrides };
   const colors = {
     ...baseColors,

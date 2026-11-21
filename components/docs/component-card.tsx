@@ -6,9 +6,9 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useAutoplay } from "@/app/(home)/components/use-autoplay";
 import registry from "@/lib/previews";
+import { sitePreview } from "@/lib/previews/site-preview";
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 import { cn } from "@/lib/utils";
-import { previewManifest } from "@/registry/__manifest__";
 import type { CardItem } from "./component-card-grid";
 
 /** How much of the thumbnail the zoomed content may take, and the cap. */
@@ -73,7 +73,7 @@ function slugFromHref(href?: string) {
  */
 function CardPreview({ name }: { name?: string }) {
   const entry = name ? registry[name] : undefined;
-  const preview = name ? previewManifest[name] : undefined;
+  const preview = name ? sitePreview(name) : undefined;
   const playerRef = useRef<PlayerRef>(null);
   const reducedMotion = usePrefersReducedMotion();
   const { containerRef } = useAutoplay(playerRef, !reducedMotion);

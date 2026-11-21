@@ -2,13 +2,8 @@
 
 import { loadFont as loadSerif } from "@remotion/google-fonts/Fraunces";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: serif } = loadSerif("normal", {
@@ -245,8 +240,8 @@ export function HalftoneCut({
   speed = 1,
 }: HalftoneCutProps) {
   const glide = useGlide();
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const stage = STAGES[theme];
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");

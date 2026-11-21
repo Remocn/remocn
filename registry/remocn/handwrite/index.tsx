@@ -1,7 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Caveat";
-import { useCurrentFrame } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { DEFAULT_STEP, hashRange, qf, qstep } from "@/lib/remocn/stop-motion";
 
 const { fontFamily: HAND_FAMILY } = loadFont("normal", {
@@ -32,7 +32,7 @@ export function Handwrite({
   fontFamily = HAND_FAMILY,
   step = DEFAULT_STEP,
 }: HandwriteProps) {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const steps = Math.max(0, qstep(Math.max(0, qf(frame, step) - delay), step));
   const shown = Math.floor(steps * perStep);
   const chars = Array.from(text);

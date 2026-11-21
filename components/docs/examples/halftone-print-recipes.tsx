@@ -1,11 +1,12 @@
 "use client";
 
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, interpolate } from "remotion";
 import { CanvasScenePoster } from "@/components/docs/examples/canvas-scenes";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { HalftonePrint } from "@/registry/remocn/halftone-print";
 
 export function HalftoneRegisterExampleScene() {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const misregistration = interpolate(frame, [0, 36, 74, 90], [9, 1.2, 1.2, 9]);
 
   return (
@@ -16,7 +17,7 @@ export function HalftoneRegisterExampleScene() {
 }
 
 export function HalftoneResolveExampleScene() {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const dotSize = interpolate(frame, [0, 40, 72, 90], [30, 7, 7, 30]);
 
   return (
@@ -27,7 +28,7 @@ export function HalftoneResolveExampleScene() {
 }
 
 function PanningPoster() {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const offset = Math.sin((frame / 90) * Math.PI * 2) * 70;
 
   return (

@@ -21,6 +21,8 @@ import type { BackdropFill } from "@/registry/remocn/backdrop";
 export interface PreviewManifestEntry {
   durationInFrames: number;
   fps: number;
+  /** Set when the site plays this preview below its usual frame rate. */
+  previewFps?: number;
   compositionWidth: number;
   compositionHeight: number;
   previewBackdrop?: BackdropFill;
@@ -105,6 +107,7 @@ async function main() {
       compositionWidth: config.compositionWidth,
       compositionHeight: config.compositionHeight,
     };
+    if (config.previewFps) entry.previewFps = config.previewFps;
     if (config.previewBackdrop) entry.previewBackdrop = config.previewBackdrop;
     entry.defaults = toProps(config.controls, getDefaults(config.controls));
     const props = cardProps(config);

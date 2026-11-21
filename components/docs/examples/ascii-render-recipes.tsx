@@ -1,17 +1,18 @@
 "use client";
 
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, interpolate } from "remotion";
 import {
   CanvasSceneA,
   CanvasSceneB,
 } from "@/components/docs/examples/canvas-scenes";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { AsciiRender } from "@/registry/remocn/ascii-render";
 
 const SANS =
   "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif";
 
 export function AsciiResolveExampleScene() {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const intensity = interpolate(frame, [0, 34, 76, 96], [1, 0, 0, 1]);
   const glyphSize = interpolate(frame, [0, 34, 76, 96], [44, 20, 20, 44]);
 
@@ -23,7 +24,7 @@ export function AsciiResolveExampleScene() {
 }
 
 export function AsciiBeatExampleScene() {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const intensity = interpolate(
     frame,
     [18, 20, 32, 56, 58, 70],
@@ -49,7 +50,7 @@ const CELLS = Array.from({ length: ROWS }, (_, row) =>
 ).flat();
 
 function SignalField() {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
 
   return (
     <AbsoluteFill

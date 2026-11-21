@@ -2,14 +2,8 @@
 
 import { loadFont } from "@remotion/google-fonts/Inter";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const inter = loadFont("normal", {
@@ -1651,8 +1645,8 @@ export function ChaosToOrder({
   theme = "dark",
 }: ChaosToOrderProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay);
-  const { fps, width, height } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { fps, width, height } = useSceneConfig();
   const f = frame * speed;
   const dark = theme === "dark";
   const u = Math.min(width / 1280, height / 720);

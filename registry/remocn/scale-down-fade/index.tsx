@@ -1,6 +1,7 @@
 "use client";
 
-import { Easing, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export interface ScaleDownFadeProps {
@@ -23,8 +24,8 @@ export function ScaleDownFade({
   className,
 }: ScaleDownFadeProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame() * speed;
-  const { durationInFrames } = useVideoConfig();
+  const frame = useSceneFrame() * speed;
+  const { durationInFrames } = useSceneConfig();
 
   const enterDurFrames = 16;
   const exitDurFrames = 11;

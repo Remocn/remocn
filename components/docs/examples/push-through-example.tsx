@@ -2,6 +2,7 @@
 
 import { linearTiming, TransitionSeries } from "@remotion/transitions";
 import { AbsoluteFill } from "remotion";
+import { useCompositionFrames } from "@/lib/remocn/frame-rate";
 import { pushThrough } from "@/registry/remocn/push-through";
 
 const FONT_FAMILY =
@@ -40,16 +41,17 @@ export function PushThroughExampleScene({
   zoom,
   blur,
 }: PushThroughExampleProps) {
+  const toFrames = useCompositionFrames();
   return (
     <TransitionSeries>
-      <TransitionSeries.Sequence durationInFrames={76}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(76)}>
         <Scene label="Scene A" background="#141318" />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
-        timing={linearTiming({ durationInFrames: 40 })}
+        timing={linearTiming({ durationInFrames: toFrames(40) })}
         presentation={pushThrough({ zoom, blur })}
       />
-      <TransitionSeries.Sequence durationInFrames={76}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(76)}>
         <Scene label="Push Through" background="#1a1922" />
       </TransitionSeries.Sequence>
     </TransitionSeries>
@@ -66,14 +68,14 @@ import { pushThrough } from "@/components/remocn/push-through";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={76}>
+    <TransitionSeries.Sequence durationInFrames={152}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 40 })}
+      timing={linearTiming({ durationInFrames: 80 })}
       presentation={pushThrough({ zoom: ${zoom}, blur: ${blur} })}
     />
-    <TransitionSeries.Sequence durationInFrames={76}>
+    <TransitionSeries.Sequence durationInFrames={152}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

@@ -10,9 +10,8 @@ import {
   Easing,
   interpolate,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const flex = loadVariableFont("normal", { subsets: ["latin"] });
@@ -222,8 +221,8 @@ export function AxisFlex({
   speed = 1,
 }: AxisFlexProps) {
   const glide = useGlide();
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = THEMES[theme];
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);

@@ -19,9 +19,12 @@ import {
   random,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import {
+  useCompositionFrames,
+  useSceneConfig,
+  useSceneFrame,
+} from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -393,7 +396,7 @@ const LightBurnToLinePresentation: React.FC<
   presentationDirection,
   passedProps,
 }) => {
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const o = { ...lightBurnToLineDefaults, ...passedProps };
   const s = burnState(presentationProgress, W, H, o);
 
@@ -711,9 +714,9 @@ function SceneA({
   look: SceneLook;
 }) {
   const glide = useGlide();
-  const raw = useCurrentFrame();
+  const raw = useSceneFrame();
   const frame = Math.max(0, raw - delay) * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const { width: W, height: H, fps } = useSceneConfig();
   const L = layout(W, H);
   const [sx, sy, sw, sh] = L.subject;
   const u = Math.min(W, H) / 720;
@@ -1127,9 +1130,9 @@ function SceneB({
   look: SceneLook;
 }) {
   const glide = useGlide();
-  const raw = useCurrentFrame();
+  const raw = useSceneFrame();
   const frame = raw * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const { width: W, height: H, fps } = useSceneConfig();
   const L = layout(W, H);
   const u = Math.min(W, H) / 720;
   const fs = L.tall ? W * 0.105 : W * 0.06;
@@ -1303,14 +1306,17 @@ export function LightBurnToLineDemo({
   groundParamsB,
   transition,
 }: LightBurnToLineDemoProps) {
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const base = THEMES[theme];
   const themed = accent ? { ...base, accent } : base;
   const palette = ink ? { ...themed, ink } : themed;
   const L = layout(W, H);
   const look: SceneLook = { fontFamily, background, scale, speed };
   // Speed scales the series itself so the transition keeps pace with the scenes.
-  const len = (f: number) => Math.max(1, Math.round(f / speed));
+  // Remotion counts a series in the composition's own frames; the lengths
+  // here are written on the 30 fps timeline the scenes run on.
+  const toFrames = useCompositionFrames();
+  const len = (f: number) => Math.max(1, toFrames(f / speed));
   // The burn reads the window and the line where the scale layer draws them.
   const at = (v: number) => (scale === 1 ? v : 0.5 + (v - 0.5) * scale);
   const subject: [number, number, number, number] =
@@ -1330,7 +1336,9 @@ export function LightBurnToLineDemo({
       }}
     >
       <TransitionSeries>
-        <TransitionSeries.Sequence durationInFrames={delay + len(A_LEN)}>
+        <TransitionSeries.Sequence
+          durationInFrames={toFrames(delay) + len(A_LEN)}
+        >
           <SceneA
             palette={palette}
             ground={ground}

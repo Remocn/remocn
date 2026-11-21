@@ -4,13 +4,8 @@ import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { getLength, getPointAtLength, getSubpaths } from "@remotion/paths";
 import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: MANROPE } = loadManrope("normal", {
@@ -487,8 +482,8 @@ export function DotFieldMorph({
   theme = "dark",
 }: DotFieldMorphProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - wait) * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - wait) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const isLight = theme === "light";
   const bg = isLight ? "#F5F4F0" : "#0A0A0B";

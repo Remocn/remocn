@@ -4,15 +4,8 @@ import { loadFont as loadSans } from "@remotion/google-fonts/InstrumentSans";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -484,8 +477,8 @@ export function CartAdd({
   groundParams,
 }: CartAddProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const portrait = H > W;
   const L = layoutFor(portrait);
   const u = Math.min(W / L.stageW, H / L.stageH);

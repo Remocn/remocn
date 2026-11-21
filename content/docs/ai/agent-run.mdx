@@ -145,8 +145,8 @@ export const RemotionRoot = () => (
   <Composition
     id="ChurnScene"
     component={ChurnScene}
-    durationInFrames={getAgentRunDuration(run)}
-    fps={30}
+    durationInFrames={getAgentRunDuration(run) * 2}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -155,7 +155,7 @@ export const RemotionRoot = () => (
 
 ## Timing
 
-At 30 fps with the default run, `seed={1}`, `compression={3}` and `speed={1}`:
+In 30 fps frames, with the default run, `seed={1}`, `compression={3}` and `speed={1}`:
 
 | Frames | Beat |
 | --- | --- |

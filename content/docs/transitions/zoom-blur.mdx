@@ -31,7 +31,7 @@ askedAs:
 past the viewer into blur while the incoming one resolves out of blur, riding
 a soft opacity crossfade — a depth punch-in. The presentation applies no
 internal easing, so the character comes entirely from the timing function.
-`linearTiming({ durationInFrames: 18 })` is the recommended default, and
+`linearTiming({ durationInFrames: 36 })` at 60 fps is the recommended default, and
 `springTiming` gives it a springy character. `rise` adds a vertical pickup to
 the move.
 
@@ -41,14 +41,14 @@ import { zoomBlur } from "@/components/remocn/zoom-blur";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 18 })}
+      timing={linearTiming({ durationInFrames: 36 })}
       presentation={zoomBlur()}
     />
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

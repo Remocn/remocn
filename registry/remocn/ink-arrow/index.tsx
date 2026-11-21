@@ -1,6 +1,4 @@
 "use client";
-
-import { useCurrentFrame } from "remotion";
 import {
   BrushGrain,
   type BrushPoint,
@@ -10,6 +8,7 @@ import {
   sampleCubic,
   sampleLine,
 } from "@/components/remocn/brush";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { DEFAULT_STEP, hashRange, steppedRamp } from "@/lib/remocn/stop-motion";
 
 const HEAD_ANGLE = 0.72;
@@ -147,7 +146,7 @@ export function InkArrow({
   seed = "arrow",
   step = DEFAULT_STEP,
 }: InkArrowProps) {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const progress = steppedRamp(frame, delay, delay + drawDur, { step });
   const { c1, c2 } = inkArrowControls(from, to, curvature, seed);
   const headReach = inkArrowHeadReach(headSize, strokeWidth);

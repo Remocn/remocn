@@ -12,9 +12,8 @@ import {
   random,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -898,9 +897,9 @@ export function SendFountain({
   groundParams,
 }: SendFountainProps) {
   const glide = useGlide();
-  const rawFrame = useCurrentFrame();
+  const rawFrame = useSceneFrame();
   const frame = Math.max(0, rawFrame - delay) * speed;
-  const { width, height, fps } = useVideoConfig();
+  const { width, height, fps } = useSceneConfig();
   // Whether a value of the frame is moving right now: springs overshoot and
   // trail off, so it is read against the neighbouring frames instead of a
   // progress. Nothing moves while `delay` holds the first frame.

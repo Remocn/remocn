@@ -1,13 +1,8 @@
 "use client";
 
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type TurntableColors = {
   background: string;
@@ -140,8 +135,8 @@ export function Turntable({
   backgroundColor,
   speed = turntableDefaults.speed,
 }: TurntableProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const baseColors = { ...turntableDefaults.colors, ...colorOverrides };
   const colors = {
     ...baseColors,

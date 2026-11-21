@@ -10,9 +10,8 @@ import {
   Easing,
   interpolate,
   random,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
@@ -212,8 +211,8 @@ export function CoolingType({
   speed = 1,
 }: CoolingTypeProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const glowK = c.glow * glow;
   const inkC = ink ?? c.ink;

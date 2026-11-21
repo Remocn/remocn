@@ -10,9 +10,8 @@ import {
   Easing,
   Img,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadDisplay("normal", {
@@ -621,8 +620,8 @@ export function PhotoFillType({
   speed = 1,
 }: PhotoFillTypeProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const u = H / 720;
   const c = THEMES[theme];
   const stage =

@@ -1,14 +1,9 @@
 "use client";
 
 import { loadFont as loadBodyFont } from "@remotion/google-fonts/Inter";
-import {
-  AbsoluteFill,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, interpolate, spring } from "remotion";
 import { Caret } from "@/components/remocn/caret";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import { useTypewriter } from "@/lib/remocn-ui";
 
@@ -229,8 +224,8 @@ export function ClaudeChat({
   speed = 1,
 }: ClaudeChatProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const t = THEMES.light;
 
   const refW = 1280;

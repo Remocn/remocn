@@ -3,13 +3,8 @@
 import { loadFont } from "@remotion/google-fonts/BarlowCondensed";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: condensed } = loadFont("normal", {
@@ -195,8 +190,8 @@ export function ScoreBug({
 }: ScoreBugProps) {
   const glide = useGlide();
   // Starts two frames in, so frame 0 already shows the core opening.
-  const t = Math.max(0, useCurrentFrame() - delay) * speed + 2;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed + 2;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.stage);

@@ -9,8 +9,11 @@ import {
   useRef,
   useState,
 } from "react";
+import { previewScale } from "@/lib/previews/frame-rate";
 import { cn } from "@/lib/utils";
 import { COMP_SIZE, FPS, type HeroTilesConfig, PLAYER_INSET } from "./config";
+
+const RATE = previewScale(FPS);
 
 export type TilePlayback =
   | "playing"
@@ -64,12 +67,17 @@ export function TilePlayer({
     return () => observer.disconnect();
   }, []);
 
+  // The tile's timeline counts in 30 fps frames; the player runs at the
+  // site's rate.
+  const total = Math.max(durationInFrames, 1) * RATE;
+  const still = Math.min(stillFrame * RATE, total - 1);
+
   useEffect(() => {
     if (!mounted) return;
     const player = playerRef.current;
     if (reducedMotion || !visible) {
       player?.pause();
-      if (reducedMotion) player?.seekTo(stillFrame);
+      if (reducedMotion) player?.seekTo(still);
       onPlayback?.(reducedMotion ? "reduced-motion" : "offscreen");
       return;
     }
@@ -82,9 +90,7 @@ export function TilePlayer({
     ensure();
     const id = window.setInterval(ensure, 400);
     return () => window.clearInterval(id);
-  }, [mounted, reducedMotion, visible, stillFrame, onPlayback]);
-
-  const total = Math.max(durationInFrames, 1);
+  }, [mounted, reducedMotion, visible, still, onPlayback]);
 
   return (
     <span
@@ -102,8 +108,8 @@ export function TilePlayer({
             {...source}
             inputProps={{ config }}
             durationInFrames={total}
-            initialFrame={Math.min(stillFrame, total - 1)}
-            fps={FPS}
+            initialFrame={still}
+            fps={FPS * RATE}
             compositionWidth={COMP_SIZE}
             compositionHeight={COMP_SIZE}
             style={{ width: "100%", height: "100%", background: "transparent" }}

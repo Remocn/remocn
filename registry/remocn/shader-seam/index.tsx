@@ -5,7 +5,8 @@ import type {
   TransitionPresentationComponentProps,
 } from "@remotion/transitions";
 import { useLayoutEffect, useRef } from "react";
-import { AbsoluteFill, useDelayRender, useVideoConfig } from "remotion";
+import { AbsoluteFill, useDelayRender } from "remotion";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 
 /* @remocn · OpenShaders — https://openshaders.com/@remocn
  * Original field and halftone GLSL from the site's React · WebGL export.
@@ -470,7 +471,7 @@ function ShaderSeamPresentation({
   presentationDurationInFrames,
   passedProps,
 }: TransitionPresentationComponentProps<ShaderSeamProps>) {
-  const { width, height, fps } = useVideoConfig();
+  const { width, height, fps } = useSceneConfig();
   const { delayRender, continueRender, cancelRender } = useDelayRender();
   const canvas = useRef<HTMLCanvasElement>(null);
   const renderer = useRef<ReturnType<typeof createSeamRenderer> | null>(null);

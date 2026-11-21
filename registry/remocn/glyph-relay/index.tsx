@@ -9,9 +9,8 @@ import {
   interpolate,
   interpolateColors,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -215,8 +214,8 @@ export function GlyphRelay({
   groundParams,
 }: GlyphRelayProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width, height, fps } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const dark = theme === "dark";
   const vertical = height > width * 1.2;
   const stageW = vertical ? 1080 : 1280;

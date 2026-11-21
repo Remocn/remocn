@@ -1,15 +1,16 @@
 "use client";
 
-import { interpolate, useCurrentFrame } from "remotion";
+import { interpolate } from "remotion";
 import {
   CanvasSceneA,
   CanvasSceneB,
 } from "@/components/docs/examples/canvas-scenes";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { CameraLens } from "@/registry/remocn/camera-lens";
 import { Drift } from "@/registry/remocn/drift";
 
 export function LensContributionExampleScene() {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const amount = interpolate(frame, [0, 34, 62, 96], [0, 1, 1, 0]);
 
   return (

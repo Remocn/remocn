@@ -2,14 +2,8 @@
 
 import { getLength, getPointAtLength } from "@remotion/paths";
 import { useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  random,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, random } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type LineBoilColors = {
   line: string;
@@ -116,8 +110,8 @@ export function LineBoil({
   background: backgroundColor,
   speed = lineBoilDefaults.speed,
 }: LineBoilProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const merged = { ...lineBoilDefaults.colors, ...colors };
   const palette: LineBoilColors = {
     line: lineColor ?? merged.line,

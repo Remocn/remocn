@@ -12,9 +12,8 @@ import {
   Img,
   interpolate,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const manrope = loadManrope("normal", {
@@ -260,7 +259,7 @@ interface Layout {
 }
 
 function useLayout(lineEms: number[]): Layout {
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   const u = height / 720;
   const left = width * 0.075;
   const longest = Math.max(...lineEms);
@@ -483,7 +482,7 @@ function Scene({
   previewTitle: string;
 }) {
   const glide = useGlide();
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   const { u } = L;
   const rise = (d: number) =>
     interpolate(t, [d - 8, d + 20], [0, 1], { ...CLAMP, easing: EASE_OUT });
@@ -642,8 +641,8 @@ export function GlassLens({
   theme = "dark",
 }: GlassLensProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { fps, width } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { fps, width } = useSceneConfig();
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
   const bg =

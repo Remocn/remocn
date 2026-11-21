@@ -5,6 +5,7 @@ import {
   CanvasSceneA,
   CanvasSceneB,
 } from "@/components/docs/examples/canvas-scenes";
+import { useCompositionFrames } from "@/lib/remocn/frame-rate";
 import { type GridWaveDirection, gridWave } from "@/registry/remocn/grid-wave";
 
 interface GridWaveExampleProps {
@@ -24,13 +25,14 @@ export function GridWaveExampleScene({
   tint,
   direction,
 }: GridWaveExampleProps) {
+  const toFrames = useCompositionFrames();
   return (
     <TransitionSeries>
-      <TransitionSeries.Sequence durationInFrames={60}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(60)}>
         <CanvasSceneA />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
-        timing={linearTiming({ durationInFrames: 36 })}
+        timing={linearTiming({ durationInFrames: toFrames(36) })}
         presentation={gridWave({
           tileSize,
           waveWidth,
@@ -40,7 +42,7 @@ export function GridWaveExampleScene({
           direction: direction as GridWaveDirection | undefined,
         })}
       />
-      <TransitionSeries.Sequence durationInFrames={60}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(60)}>
         <CanvasSceneB />
       </TransitionSeries.Sequence>
     </TransitionSeries>
@@ -61,14 +63,14 @@ import { gridWave } from "@/components/remocn/grid-wave";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={60}>
+    <TransitionSeries.Sequence durationInFrames={120}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 36 })}
+      timing={linearTiming({ durationInFrames: 72 })}
       presentation={gridWave({ tileSize: ${tileSize}, waveWidth: ${waveWidth}, lift: ${lift}, gap: ${gap}, tint: "${tint}", direction: "${direction}" })}
     />
-    <TransitionSeries.Sequence durationInFrames={60}>
+    <TransitionSeries.Sequence durationInFrames={120}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

@@ -3,14 +3,8 @@
 import { loadFont as loadDisplay } from "@remotion/google-fonts/HankenGrotesk";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadDisplay("normal", {
@@ -175,8 +169,8 @@ export function PassSwap({
   speed = 1,
 }: PassSwapProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const c = THEMES[theme];
   const fg = inkProp ?? c.fg;

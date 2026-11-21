@@ -4,13 +4,8 @@ import { loadFont as loadBricolage } from "@remotion/google-fonts/BricolageGrote
 import { loadFont as loadMono } from "@remotion/google-fonts/JetBrainsMono";
 import type React from "react";
 import { Fragment, useId } from "react";
-import {
-  AbsoluteFill,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
-
+import { AbsoluteFill, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const bricolage = loadBricolage("normal", {
@@ -209,8 +204,8 @@ export function FlickSwap({
   theme = "dark",
 }: FlickSwapProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width, height } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const p = PALETTES[theme];
   const fg = ink ?? p.fg;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");

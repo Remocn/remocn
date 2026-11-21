@@ -9,9 +9,8 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const dmSans = loadFont("normal", {
@@ -255,8 +254,8 @@ export function Turnabout({
   theme = "dark",
 }: TurnaboutProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay);
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const k = Math.min(1, durationInFrames / BASE);
   const t = (frame * speed) / k;
   const c = THEMES[theme];

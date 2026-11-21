@@ -115,6 +115,8 @@ export const queryCascadeConfig: ComponentConfig = {
   },
   durationInFrames: 170,
   fps: FPS,
+  // Does not hold 60 fps in the browser yet (`audit:playback`: paint).
+  previewFps: 30,
   compositionWidth: W,
   compositionHeight: H,
 };

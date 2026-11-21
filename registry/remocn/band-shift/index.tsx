@@ -4,13 +4,8 @@ import { loadFont as loadDisplay } from "@remotion/google-fonts/BricolageGrotesq
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["500"],
@@ -132,7 +127,7 @@ function Headline({
   ink?: string;
   logoNode?: React.ReactNode;
 }) {
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const c = TONES[tone];
   const fg = ink ?? c.fg;
@@ -326,8 +321,8 @@ export function BandShift({
   scale = 1,
   grain = true,
 }: BandShiftProps) {
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = useSceneFrame() * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const n = Math.round(Math.min(7, Math.max(5, bands)));
   const toneB: Tone = theme;

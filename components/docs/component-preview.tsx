@@ -129,6 +129,7 @@ function Preview({
     durationInFrames:
       config.getDurationInFrames?.(values) ?? config.durationInFrames,
     fps: config.fps,
+    previewFps: config.previewFps,
     compositionWidth: config.compositionWidth,
     compositionHeight: config.compositionHeight,
     previewBackdrop: config.previewBackdrop,

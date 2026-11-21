@@ -4,13 +4,8 @@ import { loadFont as loadSerif } from "@remotion/google-fonts/Fraunces";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: serif } = loadSerif("italic", {
@@ -125,7 +120,7 @@ function Headline({
   mark: boolean;
   look: Look;
 }) {
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const c = { ...TONES[tone], fg: look.ink ?? TONES[tone].fg };
   const logo = mark && isLogo(text);
@@ -303,13 +298,13 @@ export function RingBurst({
   theme = "dark",
 }: RingBurstProps) {
   const glide = useGlide();
-  const t = useCurrentFrame() * speed;
+  const t = useSceneFrame() * speed;
   const look: Look = { fontFamily, ink, scale, logo };
   const stageB =
     background === "transparent"
       ? "transparent"
       : (background ?? TONES[theme].bg);
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const toneB: Tone = theme;
   const toneA: Tone = theme === "dark" ? "light" : "dark";

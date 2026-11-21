@@ -9,9 +9,8 @@ import {
   interpolate,
   interpolateColors,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -351,8 +350,8 @@ export function TestimonialStack({
   ground,
   groundParams,
 }: TestimonialStackProps) {
-  const rawFrame = Math.max(0, useCurrentFrame() - delay);
-  const { fps, width, height } = useVideoConfig();
+  const rawFrame = Math.max(0, useSceneFrame() - delay);
+  const { fps, width, height } = useSceneConfig();
   const frame = rawFrame * speed;
   const tall = height > width;
   const SW = tall ? 700 : 1280;

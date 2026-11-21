@@ -2,14 +2,8 @@
 
 import { loadFont } from "@remotion/google-fonts/Inter";
 import { useEffect, useState } from "react";
-import {
-  continueRender,
-  delayRender,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { continueRender, delayRender, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const { fontFamily: INTER } = loadFont("normal", {
   weights: ["100", "900"],
@@ -251,8 +245,8 @@ export function StripeType({
   speed = stripeTypeDefaults.speed,
   className,
 }: StripeTypeProps) {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps, width, height } = useSceneConfig();
   const unit = height / 720;
   const size = fontSize * unit;
   const t = getStripeTypeTime(frame, { fps, speed });

@@ -1,0 +1,17 @@
+---
+title: 60 fps
+date: 2026-11-21
+---
+
+Every component now keeps its timing at any frame rate, and the site, the docs and the code they show are written at 60 fps. Set a composition to 60 and a scene lasts the same seconds as before, with a new picture on every frame.
+
+<ChangelogPreview name="achievement-pop" />
+
+### Improvements
+
+- **Any frame rate.** Components read the frame through a small shared module, `frame-rate`, which counts on a 30 fps timeline whatever the composition runs at. Before, a 60 fps composition played tweens twice as fast while springs kept their length, so a scene did not even speed up evenly. The module installs with a component like any other dependency. [Frame rate](/docs/getting-started/installation#frame-rate) has the one rule to know.
+- **Docs at 60 fps.** Every code block shows a 60 fps composition: `fps={60}` and twice the frames. What you pass to a component (`delay`, a stagger, the length on its page) is still counted at 30 fps.
+- **Previews at 60 fps.** The docs player, the cards and the galleries play at 60. Fifteen scenes the browser cannot draw that fast yet stay at 30 until they are optimized.
+- **Even playback.** The player on the site showed some frames twice and skipped others, at any frame rate, depending on the moment a preview started. It now picks each frame from the screen's own refresh.
+- **Add to Studio.** An element dropped into Remotion Studio gets a clip sized for a 60 fps composition.
+- **For agents.** The skill and the plugin write videos at 60 fps. Storyboards keep counting in 30 fps frames, and the video file doubles them where they reach Remotion.

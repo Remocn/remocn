@@ -5,6 +5,7 @@ import {
   CanvasSceneA,
   CanvasScenePoster,
 } from "@/components/docs/examples/canvas-scenes";
+import { useCompositionFrames } from "@/lib/remocn/frame-rate";
 import { paperTear } from "@/registry/remocn/paper-tear";
 
 interface PaperTearExampleProps {
@@ -20,16 +21,17 @@ export function PaperTearExampleScene({
   seed,
   edgeColor,
 }: PaperTearExampleProps) {
+  const toFrames = useCompositionFrames();
   return (
     <TransitionSeries>
-      <TransitionSeries.Sequence durationInFrames={70}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(70)}>
         <CanvasSceneA />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
-        timing={linearTiming({ durationInFrames: 36 })}
+        timing={linearTiming({ durationInFrames: toFrames(36) })}
         presentation={paperTear({ impact, roughness, seed, edgeColor })}
       />
-      <TransitionSeries.Sequence durationInFrames={70}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(70)}>
         <CanvasScenePoster />
       </TransitionSeries.Sequence>
     </TransitionSeries>
@@ -48,14 +50,14 @@ import { paperTear } from "@/components/remocn/paper-tear";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 36 })}
+      timing={linearTiming({ durationInFrames: 72 })}
       presentation={paperTear({ impact: ${impact}, roughness: ${roughness}, seed: ${seed}, edgeColor: "${edgeColor}" })}
     />
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

@@ -3,13 +3,8 @@
 import { loadFont as loadDisplay } from "@remotion/google-fonts/Geist";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["500"],
@@ -146,8 +141,8 @@ export function RingAlign({
   speed = 1,
   theme = "dark",
 }: RingAlignProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const isLight = theme === "light";
   const bg = isLight ? "#F5F4F0" : "#0A0A0B";
   const fg = ink ?? (isLight ? "#141416" : "#EEEEF0");

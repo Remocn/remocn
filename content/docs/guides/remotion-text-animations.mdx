@@ -29,8 +29,8 @@ export const WordReveal = ({ text }: { text: string }) => {
   return (
     <h1 style={{ fontSize: 96 }}>
       {text.split(" ").map((word, i) => {
-        // Each word starts 4 frames after the previous one and takes 12 frames.
-        const progress = interpolate(frame - i * 4, [0, 12], [0, 1], {
+        // Each word starts 8 frames after the previous one and takes 24 frames.
+        const progress = interpolate(frame - i * 8, [0, 24], [0, 1], {
           extrapolateLeft: "clamp",
           extrapolateRight: "clamp",
         });
@@ -66,18 +66,18 @@ import { StaggeredFadeUp } from "@/components/remocn/staggered-fade-up";
 
 export const Hook = () => (
   <AbsoluteFill>
-    <Sequence durationInFrames={90}>
+    <Sequence durationInFrames={180}>
       <StaggeredFadeUp text="Every launch needs a video" staggerDelay={4} />
     </Sequence>
-    <Sequence from={90} durationInFrames={90}>
+    <Sequence from={180} durationInFrames={180}>
       <MarkerHighlight before="Yours ships " highlight="today" after="." />
     </Sequence>
   </AbsoluteFill>
 );
 ```
 
-Every component page lists the component's props and its natural length in frames at 30fps.
-That length is the minimum for its `Sequence`. Add hold frames on top if the text should stay on
+Every component page lists the component's props and its natural length in 30 fps frames.
+That length is the minimum for its `Sequence`, so double it in a 60 fps composition. Add hold frames on top if the text should stay on
 screen after it settles.
 
 ## Remotion text animation pitfalls
@@ -99,8 +99,8 @@ Remocn's text components handle each of them in their source, which you can read
   is done.
 - **Unclamped `interpolate()` keeps going.** Without `extrapolateRight: "clamp"`, a fade passes 1
   and a slide overshoots its end position. The components clamp their interpolations.
-- **Timing written in frames breaks at another frame rate.** `typewriter` takes
-  `charsPerSecond` and converts it with the composition's `fps`. Almost every component also
+- **Timing written in frames breaks at another frame rate.** Remocn components count their
+  frames on a 30 fps timeline at any frame rate, and `typewriter` takes `charsPerSecond`. Almost every component also
   takes a `speed` prop that retimes the whole effect without editing its code.
 - **Spaces collapse when text is split into spans.** Splitting per character drops the spaces
   between words. Per-letter components such as `soft-blur-in` and `typewriter` render with

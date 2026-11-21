@@ -1,14 +1,8 @@
 "use client";
 
 import { type ReactNode, useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  random,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, random } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export type ComicPanelsColors = {
@@ -130,8 +124,8 @@ export function ComicPanels({
   speed = comicPanelsDefaults.speed,
 }: ComicPanelsProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width: W, height: H, fps } = useSceneConfig();
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const merged = { ...comicPanelsDefaults.colors, ...colors };
   const c: ComicPanelsColors = {

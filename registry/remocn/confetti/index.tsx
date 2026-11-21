@@ -1,11 +1,7 @@
 "use client";
 
-import {
-  AbsoluteFill,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface ConfettiProps {
   /** Number of confetti pieces. */
@@ -117,8 +113,8 @@ export function Confetti({
   size = 13,
   seed = 1,
 }: ConfettiProps) {
-  const frame = useCurrentFrame();
-  const { width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height } = useSceneConfig();
 
   const tt = frame - startFrame;
   if (tt < 0 || tt > lifetime) return null;

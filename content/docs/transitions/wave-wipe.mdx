@@ -30,7 +30,7 @@ askedAs:
 `TransitionSeries.Transition` between two sequences. A full-frame
 grain-gradient wave field washes over the outgoing scene while its bands
 drift upward, then the incoming scene rides in from the bottom on top of the
-field and covers it. A 60-frame timing gives the sweep a natural pace.
+field and covers it. A 120-frame timing at 60 fps gives the sweep a natural pace.
 
 ```tsx
 import { TransitionSeries, linearTiming } from "@remotion/transitions";
@@ -38,14 +38,14 @@ import { waveWipe } from "@/components/remocn/wave-wipe";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={88}>
+    <TransitionSeries.Sequence durationInFrames={176}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 60 })}
+      timing={linearTiming({ durationInFrames: 120 })}
       presentation={waveWipe()}
     />
-    <TransitionSeries.Sequence durationInFrames={88}>
+    <TransitionSeries.Sequence durationInFrames={176}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

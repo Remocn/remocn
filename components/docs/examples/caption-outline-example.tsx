@@ -1,7 +1,8 @@
 "use client";
 
-import { AbsoluteFill, useVideoConfig } from "remotion";
+import { AbsoluteFill } from "remotion";
 import { previewCaptions } from "@/components/docs/examples/caption-fixture";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 import { CaptionOutline } from "@/registry/remocn/caption-outline";
 
 interface CaptionOutlineExampleProps {
@@ -27,7 +28,7 @@ export function CaptionOutlineExampleScene({
   combineTokensWithinMilliseconds,
   holdMs,
 }: CaptionOutlineExampleProps) {
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   return (
     <AbsoluteFill
       style={{

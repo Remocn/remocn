@@ -1,6 +1,7 @@
 "use client";
 
-import { spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface AnimatedLineChartProps {
   data?: number[];
@@ -25,8 +26,8 @@ export function AnimatedLineChart({
   speed = 1,
   className,
 }: AnimatedLineChartProps) {
-  const frame = useCurrentFrame() * speed;
-  const { fps, durationInFrames } = useVideoConfig();
+  const frame = useSceneFrame() * speed;
+  const { fps, durationInFrames } = useSceneConfig();
 
   const padding = 60;
   const innerWidth = width - padding * 2;

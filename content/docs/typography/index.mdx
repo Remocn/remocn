@@ -22,7 +22,7 @@ import { StaggeredFadeUp } from "@/components/remocn/staggered-fade-up";
 const Title = () => <StaggeredFadeUp text="Ship videos faster" staggerDelay={4} />;
 
 export const RemotionRoot = () => (
-  <Composition id="Title" component={Title} durationInFrames={90} fps={30} width={1280} height={720} />
+  <Composition id="Title" component={Title} durationInFrames={180} fps={60} width={1280} height={720} />
 );
 ```
 
@@ -51,7 +51,7 @@ export const RemotionRoot = () => (
 | Draw the letters | [Outline Trace](/docs/typography/outline-trace) | 44f | `npx shadcn@latest add @remocn/outline-trace` |
 | Text on a curve | [Path Ride](/docs/typography/path-ride) | 70f | `npx shadcn@latest add @remocn/path-ride` |
 
-Length is the frames of motion at 30fps, the minimum for the component's `Sequence`. For how to
+Length is the frames of motion at 30 fps, the minimum for the component's `Sequence` (twice that at 60 fps). For how to
 animate text by hand, the Remotion pitfalls these components handle and a comparison with other
 libraries, read [Remotion text animations](/docs/guides/remotion-text-animations). For subtitles
 timed to speech, see the 31 caption styles in

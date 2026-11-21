@@ -50,16 +50,16 @@ import { zoomBlur } from "@/components/remocn/zoom-blur";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={90}>
+    <TransitionSeries.Sequence durationInFrames={180}>
       <Drift>
         <SceneA />
       </Drift>
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 18 })}
+      timing={linearTiming({ durationInFrames: 36 })}
       presentation={zoomBlur()}
     />
-    <TransitionSeries.Sequence durationInFrames={90}>
+    <TransitionSeries.Sequence durationInFrames={180}>
       <Drift>
         <SceneB />
       </Drift>

@@ -2,14 +2,8 @@
 
 import { loadFont } from "@remotion/google-fonts/Figtree";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -490,8 +484,8 @@ export function MobilePaywall({
   groundParams,
 }: MobilePaywallProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay);
-  const { fps, width, height } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { fps, width, height } = useSceneConfig();
   const f = frame * speed;
   const c = theme === "dark" ? DARK_PAL : LIGHT_PAL;
   const fg = ink ?? c.copy;

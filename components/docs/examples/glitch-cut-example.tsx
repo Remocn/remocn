@@ -5,6 +5,7 @@ import {
   CanvasSceneA,
   CanvasSceneB,
 } from "@/components/docs/examples/canvas-scenes";
+import { useCompositionFrames } from "@/lib/remocn/frame-rate";
 import { glitchCut } from "@/registry/remocn/glitch-cut";
 
 interface GlitchCutExampleProps {
@@ -20,16 +21,17 @@ export function GlitchCutExampleScene({
   rgbSplit,
   blockNoise,
 }: GlitchCutExampleProps) {
+  const toFrames = useCompositionFrames();
   return (
     <TransitionSeries>
-      <TransitionSeries.Sequence durationInFrames={45}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(45)}>
         <CanvasSceneA />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
-        timing={linearTiming({ durationInFrames: 12 })}
+        timing={linearTiming({ durationInFrames: toFrames(12) })}
         presentation={glitchCut({ intensity, slices, rgbSplit, blockNoise })}
       />
-      <TransitionSeries.Sequence durationInFrames={45}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(45)}>
         <CanvasSceneB />
       </TransitionSeries.Sequence>
     </TransitionSeries>
@@ -48,14 +50,14 @@ import { glitchCut } from "@/components/remocn/glitch-cut";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={45}>
+    <TransitionSeries.Sequence durationInFrames={90}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 12 })}
+      timing={linearTiming({ durationInFrames: 24 })}
       presentation={glitchCut({ intensity: ${intensity}, slices: ${slices}, rgbSplit: ${rgbSplit}, blockNoise: ${blockNoise} })}
     />
-    <TransitionSeries.Sequence durationInFrames={45}>
+    <TransitionSeries.Sequence durationInFrames={90}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

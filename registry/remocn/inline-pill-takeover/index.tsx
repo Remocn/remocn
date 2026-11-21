@@ -1,6 +1,7 @@
 "use client";
 
-import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export interface InlinePillTakeoverProps {
@@ -61,7 +62,7 @@ export function InlinePillTakeover({
   className,
 }: InlinePillTakeoverProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame() * speed;
+  const frame = useSceneFrame() * speed;
   const safeExpandFrames = Math.max(expandFrames, 0.001);
   const pillGrowEnd = pillGrowAt + Math.max(pillGrowFrames, 0.001);
   const outerExitEnd = Math.max(outerExitFrames, 2.001);

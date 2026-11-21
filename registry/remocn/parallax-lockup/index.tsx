@@ -10,9 +10,8 @@ import {
   Easing,
   interpolate,
   interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 /** Variable cut, so display sizes pick up the tight, ink-trapped optical size. */
@@ -193,8 +192,8 @@ export function ParallaxLockup({
   theme = "dark",
 }: ParallaxLockupProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const fg = inkColor ?? c.fg;
   const stage =

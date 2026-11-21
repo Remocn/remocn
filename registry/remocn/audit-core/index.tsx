@@ -6,7 +6,8 @@ import {
   type ReactNode,
   useContext,
 } from "react";
-import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 /**
@@ -32,7 +33,7 @@ export function AuditClock({
 }
 
 export function useAuditFrame() {
-  return useCurrentFrame() * useContext(AuditSpeed);
+  return useSceneFrame() * useContext(AuditSpeed);
 }
 
 /* Demo dashboard */

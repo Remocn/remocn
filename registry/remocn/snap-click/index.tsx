@@ -3,13 +3,8 @@
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const { fontFamily: mono } = loadMono("normal", {
   weights: ["400"],
@@ -375,8 +370,8 @@ export function SnapClick({
   theme = "dark",
   speed = 1,
 }: SnapClickProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const u = W / 1280;
   const id = `sc${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;

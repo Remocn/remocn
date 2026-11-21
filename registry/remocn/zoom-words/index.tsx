@@ -1,6 +1,7 @@
 "use client";
 
-import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export interface ZoomWordsProps {
@@ -56,7 +57,7 @@ export function ZoomWords({
   className,
 }: ZoomWordsProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame() * speed;
+  const frame = useSceneFrame() * speed;
 
   const words = text.trim().split(/\s+/).filter(Boolean);
 

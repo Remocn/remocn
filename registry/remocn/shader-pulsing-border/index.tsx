@@ -5,12 +5,8 @@ import {
   type PulsingBorderProps,
 } from "@paper-design/shaders-react";
 import { useCallback, useState } from "react";
-import {
-  continueRender,
-  delayRender,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { continueRender, delayRender } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const NEUTRAL_COLORS = ["#52527a", "#8a8a95", "#3a3a5c"];
 
@@ -28,8 +24,8 @@ export function ShaderPulsingBorder({
   className,
   ...rest
 }: ShaderPulsingBorderProps) {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps, width, height } = useSceneConfig();
 
   const [handle] = useState(() => delayRender("shader-pulsing-border"));
   const gate = useCallback(

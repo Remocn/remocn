@@ -2,12 +2,8 @@
 
 import type React from "react";
 import { useMemo } from "react";
-import {
-  AbsoluteFill,
-  random,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, random } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type GravityPileColors = {
   background: string;
@@ -266,8 +262,8 @@ export function GravityPile({
   backgroundColor,
   speed = gravityPileDefaults.speed,
 }: GravityPileProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const baseColors = { ...gravityPileDefaults.colors, ...colorOverrides };
   const colors = {
     ...baseColors,

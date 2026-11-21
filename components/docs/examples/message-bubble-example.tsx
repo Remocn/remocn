@@ -1,6 +1,7 @@
 "use client";
 
-import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import {
   MessageBubble,
   type MessageBubbleReactionStyle,
@@ -26,8 +27,8 @@ export interface MessageBubbleExampleProps {
 export const MessageBubbleExampleScene = (
   p: MessageBubbleExampleProps = {},
 ) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps } = useSceneConfig();
   const variant = p.variant ?? "incoming";
   const text = p.text ?? "Yep, pushing it live now";
   const reaction = p.reaction === "" ? undefined : (p.reaction ?? "🔥");

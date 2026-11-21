@@ -1,6 +1,6 @@
 "use client";
 
-import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { interpolate, spring } from "remotion";
 import { Caret } from "@/components/remocn/caret";
 import {
   MessageBubble,
@@ -9,6 +9,7 @@ import {
 } from "@/components/remocn/message-bubble";
 import { TypingIndicator } from "@/components/remocn/typing-indicator";
 import { useMessageBubbleTransition } from "@/components/remocn/use-message-bubble-transition";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import {
   mixOklch,
   type RemocnTheme,
@@ -258,7 +259,7 @@ export function ChatFlow({
   speed = 1,
   theme: themeOverride,
 }: ChatFlowProps) {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const eff = frame * speed;
 
   const themeProp = {
@@ -518,7 +519,7 @@ function ChatRow({
   themeProp: Partial<RemocnTheme>;
   theme: RemocnTheme;
 }) {
-  const { fps } = useVideoConfig();
+  const { fps } = useSceneConfig();
   const variant = item.from === "me" ? "outgoing" : "incoming";
   const showTyping =
     item.from === "them" &&

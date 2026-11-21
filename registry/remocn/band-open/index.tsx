@@ -17,9 +17,12 @@ import {
   interpolate,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import {
+  useCompositionFrames,
+  useSceneConfig,
+  useSceneFrame,
+} from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -106,7 +109,7 @@ const BandOpenPresentation: React.FC<
   passedProps,
 }) => {
   const glide = useGlide();
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const o = { ...bandOpenDefaults, ...passedProps };
   const p = presentationProgress;
   const u = Math.min(W, H) / 720;
@@ -304,8 +307,8 @@ function StackScene({
   speed: number;
 }) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const F = lineSize(W, H, line);
   const rows = strips(H, F);
   const pushAt = (f: number) =>
@@ -445,9 +448,9 @@ function PhotoScene({
   speed: number;
 }) {
   const glide = useGlide();
-  const frame = useCurrentFrame() * speed;
+  const frame = useSceneFrame() * speed;
   const fg = ink ?? "#ffffff";
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const u = Math.min(W, H) / 720;
   const F = lineSize(W, H, line);
   const push = interpolate(frame, [0, 120], [1.02, 1.07], {
@@ -606,12 +609,15 @@ export function BandOpen({
   band,
   ...rest
 }: BandOpenDemoProps) {
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const preset = ground ?? (groundParams ? undefined : c.ground);
   const bandShare = band ?? (1.5 * lineSize(W, H, line)) / H;
   // Speed scales the series itself so the transition keeps pace with the scenes.
-  const len = (f: number) => Math.max(1, Math.round(f / speed));
+  // Remotion counts a series in the composition's own frames; the lengths
+  // here are written on the 30 fps timeline the scenes run on.
+  const toFrames = useCompositionFrames();
+  const len = (f: number) => Math.max(1, toFrames(f / speed));
   const tLen = len(transitionFrames);
   return (
     <AbsoluteFill
@@ -622,7 +628,7 @@ export function BandOpen({
     >
       <TransitionSeries>
         <TransitionSeries.Sequence
-          durationInFrames={delay + len(BAND_OPEN_TIMING.a)}
+          durationInFrames={toFrames(delay) + len(BAND_OPEN_TIMING.a)}
         >
           <StackScene
             c={c}

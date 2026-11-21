@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useCurrentFrame } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import { DEFAULT_STEP, hashRange, qstep } from "@/lib/remocn/stop-motion";
 
@@ -311,7 +311,7 @@ export function CrumpleToss({
   ...timing
 }: CrumpleTossProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const pose = crumpleTossPose({ frame, ...timing });
   // The card leaves its flat pose by folding its copies at small angles,
   // which would snap off-grid text level-to-tilted; the mark keeps it off

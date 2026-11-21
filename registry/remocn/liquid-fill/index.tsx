@@ -8,9 +8,8 @@ import {
   interpolate,
   interpolateColors,
   random,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type LiquidFillProps = {
   /** Wordmark revealed beside the mark once it is full. */
@@ -57,8 +56,8 @@ export function LiquidFill(props: LiquidFillProps) {
     speed,
   } = { ...liquidFillDefaults, ...props };
   const uid = `liquid-fill-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
-  const frame = useCurrentFrame();
-  const { width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height } = useSceneConfig();
   const t = frame * Math.max(0, speed);
   const size = Math.round(Math.min(width, height) * 0.24);
 

@@ -56,7 +56,7 @@ Remotion frame, so seeking and rendering are deterministic.
 
 ## Timing
 
-At 30 fps, `speed={1}` and the defaults (`cycles={10}`, `loopFrames={450}`):
+In 30 fps frames, at `speed={1}` and the defaults (`cycles={10}`, `loopFrames={450}`):
 
 | Frames | Motion |
 | --- | --- |
@@ -72,14 +72,14 @@ The loop period is `loopFrames / speed` frames: 450 frames, 15 seconds, at
 the defaults. At `loopFrames / k` the bobs repeat in groups of `k` along the
 row, so the patterns land on predictable frames. The loop closes exactly only when `cycles` is a
 whole number. For a seamless background, make the `Sequence` a multiple of
-the period, or wrap the component in a Remotion `<Loop>` of that length.
+the period (twice as many frames at 60 fps), or wrap the component in a Remotion `<Loop>` of that length.
 
 ```tsx
 import { Loop } from "remotion";
 import { PendulumWave } from "@/components/remocn/pendulum-wave";
 
 export const Background = () => (
-  <Loop durationInFrames={300}>
+  <Loop durationInFrames={600}>
     <PendulumWave count={21} cycles={8} loopFrames={300} showGuides={false} />
   </Loop>
 );

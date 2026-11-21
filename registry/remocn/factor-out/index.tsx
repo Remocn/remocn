@@ -10,9 +10,8 @@ import {
   Easing,
   interpolate,
   interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const rubik = loadFont("normal", {
@@ -132,7 +131,7 @@ export function FactorOut({
   theme = "dark",
 }: FactorOutProps) {
   const glide = useGlide();
-  const now = useCurrentFrame();
+  const now = useSceneFrame();
   const tAt = (f: number) => Math.max(0, f - delay) * speed;
   const t = tAt(now);
   /** Whether a value in px, as a function of time, moves on this frame. */
@@ -143,7 +142,7 @@ export function FactorOut({
       Math.abs(here - v(tAt(now - 1))) > 1e-3
     );
   };
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;

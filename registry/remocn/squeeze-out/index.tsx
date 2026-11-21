@@ -9,9 +9,8 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const anton = loadAnton("normal", { weights: ["400"], subsets: ["latin"] });
 
@@ -220,8 +219,8 @@ export function SqueezeOut({
   speed = 1,
   theme = "dark",
 }: SqueezeOutProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const spot = accent ?? fg;

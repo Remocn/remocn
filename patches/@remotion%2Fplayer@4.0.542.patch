@@ -1,0 +1,102 @@
+diff --git a/dist/cjs/use-playback.js b/dist/cjs/use-playback.js
+index d7af03ced585df36a3a34e1a48860b0581e11426..834f0779a70f9ded7d8002ed950619263e9077e1 100644
+--- a/dist/cjs/use-playback.js
++++ b/dist/cjs/use-playback.js
+@@ -171,6 +171,14 @@ const usePlayback = ({ loop, playbackRate, moveToBeginningWhenEnded, inFrame, ou
+         }
+         let hasBeenStopped = false;
+         let audioContextFailed = false;
++        // remocn: the frame for this refresh is picked from the refresh's own
++        // timestamp, half a refresh ahead. Read from `performance.now()`, the
++        // moment a playback started sat anywhere between two refreshes, and when
++        // a frame boundary landed on a refresh the rounding was decided by timer
++        // noise: a frame shown twice, then one skipped, for that whole playback.
++        let refresh = 1000 / 60;
++        let lastStamp = null;
++        let alignedStart = null;
+         let reqAnimFrameCall = null;
+         let playbackFrame = getCurrentFrame();
+         let lastSeekRevision = (_c = seek === null || seek === void 0 ? void 0 : seek.revision.current) !== null && _c !== void 0 ? _c : null;
+@@ -192,7 +200,7 @@ const usePlayback = ({ loop, playbackRate, moveToBeginningWhenEnded, inFrame, ou
+             unsubscribeBuffering === null || unsubscribeBuffering === void 0 ? void 0 : unsubscribeBuffering();
+             unsubscribeBuffering = null;
+         };
+-        const callback = () => {
++        const callback = (stamp) => {
+             var _a, _b;
+             var _c;
+             reqAnimFrameCall = null;
+@@ -210,7 +218,21 @@ const usePlayback = ({ loop, playbackRate, moveToBeginningWhenEnded, inFrame, ou
+             if (!muted && !audioContextFailed) {
+                 (_b = sharedAudioContext === null || sharedAudioContext === void 0 ? void 0 : sharedAudioContext.resume) === null || _b === void 0 ? void 0 : _b.call(sharedAudioContext);
+             }
+-            const time = performance.now() - clock.startedTime;
++            let time;
++            if (typeof stamp === "number") {
++                if (lastStamp !== null && stamp - lastStamp > 2) {
++                    refresh = Math.min(refresh, stamp - lastStamp);
++                }
++                lastStamp = stamp;
++                if (alignedStart !== clock.startedTime) {
++                    clock.startedTime = stamp;
++                    alignedStart = stamp;
++                }
++                time = stamp - clock.startedTime + refresh / 2;
++            }
++            else {
++                time = performance.now() - clock.startedTime;
++            }
+             const actualLastFrame = outFrame !== null && outFrame !== void 0 ? outFrame : durationInFrames - 1;
+             const actualFirstFrame = inFrame !== null && inFrame !== void 0 ? inFrame : 0;
+             const seekRevision = (_c = seek === null || seek === void 0 ? void 0 : seek.revision.current) !== null && _c !== void 0 ? _c : null;
+diff --git a/dist/esm/index.mjs b/dist/esm/index.mjs
+index f7ccd1e6fc7f646c56b488066b53d0d8860f55b3..e668b2dd8cc5b3c97645028c249708ebf1fcdec8 100644
+--- a/dist/esm/index.mjs
++++ b/dist/esm/index.mjs
+@@ -2205,6 +2205,14 @@ var usePlayback = ({
+     }
+     let hasBeenStopped = false;
+     let audioContextFailed = false;
++    // remocn: the frame for this refresh is picked from the refresh's own
++    // timestamp, half a refresh ahead. Read from `performance.now()`, the
++    // moment a playback started sat anywhere between two refreshes, and when
++    // a frame boundary landed on a refresh the rounding was decided by timer
++    // noise: a frame shown twice, then one skipped, for that whole playback.
++    let refresh = 1000 / 60;
++    let lastStamp = null;
++    let alignedStart = null;
+     let reqAnimFrameCall = null;
+     let playbackFrame = getCurrentFrame();
+     let lastSeekRevision = seek?.revision.current ?? null;
+@@ -2225,7 +2233,7 @@ var usePlayback = ({
+       unsubscribeBuffering?.();
+       unsubscribeBuffering = null;
+     };
+-    const callback = () => {
++    const callback = (stamp) => {
+       reqAnimFrameCall = null;
+       if (hasBeenStopped) {
+         return;
+@@ -2241,7 +2249,21 @@ var usePlayback = ({
+       if (!muted && !audioContextFailed) {
+         sharedAudioContext?.resume?.();
+       }
+-      const time = performance.now() - clock.startedTime;
++      let time;
++      if (typeof stamp === "number") {
++          if (lastStamp !== null && stamp - lastStamp > 2) {
++              refresh = Math.min(refresh, stamp - lastStamp);
++          }
++          lastStamp = stamp;
++          if (alignedStart !== clock.startedTime) {
++              clock.startedTime = stamp;
++              alignedStart = stamp;
++          }
++          time = stamp - clock.startedTime + refresh / 2;
++      }
++      else {
++          time = performance.now() - clock.startedTime;
++      }
+       const actualLastFrame = outFrame ?? durationInFrames - 1;
+       const actualFirstFrame = inFrame ?? 0;
+       const seekRevision = seek?.revision.current ?? null;

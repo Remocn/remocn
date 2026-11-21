@@ -3,8 +3,8 @@
 import { memo, useCallback, useState } from "react";
 import { previewCaptions } from "@/components/docs/examples/caption-fixture";
 import registry from "@/lib/previews";
+import { sitePreview } from "@/lib/previews/site-preview";
 import { cn } from "@/lib/utils";
-import { previewManifest } from "@/registry/__manifest__";
 import { HeroTag } from "./hero-pill";
 import { HeroPlayer } from "./hero-player";
 
@@ -19,7 +19,7 @@ const VideoPlayer = memo(function VideoPlayer({
   onFrame: (frame: number) => void;
 }) {
   const entry = registry[slug];
-  const preview = previewManifest[slug];
+  const preview = sitePreview(slug);
   if (!entry || !preview) return null;
   return (
     <HeroPlayer
@@ -54,7 +54,7 @@ export function CaptionHero({
   /** Footage behind the caption. */
   photo: string;
 }) {
-  const preview = previewManifest[name];
+  const preview = sitePreview(name);
   const fps = preview?.fps ?? 30;
   const words = previewCaptions(
     typeof preview?.defaults.captions === "string"

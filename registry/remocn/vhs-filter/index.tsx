@@ -1,12 +1,13 @@
 "use client";
 
 import type React from "react";
-import { AbsoluteFill, random, useCurrentFrame } from "remotion";
+import { AbsoluteFill, random } from "remotion";
 import {
   type CanvasFilterProps,
   makeCanvasFilter,
   makeFilterShader,
 } from "@/lib/remocn/canvas-presentation";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type VhsFilterProps = {
   bleed?: number;
@@ -135,7 +136,7 @@ const VhsFilterFallback: React.FC<VhsFilterProps & CanvasFilterProps> = ({
   noise = DEFAULTS.noise,
   intensity = DEFAULTS.intensity,
 }) => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const shift =
     (random(`vhs-wobble-${frame}`) - 0.5) * 3.4 * wobble * intensity;
   const flicker =

@@ -1,6 +1,7 @@
 "use client";
 
-import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export interface SpringScaleInProps {
@@ -24,7 +25,7 @@ export function SpringScaleIn({
   speed = 1,
   className,
 }: SpringScaleInProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = useSceneFrame() * speed;
   const glide = useGlide();
 
   const words = text.split(" ");

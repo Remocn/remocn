@@ -1,12 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import {
-  AbsoluteFill,
-  random,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, random } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type TopoLinesProps = {
   /** Number of contour levels. */
@@ -126,8 +122,8 @@ export function TopoLines({
   color = topoLinesDefaults.color,
   accent = topoLinesDefaults.accent,
 }: TopoLinesProps) {
-  const frame = useCurrentFrame();
-  const { width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height } = useSceneConfig();
   const unit = Math.min(width, height);
   const w = width / unit;
   const h = height / unit;

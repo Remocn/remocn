@@ -1,15 +1,8 @@
 "use client";
 
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  random,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, random, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type PuzzleSnapProps = {
   /** Wordmark revealed beside the assembled mark. */
@@ -67,8 +60,8 @@ export function PuzzleSnap(props: PuzzleSnapProps) {
     seed,
     speed,
   } = { ...puzzleSnapDefaults, ...props };
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const t = frame * Math.max(0, speed);
   const s = Math.min(width, height);
   const size = Math.round(s * 0.2);

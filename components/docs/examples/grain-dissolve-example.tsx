@@ -2,6 +2,7 @@
 
 import { linearTiming, TransitionSeries } from "@remotion/transitions";
 import { AbsoluteFill, Sequence } from "remotion";
+import { useCompositionFrames } from "@/lib/remocn/frame-rate";
 import {
   type GrainDissolveProps,
   grainDissolve,
@@ -50,18 +51,19 @@ export function GrainDissolveExampleScene({
   colorBack,
   speed,
 }: GrainDissolveExampleProps) {
+  const toFrames = useCompositionFrames();
   return (
     <TransitionSeries>
-      <TransitionSeries.Sequence durationInFrames={96}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(96)}>
         <Scene label="Scene A" background="#141318" />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
-        timing={linearTiming({ durationInFrames: 76 })}
+        timing={linearTiming({ durationInFrames: toFrames(76) })}
         presentation={grainDissolve({ shape, noise, zoom, colorBack, speed })}
       />
-      <TransitionSeries.Sequence durationInFrames={96}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(96)}>
         <AbsoluteFill style={{ background: "#141318" }}>
-          <Sequence from={54}>
+          <Sequence from={toFrames(54)}>
             <SoftBlurIn text="Grain Dissolve" fontSize={96} color="#f2f2f2" />
           </Sequence>
         </AbsoluteFill>
@@ -83,14 +85,14 @@ import { grainDissolve } from "@/components/remocn/grain-dissolve";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={96}>
+    <TransitionSeries.Sequence durationInFrames={192}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 76 })}
+      timing={linearTiming({ durationInFrames: 152 })}
       presentation={grainDissolve({ shape: "${shape}", noise: ${noise}, zoom: ${zoom}, colorBack: "${colorBack}", speed: ${speed} })}
     />
-    <TransitionSeries.Sequence durationInFrames={96}>
+    <TransitionSeries.Sequence durationInFrames={192}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

@@ -1,6 +1,7 @@
 "use client";
 
-import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface ShortSlideRightProps {
   text: string;
@@ -23,7 +24,7 @@ export function ShortSlideRight({
   speed = 1,
   className,
 }: ShortSlideRightProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = useSceneFrame() * speed;
 
   const words = text.split(" ");
 

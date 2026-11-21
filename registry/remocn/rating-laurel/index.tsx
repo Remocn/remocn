@@ -4,14 +4,8 @@ import { loadFont } from "@remotion/google-fonts/HankenGrotesk";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -739,9 +733,9 @@ export function RatingLaurel({
 }: RatingLaurelProps) {
   // `glide` names the card strip's travel below, so the glide mark is `tilt`.
   const tilt = useGlide();
-  const rawFrame = useCurrentFrame();
+  const rawFrame = useSceneFrame();
   const frame = Math.max(0, rawFrame - delay);
-  const { fps, width, height } = useVideoConfig();
+  const { fps, width, height } = useSceneConfig();
   const f = frame * speed;
   const dark = theme === "dark";
   const palette = dark ? DARK : LIGHT;

@@ -1,14 +1,8 @@
 "use client";
 
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export type ExplodedViewColors = {
@@ -75,8 +69,8 @@ export function ExplodedView({
   speed = explodedViewDefaults.speed,
 }: ExplodedViewProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const baseColors = { ...explodedViewDefaults.colors, ...colorOverrides };
   const colors = {
     ...baseColors,

@@ -1,13 +1,8 @@
 "use client";
 
 import type React from "react";
-import {
-  AbsoluteFill,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export type AccordionUnfoldProps = {
@@ -96,8 +91,8 @@ export function AccordionUnfold(props: AccordionUnfoldProps) {
   const { children, panels, color, shade, backgroundColor, foldAngle, speed } =
     { ...accordionUnfoldDefaults, ...props };
   const glide = useGlide();
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const t = frame * Math.max(0, speed);
   const n = Math.max(2, Math.round(panels));
   const cardW = Math.round(Math.min(width * 0.66, height * 1.3));

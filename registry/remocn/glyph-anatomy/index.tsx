@@ -3,14 +3,8 @@
 import { loadFont } from "@remotion/google-fonts/Inter";
 import { type Font, parse } from "opentype.js";
 import { useEffect, useState } from "react";
-import {
-  continueRender,
-  delayRender,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { continueRender, delayRender, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const { fontFamily: INTER } = loadFont("normal", {
   weights: ["500"],
@@ -321,8 +315,8 @@ export function GlyphAnatomy({
   speed = glyphAnatomyDefaults.speed,
   className,
 }: GlyphAnatomyProps) {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps, width, height } = useSceneConfig();
   const font = useAnatomyFont(fontUrl);
   if (!font) return null;
 

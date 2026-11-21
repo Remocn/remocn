@@ -3,13 +3,8 @@
 import { loadFont } from "@remotion/google-fonts/SpaceGrotesk";
 import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
@@ -265,8 +260,8 @@ export function StackLetters({
   theme = "dark",
   speed = 1,
 }: StackLettersProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const glide = useGlide();
   const c = THEMES[theme];
   const fg = inkColor ?? c.fg;

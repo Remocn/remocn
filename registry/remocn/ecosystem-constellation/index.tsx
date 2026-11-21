@@ -1,7 +1,8 @@
 "use client";
 
 import type { ComponentType } from "react";
-import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export interface EcosystemConstellationProps {
@@ -143,8 +144,8 @@ export function EcosystemConstellation({
   className,
 }: EcosystemConstellationProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame() * speed;
-  const { fps } = useVideoConfig();
+  const frame = useSceneFrame() * speed;
+  const { fps } = useSceneConfig();
 
   const count = Math.max(
     3,

@@ -10,9 +10,8 @@ import {
   Easing,
   interpolate,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const flex = loadVariableFont("oblique 0deg 10deg", { subsets: ["latin"] });
@@ -241,8 +240,8 @@ export function WidthLock({
   theme = "dark",
 }: WidthLockProps) {
   const glide = useGlide();
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const list = words.length > 0 ? words : ["launch video"];

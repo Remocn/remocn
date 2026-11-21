@@ -4,14 +4,8 @@ import { loadFont } from "@remotion/google-fonts/InstrumentSans";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
@@ -620,8 +614,8 @@ export function QuoteHero({
   theme = "dark",
 }: QuoteHeroProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay);
-  const { width, height } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { width, height } = useSceneConfig();
   const t = frame * speed;
   const u = Math.min(width / 1280, height / 720);
   const c = THEMES[theme];

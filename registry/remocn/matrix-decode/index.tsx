@@ -1,6 +1,7 @@
 "use client";
 
-import { random, useCurrentFrame, useVideoConfig } from "remotion";
+import { random } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface MatrixDecodeProps {
   text: string;
@@ -23,9 +24,9 @@ export function MatrixDecode({
   speed = 1,
   className,
 }: MatrixDecodeProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = useSceneFrame() * speed;
   // useVideoConfig kept for consistency with sibling primitives
-  useVideoConfig();
+  useSceneConfig();
 
   let output = "";
   for (let i = 0; i < text.length; i++) {

@@ -10,9 +10,8 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const geist = loadGeist("normal", {
@@ -178,8 +177,8 @@ export function SpotlightText({
 }: SpotlightTextProps) {
   // `glide` names the spotlight's travel below.
   const tilt = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const lit = ink ?? c.lit;
   const stage =

@@ -1,6 +1,7 @@
 "use client";
 
-import { Easing, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface LineByLineSlideProps {
   text: string;
@@ -21,8 +22,8 @@ export function LineByLineSlide({
   speed = 1,
   className,
 }: LineByLineSlideProps) {
-  const frame = useCurrentFrame() * speed;
-  const { durationInFrames } = useVideoConfig();
+  const frame = useSceneFrame() * speed;
+  const { durationInFrames } = useSceneConfig();
 
   const lines = text.split("\n");
 

@@ -3,13 +3,8 @@
 import { loadFont } from "@remotion/google-fonts/SchibstedGrotesk";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadFont("normal", {
@@ -167,8 +162,8 @@ export function SpringBars({
   speed = 1,
 }: SpringBarsProps) {
   const glide = useGlide();
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width, height } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const vals = values.slice(0, 10).map((v) => Math.max(0.3, Math.min(1, v)));

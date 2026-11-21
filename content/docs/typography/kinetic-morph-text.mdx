@@ -77,8 +77,8 @@ export const Root = () => (
     id="KineticMorphText"
     component={KineticMorphText}
     defaultProps={props}
-    durationInFrames={getKineticMorphTextDuration(props)}
-    fps={30}
+    durationInFrames={getKineticMorphTextDuration(props) * 2}
+    fps={60}
     width={1280}
     height={720}
   />

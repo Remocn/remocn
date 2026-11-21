@@ -40,14 +40,14 @@ import { shaderSpiralPass } from "@/components/remocn/shader-spiral-pass";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={120}>
+    <TransitionSeries.Sequence durationInFrames={240}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 72 })}
+      timing={linearTiming({ durationInFrames: 144 })}
       presentation={shaderSpiralPass({ spirals: 3, zoom: 14 })}
     />
-    <TransitionSeries.Sequence durationInFrames={120}>
+    <TransitionSeries.Sequence durationInFrames={240}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>
@@ -55,8 +55,8 @@ export const MyVideo = () => (
 ```
 
 Use `linearTiming`: camera acceleration, shader coverage and the exit are built
-into the presentation. The default transition takes 72 frames (2.4 seconds at
-30 fps); the preview includes holds before and after it. Give both scenes their
+into the presentation. The default transition takes 144 frames at 60 fps (2.4
+seconds); the preview includes holds before and after it. Give both scenes their
 own opaque backgrounds for a complete scene exchange.
 
 ## Props

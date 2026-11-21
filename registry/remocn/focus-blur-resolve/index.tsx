@@ -1,6 +1,7 @@
 "use client";
 
-import { Easing, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export interface FocusBlurResolveProps {
@@ -25,8 +26,8 @@ export function FocusBlurResolve({
   className,
 }: FocusBlurResolveProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame() * speed;
-  const { durationInFrames } = useVideoConfig();
+  const frame = useSceneFrame() * speed;
+  const { durationInFrames } = useSceneConfig();
 
   const enterDur = 23;
   const exitDur = 16;

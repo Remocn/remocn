@@ -4,14 +4,8 @@ import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const manrope = loadManrope("normal", {
@@ -284,8 +278,8 @@ export function CollabLockup({
 }: CollabLockupProps) {
   // `glide` is the names' travel below.
   const tilt = useGlide();
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const u = H / 720;
   const c = THEMES[theme];
   const fg = ink ?? c.fg;

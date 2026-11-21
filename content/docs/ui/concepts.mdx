@@ -30,8 +30,8 @@ function useCurrentState<S extends string>(
 ```
 
 - `defaultState` is returned before the first step fires.
-- `speed` scales the playhead: `effectiveFrame = currentFrame * speed`. A step at `{ at: 30 }` with `speed: 2` activates at render frame 15.
-- `at` values are always **Sequence-local authored frames** — if the component sits inside `<Sequence from={30}>`, Remotion shifts the playhead automatically.
+- `speed` scales the playhead: `effectiveFrame = currentFrame * speed`. A step at `{ at: 30 }` with `speed: 2` activates half a second in: render frame 15 at 30 fps, frame 30 at 60 fps.
+- `at` values are always **Sequence-local authored frames**, counted at 30 fps whatever the composition's rate (see [Frame rate](/docs/getting-started/installation#frame-rate)) — if the component sits inside `<Sequence from={30}>`, Remotion shifts the playhead automatically.
 
 ### `useStateTransition` — smooth resolution
 

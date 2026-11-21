@@ -138,8 +138,8 @@ export const RemotionRoot = () => (
   <Composition
     id="ViteSetup"
     component={ViteSetup}
-    durationInFrames={getCodeMorphDuration({ steps })}
-    fps={30}
+    durationInFrames={getCodeMorphDuration({ steps }) * 2}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -153,7 +153,7 @@ Everything else fades out or in.
 
 ## Timing
 
-At 30 fps, `speed={1}` and the default content:
+In 30 fps frames, at `speed={1}` and the default content:
 
 | Frames | Motion |
 | --- | --- |
@@ -177,7 +177,7 @@ waits for that morph, so two morphs never overlap.
 `getCodeMorphTimeline({ steps, morphDuration, highlight })` returns every
 morph's `start`, `end` and highlight frames, plus `settled`.
 `getCodeMorphDuration({ steps, morphDuration, highlight, speed })` returns the
-composition length with a 24-frame hold, 138 by default. For another frame
+composition length at 30 fps with a 24-frame hold, 138 by default. For another frame
 rate, multiply by `fps / 30` and round up.
 
 <PropsTable title="Props"

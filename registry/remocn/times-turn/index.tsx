@@ -10,9 +10,8 @@ import {
   Easing,
   interpolate,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const familjen = loadFamiljen("normal", {
@@ -169,8 +168,8 @@ export function TimesTurn({
   theme = "dark",
 }: TimesTurnProps) {
   const glide = useGlide();
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const gid = `tt${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;

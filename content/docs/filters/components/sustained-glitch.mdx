@@ -74,7 +74,7 @@ export const MyScene = () => {
   const frame = useCurrentFrame();
   const intensity = interpolate(
     frame,
-    [40, 44, 52],
+    [80, 88, 104],
     [0, 1.6, 0],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
@@ -101,7 +101,7 @@ export const MyScene = () => {
       type: "number",
       default: "1",
       description:
-        "How often the frame can break, in bursts per second at 30fps. Around 6 the slots are short enough that the tearing is effectively continuous, which is what you want when intensity is driving the timing instead.",
+        "How often the frame can break, in bursts per second. Around 6 the slots are short enough that the tearing is effectively continuous, which is what you want when intensity is driving the timing instead.",
     },
     {
       name: "slices",

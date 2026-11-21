@@ -3,13 +3,8 @@
 import { loadFont } from "@remotion/google-fonts/InstrumentSerif";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const { fontFamily: serif } = loadFont("normal", {
   weights: ["400"],
@@ -555,8 +550,8 @@ export function BassDrop({
   speed = 1,
   theme = "dark",
 }: BassDropProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const caption = line ?? build;
   const small = H * 0.036;

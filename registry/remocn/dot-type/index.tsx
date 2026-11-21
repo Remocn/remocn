@@ -3,14 +3,8 @@
 import { loadFont as loadDisplay } from "@remotion/google-fonts/Sora";
 import type React from "react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import {
-  AbsoluteFill,
-  continueRender,
-  delayRender,
-  Easing,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, continueRender, delayRender, Easing } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const DISPLAY = loadDisplay("normal", {
   weights: ["500"],
@@ -335,8 +329,8 @@ export function DotType({
   speed = 1,
   theme = "dark",
 }: DotTypeProps) {
-  const frame = Math.max(0, useCurrentFrame() - wait) * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - wait) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const isLight = theme === "light";
   const bg = isLight ? "#F5F4F0" : "#0A0A0B";
   const ink = inkProp ?? (isLight ? "#141416" : "#EEEEF0");

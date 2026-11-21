@@ -25,6 +25,7 @@
     "report:customizer": "bun scripts/customizer-report.mts",
     "review:props": "bun scripts/review-props.mts",
     "audit:jitter": "bun scripts/audit-jitter.mts",
+    "audit:playback": "bun scripts/audit-playback.mts",
     "audit:jitter-lab": "bun scripts/jitter-lab.mts",
     "previews:build": "bun scripts/previews/build.mts --production --prune && bun scripts/describe/build-controls.mts",
     "start": "next start",
@@ -131,6 +132,7 @@
     "@types/react-dom": "^19",
     "drizzle-kit": "^0.31.11",
     "jsdom": "31.0.1",
+    "playwright-core": "1.61.1",
     "shadcn": "^4.11.0",
     "tailwindcss": "^4",
     "typescript": "^5",
@@ -143,5 +145,8 @@
   "trustedDependencies": [
     "sharp",
     "unrs-resolver"
-  ]
+  ],
+  "patchedDependencies": {
+    "@remotion/player@4.0.542": "patches/@remotion%2Fplayer@4.0.542.patch"
+  }
 }

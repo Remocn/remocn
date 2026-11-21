@@ -3,13 +3,8 @@
 import { loadFont as loadDisplay } from "@remotion/google-fonts/Geist";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadDisplay("normal", {
@@ -173,7 +168,7 @@ function Scene({
   ink?: string;
   scale: number;
 }) {
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   return (
     <AbsoluteFill
@@ -233,8 +228,8 @@ export function DiagonalSplit({
   speed = 1,
 }: DiagonalSplitProps) {
   const glide = useGlide();
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const stage = STAGES[theme];
 

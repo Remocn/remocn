@@ -2,6 +2,7 @@
 
 import { linearTiming, TransitionSeries } from "@remotion/transitions";
 import { AbsoluteFill } from "remotion";
+import { useCompositionFrames } from "@/lib/remocn/frame-rate";
 import { ditherDissolve } from "@/registry/remocn/dither-dissolve";
 
 const FONT_FAMILY =
@@ -44,16 +45,17 @@ export function DitherDissolveExampleScene({
   colorFront,
   speed,
 }: DitherDissolveExampleProps) {
+  const toFrames = useCompositionFrames();
   return (
     <TransitionSeries>
-      <TransitionSeries.Sequence durationInFrames={70}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(70)}>
         <Scene label="Scene A" background="#141318" />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
-        timing={linearTiming({ durationInFrames: 40 })}
+        timing={linearTiming({ durationInFrames: toFrames(40) })}
         presentation={ditherDissolve({ shape, colorBack, colorFront, speed })}
       />
-      <TransitionSeries.Sequence durationInFrames={70}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(70)}>
         <Scene label="Scene B" background="#1a1922" />
       </TransitionSeries.Sequence>
     </TransitionSeries>
@@ -72,14 +74,14 @@ import { ditherDissolve } from "@/components/remocn/dither-dissolve";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 40 })}
+      timing={linearTiming({ durationInFrames: 80 })}
       presentation={ditherDissolve({ shape: "${shape}", colorBack: "${colorBack}", colorFront: "${colorFront}", speed: ${speed} })}
     />
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

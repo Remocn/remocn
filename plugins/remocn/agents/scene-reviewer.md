@@ -22,7 +22,9 @@ If the caller hands you stills that are already rendered, review those and skip 
 1. Compute each beat's start frame. In a `TransitionSeries` each transition overlaps the next
    sequence, so start(n+1) = start(n) + sequence(n) − transition(n).
 2. For each beat take three frames: **entry** (start + 2), **settled** (start + own length) and
-   **end of hold** (start + sequence − 2). Clamp to the composition's duration.
+   **end of hold** (start + sequence − 2). These are storyboard counts, at 30 fps; the composition
+   runs at 60 fps, so double each one for `--frame`. Clamp to the composition's duration. (Durations
+   read from the source are already composition frames: don't double those.)
 3. Render them in one go. Make sure `out/review/<slug>/` exists first:
 
    ```bash

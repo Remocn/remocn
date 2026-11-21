@@ -1,7 +1,8 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Inter";
-import { Easing, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: INTER } = loadFont("normal", {
@@ -161,8 +162,8 @@ export function PeriodDrop({
   className,
 }: PeriodDropProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
-  const { fps, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps, height } = useSceneConfig();
   const unit = height / 720;
   const t = getPeriodDropTime(frame, { fps, speed });
   const dot = getPeriodDropDot(t);

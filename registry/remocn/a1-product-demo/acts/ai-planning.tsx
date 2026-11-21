@@ -1,6 +1,7 @@
 "use client";
 
-import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import {
   Camera,
   FLOW_BG,
@@ -245,7 +246,7 @@ function Cursor({ f }: { f: number }) {
 }
 
 export function AIPlanning({ speed = 1 }: { speed?: number }) {
-  const f = useCurrentFrame() * speed;
+  const f = useSceneFrame() * speed;
   const glide = useGlide();
 
   const craneScale = clampInterp(f, [0, 24], [1.04, 1], EASE);

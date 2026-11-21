@@ -1,13 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  continueRender,
-  delayRender,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-} from "remotion";
+import { continueRender, delayRender, Easing, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface KineticWarpProps {
   className?: string;
@@ -114,7 +109,7 @@ export function KineticWarp({
   easingBezier = [0.3, 0.74, 0.09, 1],
   resampleStep = 4,
 }: KineticWarpProps) {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [fontReady, setFontReady] = useState(false);
 

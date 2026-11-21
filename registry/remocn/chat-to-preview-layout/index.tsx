@@ -1,7 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Easing, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface ChatToPreviewLayoutProps {
   chat?: ReactNode;
@@ -165,8 +166,8 @@ export function ChatToPreviewLayout({
   speed = 1,
   className,
 }: ChatToPreviewLayoutProps) {
-  const frame = useCurrentFrame() * speed;
-  const { durationInFrames } = useVideoConfig();
+  const frame = useSceneFrame() * speed;
+  const { durationInFrames } = useSceneConfig();
 
   // Apple's signature ease — slow start, dramatic settle. Replaces the older
   // symmetric bezier so the morph feels deliberate instead of mechanical.

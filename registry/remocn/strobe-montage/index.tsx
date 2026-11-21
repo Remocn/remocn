@@ -17,9 +17,12 @@ import {
   interpolate,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import {
+  useCompositionFrames,
+  useSceneConfig,
+  useSceneFrame,
+} from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -127,7 +130,7 @@ const StrobeMontagePresentation: React.FC<
   presentationDurationInFrames,
   passedProps,
 }) => {
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const o = { ...strobeMontageDefaults, ...passedProps };
   const p = presentationProgress;
   const { slots, k, local } = slotAt(
@@ -367,8 +370,8 @@ function OpenerScene({
   look: SceneLook;
 }) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const landscape = W >= H;
   const u = Math.min(W, H) / 720;
   const longest = Math.max(lead.length, accentWord.length * 0.85);
@@ -502,8 +505,8 @@ function PromptScene({
   look: SceneLook;
 }) {
   const glide = useGlide();
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const frame = useSceneFrame() * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const landscape = W >= H;
   const u = Math.min(W, H) / 720;
   const t = frame - start;
@@ -788,7 +791,10 @@ export function StrobeMontage({
   const presetB = groundB ?? (groundBParams ? undefined : c.groundB);
   const look: SceneLook = { fontFamily, background, scale, speed };
   // Speed scales the series itself so the transition keeps pace with the scenes.
-  const len = (f: number) => Math.max(1, Math.round(f / speed));
+  // Remotion counts a series in the composition's own frames; the lengths
+  // here are written on the 30 fps timeline the scenes run on.
+  const toFrames = useCompositionFrames();
+  const len = (f: number) => Math.max(1, toFrames(f / speed));
   // The strobe keeps its count of hits when the transition gets shorter.
   const strobe =
     speed === 1
@@ -805,7 +811,7 @@ export function StrobeMontage({
     >
       <TransitionSeries>
         <TransitionSeries.Sequence
-          durationInFrames={delay + len(STROBE_MONTAGE_TIMING.a)}
+          durationInFrames={toFrames(delay) + len(STROBE_MONTAGE_TIMING.a)}
         >
           <OpenerScene
             c={c}

@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { Easing, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export interface OutlineFillTrackTextProps {
@@ -74,8 +75,8 @@ export function OutlineFillTrackText({
   className,
 }: OutlineFillTrackTextProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame() * Math.max(speed, 0);
-  const { width: compositionWidth } = useVideoConfig();
+  const frame = useSceneFrame() * Math.max(speed, 0);
+  const { width: compositionWidth } = useSceneConfig();
   const safeFontSize = Math.max(fontSize, 1);
   const safeFontWeight = Math.max(fontWeight, 1);
   const safeOutlineWidth = Math.max(outlineWidth, 0);

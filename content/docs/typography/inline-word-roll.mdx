@@ -45,9 +45,9 @@ export const Headline = () => (
 );
 ```
 
-The default sequence finishes moving at frame 75. The demo adds a 30-frame final
-hold. All durations use composition frames; at 30 fps the movement takes about
-2.5 seconds. Set `acceleration={1}` for a steady pace. Faster intervals never
+The default sequence finishes moving at frame 75. The demo adds a one-second final
+hold. All durations are 30 fps frames, so the movement takes about 2.5 seconds
+at any frame rate. Set `acceleration={1}` for a steady pace. Faster intervals never
 become shorter than the roll itself, so transitions cannot overlap.
 
 Words and phrases are separated by `|` or newlines. Spaces inside a phrase are

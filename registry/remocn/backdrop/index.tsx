@@ -1,7 +1,8 @@
 "use client";
 
 import { isValidElement, type ReactNode } from "react";
-import { AbsoluteFill, Img, useVideoConfig } from "remotion";
+import { AbsoluteFill, Img } from "remotion";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 
 export type BackdropFill =
   | { type: "color"; value: string }
@@ -46,7 +47,7 @@ export function Backdrop({
   children,
   className,
 }: BackdropProps) {
-  const { width } = useVideoConfig();
+  const { width } = useSceneConfig();
 
   const paddingPx = (padding / 100) * width;
   const radiusPx = (radius / 100) * width;

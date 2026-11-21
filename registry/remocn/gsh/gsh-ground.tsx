@@ -1,5 +1,6 @@
 import { type CSSProperties, useLayoutEffect, useMemo, useRef } from "react";
-import { AbsoluteFill, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import {
   type GradientParams,
   kindDefaults,
@@ -42,8 +43,8 @@ export function GshGround({
   resolution = 0.5,
   style,
 }: GshGroundProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<WebGLRenderer | null>(null);
   const resolved = useMemo(() => gshParams(preset, params), [preset, params]);

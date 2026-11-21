@@ -9,9 +9,8 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const plex = loadPlexSans("normal", {
@@ -138,9 +137,9 @@ export function SpineTurn({
   speed = 1,
   theme = "dark",
 }: SpineTurnProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
   const glide = useGlide();
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const list = useMemo(() => {
     const l = titles.filter((s) => s.trim().length > 0);

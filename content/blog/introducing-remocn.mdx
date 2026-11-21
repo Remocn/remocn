@@ -37,8 +37,8 @@ export const RemotionRoot = () => (
   <Composition
     id="HelloWorld"
     component={SoftBlurIn}
-    durationInFrames={60}
-    fps={30}
+    durationInFrames={120}
+    fps={60}
     width={1280}
     height={720}
     defaultProps={{ text: "Hello, world" }}
@@ -67,14 +67,14 @@ import { TransitionSeries, linearTiming } from "@remotion/transitions";
 import { whipPan } from "@/components/remocn/whip-pan";
 
 <TransitionSeries>
-  <TransitionSeries.Sequence durationInFrames={70}>
+  <TransitionSeries.Sequence durationInFrames={140}>
     <SceneA />
   </TransitionSeries.Sequence>
   <TransitionSeries.Transition
-    timing={linearTiming({ durationInFrames: 26 })}
+    timing={linearTiming({ durationInFrames: 52 })}
     presentation={whipPan()}
   />
-  <TransitionSeries.Sequence durationInFrames={70}>
+  <TransitionSeries.Sequence durationInFrames={140}>
     <SceneB />
   </TransitionSeries.Sequence>
 </TransitionSeries>

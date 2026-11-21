@@ -10,9 +10,8 @@ import {
   Easing,
   interpolate,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const plex = loadPlexMono("normal", {
@@ -149,10 +148,10 @@ export function PressStat({
   theme = "dark",
 }: PressStatProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const tAt = (df: number) => Math.max(0, frame + df - delay) * speed;
   const t = tAt(0);
-  const { width: W, height: H, fps } = useVideoConfig();
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = THEMES[theme];
   const green = accent ?? GREEN[theme];
   const fg = ink ?? c.ink;

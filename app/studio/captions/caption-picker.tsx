@@ -13,13 +13,13 @@ import { useAutoplay } from "@/app/(home)/components/use-autoplay";
 import { ComponentPreview } from "@/components/docs/component-preview";
 import captionsMeta from "@/content/docs/captions/components/meta.json";
 import components from "@/lib/previews";
+import { sitePreview } from "@/lib/previews/site-preview";
 import {
   getCachedStudioElement,
   loadStudioElement,
 } from "@/lib/studio-element";
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 import { cn } from "@/lib/utils";
-import { previewManifest } from "@/registry/__manifest__";
 import registry from "@/registry/remocn/registry.json";
 
 // Same order as the Captions sidebar in the docs.
@@ -182,7 +182,7 @@ function CaptionStyleCard({
   selectedInStudio: boolean;
   onOpen: () => void;
 }) {
-  const preview = previewManifest[name];
+  const preview = sitePreview(name);
   const entry = components[name];
   const playerRef = useRef<PlayerRef>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -192,7 +192,11 @@ function CaptionStyleCard({
   const reducedMotion = usePrefersReducedMotion();
   const playing = visible && !reducedMotion && (hovered || focused);
   const { containerRef } = useAutoplay(playerRef, playing);
-  const initialFrame = Math.min(96, (preview?.durationInFrames ?? 1) - 1);
+  // 3.2 seconds in, at whatever rate the preview plays.
+  const initialFrame = Math.min(
+    Math.round(3.2 * (preview?.fps ?? 30)),
+    (preview?.durationInFrames ?? 1) - 1,
+  );
 
   useEffect(() => {
     const el = buttonRef.current;

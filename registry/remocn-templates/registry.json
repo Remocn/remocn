@@ -126,7 +126,8 @@
       "registryDependencies": [
         "@remocn/typed-split-wipe",
         "@remocn/caret",
-        "@remocn/glide"
+        "@remocn/glide",
+        "@remocn/frame-rate"
       ],
       "files": [
         {
@@ -207,7 +208,11 @@
       "type": "registry:component",
       "description": "An independent 26.7-second editorial product film with forest-green accents, original photography, seven editable demos, and geometric marks.",
       "dependencies": ["remotion", "@fontsource/manrope"],
-      "registryDependencies": ["@remocn/shader-text-reveal", "@remocn/glide"],
+      "registryDependencies": [
+        "@remocn/shader-text-reveal",
+        "@remocn/glide",
+        "@remocn/frame-rate"
+      ],
       "files": [
         {
           "path": "launch-anything/assets.ts",

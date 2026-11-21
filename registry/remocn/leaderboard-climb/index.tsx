@@ -3,14 +3,8 @@
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadOnest } from "@remotion/google-fonts/Onest";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
@@ -170,8 +164,8 @@ export function LeaderboardClimb({
   ground,
   groundParams,
 }: LeaderboardClimbProps) {
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width, height, fps } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, fps } = useSceneConfig();
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
   const stageW = portrait ? 720 : 1280;

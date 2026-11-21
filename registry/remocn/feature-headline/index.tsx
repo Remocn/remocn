@@ -4,13 +4,8 @@ import { loadFont as loadGeist } from "@remotion/google-fonts/Geist";
 import { loadFont as loadGeistMono } from "@remotion/google-fonts/GeistMono";
 import type React from "react";
 import { Fragment } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const geist = loadGeist("normal", {
@@ -229,10 +224,10 @@ export function FeatureHeadline({
   theme = "dark",
 }: FeatureHeadlineProps) {
   const glide = useGlide();
-  const now = useCurrentFrame();
+  const now = useSceneFrame();
   const raw = Math.max(0, now - delay);
   const frame = raw * speed;
-  const { width, height, durationInFrames } = useVideoConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
   const p = PALETTES[theme];
   const fg = ink ?? p.fg;
   const centre = align === "center";

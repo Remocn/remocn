@@ -1,7 +1,7 @@
 "use client";
 
 import { type CSSProperties, Fragment } from "react";
-import { Easing, interpolate, useVideoConfig } from "remotion";
+import { Easing, interpolate } from "remotion";
 import {
   type CaptionBaseProps,
   type CaptionTokenState,
@@ -10,6 +10,7 @@ import {
   groupCaptionWords,
   useCaptions,
 } from "@/lib/remocn/caption-core";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export interface CaptionCubeProps extends CaptionBaseProps {
@@ -102,7 +103,7 @@ export function CaptionCube({
     combineTokensWithinMilliseconds,
     holdMs,
   });
-  const { fps } = useVideoConfig();
+  const { fps } = useSceneConfig();
   const glide = useGlide();
   if (!state) return null;
 

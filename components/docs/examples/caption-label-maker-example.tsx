@@ -1,7 +1,8 @@
 "use client";
 
-import { AbsoluteFill, useVideoConfig } from "remotion";
+import { AbsoluteFill } from "remotion";
 import { previewCaptions } from "@/components/docs/examples/caption-fixture";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 import { CaptionLabelMaker } from "@/registry/remocn/caption-label-maker";
 
 interface CaptionLabelMakerExampleProps {
@@ -23,7 +24,7 @@ export function CaptionLabelMakerExampleScene({
   combineTokensWithinMilliseconds,
   holdMs,
 }: CaptionLabelMakerExampleProps) {
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   return (
     <AbsoluteFill
       style={{

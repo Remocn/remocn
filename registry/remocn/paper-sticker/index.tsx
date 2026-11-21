@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useCurrentFrame } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import {
   DEFAULT_STEP,
   hashRange,
@@ -30,7 +30,7 @@ export function PaperSticker({
   maxTilt = 2.6,
   step = DEFAULT_STEP,
 }: PaperStickerProps) {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const progress = steppedRamp(frame, at, at + 2 * step, { step });
   if (progress === 0) return null;
 

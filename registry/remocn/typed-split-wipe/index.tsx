@@ -1,7 +1,8 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface TypedSplitWipeProps {
   prefix: string;
@@ -59,7 +60,7 @@ export function TypedSplitWipe({
   speed = 1,
   className,
 }: TypedSplitWipeProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = useSceneFrame() * speed;
   const fullText = [prefix, anchor, suffix].filter(Boolean).join(" ");
   const safeExitFrames = Math.max(exitFrames, 0.001);
   const typedText = getTypedSplitWipeText(fullText, frame, typeFrames);

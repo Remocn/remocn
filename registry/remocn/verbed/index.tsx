@@ -10,9 +10,8 @@ import {
   Easing,
   interpolate,
   interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const roman = loadFont("normal", {
@@ -218,8 +217,8 @@ export function Verbed({
   theme = "dark",
 }: VerbedProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H, durationInFrames: T } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, durationInFrames: T } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;

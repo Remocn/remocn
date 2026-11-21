@@ -117,7 +117,7 @@ as its uppercase letter.
 
 ## Timing
 
-At 30 fps with `speed={1}` and the default steps, `mod+k` on 20, `g i` on 78
+In 30 fps frames, with `speed={1}` and the default steps, `mod+k` on 20, `g i` on 78
 and `shift+mod+p` on 114:
 
 | Frames | Motion |
@@ -151,9 +151,9 @@ most two groups hold the screen: a third arrival sends the oldest off at once.
 
 `keystrokeLength` is 166, the frame the default content has left.
 `getKeystrokeDuration({ steps, linger, speed, fps })` returns the frames your
-own steps need, plus a 14-frame tail. `at`, `hold` and `linger` are frames of
-your composition, exactly like remocn-ui `at`. The press and release motion
-keeps the same timing in seconds at any frame rate.
+own steps need, plus a 14-frame tail. `at`, `hold` and `linger` are 30 fps
+frames at any composition frame rate, exactly like remocn-ui `at`, so the whole
+sequence keeps its timing in seconds.
 
 <PropsTable title="Props"
   rows={[

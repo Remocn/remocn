@@ -10,9 +10,8 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 /** Film-title serif for the hero, its sans sibling for the caption. */
@@ -237,9 +236,9 @@ export function AspectSlit({
   theme = "dark",
 }: AspectSlitProps) {
   const glide = useGlide();
-  const raw = Math.max(0, useCurrentFrame() - delay);
+  const raw = Math.max(0, useSceneFrame() - delay);
   const frame = raw * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const metrics = useTitleMetrics(title, fontFamily);

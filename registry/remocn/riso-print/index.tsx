@@ -1,15 +1,8 @@
 "use client";
 
 import { type ReactNode, useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  random,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, random, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type RisoPrintProps = {
   /** Subject printed in both inks. Dark tones go to the key plate, warm tones to the accent plate. */
@@ -152,8 +145,8 @@ export function RisoPrint({
   marks = risoPrintDefaults.marks,
   speed = risoPrintDefaults.speed,
 }: RisoPrintProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const inks: [string, string] = [
     keyInk ?? inksProp[0],

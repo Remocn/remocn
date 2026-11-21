@@ -15,16 +15,14 @@ import {
 } from "@/components/docs/index/icons/icons";
 import { Remotion } from "@/components/ui/svgs/remotion";
 import registry, { type RegistryEntry } from "@/lib/previews";
+import { sitePreview } from "@/lib/previews/site-preview";
 import {
   getCachedStudioElement,
   loadStudioElement,
 } from "@/lib/studio-element";
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 import { cn } from "@/lib/utils";
-import {
-  type PreviewManifestEntry,
-  previewManifest,
-} from "@/registry/__manifest__";
+import type { PreviewManifestEntry } from "@/registry/__manifest__";
 
 /** Tiles shown before "Show all" when no filter narrows the grid. */
 const PAGE_SIZE = 48;
@@ -180,7 +178,7 @@ function IconTile({
   const [installing, setInstalling] = useState(false);
   const [installError, setInstallError] = useState<string | null>(null);
   const entry = registry[icon.name];
-  const preview = previewManifest[icon.name];
+  const preview = sitePreview(icon.name);
   const command = `npx shadcn@latest add @remocn/${icon.name}`;
   const playing = active && !reducedMotion && Boolean(entry && preview);
   const Static = icon.Static;

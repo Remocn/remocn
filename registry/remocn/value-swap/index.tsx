@@ -1,7 +1,8 @@
 "use client";
 
 import type React from "react";
-import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const clampOpts = {
@@ -28,7 +29,7 @@ export function ValueSwap({
   className,
   style,
 }: ValueSwapProps) {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const glide = useGlide();
   const ats = Array.isArray(at) ? at : [at];
   const d = direction === "down" ? -distance : distance;

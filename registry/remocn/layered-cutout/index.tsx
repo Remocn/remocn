@@ -4,13 +4,8 @@ import { loadFont } from "@remotion/google-fonts/HankenGrotesk";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
@@ -248,7 +243,7 @@ function Sheet({
   u: number;
   paperId: string;
 }) {
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   const cut = CUTS[index];
   const hole = holePath(cut.R, cut.aspect, index * 7 + 3, u);
   const X = (width / 2 + Math.abs(x) + 80 * u) / scale;
@@ -361,8 +356,8 @@ export function LayeredCutout({
   theme = "light",
 }: LayeredCutoutProps) {
   const glide = useGlide();
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width, height } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const u = height / 720;
   const p = THEMES[theme];
   const fg = ink ?? p.fg;

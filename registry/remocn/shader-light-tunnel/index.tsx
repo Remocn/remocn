@@ -1,7 +1,8 @@
 "use client";
 
 import { useLayoutEffect, useRef } from "react";
-import { useCurrentFrame, useDelayRender, useVideoConfig } from "remotion";
+import { useDelayRender } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface ShaderLightTunnelProps {
   speed?: number;
@@ -431,8 +432,8 @@ export function ShaderLightTunnel({
   depth = 1,
   timeOffset = 0,
 }: ShaderLightTunnelProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const { delayRender, continueRender, cancelRender } = useDelayRender();
   const canvas = useRef<HTMLCanvasElement>(null);
   const renderer = useRef<ReturnType<typeof createTunnelRenderer> | null>(null);

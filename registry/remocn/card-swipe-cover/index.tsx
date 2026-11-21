@@ -18,9 +18,12 @@ import {
   interpolate,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import {
+  useCompositionFrames,
+  useSceneConfig,
+  useSceneFrame,
+} from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -144,7 +147,7 @@ const CardSwipeCoverPresentation: React.FC<
   presentationDurationInFrames,
   passedProps,
 }) => {
-  const { fps, width, height } = useVideoConfig();
+  const { fps, width, height } = useSceneConfig();
   const o = { ...cardSwipeCoverDefaults, ...passedProps };
   const side = o.from === "bottom-left" ? -1 : 1;
   const frames = Math.max(2, presentationDurationInFrames);
@@ -455,8 +458,8 @@ function SceneA({
   speed: number;
 }) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width, height } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const tall = height > width;
   const chars = parseLine(line);
   const firstAccent = chars.findIndex((c) => c.accent);
@@ -783,8 +786,8 @@ function SceneB({
   fgScale: number;
   speed: number;
 }) {
-  const frame = useCurrentFrame() * speed;
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame() * speed;
+  const { width, height, fps } = useSceneConfig();
   const tall = height > width;
   const m = width * 0.07;
   const scale = tall ? width / 820 : width / 1280;
@@ -1006,7 +1009,10 @@ export function CardSwipeCoverDemo({
   const palette = { ...theme0, ink: ink ?? theme0.ink };
   const tone = accent ?? palette.accent;
   // Speed scales the series itself so the transition keeps pace with the scenes.
-  const len = (f: number) => Math.max(1, Math.round(f / speed));
+  // Remotion counts a series in the composition's own frames; the lengths
+  // here are written on the 30 fps timeline the scenes run on.
+  const toFrames = useCompositionFrames();
+  const len = (f: number) => Math.max(1, toFrames(f / speed));
   return (
     <AbsoluteFill
       style={{
@@ -1015,7 +1021,9 @@ export function CardSwipeCoverDemo({
       }}
     >
       <TransitionSeries>
-        <TransitionSeries.Sequence durationInFrames={delay + len(A_LEN)}>
+        <TransitionSeries.Sequence
+          durationInFrames={toFrames(delay) + len(A_LEN)}
+        >
           <SceneA
             line={line}
             palette={{ ...palette, accent: tone, caret: tone }}

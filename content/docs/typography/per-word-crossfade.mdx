@@ -35,10 +35,10 @@ import { PerWordCrossfade } from "@/components/remocn/per-word-crossfade";
 
 const PerWordCrossfadeScene = () => (
   <>
-    <Sequence durationInFrames={50}>
+    <Sequence durationInFrames={100}>
       <PerWordCrossfade fromText="Beautifully simple." toText="Designed for focus." />
     </Sequence>
-    <Sequence from={50} durationInFrames={50}>
+    <Sequence from={100} durationInFrames={100}>
       <PerWordCrossfade fromText="Designed for focus." toText="Built for people." />
     </Sequence>
   </>
@@ -48,8 +48,8 @@ export const RemotionRoot = () => (
   <Composition
     id="PerWordCrossfade"
     component={PerWordCrossfadeScene}
-    durationInFrames={100}
-    fps={30}
+    durationInFrames={200}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -88,8 +88,8 @@ export const RemotionRoot = () => (
   <Composition
     id="PerWordCrossfade"
     component={PerWordCrossfadeScene}
-    durationInFrames={90}
-    fps={30}
+    durationInFrames={180}
+    fps={60}
     width={1280}
     height={720}
   />

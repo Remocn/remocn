@@ -1,13 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  random,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, random } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type LifeGridProps = {
   /** Columns; rows follow the frame aspect ratio. */
@@ -107,8 +102,8 @@ export function LifeGrid({
   color = lifeGridDefaults.color,
   accent = lifeGridDefaults.accent,
 }: LifeGridProps) {
-  const frame = useCurrentFrame();
-  const { width, height, durationInFrames } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, durationInFrames } = useSceneConfig();
   const nx = Math.max(4, Math.round(cols));
   const ny = Math.max(4, Math.round((nx * height) / width));
   const fpg = Math.max(1, framesPerGeneration);

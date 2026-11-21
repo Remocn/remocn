@@ -5,13 +5,8 @@ import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadFont as loadDisplay } from "@remotion/google-fonts/Newsreader";
 import type React from "react";
 import { useId, useLayoutEffect, useRef, useState } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
@@ -295,10 +290,10 @@ export function StackedShift({
   speed = 1,
 }: StackedShiftProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const timeAt = (f: number) => Math.max(0, f - delay) * speed;
   const t = timeAt(frame);
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;

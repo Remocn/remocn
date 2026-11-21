@@ -5,8 +5,9 @@ import type {
   TransitionPresentationComponentProps,
 } from "@remotion/transitions";
 import { useLayoutEffect, useRef } from "react";
-import { AbsoluteFill, useDelayRender, useVideoConfig } from "remotion";
+import { AbsoluteFill, useDelayRender } from "remotion";
 import { createTunnelRenderer } from "@/components/remocn/shader-light-tunnel";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export type ShaderSpiralPassProps = {
@@ -51,7 +52,7 @@ function ShaderSpiralPassPresentation({
   presentationDurationInFrames,
   passedProps,
 }: TransitionPresentationComponentProps<ShaderSpiralPassProps>) {
-  const { width, height, fps } = useVideoConfig();
+  const { width, height, fps } = useSceneConfig();
   const glide = useGlide();
   const { delayRender, continueRender, cancelRender } = useDelayRender();
   const canvas = useRef<HTMLCanvasElement>(null);

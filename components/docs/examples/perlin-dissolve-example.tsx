@@ -2,6 +2,7 @@
 
 import { linearTiming, TransitionSeries } from "@remotion/transitions";
 import { AbsoluteFill, Sequence } from "remotion";
+import { useCompositionFrames } from "@/lib/remocn/frame-rate";
 import { perlinDissolve } from "@/registry/remocn/perlin-dissolve";
 import { SoftBlurIn } from "@/registry/remocn/soft-blur-in";
 
@@ -45,13 +46,14 @@ export function PerlinDissolveExampleScene({
   softness,
   speed,
 }: PerlinDissolveExampleProps) {
+  const toFrames = useCompositionFrames();
   return (
     <TransitionSeries>
-      <TransitionSeries.Sequence durationInFrames={110}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(110)}>
         <Scene label="Scene A" background="#141318" />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
-        timing={linearTiming({ durationInFrames: 104 })}
+        timing={linearTiming({ durationInFrames: toFrames(104) })}
         presentation={perlinDissolve({
           colorFront,
           colorBack,
@@ -59,8 +61,8 @@ export function PerlinDissolveExampleScene({
           speed,
         })}
       />
-      <TransitionSeries.Sequence durationInFrames={110}>
-        <Sequence from={52}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(110)}>
+        <Sequence from={toFrames(52)}>
           <SoftBlurIn text="Perlin Dissolve" fontSize={96} color="#f2f2f2" />
         </Sequence>
       </TransitionSeries.Sequence>
@@ -80,14 +82,14 @@ import { perlinDissolve } from "@/components/remocn/perlin-dissolve";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={110}>
+    <TransitionSeries.Sequence durationInFrames={220}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 104 })}
+      timing={linearTiming({ durationInFrames: 208 })}
       presentation={perlinDissolve({ colorFront: "${colorFront}", colorBack: "${colorBack}", softness: ${softness}, speed: ${speed} })}
     />
-    <TransitionSeries.Sequence durationInFrames={110}>
+    <TransitionSeries.Sequence durationInFrames={220}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCurrentFrame, useVideoConfig } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type SquiggleShape = "wave" | "zigzag" | "loops" | "coil";
 export type SquiggleJoin = "miter" | "round";
@@ -373,8 +373,8 @@ export function Squiggle({
   speed = squiggleDefaults.speed,
   className,
 }: SquiggleProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const state = getSquiggleState(frame, {
     shape,
     x,

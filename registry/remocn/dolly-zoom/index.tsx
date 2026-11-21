@@ -1,13 +1,8 @@
 "use client";
 
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type DollyZoomColors = {
   background: string;
@@ -77,8 +72,8 @@ export function DollyZoom({
   lineColor,
   speed = dollyZoomDefaults.speed,
 }: DollyZoomProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const baseColors = { ...dollyZoomDefaults.colors, ...colorOverrides };
   const colors = {
     ...baseColors,

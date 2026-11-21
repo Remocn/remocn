@@ -9,9 +9,8 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const lexend = loadFont("normal", {
@@ -187,8 +186,8 @@ export function YourNameHere({
   theme = "dark",
 }: YourNameHereProps) {
   const glide = useGlide();
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const Tt = Math.max(0, durationInFrames - delay) * speed;
   const c = THEMES[theme];
   const fg = ink ?? c.ink;

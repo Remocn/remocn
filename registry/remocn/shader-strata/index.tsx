@@ -1,12 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  continueRender,
-  delayRender,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { continueRender, delayRender } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 // A field of fine horizontal sediment layers — strata. Each layer's edge is
 // displaced by fbm noise and drifts at its own depth speed, so the stack reads
@@ -145,8 +141,8 @@ export function ShaderStrata({
   speed = 1,
   className,
 }: ShaderStrataProps) {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps, width, height } = useSceneConfig();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stateRef = useRef<GlState | null>(null);
   const [handle] = useState(() => delayRender("shader-strata"));

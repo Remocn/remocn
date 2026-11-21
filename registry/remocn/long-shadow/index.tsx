@@ -1,14 +1,8 @@
 "use client";
 
 import { type ReactNode, useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type LongShadowProps = {
   /** Flat icon or mark that casts the shadow. Defaults to a red check badge. */
@@ -85,8 +79,8 @@ export function LongShadow({
   checkColor = longShadowDefaults.checkColor,
   speed = longShadowDefaults.speed,
 }: LongShadowProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const t = (frame / fps) * 30 * speed;
   const unit = Math.min(width, height) / 720;

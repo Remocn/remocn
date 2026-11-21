@@ -68,7 +68,7 @@ import { HalftonePrint } from "@/components/remocn/halftone-print";
 
 export const Opening = () => {
   const frame = useCurrentFrame();
-  const misregistration = interpolate(frame, [0, 36], [9, 1.2], {
+  const misregistration = interpolate(frame, [0, 72], [9, 1.2], {
     extrapolateRight: "clamp",
   });
 
@@ -92,7 +92,7 @@ into focus, and it survives on scenes with less colour to separate.
 <ComponentExample name="halftone-resolve" />
 
 ```tsx
-const dotSize = interpolate(frame, [0, 40], [30, 7], {
+const dotSize = interpolate(frame, [0, 80], [30, 7], {
   extrapolateRight: "clamp",
 });
 ```

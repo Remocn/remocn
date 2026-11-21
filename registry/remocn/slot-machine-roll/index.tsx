@@ -1,6 +1,7 @@
 "use client";
 
-import { spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export interface SlotMachineRollProps {
@@ -23,8 +24,8 @@ export function SlotMachineRoll({
   className,
 }: SlotMachineRollProps) {
   const glide = useGlide();
-  const current = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const current = useSceneFrame();
+  const { fps } = useSceneConfig();
 
   const len = Math.max(from.length, to.length);
   const paddedFrom = from.padStart(len, " ");

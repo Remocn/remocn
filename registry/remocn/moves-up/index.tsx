@@ -9,9 +9,8 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const golos = loadFont("normal", {
@@ -108,8 +107,8 @@ export function MovesUp({
   theme = "dark",
 }: MovesUpProps) {
   const glide = useGlide();
-  const now = useCurrentFrame();
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const now = useSceneFrame();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = inkColor ?? c.ink;

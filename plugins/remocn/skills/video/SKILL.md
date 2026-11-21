@@ -65,8 +65,8 @@ files it will touch and asks first.
 
    ```tsx
    export const meta = {
-     durationInFrames: 1356, // Planned total from the storyboard
-     fps: 30,
+     durationInFrames: 2712, // The storyboard's Planned total (1356f @30fps), doubled for 60 fps
+     fps: 60,
      height: 720,
      width: 1280,
    };
@@ -91,9 +91,12 @@ files it will touch and asks first.
 
    Pass `defaultProps` and `schema` too when the video exports them.
 4. Use the exact props from each component's docs page. Sequence lengths come from the storyboard,
-   not from guesses.
+   not from guesses. The storyboard counts at 30 fps and the video runs at 60 fps: **double every
+   count you hand to Remotion** (`durationInFrames` and `from` of each sequence, the length in
+   `linearTiming()` / `springTiming()`, `meta.durationInFrames`). Frame counts in a component's
+   props stay as the storyboard and the docs give them.
 5. Typecheck (`npx tsc --noEmit`) and list compositions (`npx remotion compositions`). The slug
-   must be in the list. Fix every error before moving on. A missing declaration file for a
+   must be in the list, at 60 fps, with twice the storyboard's **Planned** frames. Fix every error before moving on. A missing declaration file for a
    component's dependency is fixed with `npm i -D @types/<package>`, not with `any`.
 
 ## 5. Check the render
@@ -104,7 +107,8 @@ The agent that writes the code never sees the frames, so look at them.
   the project path. Apply the fixes it returns, then ask it to check again. Stop after **two** review
   rounds and tell the user what is still open, if anything.
 - Otherwise render stills yourself at the start, the middle of the motion and the end of the hold of
-  each beat (`npx remotion still <slug> out/review/<beat>-<frame>.png --frame=<n>`), open the images,
+  each beat (`npx remotion still <slug> out/review/<beat>-<frame>.png --frame=<n>`, where `<n>` is a
+  frame of the 60 fps composition: the storyboard count doubled), open the images,
   and check them against the `remocn` skill's quality bar (`references/anatomy.md` §3).
 
 ## 6. Hand off

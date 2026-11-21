@@ -2,6 +2,7 @@
 
 import { linearTiming, TransitionSeries } from "@remotion/transitions";
 import { AbsoluteFill } from "remotion";
+import { useCompositionFrames } from "@/lib/remocn/frame-rate";
 import { pageTurn } from "@/registry/remocn/page-turn";
 
 const FONT_FAMILY =
@@ -44,16 +45,17 @@ interface PageTurnExampleProps {
 }
 
 export function PageTurnExampleScene({ angle, poses }: PageTurnExampleProps) {
+  const toFrames = useCompositionFrames();
   return (
     <TransitionSeries>
-      <TransitionSeries.Sequence durationInFrames={76}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(76)}>
         <Page label="Page one" background="#f1eee7" color="#26242c" />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
-        timing={linearTiming({ durationInFrames: 24 })}
+        timing={linearTiming({ durationInFrames: toFrames(24) })}
         presentation={pageTurn({ angle, poses })}
       />
-      <TransitionSeries.Sequence durationInFrames={76}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(76)}>
         <Page label="Page two" background="#e6e1d5" color="#6f7f35" />
       </TransitionSeries.Sequence>
     </TransitionSeries>
@@ -70,14 +72,14 @@ import { pageTurn } from "@/components/remocn/page-turn";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={76}>
+    <TransitionSeries.Sequence durationInFrames={152}>
       <PageOne />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 24 })}
+      timing={linearTiming({ durationInFrames: 48 })}
       presentation={pageTurn({ angle: ${angle}, poses: ${poses} })}
     />
-    <TransitionSeries.Sequence durationInFrames={76}>
+    <TransitionSeries.Sequence durationInFrames={152}>
       <PageTwo />
     </TransitionSeries.Sequence>
   </TransitionSeries>

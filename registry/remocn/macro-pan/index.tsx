@@ -4,13 +4,8 @@ import { loadFont } from "@remotion/google-fonts/Fraunces";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadFont("normal", {
@@ -216,8 +211,8 @@ export function MacroPan({
   speed = 1,
 }: MacroPanProps) {
   const glide = useGlide();
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const c = THEMES[theme];
 
@@ -289,7 +284,7 @@ export function MacroPan({
       ]),
     };
   };
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const tAt = (f: number) => Math.max(0, f - delay) * speed;
   const cam = camera(t);
   // The camera eases in and out slowly, so it counts as moving from the first

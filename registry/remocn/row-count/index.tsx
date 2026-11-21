@@ -3,14 +3,8 @@
 import { loadFont as loadPlexSans } from "@remotion/google-fonts/IBMPlexSans";
 import type React from "react";
 import { useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const plex = loadPlexSans("normal", {
@@ -116,8 +110,8 @@ export function RowCount({
   theme = "dark",
 }: RowCountProps) {
   const glide = useGlide();
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const transparent = background === "transparent";

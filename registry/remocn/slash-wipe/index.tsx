@@ -4,13 +4,8 @@ import { loadFont as loadBricolage } from "@remotion/google-fonts/BricolageGrote
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const bricolage = loadBricolage("normal", {
@@ -147,10 +142,10 @@ export function SlashWipe({
   speed = 1,
   theme = "dark",
 }: SlashWipeProps) {
-  const raw = Math.max(0, useCurrentFrame() - delay);
+  const raw = Math.max(0, useSceneFrame() - delay);
   const glide = useGlide();
   const frame = raw * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const p = PALETTES[theme];
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 

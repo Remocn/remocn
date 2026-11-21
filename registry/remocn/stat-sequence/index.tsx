@@ -5,13 +5,8 @@ import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
@@ -480,8 +475,8 @@ export function StatSequence({
   theme = "dark",
 }: StatSequenceProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay);
-  const { width, height } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { width, height } = useSceneConfig();
   const t = frame * speed;
   const u = Math.min(width / 1280, height / 720);
   const c = THEMES[theme];

@@ -9,9 +9,8 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const nunito = loadFont("normal", {
@@ -245,10 +244,10 @@ export function CarryCount({
   theme = "dark",
 }: CarryCountProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const tAt = (f: number) => Math.max(0, f - delay) * speed;
   const t = tAt(frame);
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const bg = background ?? c.bg;
   const disc = accent ?? c.accent;
