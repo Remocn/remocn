@@ -645,10 +645,13 @@ function Root() {
           height={720}
           calculateMetadata={async () => {
             const { config, values } = await loadDefaults(name);
+            const K = (input as { fpsScale?: number }).fpsScale ?? 1;
             return {
-              durationInFrames:
-                config.getDurationInFrames?.(values) ?? config.durationInFrames,
-              fps: config.fps,
+              durationInFrames: Math.round(
+                (config.getDurationInFrames?.(values) ??
+                  config.durationInFrames) * K,
+              ),
+              fps: config.fps * K,
               width: config.compositionWidth,
               height: config.compositionHeight,
             };

@@ -25,6 +25,13 @@
 // frames over several tabs, and a frame that depends on the ones before it
 // (text on a `will-change: transform` layer does) jumps between neighbours.
 //
+// `--fps-scale 2` runs every preview at twice its frame rate and twice its
+// length in frames: the same seconds, at 60 fps. `--at 0.25,0.5,0.75` also
+// photographs those shares of the length, at the same moments whatever the
+// rate, and `scripts/compare-frame-rates.mts` compares two such runs.
+// `--stills-only` takes the photographs and skips the count; `--window 150`
+// counts only the first 150 frames of the 30 fps timeline.
+//
 // Only the named components are bundled: the preview index is sliced down to
 // their entries, otherwise webpack compiles all ~900 lazy imports.
 import {
@@ -703,7 +710,13 @@ const inputProps = {
   names,
   props: flag("props") ? JSON.parse(flag("props") as string) : undefined,
   shown: flag("shown") ? Number(flag("shown")) : undefined,
+  fpsScale: flag("fps-scale") ? Number(flag("fps-scale")) : 1,
 };
+const K = inputProps.fpsScale;
+// Fractions of the length to photograph, at the same moment whatever the rate.
+const at = (flag("at") ?? "").split(",").filter(Boolean).map(Number);
+mkdirSync(path.join(out, "tracks"), { recursive: true });
+if (at.length > 0) mkdirSync(path.join(out, "at"), { recursive: true });
 const chromiumOptions = { gl: "angle" as const };
 const browser = await openBrowser("chrome", { chromiumOptions });
 const failed: string[] = [];
@@ -719,12 +732,41 @@ try {
     const frames = new Map<number, Row[]>();
     const described: Descriptions = new Map();
     try {
+      if (process.argv.includes("--stills-only")) {
+        for (const share of at) {
+          const designFrames = Math.round(composition.durationInFrames / K);
+          const frame =
+            Math.min(designFrames - 1, Math.floor(share * designFrames)) * K;
+          await renderStill({
+            serveUrl,
+            composition,
+            frame,
+            output: path.join(out, "at", `${composition.id}@${share}.png`),
+            inputProps: { ...inputProps, quiet: true },
+            puppeteerInstance: browser,
+            chromiumOptions,
+            logLevel: "error",
+          });
+        }
+        process.stdout.write(`\r${i}/${compositions.length}   `);
+        continue;
+      }
       await renderFrames({
         serveUrl,
         composition,
         inputProps,
         imageFormat: "none",
         outputDir: null,
+        // `--window 90`: only the first 90 frames of the design, at any rate.
+        frameRange: flag("window")
+          ? [
+              0,
+              Math.min(
+                composition.durationInFrames,
+                Number(flag("window")) * K,
+              ) - 1,
+            ]
+          : null,
         concurrency: 1,
         puppeteerInstance: browser,
         chromiumOptions,
@@ -751,6 +793,33 @@ try {
           }
         },
       });
+      writeFileSync(
+        path.join(out, "tracks", `${composition.id}.json`),
+        JSON.stringify({
+          fps: composition.fps,
+          frames: Object.fromEntries(
+            [...frames].map(([f, rows]) => [
+              f,
+              rows.map((r) => [r[0], r[1], r[2], r[3], r[4], r[5], r[6]]),
+            ]),
+          ),
+        }),
+      );
+      for (const share of at) {
+        const designFrames = Math.round(composition.durationInFrames / K);
+        const frame =
+          Math.min(designFrames - 1, Math.floor(share * designFrames)) * K;
+        await renderStill({
+          serveUrl,
+          composition,
+          frame,
+          output: path.join(out, "at", `${composition.id}@${share}.png`),
+          inputProps: { ...inputProps, quiet: true },
+          puppeteerInstance: browser,
+          chromiumOptions,
+          logLevel: "error",
+        });
+      }
       const detail: Detail = {
         name: composition.id,
         frames: frames.size,
