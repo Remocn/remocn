@@ -1,0 +1,16 @@
+---
+title: Element timelines
+date: 2026-11-23
+---
+
+An animation's schedule now lives apart from its drawing. Each converted component has a `timeline.ts` beside it: a pure function of the props that names the elements of the animation (a line, a word, a finale) and says when each starts and how long it runs. A new `timing` prop moves, trims or stretches those elements one by one, without touching the code that draws them.
+
+<ChangelogPreview name="a-to-z" />
+
+### Improvements
+
+- **The `timing` prop.** Pass overrides by element id: `timing={{ "entry:1": { start: 40 } }}` moves one entry, `{ stretch: 2 }` plays an element half as fast, `{ length: 10 }` trims it, `{ detach: true }` stops it following the one before. Elements that follow a moved one keep their gap and move with it. Frames are 30 fps frames on the scene's own timeline; `delay` and `speed` still apply to the whole animation.
+- **Element ids are public API.** A saved `timing` refers to them, so an id keeps its name and meaning from release to release. Each component lists its ids in the type at the top of its `timeline.ts`.
+- **Unchanged without `timing`.** Every converted component renders the same frames as before, checked frame by frame at three tempos.
+- **Install layout.** A component with a timeline installs as a folder, `components/remocn/<name>/index.tsx` and `timeline.ts`, and brings the small shared `timeline` module with it. The import path is the same.
+- **Converted so far.** [A to Z](/docs/typography/a-to-z), [Staggered Fade Up](/docs/typography/staggered-fade-up), [Per Character Rise](/docs/typography/per-character-rise), [Top-Down Letters](/docs/typography/top-down-letters), [Bottom-Up Letters](/docs/typography/bottom-up-letters), [Per-Word Crossfade](/docs/typography/per-word-crossfade), [Word Stream](/docs/typography/word-stream), [Centered Word Build](/docs/typography/centered-word-build), [Line-by-Line Slide](/docs/typography/line-by-line-slide), [Zoom Words](/docs/typography/zoom-words), [Word Push](/docs/typography/word-push), [Spring Scale In](/docs/typography/spring-scale-in), [Soft Blur In](/docs/typography/soft-blur-in), [Blur Out Up](/docs/typography/blur-out-up), [Mask Reveal Up](/docs/typography/mask-reveal-up), [Short Slide Right](/docs/typography/short-slide-right), [Squeeze In](/docs/typography/squeeze-in), [Fog Rise](/docs/typography/fog-rise), [Shared Axis Y](/docs/typography/shared-axis-y), [Typed Split Wipe](/docs/typography/typed-split-wipe), [Period Drop](/docs/typography/period-drop), [Absorb Stack](/docs/typography/absorb-stack) and [Baseline Drop](/docs/typography/baseline-drop). More follow one by one.
