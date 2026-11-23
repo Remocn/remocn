@@ -334,12 +334,21 @@
       "title": "Centered Word Build",
       "description": "Words appear sharply from below while the centered phrase pushes cumulatively closer on every beat, then clears through a soft left-to-right opacity wipe.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/centered-word-build/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/centered-word-build.tsx"
+          "target": "components/remocn/centered-word-build/index.tsx"
+        },
+        {
+          "path": "registry/remocn/centered-word-build/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/centered-word-build/timeline.ts"
         }
       ],
       "type": "registry:component"

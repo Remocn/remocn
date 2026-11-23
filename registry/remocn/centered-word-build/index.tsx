@@ -1,8 +1,19 @@
 "use client";
 
 import { Easing, interpolate } from "remotion";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  ACCEL,
+  type CenteredWordBuildElementId,
+  centeredWordBuildTimeline,
+  EXIT_AT,
+  EXIT_FRAMES,
+  revealFrame,
+  SETTLE_FRAMES,
+  WORD_GAP,
+} from "./timeline";
 
 export interface CenteredWordBuildProps {
   text: string;
@@ -18,26 +29,20 @@ export interface CenteredWordBuildProps {
   exitFrames?: number;
   speed?: number;
   className?: string;
-}
-
-function revealFrame(index: number, wordGap: number, accel: number): number {
-  let frame = 0;
-
-  for (let step = 1; step <= index; step++) {
-    // Establish two even beats before tightening the cadence.
-    frame += wordGap * accel ** Math.max(step - 2, 0);
-  }
-
-  return Math.round(frame);
+  /**
+   * Moves, trims or stretches single words and the exit, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<CenteredWordBuildElementId>;
 }
 
 export function centeredWordBuildLength(
   text: string,
-  wordGap = 11,
-  accel = 0.75,
-  settleFrames = 9,
-  exitAt = 51,
-  exitFrames = 12,
+  wordGap = WORD_GAP,
+  accel = ACCEL,
+  settleFrames = SETTLE_FRAMES,
+  exitAt = EXIT_AT,
+  exitFrames = EXIT_FRAMES,
 ): number {
   const words = text.trim().split(/\s+/).filter(Boolean);
   if (words.length === 0) return 0;
@@ -48,57 +53,52 @@ export function centeredWordBuildLength(
 
 const settleEasing = Easing.bezier(0.16, 1, 0.3, 1);
 
-export function CenteredWordBuild({
-  text,
-  fontSize = 52,
-  color = "#fff3df",
-  fontWeight = 400,
-  wordGap = 11,
-  accel = 0.75,
-  rise = 0.18,
-  zoomStep = 0.035,
-  settleFrames = 9,
-  exitAt = 51,
-  exitFrames = 12,
-  speed = 1,
-  className,
-}: CenteredWordBuildProps) {
+export function CenteredWordBuild(props: CenteredWordBuildProps) {
+  const {
+    text,
+    fontSize = 52,
+    color = "#fff3df",
+    fontWeight = 400,
+    rise = 0.18,
+    zoomStep = 0.035,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame() * speed;
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    centeredWordBuildTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const words = text.trim().split(/\s+/).filter(Boolean);
 
   if (words.length === 0) return null;
 
-  const visibleCount = words.filter(
-    (_, index) => frame >= revealFrame(index, wordGap, accel),
-  ).length;
+  const landings = words.map((_, index) => tl.get(`word:${index}`));
+  const shown = (index: number) => frame >= landings[index].start;
   let cameraScale = 1;
   // Zooms overlap, so the camera moves while any one of them is midway.
   let cameraMoving = false;
-  for (let index = 1; index < visibleCount; index++) {
-    const revealAt = revealFrame(index, wordGap, accel);
-    const zoom = interpolate(
-      frame,
-      [revealAt, revealAt + Math.max(settleFrames, 0.001)],
-      [0, 1],
-      {
-        easing: settleEasing,
-        extrapolateLeft: "clamp",
-        extrapolateRight: "clamp",
-      },
-    );
+  for (let index = 1; index < words.length; index++) {
+    if (!shown(index)) continue;
+    const { start, end } = landings[index];
+    const zoom = interpolate(frame, [start, end], [0, 1], {
+      easing: settleEasing,
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    });
     cameraScale += zoomStep * zoom;
     if (zoom > 0 && zoom < 1) cameraMoving = true;
   }
-  const exitProgress = interpolate(
-    frame,
-    [exitAt, exitAt + Math.max(exitFrames, 0.001)],
-    [0, 1],
-    {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    },
-  );
+  const exit = tl.get("exit");
+  const exitProgress = interpolate(frame, [exit.start, exit.end], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
   const fadeStart = -35 + exitProgress * 135;
   const fadeEnd = fadeStart + 35;
   const exitMask = `linear-gradient(90deg, transparent ${fadeStart}%, black ${fadeEnd}%)`;
@@ -136,18 +136,14 @@ export function CenteredWordBuild({
           WebkitMaskRepeat: "no-repeat",
         }}
       >
-        {words.slice(0, visibleCount).map((word, index) => {
-          const revealAt = revealFrame(index, wordGap, accel);
-          const y = interpolate(
-            frame,
-            [revealAt, revealAt + Math.max(settleFrames, 0.001)],
-            [rise * fontSize, 0],
-            {
-              easing: settleEasing,
-              extrapolateLeft: "clamp",
-              extrapolateRight: "clamp",
-            },
-          );
+        {words.map((word, index) => {
+          if (!shown(index)) return null;
+          const { start, end } = landings[index];
+          const y = interpolate(frame, [start, end], [rise * fontSize, 0], {
+            easing: settleEasing,
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+          });
 
           return (
             <span
