@@ -1,10 +1,12 @@
-// `bun scripts/review-props.mts --names a,b|--file names.txt --out dir [--props '{"scale":0.8}'] [--at 0.6,0.25|all] [--scale 0.25]`
+// `bun scripts/review-props.mts --names a,b|--file names.txt --out dir [--props '{"scale":0.8}'] [--defaults] [--at 0.6,0.25|all] [--scale 0.25]`
 //
 // Renders stills of registry components through `src/remotion/props-review-root.tsx`:
 // one PNG per component per moment (`--at` is a share of each component's
 // duration, or `all` for every frame). Used to check that new props keep the
 // default render unchanged and visibly do something when set, and with
 // `--at all --scale 1` that a refactor keeps every frame to the pixel.
+// `--defaults` starts every component from its config's defaults, as the docs
+// preview renders it, for components whose copy has no default in code.
 import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { bundle } from "@remotion/bundler";
@@ -51,7 +53,11 @@ const serveUrl =
       },
     }),
   }));
-const inputProps = { names, props };
+const inputProps = {
+  names,
+  props,
+  defaults: process.argv.includes("--defaults"),
+};
 const browser = await openBrowser("chrome", {
   chromiumOptions: { gl: "angle" },
 });
