@@ -8142,12 +8142,21 @@
       "title": "Indent Steps",
       "description": "Three lines step in with growing indents and line numbers like code: 'Write it in React...'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/indent-steps/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/indent-steps.tsx"
+          "target": "components/remocn/indent-steps/index.tsx"
+        },
+        {
+          "path": "registry/remocn/indent-steps/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/indent-steps/timeline.ts"
         }
       ],
       "type": "registry:component"
