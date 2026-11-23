@@ -186,12 +186,17 @@
       "title": "Line-by-Line Slide",
       "description": "Each line enters from the left with a staggered slide and exits to the right for a flowing paragraph reveal.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "line-by-line-slide/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/line-by-line-slide.tsx"
+          "target": "components/remocn/line-by-line-slide/index.tsx"
+        },
+        {
+          "path": "line-by-line-slide/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/line-by-line-slide/timeline.ts"
         }
       ]
     },

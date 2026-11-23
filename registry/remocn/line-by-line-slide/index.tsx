@@ -2,6 +2,11 @@
 
 import { Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type LineByLineSlideElementId,
+  lineByLineSlideTimeline,
+} from "./timeline";
 
 export interface LineByLineSlideProps {
   text: string;
@@ -11,37 +16,38 @@ export interface LineByLineSlideProps {
   fontWeight?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches single lines and their exits, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<LineByLineSlideElementId>;
 }
 
-export function LineByLineSlide({
-  text,
-  distance = 48,
-  fontSize = 72,
-  color = "#171717",
-  fontWeight = 600,
-  speed = 1,
-  className,
-}: LineByLineSlideProps) {
+export function LineByLineSlide(props: LineByLineSlideProps) {
+  const {
+    text,
+    distance = 48,
+    fontSize = 72,
+    color = "#171717",
+    fontWeight = 600,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame() * speed;
   const { durationInFrames } = useSceneConfig();
+  // The exit is timed against the composition length without `speed`.
+  const tl = useTimeline(
+    lineByLineSlideTimeline,
+    props,
+    durationInFrames,
+    timing,
+  );
 
   const lines = text.split("\n");
 
-  const enterDur = 27;
-  const enterTravel = 14;
-  const exitDur = 18;
-  const exitTravelFrom = 8;
-  const enterStagger = 4;
-  const exitStagger = 2;
-
   const enterEasing = Easing.bezier(0.22, 1, 0.36, 1);
   const exitEasing = Easing.bezier(0.64, 0, 0.78, 0);
-
-  const enterEnd = enterDur + (lines.length - 1) * enterStagger;
-  const exitStart = Math.max(
-    enterEnd,
-    durationInFrames - exitDur - (lines.length - 1) * exitStagger,
-  );
 
   return (
     <div
@@ -68,8 +74,14 @@ export function LineByLineSlide({
         }}
       >
         {lines.map((line, i) => {
-          const enterLocal = frame - i * enterStagger;
-          const exitLocal = frame - exitStart - i * exitStagger;
+          const enter = tl.get(`line:${i}`);
+          const exit = tl.get(`exit:${i}`);
+          const enterLocal = frame - enter.start;
+          const exitLocal = frame - exit.start;
+          const enterDur = enter.length;
+          const enterTravel = enter.beat("travel");
+          const exitDur = exit.length;
+          const exitTravelFrom = exit.beat("travelFrom");
 
           const enterP = interpolate(enterLocal, [0, enterDur], [0, 1], {
             extrapolateLeft: "clamp",
