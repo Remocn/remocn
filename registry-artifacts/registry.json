@@ -8405,12 +8405,21 @@
       "title": "Feature Trio",
       "description": "Three feature words, 'Fast. Composable. Open source.', rise from masks with progress ticks and notes.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/feature-trio/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/feature-trio.tsx"
+          "target": "components/remocn/feature-trio/index.tsx"
+        },
+        {
+          "path": "registry/remocn/feature-trio/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/feature-trio/timeline.ts"
         }
       ],
       "type": "registry:component"

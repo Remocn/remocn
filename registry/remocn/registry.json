@@ -8410,10 +8410,19 @@
         {
           "path": "feature-trio/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/feature-trio.tsx"
+          "target": "components/remocn/feature-trio/index.tsx"
+        },
+        {
+          "path": "feature-trio/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/feature-trio/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "magnet-letters",
