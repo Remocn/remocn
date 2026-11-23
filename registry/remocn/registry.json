@@ -535,12 +535,17 @@
       "title": "Shared Axis Y",
       "description": "Per-word hard-cut transition with staircase timing for sharp editorial swaps.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "shared-axis-y/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/shared-axis-y.tsx"
+          "target": "components/remocn/shared-axis-y/index.tsx"
+        },
+        {
+          "path": "shared-axis-y/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/shared-axis-y/timeline.ts"
         }
       ]
     },
