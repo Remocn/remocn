@@ -1,7 +1,17 @@
 "use client";
 
-import { type CSSProperties, Fragment } from "react";
-import { Easing, interpolate } from "remotion";
+import {
+  type CSSProperties,
+  type ForwardedRef,
+  Fragment,
+  forwardRef,
+} from "react";
+import {
+  Easing,
+  Interactive,
+  type InteractiveTransformProps,
+  interpolate,
+} from "remotion";
 import {
   type CaptionBaseProps,
   captionWordText,
@@ -49,22 +59,26 @@ function revealedCount(
   );
 }
 
-export function CaptionLabelMaker({
-  captions,
-  combineTokensWithinMilliseconds = 1000,
-  holdMs = DEFAULT_HOLD_MS,
-  fontSize = 64,
-  fontWeight = 800,
-  color = "#ffffff",
-  tapeColor = "#18181b",
-  className,
-}: CaptionLabelMakerProps) {
+function CaptionLabelMakerContent(
+  {
+    captions,
+    combineTokensWithinMilliseconds = 1000,
+    holdMs = DEFAULT_HOLD_MS,
+    fontSize = 64,
+    fontWeight = 800,
+    color = "#ffffff",
+    tapeColor = "#18181b",
+    className,
+    style,
+  }: CaptionLabelMakerProps & InteractiveTransformProps,
+  ref: ForwardedRef<HTMLDivElement>,
+) {
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
     holdMs,
   });
-  if (!state) return null;
+  if (!state) return <div ref={ref} style={style} />;
 
   const enter = interpolate(
     state.previous ? ENTER_MS : state.sinceStartMs,
@@ -107,92 +121,101 @@ export function CaptionLabelMaker({
   const finished = last !== undefined && last.revealed === last.chars.length;
 
   return (
-    <div
-      className={className}
-      style={{
-        fontSize,
-        fontWeight,
-        color,
-        lineHeight: 1.1,
-        textAlign: "center",
-        opacity: Math.min(enter, exit),
-        transform: `translateY(${(1 - enter) * RISE_EM}em)`,
-      }}
-    >
-      <span
+    <div ref={ref} style={style}>
+      <div
+        className={className}
         style={{
-          display: "inline-block",
-          whiteSpace: "nowrap",
-          transform: `rotate(${TILT_DEG}deg)`,
-          filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35))",
+          fontSize,
+          fontWeight,
+          color,
+          lineHeight: 1.1,
+          textAlign: "center",
+          opacity: Math.min(enter, exit),
+          transform: `translateY(${(1 - enter) * RISE_EM}em)`,
         }}
       >
         <span
           style={{
-            ...segment,
-            width: `${LEAD_EM}em`,
-            borderRadius: `${RADIUS}em 0 0 ${RADIUS}em`,
+            display: "inline-block",
+            whiteSpace: "nowrap",
+            transform: `rotate(${TILT_DEG}deg)`,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35))",
           }}
         >
-          {"\u00a0"}
-        </span>
-        {words.map((word, w) => {
-          const duration = Math.max(word.toMs - word.fromMs, 1);
-          return (
-            <Fragment key={word.key}>
-              {w > 0 && (
-                <span
-                  style={{
-                    ...segment,
-                    visibility: word.revealed > 0 ? "visible" : "hidden",
-                  }}
-                >
-                  {"\u00a0"}
-                </span>
-              )}
-              {word.chars.map((char, c) => {
-                const pressedAt =
-                  word.fromMs + (c / word.chars.length) * duration;
-                const press = interpolate(
-                  state.timeMs - pressedAt,
-                  [0, PRESS_MS],
-                  [PRESS_SCALE, 1],
-                  clamp,
-                );
-                return (
+          <span
+            style={{
+              ...segment,
+              width: `${LEAD_EM}em`,
+              borderRadius: `${RADIUS}em 0 0 ${RADIUS}em`,
+            }}
+          >
+            {"\u00a0"}
+          </span>
+          {words.map((word, w) => {
+            const duration = Math.max(word.toMs - word.fromMs, 1);
+            return (
+              <Fragment key={word.key}>
+                {w > 0 && (
                   <span
-                    key={c}
                     style={{
                       ...segment,
-                      visibility: c < word.revealed ? "visible" : "hidden",
+                      visibility: word.revealed > 0 ? "visible" : "hidden",
                     }}
                   >
+                    {"\u00a0"}
+                  </span>
+                )}
+                {word.chars.map((char, c) => {
+                  const pressedAt =
+                    word.fromMs + (c / word.chars.length) * duration;
+                  const press = interpolate(
+                    state.timeMs - pressedAt,
+                    [0, PRESS_MS],
+                    [PRESS_SCALE, 1],
+                    clamp,
+                  );
+                  return (
                     <span
+                      key={c}
                       style={{
-                        display: "inline-block",
-                        transform: `scale(${press})`,
-                        textShadow: EMBOSS,
+                        ...segment,
+                        visibility: c < word.revealed ? "visible" : "hidden",
                       }}
                     >
-                      {char}
+                      <span
+                        style={{
+                          display: "inline-block",
+                          transform: `scale(${press})`,
+                          textShadow: EMBOSS,
+                        }}
+                      >
+                        {char}
+                      </span>
                     </span>
-                  </span>
-                );
-              })}
-            </Fragment>
-          );
-        })}
-        <span
-          style={{
-            ...segment,
-            width: `${LEAD_EM}em`,
-            borderRadius: `0 ${RADIUS}em ${RADIUS}em 0`,
-            visibility: finished ? "visible" : "hidden",
-          }}
-        >
-          {"\u00a0"}
+                  );
+                })}
+              </Fragment>
+            );
+          })}
+          <span
+            style={{
+              ...segment,
+              width: `${LEAD_EM}em`,
+              borderRadius: `0 ${RADIUS}em ${RADIUS}em 0`,
+              visibility: finished ? "visible" : "hidden",
+            }}
+          >
+            {"\u00a0"}
+          </span>
         </span>
-      </span>
+      </div>
     </div>
   );
 }
+
+export const CaptionLabelMaker = Interactive.create({
+  Component: forwardRef(CaptionLabelMakerContent),
+  componentName: "<CaptionLabelMaker>",
+  layout: "none",
+  schema: Interactive.captionsSchema,
+});

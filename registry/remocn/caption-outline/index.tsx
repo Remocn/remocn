@@ -1,7 +1,13 @@
 "use client";
 
-import { Fragment } from "react";
-import { Easing, interpolate, interpolateColors } from "remotion";
+import { type ForwardedRef, Fragment, forwardRef } from "react";
+import {
+  Easing,
+  Interactive,
+  type InteractiveTransformProps,
+  interpolate,
+  interpolateColors,
+} from "remotion";
 import {
   type CaptionBaseProps,
   captionWordText,
@@ -32,25 +38,29 @@ const clamp = {
   extrapolateRight: "clamp",
 } as const;
 
-export function CaptionOutline({
-  captions,
-  combineTokensWithinMilliseconds = 1200,
-  holdMs = DEFAULT_HOLD_MS,
-  fontSize = 64,
-  fontWeight = 800,
-  color = "#ffffff",
-  activeColor = "#facc15",
-  strokeColor = "#000000",
-  strokeWidth = 0.12,
-  className,
-}: CaptionOutlineProps) {
+function CaptionOutlineContent(
+  {
+    captions,
+    combineTokensWithinMilliseconds = 1200,
+    holdMs = DEFAULT_HOLD_MS,
+    fontSize = 64,
+    fontWeight = 800,
+    color = "#ffffff",
+    activeColor = "#facc15",
+    strokeColor = "#000000",
+    strokeWidth = 0.12,
+    className,
+    style,
+  }: CaptionOutlineProps & InteractiveTransformProps,
+  ref: ForwardedRef<HTMLDivElement>,
+) {
   const glide = useGlide();
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
     holdMs,
   });
-  if (!state) return null;
+  if (!state) return <div ref={ref} style={style} />;
 
   const enter = interpolate(
     state.previous ? ENTER_MS : state.sinceStartMs,
@@ -87,38 +97,47 @@ export function CaptionOutline({
   };
 
   return (
-    <div
-      className={className}
-      style={{
-        fontSize,
-        fontWeight,
-        color,
-        lineHeight: 1.2,
-        textAlign: "center",
-        WebkitTextStroke: `${strokeWidth * 2}em ${strokeColor}`,
-        paintOrder: "stroke fill",
-        opacity: Math.min(enter, exit),
-        transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
-      }}
-    >
-      {words.map((word, w) => (
-        <Fragment key={`${state.pageIndex}-${word[0].index}`}>
-          {w > 0 && " "}
-          <span
-            style={{
-              display: "inline-block",
-              whiteSpace: "nowrap",
-              color: interpolateColors(
-                highlight(w),
-                [0, 1],
-                [color, activeColor],
-              ),
-            }}
-          >
-            {captionWordText(word)}
-          </span>
-        </Fragment>
-      ))}
+    <div ref={ref} style={style}>
+      <div
+        className={className}
+        style={{
+          fontSize,
+          fontWeight,
+          color,
+          lineHeight: 1.2,
+          textAlign: "center",
+          WebkitTextStroke: `${strokeWidth * 2}em ${strokeColor}`,
+          paintOrder: "stroke fill",
+          opacity: Math.min(enter, exit),
+          transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
+        }}
+      >
+        {words.map((word, w) => (
+          <Fragment key={`${state.pageIndex}-${word[0].index}`}>
+            {w > 0 && " "}
+            <span
+              style={{
+                display: "inline-block",
+                whiteSpace: "nowrap",
+                color: interpolateColors(
+                  highlight(w),
+                  [0, 1],
+                  [color, activeColor],
+                ),
+              }}
+            >
+              {captionWordText(word)}
+            </span>
+          </Fragment>
+        ))}
+      </div>
     </div>
   );
 }
+
+export const CaptionOutline = Interactive.create({
+  Component: forwardRef(CaptionOutlineContent),
+  componentName: "<CaptionOutline>",
+  layout: "none",
+  schema: Interactive.captionsSchema,
+});

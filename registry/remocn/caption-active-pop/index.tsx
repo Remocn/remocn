@@ -1,7 +1,14 @@
 "use client";
 
-import { Fragment } from "react";
-import { Easing, interpolate, interpolateColors, spring } from "remotion";
+import { type ForwardedRef, Fragment, forwardRef } from "react";
+import {
+  Easing,
+  Interactive,
+  type InteractiveTransformProps,
+  interpolate,
+  interpolateColors,
+  spring,
+} from "remotion";
 import {
   type CaptionBaseProps,
   DEFAULT_HOLD_MS,
@@ -36,18 +43,22 @@ const clamp = {
   extrapolateRight: "clamp",
 } as const;
 
-export function CaptionActivePop({
-  captions,
-  combineTokensWithinMilliseconds = 1200,
-  holdMs = DEFAULT_HOLD_MS,
-  fontSize = 64,
-  fontWeight = 800,
-  color = "#ffffff",
-  activeColor = "#facc15",
-  popScale = 1.12,
-  shadow = true,
-  className,
-}: CaptionActivePopProps) {
+function CaptionActivePopContent(
+  {
+    captions,
+    combineTokensWithinMilliseconds = 1200,
+    holdMs = DEFAULT_HOLD_MS,
+    fontSize = 64,
+    fontWeight = 800,
+    color = "#ffffff",
+    activeColor = "#facc15",
+    popScale = 1.12,
+    shadow = true,
+    className,
+    style,
+  }: CaptionActivePopProps & InteractiveTransformProps,
+  ref: ForwardedRef<HTMLDivElement>,
+) {
   const glide = useGlide();
   const { fps } = useSceneConfig();
   const state = useCaptions({
@@ -55,7 +66,7 @@ export function CaptionActivePop({
     combineTokensWithinMilliseconds,
     holdMs,
   });
-  if (!state) return null;
+  if (!state) return <div ref={ref} style={style} />;
 
   const enter = interpolate(
     state.previous ? ENTER_MS : state.sinceStartMs,
@@ -120,46 +131,55 @@ export function CaptionActivePop({
   const rising = midway(enter);
 
   return (
-    <div
-      className={className}
-      style={{
-        fontSize,
-        fontWeight,
-        color,
-        lineHeight: 1.2,
-        textAlign: "center",
-        opacity: Math.min(enter, exit),
-        transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(rising)}`,
-      }}
-    >
-      {words.map((word, w) => {
-        const amount = emphasis(w);
-        return (
-          <Fragment key={`${state.pageIndex}-${word[0].index}`}>
-            {w > 0 && " "}
-            <span
-              style={{
-                position: "relative",
-                zIndex: w === activeWord ? 1 : 0,
-                display: "inline-block",
-                whiteSpace: "nowrap",
-                transform: `scale(${1 + (popScale - 1) * amount})${glide(!rising && popping(w, amount))}`,
-                transformOrigin: "50% 60%",
-                color: interpolateColors(
-                  Math.min(1, Math.max(0, amount)),
-                  [0, 1],
-                  [color, activeColor],
-                ),
-                textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
-              }}
-            >
-              {word.map(({ index, token }) => (
-                <span key={index}>{token.text}</span>
-              ))}
-            </span>
-          </Fragment>
-        );
-      })}
+    <div ref={ref} style={style}>
+      <div
+        className={className}
+        style={{
+          fontSize,
+          fontWeight,
+          color,
+          lineHeight: 1.2,
+          textAlign: "center",
+          opacity: Math.min(enter, exit),
+          transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(rising)}`,
+        }}
+      >
+        {words.map((word, w) => {
+          const amount = emphasis(w);
+          return (
+            <Fragment key={`${state.pageIndex}-${word[0].index}`}>
+              {w > 0 && " "}
+              <span
+                style={{
+                  position: "relative",
+                  zIndex: w === activeWord ? 1 : 0,
+                  display: "inline-block",
+                  whiteSpace: "nowrap",
+                  transform: `scale(${1 + (popScale - 1) * amount})${glide(!rising && popping(w, amount))}`,
+                  transformOrigin: "50% 60%",
+                  color: interpolateColors(
+                    Math.min(1, Math.max(0, amount)),
+                    [0, 1],
+                    [color, activeColor],
+                  ),
+                  textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
+                }}
+              >
+                {word.map(({ index, token }) => (
+                  <span key={index}>{token.text}</span>
+                ))}
+              </span>
+            </Fragment>
+          );
+        })}
+      </div>
     </div>
   );
 }
+
+export const CaptionActivePop = Interactive.create({
+  Component: forwardRef(CaptionActivePopContent),
+  componentName: "<CaptionActivePop>",
+  layout: "none",
+  schema: Interactive.captionsSchema,
+});

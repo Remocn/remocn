@@ -1,7 +1,18 @@
 "use client";
 
-import { type CSSProperties, Fragment } from "react";
-import { Easing, interpolate, random } from "remotion";
+import {
+  type CSSProperties,
+  type ForwardedRef,
+  Fragment,
+  forwardRef,
+} from "react";
+import {
+  Easing,
+  Interactive,
+  type InteractiveTransformProps,
+  interpolate,
+  random,
+} from "remotion";
 import {
   type CaptionBaseProps,
   captionWordText,
@@ -161,23 +172,27 @@ function Tile({ frame, tileColor }: { frame: FlapFrame; tileColor: string }) {
   );
 }
 
-export function CaptionSplitFlap({
-  captions,
-  combineTokensWithinMilliseconds = 1000,
-  holdMs = DEFAULT_HOLD_MS,
-  fontSize = 56,
-  fontWeight = 800,
-  color = "#ffffff",
-  tileColor = "#111111",
-  className,
-}: CaptionSplitFlapProps) {
+function CaptionSplitFlapContent(
+  {
+    captions,
+    combineTokensWithinMilliseconds = 1000,
+    holdMs = DEFAULT_HOLD_MS,
+    fontSize = 56,
+    fontWeight = 800,
+    color = "#ffffff",
+    tileColor = "#111111",
+    className,
+    style,
+  }: CaptionSplitFlapProps & InteractiveTransformProps,
+  ref: ForwardedRef<HTMLDivElement>,
+) {
   const glide = useGlide();
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
     holdMs,
   });
-  if (!state) return null;
+  if (!state) return <div ref={ref} style={style} />;
 
   const enter = interpolate(
     state.previous ? ENTER_MS : state.sinceStartMs,
@@ -195,54 +210,63 @@ export function CaptionSplitFlap({
     : 1;
 
   return (
-    <div
-      className={className}
-      style={{
-        fontSize,
-        fontWeight,
-        color,
-        lineHeight: TILE_H + 0.24,
-        textAlign: "center",
-        opacity: Math.min(enter, exit),
-        transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
-      }}
-    >
-      {groupCaptionWords(state.tokens).map((word, w) => {
-        const first = word[0];
-        const fromMs = first.token.fromMs;
-        const toMs = word[word.length - 1].token.toMs;
-        const windowMs = Math.max(toMs - fromMs, MIN_SETTLE_MS);
-        const chars = Array.from(captionWordText(word));
-        return (
-          <Fragment key={`${state.pageIndex}-${first.index}`}>
-            {w > 0 && " "}
-            <span
-              style={{
-                display: "inline-flex",
-                gap: `${TILE_GAP}em`,
-                verticalAlign: "top",
-                paddingInline: `${TILE_GAP}em`,
-              }}
-            >
-              {chars.map((char, c) => (
-                <Tile
-                  key={c}
-                  tileColor={tileColor}
-                  frame={flapFrame(
-                    char,
-                    `${state.pageIndex}-${first.index}-${c}`,
-                    c,
-                    chars.length,
-                    fromMs,
-                    windowMs,
-                    state.timeMs,
-                  )}
-                />
-              ))}
-            </span>
-          </Fragment>
-        );
-      })}
+    <div ref={ref} style={style}>
+      <div
+        className={className}
+        style={{
+          fontSize,
+          fontWeight,
+          color,
+          lineHeight: TILE_H + 0.24,
+          textAlign: "center",
+          opacity: Math.min(enter, exit),
+          transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
+        }}
+      >
+        {groupCaptionWords(state.tokens).map((word, w) => {
+          const first = word[0];
+          const fromMs = first.token.fromMs;
+          const toMs = word[word.length - 1].token.toMs;
+          const windowMs = Math.max(toMs - fromMs, MIN_SETTLE_MS);
+          const chars = Array.from(captionWordText(word));
+          return (
+            <Fragment key={`${state.pageIndex}-${first.index}`}>
+              {w > 0 && " "}
+              <span
+                style={{
+                  display: "inline-flex",
+                  gap: `${TILE_GAP}em`,
+                  verticalAlign: "top",
+                  paddingInline: `${TILE_GAP}em`,
+                }}
+              >
+                {chars.map((char, c) => (
+                  <Tile
+                    key={c}
+                    tileColor={tileColor}
+                    frame={flapFrame(
+                      char,
+                      `${state.pageIndex}-${first.index}-${c}`,
+                      c,
+                      chars.length,
+                      fromMs,
+                      windowMs,
+                      state.timeMs,
+                    )}
+                  />
+                ))}
+              </span>
+            </Fragment>
+          );
+        })}
+      </div>
     </div>
   );
 }
+
+export const CaptionSplitFlap = Interactive.create({
+  Component: forwardRef(CaptionSplitFlapContent),
+  componentName: "<CaptionSplitFlap>",
+  layout: "none",
+  schema: Interactive.captionsSchema,
+});

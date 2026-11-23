@@ -1,7 +1,12 @@
 "use client";
 
-import { Fragment } from "react";
-import { interpolate, spring } from "remotion";
+import { type ForwardedRef, Fragment, forwardRef } from "react";
+import {
+  Interactive,
+  type InteractiveTransformProps,
+  interpolate,
+  spring,
+} from "remotion";
 import {
   type CaptionBaseProps,
   DEFAULT_HOLD_MS,
@@ -29,17 +34,21 @@ const clamp = {
   extrapolateRight: "clamp",
 } as const;
 
-export function CaptionWordPop({
-  captions,
-  combineTokensWithinMilliseconds = 0,
-  holdMs = DEFAULT_HOLD_MS,
-  fontSize = 96,
-  fontWeight = 800,
-  color = "#ffffff",
-  popScale = 0.6,
-  shadow = true,
-  className,
-}: CaptionWordPopProps) {
+function CaptionWordPopContent(
+  {
+    captions,
+    combineTokensWithinMilliseconds = 0,
+    holdMs = DEFAULT_HOLD_MS,
+    fontSize = 96,
+    fontWeight = 800,
+    color = "#ffffff",
+    popScale = 0.6,
+    shadow = true,
+    className,
+    style,
+  }: CaptionWordPopProps & InteractiveTransformProps,
+  ref: ForwardedRef<HTMLDivElement>,
+) {
   const glide = useGlide();
   const { fps } = useSceneConfig();
   const state = useCaptions({
@@ -47,7 +56,7 @@ export function CaptionWordPop({
     combineTokensWithinMilliseconds,
     holdMs,
   });
-  if (!state) return null;
+  if (!state) return <div ref={ref} style={style} />;
 
   const since = (state.sinceStartMs / 1000) * fps;
   const scaleAt = (f: number) =>
@@ -72,29 +81,38 @@ export function CaptionWordPop({
     : 1;
 
   return (
-    <div
-      className={className}
-      style={{
-        fontSize,
-        fontWeight,
-        color,
-        lineHeight: 1.1,
-        textAlign: "center",
-        opacity: Math.min(fadeIn, exit),
-        transform: `scale(${scaleAt(since)})${glide(moving)}`,
-        textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
-      }}
-    >
-      {groupCaptionWords(state.tokens).map((word, w) => (
-        <Fragment key={`${state.pageIndex}-${word[0].index}`}>
-          {w > 0 && " "}
-          <span style={{ display: "inline-block", whiteSpace: "nowrap" }}>
-            {word.map(({ index, token }) => (
-              <span key={index}>{token.text}</span>
-            ))}
-          </span>
-        </Fragment>
-      ))}
+    <div ref={ref} style={style}>
+      <div
+        className={className}
+        style={{
+          fontSize,
+          fontWeight,
+          color,
+          lineHeight: 1.1,
+          textAlign: "center",
+          opacity: Math.min(fadeIn, exit),
+          transform: `scale(${scaleAt(since)})${glide(moving)}`,
+          textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
+        }}
+      >
+        {groupCaptionWords(state.tokens).map((word, w) => (
+          <Fragment key={`${state.pageIndex}-${word[0].index}`}>
+            {w > 0 && " "}
+            <span style={{ display: "inline-block", whiteSpace: "nowrap" }}>
+              {word.map(({ index, token }) => (
+                <span key={index}>{token.text}</span>
+              ))}
+            </span>
+          </Fragment>
+        ))}
+      </div>
     </div>
   );
 }
+
+export const CaptionWordPop = Interactive.create({
+  Component: forwardRef(CaptionWordPopContent),
+  componentName: "<CaptionWordPop>",
+  layout: "none",
+  schema: Interactive.captionsSchema,
+});

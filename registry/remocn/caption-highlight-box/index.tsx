@@ -1,7 +1,13 @@
 "use client";
 
-import { Fragment } from "react";
-import { Easing, interpolate, interpolateColors } from "remotion";
+import { type ForwardedRef, Fragment, forwardRef } from "react";
+import {
+  Easing,
+  Interactive,
+  type InteractiveTransformProps,
+  interpolate,
+  interpolateColors,
+} from "remotion";
 import {
   type CaptionBaseProps,
   DEFAULT_HOLD_MS,
@@ -44,20 +50,24 @@ function mix(a: number, b: number, t: number): number {
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
-export function CaptionHighlightBox({
-  captions,
-  combineTokensWithinMilliseconds = 1200,
-  holdMs = DEFAULT_HOLD_MS,
-  fontSize = 64,
-  fontWeight = 800,
-  color = "#ffffff",
-  activeColor = "#0a0a0a",
-  boxColor = "#facc15",
-  boxRadius = 0.16,
-  boxPadding = 0.14,
-  shadow = true,
-  className,
-}: CaptionHighlightBoxProps) {
+function CaptionHighlightBoxContent(
+  {
+    captions,
+    combineTokensWithinMilliseconds = 1200,
+    holdMs = DEFAULT_HOLD_MS,
+    fontSize = 64,
+    fontWeight = 800,
+    color = "#ffffff",
+    activeColor = "#0a0a0a",
+    boxColor = "#facc15",
+    boxRadius = 0.16,
+    boxPadding = 0.14,
+    shadow = true,
+    className,
+    style,
+  }: CaptionHighlightBoxProps & InteractiveTransformProps,
+  ref: ForwardedRef<HTMLDivElement>,
+) {
   const glide = useGlide();
   const state = useCaptions({
     captions,
@@ -68,7 +78,7 @@ export function CaptionHighlightBox({
   const pageIndex = state ? state.pageIndex : -1;
   const { wordRef, rects } = useCaptionWordRects(pageIndex, words.length);
 
-  if (!state) return null;
+  if (!state) return <div ref={ref} style={style} />;
 
   const enter = interpolate(
     state.previous ? ENTER_MS : state.sinceStartMs,
@@ -129,57 +139,70 @@ export function CaptionHighlightBox({
   };
 
   return (
-    <div
-      className={className}
-      style={{
-        position: "relative",
-        isolation: "isolate",
-        fontSize,
-        fontWeight,
-        color,
-        lineHeight: 1.2,
-        textAlign: "center",
-        opacity: Math.min(enter, exit),
-        transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
-      }}
-    >
-      {box && (
-        <span
-          aria-hidden
-          style={{
-            position: "absolute",
-            left: box.left - padX,
-            top: box.top - padY,
-            width: box.width + padX * 2,
-            height: box.height + padY * 2,
-            borderRadius: boxRadius * fontSize,
-            background: boxColor,
-            opacity: box.opacity,
-          }}
-        />
-      )}
-      {words.map((word, w) => {
-        const covered = coverage(w);
-        return (
-          <Fragment key={`${state.pageIndex}-${word[0].index}`}>
-            {w > 0 && " "}
-            <span
-              ref={wordRef(w)}
-              style={{
-                position: "relative",
-                display: "inline-block",
-                whiteSpace: "nowrap",
-                color: interpolateColors(covered, [0, 1], [color, activeColor]),
-                textShadow: legibilityShadow(shadow ? 1 - covered : 0),
-              }}
-            >
-              {word.map(({ index, token }) => (
-                <span key={index}>{token.text}</span>
-              ))}
-            </span>
-          </Fragment>
-        );
-      })}
+    <div ref={ref} style={style}>
+      <div
+        className={className}
+        style={{
+          position: "relative",
+          isolation: "isolate",
+          fontSize,
+          fontWeight,
+          color,
+          lineHeight: 1.2,
+          textAlign: "center",
+          opacity: Math.min(enter, exit),
+          transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
+        }}
+      >
+        {box && (
+          <span
+            aria-hidden
+            style={{
+              position: "absolute",
+              left: box.left - padX,
+              top: box.top - padY,
+              width: box.width + padX * 2,
+              height: box.height + padY * 2,
+              borderRadius: boxRadius * fontSize,
+              background: boxColor,
+              opacity: box.opacity,
+            }}
+          />
+        )}
+        {words.map((word, w) => {
+          const covered = coverage(w);
+          return (
+            <Fragment key={`${state.pageIndex}-${word[0].index}`}>
+              {w > 0 && " "}
+              <span
+                ref={wordRef(w)}
+                style={{
+                  position: "relative",
+                  display: "inline-block",
+                  whiteSpace: "nowrap",
+                  color: interpolateColors(
+                    covered,
+                    [0, 1],
+                    [color, activeColor],
+                  ),
+                  textShadow: legibilityShadow(shadow ? 1 - covered : 0),
+                }}
+              >
+                {word.map(({ index, token }) => (
+                  <span key={index}>{token.text}</span>
+                ))}
+              </span>
+            </Fragment>
+          );
+        })}
+      </div>
     </div>
   );
 }
+
+export const CaptionHighlightBox = Interactive.create({
+  Component: forwardRef(CaptionHighlightBoxContent),
+  componentName: "<CaptionHighlightBox>",
+  layout: "none",
+  schema: Interactive.captionsSchema,
+});

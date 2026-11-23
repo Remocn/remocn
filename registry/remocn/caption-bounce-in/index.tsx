@@ -1,7 +1,12 @@
 "use client";
 
-import { Fragment } from "react";
-import { interpolate, spring } from "remotion";
+import { type ForwardedRef, Fragment, forwardRef } from "react";
+import {
+  Interactive,
+  type InteractiveTransformProps,
+  interpolate,
+  spring,
+} from "remotion";
 import {
   type CaptionBaseProps,
   DEFAULT_HOLD_MS,
@@ -24,17 +29,21 @@ const START_SCALE = 0.7;
 const LEGIBILITY_SHADOW =
   "0 2px 3px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.35)";
 
-export function CaptionBounceIn({
-  captions,
-  combineTokensWithinMilliseconds = 1200,
-  holdMs = DEFAULT_HOLD_MS,
-  fontSize = 64,
-  fontWeight = 800,
-  color = "#ffffff",
-  bounce = 0.6,
-  shadow = true,
-  className,
-}: CaptionBounceInProps) {
+function CaptionBounceInContent(
+  {
+    captions,
+    combineTokensWithinMilliseconds = 1200,
+    holdMs = DEFAULT_HOLD_MS,
+    fontSize = 64,
+    fontWeight = 800,
+    color = "#ffffff",
+    bounce = 0.6,
+    shadow = true,
+    className,
+    style,
+  }: CaptionBounceInProps & InteractiveTransformProps,
+  ref: ForwardedRef<HTMLDivElement>,
+) {
   const glide = useGlide();
   const { fps } = useSceneConfig();
   const state = useCaptions({
@@ -42,7 +51,7 @@ export function CaptionBounceIn({
     combineTokensWithinMilliseconds,
     holdMs,
   });
-  if (!state) return null;
+  if (!state) return <div ref={ref} style={style} />;
 
   const damping = interpolate(bounce, [0, 1], [22, 7], {
     extrapolateLeft: "clamp",
@@ -61,64 +70,73 @@ export function CaptionBounceIn({
     : 1;
 
   return (
-    <div
-      className={className}
-      style={{
-        fontSize,
-        fontWeight,
-        color,
-        lineHeight: 1.2,
-        textAlign: "center",
-        opacity: exit,
-      }}
-    >
-      {groupCaptionWords(state.tokens).map((word, w) => (
-        <Fragment key={`${state.pageIndex}-${word[0].index}`}>
-          {w > 0 && " "}
-          <span style={{ display: "inline-block", whiteSpace: "nowrap" }}>
-            {word.map(({ index, token }) => {
-              const sinceMs = state.timeMs - token.fromMs;
-              const arrived = sinceMs >= 0;
-              const at = (df: number) =>
-                spring({
-                  frame: (sinceMs / 1000) * fps + df,
-                  fps,
-                  config: { damping, stiffness: 220, mass: 0.6 },
-                });
-              const p = arrived ? at(0) : 0;
-              // The spring overshoots and has a long tail, so "moving" is
-              // judged on the drop in px against the neighbouring frames.
-              const reach = DROP_EM * fontSize;
-              const moving =
-                arrived &&
-                (Math.abs(at(1) - p) * reach > 1e-3 ||
-                  Math.abs(p - at(-1)) * reach > 1e-3);
-              const opacity = arrived
-                ? interpolate(sinceMs, [0, FADE_IN_MS], [0, 1], {
-                    extrapolateLeft: "clamp",
-                    extrapolateRight: "clamp",
-                  })
-                : 0;
-              return (
-                <span
-                  key={index}
-                  style={{
-                    display: "inline-block",
-                    opacity,
-                    transform: `translateY(${(1 - p) * DROP_EM}em) scale(${
-                      START_SCALE + (1 - START_SCALE) * p
-                    })${glide(moving)}`,
-                    transformOrigin: "50% 80%",
-                    textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
-                  }}
-                >
-                  {token.text}
-                </span>
-              );
-            })}
-          </span>
-        </Fragment>
-      ))}
+    <div ref={ref} style={style}>
+      <div
+        className={className}
+        style={{
+          fontSize,
+          fontWeight,
+          color,
+          lineHeight: 1.2,
+          textAlign: "center",
+          opacity: exit,
+        }}
+      >
+        {groupCaptionWords(state.tokens).map((word, w) => (
+          <Fragment key={`${state.pageIndex}-${word[0].index}`}>
+            {w > 0 && " "}
+            <span style={{ display: "inline-block", whiteSpace: "nowrap" }}>
+              {word.map(({ index, token }) => {
+                const sinceMs = state.timeMs - token.fromMs;
+                const arrived = sinceMs >= 0;
+                const at = (df: number) =>
+                  spring({
+                    frame: (sinceMs / 1000) * fps + df,
+                    fps,
+                    config: { damping, stiffness: 220, mass: 0.6 },
+                  });
+                const p = arrived ? at(0) : 0;
+                // The spring overshoots and has a long tail, so "moving" is
+                // judged on the drop in px against the neighbouring frames.
+                const reach = DROP_EM * fontSize;
+                const moving =
+                  arrived &&
+                  (Math.abs(at(1) - p) * reach > 1e-3 ||
+                    Math.abs(p - at(-1)) * reach > 1e-3);
+                const opacity = arrived
+                  ? interpolate(sinceMs, [0, FADE_IN_MS], [0, 1], {
+                      extrapolateLeft: "clamp",
+                      extrapolateRight: "clamp",
+                    })
+                  : 0;
+                return (
+                  <span
+                    key={index}
+                    style={{
+                      display: "inline-block",
+                      opacity,
+                      transform: `translateY(${(1 - p) * DROP_EM}em) scale(${
+                        START_SCALE + (1 - START_SCALE) * p
+                      })${glide(moving)}`,
+                      transformOrigin: "50% 80%",
+                      textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
+                    }}
+                  >
+                    {token.text}
+                  </span>
+                );
+              })}
+            </span>
+          </Fragment>
+        ))}
+      </div>
     </div>
   );
 }
+
+export const CaptionBounceIn = Interactive.create({
+  Component: forwardRef(CaptionBounceInContent),
+  componentName: "<CaptionBounceIn>",
+  layout: "none",
+  schema: Interactive.captionsSchema,
+});
