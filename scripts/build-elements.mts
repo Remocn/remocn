@@ -44,6 +44,10 @@ const INLINABLE_LIBS: Record<string, { artifact: string; importPath: string }> =
       artifact: "frame-rate",
       importPath: "@/lib/remocn/frame-rate",
     },
+    "@remocn/timeline": {
+      artifact: "timeline",
+      importPath: "@/lib/remocn/timeline",
+    },
   };
 
 interface RegistryItem {
@@ -196,6 +200,7 @@ function mergeSources(
   for (const source of [component, ...libs, { imports: extra, body: "" }]) {
     for (const [module, entry] of source.imports) {
       if (
+        module.startsWith("./") ||
         Object.values(INLINABLE_LIBS).some((lib) => lib.importPath === module)
       )
         continue;
@@ -467,14 +472,17 @@ for (const file of readdirSync(ARTIFACTS_DIR).sort()) {
   if (!file.endsWith(".json")) continue;
   const item = readItem(file.replace(/\.json$/, ""));
   if (item.type !== "registry:component") continue;
-  if (!item.files || item.files.length !== 1) continue;
-  const path = item.files[0].path;
+  if (!item.files || item.files.length === 0) continue;
+  // A component may carry modules of its own beside it (`timeline.ts`),
+  // imported relatively; they are inlined ahead of it like the libs.
+  const [main, ...ownModules] = item.files;
+  const path = main.path;
   if (
     !path.startsWith("registry/remocn/") &&
     !path.startsWith("registry/remocn-icons/")
   )
     continue;
-  const component = parseSource(item.files[0].content);
+  const component = parseSource(main.content);
   const ownsSequence =
     /^export\s+const\s+[\w$]+\s*=\s*Interactive\.create\(/m.test(
       component.body,
@@ -510,10 +518,17 @@ for (const file of readdirSync(ARTIFACTS_DIR).sort()) {
     : (previewManifest[item.name]?.fps ?? 30);
   const durationInFrames = Math.round((ownFrames * ELEMENT_FPS) / ownFps);
 
-  const libs = regDeps.flatMap((dep) => {
-    const lib = libSources.get(dep);
-    return lib ? [lib] : [];
-  });
+  const libs = [
+    ...regDeps.flatMap((dep) => {
+      const lib = libSources.get(dep);
+      return lib ? [lib] : [];
+    }),
+    ...ownModules.map((file) => ({
+      parsed: parseSource(file.content),
+      dependencies: [] as string[],
+      registryDependencies: [] as string[],
+    })),
+  ];
   const { schema, dimensions } = await loadElementConfig(item.name, path);
   let sourceCode = mergeSources(
     component,

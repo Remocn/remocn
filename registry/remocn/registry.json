@@ -3464,6 +3464,19 @@
       ]
     },
     {
+      "name": "timeline",
+      "type": "registry:lib",
+      "title": "Timeline",
+      "description": "Keeps a component's schedule in a pure function of its props: named elements with a start, a length and beats, which a timing prop can move, trim or stretch one by one.",
+      "files": [
+        {
+          "path": "timeline/index.ts",
+          "type": "registry:lib",
+          "target": "lib/remocn/timeline.ts"
+        }
+      ]
+    },
+    {
       "name": "caption-karaoke",
       "type": "registry:component",
       "title": "Caption Karaoke",

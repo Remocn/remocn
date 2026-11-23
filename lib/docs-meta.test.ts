@@ -20,6 +20,8 @@ const UNDOCUMENTED: Record<string, string> = {
   glide: "shared lib that keeps moving text off the pixel grid",
   "frame-rate":
     "shared lib that keeps timings in 30 fps frames at any frame rate",
+  timeline:
+    "shared lib that keeps a component's schedule apart from its drawing",
   brush: "ribbon primitive consumed by the ink marks, not used on its own",
   "select-item": "folds into the select page",
   "dropdown-menu-item": "folds into the dropdown-menu page",
@@ -402,6 +404,118 @@ describe("components count time on the 30 fps timeline", () => {
       );
 
     expect(offenders).toEqual([]);
+  });
+});
+
+describe("components with a timeline read it through useTimeline", () => {
+  // A component's schedule lives in `timeline.ts` beside it, as a pure
+  // function of its props, so remocn lab can lay the elements out on a
+  // timeline and a `timing` prop can move them. The component reads its
+  // frames from that schedule; a timing computed inline again is invisible
+  // to both.
+  const timelines = [
+    ...new Glob("registry/remocn/*/timeline.ts").scanSync("."),
+  ].sort();
+
+  it("every component with a timeline.ts calls useTimeline on it", () => {
+    const offenders = timelines.filter((file) => {
+      const component = readFileSync(
+        file.replace(/timeline\.ts$/, "index.tsx"),
+        "utf8",
+      );
+      return !(
+        /from\s*"\.\/timeline"/.test(component) &&
+        /\buseTimeline\(/.test(component)
+      );
+    });
+
+    expect(offenders).toEqual([]);
+  });
+
+  it("a timeline.ts imports nothing that renders or reads the outside world", () => {
+    const offenders = timelines.filter((file) => {
+      const source = readFileSync(file, "utf8");
+      const imports = [...source.matchAll(/from\s*"([^"]+)"/g)].map(
+        (match) => match[1],
+      );
+      return (
+        imports.some((module) => module !== "@/lib/remocn/timeline") ||
+        /\b(Math\.random|Date\.now|new Date|performance|document|window|globalThis)\b/.test(
+          source,
+        )
+      );
+    });
+
+    expect(offenders).toEqual([]);
+  });
+
+  it("schedules are pure, in time order, with unique ids", async () => {
+    const problems: string[] = [];
+    for (const file of timelines) {
+      const dir = file.replace(/\/timeline\.ts$/, "");
+      const mod = await import(`@/${file}`);
+      const configMod = await import(`@/${dir}/config`);
+      const config = Object.values(configMod).find(
+        (value) =>
+          value !== null && typeof value === "object" && "controls" in value,
+      ) as {
+        durationInFrames: number;
+        controls: Record<string, { default?: unknown }>;
+        lists?: Record<string, { default: unknown }>;
+      };
+      const props = Object.freeze({
+        ...Object.fromEntries(
+          Object.entries(config.controls).map(([k, c]) => [k, c.default]),
+        ),
+        ...Object.fromEntries(
+          Object.entries(config.lists ?? {}).map(([k, l]) => [k, l.default]),
+        ),
+      });
+      const schedules = Object.entries(mod).filter(
+        ([name, value]) =>
+          name.endsWith("Timeline") && typeof value === "function",
+      ) as [string, (p: unknown, s: { length: number }) => unknown[]][];
+      if (schedules.length !== 1) {
+        problems.push(`${file}: ${schedules.length} exported *Timeline`);
+        continue;
+      }
+      const [, schedule] = schedules[0];
+      for (const length of [
+        config.durationInFrames,
+        config.durationInFrames / 2,
+      ]) {
+        const scene = { length };
+        const first = schedule(props, scene) as {
+          id: string;
+          start: number;
+          length: number;
+          follows?: string;
+          beats?: Record<string, number>;
+        }[];
+        const label = `${file} @${length}`;
+        if (JSON.stringify(schedule(props, scene)) !== JSON.stringify(first))
+          problems.push(`${label}: two calls disagree`);
+        if (JSON.stringify(schedule({}, scene)) === "[]")
+          problems.push(`${label}: no elements without props`);
+        const ids = first.map((e) => e.id);
+        if (new Set(ids).size !== ids.length)
+          problems.push(`${label}: duplicate ids ${ids.join(", ")}`);
+        first.forEach((e, i) => {
+          const numbers = [e.start, e.length, ...Object.values(e.beats ?? {})];
+          if (!numbers.every(Number.isFinite))
+            problems.push(`${label}: ${e.id} has a non-finite number`);
+          if (e.length < 0) problems.push(`${label}: ${e.id} has length < 0`);
+          if (i > 0 && e.start < first[i - 1].start)
+            problems.push(`${label}: ${e.id} starts before ${first[i - 1].id}`);
+          if (e.follows && !ids.slice(0, i).includes(e.follows))
+            problems.push(
+              `${label}: ${e.id} follows ${e.follows}, not earlier`,
+            );
+        });
+      }
+    }
+
+    expect(problems).toEqual([]);
   });
 });
 
