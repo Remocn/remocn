@@ -53,12 +53,21 @@
       "title": "Top-Down Letters",
       "description": "Letters descend from above in a pronounced staircase, one symbol at a time, with zero blur.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/top-down-letters/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/top-down-letters.tsx"
+          "target": "components/remocn/top-down-letters/index.tsx"
+        },
+        {
+          "path": "registry/remocn/top-down-letters/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/top-down-letters/timeline.ts"
         }
       ],
       "type": "registry:component"

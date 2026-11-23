@@ -58,10 +58,19 @@
         {
           "path": "top-down-letters/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/top-down-letters.tsx"
+          "target": "components/remocn/top-down-letters/index.tsx"
+        },
+        {
+          "path": "top-down-letters/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/top-down-letters/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "spring-scale-in",
