@@ -5,17 +5,67 @@ import {
 } from "@/components/docs/examples/caption-fixture";
 import { captionKaraokeExampleCode } from "@/components/docs/examples/caption-karaoke-example";
 import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
-import { captionKaraokeSchema } from "./index";
 
 export const captionKaraokeConfig: ComponentConfig = {
   componentName: "CaptionKaraoke",
   importPath: "@/components/remocn/caption-karaoke",
   controls: {
-    ...captionKaraokeSchema,
     captions: {
-      ...captionKaraokeSchema.captions,
+      type: "remotion-captions",
       default: CAPTION_FIXTURE,
       description: "Transcript",
+      keyframable: false,
+    },
+    fontSize: {
+      type: "number",
+      min: 24,
+      max: 140,
+      step: 1,
+      default: 64,
+      description: "Font size",
+      hiddenFromList: false,
+    },
+    fontWeight: {
+      type: "number",
+      min: 400,
+      max: 900,
+      step: 100,
+      default: 800,
+      description: "Font weight",
+      hiddenFromList: false,
+    },
+    color: {
+      type: "color",
+      default: "#ffffff",
+      description: "Text color",
+    },
+    activeColor: {
+      type: "color",
+      default: "#facc15",
+      description: "Fill color",
+    },
+    combineTokensWithinMilliseconds: {
+      type: "number",
+      min: 0,
+      max: 3000,
+      step: 100,
+      default: 1200,
+      description: "Page window (ms)",
+      hiddenFromList: false,
+    },
+    holdMs: {
+      type: "number",
+      min: 0,
+      max: 2000,
+      step: 50,
+      default: 600,
+      description: "Hold (ms)",
+      hiddenFromList: false,
+    },
+    shadow: {
+      type: "boolean",
+      default: true,
+      description: "Shadow",
     },
   },
   durationInFrames: previewCaptionsDuration(undefined, FPS),

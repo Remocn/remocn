@@ -5,7 +5,6 @@ import {
   Easing,
   Interactive,
   type InteractiveTransformProps,
-  type InteractivitySchema,
   interpolate,
 } from "remotion";
 import {
@@ -22,61 +21,6 @@ export interface CaptionKaraokeProps extends CaptionBaseProps {
   shadow?: boolean;
 }
 
-export const captionKaraokeSchema = {
-  ...Interactive.captionsSchema,
-  fontSize: {
-    type: "number",
-    min: 24,
-    max: 140,
-    step: 1,
-    default: 64,
-    description: "Font size",
-    hiddenFromList: false,
-  },
-  fontWeight: {
-    type: "number",
-    min: 400,
-    max: 900,
-    step: 100,
-    default: 800,
-    description: "Font weight",
-    hiddenFromList: false,
-  },
-  color: {
-    type: "color",
-    default: "#ffffff",
-    description: "Text color",
-  },
-  activeColor: {
-    type: "color",
-    default: "#facc15",
-    description: "Fill color",
-  },
-  combineTokensWithinMilliseconds: {
-    type: "number",
-    min: 0,
-    max: 3000,
-    step: 100,
-    default: 1200,
-    description: "Page window (ms)",
-    hiddenFromList: false,
-  },
-  holdMs: {
-    type: "number",
-    min: 0,
-    max: 2000,
-    step: 50,
-    default: DEFAULT_HOLD_MS,
-    description: "Hold (ms)",
-    hiddenFromList: false,
-  },
-  shadow: {
-    type: "boolean",
-    default: true,
-    description: "Shadow",
-  },
-} as const satisfies InteractivitySchema;
-
 const ENTER_MS = 160;
 const EXIT_MS = 220;
 const RISE_EM = 0.14;
@@ -90,14 +34,13 @@ const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 function CaptionKaraokeContent(
   {
     captions,
-    combineTokensWithinMilliseconds = captionKaraokeSchema
-      .combineTokensWithinMilliseconds.default,
-    holdMs = captionKaraokeSchema.holdMs.default,
-    fontSize = captionKaraokeSchema.fontSize.default,
-    fontWeight = captionKaraokeSchema.fontWeight.default,
-    color = captionKaraokeSchema.color.default,
-    activeColor = captionKaraokeSchema.activeColor.default,
-    shadow = captionKaraokeSchema.shadow.default,
+    combineTokensWithinMilliseconds = 1200,
+    holdMs = DEFAULT_HOLD_MS,
+    fontSize = 64,
+    fontWeight = 800,
+    color = "#ffffff",
+    activeColor = "#facc15",
+    shadow = true,
     className,
     style,
   }: CaptionKaraokeProps & InteractiveTransformProps,
@@ -188,5 +131,5 @@ export const CaptionKaraoke = Interactive.create({
   Component: forwardRef(CaptionKaraokeContent),
   componentName: "<CaptionKaraoke>",
   layout: "none",
-  schema: captionKaraokeSchema,
+  schema: Interactive.captionsSchema,
 });
