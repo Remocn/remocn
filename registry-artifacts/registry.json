@@ -7139,12 +7139,21 @@
       "title": "Absorb Stack",
       "description": "A centred stack of small lines, ending in a red \"on top.\", on a dark brown ground.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/absorb-stack/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/absorb-stack.tsx"
+          "target": "components/remocn/absorb-stack/index.tsx"
+        },
+        {
+          "path": "registry/remocn/absorb-stack/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/absorb-stack/timeline.ts"
         }
       ],
       "type": "registry:component"

@@ -5,6 +5,12 @@ import type React from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type AbsorbStackElementId,
+  absorbStackTimeline,
+  DEFAULT_LINES,
+} from "./timeline";
 
 const jost = loadVariableFont("normal", { subsets: ["latin"] });
 
@@ -26,6 +32,11 @@ export interface AbsorbStackProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single lines, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<AbsorbStackElementId>;
 }
 
 const THEMES = {
@@ -35,9 +46,6 @@ const THEMES = {
 
 const LEADING = 1.02;
 const WEIGHT = 400;
-const ENTER_LEN = 12;
-const SETTLE_AT = 14;
-const RING_GAP = 5;
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -62,23 +70,30 @@ function ScaleLayer({
   );
 }
 
-export function AbsorbStack({
-  lines = ["made to", "sink into", "your cut,", "not sit", "on top."],
-  accentLine,
-  accent,
-  ink: inkProp,
-  background,
-  fontFamily = jost.fontFamily,
-  fontWeight = WEIGHT,
-  stagger = RING_GAP,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: AbsorbStackProps) {
+export function AbsorbStack(props: AbsorbStackProps) {
+  const {
+    lines = DEFAULT_LINES,
+    accentLine,
+    accent,
+    ink: inkProp,
+    background,
+    fontFamily = jost.fontFamily,
+    fontWeight = WEIGHT,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    absorbStackTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const hot = accent ?? c.accent;
   const fg = inkProp ?? c.ink;
@@ -97,19 +112,15 @@ export function AbsorbStack({
       <ScaleLayer scale={scale}>
         {lines.map((line, i) => {
           const offset = i - mid;
-          const ring = Math.abs(offset);
-          const enter = interpolate(
-            frame,
-            [ring * 3, ring * 3 + ENTER_LEN],
-            [0, 1],
-            {
-              ...CLAMP,
-              easing: EASE_OUT,
-            },
-          );
+          const { start, end, beat } = tl.get(`line:${i}`);
+          const settleStart = start + beat("settle");
+          const enter = interpolate(frame, [start, end], [0, 1], {
+            ...CLAMP,
+            easing: EASE_OUT,
+          });
           const settleAt = (f: number) =>
             spring({
-              frame: f - SETTLE_AT - ring * stagger,
+              frame: f - settleStart,
               fps,
               config: { damping: 20, stiffness: 70, mass: 1 },
             });
