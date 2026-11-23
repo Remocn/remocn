@@ -7,7 +7,7 @@ import type {
 import { useLayoutEffect, useRef } from "react";
 import { AbsoluteFill, useDelayRender } from "remotion";
 import { createTunnelRenderer } from "@/components/remocn/shader-light-tunnel";
-import { useSceneConfig } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrameCount } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export type ShaderSpiralPassProps = {
@@ -52,6 +52,9 @@ function ShaderSpiralPassPresentation({
   presentationDurationInFrames,
   passedProps,
 }: TransitionPresentationComponentProps<ShaderSpiralPassProps>) {
+  // Remotion counts the transition's length in the composition's own
+  // frames; everything below counts on the 30 fps timeline.
+  const sceneLength = useSceneFrameCount()(presentationDurationInFrames);
   const { width, height, fps } = useSceneConfig();
   const glide = useGlide();
   const { delayRender, continueRender, cancelRender } = useDelayRender();
@@ -102,7 +105,7 @@ function ShaderSpiralPassPresentation({
     if (!active) return;
     try {
       // Integrate acceleration so shader motion speeds up without a time jump.
-      const seconds = (p * presentationDurationInFrames) / fps;
+      const seconds = (p * sceneLength) / fps;
       const time =
         finite(timeOffset, 0, -10000, 10000) +
         seconds * (1 + 0.8 * p * p) * finite(speed, 1, 0, 5);
@@ -113,7 +116,7 @@ function ShaderSpiralPassPresentation({
   }, [
     active,
     p,
-    presentationDurationInFrames,
+    sceneLength,
     fps,
     speed,
     timeOffset,

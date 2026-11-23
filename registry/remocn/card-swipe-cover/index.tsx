@@ -23,6 +23,7 @@ import {
   useCompositionFrames,
   useSceneConfig,
   useSceneFrame,
+  useSceneFrameCount,
 } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
@@ -147,10 +148,13 @@ const CardSwipeCoverPresentation: React.FC<
   presentationDurationInFrames,
   passedProps,
 }) => {
+  // Remotion counts the transition's length in the composition's own
+  // frames; everything below counts on the 30 fps timeline.
+  const sceneLength = useSceneFrameCount()(presentationDurationInFrames);
   const { fps, width, height } = useSceneConfig();
   const o = { ...cardSwipeCoverDefaults, ...passedProps };
   const side = o.from === "bottom-left" ? -1 : 1;
-  const frames = Math.max(2, presentationDurationInFrames);
+  const frames = Math.max(2, sceneLength);
   const p = presentationProgress;
   const pose = cardPose(p, frames, fps, side, o.tilt);
 

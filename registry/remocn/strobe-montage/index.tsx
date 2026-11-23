@@ -22,6 +22,7 @@ import {
   useCompositionFrames,
   useSceneConfig,
   useSceneFrame,
+  useSceneFrameCount,
 } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
@@ -130,14 +131,13 @@ const StrobeMontagePresentation: React.FC<
   presentationDurationInFrames,
   passedProps,
 }) => {
+  // Remotion counts the transition's length in the composition's own
+  // frames; everything below counts on the 30 fps timeline.
+  const sceneLength = useSceneFrameCount()(presentationDurationInFrames);
   const { width: W, height: H } = useSceneConfig();
   const o = { ...strobeMontageDefaults, ...passedProps };
   const p = presentationProgress;
-  const { slots, k, local } = slotAt(
-    p,
-    presentationDurationInFrames,
-    o.framesPerHit,
-  );
+  const { slots, k, local } = slotAt(p, sceneLength, o.framesPerHit);
   const u = Math.min(W, H) / 720;
   const growSlots = Math.max(1, o.growHits);
 

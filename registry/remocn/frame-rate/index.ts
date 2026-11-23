@@ -56,3 +56,16 @@ export function useCompositionFrames(): (sceneFrames: number) => number {
     [fps],
   );
 }
+
+/**
+ * The other way round: a count Remotion gives a component in the
+ * composition's own frames, in 30 fps frames. A transition's presentation
+ * gets its length that way (`presentationDurationInFrames`).
+ */
+export function useSceneFrameCount(): (compositionFrames: number) => number {
+  const { fps } = useVideoConfig();
+  return useMemo(
+    () => (compositionFrames: number) => (compositionFrames * SCENE_FPS) / fps,
+    [fps],
+  );
+}

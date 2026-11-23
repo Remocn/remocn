@@ -6,7 +6,7 @@ import type {
 } from "@remotion/transitions";
 import { useLayoutEffect, useRef } from "react";
 import { AbsoluteFill, useDelayRender } from "remotion";
-import { useSceneConfig } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrameCount } from "@/lib/remocn/frame-rate";
 
 /* @remocn · OpenShaders — https://openshaders.com/@remocn
  * Original field and halftone GLSL from the site's React · WebGL export.
@@ -471,6 +471,9 @@ function ShaderSeamPresentation({
   presentationDurationInFrames,
   passedProps,
 }: TransitionPresentationComponentProps<ShaderSeamProps>) {
+  // Remotion counts the transition's length in the composition's own
+  // frames; everything below counts on the 30 fps timeline.
+  const sceneLength = useSceneFrameCount()(presentationDurationInFrames);
   const { width, height, fps } = useSceneConfig();
   const { delayRender, continueRender, cancelRender } = useDelayRender();
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -510,8 +513,7 @@ function ShaderSeamPresentation({
   useLayoutEffect(() => {
     if (!active || !canvas.current) return;
     try {
-      const time =
-        timeOffset + ((p * presentationDurationInFrames) / fps) * speed;
+      const time = timeOffset + ((p * sceneLength) / fps) * speed;
       renderer.current?.draw(
         width,
         height,
@@ -533,7 +535,7 @@ function ShaderSeamPresentation({
     detail,
     speed,
     timeOffset,
-    presentationDurationInFrames,
+    sceneLength,
     entering,
     field,
     postprocess,

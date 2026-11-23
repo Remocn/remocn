@@ -23,6 +23,7 @@ import {
   useCompositionFrames,
   useSceneConfig,
   useSceneFrame,
+  useSceneFrameCount,
 } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
@@ -273,6 +274,9 @@ const DiscPopPresentation: React.FC<
   presentationDurationInFrames,
   passedProps,
 }) => {
+  // Remotion counts the transition's length in the composition's own
+  // frames; everything below counts on the 30 fps timeline.
+  const sceneLength = useSceneFrameCount()(presentationDurationInFrames);
   const props = { ...discPopDefaults, ...passedProps };
   const p = presentationProgress;
 
@@ -308,11 +312,7 @@ const DiscPopPresentation: React.FC<
         {children}
       </AbsoluteFill>
       {p > 0 && p < 1 ? (
-        <Discs
-          p={p}
-          duration={Math.max(1, presentationDurationInFrames)}
-          props={props}
-        />
+        <Discs p={p} duration={Math.max(1, sceneLength)} props={props} />
       ) : null}
     </AbsoluteFill>
   );

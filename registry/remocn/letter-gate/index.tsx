@@ -22,6 +22,7 @@ import {
   useCompositionFrames,
   useSceneConfig,
   useSceneFrame,
+  useSceneFrameCount,
 } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
@@ -209,6 +210,9 @@ const LetterGatePresentation: React.FC<
   presentationDurationInFrames,
   passedProps,
 }) => {
+  // Remotion counts the transition's length in the composition's own
+  // frames; everything below counts on the 30 fps timeline.
+  const sceneLength = useSceneFrameCount()(presentationDurationInFrames);
   const { width: W, height: H } = useSceneConfig();
   const o = { ...letterGateDefaults, ...passedProps };
   const uid = useId().replace(/:/g, "");
@@ -251,7 +255,7 @@ const LetterGatePresentation: React.FC<
   const sceneIn = clamp01(q / SWAP);
   // Parting starts on the cut itself: the glyphs never hold, they open while
   // the new scene dissolves in under them.
-  const frames = Math.max(1, presentationDurationInFrames * (1 - o.cut));
+  const frames = Math.max(1, sceneLength * (1 - o.cut));
   // The gate is already opening on the cut frame, so the pair is never seen
   // closed and still.
   const g = clamp01(q + 2 / frames);

@@ -15,6 +15,7 @@ import {
   useCompositionFrames,
   useSceneConfig,
   useSceneFrame,
+  useSceneFrameCount,
 } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
@@ -142,6 +143,9 @@ const CaretCollapsePresentation: React.FC<
   presentationDurationInFrames,
   passedProps,
 }) => {
+  // Remotion counts the transition's length in the composition's own
+  // frames; everything below counts on the 30 fps timeline.
+  const sceneLength = useSceneFrameCount()(presentationDurationInFrames);
   const { width: W, height: H } = useSceneConfig();
   const o = {
     ...caretCollapseDefaults,
@@ -189,7 +193,7 @@ const CaretCollapsePresentation: React.FC<
   const ty = ramp(p, PHASE.openY, OPEN);
   const ox = o.to.x * W;
   const oy = o.to.y * H;
-  const step = 1 / Math.max(2, presentationDurationInFrames);
+  const step = 1 / Math.max(2, sceneLength);
   const c = caretAt(p, o);
   const blinkOff = p > PHASE.blinkOff[0] && p < PHASE.blinkOff[1];
   const caretOpacity =

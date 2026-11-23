@@ -14,6 +14,7 @@ import {
   useCompositionFrames,
   useSceneConfig,
   useSceneFrame,
+  useSceneFrameCount,
 } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
@@ -189,9 +190,12 @@ const HotSlabMorphPresentation: React.FC<
   presentationDurationInFrames,
   passedProps,
 }) => {
+  // Remotion counts the transition's length in the composition's own
+  // frames; everything below counts on the 30 fps timeline.
+  const sceneLength = useSceneFrameCount()(presentationDurationInFrames);
   const { width: W, height: H, fps } = useSceneConfig();
   const o = { ...hotSlabMorphDefaults, ...passedProps };
-  const frames = Math.max(2, presentationDurationInFrames);
+  const frames = Math.max(2, sceneLength);
   const s = slabState(presentationProgress, frames, fps, o);
   const hazeId = `slab-haze-${useId().replace(/:/g, "")}`;
   const hazeOn = o.haze !== null && s.haze * o.hazeStrength > 0.01;
