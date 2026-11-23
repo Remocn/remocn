@@ -9267,12 +9267,21 @@
       "title": "Escalate Cards",
       "description": "Cards flash one word each, accelerating until the last word fills the frame over a date.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/escalate-cards/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/escalate-cards.tsx"
+          "target": "components/remocn/escalate-cards/index.tsx"
+        },
+        {
+          "path": "registry/remocn/escalate-cards/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/escalate-cards/timeline.ts"
         }
       ],
       "type": "registry:component"

@@ -5,6 +5,13 @@ import type React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_DATE,
+  DEFAULT_WORDS,
+  type EscalateCardsElementId,
+  escalateCardsTimeline,
+} from "./timeline";
 
 const oswald = loadFont("normal", {
   weights: ["300", "400", "500"],
@@ -38,6 +45,11 @@ export interface EscalateCardsProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single cards and the date, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<EscalateCardsElementId>;
 }
 
 // Beat sheet (30fps, speed 1, defaults):
@@ -47,7 +59,6 @@ export interface EscalateCardsProps {
 //  51      hard cut to the gradient ground: "LAUNCH" edge to edge, its
 //          outer letters cropped by the frame
 //  65      the date cuts in under it; slow push, poster hold to 130
-const DATE_DELAY = 14;
 /** Frames the default demo needs: the cards plus a long poster hold. */
 export const ESCALATE_CARDS_DURATION = 130;
 
@@ -223,24 +234,29 @@ function ScaleLayer({
   );
 }
 
-export function EscalateCards({
-  words = ["ONE", "CODEBASE", "EVERY", "LAUNCH"],
-  date = "OCTOBER 30",
-  firstBeat = 26,
-  accel = 0.6,
-  dateDelay = DATE_DELAY,
-  push = 0.045,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = oswald.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: EscalateCardsProps) {
+export function EscalateCards(props: EscalateCardsProps) {
+  const {
+    words = DEFAULT_WORDS,
+    date = DEFAULT_DATE,
+    push = 0.045,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = oswald.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    escalateCardsTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const n = Math.max(1, words.length);
   const last = n - 1;
@@ -265,26 +281,22 @@ export function EscalateCards({
       ? target
       : Math.min(target, (W * 0.84) / textWidth(text, track));
     const weight = climax ? 500 : Math.round(3 + 2 * k) * 100;
-    const length = climax
-      ? Number.POSITIVE_INFINITY
-      : Math.max(4, Math.round(firstBeat * accel ** i));
-    return { text, size, track, weight, length, climax };
+    const { start, length } = tl.get(`card:${i}`);
+    return { text, size, track, weight, start, length, climax };
   });
 
-  let start = 0;
-  let active = last;
-  let local = 0;
-  for (let i = 0; i < cards.length; i++) {
-    if (t < start + cards[i].length) {
-      active = i;
-      local = t - start;
-      break;
-    }
-    start += cards[i].length;
-  }
+  // The card on screen: the last one cut to.
+  let active = 0;
+  cards.forEach((c, i) => {
+    if (t >= c.start) active = i;
+  });
   const card = cards[active];
+  const local = t - card.start;
   const settle = card.climax
-    ? interpolate(local, [0, 80], [0, 1], { ...CLAMP, easing: SETTLE })
+    ? interpolate(local, [0, tl.get(`card:${last}`).beat("settle")], [0, 1], {
+        ...CLAMP,
+        easing: SETTLE,
+      })
     : 0;
   const mesh = card.climax ? meshGround(settle, accent, c.pale) : "";
   const stage =
@@ -298,7 +310,8 @@ export function EscalateCards({
   const zoom = card.climax
     ? 1 + push * settle
     : 1 + 0.025 * Math.min(1, local / card.length);
-  const showDate = card.climax && date !== "" && local >= dateDelay;
+  const dateEl = tl.elements.find((e) => e.id === "date");
+  const showDate = card.climax && dateEl !== undefined && t >= dateEl.start;
   const titleY = card.climax && date !== "" ? H * 0.45 : H * 0.5;
   const dateSize = H * 0.032;
 
