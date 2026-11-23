@@ -17,6 +17,7 @@ import path from "node:path";
 import { bundle } from "@remotion/bundler";
 import {
   getCompositions,
+  makeCancelSignal,
   openBrowser,
   renderFrames,
   renderStill,
@@ -128,7 +129,15 @@ try {
         if (every) {
           // One pass over every frame, across several tabs.
           const pad = String(composition.durationInFrames - 1).length;
+          // A component that throws leaves renderFrames waiting rather than
+          // failing, so a run gets a deadline sized to the clip.
+          const { cancelSignal, cancel } = makeCancelSignal();
+          const deadline = setTimeout(
+            cancel,
+            60_000 + composition.durationInFrames * 1_000,
+          );
           await renderFrames({
+            cancelSignal,
             serveUrl,
             composition,
             inputProps,
@@ -147,7 +156,7 @@ try {
                 buffer,
               );
             },
-          });
+          }).finally(() => clearTimeout(deadline));
         } else {
           for (const share of at) {
             const frame = Math.min(
