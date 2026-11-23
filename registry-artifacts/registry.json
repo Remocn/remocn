@@ -9666,12 +9666,21 @@
       "title": "Pass Swap",
       "description": "An object passes across the frame and each pass swaps the headline to the next one.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/pass-swap/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/pass-swap.tsx"
+          "target": "components/remocn/pass-swap/index.tsx"
+        },
+        {
+          "path": "registry/remocn/pass-swap/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/pass-swap/timeline.ts"
         }
       ],
       "type": "registry:component"
