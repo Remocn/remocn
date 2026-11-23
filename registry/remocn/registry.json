@@ -555,12 +555,17 @@
       "title": "Short Slide Right",
       "description": "The whole phrase glides in from the left as one compact move while words reveal in sequence through opacity.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "short-slide-right/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/short-slide-right.tsx"
+          "target": "components/remocn/short-slide-right/index.tsx"
+        },
+        {
+          "path": "short-slide-right/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/short-slide-right/timeline.ts"
         }
       ]
     },
