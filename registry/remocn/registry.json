@@ -6867,10 +6867,19 @@
         {
           "path": "a-to-z/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/a-to-z.tsx"
+          "target": "components/remocn/a-to-z/index.tsx"
+        },
+        {
+          "path": "a-to-z/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/a-to-z/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "carry-count",

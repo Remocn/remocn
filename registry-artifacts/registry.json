@@ -6862,12 +6862,21 @@
       "title": "a to Z",
       "description": "An alphabet gag where a big \"Z\" and \"is for zero lock-in.\" land on orange.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/a-to-z/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/a-to-z.tsx"
+          "target": "components/remocn/a-to-z/index.tsx"
+        },
+        {
+          "path": "registry/remocn/a-to-z/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/a-to-z/timeline.ts"
         }
       ],
       "type": "registry:component"
