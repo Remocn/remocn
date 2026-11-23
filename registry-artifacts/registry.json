@@ -10951,12 +10951,21 @@
       "title": "Three Steps",
       "description": "Three large gradient numerals light along a connecting line: Install, Compose, Render.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/three-steps/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/three-steps.tsx"
+          "target": "components/remocn/three-steps/index.tsx"
+        },
+        {
+          "path": "registry/remocn/three-steps/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/three-steps/timeline.ts"
         }
       ],
       "type": "registry:component"

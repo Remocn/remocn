@@ -7,6 +7,15 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_STEPS,
+  FIRST_FILL,
+  PAUSE,
+  type ThreeStepsElementId,
+  TRAVEL,
+  threeStepsTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -45,13 +54,13 @@ export interface ThreeStepsProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the rail, the eyebrow, single steps and the
+   * ring, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<ThreeStepsElementId>;
 }
-
-const DEFAULT_STEPS: Step[] = [
-  { title: "Install", detail: "Add a component with the shadcn CLI" },
-  { title: "Compose", detail: "Arrange scenes in plain React" },
-  { title: "Render", detail: "Export MP4 from Remotion" },
-];
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -107,12 +116,6 @@ function rampCss(ramp: readonly string[]) {
     .map((col, i) => `${col} ${(i / (ramp.length - 1)) * 100}%`)
     .join(", ");
 }
-
-const LINE_START = 2;
-const LINE_DUR = 26;
-const FIRST_FILL = 26;
-const TRAVEL = 18;
-const PAUSE = 10;
 
 export const threeStepsLength = (count = 3) =>
   FIRST_FILL + (count - 1) * (TRAVEL + PAUSE) + 30 + 40;
@@ -359,25 +362,31 @@ function ScaleLayer({
   );
 }
 
-export function ThreeSteps({
-  steps = DEFAULT_STEPS,
-  eyebrow = "How it works",
-  outcome = "Your launch video, shipped",
-  travel = TRAVEL,
-  pause = PAUSE,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: ThreeStepsProps) {
+export function ThreeSteps(props: ThreeStepsProps) {
+  const {
+    steps = DEFAULT_STEPS,
+    eyebrow = "How it works",
+    outcome = "Your launch video, shipped",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    threeStepsTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const u = Math.min(W / 1280, H / 720);
   const base = THEMES[theme];
   const solid =
@@ -403,10 +412,13 @@ export function ThreeSteps({
   const lastX = nodeX(n - 1);
   const firstX = nodeX(0);
 
-  const fillAt = (i: number) => FIRST_FILL + i * (travel + pause);
-  const done = fillAt(n - 1);
+  const stepAt = (i: number) => tl.get(`step:${i}`);
+  const fillAt = (i: number) => stepAt(i).start;
+  const line = tl.get("line");
+  const ring = tl.get("ring");
+  const done = ring.start;
 
-  const lineP = interpolate(t, [LINE_START, LINE_START + LINE_DUR], [0, 1], {
+  const lineP = interpolate(t, [line.start, line.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -414,24 +426,40 @@ export function ThreeSteps({
 
   let dotX = firstX;
   for (let i = 1; i < n; i++) {
-    const p = interpolate(t, [fillAt(i) - travel, fillAt(i)], [0, 1], {
-      ...CLAMP,
-      easing: EASE_IO,
-    });
+    const p = interpolate(
+      t,
+      [fillAt(i) + stepAt(i).beat("arrive"), fillAt(i)],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_IO,
+      },
+    );
     dotX += (nodeX(i) - nodeX(i - 1)) * p;
   }
-  const dotIn = interpolate(t, [FIRST_FILL - 8, FIRST_FILL], [0, 1], CLAMP);
-  const dotOut = interpolate(t, [done, done + 4], [1, 0], CLAMP);
+  const dotIn = interpolate(
+    t,
+    [fillAt(0) + stepAt(0).beat("arrive"), fillAt(0)],
+    [0, 1],
+    CLAMP,
+  );
+  const dotOut = interpolate(
+    t,
+    [done, done + ring.beat("dotOut")],
+    [1, 0],
+    CLAMP,
+  );
   const travelling = n > 1 && t > fillAt(0) && t < done;
   const trail = travelling ? 1 : 0;
 
-  const eyeIn = rise(t, 8, 18);
-  const ringP = interpolate(t, [done, done + 26], [0, 1], {
+  const eyebrowEl = tl.get("eyebrow");
+  const eyeIn = rise(t, eyebrowEl.start, eyebrowEl.length);
+  const ringP = interpolate(t, [ring.start, ring.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
   const camAt = (at: number) =>
-    interpolate(at, [0, done + 60], [1, 1.025], {
+    interpolate(at, [0, done + ring.beat("push")], [1, 1.025], {
       ...CLAMP,
       easing: EASE_IO,
     });
@@ -532,10 +560,15 @@ export function ThreeSteps({
                 [0, 1],
                 { ...CLAMP, easing: EASE_OUT },
               );
-              const f = interpolate(t, [fillAt(i), fillAt(i) + 8], [0, 1], {
-                ...CLAMP,
-                easing: EASE_OUT,
-              });
+              const f = interpolate(
+                t,
+                [fillAt(i), fillAt(i) + stepAt(i).beat("fill")],
+                [0, 1],
+                {
+                  ...CLAMP,
+                  easing: EASE_OUT,
+                },
+              );
               const pop = Math.sin(Math.PI * f);
               const fillColor = sampleRamp(
                 c.ramp,
@@ -607,9 +640,9 @@ export function ThreeSteps({
                 index={i}
                 step={step}
                 t={t}
-                start={fillAt(i) + 2}
+                start={fillAt(i) + stepAt(i).beat("text")}
                 ghostAt={
-                  LINE_START + 4 + (i / Math.max(1, n - 1)) * LINE_DUR * 0.85
+                  line.start + 4 + (i / Math.max(1, n - 1)) * line.length * 0.85
                 }
                 last={i === n - 1}
                 outcome={outcome}
