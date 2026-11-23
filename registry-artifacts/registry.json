@@ -8803,12 +8803,21 @@
       "title": "Kill Feed",
       "description": "A kill-feed of eliminations builds to a big gradient 'PENTA SHIP' banner.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/kill-feed/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/kill-feed.tsx"
+          "target": "components/remocn/kill-feed/index.tsx"
+        },
+        {
+          "path": "registry/remocn/kill-feed/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/kill-feed/timeline.ts"
         }
       ],
       "type": "registry:component"
