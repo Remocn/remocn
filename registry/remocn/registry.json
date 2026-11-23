@@ -10292,10 +10292,19 @@
         {
           "path": "counter-reveal/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/counter-reveal.tsx"
+          "target": "components/remocn/counter-reveal/index.tsx"
+        },
+        {
+          "path": "counter-reveal/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/counter-reveal/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "slit-scan",
