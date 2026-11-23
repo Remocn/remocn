@@ -593,12 +593,21 @@
       "title": "Staggered Fade Up",
       "description": "Words fade in and slide up one after another with a configurable delay.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/staggered-fade-up/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/staggered-fade-up.tsx"
+          "target": "components/remocn/staggered-fade-up/index.tsx"
+        },
+        {
+          "path": "registry/remocn/staggered-fade-up/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/staggered-fade-up/timeline.ts"
         }
       ],
       "type": "registry:component"

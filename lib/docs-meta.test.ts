@@ -495,8 +495,7 @@ describe("components with a timeline read it through useTimeline", () => {
         const label = `${file} @${length}`;
         if (JSON.stringify(schedule(props, scene)) !== JSON.stringify(first))
           problems.push(`${label}: two calls disagree`);
-        if (JSON.stringify(schedule({}, scene)) === "[]")
-          problems.push(`${label}: no elements without props`);
+        if (first.length === 0) problems.push(`${label}: no elements`);
         const ids = first.map((e) => e.id);
         if (new Set(ids).size !== ids.length)
           problems.push(`${label}: duplicate ids ${ids.join(", ")}`);

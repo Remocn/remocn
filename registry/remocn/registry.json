@@ -598,10 +598,19 @@
         {
           "path": "staggered-fade-up/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/staggered-fade-up.tsx"
+          "target": "components/remocn/staggered-fade-up/index.tsx"
+        },
+        {
+          "path": "staggered-fade-up/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/staggered-fade-up/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "mask-reveal-up",
