@@ -4,6 +4,13 @@ import type React from "react";
 import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_WORDS,
+  type WordStackElementId,
+  wordStackTimeline,
+  wordsOf,
+} from "./timeline";
 
 export interface WordStackProps {
   words?: string[];
@@ -20,6 +27,11 @@ export interface WordStackProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches single words, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<WordStackElementId>;
 }
 
 // [advance, inkLeft, inkRight, inkTop, inkBottom, outline] per 1000 em,
@@ -456,11 +468,6 @@ const ITALIC: Face = {
 // gradients.sh "silk" on the closing word: violet into a peach sheen.
 const SILK = { violet: "#8a7bff", peach: "#f3d6c0", blue: "#3b3fd8" } as const;
 
-// Negative: the first word is already mid-push on frame 0.
-const START = -5;
-const INTERVAL = 17;
-const DURATION = 15;
-
 const EASE_PUSH = Easing.bezier(0.72, 0, 0.18, 1);
 const CLAMP = {
   extrapolateLeft: "clamp",
@@ -558,20 +565,27 @@ function ScaleLayer({
   );
 }
 
-export function WordStack({
-  words = ["Even", "solo", "builders", "deserve", "cinematic", "launches"],
-  beat = INTERVAL,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: WordStackProps) {
+export function WordStack(props: WordStackProps) {
+  const {
+    words = DEFAULT_WORDS,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    wordStackTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const u = H / 720;
   const c = THEMES[theme];
   const stage =
@@ -581,7 +595,7 @@ export function WordStack({
   const heroClip = `h${uid}`;
   const heroFill = `f${uid}`;
 
-  const list = words.length > 0 ? words : ["remocn"];
+  const list = wordsOf(words);
   const n = list.length;
   const set = list.map((w, i) =>
     setWord(w, n > 1 && i === n - 1 ? ITALIC : SANS),
@@ -646,7 +660,12 @@ export function WordStack({
     return s;
   }
 
-  const step = Math.max(-1, Math.min(n - 1, Math.floor((t - START) / beat)));
+  const pushes = list.map((_, k) => tl.get(`word:${k}`));
+  // The push under way: the last one that has started.
+  let step = -1;
+  pushes.forEach((push, k) => {
+    if (t >= push.start) step = k;
+  });
   // Before the first push (frames 0–1) both ends are the off-screen state.
   const from = states[Math.max(0, step)];
   const to = states[step + 1];
@@ -655,21 +674,23 @@ export function WordStack({
       ? 0
       : interpolate(
           t,
-          [
-            START + step * beat,
-            START + step * beat + DURATION + (step === n - 1 ? 4 : 0),
-          ],
+          [pushes[step].start, pushes[step].start + pushes[step].beat("push")],
           [0, 1],
           { ...CLAMP, easing: EASE_PUSH },
         );
   const ys = to.map((v, i) => from[i] + (v - from[i]) * p);
 
   // The silk sheen eases across the closing word as it lands and holds.
-  const lastAt = START + (n - 1) * beat;
-  const sheen = interpolate(t, [lastAt, lastAt + 70], [0.28, 0.62], {
-    ...CLAMP,
-    easing: EASE_PUSH,
-  });
+  const lastAt = pushes[n - 1].start;
+  const sheen = interpolate(
+    t,
+    [lastAt, lastAt + pushes[n - 1].beat("sheen")],
+    [0.28, 0.62],
+    {
+      ...CLAMP,
+      easing: EASE_PUSH,
+    },
+  );
   const stops =
     theme === "light"
       ? [accent, SILK.violet, "#d9876c"]

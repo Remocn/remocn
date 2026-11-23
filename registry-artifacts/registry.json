@@ -10198,12 +10198,17 @@
       "title": "Word Stack",
       "description": "Caps words stack in a tight poster, the last one swapped for a serif gradient italic.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/word-stack/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/word-stack.tsx"
+          "target": "components/remocn/word-stack/index.tsx"
+        },
+        {
+          "path": "registry/remocn/word-stack/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/word-stack/timeline.ts"
         }
       ],
       "type": "registry:component"
