@@ -10117,12 +10117,21 @@
       "title": "Torn Edge",
       "description": "A torn paper sheet rips away to reveal a bold headline printed on the gradient stage.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/torn-edge/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/torn-edge.tsx"
+          "target": "components/remocn/torn-edge/index.tsx"
+        },
+        {
+          "path": "registry/remocn/torn-edge/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/torn-edge/timeline.ts"
         }
       ],
       "type": "registry:component"

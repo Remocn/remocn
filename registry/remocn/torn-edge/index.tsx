@@ -5,6 +5,8 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type TornEdgeElementId, tornEdgeTimeline } from "./timeline";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["500"],
@@ -35,6 +37,11 @@ export interface TornEdgeProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the tear and the part, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<TornEdgeElementId>;
 }
 
 const CLAMP = {
@@ -53,10 +60,6 @@ const FLUTED = ["#1D2A8F", "#FF7A3D", "#FFE2C4"] as const;
 // How far the drawing reaches past the frame: more than the steepest lean
 // (0.5deg) moves a corner of a 1280x720 frame.
 const BLEED = 8;
-const TEAR_START = 2;
-const TEAR_END = 36;
-const PART_START = 32;
-const PART_END = 70;
 
 const THEMES = {
   dark: {
@@ -128,31 +131,39 @@ function piece(edge: Pt[], farY: number) {
   return `M${first[0].toFixed(2)} ${farY}L${pts.join("L")}L${last[0].toFixed(2)} ${farY}Z`;
 }
 
-export function TornEdge({
-  title = "Make it yours.",
-  accent = "#3B5BFD",
-  tear = TEAR_END - TEAR_START,
-  spread = 0.205,
-  ink,
-  background,
-  fontFamily = display,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: TornEdgeProps) {
+export function TornEdge(props: TornEdgeProps) {
+  const {
+    title = "Make it yours.",
+    accent = "#3B5BFD",
+    spread = 0.205,
+    ink,
+    background,
+    fontFamily = display,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const f = Math.max(0, useSceneFrame() - delay) * speed;
   const glide = useGlide();
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    tornEdgeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const tearEl = tl.get("tear");
+  const partEl = tl.get("part");
   const u = H / 720;
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? p.stage);
-  const tearEnd = TEAR_START + tear;
-  const partStart = tearEnd - (TEAR_END - PART_START);
-  const partEnd = partStart + (PART_END - PART_START);
+  const partStart = partEl.start;
+  const partEnd = partEl.end;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const paperId = `pa${uid}`;
   const frayId = `fr${uid}`;
@@ -165,7 +176,7 @@ export function TornEdge({
   const step = 2.5 * u;
   const count = Math.ceil((W + 2 * M) / step) + 1;
 
-  const tip = interpolate(f, [TEAR_START, tearEnd], [-M * 0.5, W + M], {
+  const tip = interpolate(f, [tearEl.start, tearEl.end], [-M * 0.5, W + M], {
     ...CLAMP,
     easing: EASE_TEAR,
   });
@@ -224,19 +235,29 @@ export function TornEdge({
   const sBlur = u * (2.2 + 5 * part);
 
   const pushAt = (g: number) =>
-    interpolate(g, [0, partEnd + 40], [1, 1.035], {
+    interpolate(g, [0, partEnd + partEl.beat("push")], [1, 1.035], {
       ...CLAMP,
       easing: EASE_IO,
     });
   const push = pushAt(f);
-  const drift = interpolate(f, [0, partEnd + 40], [0, 1], CLAMP);
+  const drift = interpolate(
+    f,
+    [0, partEnd + partEl.beat("push")],
+    [0, 1],
+    CLAMP,
+  );
   const cam = `translate(${W / 2} ${H / 2}) scale(${push}) translate(${-W / 2} ${-H / 2})`;
 
   const fs = Math.min(150 * u, (W * 0.78) / (Math.max(title.length, 1) * 0.47));
-  const settle = interpolate(f, [partStart, partEnd + 6], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const settle = interpolate(
+    f,
+    [partStart, partEnd + partEl.beat("settle")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
   // The headline is an SVG <text>, so `scale` joins its own transform rather
   // than a ScaleLayer; the full-bleed sheet stays full-bleed.
   const headScale = (1.045 - 0.045 * settle) * scale;
