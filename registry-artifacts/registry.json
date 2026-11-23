@@ -95,12 +95,21 @@
       "title": "Spring Scale In",
       "description": "Words pop in with a soft overshoot scale, like a physical spring settling into place.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/spring-scale-in/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/spring-scale-in.tsx"
+          "target": "components/remocn/spring-scale-in/index.tsx"
+        },
+        {
+          "path": "registry/remocn/spring-scale-in/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/spring-scale-in/timeline.ts"
         }
       ],
       "type": "registry:component"
