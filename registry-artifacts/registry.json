@@ -429,12 +429,17 @@
       "title": "Typed Split Wipe",
       "description": "A centered cursorless type build holds, then exits through opposing fixed-layout glyph wipes that leave the anchor visible longest.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/typed-split-wipe/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/typed-split-wipe.tsx"
+          "target": "components/remocn/typed-split-wipe/index.tsx"
+        },
+        {
+          "path": "registry/remocn/typed-split-wipe/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/typed-split-wipe/timeline.ts"
         }
       ],
       "type": "registry:component"
