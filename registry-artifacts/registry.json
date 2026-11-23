@@ -8712,12 +8712,21 @@
       "title": "Got Em",
       "description": "A suspense line resolves into an exploded 'GOT 'EM' over a gradient sunburst.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/got-em/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/got-em.tsx"
+          "target": "components/remocn/got-em/index.tsx"
+        },
+        {
+          "path": "registry/remocn/got-em/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/got-em/timeline.ts"
         }
       ],
       "type": "registry:component"
