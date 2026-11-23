@@ -9335,10 +9335,19 @@
         {
           "path": "italic-speed/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/italic-speed.tsx"
+          "target": "components/remocn/italic-speed/index.tsx"
+        },
+        {
+          "path": "italic-speed/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/italic-speed/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "split-flash",

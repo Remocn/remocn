@@ -9330,12 +9330,21 @@
       "title": "Italic Speed",
       "description": "A slanted caps word rides in on speed strips with a serif italic subtitle under an underline.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/italic-speed/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/italic-speed.tsx"
+          "target": "components/remocn/italic-speed/index.tsx"
+        },
+        {
+          "path": "registry/remocn/italic-speed/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/italic-speed/timeline.ts"
         }
       ],
       "type": "registry:component"

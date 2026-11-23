@@ -7,6 +7,12 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type ItalicSpeedElementId,
+  italicSpeedTimeline,
+  titleText,
+} from "./timeline";
 
 const { fontFamily: display } = loadFont("italic", {
   weights: ["500"],
@@ -41,6 +47,12 @@ export interface ItalicSpeedProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches single letters, the strips retracting and the
+   * subtitle, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<ItalicSpeedElementId>;
 }
 
 // Archivo Italic 500, per 1000 em, chars 32–126 then ’ “ ” … – — (harfbuzz):
@@ -115,14 +127,8 @@ const CAP = 0.686;
 //          accent underline under the word
 //  32–43   the second line slides up out from under the underline
 //  43–     poster hold
-const ARRIVE = 13;
 const TRAVEL = 11;
-const STAGGER = 1.2;
 const LEAN = 34;
-const RETRACT_AT = 18;
-const RETRACT_LEN = 11;
-const SUB_AT = 32;
-const SUB_LEN = 11;
 
 const RIDE = Easing.bezier(0.16, 0.8, 0.25, 1);
 const STRIP_IN = Easing.bezier(0.2, 0.7, 0.3, 1);
@@ -202,30 +208,37 @@ function ScaleLayer({
   );
 }
 
-export function ItalicSpeed({
-  title = "FASTER",
-  subtitle = "Ship at race pace.",
-  stagger = STAGGER,
-  lean: arriveLean = LEAN,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = display,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: ItalicSpeedProps) {
+export function ItalicSpeed(props: ItalicSpeedProps) {
+  const {
+    title = "FASTER",
+    subtitle = "Ship at race pace.",
+    lean: arriveLean = LEAN,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    italicSpeedTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.stage);
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
-  const text = title.trim().toUpperCase() || "GO";
+  const text = titleText(title);
   const { pens, advance } = layout(text);
   const lsb = LSB[code(text[0])] / 1000;
   const rsb = RSB[code(text[text.length - 1])] / 1000;
@@ -251,14 +264,17 @@ export function ItalicSpeed({
   // Letters: the last one leads; each trails the next by STAGGER frames.
   const n = text.length;
   const letters = text.split("").map((ch, i) => {
-    const arrive = ARRIVE + (n - 1 - i) * stagger;
-    const ride = RIDE(interpolate(t, [arrive - TRAVEL, arrive], [0, 1], CLAMP));
+    const letter = tl.get(`char:${i}`);
+    const arrive = letter.start;
+    const ride = RIDE(
+      interpolate(t, [arrive + letter.beat("travel"), arrive], [0, 1], CLAMP),
+    );
     const dx = -(1.05 * W) * (1 - ride);
     const leanAt = (tt: number) =>
       -arriveLean *
       (1 -
         spring({
-          frame: tt - (arrive - 2),
+          frame: tt - (arrive + letter.beat("brake")),
           fps,
           config: { damping: 11, stiffness: 320, mass: 0.55 },
         }));
@@ -277,10 +293,17 @@ export function ItalicSpeed({
   const lead = letters[n - 1];
   const leadRight = lead.x + (ADV[code(lead.ch)] / 1000) * fs;
 
+  const leadArrive = tl.get(`char:${n - 1}`).start;
+  const retract = tl.get("retract");
   const strips = STRIPS.map((s, k) => {
     const color = s.accent ? `url(#${uid}-beam)` : c.strip;
     const enter = STRIP_IN(
-      interpolate(t, [-TRAVEL * s.head, ARRIVE - 2 + k * 0.5], [0, 1], CLAMP),
+      interpolate(
+        t,
+        [-TRAVEL * s.head, leadArrive - 2 + k * 0.5],
+        [0, 1],
+        CLAMP,
+      ),
     );
     const restR = ruleR + s.over * inkW;
     // The strip head never falls behind the leading letter it pulls along.
@@ -289,7 +312,10 @@ export function ItalicSpeed({
     const ret = RETRACT(
       interpolate(
         t,
-        [RETRACT_AT + k * 0.5, RETRACT_AT + k * 0.5 + RETRACT_LEN],
+        [
+          retract.start + k * retract.beat("stagger"),
+          retract.start + k * retract.beat("stagger") + retract.beat("strip"),
+        ],
         [0, 1],
         CLAMP,
       ),
@@ -304,8 +330,9 @@ export function ItalicSpeed({
   });
   const done = strips.every((s) => s.ret >= 1);
 
+  const subEl = tl.get("subtitle");
   const subAt = (tt: number) =>
-    SUB(interpolate(tt, [SUB_AT, SUB_AT + SUB_LEN], [0, 1], CLAMP));
+    SUB(interpolate(tt, [subEl.start, subEl.end], [0, 1], CLAMP));
   const subP = subAt(t);
   const subMoving = subAt(t + speed) !== subP || subAt(t - speed) !== subP;
   const subLean = -14 * (1 - subP);
