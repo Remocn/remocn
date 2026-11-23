@@ -224,12 +224,17 @@
       "title": "Word Stream",
       "description": "Voiceover-paced phrases that build word by word — the next word looms as a blurred ghost before it resolves, then the phrase cuts away.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/word-stream/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/word-stream.tsx"
+          "target": "components/remocn/word-stream/index.tsx"
+        },
+        {
+          "path": "registry/remocn/word-stream/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/word-stream/timeline.ts"
         }
       ],
       "type": "registry:component"

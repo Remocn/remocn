@@ -1,7 +1,16 @@
 "use client";
 
 import { Easing, interpolate } from "remotion";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  HOLD,
+  REVEAL_FRAMES,
+  schedulePhrases,
+  WORD_GAP,
+  type WordStreamElementId,
+  wordStreamTimeline,
+} from "./timeline";
 
 export interface WordStreamProps {
   text: string;
@@ -13,21 +22,18 @@ export interface WordStreamProps {
   drift?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches single phrases, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<WordStreamElementId>;
 }
 
-interface PhraseSchedule {
-  words: string[];
-  start: number;
-  exitStart: number;
-  last: boolean;
-}
-
-const REVEAL_FRAMES = 3;
-const ENTRY_FRAMES = 8;
-const RUN_OUT_FRAMES = 5;
-const SWAP_OVERLAP = 0;
-
-export function wordStreamLength(text: string, wordGap = 6, hold = 18): number {
+export function wordStreamLength(
+  text: string,
+  wordGap = WORD_GAP,
+  hold = HOLD,
+): number {
   const schedule = schedulePhrases(text, wordGap, hold);
   const finalPhrase = schedule[schedule.length - 1];
   if (!finalPhrase) return 0;
@@ -36,44 +42,38 @@ export function wordStreamLength(text: string, wordGap = 6, hold = 18): number {
   );
 }
 
-function schedulePhrases(
-  text: string,
-  wordGap: number,
-  hold: number,
-): PhraseSchedule[] {
-  const phrases = text
-    .split("|")
-    .map((phrase) => phrase.trim())
-    .filter(Boolean);
-  let cursor = 0;
-  return phrases.map((phrase, i) => {
-    const words = phrase.split(/\s+/);
-    const start = cursor;
-    const complete = start + (words.length - 1) * wordGap + REVEAL_FRAMES;
-    const exitStart = complete + hold;
-    cursor = exitStart + SWAP_OVERLAP;
-    return { words, start, exitStart, last: i === phrases.length - 1 };
-  });
-}
-
 const revealEasing = Easing.bezier(0.2, 0.8, 0.2, 1);
 const entryEasing = Easing.bezier(0.2, 0.8, 0.3, 1);
 const runOutEasing = Easing.bezier(0.7, 0, 0.9, 0.4);
 
-export function WordStream({
-  text,
-  fontSize = 72,
-  color = "#171717",
-  fontWeight = 400,
-  wordGap = 6,
-  hold = 18,
-  drift = 2,
-  speed = 1,
-  className,
-}: WordStreamProps) {
+export function WordStream(props: WordStreamProps) {
+  const {
+    fontSize = 72,
+    color = "#171717",
+    fontWeight = 400,
+    drift = 2,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame() * speed;
-
-  const schedule = schedulePhrases(text, wordGap, hold);
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    wordStreamTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const schedule = tl.elements.map((phrase, i) => ({
+    words: phrase.label.split(" "),
+    start: phrase.start,
+    exitStart: phrase.end,
+    last: i === tl.elements.length - 1,
+    wordGap: phrase.beat("wordGap"),
+    reveal: phrase.beat("reveal"),
+    entry: phrase.beat("entry"),
+    runOut: phrase.beat("runOut"),
+  }));
 
   return (
     <div
@@ -93,7 +93,7 @@ export function WordStream({
 
         const entryX = interpolate(
           frame,
-          [phrase.start, phrase.start + ENTRY_FRAMES],
+          [phrase.start, phrase.start + phrase.entry],
           [scale * 30, 0],
           {
             extrapolateLeft: "clamp",
@@ -108,7 +108,7 @@ export function WordStream({
           ? 0
           : interpolate(
               frame,
-              [phrase.exitStart - RUN_OUT_FRAMES, phrase.exitStart],
+              [phrase.exitStart - phrase.runOut, phrase.exitStart],
               [0, -scale * 80],
               {
                 extrapolateLeft: "clamp",
@@ -143,11 +143,11 @@ export function WordStream({
               }}
             >
               {phrase.words.map((word, j) => {
-                const revealAt = phrase.start + j * wordGap;
+                const revealAt = phrase.start + j * phrase.wordGap;
 
                 const opacity = interpolate(
                   frame,
-                  [revealAt, revealAt + REVEAL_FRAMES],
+                  [revealAt, revealAt + phrase.reveal],
                   [0, 1],
                   {
                     extrapolateLeft: "clamp",
