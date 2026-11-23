@@ -10002,10 +10002,19 @@
         {
           "path": "kerning-snap/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/kerning-snap.tsx"
+          "target": "components/remocn/kerning-snap/index.tsx"
+        },
+        {
+          "path": "kerning-snap/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/kerning-snap/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "baseline-drop",

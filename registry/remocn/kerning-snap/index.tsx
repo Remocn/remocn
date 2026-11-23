@@ -6,6 +6,13 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_WORD,
+  type KerningSnapElementId,
+  kerningSnapTimeline,
+  snapOrder,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400"],
@@ -34,6 +41,12 @@ export interface KerningSnapProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the gather, the fade-in and single snaps, by
+   * the ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<KerningSnapElementId>;
 }
 
 /** Fraunces 400 advance widths (per 1000 em) for ASCII 32–126. */
@@ -70,8 +83,6 @@ const BASELINE = 0.8615;
 /** Padding around each glyph box so the clip-text gradient covers overhangs and descenders. */
 const PAD_X = 0.12;
 const PAD_Y = 0.2;
-
-const FIRST_SNAP = 30;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -197,23 +208,29 @@ function ScaleLayer({
   );
 }
 
-export function KerningSnap({
-  word = "Typeset",
-  interval = 7,
-  firstSnap = FIRST_SNAP,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: KerningSnapProps) {
+export function KerningSnap(props: KerningSnapProps) {
+  const {
+    word = DEFAULT_WORD,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    kerningSnapTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
@@ -251,22 +268,9 @@ export function KerningSnap({
     [chars, finalCenters, finalEm, F],
   );
 
-  const anchor = Math.floor((n - 1) / 2);
-  const order = useMemo(() => {
-    const seq: number[] = [];
-    for (let d = 1; seq.length < n - 1; d++) {
-      if (anchor + d < n) seq.push(anchor + d);
-      if (anchor - d >= 0) seq.push(anchor - d);
-    }
-    return seq;
-  }, [anchor, n]);
-  const snapAt = useMemo(() => {
-    const at = new Array<number>(n).fill(firstSnap - interval);
-    order.forEach((j, k) => {
-      at[j] = firstSnap + k * interval;
-    });
-    return at;
-  }, [order, n, interval, firstSnap]);
+  const { anchor } = snapOrder(n);
+  // The anchor never snaps: it is set from the start.
+  const snapOf = (i: number) => tl.get(`snap:${i}`);
 
   const spread = useMemo(() => {
     const span = W * 0.78;
@@ -280,23 +284,28 @@ export function KerningSnap({
     return raw.map((r) => -span / 2 + (r / total) * span);
   }, [n, W]);
 
-  const lastSnap = firstSnap + (n - 2) * interval;
-  const gather = interpolate(t, [0, lastSnap + 4], [0, 1], {
+  const gatherEl = tl.get("gather");
+  const gather = interpolate(t, [gatherEl.start, gatherEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const push = interpolate(t, [0, lastSnap + 60], [0, 1], CLAMP);
+  const push = interpolate(
+    t,
+    [gatherEl.start, gatherEl.end + gatherEl.beat("push")],
+    [0, 1],
+    CLAMP,
+  );
 
   const snap = (i: number) =>
     i === anchor
       ? 1
       : spring({
-          frame: t - snapAt[i],
+          frame: t - snapOf(i).start,
           fps,
           config: { damping: 19, stiffness: 420, mass: 0.55 },
         });
   const flash = (j: number) => {
-    const d = t - snapAt[j] - 3;
+    const d = t - snapOf(j).start - snapOf(j).beat("flash");
     if (d < 0) return 0;
     return interpolate(d, [0, 2, 12], [0, 1, 0], {
       ...CLAMP,
@@ -304,6 +313,7 @@ export function KerningSnap({
     });
   };
 
+  const fade = tl.get("fade");
   const anchorDrift = (spread[anchor] - finalCenters[anchor]) * (1 - gather);
   const anchorLift = (hash(anchor, 7) - 0.5) * F * 0.12 * (1 - gather);
 
@@ -350,10 +360,16 @@ export function KerningSnap({
               const dy =
                 anchorLift + (hash(i, 7) - 0.5) * F * 0.5 * wander * loose;
               const rot = (hash(i, 11) - 0.5) * 12 * wander * loose;
-              const o = interpolate(t, [2 + i * 2, 16 + i * 2], [0, 1], {
-                ...CLAMP,
-                easing: EASE_OUT,
-              });
+              const fadeAt = fade.start + i * fade.beat("stagger");
+              const o = interpolate(
+                t,
+                [fadeAt, fadeAt + fade.beat("letter")],
+                [0, 1],
+                {
+                  ...CLAMP,
+                  easing: EASE_OUT,
+                },
+              );
               const leftTick = i > anchor ? flash(i) : 0;
               const rightTick = i < anchor ? flash(i) : 0;
               return (
