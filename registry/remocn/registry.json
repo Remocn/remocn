@@ -250,12 +250,17 @@
       "title": "Word Push",
       "description": "A phrase builds from its first word centered: each next word drives in from the right and pushes the line left, easing into the new center.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "word-push/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/word-push.tsx"
+          "target": "components/remocn/word-push/index.tsx"
+        },
+        {
+          "path": "word-push/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/word-push/timeline.ts"
         }
       ]
     },
