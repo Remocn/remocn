@@ -9,10 +9,8 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
-
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const albert = loadFont("normal", {
@@ -137,8 +135,8 @@ export function FreeAsIn({
   theme = "dark",
 }: FreeAsInProps) {
   const glide = useGlide();
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const T = (durationInFrames - delay) * speed;
   const c = THEMES[theme];
   const fg = ink ?? c.ink;

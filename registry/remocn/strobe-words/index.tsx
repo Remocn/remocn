@@ -4,13 +4,8 @@ import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadFont as loadDisplay } from "@remotion/google-fonts/Sora";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const manrope = loadManrope("normal", {
   weights: ["500", "600"],
@@ -153,7 +148,7 @@ function Word({
   fill?: string;
   fontFamily: string;
 }) {
-  const { height: H } = useVideoConfig();
+  const { height: H } = useSceneConfig();
   const baseline = H / 2 + (CAP * size) / 2;
   const tail = text.match(/[.!?]$/) ? text.slice(-1) : "";
   const body = tail ? text.slice(0, -1) : text;
@@ -232,8 +227,8 @@ export function StrobeWords({
   theme = "dark",
   speed = 1,
 }: StrobeWordsProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const list = words.length > 0 ? words : ["Ship."];
   const beats =

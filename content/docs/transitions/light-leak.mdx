@@ -35,7 +35,7 @@ color in `colors` and the scenes hard-cut underneath that blow-out. The leak
 then keeps drifting across and cools off on the incoming scene.
 
 Both scenes render once per frame. The cut is hidden by the blow-out, so it
-works best short: 16 to 24 frames.
+works best short: 32 to 48 frames at 60 fps.
 
 ```tsx
 import { TransitionSeries, linearTiming } from "@remotion/transitions";
@@ -43,14 +43,14 @@ import { lightLeak } from "@/components/remocn/light-leak";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 20 })}
+      timing={linearTiming({ durationInFrames: 40 })}
       presentation={lightLeak({ origin: "right" })}
     />
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

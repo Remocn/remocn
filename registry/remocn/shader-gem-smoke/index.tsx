@@ -2,12 +2,8 @@
 
 import { GemSmoke, type GemSmokeProps } from "@paper-design/shaders-react";
 import React, { useCallback, useState } from "react";
-import {
-  continueRender,
-  delayRender,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { continueRender, delayRender } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const NEUTRAL_COLORS = ["#3a3a5c", "#52527a"];
 
@@ -34,8 +30,8 @@ export function ShaderGemSmoke({
   className,
   ...rest
 }: ShaderGemSmokeProps) {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps, width, height } = useSceneConfig();
 
   const [handle] = useState(() => delayRender("shader-gem-smoke"));
   const gate = useCallback(

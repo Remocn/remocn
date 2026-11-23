@@ -41,14 +41,14 @@ import { rippleZoom } from "@/components/remocn/ripple-zoom";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={102}>
+    <TransitionSeries.Sequence durationInFrames={204}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 88 })}
+      timing={linearTiming({ durationInFrames: 176 })}
       presentation={rippleZoom()}
     />
-    <TransitionSeries.Sequence durationInFrames={102}>
+    <TransitionSeries.Sequence durationInFrames={204}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

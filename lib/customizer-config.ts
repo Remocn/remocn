@@ -79,6 +79,14 @@ export interface ComponentConfig {
   /** Optional duration for edited copy/timing in the interactive docs preview. */
   getDurationInFrames?: (values: Record<string, unknown>) => number;
   fps: number;
+  /**
+   * The frame rate the site plays this preview at, for a scene the browser
+   * cannot draw at the site's 60 fps in real time yet. Played at 30 it is
+   * even; asked for 60 it would stutter between the two. The component
+   * itself keeps its timing at any rate, and a render is unaffected. Remove
+   * it once `bun run audit:playback` shows the scene holding 60.
+   */
+  previewFps?: number;
   compositionWidth: number;
   compositionHeight: number;
   /**

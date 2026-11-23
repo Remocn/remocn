@@ -1,12 +1,13 @@
 "use client";
 
 import type React from "react";
-import { AbsoluteFill, useVideoConfig } from "remotion";
+import { AbsoluteFill } from "remotion";
 import {
   type CanvasFilterProps,
   makeCanvasFilter,
   makeFilterShader,
 } from "@/lib/remocn/canvas-presentation";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 
 export type AsciiRenderProps = {
   glyphSize?: number;
@@ -199,7 +200,7 @@ export const AsciiRender: React.FC<AsciiRenderProps & CanvasFilterProps> = ({
   intensity = DEFAULTS.intensity,
   children,
 }) => {
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   const resolved = charset.length > 0 ? charset : DEFAULTS.charset;
 
   return (

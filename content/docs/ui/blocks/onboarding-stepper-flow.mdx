@@ -47,7 +47,9 @@ Installing `onboarding-stepper-flow` automatically installs the shared `remocn-u
 The scene opens on step one with the email typing into the input. The stepper advances to step two
 around frame 64, crossfading to the plan panel where a radio option is selected. It advances again
 around frame 104 to the preferences panel and its switches. The Finish button then runs to its
-success state at 156, leaving about 20 frames of settle before the scene ends at 175.
+success state at 156, leaving about 20 frames of settle before the scene ends at 175. These are the
+block's own frames, counted at 30 fps: in the 60 fps composition below the scene ends at frame 350,
+about 5.8 seconds in.
 
 ## Usage
 
@@ -68,8 +70,8 @@ export const RemotionRoot = () => (
   <Composition
     id="OnboardingStepperFlow"
     component={OnboardingScene}
-    durationInFrames={175}
-    fps={30}
+    durationInFrames={350}
+    fps={60}
     width={1280}
     height={720}
   />

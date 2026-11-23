@@ -1,13 +1,7 @@
 "use client";
 
 import { Fragment } from "react";
-import {
-  Easing,
-  interpolate,
-  interpolateColors,
-  spring,
-  useVideoConfig,
-} from "remotion";
+import { Easing, interpolate, interpolateColors, spring } from "remotion";
 import {
   type CaptionBaseProps,
   DEFAULT_HOLD_MS,
@@ -15,6 +9,7 @@ import {
   groupCaptionWords,
   useCaptions,
 } from "@/lib/remocn/caption-core";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export interface CaptionActivePopProps extends CaptionBaseProps {
@@ -54,7 +49,7 @@ export function CaptionActivePop({
   className,
 }: CaptionActivePopProps) {
   const glide = useGlide();
-  const { fps } = useVideoConfig();
+  const { fps } = useSceneConfig();
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,

@@ -42,8 +42,8 @@ export const RemotionRoot = () => (
   <Composition
     id="Handwrite"
     component={HandwriteScene}
-    durationInFrames={120}
-    fps={30}
+    durationInFrames={240}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -64,10 +64,10 @@ const subtitle = "one pose at a time";
 
 const Titles = () => (
   <>
-    <Sequence durationInFrames={handwriteDuration(title)}>
+    <Sequence durationInFrames={handwriteDuration(title) * 2}>
       <Handwrite text={title} fontSize={72} />
     </Sequence>
-    <Sequence from={handwriteDuration(title)}>
+    <Sequence from={handwriteDuration(title) * 2}>
       <Handwrite text={subtitle} fontSize={44} />
     </Sequence>
   </>
@@ -75,7 +75,7 @@ const Titles = () => (
 ```
 
 Letters arrive on the stop-motion clock, so `step` is the tempo control: `3`
-frames per pose is ten poses a second at 30fps. Raise it for a slower, more
+frames per pose is ten poses a second, counted at 30 fps. Raise it for a slower, more
 deliberate hand. The component holds still between poses — wrap it in
 `paper-wobble` if the whole sheet should breathe.
 

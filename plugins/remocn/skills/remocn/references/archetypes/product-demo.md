@@ -47,13 +47,15 @@ Pick one slot per beat from these candidates (full props at `https://remocn.dev/
 | **Transitions** | `push-through` (going deeper), `focus-pull` (refined shift), `whip-pan` (energy), or plain `fade()` from `@remotion/transitions/fade` (neutral cut) | pass to `TransitionSeries.Transition` as `presentation`; text-swap components (`fade-through`, `shared-axis-*`) mount inside a scene instead |
 
 Budget each `<TransitionSeries.Sequence durationInFrames>` around the component's natural length
-(`Length` in `https://remocn.dev/llms-components.txt`). Standard ~45s split: Hook 165 · Positioning 120 · Product reveal
+(`Length` in `https://remocn.dev/llms-components.txt`, counted at 30 fps). Standard ~45s split: Hook 165 · Positioning 120 · Product reveal
 150 · Features 450 (across 2–4) · Proof 300 · CTA 171.
 
 ## Step 4 — assemble (raw `<TransitionSeries>`)
 
 Standard variant skeleton. Swap the slot components and content for the gathered contract. Install each
-picked component first (`shadcn add @remocn/<name>`); deps auto-install.
+picked component first (`shadcn add @remocn/<name>`); deps auto-install. The composition runs at 60 fps,
+so every count handed to Remotion below is the split above doubled (Hook 165 → `durationInFrames={330}`,
+the 18-frame fades → `springTiming({ durationInFrames: 36 })`); component props keep their 30 fps counts.
 
 ```tsx
 import { AbsoluteFill } from "remotion";
@@ -69,32 +71,32 @@ const ACCENT = "#F2D200";
 export const ProductDemo = () => (
   <AbsoluteFill style={{ background: "#FAF8EC" }}>
     <TransitionSeries>
-      <TransitionSeries.Sequence durationInFrames={165}>
+      <TransitionSeries.Sequence durationInFrames={330}>
         <KineticCenterBuild text="Your team has tasks everywhere" accent={ACCENT} />
       </TransitionSeries.Sequence>
-      <TransitionSeries.Transition presentation={fade()} timing={springTiming({ durationInFrames: 18 })} />
+      <TransitionSeries.Transition presentation={fade()} timing={springTiming({ durationInFrames: 36 })} />
 
-      <TransitionSeries.Sequence durationInFrames={120}>
+      <TransitionSeries.Sequence durationInFrames={240}>
         <PerCharacterRise text="AI-Powered Work Operating System" />
       </TransitionSeries.Sequence>
-      <TransitionSeries.Transition presentation={fade()} timing={springTiming({ durationInFrames: 18 })} />
-
-      <TransitionSeries.Sequence durationInFrames={150}>
-        <KineticCenterBuild text="Flowith" accent={ACCENT} />
-      </TransitionSeries.Sequence>
-      <TransitionSeries.Transition presentation={fade()} timing={springTiming({ durationInFrames: 18 })} />
-
-      <TransitionSeries.Sequence durationInFrames={450}>
-        <CheckList items={["AI Workflow Setup", "Product Metrics Audit", "Content Calendar Prep"]} width={900} tickColor={ACCENT} />
-      </TransitionSeries.Sequence>
-      <TransitionSeries.Transition presentation={fade()} timing={springTiming({ durationInFrames: 18 })} />
+      <TransitionSeries.Transition presentation={fade()} timing={springTiming({ durationInFrames: 36 })} />
 
       <TransitionSeries.Sequence durationInFrames={300}>
+        <KineticCenterBuild text="Flowith" accent={ACCENT} />
+      </TransitionSeries.Sequence>
+      <TransitionSeries.Transition presentation={fade()} timing={springTiming({ durationInFrames: 36 })} />
+
+      <TransitionSeries.Sequence durationInFrames={900}>
+        <CheckList items={["AI Workflow Setup", "Product Metrics Audit", "Content Calendar Prep"]} width={900} tickColor={ACCENT} />
+      </TransitionSeries.Sequence>
+      <TransitionSeries.Transition presentation={fade()} timing={springTiming({ durationInFrames: 36 })} />
+
+      <TransitionSeries.Sequence durationInFrames={600}>
         <RollingNumber from={0} to={12000} />
       </TransitionSeries.Sequence>
-      <TransitionSeries.Transition presentation={fade()} timing={springTiming({ durationInFrames: 18 })} />
+      <TransitionSeries.Transition presentation={fade()} timing={springTiming({ durationInFrames: 36 })} />
 
-      <TransitionSeries.Sequence durationInFrames={171}>
+      <TransitionSeries.Sequence durationInFrames={342}>
         <KineticCenterBuild text="Flowith" accent={ACCENT} />
       </TransitionSeries.Sequence>
     </TransitionSeries>

@@ -1,7 +1,8 @@
 "use client";
 
 import { useId, useLayoutEffect, useMemo, useState } from "react";
-import { Easing, useCurrentFrame, useVideoConfig } from "remotion";
+import { Easing } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export interface KineticMorphTextProps {
@@ -372,8 +373,8 @@ export function KineticMorphText({
   className,
 }: KineticMorphTextProps) {
   const glide = useGlide();
-  const currentFrame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const currentFrame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const rate = (30 / fps) * Math.max(0, finite(speed, 1));
   const frame = currentFrame * rate;
   const size = Math.min(height * 0.28, Math.max(1, finite(fontSize, 100)));

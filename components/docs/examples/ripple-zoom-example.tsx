@@ -2,6 +2,7 @@
 
 import { linearTiming, TransitionSeries } from "@remotion/transitions";
 import { AbsoluteFill } from "remotion";
+import { useCompositionFrames } from "@/lib/remocn/frame-rate";
 import { rippleZoom } from "@/registry/remocn/ripple-zoom";
 
 const FONT_FAMILY =
@@ -45,13 +46,14 @@ export function RippleZoomExampleScene({
   colorBack,
   speed,
 }: RippleZoomExampleProps) {
+  const toFrames = useCompositionFrames();
   return (
     <TransitionSeries>
-      <TransitionSeries.Sequence durationInFrames={102}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(102)}>
         <Scene label="Scene A" />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
-        timing={linearTiming({ durationInFrames: 88 })}
+        timing={linearTiming({ durationInFrames: toFrames(88) })}
         presentation={rippleZoom({
           zoom,
           intensity,
@@ -60,7 +62,7 @@ export function RippleZoomExampleScene({
           speed,
         })}
       />
-      <TransitionSeries.Sequence durationInFrames={102}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(102)}>
         <Scene label="Ripple Zoom" />
       </TransitionSeries.Sequence>
     </TransitionSeries>
@@ -80,14 +82,14 @@ import { rippleZoom } from "@/components/remocn/ripple-zoom";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={102}>
+    <TransitionSeries.Sequence durationInFrames={204}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 88 })}
+      timing={linearTiming({ durationInFrames: 176 })}
       presentation={rippleZoom({ zoom: ${zoom}, intensity: ${intensity}, softness: ${softness}, colorBack: "${colorBack}", speed: ${speed} })}
     />
-    <TransitionSeries.Sequence durationInFrames={102}>
+    <TransitionSeries.Sequence durationInFrames={204}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

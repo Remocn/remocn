@@ -2,17 +2,14 @@
 
 import { loadFont as loadSans } from "@remotion/google-fonts/Manrope";
 import { memo, useMemo, useState } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  Sequence,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate, Sequence } from "remotion";
 import { BlurOutUp } from "@/components/remocn/blur-out-up";
 import { SoftBlurIn } from "@/components/remocn/soft-blur-in";
+import {
+  useCompositionFrames,
+  useSceneConfig,
+  useSceneFrame,
+} from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export interface Sponsor {
@@ -394,8 +391,10 @@ export function GitHubSponsors({
   theme = "light",
 }: GitHubSponsorsProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
-  const { width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height } = useSceneConfig();
+  // A `<Sequence>` starts on one of the composition's own frames.
+  const toFrames = useCompositionFrames();
   const t = THEMES[theme] ?? THEMES.light;
   const stageScale = Math.min(width / REF_W, height / REF_H);
 
@@ -493,7 +492,7 @@ export function GitHubSponsors({
             height: 84,
           }}
         >
-          <Sequence from={Math.round(THANK_START / speed)} layout="none">
+          <Sequence from={toFrames(THANK_START / speed)} layout="none">
             <SoftBlurIn
               text="Thank you"
               fontSize={54}
@@ -513,7 +512,7 @@ export function GitHubSponsors({
             height: 36,
           }}
         >
-          <Sequence from={Math.round(SUB_START / speed)} layout="none">
+          <Sequence from={toFrames(SUB_START / speed)} layout="none">
             <BlurOutUp
               text={`Powered by ${count} sponsors`}
               fontSize={24}

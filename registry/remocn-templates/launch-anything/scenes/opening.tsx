@@ -1,5 +1,6 @@
 import { Img, Sequence, useVideoConfig } from "remotion";
 import { ShaderTextReveal } from "@/components/remocn/shader-text-reveal";
+import { SCENE_FPS } from "@/lib/remocn/frame-rate";
 import type { SceneProps } from "../content";
 import { tween } from "../motion";
 import { Center, Title } from "../ui";
@@ -26,7 +27,7 @@ export function Opening({ scene, t }: SceneProps) {
             fontFamily="Manrope"
             fontWeight={500}
             fontSize={430}
-            wordDuration={fps * 1.4}
+            wordDuration={SCENE_FPS * 1.4}
           />
         </div>
       </Sequence>
@@ -48,7 +49,7 @@ export function Opening({ scene, t }: SceneProps) {
             fontFamily="Manrope"
             fontWeight={500}
             fontSize={300}
-            wordDuration={fps * 1.4}
+            wordDuration={SCENE_FPS * 1.4}
           />
         </div>
       </Sequence>

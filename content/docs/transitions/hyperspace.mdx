@@ -44,14 +44,14 @@ import { hyperspace } from "@/components/remocn/hyperspace";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={90}>
+    <TransitionSeries.Sequence durationInFrames={180}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 56 })}
+      timing={linearTiming({ durationInFrames: 112 })}
       presentation={hyperspace()}
     />
-    <TransitionSeries.Sequence durationInFrames={90}>
+    <TransitionSeries.Sequence durationInFrames={180}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

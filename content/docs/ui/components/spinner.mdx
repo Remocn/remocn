@@ -57,7 +57,7 @@ export const Scene = () => (
 rotation (deg) = frame × speed × 6
 ```
 
-At 30 fps with `speed=1`, one full rotation takes 20 frames (2 frames per 12°). Increase `speed` to spin faster without changing the composition fps.
+Here `frame` counts at 30 fps whatever the composition's rate, so with `speed=1` one full rotation takes 20 of those frames (2 frames per 12°): two thirds of a second at any frame rate. Increase `speed` to spin faster; changing the composition fps does not change the spin.
 
 <PropsTable title="Props"
   rows={[

@@ -1,12 +1,7 @@
 "use client";
 
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type StringArtProps = {
   /** Pins around the ring. */
@@ -71,8 +66,8 @@ export function StringArt({
   color = stringArtDefaults.color,
   accent = stringArtDefaults.accent,
 }: StringArtProps) {
-  const frame = useCurrentFrame();
-  const { width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height } = useSceneConfig();
   const n = Math.max(8, Math.round(pins));
   const unit = Math.min(width, height) / 720;
   const radius = Math.min(width, height) * 0.42;

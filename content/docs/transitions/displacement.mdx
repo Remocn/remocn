@@ -42,14 +42,14 @@ import { displacement } from "@/components/remocn/displacement";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={45}>
+    <TransitionSeries.Sequence durationInFrames={90}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 18 })}
+      timing={linearTiming({ durationInFrames: 36 })}
       presentation={displacement()}
     />
-    <TransitionSeries.Sequence durationInFrames={45}>
+    <TransitionSeries.Sequence durationInFrames={90}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

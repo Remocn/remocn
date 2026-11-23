@@ -11,9 +11,8 @@ import {
   interpolate,
   random,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -230,9 +229,9 @@ export function MacroTabName({
   speed = 1,
 }: MacroTabNameProps) {
   const glide = useGlide();
-  const raw = useCurrentFrame();
+  const raw = useSceneFrame();
   const frame = Math.max(0, raw - delay) * speed;
-  const { width, height, fps } = useVideoConfig();
+  const { width, height, fps } = useSceneConfig();
   const m = useMetrics(fontFamily);
   const dark = theme === "dark";
   const portrait = height > width * 1.2;

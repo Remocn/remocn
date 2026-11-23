@@ -67,7 +67,8 @@ Remotion frame and the seed, so seeking and rendering are deterministic.
 Start the burst on the event frame: put it in a `Sequence` that begins there
 and center it on the element it punctuates. Set `innerRadius` just outside the
 element so the strokes are born at its edge. Here a badge springs in and
-reaches full size around frame 6, and the burst fires on that frame.
+reaches full size around frame 6 at 30 fps, frame 12 of this 60 fps
+composition, and the burst fires on that frame.
 `trimBurstLength` covers the whole burst at the default `jitter` and `speed`,
 so it is a safe `Sequence` duration.
 
@@ -76,7 +77,7 @@ import { Sequence, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { Backdrop } from "@/components/remocn/backdrop";
 import { TrimBurst, trimBurstLength } from "@/components/remocn/trim-burst";
 
-const LAND = 6;
+const LAND = 6; // 30 fps frames, doubled for the 60 fps Sequence
 
 const Badge = () => {
   const frame = useCurrentFrame();
@@ -108,7 +109,7 @@ export const BadgeLanding = () => (
     shadow=""
   >
     <Badge />
-    <Sequence from={LAND} durationInFrames={trimBurstLength}>
+    <Sequence from={LAND * 2} durationInFrames={trimBurstLength * 2}>
       <TrimBurst x={0.7} y={0.4} innerRadius={48} reach={40} />
     </Sequence>
   </Backdrop>
@@ -121,7 +122,7 @@ and `y`, so the burst stays centered on the badge at any composition size.
 
 ## Timing
 
-At 30 fps, `speed={1}` and the defaults:
+In 30 fps frames, at `speed={1}` and the defaults:
 
 | Frames | Motion |
 | --- | --- |
@@ -147,7 +148,7 @@ length, then its start zips it shut.
 `trimBurstLength` is 18: the 15-frame stroke plus a launch spread of
 `6 × jitter` frames. `getTrimBurstTimeline({ jitter, count })` returns those
 parts. `getTrimBurstDuration({ speed, jitter, count, delay })` returns the
-preview length, which adds a 24-frame empty hold. `delay` counts composition
+preview length, which adds a 24-frame empty hold. `delay` counts 30 fps
 frames before the burst fires. `speed` scales the motion, so at `speed={2}`
 the burst lasts 9 frames. For another frame rate, multiply by `fps / 30`.
 

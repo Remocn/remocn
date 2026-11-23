@@ -6,14 +6,8 @@ import type {
 } from "@remotion/transitions";
 import type React from "react";
 import { useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  random,
-  spring,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, random, spring } from "remotion";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export type PaperTearProps = {
@@ -146,7 +140,7 @@ const PaperTearPresentation: React.FC<
   presentationDirection,
   passedProps,
 }) => {
-  const { width, height, fps } = useVideoConfig();
+  const { width, height, fps } = useSceneConfig();
   const glide = useGlide();
   const { seed, edgeColor, roughness, shadowColor, impact } = {
     ...paperTearDefaults,

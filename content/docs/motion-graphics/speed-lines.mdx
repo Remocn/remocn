@@ -126,10 +126,10 @@ export const RevenueBeat = () => (
     radius={0}
     shadow=""
   >
-    <Sequence from={LAND - FOCUS}>
+    <Sequence from={(LAND - FOCUS) * 2}>
       <SpeedLines mode="focus" x={0.5} y={0.5} spread={160} />
     </Sequence>
-    <Sequence from={ENTER}>
+    <Sequence from={ENTER * 2}>
       <SpeedLines
         from={{ x: -0.3, y: 0.5 }}
         to={{ x: 0.5, y: 0.5 }}
@@ -155,12 +155,12 @@ export const RevenueBeat = () => (
 );
 ```
 
-For a smaller landing, put `trim-burst` on the same point at `LAND` instead of
+For a smaller landing, put `trim-burst` on the same point at `LAND * 2` instead of
 the focus.
 
 ## Timing
 
-At 30 fps and `speed={1}`, trail mode with the default `duration={14}`,
+In 30 fps frames, at `speed={1}`, trail mode with the default `duration={14}`,
 `bounce={0.5}`, `squash={0.5}` and a 960 px flight:
 
 | Frames | Motion |
@@ -196,7 +196,7 @@ Focus mode:
 - `getSpeedLinesDuration({ mode, duration, bounce, delay, speed })` returns the
   preview length, which adds a 24-frame hold: 55 frames for trail and 37 for
   focus.
-- `delay` counts composition frames before the motion and is not scaled by
+- `delay` counts 30 fps frames before the motion and is not scaled by
   `speed`. At another speed or frame rate, divide the motion frames by `speed`
   and multiply by `fps / 30`. A higher `speed` also draws longer streaks,
   because the element really moves faster.

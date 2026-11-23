@@ -4,14 +4,8 @@ import { loadFont as loadDisplay } from "@remotion/google-fonts/Geist";
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import type React from "react";
 import { type ReactNode, useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadDisplay("normal", {
@@ -163,7 +157,7 @@ export function BracketFocus({
   speed = 1,
 }: BracketFocusProps) {
   const glide = useGlide();
-  const now = useCurrentFrame();
+  const now = useSceneFrame();
   const tAt = (n: number) => Math.max(0, n - delay) * speed;
   const t = tAt(now);
   /** Whether a value in px, as a function of time, moves on this frame. */
@@ -174,7 +168,7 @@ export function BracketFocus({
       Math.abs(here - v(tAt(now - 1))) > 1e-3
     );
   };
-  const { width: W, height: H, fps } = useVideoConfig();
+  const { width: W, height: H, fps } = useSceneConfig();
   const u = Math.min(W / 1280, H / 720);
   const p = THEMES[theme];
   const stage = background ?? p.bg;

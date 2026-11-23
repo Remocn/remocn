@@ -1,12 +1,8 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState } from "react";
-import {
-  Easing,
-  useCurrentFrame,
-  useDelayRender,
-  useVideoConfig,
-} from "remotion";
+import { Easing, useDelayRender } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export interface InlineWordRollProps {
@@ -97,8 +93,8 @@ export function InlineWordRoll({
   transitionFrames = 6,
 }: InlineWordRollProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
-  const { width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height } = useSceneConfig();
   const { delayRender, continueRender, cancelRender } = useDelayRender();
   const words = parseInlineWords(text);
   const measurement = useRef<HTMLDivElement>(null);

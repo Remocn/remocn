@@ -1,6 +1,7 @@
 "use client";
 
-import { AbsoluteFill, interpolate, Series, useCurrentFrame } from "remotion";
+import { AbsoluteFill, interpolate, Series } from "remotion";
+import { useCompositionFrames, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { LivePlayer } from "../../ui/catalog-card";
 import { Clip, nativeDuration } from "../hero/tiles/clips";
 import type { ClipSpec } from "../hero/tiles/config";
@@ -22,7 +23,7 @@ function Beat({
   length: number;
   box: { width: number; height: number };
 }) {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const opacity = interpolate(frame, [length - FADE, length], [1, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
@@ -52,6 +53,7 @@ function RemixScene({
   width: number;
   height: number;
 }) {
+  const toFrames = useCompositionFrames();
   return (
     <Series>
       {specs.map((spec, index) => {
@@ -59,7 +61,7 @@ function RemixScene({
         return (
           <Series.Sequence
             key={`${spec.name}-${index}`}
-            durationInFrames={length}
+            durationInFrames={toFrames(length)}
           >
             <Beat spec={spec} length={length} box={{ width, height }} />
           </Series.Sequence>

@@ -2,14 +2,8 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import { createContext, useContext } from "react";
-import {
-  AbsoluteFill,
-  interpolate,
-  interpolateColors,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, interpolate, interpolateColors, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import { CLAMP, FADE, stagger } from "@/lib/remocn/scene-motion";
 
@@ -151,7 +145,7 @@ export function SpringSettleEnter({
   config,
   children,
 }: SpringSettleEnterProps) {
-  const { fps } = useVideoConfig();
+  const { fps } = useSceneConfig();
   return (
     <SceneCtx.Provider value={{ local, cfg: resolveConfig(config), fps }}>
       {children}
@@ -240,7 +234,7 @@ export function SpringSettleScenes({
   style,
 }: SpringSettleScenesProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const cfg = resolveConfig(config);
 
   const lens = scenes.map((s) => dwellOf(s, cfg) + cfg.gapFrames);

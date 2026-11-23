@@ -1,11 +1,7 @@
 "use client";
 
-import {
-  interpolate,
-  interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { interpolate, interpolateColors } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface InlineHighlightProps {
   before: string;
@@ -30,8 +26,8 @@ export function InlineHighlight({
   speed = 1,
   className,
 }: InlineHighlightProps) {
-  const frame = useCurrentFrame() * speed;
-  const { durationInFrames } = useVideoConfig();
+  const frame = useSceneFrame() * speed;
+  const { durationInFrames } = useSceneConfig();
 
   const progress = interpolate(
     frame,

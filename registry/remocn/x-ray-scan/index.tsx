@@ -1,13 +1,8 @@
 "use client";
 
 import { type ReactNode, useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type XRayScanColors = {
   background: string;
@@ -270,8 +265,8 @@ export function XRayScan({
   direction = xRayScanDefaults.direction,
   speed = xRayScanDefaults.speed,
 }: XRayScanProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width: W, height: H, fps } = useSceneConfig();
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const merged = { ...xRayScanDefaults.colors, ...colors };
   const c: XRayScanColors = {

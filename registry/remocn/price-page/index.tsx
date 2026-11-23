@@ -9,9 +9,8 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const albert = loadFont("normal", {
@@ -143,11 +142,11 @@ export function PricePage({
   speed = 1,
   theme = "dark",
 }: PricePageProps) {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const glide = useGlide();
   const tAt = (df: number) => Math.max(0, frame + df - delay) * speed;
   const t = tAt(0);
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const T = durationInFrames * speed;
   const c = THEMES[theme];
   const hi = accent ?? c.accent;

@@ -115,7 +115,7 @@ The `query` prop holds the full search string. The `revealCount` prop controls h
 Use `revealCount` from `@/lib/remocn-ui` to compute the reveal from the timeline frame:
 
 ```tsx
-import { useCurrentFrame } from "remotion";
+import { useCurrentFrame, useVideoConfig } from "remotion";
 import { revealCount } from "@/lib/remocn-ui";
 import { CommandMenu } from "@/components/remocn/command-menu";
 import { useCommandMenuTransition } from "@/components/remocn/use-command-menu-transition";
@@ -124,16 +124,18 @@ const QUERY = "settings";
 
 export const Scene = () => {
   const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
 
+  // Step frames (`at`, `duration`) count at 30 fps at any composition rate.
   const panelStyle = useCommandMenuTransition([
     { at: 16, state: "opened", duration: 16 },
     { at: 108, state: "closed", duration: 12 },
   ]);
 
-  // 8 chars at 4 chars/sec @ 30 fps = 60 frames total typing window.
+  // 8 chars at 4 chars/sec = 2 s typing window (120 frames at 60 fps).
   const revealed = revealCount(
-    Math.max(0, frame - 20), // typing starts at frame 20
-    30,                       // fps
+    Math.max(0, frame - 40), // typing starts at frame 40 of a 60 fps composition
+    fps,                      // composition fps
     QUERY.length,             // total characters
     4,                        // chars per second
   );

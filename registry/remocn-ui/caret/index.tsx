@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { useCurrentFrame, useVideoConfig } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface CaretProps {
   color?: string;
@@ -40,8 +40,8 @@ export function Caret({
   className,
   style,
 }: CaretProps) {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps } = useSceneConfig();
 
   const resolvedOpacity =
     opacity !== undefined

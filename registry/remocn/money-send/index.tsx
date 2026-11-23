@@ -9,9 +9,8 @@ import {
   interpolate,
   interpolateColors,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -486,9 +485,9 @@ export function MoneySend({
   groundParams,
 }: MoneySendProps) {
   const glide = useGlide();
-  const rawFrame = useCurrentFrame();
+  const rawFrame = useSceneFrame();
   const frame = Math.max(0, rawFrame - delay);
-  const { fps, width, height } = useVideoConfig();
+  const { fps, width, height } = useSceneConfig();
   const f = frame * speed;
   const dark = theme !== "light";
   const c: Palette = dark ? DARK : LIGHT_PAL;

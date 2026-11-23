@@ -2,13 +2,14 @@
 
 import type { TikTokPage } from "@remotion/captions";
 import { Fragment, useMemo } from "react";
-import { Easing, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { Easing, interpolate } from "remotion";
 import {
   buildCaptionPages,
   type CaptionBaseProps,
   DEFAULT_HOLD_MS,
   useCaptionWordRects,
 } from "@/lib/remocn/caption-core";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export interface CaptionTeleprompterProps extends CaptionBaseProps {
@@ -80,8 +81,8 @@ export function CaptionTeleprompter({
   className,
 }: CaptionTeleprompterProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps } = useSceneConfig();
   const timeMs = (frame / fps) * 1000;
   const lines = useMemo(
     () =>

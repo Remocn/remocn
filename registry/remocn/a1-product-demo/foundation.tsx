@@ -7,15 +7,9 @@ import {
   type TransitionPresentationComponentProps,
 } from "@remotion/transitions";
 import type { FC, ReactNode } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { MaskRevealUp } from "@/components/remocn/mask-reveal-up";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export interface TemplateMeta {
@@ -151,13 +145,20 @@ export function Camera({
   );
 }
 
-export function resolveTiming(timing: SceneTiming) {
+/**
+ * `toFrames` (from `useCompositionFrames()`) turns the planned length, written
+ * on the 30 fps timeline, into the composition's own frames.
+ */
+export function resolveTiming(
+  timing: SceneTiming,
+  toFrames: (sceneFrames: number) => number,
+) {
   return timing.kind === "spring"
     ? springTiming({
-        durationInFrames: timing.durationInFrames,
+        durationInFrames: toFrames(timing.durationInFrames),
         config: { damping: 200 },
       })
-    : linearTiming({ durationInFrames: timing.durationInFrames });
+    : linearTiming({ durationInFrames: toFrames(timing.durationInFrames) });
 }
 
 type CameraCraneUpProps = Record<string, never>;
@@ -302,8 +303,8 @@ function CtaDomain({
   accent: string;
   speed: number;
 }) {
-  const frame = useCurrentFrame() * speed;
-  const { fps } = useVideoConfig();
+  const frame = useSceneFrame() * speed;
+  const { fps } = useSceneConfig();
 
   const settle = spring({
     frame: frame - 28,

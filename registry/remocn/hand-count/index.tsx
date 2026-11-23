@@ -1,7 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Caveat";
-import { useCurrentFrame } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import {
   DEFAULT_STEP,
   hashRange,
@@ -129,7 +129,7 @@ export function HandCount({
   seed = "count",
   step = DEFAULT_STEP,
 }: HandCountProps) {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const value = handCountValue({
     frame,
     to,

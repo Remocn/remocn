@@ -1,6 +1,6 @@
 "use client";
 
-import { useCurrentFrame } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface InfiniteMarqueeProps {
   text?: string;
@@ -25,7 +25,7 @@ export function InfiniteMarquee({
   speed = 1,
   className,
 }: InfiniteMarqueeProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = useSceneFrame() * speed;
 
   const approxWidth = text.length * fontSize * 0.55;
   const offset = -((frame * pixelsPerFrame) % approxWidth);

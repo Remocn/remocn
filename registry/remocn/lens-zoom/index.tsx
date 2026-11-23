@@ -6,7 +6,8 @@ import type {
 } from "@remotion/transitions";
 import type { ReactNode } from "react";
 import { useId } from "react";
-import { Easing, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export const LENS_ZOOM_DURATION_IN_FRAMES = 28;
 
@@ -261,8 +262,8 @@ function LensZoomStage({
   letterboxAspect,
   ...half
 }: LensZoomStageProps) {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps } = useSceneConfig();
   const filterId = useId();
   const { width, height, centerX, centerY } = half;
 
@@ -396,7 +397,7 @@ const LensZoomPresentation: React.FC<
   presentationProgress,
   passedProps,
 }) => {
-  const config = useVideoConfig();
+  const config = useSceneConfig();
   const {
     inScaleFrom = 100,
     inScaleTo = 150,

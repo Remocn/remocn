@@ -1,6 +1,4 @@
 "use client";
-
-import { useCurrentFrame } from "remotion";
 import {
   BrushGrain,
   type BrushPoint,
@@ -8,6 +6,7 @@ import {
   brushReach,
   brushRibbon,
 } from "@/components/remocn/brush";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { DEFAULT_STEP, hashRange, steppedRamp } from "@/lib/remocn/stop-motion";
 
 const SAMPLES_PER_LAP = 48;
@@ -127,7 +126,7 @@ export function ScribbleCircle({
   seed = "scribble",
   step = DEFAULT_STEP,
 }: ScribbleCircleProps) {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const progress = scribbleCircleProgress(frame, {
     delay,
     durationSteps,

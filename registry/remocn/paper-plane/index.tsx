@@ -4,13 +4,8 @@ import { loadFont as loadFraunces } from "@remotion/google-fonts/Fraunces";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 // Manrope: small labels (500) and the remocn.dev logo (600, the brand asset).
@@ -639,11 +634,11 @@ export function PaperPlane({
   theme = "light",
 }: PaperPlaneProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const tAt = (f: number) => Math.max(0, f - delay) * speed;
   const t = tAt(frame);
   const transparent = background === "transparent";
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   const u = height / 720;
   const pal = THEMES[theme];
   const W = width;

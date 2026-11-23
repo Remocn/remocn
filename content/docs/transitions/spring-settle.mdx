@@ -62,7 +62,7 @@ export const MyVideo = () => (
 );
 ```
 
-The composition length is the sum of every scene's `durationInFrames` **plus** `gapFrames` per scene — the gap is part of each slot, not a boundary between them.
+The composition length is the sum of every scene's `durationInFrames` **plus** `gapFrames` per scene — the gap is part of each slot, not a boundary between them. All of it is counted in 30 fps frames, so double the total for a 60 fps composition.
 
 ## The group exit matters
 

@@ -1,11 +1,10 @@
 import type { CSSProperties } from "react";
-import { useVideoConfig } from "remotion";
 import { TypedSplitWipe } from "@/components/remocn/typed-split-wipe";
+import { SCENE_FPS } from "@/lib/remocn/frame-rate";
 import type { SceneProps } from "../content";
 import { Command } from "../ui";
 
 export function Intro({ scene, t }: SceneProps) {
-  const { fps } = useVideoConfig();
   return (
     <>
       <div
@@ -35,7 +34,9 @@ export function Intro({ scene, t }: SceneProps) {
               ),
           )}
           color="#e6f1f8"
-          speed={60 / fps}
+          // The counts above are 60 fps frames; the wipe counts on a 30 fps
+          // timeline at any composition rate.
+          speed={60 / SCENE_FPS}
         />
       </div>
       {t >= 1.85 ? (

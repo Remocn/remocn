@@ -1,6 +1,7 @@
 "use client";
 
-import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface WordStreamProps {
   text: string;
@@ -70,7 +71,7 @@ export function WordStream({
   speed = 1,
   className,
 }: WordStreamProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = useSceneFrame() * speed;
 
   const schedule = schedulePhrases(text, wordGap, hold);
 

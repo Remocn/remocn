@@ -37,14 +37,14 @@ import { swirlDissolve } from "@/components/remocn/swirl-dissolve";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={110}>
+    <TransitionSeries.Sequence durationInFrames={220}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 104 })}
+      timing={linearTiming({ durationInFrames: 208 })}
       presentation={swirlDissolve()}
     />
-    <TransitionSeries.Sequence durationInFrames={110}>
+    <TransitionSeries.Sequence durationInFrames={220}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

@@ -3,8 +3,8 @@
 import { Player, type PlayerRef } from "@remotion/player";
 import { useEffect, useRef } from "react";
 import registry from "@/lib/previews";
+import { sitePreview } from "@/lib/previews/site-preview";
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
-import { previewManifest } from "@/registry/__manifest__";
 import { FILTER_PHOTO_LOADERS } from "./filter-photo-scenes";
 import { useInView } from "./use-in-view";
 
@@ -30,7 +30,7 @@ export function TilePreview({
   const playerRef = useRef<PlayerRef>(null);
   const inView = useInView(boxRef);
   const reduced = usePrefersReducedMotion();
-  const preview = previewManifest[slug];
+  const preview = sitePreview(slug);
   const load =
     (kind === "filter" ? FILTER_PHOTO_LOADERS[slug] : undefined) ??
     registry[slug]?.load;

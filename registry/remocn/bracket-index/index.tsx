@@ -11,9 +11,8 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const manrope = loadManrope("normal", {
@@ -195,7 +194,7 @@ export function BracketIndex({
   speed = 1,
 }: BracketIndexProps) {
   const glide = useGlide();
-  const now = useCurrentFrame();
+  const now = useSceneFrame();
   const fAt = (n: number) => Math.max(0, n - delay) * speed;
   const frame = fAt(now);
   /** Whether a value in px, as a function of time, moves on this frame. */
@@ -206,7 +205,7 @@ export function BracketIndex({
       Math.abs(here - v(fAt(now - 1))) > 1e-3
     );
   };
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   const t = THEMES[theme];
   const fg = ink ?? t.fg;
   const stage = background ?? t.bg;

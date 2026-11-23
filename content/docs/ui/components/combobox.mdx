@@ -115,26 +115,28 @@ The `query` prop holds the full search string. The `revealCount` prop controls h
 Use `revealCount` from `@/lib/remocn-ui` to compute the reveal from the timeline frame:
 
 ```tsx
-import { useCurrentFrame } from "remotion";
+import { useCurrentFrame, useVideoConfig } from "remotion";
 import { revealCount } from "@/lib/remocn-ui";
 import { Combobox } from "@/components/remocn/combobox";
 import { useComboboxTransition } from "@/components/remocn/use-combobox-transition";
 
 const QUERY = "ba";
-const TYPE_START = 32;
+const TYPE_START = 64; // composition frame at 60 fps (~1.07 s)
 
 export const Scene = () => {
   const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
 
+  // Step frames (`at`, `duration`) count at 30 fps at any composition rate.
   const style = useComboboxTransition([
     { at: 16, state: "opened", duration: 12 },
     { at: 96, state: "closed", duration: 12 },
   ]);
 
-  // 2 chars at 4 chars/sec @ 30 fps = 15 frames total typing window.
+  // 2 chars at 4 chars/sec = 0.5 s typing window (30 frames at 60 fps).
   const revealed = revealCount(
-    Math.max(0, frame - TYPE_START), // typing starts at frame 32
-    30,                               // fps
+    Math.max(0, frame - TYPE_START), // typing starts at frame 64
+    fps,                              // composition fps
     QUERY.length,                     // total characters
     4,                                // chars per second
   );

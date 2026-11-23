@@ -4,13 +4,8 @@ import { loadFont as loadGeistMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadSora } from "@remotion/google-fonts/Sora";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const sora = loadSora("normal", {
@@ -269,9 +264,9 @@ export function CometHeadline({
   theme = "dark",
 }: CometHeadlineProps) {
   const glide = useGlide();
-  const raw = Math.max(0, useCurrentFrame() - delay);
+  const raw = Math.max(0, useSceneFrame() - delay);
   const frame = raw * speed;
-  const { width, height, durationInFrames } = useVideoConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
   const p = PALETTES[theme];
   const fg = ink ?? p.fg;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");

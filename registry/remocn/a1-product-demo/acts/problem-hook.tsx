@@ -1,13 +1,7 @@
 "use client";
 
-import {
-  AbsoluteFill,
-  interpolate,
-  interpolateColors,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, interpolate, interpolateColors, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import {
   FLOW_BG,
   FLOW_BORDER,
@@ -123,8 +117,8 @@ const SCATTER_CARDS = [
 ] as const;
 
 export function ProblemHook({ speed = 1 }: { speed?: number }) {
-  const f = useCurrentFrame() * speed;
-  const { fps } = useVideoConfig();
+  const f = useSceneFrame() * speed;
+  const { fps } = useSceneConfig();
   const glide = useGlide();
 
   const beat1Opacity = interpolate(f, [0, 4, 40, 55], [0, 1, 1, 0], clamp);

@@ -1,6 +1,4 @@
 "use client";
-
-import { useCurrentFrame } from "remotion";
 import {
   type SelectMenuState,
   type SelectMenuStyle,
@@ -8,6 +6,7 @@ import {
   selectMenuStyle,
   selectMenuStyleContext,
 } from "@/components/remocn/select-menu";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import {
   clamp01,
   easings,
@@ -117,7 +116,7 @@ export function useSelectMenuTransition(
     t,
   );
 
-  const frame = useCurrentFrame() * speed;
+  const frame = useSceneFrame() * speed;
   const click =
     clickAt === undefined
       ? { press: 0, selectProgress: 0 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { CrtScreen } from "@/registry/remocn/crt-screen";
 import { RemocnMark } from "../ui/remocn-mark";
 
@@ -14,7 +15,7 @@ export function CrtWordmark({
   text?: string;
   fontSize?: number;
 }) {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const clamp = {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",

@@ -1,6 +1,7 @@
 "use client";
 
-import { interpolate, useCurrentFrame } from "remotion";
+import { interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface VolumetricRaysProps {
   text?: string;
@@ -38,7 +39,7 @@ export function VolumetricRays({
   speed = 1,
   className,
 }: VolumetricRaysProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = useSceneFrame() * speed;
 
   // Slow source rotation: the rays drift around their origin so the scene
   // never looks frozen even though motion is sub-conscious.

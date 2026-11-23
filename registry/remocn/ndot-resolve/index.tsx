@@ -11,14 +11,8 @@ import {
   useRef,
   useState,
 } from "react";
-import {
-  AbsoluteFill,
-  continueRender,
-  delayRender,
-  Easing,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, continueRender, delayRender, Easing } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const geist = loadFont("normal", {
   weights: ["500"],
@@ -399,8 +393,8 @@ export function NdotResolve({
   speed = 1,
   theme = "dark",
 }: NdotResolveProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const pal = THEMES[theme];
   const fg = ink ?? pal.ink;

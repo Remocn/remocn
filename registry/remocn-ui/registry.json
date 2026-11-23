@@ -10,6 +10,7 @@
       "description": "Shared timeline-fold hook, theme context, and color math for remocn UI primitives.",
       "dependencies": ["remotion", "culori"],
       "devDependencies": ["@types/culori"],
+      "registryDependencies": ["@remocn/frame-rate"],
       "files": [
         {
           "path": "core/timeline.ts",
@@ -49,7 +50,7 @@
       "title": "UI Spinner",
       "description": "A deterministic spinning arc that loops on the Remotion frame — a pure motion atom with no state.",
       "dependencies": ["remotion"],
-      "registryDependencies": [],
+      "registryDependencies": ["@remocn/frame-rate"],
       "files": [
         {
           "path": "spinner/index.tsx",
@@ -64,7 +65,7 @@
       "title": "UI Caret",
       "description": "A blinking text caret — a controlled vertical bar, or a pure motion atom that blinks deterministically from useCurrentFrame.",
       "dependencies": ["remotion"],
-      "registryDependencies": [],
+      "registryDependencies": ["@remocn/frame-rate"],
       "files": [
         {
           "path": "caret/index.tsx",
@@ -358,7 +359,7 @@
       "title": "UI Select Menu",
       "description": "A vertical option list where exactly one row is highlighted; the highlight bar and left accent slide smoothly between rows. Fully controlled via selectedIndex/state or useSelectMenuTransition.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/remocn-ui"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/frame-rate"],
       "files": [
         {
           "path": "select-menu/index.tsx",
@@ -442,7 +443,7 @@
       "title": "UI Cursor",
       "description": "An animated cursor that moves between waypoints, clicks (ripple), and drags. The Cursor renderer is a pure function of a numeric CursorStyle channel; useCursorPath reads the frame and eases the path, ripple, and press phases.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/remocn-ui"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/frame-rate"],
       "files": [
         {
           "path": "cursor/index.tsx",
@@ -545,7 +546,7 @@
       "title": "UI Progress",
       "description": "A progress bar whose fill is a pure function of a numeric value channel (value-channel deviation). The Progress renderer takes a clamped 0–100 value; useProgressTransition reads the frame and eases the fill between value steps. Muted track + primary indicator, optional floored percentage label.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/remocn-ui"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/frame-rate"],
       "files": [
         {
           "path": "progress/index.tsx",
@@ -565,7 +566,7 @@
       "title": "UI Skeleton Block",
       "description": "A shimmer placeholder block — a motion atom (spinner pattern). A directional highlight gradient sweeps across deterministically from useCurrentFrame() and loops seamlessly. Configurable width/height/radius/speed and base/highlight colors.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/remocn-ui"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/frame-rate"],
       "files": [
         {
           "path": "skeleton-block/index.tsx",
@@ -600,7 +601,7 @@
       "title": "UI Slider",
       "description": "A slider whose fill is a numeric value channel plus a thumb idle/hover/press channel (dual-channel value-channel deviation). The Slider renderer is pure (clamped 0–100 value, thumb scale, grab-ring opacity); useSliderTransition reads the frame and eases both channels — value as a numeric lerp, the thumb visual from its state presets. Muted track + primary range + bordered thumb with a derived grab ring.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/remocn-ui"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/frame-rate"],
       "files": [
         {
           "path": "slider/index.tsx",
@@ -707,7 +708,7 @@
       "title": "UI Stepper",
       "description": "A horizontal onboarding stepper whose progress is a pure function of a continuous step index (value-channel deviation). Every circle (fill, number, stroke-dash check) and connector (primary fill fraction) derives purely from the float position; useStepperTransition reads the frame and eases position between step indices.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/remocn-ui"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/frame-rate"],
       "files": [
         {
           "path": "stepper/index.tsx",
@@ -727,7 +728,7 @@
       "title": "UI Resizable",
       "description": "Two panels split by a draggable handle, where the split ratio is a numeric channel plus a handle idle/hover/press channel (dual-channel value-channel deviation). The Resizable renderer is pure (clamped 0–1 ratio, handle scale, grab-ring opacity); useResizableTransition reads the frame and eases both channels — ratio as a numeric lerp, the handle visual from its state presets. Horizontal and vertical splits; 1px divider + centered grip pill with a derived grab ring.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/remocn-ui"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/frame-rate"],
       "files": [
         {
           "path": "resizable/index.tsx",
@@ -883,7 +884,7 @@
       "title": "UI Typing Indicator",
       "description": "A continuous typing animation: N dots bounce with a staggered sine wave. A motion atom — it reads the frame and takes color, size, gap, and speed props, defaulting to currentColor so it inherits the bubble it sits in.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/remocn-ui"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/frame-rate"],
       "files": [
         {
           "path": "typing-indicator/index.tsx",
@@ -902,7 +903,8 @@
         "@remocn/remocn-ui",
         "@remocn/caret",
         "@remocn/message-bubble",
-        "@remocn/typing-indicator"
+        "@remocn/typing-indicator",
+        "@remocn/frame-rate"
       ],
       "files": [
         {
@@ -918,7 +920,11 @@
       "title": "UI Telegram Chat Flow",
       "description": "A Telegram-styled messaging composition: tailed bubbles (white incoming, blue outgoing) with in-bubble timestamps and delivery checks, a header that flips to 'typing…' while the other side replies, reaction chips, and a Telegram composer that types the outgoing message before sending. Self-contained — it owns its timeline and only composes the caret primitive.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/remocn-ui", "@remocn/caret"],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/caret",
+        "@remocn/frame-rate"
+      ],
       "files": [
         {
           "path": "telegram-chat-flow/index.tsx",
@@ -936,7 +942,8 @@
       "registryDependencies": [
         "@remocn/remocn-ui",
         "@remocn/caret",
-        "@remocn/typing-indicator"
+        "@remocn/typing-indicator",
+        "@remocn/frame-rate"
       ],
       "files": [
         {

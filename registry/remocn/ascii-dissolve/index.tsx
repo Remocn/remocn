@@ -12,8 +12,8 @@ import {
   Easing,
   interpolate,
   random,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const clampOpts = {
@@ -197,7 +197,7 @@ const AsciiDissolvePresentation: React.FC<
     exitFade,
     enterFade,
   } = passedProps;
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   const glide = useGlide();
   const entering = presentationDirection === "entering";
   const p = presentationProgress;

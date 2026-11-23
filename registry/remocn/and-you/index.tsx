@@ -9,9 +9,8 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const gabarito = loadFont("normal", {
@@ -195,8 +194,8 @@ export function AndYou({
   theme = "dark",
 }: AndYouProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay);
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const t = frame * speed;
   const D = Math.max(110, durationInFrames);
   const c = THEMES[theme];

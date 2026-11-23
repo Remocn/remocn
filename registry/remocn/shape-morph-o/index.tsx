@@ -12,9 +12,8 @@ import {
   interpolate,
   interpolateColors,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const WEIGHT = 500;
 const display = loadFont("normal", { weights: ["500"], subsets: ["latin"] });
@@ -446,8 +445,8 @@ export function ShapeMorphO({
   theme = "dark",
   speed = 1,
 }: ShapeMorphOProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
   const stage =

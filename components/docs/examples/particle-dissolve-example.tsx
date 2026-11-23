@@ -5,6 +5,7 @@ import {
   CanvasSceneA,
   CanvasSceneB,
 } from "@/components/docs/examples/canvas-scenes";
+import { useCompositionFrames } from "@/lib/remocn/frame-rate";
 import {
   type ParticleDissolveDirection,
   particleDissolve,
@@ -27,13 +28,14 @@ export function ParticleDissolveExampleScene({
   direction,
   stagger,
 }: ParticleDissolveExampleProps) {
+  const toFrames = useCompositionFrames();
   return (
     <TransitionSeries>
-      <TransitionSeries.Sequence durationInFrames={60}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(60)}>
         <CanvasSceneA />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
-        timing={linearTiming({ durationInFrames: 36 })}
+        timing={linearTiming({ durationInFrames: toFrames(36) })}
         presentation={particleDissolve({
           particleSize,
           scatter,
@@ -43,7 +45,7 @@ export function ParticleDissolveExampleScene({
           stagger,
         })}
       />
-      <TransitionSeries.Sequence durationInFrames={60}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(60)}>
         <CanvasSceneB />
       </TransitionSeries.Sequence>
     </TransitionSeries>
@@ -64,14 +66,14 @@ import { particleDissolve } from "@/components/remocn/particle-dissolve";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={60}>
+    <TransitionSeries.Sequence durationInFrames={120}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 36 })}
+      timing={linearTiming({ durationInFrames: 72 })}
       presentation={particleDissolve({ particleSize: ${particleSize}, scatter: ${scatter}, shimmer: ${shimmer}, aberration: ${aberration}, direction: "${direction}", stagger: ${stagger} })}
     />
-    <TransitionSeries.Sequence durationInFrames={60}>
+    <TransitionSeries.Sequence durationInFrames={120}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

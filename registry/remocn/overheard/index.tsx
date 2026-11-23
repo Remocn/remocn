@@ -9,9 +9,8 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const serif = loadFont("normal", { weights: ["400"], subsets: ["latin"] });
@@ -259,7 +258,7 @@ export function Overheard({
   theme = "dark",
 }: OverheardProps) {
   const glide = useGlide();
-  const now = useCurrentFrame();
+  const now = useSceneFrame();
   const tAt = (f: number) => Math.max(0, f - delay) * speed;
   const t = tAt(now);
   /** Whether a lift, in px as a function of time, moves on this frame. */
@@ -270,7 +269,7 @@ export function Overheard({
       Math.abs(here - lift(tAt(now - 1))) > 1e-3
     );
   };
-  const { width: W, height: H, durationInFrames: T } = useVideoConfig();
+  const { width: W, height: H, durationInFrames: T } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;

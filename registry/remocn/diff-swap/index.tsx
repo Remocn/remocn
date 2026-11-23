@@ -10,9 +10,8 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const sans = loadInstrumentSans("normal", {
@@ -183,8 +182,8 @@ export function DiffSwap({
   theme = "dark",
 }: DiffSwapProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width, height, durationInFrames } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height, durationInFrames } = useSceneConfig();
   const t = THEMES[theme];
   const fg = ink ?? t.fg;
   const measure = useMeasure(fontFamily, fontWeight);

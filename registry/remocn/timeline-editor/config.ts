@@ -69,6 +69,8 @@ export const timelineEditorConfig: ComponentConfig = {
   },
   durationInFrames: 360,
   fps: FPS,
+  // Does not hold 60 fps in the browser yet (`audit:playback`: script).
+  previewFps: 30,
   compositionWidth: W,
   compositionHeight: H,
 };

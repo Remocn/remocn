@@ -1,11 +1,12 @@
 "use client";
 
 import type React from "react";
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, interpolate } from "remotion";
 import {
   CanvasSceneA,
   CanvasSceneB,
 } from "@/components/docs/examples/canvas-scenes";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { SecurityCam } from "@/registry/remocn/security-cam";
 
 const MONO =
@@ -20,7 +21,7 @@ const OSD: React.CSSProperties = {
 };
 
 function CameraOsd() {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const seconds = 14 + Math.floor(frame / 30);
   const stamp = `2026-08-02 09:41:${String(seconds).padStart(2, "0")}`;
   const recording = frame % 30 < 20;
@@ -55,7 +56,7 @@ function CameraOsd() {
 }
 
 export function SecurityColdOpenExampleScene() {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const intensity = interpolate(frame, [0, 40, 44, 84, 90], [1, 1, 0, 0, 1], {
     extrapolateRight: "clamp",
   });
@@ -79,7 +80,7 @@ export function SecurityFeedExampleScene() {
 }
 
 export function SecurityBitrateExampleScene() {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const starve = interpolate(frame, [0, 36, 62, 96], [0.15, 1, 1, 0.15]);
   const block = interpolate(frame, [0, 36, 62, 96], [6, 26, 26, 6]);
 

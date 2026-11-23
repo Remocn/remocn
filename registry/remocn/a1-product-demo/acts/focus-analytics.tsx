@@ -1,12 +1,7 @@
 "use client";
 
-import {
-  AbsoluteFill,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import {
   FLOW_BG,
   FLOW_BORDER,
@@ -26,8 +21,8 @@ const BAR_HEIGHTS = [
 const YELLOW_BARS = new Set([17, 18]);
 
 export function FocusAnalytics({ speed = 1 }: { speed?: number }) {
-  const f = useCurrentFrame() * speed;
-  const { fps } = useVideoConfig();
+  const f = useSceneFrame() * speed;
+  const { fps } = useSceneConfig();
   const glide = useGlide();
   const springAt =
     (start: number, damping: number, stiffness: number) => (g: number) =>

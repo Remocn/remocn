@@ -4,6 +4,7 @@ import { Tabs as TabsPrimitive } from "@base-ui/react/tabs";
 import type { PlayerRef } from "@remotion/player";
 import { type ReactNode, useCallback, useRef, useState } from "react";
 import { CodeBlock } from "@/components/docs/code-block";
+import { atPreviewRate } from "@/lib/previews/frame-rate";
 import { cn } from "@/lib/utils";
 import { PlayerBar } from "./player-bar";
 import { PlayerStage, type StageComposition } from "./player-stage";
@@ -19,7 +20,7 @@ const TAB =
  */
 export function DocsPlayer({
   name,
-  composition,
+  composition: own,
   code,
   actions,
   children,
@@ -33,6 +34,7 @@ export function DocsPlayer({
   children?: ReactNode;
   className?: string;
 }) {
+  const composition = atPreviewRate(own);
   const playerRef = useRef<PlayerRef | null>(null);
   const [mounted, setMounted] = useState(false);
   const mount = useCallback(() => setMounted(true), []);

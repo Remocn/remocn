@@ -1,7 +1,8 @@
 "use client";
 
-import { AbsoluteFill, useVideoConfig } from "remotion";
+import { AbsoluteFill } from "remotion";
 import { previewCaptions } from "@/components/docs/examples/caption-fixture";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 import { CaptionHighlightBox } from "@/registry/remocn/caption-highlight-box";
 
 interface CaptionHighlightBoxExampleProps {
@@ -31,7 +32,7 @@ export function CaptionHighlightBoxExampleScene({
   holdMs,
   shadow,
 }: CaptionHighlightBoxExampleProps) {
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   return (
     <AbsoluteFill
       style={{

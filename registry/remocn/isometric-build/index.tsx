@@ -1,14 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import {
-  AbsoluteFill,
-  interpolate,
-  random,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, interpolate, random, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type IsometricBuildProps = {
   /** Tiles per side. */
@@ -114,8 +108,8 @@ export function IsometricBuild({
   gap = isometricBuildDefaults.gap,
 }: IsometricBuildProps) {
   const inset = Math.min(0.45, Math.max(0, gap)) / 2;
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const n = Math.max(1, Math.round(grid));
   const blocks = useMemo(
     () => makeBlocks(n, maxHeight, seed, stagger),

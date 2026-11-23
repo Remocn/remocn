@@ -34,10 +34,10 @@ import { FadeThrough } from "@/components/remocn/fade-through";
 
 const FadeThroughScene = () => (
   <>
-    <Sequence durationInFrames={40}>
+    <Sequence durationInFrames={80}>
       <FadeThrough fromText="Calm transitions." toText="Fade through content." />
     </Sequence>
-    <Sequence from={40} durationInFrames={40}>
+    <Sequence from={80} durationInFrames={80}>
       <FadeThrough fromText="Fade through content." toText="Focus shifts smoothly." />
     </Sequence>
   </>
@@ -47,8 +47,8 @@ export const RemotionRoot = () => (
   <Composition
     id="FadeThrough"
     component={FadeThroughScene}
-    durationInFrames={80}
-    fps={30}
+    durationInFrames={160}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -87,8 +87,8 @@ export const RemotionRoot = () => (
   <Composition
     id="FadeThrough"
     component={FadeThroughScene}
-    durationInFrames={90}
-    fps={30}
+    durationInFrames={180}
+    fps={60}
     width={1280}
     height={720}
   />

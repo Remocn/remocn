@@ -12,9 +12,8 @@ import {
   interpolateColors,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -264,10 +263,10 @@ export function StatRail({
   groundParams,
 }: StatRailProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
   const beat = (n: BeatName) =>
     beatAt(n) + (n === "tagline" ? 0 : hold - beatAt("shrink"));
-  const { width: W, height: H, fps } = useVideoConfig();
+  const { width: W, height: H, fps } = useSceneConfig();
   const t = THEMES[theme];
   const acc = accent ?? t.accent;
   const cardBg = card ?? t.card;

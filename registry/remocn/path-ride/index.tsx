@@ -7,14 +7,8 @@ import {
   getTangentAtLength,
 } from "@remotion/paths";
 import { useEffect, useMemo, useState } from "react";
-import {
-  continueRender,
-  delayRender,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { continueRender, delayRender, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: INTER } = loadFont("normal", {
@@ -330,8 +324,8 @@ export function PathRide({
   className,
 }: PathRideProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps, width, height } = useSceneConfig();
   const unit = height / 720;
   const t = getPathRideTime(frame, { fps, speed });
   const metrics = useMetrics(

@@ -5,14 +5,8 @@ import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadFont as loadSpace } from "@remotion/google-fonts/SpaceGrotesk";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadSpace("normal", {
@@ -242,8 +236,8 @@ export function ThreadWeave({
   theme = "dark",
 }: ThreadWeaveProps) {
   const glide = useGlide();
-  const t = Math.max(0, useCurrentFrame() - wait) * speed;
-  const { width, height } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - wait) * speed;
+  const { width, height } = useSceneConfig();
   const u = height / 720;
   const p = THEMES[theme];
   const fg = ink ?? p.fg;

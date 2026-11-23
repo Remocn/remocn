@@ -10,9 +10,8 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const figtree = loadFigtree("normal", {
   weights: ["400", "500"],
@@ -228,8 +227,8 @@ export function RewriteBars({
   speed = 1,
   theme = "dark",
 }: RewriteBarsProps) {
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width, height } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const t = THEMES[theme];
 
   const heads = headlines.length > 0 ? headlines : ["remocn"];

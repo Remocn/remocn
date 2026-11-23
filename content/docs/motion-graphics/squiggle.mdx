@@ -62,7 +62,7 @@ deterministic.
 ### On a moment
 
 Put the squiggle in a `Sequence` that starts on the event frame, next to the
-element it accents. Here the beat to stress is frame 18. The line fires on
+element it accents. Here the beat to stress is frame 36 of a 60 fps composition. The line fires on
 that frame, draws under the word, and stays. Positions are fractions of the
 frame and the length is in reference px, so convert the word's box with the
 composition size.
@@ -101,7 +101,7 @@ export const Headline = () => {
           faster
         </div>
       </AbsoluteFill>
-      <Sequence from={18}>
+      <Sequence from={36}>
         <Squiggle
           x={WORD.left / width}
           y={(WORD.top + WORD.height + 10) / height}
@@ -121,7 +121,7 @@ converted to reference px, as `length`. To stagger several accents inside one
 
 ## Timing
 
-At 30 fps with `speed={1}` and the default props:
+In 30 fps frames, with `speed={1}` and the default props:
 
 | Frames | Motion |
 | --- | --- |
@@ -142,7 +142,7 @@ line never overshoots its calm shape.
 `getSquiggleTimeline({ hold, erase })` returns every beat.
 `getSquiggleDuration({ speed, delay, hold, erase })` returns the preview
 length, the motion plus a short rest before the loop: 80 frames by default
-and 60 without the erase. `delay` counts composition frames before the draw
+and 60 without the erase. `delay` counts 30 fps frames before the draw
 starts and does not scale with `speed`. `hold` is part of the motion and does.
 For another frame rate, multiply the beat frames by `fps / 30`.
 

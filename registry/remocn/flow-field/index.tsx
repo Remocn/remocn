@@ -1,12 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import {
-  AbsoluteFill,
-  random,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, random } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type FlowFieldProps = {
   /** Number of particles in flight. */
@@ -96,8 +92,8 @@ export function FlowField({
   color = flowFieldDefaults.color,
   accent = flowFieldDefaults.accent,
 }: FlowFieldProps) {
-  const frame = useCurrentFrame();
-  const { width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height } = useSceneConfig();
   const field = useMemo(() => makeField(seed), [seed]);
 
   const unit = Math.min(width, height);

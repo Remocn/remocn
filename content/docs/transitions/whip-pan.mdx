@@ -30,7 +30,7 @@ askedAs:
 `TransitionSeries.Transition` between two sequences. Both scenes travel in the
 same direction as one continuous camera whip — blur and a subtle smear stretch
 peak at maximum velocity mid-transition and hide the seam. It lives on speed:
-keep it around 26 frames.
+keep it around 52 frames at 60 fps.
 
 ```tsx
 import { TransitionSeries, linearTiming } from "@remotion/transitions";
@@ -38,14 +38,14 @@ import { whipPan } from "@/components/remocn/whip-pan";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 26 })}
+      timing={linearTiming({ durationInFrames: 52 })}
       presentation={whipPan()}
     />
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

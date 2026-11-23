@@ -3,13 +3,8 @@
 import { loadFont as loadDisplay } from "@remotion/google-fonts/SpaceGrotesk";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: display } = loadDisplay("normal", {
@@ -119,7 +114,7 @@ function Headline({
   fontFamily: string;
   scale: number;
 }) {
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const dot = text.endsWith(".");
   const body = dot ? text.slice(0, -1) : text;
@@ -228,8 +223,8 @@ export function TileWave({
   theme = "dark",
 }: TileWaveProps) {
   const glide = useGlide();
-  const t = useCurrentFrame() * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = useSceneFrame() * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const stage =
     background === "transparent" ? "transparent" : (background ?? STAGE[theme]);

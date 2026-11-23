@@ -4,14 +4,8 @@ import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadFont as loadNewsreader } from "@remotion/google-fonts/Newsreader";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 // The italic face is set by `fontStyle` on the same family.
@@ -289,7 +283,7 @@ function ProductScene({
   /** 0 → 1 as the scene settles: the ring lifts a touch. */
   rise: number;
 }) {
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const pw = Math.min(W * 0.7, H * 1.32);
   const ph = pw * 0.6;
@@ -515,8 +509,8 @@ export function SlitReveal({
   speed = 1,
 }: SlitRevealProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const u = H / 720;
   const sideways = opening === "sideways";
 

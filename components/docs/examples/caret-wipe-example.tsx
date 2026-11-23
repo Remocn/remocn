@@ -2,6 +2,7 @@
 
 import { linearTiming, TransitionSeries } from "@remotion/transitions";
 import { AbsoluteFill } from "remotion";
+import { useCompositionFrames } from "@/lib/remocn/frame-rate";
 import { caretWipe } from "@/registry/remocn/caret-wipe";
 
 const FONT_FAMILY =
@@ -42,16 +43,17 @@ export function CaretWipeExampleScene({
   caretColor,
   caretWidth,
 }: CaretWipeExampleProps) {
+  const toFrames = useCompositionFrames();
   return (
     <TransitionSeries>
-      <TransitionSeries.Sequence durationInFrames={70}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(70)}>
         <Scene label="Scene A" background="#0d0d10" />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
-        timing={linearTiming({ durationInFrames: 40 })}
+        timing={linearTiming({ durationInFrames: toFrames(40) })}
         presentation={caretWipe({ direction, caretColor, caretWidth })}
       />
-      <TransitionSeries.Sequence durationInFrames={70}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(70)}>
         <Scene label="Scene B" background="#141318" />
       </TransitionSeries.Sequence>
     </TransitionSeries>
@@ -69,14 +71,14 @@ import { caretWipe } from "@/components/remocn/caret-wipe";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 40 })}
+      timing={linearTiming({ durationInFrames: 80 })}
       presentation={caretWipe({ direction: "${direction}", caretColor: "${caretColor}", caretWidth: ${caretWidth} })}
     />
-    <TransitionSeries.Sequence durationInFrames={70}>
+    <TransitionSeries.Sequence durationInFrames={140}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

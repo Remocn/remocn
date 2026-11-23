@@ -4,13 +4,8 @@ import { loadFont as loadGeistMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadHanken } from "@remotion/google-fonts/HankenGrotesk";
 import type React from "react";
 import { Fragment, useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const hanken = loadHanken("normal", {
@@ -208,10 +203,10 @@ export function IndentSteps({
 }: IndentStepsProps) {
   const glide = useGlide();
   // The exit stays pinned to the end of the clip, so it reads the undelayed frame.
-  const now = useCurrentFrame();
+  const now = useSceneFrame();
   const raw = Math.max(0, now - delay);
   const frame = raw * speed;
-  const { width, height, durationInFrames } = useVideoConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
   const p = PALETTES[theme];
   const fg = ink ?? p.fg;
   const logical = lines.slice(0, 5);

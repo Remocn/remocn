@@ -4,13 +4,8 @@ import { loadFont as loadPlexMono } from "@remotion/google-fonts/IBMPlexMono";
 import { loadFont as loadInstrument } from "@remotion/google-fonts/InstrumentSans";
 import type React from "react";
 import { Fragment, useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const instrument = loadInstrument("normal", {
@@ -176,9 +171,9 @@ export function CutStat({
   theme = "dark",
 }: CutStatProps) {
   const glide = useGlide();
-  const raw = Math.max(0, useCurrentFrame() - delay);
+  const raw = Math.max(0, useSceneFrame() - delay);
   const frame = raw * speed;
-  const { width, height, durationInFrames } = useVideoConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
   const p = PALETTES[theme];
   const fg = ink ?? p.fg;
 

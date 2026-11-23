@@ -11,9 +11,8 @@ import {
   Easing,
   interpolate,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
@@ -299,9 +298,9 @@ export function FocusFrontSwap({
   speed = 1,
 }: FocusFrontSwapProps) {
   const glide = useGlide();
-  const sinceDelay = useCurrentFrame() - delay;
+  const sinceDelay = useSceneFrame() - delay;
   const frame = Math.max(0, sinceDelay) * speed;
-  const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;

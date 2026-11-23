@@ -5,13 +5,8 @@ import { loadFont as loadGeistMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadLexendExa } from "@remotion/google-fonts/LexendExa";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const exa = loadLexendExa("normal", { weights: ["400"], subsets: ["latin"] });
@@ -179,8 +174,8 @@ export function StudioReflection({
   theme = "dark",
 }: StudioReflectionProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width, height } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const p = PALETTES[theme];
   const reflect = shine ?? p.reflect;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");

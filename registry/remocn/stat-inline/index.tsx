@@ -10,9 +10,8 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const geist = loadGeist("normal", {
@@ -254,7 +253,7 @@ export function StatInline({
   speed = 1,
   theme = "dark",
 }: StatInlineProps) {
-  const now = useCurrentFrame();
+  const now = useSceneFrame();
   const at = (f: number) => Math.max(0, f - delay) * speed;
   const frame = at(now);
   const glide = useGlide();
@@ -266,7 +265,7 @@ export function StatInline({
       Math.abs(here - travel(at(now - 1))) > 1e-3
     );
   };
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const t = THEMES[theme];
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 

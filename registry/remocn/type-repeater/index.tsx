@@ -2,13 +2,8 @@
 
 import { loadFont } from "@remotion/google-fonts/Inter";
 import { useId } from "react";
-import {
-  Easing,
-  interpolate,
-  interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { Easing, interpolate, interpolateColors } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: INTER } = loadFont("normal", {
@@ -167,8 +162,8 @@ export function TypeRepeater({
   className,
 }: TypeRepeaterProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
-  const { fps, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps, height } = useSceneConfig();
   const outlineId = `type-repeater-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const unit = height / 720;
   const size = fontSize * unit;

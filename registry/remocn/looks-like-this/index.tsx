@@ -13,9 +13,8 @@ import {
   interpolate,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -255,9 +254,9 @@ export function LooksLikeThis({
   groundParams,
 }: LooksLikeThisProps) {
   const glide = useGlide();
-  const now = useCurrentFrame();
+  const now = useSceneFrame();
   const frame = Math.max(0, now - delay);
-  const { width: W, height: H, fps, durationInFrames: D } = useVideoConfig();
+  const { width: W, height: H, fps, durationInFrames: D } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;

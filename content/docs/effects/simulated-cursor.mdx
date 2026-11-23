@@ -52,8 +52,8 @@ export const RemotionRoot = () => (
   <Composition
     id="SimulatedCursor"
     component={CursorScene}
-    durationInFrames={150}
-    fps={30}
+    durationInFrames={300}
+    fps={60}
     width={1280}
     height={720}
   />
@@ -90,8 +90,8 @@ const DemoScene = () => (
 
 ## Timing
 
-Budget the `Sequence` from the waypoints: `24` frames per leg plus each point's `hold`. The default
-three-point path runs about `93` frames; leave headroom for the click ripple to finish.
+Budget the `Sequence` from the waypoints: `24` frames per leg plus each point's `hold`, counted at 30 fps. The default
+three-point path runs about `93` of them, so a 60 fps `Sequence` needs about `186`; leave headroom for the click ripple to finish.
 
 <PropsTable title="Props"
   rows={[

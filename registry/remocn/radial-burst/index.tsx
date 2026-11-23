@@ -1,12 +1,7 @@
 "use client";
 
-import {
-  Easing,
-  interpolateColors,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { Easing, interpolateColors, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface RadialBurstProps {
   /** Number of rounded segments, from 4 to 16. */
@@ -273,8 +268,8 @@ export function RadialBurst({
   loop = false,
   className,
 }: RadialBurstProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const time = frame * (30 / fps) * Math.max(0, finite(speed, 1));
   const options = {
     segments,

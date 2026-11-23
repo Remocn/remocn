@@ -1,12 +1,12 @@
 "use client";
 
 import registry from "@/lib/previews";
+import { sitePreview } from "@/lib/previews/site-preview";
 import { PreviewStage } from "@/lib/ui-preview-internals";
-import { previewManifest } from "@/registry/__manifest__";
 
 export function ChangelogPreview({ name }: { name: string }) {
   const entry = registry[name];
-  const preview = previewManifest[name];
+  const preview = sitePreview(name);
 
   if (!entry || !preview) {
     return (

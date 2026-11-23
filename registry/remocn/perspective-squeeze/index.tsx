@@ -1,6 +1,7 @@
 "use client";
 
-import { Easing, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 type Corners = [
@@ -138,8 +139,8 @@ export function PerspectiveSqueeze({
   fill = "#ffffff",
 }: PerspectiveSqueezeProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
-  const { width: compWidth, height: compHeight } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width: compWidth, height: compHeight } = useSceneConfig();
   const stageScale = Math.min(compWidth / width, compHeight / height);
 
   const squishEase = Easing.bezier(0.6, 0, 0.4, 1);

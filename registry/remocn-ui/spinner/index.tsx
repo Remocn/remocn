@@ -1,6 +1,6 @@
 "use client";
 
-import { useCurrentFrame } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface SpinnerProps {
   size?: number;
@@ -17,7 +17,7 @@ export function Spinner({
   strokeWidth = 2.5,
   className,
 }: SpinnerProps) {
-  const rotation = useCurrentFrame() * speed * 6;
+  const rotation = useSceneFrame() * speed * 6;
 
   return (
     <svg

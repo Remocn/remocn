@@ -1,7 +1,8 @@
 "use client";
 
 import { type CSSProperties, type ReactNode, useMemo } from "react";
-import { Easing, random, useCurrentFrame, useVideoConfig } from "remotion";
+import { Easing, random } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type MondrianSplitAxis = "x" | "y";
 export type MondrianSplitSlot = "red" | "yellow" | "blue";
@@ -782,8 +783,8 @@ export function MondrianSplit({
   speed = 1,
   className,
 }: MondrianSplitProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const layout = useMemo(
     () =>
       getMondrianSplitLayout({

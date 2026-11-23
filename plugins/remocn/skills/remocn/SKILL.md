@@ -164,7 +164,7 @@ sequencers that take a `scenes` array and own the whole timeline. The page says 
 ```tsx
 import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 
-const opacity = interpolate(frame, [0, 30], [0, 1], { extrapolateRight: "clamp" });
+const opacity = interpolate(frame, [0, 60], [0, 1], { extrapolateRight: "clamp" }); // 1 s at 60 fps
 const scale = spring({ fps, frame, config: { damping: 12, mass: 1, stiffness: 100 } });
 
 // Deterministic randomness (NEVER Math.random())
@@ -174,27 +174,32 @@ const jitter = random(`seed-${frame}`);
 
 ### Composition structure
 
+Frame counts here are composition frames at 60 fps: twice the 30 fps counts of a storyboard.
+
 ```tsx
 import { Sequence, Series } from "remotion";
 
-<Sequence from={30} durationInFrames={60}>
+<Sequence from={60} durationInFrames={120}>
   <Typewriter text="npm install remocn" />
 </Sequence>
 
 <Series>
-  <Series.Sequence durationInFrames={60}><SceneA /></Series.Sequence>
-  <Series.Sequence durationInFrames={60}><SceneB /></Series.Sequence>
+  <Series.Sequence durationInFrames={120}><SceneA /></Series.Sequence>
+  <Series.Sequence durationInFrames={120}><SceneB /></Series.Sequence>
 </Series>
 ```
 
 ### Canvas & timing
 
-- **Canvas standard:** `1280×720 @ 30fps`. Components are laid out for it.
-- **`Length` is the component's own motion, not the whole beat.** For a transition it is the value
-  to pass to `linearTiming` / `springTiming`; for everything else it is the frame the animation
-  finishes on. Treat it as the floor for the `Sequence` and add hold time when the element should
-  stay on screen after it settles. `state-driven` means the component renders from its `state` prop
-  and has no duration of its own.
+- **Canvas standard:** `1280×720 @ 60fps`. Components are laid out for it and keep their timing at
+  any frame rate.
+- **`Length` is the component's own motion, not the whole beat**, counted in 30 fps frames. For a
+  transition it is the length of its `linearTiming` / `springTiming`; for everything else it is the
+  frame the animation finishes on. Treat it as the floor for the `Sequence` and add hold time when
+  the element should stay on screen after it settles. Plan in these 30 fps counts; when you hand a
+  count to Remotion in a 60 fps composition (`durationInFrames`, `from`, the timing length), double
+  it. Frame props passed to a component (`delay`, staggers) stay in 30 fps frames. `state-driven`
+  means the component renders from its `state` prop and has no duration of its own.
 - **Tone matching:** each entry carries a `vibe` tag (`tech`/`premium`/`data`/`clean`/`playful`/
   `social`/`paper`) — pick components whose vibe fits the brand. `paper` is the stop-motion kit: a
   quantized ~10-poses-per-second clock, handwriting and ink. Those components read as one world, so
@@ -220,7 +225,7 @@ https://remocn.dev/docs/craft/anti-patterns.md
 
 - **Terminal scroll is instant** — step-function `translateY`, never spring/ease the scroll.
 - **`overflow: hidden` on split layouts** — prevents content breakage during width animations.
-- **Cursor blink is deterministic** — `Math.floor(frame / 15) % 2 === 0`, not intervals.
+- **Cursor blink is deterministic** — `Math.floor(frame / 30) % 2 === 0` at 60 fps, not intervals.
 - **Static files go in `public/`** — load via `staticFile('cursor.svg')`, not imports.
 - **Social cards render offline** — `avatarUrl=""` / `coverUrl=""` fall back to gradients; no fetch.
 - **Gradient grounds need WebGL** — any component with a `ground` prop renders black without `--gl=angle`.

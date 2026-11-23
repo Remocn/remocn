@@ -76,6 +76,8 @@ export const waitlistSwarmConfig: ComponentConfig = {
   },
   durationInFrames: 175,
   fps: FPS,
+  // Does not hold 60 fps in the browser yet (`audit:playback`: script).
+  previewFps: 30,
   compositionWidth: W,
   compositionHeight: H,
 };

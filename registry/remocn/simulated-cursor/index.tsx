@@ -1,6 +1,7 @@
 "use client";
 
-import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface CursorPoint {
   x: number;
@@ -30,8 +31,8 @@ export function SimulatedCursor({
   speed = 1,
   className,
 }: SimulatedCursorProps) {
-  const frame = useCurrentFrame() * speed;
-  const { fps, durationInFrames } = useVideoConfig();
+  const frame = useSceneFrame() * speed;
+  const { fps, durationInFrames } = useSceneConfig();
 
   const travelPerLeg = 24;
   const segments: Array<{

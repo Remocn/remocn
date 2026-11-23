@@ -1,6 +1,7 @@
 "use client";
 
-import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface CaretSwapProps {
   fromText: string;
@@ -61,7 +62,7 @@ export function CaretSwap({
   speed = 1,
   className,
 }: CaretSwapProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = useSceneFrame() * speed;
 
   const toChars = Array.from(toText);
   const caretWidth = CARET_WIDTH_EM * fontSize;

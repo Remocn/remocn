@@ -17,9 +17,13 @@ import {
   delayRender,
   Easing,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import {
+  useCompositionFrames,
+  useSceneConfig,
+  useSceneFrame,
+  useSceneFrameCount,
+} from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -206,7 +210,10 @@ const LetterGatePresentation: React.FC<
   presentationDurationInFrames,
   passedProps,
 }) => {
-  const { width: W, height: H } = useVideoConfig();
+  // Remotion counts the transition's length in the composition's own
+  // frames; everything below counts on the 30 fps timeline.
+  const sceneLength = useSceneFrameCount()(presentationDurationInFrames);
+  const { width: W, height: H } = useSceneConfig();
   const o = { ...letterGateDefaults, ...passedProps };
   const uid = useId().replace(/:/g, "");
   const m = useMetrics(o.fontFamily, o.fontWeight, "gate glyphs");
@@ -248,7 +255,7 @@ const LetterGatePresentation: React.FC<
   const sceneIn = clamp01(q / SWAP);
   // Parting starts on the cut itself: the glyphs never hold, they open while
   // the new scene dissolves in under them.
-  const frames = Math.max(1, presentationDurationInFrames * (1 - o.cut));
+  const frames = Math.max(1, sceneLength * (1 - o.cut));
   // The gate is already opening on the cut frame, so the pair is never seen
   // closed and still.
   const g = clamp01(q + 2 / frames);
@@ -526,9 +533,9 @@ function SceneA({
   look: SceneLook;
 }) {
   const glide = useGlide();
-  const now = useCurrentFrame();
+  const now = useSceneFrame();
   const frame = Math.max(0, now - delay) * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const { width: W, height: H, fps } = useSceneConfig();
   const u = Math.min(W, H) / 720;
   const fs = pillFont(W, H);
   const rise = spring({ frame: frame - A_BEATS.pill, fps, config: CARD });
@@ -688,9 +695,9 @@ function SceneB({
   look: SceneLook;
 }) {
   const glide = useGlide();
-  const now = useCurrentFrame();
+  const now = useSceneFrame();
   const frame = now * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const { width: W, height: H, fps } = useSceneConfig();
   const uid = useId().replace(/:/g, "");
   const tall = H > W * 1.1;
   const u = Math.min(W, H) / 720;
@@ -1068,13 +1075,16 @@ export function LetterGateDemo({
   groundParamsB,
   transition,
 }: LetterGateDemoProps) {
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const base = THEMES[theme];
   const palette = ink ? { ...base, ink, pillInk: ink } : base;
   const acc = accent ?? palette.accent;
   const look: SceneLook = { background, scale, speed };
   // Speed scales the series itself so the transition keeps pace with the scenes.
-  const len = (f: number) => Math.max(1, Math.round(f / speed));
+  // Remotion counts a series in the composition's own frames; the lengths
+  // here are written on the 30 fps timeline the scenes run on.
+  const toFrames = useCompositionFrames();
+  const len = (f: number) => Math.max(1, toFrames(f / speed));
   const m = useMetrics(fontFamily, fontWeight, "pill text");
   const idx = Math.max(0, text.indexOf(gate));
   const pair = text.indexOf(gate) >= 0 ? gate : text.slice(idx, idx + 2);
@@ -1110,7 +1120,9 @@ export function LetterGateDemo({
       }}
     >
       <TransitionSeries>
-        <TransitionSeries.Sequence durationInFrames={delay + len(A_LEN)}>
+        <TransitionSeries.Sequence
+          durationInFrames={toFrames(delay) + len(A_LEN)}
+        >
           <SceneA
             text={text}
             palette={palette}

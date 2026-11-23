@@ -9,9 +9,8 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const plex = loadPlexMono("normal", {
   weights: ["500"],
@@ -143,8 +142,8 @@ export function UnmaskLine({
   speed = 1,
   theme = "dark",
 }: UnmaskLineProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const green = accent ?? GREEN[theme];
   const fg = ink ?? c.ink;

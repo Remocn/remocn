@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { random, useCurrentFrame, useVideoConfig } from "remotion";
+import { random } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type TruchetFlipWaveMode = "radial" | "diagonal" | "random";
 export type TruchetFlipResolve = "rings" | "field" | "silhouette";
@@ -321,8 +322,8 @@ export function TruchetFlip({
   loop = truchetFlipDefaults.loop,
   className,
 }: TruchetFlipProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const grid = useMemo(() => {
     const layout = { width, height, tiles, seed, waveMode, resolve };
     return getTruchetFlipGrid(layout);

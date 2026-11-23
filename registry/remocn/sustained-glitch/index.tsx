@@ -1,12 +1,13 @@
 "use client";
 
 import type React from "react";
-import { AbsoluteFill, random, useCurrentFrame } from "remotion";
+import { AbsoluteFill, random } from "remotion";
 import {
   type CanvasFilterProps,
   makeCanvasFilter,
   makeFilterShader,
 } from "@/lib/remocn/canvas-presentation";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type SustainedGlitchProps = {
   intensity?: number;
@@ -145,7 +146,7 @@ const SustainedGlitchFallback: React.FC<
   slices = DEFAULTS.slices,
   seed = DEFAULTS.seed,
 }) => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const energy = burstEnergy(frame, intensity, frequency, seed);
 
   if (energy <= 0) {

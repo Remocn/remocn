@@ -5,14 +5,8 @@ import { loadFont as loadGeistMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const manrope = loadManrope("normal", {
@@ -202,10 +196,10 @@ export function LightSignature({
   theme = "dark",
 }: LightSignatureProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
   const shift = sweep - CHASE_LEN;
   const returnStart = RETURN_START + shift;
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   const p = PALETTES[theme];
   const fg = ink ?? p.fg;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");

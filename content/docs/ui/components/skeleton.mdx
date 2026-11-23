@@ -142,7 +142,7 @@ import { SkeletonBlock } from "@/components/remocn/skeleton-block";
 
 ## Shimmer block
 
-The `SkeletonBlock` motion atom is the building block behind every shimmer effect. It reads `useCurrentFrame()` directly — it is the only file in this component allowed to do so — and drives a diagonal highlight gradient sweep that loops seamlessly every 60 frames at `speed = 1`.
+The `SkeletonBlock` motion atom is the building block behind every shimmer effect. It reads `useCurrentFrame()` directly — it is the only file in this component allowed to do so — and drives a diagonal highlight gradient sweep that loops seamlessly every 60 frames at `speed = 1`, counted at 30 fps: two seconds at any composition frame rate.
 
 <ComponentPreview name="skeleton-block" />
 

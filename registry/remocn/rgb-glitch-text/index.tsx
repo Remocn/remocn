@@ -1,6 +1,7 @@
 "use client";
 
-import { random, useCurrentFrame } from "remotion";
+import { random } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export interface RGBGlitchTextProps {
@@ -29,7 +30,7 @@ export function RGBGlitchText({
   className,
 }: RGBGlitchTextProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame() * speed;
+  const frame = useSceneFrame() * speed;
 
   const isGlitching = frame >= glitchAt && frame < glitchAt + glitchDuration;
 

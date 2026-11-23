@@ -1,6 +1,7 @@
 "use client";
 
-import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface FogRiseProps {
   text: string;
@@ -61,8 +62,8 @@ export function FogRise({
   speed = 1,
   className,
 }: FogRiseProps) {
-  const frame = useCurrentFrame() * speed;
-  const { fps } = useVideoConfig();
+  const frame = useSceneFrame() * speed;
+  const { fps } = useSceneConfig();
 
   const chars = Array.from(text);
   const center = (chars.length - 1) / 2;

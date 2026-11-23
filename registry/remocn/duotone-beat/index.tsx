@@ -1,14 +1,8 @@
 "use client";
 
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 /** [shadow ink, highlight ink], hex colors. */
 export type DuotonePalette = [string, string];
@@ -191,8 +185,8 @@ export function DuotoneBeat({
   halftone = duotoneBeatDefaults.halftone,
   speed = duotoneBeatDefaults.speed,
 }: DuotoneBeatProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const u = Math.min(width, height) / 720;
   const t = (frame / fps) * 30 * speed;

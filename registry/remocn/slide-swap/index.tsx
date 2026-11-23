@@ -1,12 +1,8 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
-import {
-  AbsoluteFill,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export type SlideSwapConfig = {
@@ -169,8 +165,8 @@ export function SlideSwapScenes({
   style,
 }: SlideSwapScenesProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const cfg = { ...SLIDE_SWAP_DEFAULTS, ...config };
   const size = axis === "x" ? width : height;
 

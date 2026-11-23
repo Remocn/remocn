@@ -4,14 +4,8 @@ import { loadFont } from "@remotion/google-fonts/BricolageGrotesque";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: sans } = loadFont("normal", {
@@ -244,13 +238,13 @@ export function Countdown({
   theme = "dark",
 }: CountdownProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const tAt = (df: number) => Math.max(0, frame + df - delay) * speed;
   const t = tAt(0);
   // Every numeral on screen breathes, enters or exits, so it moves whenever
   // time does; only the held frames before `delay` stand still.
   const ticking = tAt(1) !== t || tAt(-1) !== t;
-  const { width, height, fps } = useVideoConfig();
+  const { width, height, fps } = useSceneConfig();
   const u = height / 720;
   const p: Palette = THEMES[theme];
   const fg = ink ?? p.fg;

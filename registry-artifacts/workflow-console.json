@@ -7,7 +7,8 @@
   "registryDependencies": [
     "@remocn/typed-split-wipe",
     "@remocn/caret",
-    "@remocn/glide"
+    "@remocn/glide",
+    "@remocn/frame-rate"
   ],
   "files": [
     {
@@ -42,7 +43,7 @@
     },
     {
       "path": "registry/remocn-templates/workflow-console/scenes/intro.tsx",
-      "content": "import type { CSSProperties } from \"react\";\nimport { useVideoConfig } from \"remotion\";\nimport { TypedSplitWipe } from \"@/components/remocn/typed-split-wipe\";\nimport type { SceneProps } from \"../content\";\nimport { Command } from \"../ui\";\n\nexport function Intro({ scene, t }: SceneProps) {\n  const { fps } = useVideoConfig();\n  return (\n    <>\n      <div\n        style={\n          {\n            position: \"absolute\",\n            inset: 0,\n            \"--font-geist-sans\": '\"Inter\", sans-serif',\n          } as CSSProperties\n        }\n      >\n        <TypedSplitWipe\n          prefix={scene.content.prefix}\n          anchor=\"\"\n          suffix={scene.content.product}\n          typeFrames={60}\n          exitAt={86}\n          exitFrames={46}\n          wordStagger={8}\n          anchorShift={-30}\n          fontSize={Math.min(\n            26,\n            620 /\n              Math.max(\n                1,\n                scene.content.prefix.length + scene.content.product.length + 3,\n              ),\n          )}\n          color=\"#e6f1f8\"\n          speed={60 / fps}\n        />\n      </div>\n      {t >= 1.85 ? (\n        <Command\n          text={scene.content.command}\n          t={t}\n          start={1.85}\n          finish={5.4}\n          end={6.4}\n          tracking\n        />\n      ) : null}\n    </>\n  );\n}\n",
+      "content": "import type { CSSProperties } from \"react\";\nimport { TypedSplitWipe } from \"@/components/remocn/typed-split-wipe\";\nimport { SCENE_FPS } from \"@/lib/remocn/frame-rate\";\nimport type { SceneProps } from \"../content\";\nimport { Command } from \"../ui\";\n\nexport function Intro({ scene, t }: SceneProps) {\n  return (\n    <>\n      <div\n        style={\n          {\n            position: \"absolute\",\n            inset: 0,\n            \"--font-geist-sans\": '\"Inter\", sans-serif',\n          } as CSSProperties\n        }\n      >\n        <TypedSplitWipe\n          prefix={scene.content.prefix}\n          anchor=\"\"\n          suffix={scene.content.product}\n          typeFrames={60}\n          exitAt={86}\n          exitFrames={46}\n          wordStagger={8}\n          anchorShift={-30}\n          fontSize={Math.min(\n            26,\n            620 /\n              Math.max(\n                1,\n                scene.content.prefix.length + scene.content.product.length + 3,\n              ),\n          )}\n          color=\"#e6f1f8\"\n          // The counts above are 60 fps frames; the wipe counts on a 30 fps\n          // timeline at any composition rate.\n          speed={60 / SCENE_FPS}\n        />\n      </div>\n      {t >= 1.85 ? (\n        <Command\n          text={scene.content.command}\n          t={t}\n          start={1.85}\n          finish={5.4}\n          end={6.4}\n          tracking\n        />\n      ) : null}\n    </>\n  );\n}\n",
       "type": "registry:component",
       "target": "components/remocn/templates/workflow-console/scenes/intro.tsx"
     },

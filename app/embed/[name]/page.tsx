@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { sitePreview } from "@/lib/previews/site-preview";
 import { previewManifest } from "@/registry/__manifest__";
 import { EmbedPlayer } from "./embed-player";
 
@@ -41,8 +42,10 @@ export default async function EmbedPage({
   const { name } = await params;
   // `name` comes from the URL: `constructor` or `toString` must 404, not
   // resolve to an Object.prototype member.
-  if (!Object.hasOwn(previewManifest, name)) notFound();
-  const entry = previewManifest[name];
+  const entry = Object.hasOwn(previewManifest, name)
+    ? sitePreview(name)
+    : undefined;
+  if (!entry) notFound();
   const props = parseProps((await searchParams).props);
 
   return (

@@ -10,14 +10,13 @@ import {
   TransitionSeries,
 } from "@remotion/transitions";
 import type React from "react";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+  useCompositionFrames,
+  useSceneConfig,
+  useSceneFrame,
+  useSceneFrameCount,
+} from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -144,7 +143,10 @@ const CaretCollapsePresentation: React.FC<
   presentationDurationInFrames,
   passedProps,
 }) => {
-  const { width: W, height: H } = useVideoConfig();
+  // Remotion counts the transition's length in the composition's own
+  // frames; everything below counts on the 30 fps timeline.
+  const sceneLength = useSceneFrameCount()(presentationDurationInFrames);
+  const { width: W, height: H } = useSceneConfig();
   const o = {
     ...caretCollapseDefaults,
     ...passedProps,
@@ -191,7 +193,7 @@ const CaretCollapsePresentation: React.FC<
   const ty = ramp(p, PHASE.openY, OPEN);
   const ox = o.to.x * W;
   const oy = o.to.y * H;
-  const step = 1 / Math.max(2, presentationDurationInFrames);
+  const step = 1 / Math.max(2, sceneLength);
   const c = caretAt(p, o);
   const blinkOff = p > PHASE.blinkOff[0] && p < PHASE.blinkOff[1];
   const caretOpacity =
@@ -474,8 +476,8 @@ function SceneA({
   speed: number;
 }) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const L = urlLayout(W, H, url);
   const typed = Math.floor(
     interpolate(frame, [A_BEATS.type, A_BEATS.typeEnd], [0, url.length], CLAMP),
@@ -637,8 +639,8 @@ function SceneB({
   speed: number;
 }) {
   const glide = useGlide();
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const frame = useSceneFrame() * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const P = promptLayout(W, H);
   const s = P.s;
   const typed = Math.floor(
@@ -903,14 +905,17 @@ export function CaretCollapseDemo({
     ink: ink ?? base.ink,
     caret: accent ?? base.caret,
   };
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const A = urlLayout(W, H, url);
   const B = promptLayout(W, H);
   // The caret handoff points live in frame space, so they follow the scaled scenes.
   const at = (v: number) => (scale === 1 ? v : 0.5 + (v - 0.5) * scale);
   const sz = (v: number) => (scale === 1 ? v : v * scale);
   // Speed scales the series itself so the transition keeps pace with the scenes.
-  const len = (f: number) => Math.max(1, Math.round(f / speed));
+  // Remotion counts a series in the composition's own frames; the lengths
+  // here are written on the 30 fps timeline the scenes run on.
+  const toFrames = useCompositionFrames();
+  const len = (f: number) => Math.max(1, toFrames(f / speed));
   return (
     <AbsoluteFill
       style={{
@@ -919,7 +924,9 @@ export function CaretCollapseDemo({
       }}
     >
       <TransitionSeries>
-        <TransitionSeries.Sequence durationInFrames={delay + len(A_LEN)}>
+        <TransitionSeries.Sequence
+          durationInFrames={toFrames(delay) + len(A_LEN)}
+        >
           <SceneA
             url={url}
             label={label}

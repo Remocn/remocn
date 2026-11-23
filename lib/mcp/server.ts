@@ -30,6 +30,7 @@ import {
   normalizeName,
 } from "@/lib/mcp/search";
 import { PREVIEW_WIDGET_HTML } from "@/lib/mcp/widget";
+import { sitePreview } from "@/lib/previews/site-preview";
 import { searchCatalog } from "@/lib/search/components";
 import {
   trackAgentComponentFetch,
@@ -171,7 +172,7 @@ function compactRow(r: ComponentRecord) {
 }
 
 function previewFor(name: string, props?: Record<string, unknown>) {
-  const entry = previewManifest[name];
+  const entry = sitePreview(name);
   if (!entry) return undefined;
   return {
     name,
@@ -225,7 +226,7 @@ export function createRemocnMcpServer(): McpServer {
     {
       title: "Search Remocn components",
       description:
-        "Search Remocn Remotion components by what they do or by the need they serve; matches by meaning as well as by words. Returns name, docs .md URL, vibe, length (frames @30fps), use/avoid notes and install command.",
+        "Search Remocn Remotion components by what they do or by the need they serve; matches by meaning as well as by words. Returns name, docs .md URL, vibe, length (frames @30fps; double it in a 60 fps composition), use/avoid notes and install command.",
       inputSchema: z.object({
         query: z
           .string()
@@ -274,7 +275,7 @@ export function createRemocnMcpServer(): McpServer {
           { results: [] },
         );
       }
-      const header = `${results.length} Remocn components for "${query}"${filters ? ` (${filters})` : ""}. Lengths are frames of motion @30fps — a floor for the Sequence, add hold on top.`;
+      const header = `${results.length} Remocn components for "${query}"${filters ? ` (${filters})` : ""}. Lengths are frames of motion @30fps — a floor for the Sequence, add hold on top. Components keep their timing at any frame rate: in a 60 fps composition hand Remotion twice the length.`;
       return text(`${header}\n\n${results.map(formatRow).join("\n")}`, {
         results: results.map(compactRow),
       });

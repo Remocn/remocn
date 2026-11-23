@@ -48,7 +48,8 @@ The scene opens with the prompt field active and empty. The prompt types itself 
 button picks up hover then press, and drops into its loading state. The answer area swaps to a
 skeleton shimmer while generation is pending, then crossfades from shimmer to the real answer lines.
 A toast slides in to confirm the response is ready and dismisses near frame 220, leaving a short
-settle before the scene ends at 230.
+settle before the scene ends at 230. These are the block's own frames, counted at 30 fps: in the
+60 fps composition below the scene ends at frame 460, about 7.7 seconds in.
 
 ## Usage
 
@@ -69,8 +70,8 @@ export const RemotionRoot = () => (
   <Composition
     id="AiPromptFlow"
     component={PromptScene}
-    durationInFrames={230}
-    fps={30}
+    durationInFrames={460}
+    fps={60}
     width={1280}
     height={720}
   />

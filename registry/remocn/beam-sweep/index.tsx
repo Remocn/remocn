@@ -17,9 +17,12 @@ import {
   interpolate,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import {
+  useCompositionFrames,
+  useSceneConfig,
+  useSceneFrame,
+} from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -101,7 +104,7 @@ const BeamSweepPresentation: React.FC<
     ...passedProps,
     beamParams: passedProps.beamParams ?? beamSweepDefaults.beamParams,
   };
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const p = presentationProgress;
   const cssAngle = `${90 + props.angle}deg`;
   const { lead, trail } = sweep(p);
@@ -295,8 +298,8 @@ function BuilderScene({
   speed: number;
 }) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps } = useSceneConfig();
   const c = UI[theme];
   const tall = H > W;
   const u = (tall ? W / 720 : H / 720) * 1.12;
@@ -688,8 +691,8 @@ function RiseLine({
   style: React.CSSProperties;
   speed: number;
 }) {
-  const frame = useCurrentFrame() * speed;
-  const { fps } = useVideoConfig();
+  const frame = useSceneFrame() * speed;
+  const { fps } = useSceneConfig();
   const words = text.split(" ");
   return (
     <div style={style}>
@@ -751,8 +754,8 @@ function StatementScene({
   speed: number;
 }) {
   const glide = useGlide();
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const frame = useSceneFrame() * speed;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const c = UI[theme];
   const tall = H > W;
   const size = tall ? W * 0.1 : Math.min(W * 0.066, H * 0.12);
@@ -917,7 +920,10 @@ export function BeamSweepDemo({
     ...beam,
   });
   // Speed scales the series itself so the transition keeps pace with the scenes.
-  const len = (f: number) => Math.max(1, Math.round(f / speed));
+  // Remotion counts a series in the composition's own frames; the lengths
+  // here are written on the 30 fps timeline the scenes run on.
+  const toFrames = useCompositionFrames();
+  const len = (f: number) => Math.max(1, toFrames(f / speed));
   return (
     <AbsoluteFill
       style={{
@@ -928,7 +934,9 @@ export function BeamSweepDemo({
       }}
     >
       <TransitionSeries>
-        <TransitionSeries.Sequence durationInFrames={delay + len(sceneA)}>
+        <TransitionSeries.Sequence
+          durationInFrames={toFrames(delay) + len(sceneA)}
+        >
           <BuilderScene
             theme={theme}
             images={images}

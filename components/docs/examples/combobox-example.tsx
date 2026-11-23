@@ -1,6 +1,5 @@
 "use client";
-
-import { useCurrentFrame } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { revealCount } from "@/lib/remocn-ui";
 import { Combobox } from "@/registry/remocn-ui/combobox";
 import { useComboboxTransition } from "@/registry/remocn-ui/combobox/use-combobox-transition";
@@ -19,7 +18,7 @@ export interface ComboboxExampleProps {
 }
 
 export const ComboboxExampleScene = (p: ComboboxExampleProps = {}) => {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
 
   // Panel: opens at frame 16, closes at frame 100.
   const panelStyle = useComboboxTransition([
@@ -70,7 +69,7 @@ export const comboboxExampleCode = (
 
   const optsStr = "";
 
-  return `import { useCurrentFrame } from "remotion";
+  return `import { useCurrentFrame, useVideoConfig } from "remotion";
 import { revealCount } from "@/lib/remocn-ui";
 import { Combobox } from "@/components/remocn/combobox";
 import { useComboboxTransition } from "@/components/remocn/use-combobox-transition";
@@ -78,13 +77,14 @@ import { useSelectItemTransition } from "@/components/remocn/use-select-item-tra
 
 // Typing "ba" filters ["Apple","Banana","Orange","Grape"] to ["Banana"].
 const QUERY = "ba";
-const TYPE_START = 32;
-const FPS = 30;
+const TYPE_START = 64; // composition frame at 60 fps (~1.07 s)
 const CPS = 4;
 
 export const Scene = () => {
   const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
 
+  // Step frames (\`at\`, \`duration\`) count at 30 fps at any composition rate.
   // Panel opens at frame 16, closes at frame 100.
   const panelStyle = useComboboxTransition(
     [
@@ -96,7 +96,7 @@ export const Scene = () => {
   // revealCount drives how many characters of QUERY are visible.
   const revealed = revealCount(
     Math.max(0, frame - TYPE_START),
-    FPS,
+    fps,
     QUERY.length,
     CPS,
   );

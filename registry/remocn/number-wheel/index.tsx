@@ -2,14 +2,8 @@
 
 import { loadFont as loadMono } from "@remotion/google-fonts/JetBrainsMono";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: MONO_FAMILY } = loadMono();
@@ -187,7 +181,7 @@ function OdometerColumns({
 }
 
 export function Odometer({ current, fontSize, color }: OdometerProps) {
-  const { fps } = useVideoConfig();
+  const { fps } = useSceneConfig();
   const value = Math.max(0, Math.round(current));
   return (
     <OdometerColumns
@@ -207,8 +201,8 @@ export function NumberWheel({
   color = "#171717",
   speed = 1,
 }: NumberWheelProps) {
-  const frame = useCurrentFrame();
-  const { durationInFrames, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { durationInFrames, fps } = useSceneConfig();
 
   const start = Math.max(0, Math.round(from));
   const end = Math.max(0, Math.round(to));

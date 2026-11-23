@@ -4,13 +4,8 @@ import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadFont } from "@remotion/google-fonts/Saira";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: saira } = loadFont("normal", {
@@ -232,8 +227,8 @@ export function TimingTower({
 }: TimingTowerProps) {
   const glide = useGlide();
   // Starts four frames in, so frame 0 already shows the tower wiping in.
-  const t = Math.max(0, useCurrentFrame() - delay) * speed + 4;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed + 4;
+  const { width: W, height: H } = useSceneConfig();
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const stage =

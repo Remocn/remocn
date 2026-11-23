@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { Easing, random, useCurrentFrame, useVideoConfig } from "remotion";
+import { Easing, random } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type TrimBurstCap = "round" | "butt";
 
@@ -327,8 +328,8 @@ export function TrimBurst({
   speed = trimBurstDefaults.speed,
   className,
 }: TrimBurstProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const strokes = useMemo(
     () => getTrimBurstStrokes({ count, rotation, spread, jitter, seed }),
     [count, rotation, spread, jitter, seed],

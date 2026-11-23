@@ -1,7 +1,8 @@
 "use client";
 
 import type React from "react";
-import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const clampOpts = {
@@ -27,7 +28,7 @@ export function RolodexFlip({
   style,
 }: RolodexFlipProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const sizer = items.reduce((a, b) => (b.length > a.length ? b : a), "");
   return (
     <span

@@ -2,6 +2,7 @@
 
 import { linearTiming, TransitionSeries } from "@remotion/transitions";
 import { AbsoluteFill } from "remotion";
+import { useCompositionFrames } from "@/lib/remocn/frame-rate";
 import { focusPull } from "@/registry/remocn/focus-pull";
 
 const FONT_FAMILY =
@@ -36,16 +37,17 @@ interface FocusPullExampleProps {
 }
 
 export function FocusPullExampleScene({ blur }: FocusPullExampleProps) {
+  const toFrames = useCompositionFrames();
   return (
     <TransitionSeries>
-      <TransitionSeries.Sequence durationInFrames={80}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(80)}>
         <Scene label="Scene A" background="#141318" />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
-        timing={linearTiming({ durationInFrames: 46 })}
+        timing={linearTiming({ durationInFrames: toFrames(46) })}
         presentation={focusPull({ blur })}
       />
-      <TransitionSeries.Sequence durationInFrames={80}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(80)}>
         <Scene label="Focus Pull" background="#1a1922" />
       </TransitionSeries.Sequence>
     </TransitionSeries>
@@ -61,14 +63,14 @@ import { focusPull } from "@/components/remocn/focus-pull";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={80}>
+    <TransitionSeries.Sequence durationInFrames={160}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 46 })}
+      timing={linearTiming({ durationInFrames: 92 })}
       presentation={focusPull({ blur: ${blur} })}
     />
-    <TransitionSeries.Sequence durationInFrames={80}>
+    <TransitionSeries.Sequence durationInFrames={160}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

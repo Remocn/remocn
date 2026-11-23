@@ -1,6 +1,6 @@
 "use client";
 
-import { useCurrentFrame } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface PerspectiveMarqueeProps {
   items?: string[];
@@ -43,7 +43,7 @@ export function PerspectiveMarquee({
   speed = 1,
   className,
 }: PerspectiveMarqueeProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = useSceneFrame() * speed;
 
   // Approximate width of one full item set so the modulo wraps cleanly.
   const itemPadding = fontSize * 0.9;

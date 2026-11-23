@@ -1,6 +1,7 @@
 "use client";
 
-import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface SqueezeInProps {
   text: string;
@@ -33,7 +34,7 @@ export function SqueezeIn({
   speed = 1,
   className,
 }: SqueezeInProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = useSceneFrame() * speed;
 
   const chars = Array.from(text);
   const lastRevealAt = chars.length * stagger;

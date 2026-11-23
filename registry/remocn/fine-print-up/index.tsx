@@ -10,10 +10,8 @@ import {
   Easing,
   interpolate,
   interpolateColors,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
-
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const gloock = loadFont("normal", { weights: ["400"], subsets: ["latin"] });
@@ -193,9 +191,9 @@ export function FinePrintUp({
   theme = "dark",
 }: FinePrintUpProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay);
+  const frame = Math.max(0, useSceneFrame() - delay);
   const t = frame * speed;
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;

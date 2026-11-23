@@ -4,15 +4,9 @@ import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadSans } from "@remotion/google-fonts/Manrope";
 import { format, parseISO } from "date-fns";
 import { memo, useMemo, useState } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate } from "remotion";
 import { Odometer } from "@/components/remocn/number-wheel";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export interface Stargazer {
@@ -958,8 +952,8 @@ export function GitHubStars({
   repoAvatarUrl,
 }: GitHubStarsProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
-  const { durationInFrames, width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { durationInFrames, width, height } = useSceneConfig();
   const t = THEMES[theme] ?? THEMES.light;
   const isVertical = orientation === "vertical";
 

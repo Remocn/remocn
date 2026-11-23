@@ -1,7 +1,8 @@
 "use client";
 
 import { useId } from "react";
-import { Easing, useCurrentFrame, useVideoConfig } from "remotion";
+import { Easing } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export interface TypeFossilProps {
@@ -154,8 +155,8 @@ export function TypeFossil({
 }: TypeFossilProps) {
   const id = useId().replace(/:/g, "");
   const glide = useGlide();
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps } = useSceneConfig();
   const finalText = text.trim().replace(/\s+/g, " ");
   const revisions = [...parseFossilDrafts(drafts), finalText];
   const stateAt = (f: number) =>

@@ -1,7 +1,8 @@
 "use client";
 
-import { AbsoluteFill, interpolate, Sequence, useCurrentFrame } from "remotion";
+import { AbsoluteFill, interpolate, Sequence } from "remotion";
 import { SoftBlurIn } from "@/components/remocn/soft-blur-in";
+import { useCompositionFrames, useSceneFrame } from "@/lib/remocn/frame-rate";
 import type { ProductHeroContent, TemplateTheme } from "./foundation";
 import { CAMERA_TRAVEL_EASE, Camera, stirring } from "./foundation";
 
@@ -15,7 +16,9 @@ const PITCH_DELAY = 30;
 const TRAVEL = 16;
 
 export function ProductHero({ content, theme, speed = 1 }: ProductHeroProps) {
-  const f = useCurrentFrame() * speed;
+  const f = useSceneFrame() * speed;
+  // A `<Sequence>` starts on one of the composition's own frames.
+  const toFrames = useCompositionFrames();
   const vertical = content.entrance === "per-character-rise";
 
   const travelAt = (g: number) =>
@@ -60,7 +63,7 @@ export function ProductHero({ content, theme, speed = 1 }: ProductHeroProps) {
         </AbsoluteFill>
       </Camera>
 
-      <Sequence from={PITCH_DELAY} layout="none">
+      <Sequence from={toFrames(PITCH_DELAY)} layout="none">
         <AbsoluteFill
           style={{
             alignItems: "center",

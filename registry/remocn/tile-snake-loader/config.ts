@@ -84,6 +84,8 @@ export const tileSnakeLoaderConfig: ComponentConfig = {
   },
   durationInFrames: 178,
   fps: FPS,
+  // Does not hold 60 fps in the browser yet (`audit:playback`: pixels).
+  previewFps: 30,
   compositionWidth: W,
   compositionHeight: H,
 };

@@ -2,19 +2,13 @@
 
 import { loadFont } from "@remotion/google-fonts/Inter";
 import { useState } from "react";
-import {
-  AbsoluteFill,
-  Img,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Img, interpolate, spring } from "remotion";
 import { Cursor, type CursorStyle } from "@/components/remocn/cursor";
 import {
   type CursorWaypoint,
   useCursorPath,
 } from "@/components/remocn/use-cursor-path";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: FONT_FAMILY } = loadFont();
@@ -689,8 +683,8 @@ export function XFollowCard({
   speed = 1,
 }: XFollowCardProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const t = THEMES.light;
   const isVertical = orientation === "vertical";
 

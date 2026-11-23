@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment } from "react";
-import { Easing, interpolate, random, useVideoConfig } from "remotion";
+import { Easing, interpolate, random } from "remotion";
 import {
   type CaptionBaseProps,
   DEFAULT_HOLD_MS,
@@ -9,6 +9,7 @@ import {
   groupCaptionWords,
   useCaptions,
 } from "@/lib/remocn/caption-core";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export interface CaptionScrambleProps extends CaptionBaseProps {
@@ -52,7 +53,7 @@ export function CaptionScramble({
   className,
 }: CaptionScrambleProps) {
   const glide = useGlide();
-  const { fps } = useVideoConfig();
+  const { fps } = useSceneConfig();
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,

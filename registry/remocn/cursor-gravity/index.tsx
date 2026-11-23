@@ -1,7 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Easing, useCurrentFrame, useVideoConfig } from "remotion";
+import { Easing } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export interface CursorGravityProps {
@@ -190,8 +191,8 @@ export function CursorGravity({
   className,
 }: CursorGravityProps) {
   const glide = useGlide();
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const step = (30 / fps) * Math.max(0, finite(speed, 1));
   const t = frame * step;
   // Content travels with the material, without stretching the lettering.

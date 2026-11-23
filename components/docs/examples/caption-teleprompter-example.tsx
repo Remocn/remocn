@@ -1,7 +1,8 @@
 "use client";
 
-import { AbsoluteFill, useVideoConfig } from "remotion";
+import { AbsoluteFill } from "remotion";
 import { previewCaptions } from "@/components/docs/examples/caption-fixture";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 import { CaptionTeleprompter } from "@/registry/remocn/caption-teleprompter";
 
 interface CaptionTeleprompterExampleProps {
@@ -31,7 +32,7 @@ export function CaptionTeleprompterExampleScene({
   holdMs,
   shadow,
 }: CaptionTeleprompterExampleProps) {
-  const { width } = useVideoConfig();
+  const { width } = useSceneConfig();
   return (
     <AbsoluteFill
       style={{

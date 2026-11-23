@@ -2,12 +2,8 @@
 
 import { Warp, type WarpProps } from "@paper-design/shaders-react";
 import { useCallback, useState } from "react";
-import {
-  continueRender,
-  delayRender,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { continueRender, delayRender } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const NEUTRAL_COLORS = ["#12121a", "#3a3a5c", "#12121a", "#52527a"];
 
@@ -23,8 +19,8 @@ export function ShaderWarp({
   className,
   ...rest
 }: ShaderWarpProps) {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps, width, height } = useSceneConfig();
 
   const [handle] = useState(() => delayRender("shader-warp"));
   const gate = useCallback(

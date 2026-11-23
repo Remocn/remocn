@@ -4,13 +4,8 @@ import { loadFont } from "@remotion/google-fonts/IBMPlexMono";
 import { loadFont as loadDisplay } from "@remotion/google-fonts/Sora";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: mono } = loadFont("normal", {
@@ -166,7 +161,7 @@ function Content({
   fontFamily: string;
 }) {
   const glide = useGlide();
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   const u = height / 720;
   const rise = (d: number) =>
     interpolate(t, [d, d + 26], [0, 1], { ...CLAMP, easing: EASE_OUT });
@@ -264,8 +259,8 @@ export function FrostedClear({
   theme = "dark",
   speed = 1,
 }: FrostedClearProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width, height } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const p = THEMES[theme];
   const bg =
     background === "transparent" ? "transparent" : (background ?? p.bg);

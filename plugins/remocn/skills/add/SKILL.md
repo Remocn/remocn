@@ -26,6 +26,8 @@ Load the `remocn` skill first for the tier conventions and Canvas & timing.
 5. **Use it.** Show a usage snippet built from the docs example, sized to the canvas, inside a
    `<Sequence durationInFrames>` of at least its `Length` plus hold time. Transitions go into
    `TransitionSeries.Transition` as `presentation` with `linearTiming`/`springTiming` at their
-   `Length`. If the user named a place in their code, put it there; otherwise ask where it goes.
+   `Length`. `Length` is counted at 30 fps: in a 60 fps composition hand Remotion twice that (scale
+   by `fps / 30` at other rates); frame counts in the component's own props stay as the docs give
+   them. If the user named a place in their code, put it there; otherwise ask where it goes.
 6. **Check.** `npx tsc --noEmit`, then a still at the end of its motion
    (`npx remotion still <composition> out/<name>.png --frame=<n>`) and look at it.

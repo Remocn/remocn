@@ -1,14 +1,8 @@
 "use client";
 
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  random,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, random } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type SynthwaveColors = {
   skyTop: string;
@@ -97,8 +91,8 @@ export function Synthwave({
   sunStripes = synthwaveDefaults.sunStripes,
   speed = synthwaveDefaults.speed,
 }: SynthwaveProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width: W, height: H, fps } = useSceneConfig();
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const merged = { ...synthwaveDefaults.colors, ...colors };
   const c: SynthwaveColors = {

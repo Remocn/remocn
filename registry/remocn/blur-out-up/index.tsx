@@ -1,6 +1,7 @@
 "use client";
 
-import { Easing, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export interface BlurOutUpProps {
@@ -22,9 +23,9 @@ export function BlurOutUp({
   speed = 1,
   className,
 }: BlurOutUpProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = useSceneFrame() * speed;
   const glide = useGlide();
-  const { durationInFrames } = useVideoConfig();
+  const { durationInFrames } = useSceneConfig();
 
   const words = text.split(" ");
 

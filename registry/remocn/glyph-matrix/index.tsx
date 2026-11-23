@@ -3,13 +3,8 @@
 import { loadFont } from "@remotion/google-fonts/Manrope";
 import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const { fontFamily: MANROPE } = loadFont("normal", {
   weights: ["500", "600"],
@@ -394,8 +389,8 @@ export function GlyphMatrix({
   speed = 1,
   theme = "dark",
 }: GlyphMatrixProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H } = useSceneConfig();
   const pal = THEMES[theme];
   // Everything after the countdown slides with its length.
   const shift = 3 * (numStep - NUM_STEP);

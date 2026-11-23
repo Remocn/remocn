@@ -65,7 +65,7 @@ import { AsciiRender } from "@/components/remocn/ascii-render";
 
 export const Opening = () => {
   const frame = useCurrentFrame();
-  const intensity = interpolate(frame, [0, 30], [1, 0], {
+  const intensity = interpolate(frame, [0, 60], [1, 0], {
     extrapolateRight: "clamp",
   });
 
@@ -91,13 +91,13 @@ moment a command runs.
 <ComponentExample name="ascii-beat" />
 
 ```tsx
-const intensity = interpolate(frame, [44, 46, 58], [0, 1, 0], {
+const intensity = interpolate(frame, [88, 92, 116], [0, 1, 0], {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 });
 ```
 
-Two frames of attack and a dozen of release is the shape that reads as a hit.
+Four frames of attack and two dozen of release at 60 fps is the shape that reads as a hit.
 Give it a slow ramp and it stops being punctuation.
 
 ### Build a backdrop out of characters

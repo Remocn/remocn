@@ -1,11 +1,10 @@
 "use client";
-
-import { useCurrentFrame } from "remotion";
 import {
   type SliderStyle,
   type SliderThumbState,
   sliderThumbStyle,
 } from "@/components/remocn/slider";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { clamp01, type EasingName, easings } from "@/lib/remocn-ui";
 
 export interface SliderStep {
@@ -40,7 +39,7 @@ export function useSliderTransition(
   opts: SliderTransitionOptions = {},
 ): SliderStyle {
   const { speed = 1 } = opts;
-  const raw = useCurrentFrame() * speed;
+  const raw = useSceneFrame() * speed;
   return sliderStyleAt(steps, raw, opts);
 }
 

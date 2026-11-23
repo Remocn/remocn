@@ -1,12 +1,7 @@
 "use client";
 
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type PhyllotaxisProps = {
   /** Number of seeds. */
@@ -60,8 +55,8 @@ export function Phyllotaxis({
   color = phyllotaxisDefaults.color,
   accent = phyllotaxisDefaults.accent,
 }: PhyllotaxisProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const n = Math.max(1, Math.round(count));
   const step = Math.max(1, Math.round(arm));
   const time = frame * speed;

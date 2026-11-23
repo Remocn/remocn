@@ -1,14 +1,8 @@
 "use client";
 
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  random,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, random } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type BrickMosaicProps = {
   /**
@@ -73,8 +67,8 @@ export function BrickMosaic({
   rowDelay = brickMosaicDefaults.rowDelay,
   speed = brickMosaicDefaults.speed,
 }: BrickMosaicProps) {
-  const frame = useCurrentFrame();
-  const { width: W, height: H, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width: W, height: H, fps } = useSceneConfig();
   const t = (frame / fps) * 30 * speed;
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 

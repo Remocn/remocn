@@ -1,6 +1,7 @@
 "use client";
 
-import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import { AfterEffectsMark } from "./ae-mark";
 import {
   aeDuration,
@@ -92,7 +93,7 @@ function StallBar({
 }
 
 export function AeTileComposition({ config }: { config: HeroTilesConfig }) {
-  const raw = useCurrentFrame();
+  const raw = useSceneFrame();
   const total = aeDuration(config);
   const frame = (raw + total - (config.ae.delay % total)) % total;
   const { mode, period, bounce, tilt, stallAt } = config.ae;

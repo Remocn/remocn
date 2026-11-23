@@ -30,7 +30,7 @@ askedAs:
 `TransitionSeries.Transition` between two sequences. The camera pushes
 forward: the outgoing scene accelerates past the lens, blurring as it grows to
 `zoom`, while the incoming scene scales up from the depth with a small
-overshoot settle. Around 40 frames keeps the dolly readable.
+overshoot settle. Around 80 frames at 60 fps keeps the dolly readable.
 
 ```tsx
 import { TransitionSeries, linearTiming } from "@remotion/transitions";
@@ -38,14 +38,14 @@ import { pushThrough } from "@/components/remocn/push-through";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={76}>
+    <TransitionSeries.Sequence durationInFrames={152}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 40 })}
+      timing={linearTiming({ durationInFrames: 80 })}
       presentation={pushThrough()}
     />
-    <TransitionSeries.Sequence durationInFrames={76}>
+    <TransitionSeries.Sequence durationInFrames={152}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

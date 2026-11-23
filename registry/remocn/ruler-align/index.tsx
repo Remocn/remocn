@@ -10,9 +10,8 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const face = loadFont("normal", { weights: ["300"], subsets: ["latin"] });
@@ -153,8 +152,8 @@ export function RulerAlign({
   speed = 1,
 }: RulerAlignProps) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width, height } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const t = THEMES[theme];
   const fg = ink ?? t.fg;
   const clipId = `ruler-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;

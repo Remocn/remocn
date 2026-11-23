@@ -3,13 +3,8 @@
 import { loadFont as loadDisplay } from "@remotion/google-fonts/Fraunces";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["400"],
@@ -131,7 +126,7 @@ interface Layout {
 }
 
 function useLayout(title: string): Layout {
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   const u = height / 720;
   const disc = height * 0.42;
   const gap = 60 * u;
@@ -158,7 +153,7 @@ function Backdrop({
   bg: string;
   fontFamily: string;
 }) {
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   const drift = EASE_IO(interpolate(t, [0, 62], [0, 1], CLAMP));
   const ox = -width * 0.34 * (1 - drift);
   const oy = Math.sin(drift * Math.PI) * -46 * L.u;
@@ -246,8 +241,8 @@ export function FlutedGlass({
   theme = "dark",
   speed = 1,
 }: FlutedGlassProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width, height } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
   const bg =

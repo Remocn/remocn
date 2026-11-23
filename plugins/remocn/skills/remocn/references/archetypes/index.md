@@ -19,6 +19,11 @@ strategy, the beat language, and the good-vs-slop bar; pick components from `htt
 
 `[N]` = the main scene scales linearly with item count.
 
+Every frame count in the recipes (beat tables, transition lengths, frame math, `@30fps` defaults) is
+counted at 30 fps, the unit of a component's `Length` and of its frame props. The video runs at
+60 fps: double a count where you hand it to Remotion (sequence `durationInFrames` and `from`,
+`linearTiming` / `springTiming` lengths, `meta.durationInFrames`).
+
 **Any other archetype** (launch teaser, tweet-wall, dashboard tour, tutorial, milestone,
 sale promo, lower-third…) — compose it from `../anatomy.md`: the 6-beat anatomy generalizes.
 Use the nearest ready recipe above as the format model.

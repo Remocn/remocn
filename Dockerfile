@@ -14,6 +14,8 @@ WORKDIR /app
 # skipped because the root postinstall (fumadocs-mdx) needs the sources; it runs
 # after the COPY below.
 COPY package.json bun.lock ./
+# `bun install` applies these (package.json `patchedDependencies`).
+COPY patches ./patches
 RUN --mount=type=cache,target=/root/.bun/install/cache \
     bun install --frozen-lockfile --ignore-scripts
 

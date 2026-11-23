@@ -12,9 +12,8 @@ import {
   interpolate,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -470,9 +469,9 @@ export function ChannelReactions({
   groundParams,
 }: ChannelReactionsProps) {
   const glide = useGlide();
-  const rawFrame = useCurrentFrame();
+  const rawFrame = useSceneFrame();
   const frame = Math.max(0, rawFrame - delay) * speed;
-  const { width, height, fps } = useVideoConfig();
+  const { width, height, fps } = useSceneConfig();
   const tall = height > width;
   const SW = tall ? 720 : 1280;
   const SH = tall ? 1280 : 720;

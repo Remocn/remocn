@@ -30,7 +30,7 @@ askedAs:
 `TransitionSeries.Transition` between two sequences. The outgoing scene drifts
 out of focus and brightens like an over-exposed bokeh, the incoming scene
 resolves from the same blur and settles into sharpness with a gentle lens
-breath. Calm and editorial — give it around 46 frames.
+breath. Calm and editorial — give it around 92 frames at 60 fps.
 
 ```tsx
 import { TransitionSeries, linearTiming } from "@remotion/transitions";
@@ -38,14 +38,14 @@ import { focusPull } from "@/components/remocn/focus-pull";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={80}>
+    <TransitionSeries.Sequence durationInFrames={160}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 46 })}
+      timing={linearTiming({ durationInFrames: 92 })}
       presentation={focusPull()}
     />
-    <TransitionSeries.Sequence durationInFrames={80}>
+    <TransitionSeries.Sequence durationInFrames={160}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

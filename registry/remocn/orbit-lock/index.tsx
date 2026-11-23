@@ -8,9 +8,8 @@ import {
   interpolate,
   interpolateColors,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export type OrbitLockProps = {
@@ -139,8 +138,8 @@ export function OrbitLock(props: OrbitLockProps) {
   } = { ...orbitLockDefaults, ...props };
   const glide = useGlide();
   const uid = `orbit-lock-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const t = frame * Math.max(0, speed);
   const s = Math.min(width, height);
   const cx = width / 2;

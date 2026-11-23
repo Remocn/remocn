@@ -9,9 +9,8 @@ import {
   delayRender,
   Easing,
   interpolate,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const face = loadFont("normal", {
@@ -182,9 +181,9 @@ export function CaretLetter({
   theme = "light",
   speed = 1,
 }: CaretLetterProps) {
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
   const glide = useGlide();
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   const t = THEMES[theme];
   const fg = inkProp ?? t.fg;
   const stage =

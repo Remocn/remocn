@@ -1,7 +1,8 @@
 "use client";
 
 import { useId } from "react";
-import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { Easing, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface GooeyMorphProps {
   className?: string;
@@ -77,7 +78,7 @@ export function GooeyMorph({
   displaceEvolutionPerSecond = 50,
   fill = "#ffffff",
 }: GooeyMorphProps) {
-  const frame = useCurrentFrame();
+  const frame = useSceneFrame();
   const filterId = useId();
 
   const travelEase = Easing.bezier(0.88, 0.14, 0.12, 0.86);

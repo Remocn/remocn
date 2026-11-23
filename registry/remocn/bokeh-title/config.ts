@@ -83,6 +83,8 @@ export const bokehTitleConfig: ComponentConfig = {
   },
   durationInFrames: 190,
   fps: FPS,
+  // Does not hold 60 fps in the browser yet (`audit:playback`: script).
+  previewFps: 30,
   compositionWidth: W,
   compositionHeight: H,
 };

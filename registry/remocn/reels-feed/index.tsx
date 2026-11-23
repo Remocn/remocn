@@ -4,15 +4,8 @@ import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadFont } from "@remotion/google-fonts/Onest";
 import type React from "react";
 import { useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -686,7 +679,7 @@ function Ticker({
 }
 
 function ProductScene({ t, accent }: { t: number; accent: string }) {
-  const { fps } = useVideoConfig();
+  const { fps } = useSceneConfig();
   const inn = spring({
     frame: t,
     fps,
@@ -848,7 +841,7 @@ function ProductScene({ t, accent }: { t: number; accent: string }) {
 }
 
 function LaunchScene({ t, accent }: { t: number; accent: string }) {
-  const { fps } = useVideoConfig();
+  const { fps } = useSceneConfig();
   const card = spring({
     frame: t - 2,
     fps,
@@ -924,7 +917,7 @@ function PollScene({
   options: [string, string];
   vote: number;
 }) {
-  const { fps } = useVideoConfig();
+  const { fps } = useSceneConfig();
   const pop = spring({
     frame: t - 4,
     fps,
@@ -1041,7 +1034,7 @@ function PollScene({
 }
 
 function ReelScene({ t }: { t: number }) {
-  const { fps } = useVideoConfig();
+  const { fps } = useSceneConfig();
   const words = ["Ship", "your", "launch", "video.", "Today."];
   const idx = Math.min(words.length - 1, Math.max(0, Math.floor(t / 13)));
   const w = spring({
@@ -1147,8 +1140,8 @@ export function ReelsFeed({
 }: ReelsFeedProps) {
   // `glide` names an easing in this file, so the glide mark is `tilt`.
   const tilt = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay);
-  const { fps, width, height } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay);
+  const { fps, width, height } = useSceneConfig();
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const f = frame * speed;
   const dark = theme === "dark";

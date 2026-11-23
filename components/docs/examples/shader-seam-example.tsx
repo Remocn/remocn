@@ -2,6 +2,7 @@
 
 import { linearTiming, TransitionSeries } from "@remotion/transitions";
 import { AbsoluteFill } from "remotion";
+import { useCompositionFrames } from "@/lib/remocn/frame-rate";
 import {
   type ShaderSeamProps,
   shaderSeam,
@@ -91,16 +92,17 @@ function Scene({ next = false }: { next?: boolean }) {
 }
 
 export function ShaderSeamExampleScene(props: ShaderSeamProps) {
+  const toFrames = useCompositionFrames();
   return (
     <TransitionSeries>
-      <TransitionSeries.Sequence durationInFrames={108}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(108)}>
         <Scene />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
-        timing={linearTiming({ durationInFrames: 60 })}
+        timing={linearTiming({ durationInFrames: toFrames(60) })}
         presentation={shaderSeam(props)}
       />
-      <TransitionSeries.Sequence durationInFrames={108}>
+      <TransitionSeries.Sequence durationInFrames={toFrames(108)}>
         <Scene next />
       </TransitionSeries.Sequence>
     </TransitionSeries>
@@ -119,14 +121,14 @@ import { shaderSeam } from "@/components/remocn/shader-seam";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={108}>
+    <TransitionSeries.Sequence durationInFrames={216}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 60 })}
+      timing={linearTiming({ durationInFrames: 120 })}
       presentation={shaderSeam(${JSON.stringify(props, null, 2).replace(/\n/g, "\n      ")})}
     />
-    <TransitionSeries.Sequence durationInFrames={108}>
+    <TransitionSeries.Sequence durationInFrames={216}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

@@ -1,12 +1,13 @@
 "use client";
 
 import type React from "react";
-import { AbsoluteFill, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill } from "remotion";
 import {
   type CanvasFilterProps,
   makeCanvasFilter,
   makeFilterShader,
 } from "@/lib/remocn/canvas-presentation";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type UnderwaterRippleProps = {
   amplitude?: number;
@@ -107,8 +108,8 @@ export const UnderwaterRipple: React.FC<
   dispersion = DEFAULTS.dispersion,
   children,
 }) => {
-  const frame = useCurrentFrame();
-  const { height, durationInFrames } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { height, durationInFrames } = useSceneConfig();
   const cycle = Math.max(durationInFrames, 1);
 
   return (

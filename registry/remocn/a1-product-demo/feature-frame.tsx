@@ -1,7 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneFrame } from "@/lib/remocn/frame-rate";
 import type { TemplateTheme } from "./foundation";
 import { UiSnapshotCard } from "./ui-snapshot-card";
 
@@ -28,7 +29,7 @@ export function FeatureFrame({
   header,
   speed = 1,
 }: FeatureFrameProps) {
-  const f = useCurrentFrame() * speed;
+  const f = useSceneFrame() * speed;
 
   const cardOpacity = interpolate(f, [0, 22], [0, 1], {
     extrapolateLeft: "clamp",

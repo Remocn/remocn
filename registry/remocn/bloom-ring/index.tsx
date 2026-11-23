@@ -17,9 +17,12 @@ import {
   interpolateColors,
   random,
   spring,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import {
+  useCompositionFrames,
+  useSceneConfig,
+  useSceneFrame,
+} from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -76,7 +79,7 @@ function ringState(p: number) {
 }
 
 function Bloom({ p, props }: { p: number; props: Required<BloomRingProps> }) {
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const { radius, width, heat } = ringState(p);
   const cx = props.centerX * W;
   const cy = props.centerY * H;
@@ -143,7 +146,7 @@ const BloomRingPresentation: React.FC<
   passedProps,
 }) => {
   const props = { ...bloomRingDefaults, ...passedProps };
-  const { width: W, height: H } = useVideoConfig();
+  const { width: W, height: H } = useSceneConfig();
   const p = presentationProgress;
 
   if (presentationDirection === "exiting") {
@@ -285,8 +288,8 @@ function RiseWord({
   delay: number;
   speed: number;
 }) {
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { fps } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { fps } = useSceneConfig();
   const s = spring({
     frame: frame - at,
     fps,
@@ -346,8 +349,8 @@ function SceneLine({
   speed: number;
 }) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H, durationInFrames } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
   const t = THEMES[theme];
   const tall = H > W;
   const size = tall ? W * 0.09 : Math.min(W * 0.066, H * 0.12);
@@ -462,8 +465,8 @@ function SceneLogo({
   speed: number;
 }) {
   const glide = useGlide();
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
+  const frame = useSceneFrame() * speed;
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
   const t = THEMES[theme];
   const tall = H > W;
   const logoSize = tall ? W * 0.2 : Math.min(W * 0.11, H * 0.2);
@@ -619,7 +622,10 @@ export function BloomRingDemo({
   speed = 1,
 }: BloomRingDemoProps) {
   // Speed scales the series itself so the transition keeps pace with the scenes.
-  const len = (f: number) => Math.max(1, Math.round(f / speed));
+  // Remotion counts a series in the composition's own frames; the lengths
+  // here are written on the 30 fps timeline the scenes run on.
+  const toFrames = useCompositionFrames();
+  const len = (f: number) => Math.max(1, toFrames(f / speed));
   return (
     <AbsoluteFill
       style={{
@@ -630,7 +636,9 @@ export function BloomRingDemo({
       }}
     >
       <TransitionSeries>
-        <TransitionSeries.Sequence durationInFrames={delay + len(sceneA)}>
+        <TransitionSeries.Sequence
+          durationInFrames={toFrames(delay) + len(sceneA)}
+        >
           <SceneLine
             theme={theme}
             lead={lead}

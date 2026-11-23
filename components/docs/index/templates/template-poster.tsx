@@ -3,7 +3,7 @@
 import { Player, type PlayerRef } from "@remotion/player";
 import { useEffect, useRef, useState } from "react";
 import registry from "@/lib/previews";
-import { previewManifest } from "@/registry/__manifest__";
+import { sitePreview } from "@/lib/previews/site-preview";
 
 /**
  * A template's live Remotion player, mounted once it nears the viewport and
@@ -25,7 +25,7 @@ export function TemplatePoster({
   const [near, setNear] = useState(false);
   const [playing, setPlaying] = useState(false);
   const entry = registry[name];
-  const preview = previewManifest[name];
+  const preview = sitePreview(name);
 
   useEffect(() => {
     const node = boxRef.current;

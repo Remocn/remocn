@@ -1,6 +1,6 @@
 "use client";
 
-import { useCurrentFrame, useVideoConfig } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export interface TypingIndicatorProps {
   dotCount?: number;
@@ -48,8 +48,8 @@ export function TypingIndicator({
   cyclesPerSecond = 1.1,
   className,
 }: TypingIndicatorProps) {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { fps } = useSceneConfig();
   const opts: TypingDotOptions = {
     fps,
     dotCount,

@@ -3,13 +3,8 @@
 import { loadFont } from "@remotion/google-fonts/Sora";
 import type React from "react";
 import { type ReactNode, useId } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const { fontFamily: sora } = loadFont("normal", {
   weights: ["300", "400"],
@@ -233,8 +228,8 @@ export function BlockCity({
   speed = 1,
   theme = "dark",
 }: BlockCityProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width, height } = useVideoConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width, height } = useSceneConfig();
   const u = height / 720;
   const pal: Palette = PALETTES[theme];
   const fg = ink ?? pal.fg;

@@ -1,6 +1,7 @@
 "use client";
 
-import { Easing, interpolate, spring, useVideoConfig } from "remotion";
+import { Easing, interpolate, spring } from "remotion";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 import {
   drawnPathProps,
   type IconAnimationProps,
@@ -28,7 +29,7 @@ export function PlusIcon({
 }: IconAnimationProps) {
   const { drawProgress, scaleIn, actionFrame, actionProgress } =
     useIconAnimation({ animation, loop, speed }, TIMINGS);
-  const { fps } = useVideoConfig();
+  const { fps } = useSceneConfig();
 
   const linearDraw = 1 - (1 - drawProgress) ** (1 / 3);
 

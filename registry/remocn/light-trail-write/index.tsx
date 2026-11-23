@@ -8,13 +8,8 @@ import {
 } from "@remotion/paths";
 import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 /**
  * Beat sheet (30fps, speed 1):
@@ -242,12 +237,12 @@ export function LightTrailWrite({
   grain = true,
   speed = 1,
 }: LightTrailWriteProps) {
-  const t = Math.max(0, useCurrentFrame() - delay) * speed;
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
   const transparent = background === "transparent";
   const writeEnd = WRITE_START + write;
   const sweepStart = writeEnd + 12;
   const sweepEnd = sweepStart + 24;
-  const { width, height } = useVideoConfig();
+  const { width, height } = useSceneConfig();
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const ids = {
     wide: `w${uid}`,

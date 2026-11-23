@@ -18,9 +18,13 @@ import {
   random,
   spring,
   staticFile,
-  useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import {
+  useCompositionFrames,
+  useSceneConfig,
+  useSceneFrame,
+  useSceneFrameCount,
+} from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
@@ -200,7 +204,7 @@ function Discs({
   duration: number;
   props: Required<DiscPopProps>;
 }) {
-  const { width: W, height: H, fps } = useVideoConfig();
+  const { width: W, height: H, fps } = useSceneConfig();
   const discs = layoutDiscs(W, H, props);
   const n = discs.length;
   const frame = p * duration;
@@ -270,6 +274,9 @@ const DiscPopPresentation: React.FC<
   presentationDurationInFrames,
   passedProps,
 }) => {
+  // Remotion counts the transition's length in the composition's own
+  // frames; everything below counts on the 30 fps timeline.
+  const sceneLength = useSceneFrameCount()(presentationDurationInFrames);
   const props = { ...discPopDefaults, ...passedProps };
   const p = presentationProgress;
 
@@ -305,11 +312,7 @@ const DiscPopPresentation: React.FC<
         {children}
       </AbsoluteFill>
       {p > 0 && p < 1 ? (
-        <Discs
-          p={p}
-          duration={Math.max(1, presentationDurationInFrames)}
-          props={props}
-        />
+        <Discs p={p} duration={Math.max(1, sceneLength)} props={props} />
       ) : null}
     </AbsoluteFill>
   );
@@ -444,8 +447,8 @@ function PromptScene({
   speed: number;
 }) {
   const glide = useGlide();
-  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
-  const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
+  const frame = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
   const c = T[theme];
   const tall = H > W;
   const u = tall ? W / 760 : H / 640;
@@ -661,8 +664,8 @@ function PlayerScene({
   speed: number;
 }) {
   const glide = useGlide();
-  const frame = useCurrentFrame() * speed;
-  const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
+  const frame = useSceneFrame() * speed;
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
   const c = T[theme];
   const tall = H > W;
   const u = tall ? W / 760 : H / 640;
@@ -974,7 +977,10 @@ export function DiscPopDemo({
     ...discs,
   });
   // Speed scales the series itself so the transition keeps pace with the scenes.
-  const len = (f: number) => Math.max(1, Math.round(f / speed));
+  // Remotion counts a series in the composition's own frames; the lengths
+  // here are written on the 30 fps timeline the scenes run on.
+  const toFrames = useCompositionFrames();
+  const len = (f: number) => Math.max(1, toFrames(f / speed));
   return (
     <AbsoluteFill
       style={{
@@ -985,7 +991,9 @@ export function DiscPopDemo({
       }}
     >
       <TransitionSeries>
-        <TransitionSeries.Sequence durationInFrames={delay + len(sceneA)}>
+        <TransitionSeries.Sequence
+          durationInFrames={toFrames(delay) + len(sceneA)}
+        >
           <PromptScene
             theme={theme}
             greeting={greeting}

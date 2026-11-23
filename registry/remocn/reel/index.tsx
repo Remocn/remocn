@@ -1,13 +1,7 @@
 "use client";
 
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 const clamp = {
   extrapolateLeft: "clamp" as const,
@@ -36,8 +30,8 @@ export function Reel({
   objectPosition = "top",
   background = "#050506",
 }: ReelProps) {
-  const frame = useCurrentFrame();
-  const { width: compWidth, height: compHeight } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width: compWidth, height: compHeight } = useSceneConfig();
   const left = (compWidth - width) / 2;
   const top = (compHeight - height) / 2;
 

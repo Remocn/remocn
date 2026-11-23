@@ -2,13 +2,8 @@
 
 import { loadFont as loadMono } from "@remotion/google-fonts/JetBrainsMono";
 import type React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 const { fontFamily: MONO_FAMILY } = loadMono();
@@ -125,8 +120,8 @@ export function RollingNumber({
   color = "#171717",
   speed = 1,
 }: RollingNumberProps) {
-  const frame = useCurrentFrame();
-  const { durationInFrames } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { durationInFrames } = useSceneConfig();
 
   const start = Math.max(0, Math.round(from));
   const end = Math.max(0, Math.round(to));

@@ -1,12 +1,7 @@
 "use client";
 
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
 export type SearchRevealProps = {
   text?: string;
@@ -123,8 +118,8 @@ export function SearchReveal({
   reducedMotion = false,
   className,
 }: SearchRevealProps) {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const state = getSearchRevealState((frame * 30) / fps, {
     text,
     fieldWidth,

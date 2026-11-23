@@ -15,6 +15,8 @@ export type StageComposition = {
   inputProps: Record<string, unknown>;
   durationInFrames: number;
   fps: number;
+  /** A config's own `previewFps`; the docs player reads it, the stage does not. */
+  previewFps?: number;
   compositionWidth: number;
   compositionHeight: number;
   previewBackdrop?: BackdropFill;

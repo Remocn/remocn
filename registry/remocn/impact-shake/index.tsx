@@ -2,15 +2,8 @@
 
 import type React from "react";
 import { useId, useMemo } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  random,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, random, spring } from "remotion";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
 
 export type ImpactShakeColors = {
@@ -78,8 +71,8 @@ export function ImpactShake({
   speed = impactShakeDefaults.speed,
 }: ImpactShakeProps) {
   const tilt = useGlide();
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const frame = useSceneFrame();
+  const { width, height, fps } = useSceneConfig();
   const uid = `impact-shake-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const baseColors = { ...impactShakeDefaults.colors, ...colorOverrides };
   const colors = {
