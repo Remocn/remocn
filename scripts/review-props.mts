@@ -1,9 +1,10 @@
-// `bun scripts/review-props.mts --names a,b|--file names.txt --out dir [--props '{"scale":0.8}'] [--at 0.6,0.25] [--scale 0.25]`
+// `bun scripts/review-props.mts --names a,b|--file names.txt --out dir [--props '{"scale":0.8}'] [--at 0.6,0.25|all] [--scale 0.25]`
 //
 // Renders stills of registry components through `src/remotion/props-review-root.tsx`:
 // one PNG per component per moment (`--at` is a share of each component's
-// duration). Used to check that new props keep the default render unchanged
-// and visibly do something when set.
+// duration, or `all` for every frame). Used to check that new props keep the
+// default render unchanged and visibly do something when set, and with
+// `--at all --scale 1` that a refactor keeps every frame to the pixel.
 import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { bundle } from "@remotion/bundler";
@@ -24,7 +25,8 @@ const names = (
   .filter(Boolean);
 const out = path.resolve(flag("out") ?? "out/review-props");
 const props = JSON.parse(flag("props") ?? "{}") as Record<string, unknown>;
-const at = (flag("at") ?? "0.6").split(",").map(Number);
+const every = flag("at") === "all";
+const at = every ? [] : (flag("at") ?? "0.6").split(",").map(Number);
 const scale = Number(flag("scale") ?? "0.25");
 mkdirSync(out, { recursive: true });
 
@@ -62,12 +64,20 @@ try {
   let i = 0;
   for (const composition of compositions) {
     i += 1;
-    for (const share of at) {
-      const frame = Math.min(
-        composition.durationInFrames - 1,
-        Math.round(composition.durationInFrames * share),
-      );
-      const file = path.join(out, `${composition.id}@${share}.png`);
+    const moments = every
+      ? Array.from({ length: composition.durationInFrames }, (_, f) => ({
+          frame: f,
+          tag: String(f).padStart(4, "0"),
+        }))
+      : at.map((share) => ({
+          frame: Math.min(
+            composition.durationInFrames - 1,
+            Math.round(composition.durationInFrames * share),
+          ),
+          tag: String(share),
+        }));
+    for (const { frame, tag } of moments) {
+      const file = path.join(out, `${composition.id}@${tag}.png`);
       try {
         await renderStill({
           serveUrl,
