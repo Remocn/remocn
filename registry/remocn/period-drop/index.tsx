@@ -4,6 +4,13 @@ import { loadFont } from "@remotion/google-fonts/Inter";
 import { Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_TEXT,
+  type PeriodDropElementId,
+  periodDropTimeline,
+  REST_FRAME,
+} from "./timeline";
 
 const { fontFamily: INTER } = loadFont("normal", {
   weights: ["100", "900"],
@@ -20,10 +27,15 @@ export interface PeriodDropProps {
   dotSize?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches single letters and the drop, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<PeriodDropElementId>;
 }
 
 export const periodDropDefaults = {
-  text: "remocn",
+  text: DEFAULT_TEXT,
   fontSize: 160,
   fontWeight: 800,
   fontFamily: INTER,
@@ -31,10 +43,10 @@ export const periodDropDefaults = {
   dotColor: "#D97757",
   dotSize: 0.2,
   speed: 1,
-} satisfies Required<Omit<PeriodDropProps, "className">>;
+} satisfies Required<Omit<PeriodDropProps, "className" | "timing">>;
 
 /** Frame where the dot has come to rest, squash included. */
-export const periodDropLength = 47;
+export const periodDropLength = REST_FRAME;
 
 /** Timeline constants on the 30 fps clock. */
 export const periodDropTiming = {
@@ -75,18 +87,33 @@ export function getPeriodDropTime(
   return (Math.max(0, finite(frame, 0)) * 30 * speed) / fps;
 }
 
-/** How far letter `index` still sits below its line, 1 → 0. */
-export function getPeriodDropRise(t: number, index: number) {
-  const start = periodDropTiming.riseStagger * index;
-  return interpolate(t, [start, start + periodDropTiming.riseFrames], [1, 0], {
+/**
+ * How far letter `index` still sits below its line, 1 → 0. `start` and
+ * `frames` move and stretch its rise; by default it starts `riseStagger`
+ * frames after the letter before.
+ */
+export function getPeriodDropRise(
+  t: number,
+  index: number,
+  start = periodDropTiming.riseStagger * index,
+  frames: number = periodDropTiming.riseFrames,
+) {
+  return interpolate(t, [start, start + frames], [1, 0], {
     ...CLAMP,
     easing: easeOutQuart,
   });
 }
 
-/** Frames at which the dot touches the line: the landing, then each bounce. */
-export function getPeriodDropImpacts() {
-  const { dropStart, fallFrames, restitution, bounces } = periodDropTiming;
+/**
+ * Frames at which the dot touches the line: the landing, then each bounce.
+ * `dropStart` moves the drop; `stretch` slows the whole fall and bounce.
+ */
+export function getPeriodDropImpacts(
+  dropStart: number = periodDropTiming.dropStart,
+  stretch = 1,
+) {
+  const { restitution, bounces } = periodDropTiming;
+  const fallFrames = periodDropTiming.fallFrames * stretch;
   const impacts = [dropStart + fallFrames];
   for (let n = 1; n <= bounces; n++) {
     impacts.push(impacts[n - 1] + 2 * restitution ** n * fallFrames);
@@ -106,15 +133,21 @@ export interface PeriodDropDot {
  * The dot's fall and bounces. Heights are shares of the drop height, time is
  * in 30 fps frames. Gravity is set by the fall: `g = 2 / fall²`, so the
  * landing speed is `2 / fall`. Each bounce leaves at `restitution` times the
- * previous speed, and the squash of each impact scales with it.
+ * previous speed, and the squash of each impact scales with it. `dropStart`
+ * moves the drop; `slow` stretches its fall, bounces and recovery in time.
  */
-export function getPeriodDropDot(t: number): PeriodDropDot {
-  const { dropStart, fallFrames, restitution, stretch, squash, recover } =
-    periodDropTiming;
+export function getPeriodDropDot(
+  t: number,
+  dropStart: number = periodDropTiming.dropStart,
+  slow = 1,
+): PeriodDropDot {
+  const { restitution, stretch, squash } = periodDropTiming;
+  const fallFrames = periodDropTiming.fallFrames * slow;
+  const recover = periodDropTiming.recover * slow;
   if (t < dropStart) return { visible: false, y: -1, scaleX: 1, scaleY: 1 };
   const g = 2 / (fallFrames * fallFrames);
   const landing = g * fallFrames;
-  const impacts = getPeriodDropImpacts();
+  const impacts = getPeriodDropImpacts(dropStart, slow);
 
   let y = 0;
   let speed = 0;
@@ -150,23 +183,36 @@ export function getPeriodDropDot(t: number): PeriodDropDot {
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
-export function PeriodDrop({
-  text = periodDropDefaults.text,
-  fontSize = periodDropDefaults.fontSize,
-  fontWeight = periodDropDefaults.fontWeight,
-  fontFamily = periodDropDefaults.fontFamily,
-  color = periodDropDefaults.color,
-  dotColor = periodDropDefaults.dotColor,
-  dotSize = periodDropDefaults.dotSize,
-  speed = periodDropDefaults.speed,
-  className,
-}: PeriodDropProps) {
+export function PeriodDrop(props: PeriodDropProps) {
+  const {
+    text = periodDropDefaults.text,
+    fontSize = periodDropDefaults.fontSize,
+    fontWeight = periodDropDefaults.fontWeight,
+    fontFamily = periodDropDefaults.fontFamily,
+    color = periodDropDefaults.color,
+    dotColor = periodDropDefaults.dotColor,
+    dotSize = periodDropDefaults.dotSize,
+    speed = periodDropDefaults.speed,
+    className,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
-  const { fps, height } = useSceneConfig();
+  const { fps, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    periodDropTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const unit = height / 720;
   const t = getPeriodDropTime(frame, { fps, speed });
-  const dot = getPeriodDropDot(t);
+  const fall = tl.get("drop");
+  const dot = getPeriodDropDot(
+    t,
+    fall.start,
+    fall.beat("fall") / periodDropTiming.fallFrames,
+  );
   const drop = periodDropTiming.dropHeight * height;
 
   return (
@@ -192,28 +238,32 @@ export function PeriodDrop({
           whiteSpace: "pre",
         }}
       >
-        {Array.from(text).map((char, i) => (
-          <span
-            key={i}
-            style={{
-              display: "inline-block",
-              overflow: "hidden",
-              // Extend the clip below the line box so descenders survive.
-              paddingBottom: "0.15em",
-              marginBottom: "-0.15em",
-              verticalAlign: "top",
-            }}
-          >
+        {Array.from(text).map((char, i) => {
+          const letter = tl.get(`char:${i}`);
+          const rise = getPeriodDropRise(t, i, letter.start, letter.length);
+          return (
             <span
+              key={i}
               style={{
                 display: "inline-block",
-                transform: `translateY(${getPeriodDropRise(t, i) * 115}%)${glide(midway(getPeriodDropRise(t, i)))}`,
+                overflow: "hidden",
+                // Extend the clip below the line box so descenders survive.
+                paddingBottom: "0.15em",
+                marginBottom: "-0.15em",
+                verticalAlign: "top",
               }}
             >
-              {char}
+              <span
+                style={{
+                  display: "inline-block",
+                  transform: `translateY(${rise * 115}%)${glide(midway(rise))}`,
+                }}
+              >
+                {char}
+              </span>
             </span>
-          </span>
-        ))}
+          );
+        })}
         <span
           style={{
             display: "inline-block",

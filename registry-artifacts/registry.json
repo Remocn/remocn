@@ -3475,12 +3475,21 @@
       "title": "Period Drop",
       "description": "A word rises out of its line, then a colored dot falls from above the frame, bounces with squash and stretch, and settles as the period.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/period-drop/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/period-drop.tsx"
+          "target": "components/remocn/period-drop/index.tsx"
+        },
+        {
+          "path": "registry/remocn/period-drop/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/period-drop/timeline.ts"
         }
       ],
       "type": "registry:component"
