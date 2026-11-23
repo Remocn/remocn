@@ -38,12 +38,21 @@
       "title": "Bottom-Up Letters",
       "description": "Letters rise from below in a pronounced staircase, one symbol at a time, with zero blur.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/bottom-up-letters/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/bottom-up-letters.tsx"
+          "target": "components/remocn/bottom-up-letters/index.tsx"
+        },
+        {
+          "path": "registry/remocn/bottom-up-letters/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/bottom-up-letters/timeline.ts"
         }
       ],
       "type": "registry:component"

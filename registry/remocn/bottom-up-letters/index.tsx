@@ -1,8 +1,13 @@
 "use client";
 
 import { Easing, interpolate } from "remotion";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type BottomUpLettersElementId,
+  bottomUpLettersTimeline,
+} from "./timeline";
 
 export interface BottomUpLettersProps {
   text: string;
@@ -13,24 +18,35 @@ export interface BottomUpLettersProps {
   fontWeight?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches single letters, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<BottomUpLettersElementId>;
 }
 
-export function BottomUpLetters({
-  text,
-  staggerDelay = 3,
-  distance = 46,
-  fontSize = 72,
-  color = "#171717",
-  fontWeight = 600,
-  speed = 1,
-  className,
-}: BottomUpLettersProps) {
+export function BottomUpLetters(props: BottomUpLettersProps) {
+  const {
+    text,
+    distance = 46,
+    fontSize = 72,
+    color = "#171717",
+    fontWeight = 600,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame() * speed;
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    bottomUpLettersTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
 
   const chars = Array.from(text);
-  const charDurationFrames = 12;
-  const charTravelFrames = 7;
 
   return (
     <div
@@ -55,7 +71,10 @@ export function BottomUpLetters({
         }}
       >
         {chars.map((char, i) => {
-          const local = frame - i * staggerDelay;
+          const letter = tl.get(`char:${i}`);
+          const local = frame - letter.start;
+          const charDurationFrames = letter.length;
+          const charTravelFrames = letter.beat("travel");
           const easing = Easing.bezier(0.18, 1, 0.32, 1);
           const opacity = interpolate(local, [0, charDurationFrames], [0, 1], {
             extrapolateLeft: "clamp",
