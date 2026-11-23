@@ -450,6 +450,7 @@ const libSources = new Map(
       {
         parsed: parseSource(item.files[0].content),
         dependencies: item.dependencies ?? [],
+        registryDependencies: item.registryDependencies ?? [],
       },
     ];
   }),
@@ -473,7 +474,20 @@ for (const file of readdirSync(ARTIFACTS_DIR).sort()) {
     !path.startsWith("registry/remocn-icons/")
   )
     continue;
-  const regDeps = item.registryDependencies ?? [];
+  const component = parseSource(item.files[0].content);
+  const ownsSequence =
+    /^export\s+const\s+[\w$]+\s*=\s*Interactive\.create\(/m.test(
+      component.body,
+    );
+  const registryDependencies = new Set(item.registryDependencies);
+  if (ownsSequence) {
+    for (const dep of registryDependencies) {
+      for (const nested of libSources.get(dep)?.registryDependencies ?? []) {
+        registryDependencies.add(nested);
+      }
+    }
+  }
+  const regDeps = [...registryDependencies];
   if (!regDeps.every((dep) => dep in INLINABLE_LIBS)) {
     skipped.push(`${item.name} (registry deps: ${regDeps.join(", ")})`);
     continue;
@@ -502,9 +516,9 @@ for (const file of readdirSync(ARTIFACTS_DIR).sort()) {
   });
   const { schema, dimensions } = await loadElementConfig(item.name, path);
   let sourceCode = mergeSources(
-    parseSource(item.files[0].content),
+    component,
     libs.map((lib) => lib.parsed),
-    schema ? WRAPPER_IMPORTS : undefined,
+    schema && !ownsSequence ? WRAPPER_IMPORTS : undefined,
   );
   let exported = countExportedComponents(sourceCode);
   if (exported.length === 2) {
@@ -526,8 +540,7 @@ for (const file of readdirSync(ARTIFACTS_DIR).sort()) {
     skipped.push(`${item.name} (${exported.length} exported components)`);
     continue;
   }
-  let installationMode: "wrapped" | "component-owned-sequence" = "wrapped";
-  if (schema) {
+  if (schema && !ownsSequence) {
     const componentName = exported[0];
     sourceCode = stripExports(
       sourceCode.replace(
@@ -536,14 +549,23 @@ for (const file of readdirSync(ARTIFACTS_DIR).sort()) {
       ),
     );
     sourceCode += `\n\n${makeInteractiveWrapper(componentName, schema, dimensions)}\n`;
-    installationMode = "component-owned-sequence";
-    interactive++;
   }
+
+  const installationMode =
+    ownsSequence || schema ? "component-owned-sequence" : "wrapped";
+  if (installationMode === "component-owned-sequence") interactive++;
 
   const depNames = new Set([
     ...(item.dependencies ?? []),
     ...libs.flatMap((lib) => lib.dependencies),
   ]);
+  const captionField = schema?.captions;
+  const initialProps =
+    ownsSequence &&
+    captionField?.type === "remotion-captions" &&
+    captionField.default
+      ? { captions: captionField.default }
+      : null;
 
   const payload = createElementPayload({
     displayName: item.title ?? item.name,
@@ -553,6 +575,7 @@ for (const file of readdirSync(ARTIFACTS_DIR).sort()) {
     dimensions,
     durationInFrames,
     installationMode,
+    initialProps,
     ...(regDeps.includes("@remocn/caption-core")
       ? { isCaptionStyle: true }
       : {}),

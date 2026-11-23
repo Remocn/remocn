@@ -23,12 +23,18 @@ askedAs:
 
 <InstallBlock name="caption-karaoke" />
 
+Requires Remotion 4.0.536 or later.
+
 ## Usage
 
 `CaptionKaraoke` takes a timed transcript and renders only the text block, so
 place it inside your own `AbsoluteFill`. See [Positioning](/docs/captions/getting-started/positioning)
 for safe placements and [Get a transcript](/docs/captions/getting-started/get-a-transcript)
 for producing `captions.json`.
+
+In Remotion Studio, select the Karaoke clip to edit its captions and style.
+Pass timing props such as `from`, `durationInFrames`, and `trimBefore` directly
+to `CaptionKaraoke` to position and trim the clip.
 
 ```tsx
 import { AbsoluteFill } from "remotion";
@@ -56,7 +62,7 @@ export const MyScene = () => (
       type: "Caption[]",
       default: "—",
       description:
-        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the clip's source timeline.",
     },
     {
       name: "combineTokensWithinMilliseconds",

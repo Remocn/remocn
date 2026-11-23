@@ -1,7 +1,13 @@
 "use client";
 
-import { Fragment } from "react";
-import { Easing, interpolate } from "remotion";
+import { type ForwardedRef, Fragment, forwardRef } from "react";
+import {
+  Easing,
+  Interactive,
+  type InteractiveTransformProps,
+  type InteractivitySchema,
+  interpolate,
+} from "remotion";
 import {
   type CaptionBaseProps,
   DEFAULT_HOLD_MS,
@@ -16,6 +22,61 @@ export interface CaptionKaraokeProps extends CaptionBaseProps {
   shadow?: boolean;
 }
 
+export const captionKaraokeSchema = {
+  ...Interactive.captionsSchema,
+  fontSize: {
+    type: "number",
+    min: 24,
+    max: 140,
+    step: 1,
+    default: 64,
+    description: "Font size",
+    hiddenFromList: false,
+  },
+  fontWeight: {
+    type: "number",
+    min: 400,
+    max: 900,
+    step: 100,
+    default: 800,
+    description: "Font weight",
+    hiddenFromList: false,
+  },
+  color: {
+    type: "color",
+    default: "#ffffff",
+    description: "Text color",
+  },
+  activeColor: {
+    type: "color",
+    default: "#facc15",
+    description: "Fill color",
+  },
+  combineTokensWithinMilliseconds: {
+    type: "number",
+    min: 0,
+    max: 3000,
+    step: 100,
+    default: 1200,
+    description: "Page window (ms)",
+    hiddenFromList: false,
+  },
+  holdMs: {
+    type: "number",
+    min: 0,
+    max: 2000,
+    step: 50,
+    default: DEFAULT_HOLD_MS,
+    description: "Hold (ms)",
+    hiddenFromList: false,
+  },
+  shadow: {
+    type: "boolean",
+    default: true,
+    description: "Shadow",
+  },
+} as const satisfies InteractivitySchema;
+
 const ENTER_MS = 160;
 const EXIT_MS = 220;
 const RISE_EM = 0.14;
@@ -26,24 +87,29 @@ const enterEasing = Easing.bezier(0.2, 0.8, 0.2, 1);
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
-export function CaptionKaraoke({
-  captions,
-  combineTokensWithinMilliseconds = 1200,
-  holdMs = DEFAULT_HOLD_MS,
-  fontSize = 64,
-  fontWeight = 800,
-  color = "#ffffff",
-  activeColor = "#facc15",
-  shadow = true,
-  className,
-}: CaptionKaraokeProps) {
+function CaptionKaraokeContent(
+  {
+    captions,
+    combineTokensWithinMilliseconds = captionKaraokeSchema
+      .combineTokensWithinMilliseconds.default,
+    holdMs = captionKaraokeSchema.holdMs.default,
+    fontSize = captionKaraokeSchema.fontSize.default,
+    fontWeight = captionKaraokeSchema.fontWeight.default,
+    color = captionKaraokeSchema.color.default,
+    activeColor = captionKaraokeSchema.activeColor.default,
+    shadow = captionKaraokeSchema.shadow.default,
+    className,
+    style,
+  }: CaptionKaraokeProps & InteractiveTransformProps,
+  ref: ForwardedRef<HTMLDivElement>,
+) {
   const glide = useGlide();
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
     holdMs,
   });
-  if (!state) return null;
+  if (!state) return <div ref={ref} style={style} />;
 
   const enter = interpolate(
     state.previous ? ENTER_MS : state.sinceStartMs,
@@ -68,48 +134,59 @@ export function CaptionKaraoke({
     : 1;
 
   return (
-    <div
-      className={className}
-      style={{
-        fontSize,
-        fontWeight,
-        color,
-        lineHeight: 1.2,
-        textAlign: "center",
-        opacity: Math.min(enter, exit),
-        transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
-      }}
-    >
-      {groupCaptionWords(state.tokens).map((word, w) => (
-        <Fragment key={`${state.pageIndex}-${word[0].index}`}>
-          {w > 0 && " "}
-          <span style={{ display: "inline-block", whiteSpace: "nowrap" }}>
-            {word.map(({ index, token }) => (
-              <span
-                key={index}
-                style={{ position: "relative", display: "inline-block" }}
-              >
+    <div ref={ref} style={style}>
+      <div
+        className={className}
+        style={{
+          fontSize,
+          fontWeight,
+          color,
+          lineHeight: 1.2,
+          textAlign: "center",
+          opacity: Math.min(enter, exit),
+          transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
+        }}
+      >
+        {groupCaptionWords(state.tokens).map((word, w) => (
+          <Fragment key={`${state.pageIndex}-${word[0].index}`}>
+            {w > 0 && " "}
+            <span style={{ display: "inline-block", whiteSpace: "nowrap" }}>
+              {word.map(({ index, token }) => (
                 <span
-                  style={{ textShadow: shadow ? LEGIBILITY_SHADOW : undefined }}
+                  key={index}
+                  style={{ position: "relative", display: "inline-block" }}
                 >
-                  {token.text}
+                  <span
+                    style={{
+                      textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
+                    }}
+                  >
+                    {token.text}
+                  </span>
+                  <span
+                    aria-hidden
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      color: activeColor,
+                      clipPath: `inset(0 ${(1 - token.progress) * 100}% 0 0)`,
+                    }}
+                  >
+                    {token.text}
+                  </span>
                 </span>
-                <span
-                  aria-hidden
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    color: activeColor,
-                    clipPath: `inset(0 ${(1 - token.progress) * 100}% 0 0)`,
-                  }}
-                >
-                  {token.text}
-                </span>
-              </span>
-            ))}
-          </span>
-        </Fragment>
-      ))}
+              ))}
+            </span>
+          </Fragment>
+        ))}
+      </div>
     </div>
   );
 }
+
+export const CaptionKaraoke = Interactive.create({
+  Component: forwardRef(CaptionKaraokeContent),
+  componentName: "<CaptionKaraoke>",
+  layout: "none",
+  schema: captionKaraokeSchema,
+});
