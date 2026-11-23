@@ -9754,12 +9754,21 @@
       "title": "Word Ladder",
       "description": "A word changes a letter or two per rung, climbing a ladder to the last word.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/word-ladder/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/word-ladder.tsx"
+          "target": "components/remocn/word-ladder/index.tsx"
+        },
+        {
+          "path": "registry/remocn/word-ladder/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/word-ladder/timeline.ts"
         }
       ],
       "type": "registry:component"

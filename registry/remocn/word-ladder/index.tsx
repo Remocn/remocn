@@ -5,6 +5,13 @@ import { type ReactNode, useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_WORDS,
+  rungsOf,
+  type WordLadderElementId,
+  wordLadderTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["500"],
@@ -31,6 +38,12 @@ export interface WordLadderProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the first word, single rungs and the poster,
+   * by the ids in `./timeline`. Frames on the scene timeline, after `delay`
+   * and `speed`.
+   */
+  timing?: Timing<WordLadderElementId>;
 }
 
 // Space Grotesk 500 advance widths (1/1000 em) for ASCII 32–126, plus its kern pairs.
@@ -79,25 +92,6 @@ const LINE = 1.276;
 const ASCENDER = 0.7;
 
 // Timing, in frames at speed 1.
-const ENTER_STAGGER = 2;
-const ENTER = 18;
-const FIRST = 32;
-const RUNG = 24;
-const SUB = 3;
-const DROP = 8;
-const RISE_DELAY = 7;
-const RISE = 16;
-const GLIDE_DELAY = 3;
-const GLIDE = 16;
-const BAR_LEAD = 9;
-const BAR_IN = 10;
-const BAR_OUT = 7;
-const SETTLE = 12;
-const POSTER_GAP = 6;
-const POSTER = 18;
-
-const stepAt = (k: number, rung: number) => FIRST + k * rung;
-
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IN = Easing.bezier(0.55, 0, 1, 0.45);
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -196,6 +190,9 @@ interface Swap {
 interface Mark {
   in: number;
   out: number;
+  /** Frames the mark grows over, and shrinks over when it is not the last. */
+  grow: number;
+  shrink: number;
 }
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -214,38 +211,49 @@ function ScaleLayer({
   );
 }
 
-export function WordLadder({
-  words = ["idea", "item", "stem", "step", "ship"],
-  rung = RUNG,
-  stagger = SUB,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: WordLadderProps) {
+export function WordLadder(props: WordLadderProps) {
+  const {
+    words = DEFAULT_WORDS,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const tilt = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    wordLadderTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
-  const rungs = useMemo(
-    () => (words.length > 0 ? words : [""]).map((w) => Array.from(w)),
-    [words],
-  );
+  const rungs = useMemo(() => rungsOf(words), [words]);
   const slots = Math.max(1, ...rungs.map((r) => r.length));
   const layouts = useMemo(
     () => rungs.map((r) => layoutWord(r, slots)),
     [rungs, slots],
   );
   const steps = rungs.length - 1;
+  const enter = tl.get("enter");
+  const poster = tl.get("poster");
+  // Rung `k` here is the step from word `k` to word `k + 1`.
+  const rungEls = useMemo(
+    () => Array.from({ length: steps }, (_, k) => tl.get(`rung:${k + 1}`)),
+    [tl, steps],
+  );
+  const stepAt = (k: number) => rungEls[k].start;
 
   const plan = useMemo(() => {
     const swaps: Swap[][] = Array.from({ length: slots }, () => []);
@@ -262,7 +270,7 @@ export function WordLadder({
         if (from === to) continue;
         swaps[i].push({
           step: k,
-          at: stepAt(k, rung) + order * stagger,
+          at: rungEls[k].start + order * rungEls[k].beat("stagger"),
           from,
           to,
         });
@@ -270,24 +278,29 @@ export function WordLadder({
       }
       changed.push(row);
     }
-    const lastSwap = Math.max(
-      stepAt(0, rung),
-      ...swaps.flat().map((s) => s.at + RISE_DELAY + RISE),
-    );
-    const posterAt = steps > 0 ? lastSwap + POSTER_GAP : stepAt(0, rung);
+    const posterAt = poster.start;
     // Accent marks: one per slot and run of consecutive steps that change it.
     const marks: Mark[][] = Array.from({ length: slots }, () => []);
     for (let i = 0; i < slots; i++) {
       for (let k = 0; k < steps; k++) {
         if (!changed[k][i]) continue;
         const prev = marks[i][marks[i].length - 1];
-        const end = k + 1 < steps ? stepAt(k + 1, rung) - BAR_LEAD : posterAt;
+        const end =
+          k + 1 < steps
+            ? rungEls[k + 1].start + rungEls[k + 1].beat("mark")
+            : posterAt;
         if (prev && k > 0 && changed[k - 1][i]) prev.out = end;
-        else marks[i].push({ in: stepAt(k, rung) - BAR_LEAD, out: end });
+        else
+          marks[i].push({
+            in: rungEls[k].start + rungEls[k].beat("mark"),
+            out: end,
+            grow: rungEls[k].beat("barIn"),
+            shrink: rungEls[k].beat("barOut"),
+          });
       }
     }
     return { swaps, changed, posterAt, marks };
-  }, [rungs, slots, steps, rung, stagger]);
+  }, [rungs, slots, steps, rungEls, poster]);
 
   const F = Math.min(
     H * 0.42,
@@ -302,7 +315,10 @@ export function WordLadder({
   const glide = (k: number) =>
     interpolate(
       t,
-      [stepAt(k, rung) + GLIDE_DELAY, stepAt(k, rung) + GLIDE_DELAY + GLIDE],
+      [
+        stepAt(k) + rungEls[k].beat("glideDelay"),
+        stepAt(k) + rungEls[k].beat("glideDelay") + rungEls[k].beat("glide"),
+      ],
       [0, 1],
       { ...CLAMP, easing: EASE_IO },
     );
@@ -327,16 +343,14 @@ export function WordLadder({
         if (g <= 0 || g >= 1) return g;
         const swap = plan.swaps[i].find((s) => s.step === k);
         if (!swap) return g < 0.5 ? 0 : 1;
-        return t < swap.at + RISE_DELAY ? 0 : 1;
+        return t < swap.at + rungEls[k].beat("riseDelay") ? 0 : 1;
       }),
     );
 
-  const poster = interpolate(
-    t,
-    [plan.posterAt, plan.posterAt + POSTER],
-    [0, 1],
-    { ...CLAMP, easing: EASE_IO },
-  );
+  const posterP = interpolate(t, [poster.start, poster.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
   const isFinal = steps > 0;
 
   const glyphs: ReactNode[] = [];
@@ -380,18 +394,29 @@ export function WordLadder({
     };
 
     if (!current) {
-      const enter = interpolate(
-        t,
-        [i * ENTER_STAGGER, i * ENTER_STAGGER + ENTER],
-        [0, 1],
-        { ...CLAMP, easing: EASE_OUT },
-      );
-      draw(`s${i}`, rungs[0][i] ?? "", (1 - enter) * dropD, fg, midway(enter));
-    } else {
-      const drop = interpolate(t, [current.at, current.at + DROP], [0, 1], {
+      const at = enter.start + i * enter.beat("stagger");
+      const rising = interpolate(t, [at, at + enter.beat("letter")], [0, 1], {
         ...CLAMP,
-        easing: EASE_IN,
+        easing: EASE_OUT,
       });
+      draw(
+        `s${i}`,
+        rungs[0][i] ?? "",
+        (1 - rising) * dropD,
+        fg,
+        midway(rising),
+      );
+    } else {
+      const step = rungEls[current.step];
+      const drop = interpolate(
+        t,
+        [current.at, current.at + step.beat("drop")],
+        [0, 1],
+        {
+          ...CLAMP,
+          easing: EASE_IN,
+        },
+      );
       if (drop < 1)
         draw(
           `o${i}-${current.step}`,
@@ -402,18 +427,26 @@ export function WordLadder({
         );
       const rise = interpolate(
         t,
-        [current.at + RISE_DELAY, current.at + RISE_DELAY + RISE],
+        [
+          current.at + step.beat("riseDelay"),
+          current.at + step.beat("riseDelay") + step.beat("rise"),
+        ],
         [0, 1],
         { ...CLAMP, easing: EASE_OUT },
       );
       const settleAt =
         current.step + 1 < steps
-          ? stepAt(current.step + 1, rung) - BAR_LEAD
+          ? stepAt(current.step + 1) + rungEls[current.step + 1].beat("mark")
           : plan.posterAt;
-      const settle = interpolate(t, [settleAt, settleAt + SETTLE], [0, 1], {
-        ...CLAMP,
-        easing: EASE_IO,
-      });
+      const settle = interpolate(
+        t,
+        [settleAt, settleAt + step.beat("settle")],
+        [0, 1],
+        {
+          ...CLAMP,
+          easing: EASE_IO,
+        },
+      );
       draw(
         `i${i}-${current.step}`,
         current.to,
@@ -425,19 +458,24 @@ export function WordLadder({
 
     // Accent mark under the slot that is about to change.
     const glyphNow = current
-      ? t < current.at + RISE_DELAY
+      ? t < current.at + rungEls[current.step].beat("riseDelay")
         ? current.from
         : current.to
       : (rungs[0][i] ?? "");
     for (const m of plan.marks[i]) {
-      const grow = interpolate(t, [m.in, m.in + BAR_IN], [0, 1], {
+      const grow = interpolate(t, [m.in, m.in + m.grow], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       });
       const isLast = isFinal && m.out === plan.posterAt;
       const shrink = isLast
-        ? interpolate(t, [m.out + POSTER, m.out + POSTER + 1], [0, 1], CLAMP)
-        : interpolate(t, [m.out, m.out + BAR_OUT], [0, 1], {
+        ? interpolate(
+            t,
+            [m.out + poster.length, m.out + poster.length + 1],
+            [0, 1],
+            CLAMP,
+          )
+        : interpolate(t, [m.out, m.out + m.shrink], [0, 1], {
             ...CLAMP,
             easing: EASE_IN,
           });
@@ -479,8 +517,8 @@ export function WordLadder({
         barSpan(0, last[0])[0],
         barSpan(last.length - 1, last[last.length - 1])[1],
       ];
-      const l = from[0] + (to[0] - from[0]) * poster;
-      const r = from[1] + (to[1] - from[1]) * poster;
+      const l = from[0] + (to[0] - from[0]) * posterP;
+      const r = from[1] + (to[1] - from[1]) * posterP;
       bars.push(
         <div
           key="rule"
@@ -498,7 +536,7 @@ export function WordLadder({
   }
 
   // Ground: light spilling down from the slot line, drifting a touch wider.
-  const drift = interpolate(t, [0, plan.posterAt + POSTER], [0, 1], {
+  const drift = interpolate(t, [0, poster.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
