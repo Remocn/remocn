@@ -11113,12 +11113,21 @@
       "title": "Index List",
       "description": "A numbered feature index where hairline rows highlight one by one with an arrow.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/index-list/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/index-list.tsx"
+          "target": "components/remocn/index-list/index.tsx"
+        },
+        {
+          "path": "registry/remocn/index-list/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/index-list/timeline.ts"
         }
       ],
       "type": "registry:component"
