@@ -9949,12 +9949,21 @@
       "title": "Baseline Drop",
       "description": "Words drop onto the baseline in a stagger, with a gradient streak beneath.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/baseline-drop/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/baseline-drop.tsx"
+          "target": "components/remocn/baseline-drop/index.tsx"
+        },
+        {
+          "path": "registry/remocn/baseline-drop/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/baseline-drop/timeline.ts"
         }
       ],
       "type": "registry:component"

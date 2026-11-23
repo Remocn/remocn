@@ -6,6 +6,13 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type BaselineDropElementId,
+  baselineDropTimeline,
+  DEFAULT_TEXT,
+  wordsOf,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["500"],
@@ -35,6 +42,12 @@ export interface BaselineDropProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the baseline, single words and the retract,
+   * by the ids in `./timeline`. Frames on the scene timeline, after `delay`
+   * and `speed`.
+   */
+  timing?: Timing<BaselineDropElementId>;
 }
 
 /** Schibsted Grotesk 500 advance widths (per 1000 em) for ASCII 32–126. */
@@ -51,12 +64,6 @@ const TRACK = -0.03;
 const SPACE = 0.24;
 const BASELINE = 0.8594;
 const CAP = 0.703;
-
-const DRAW = [4, 28] as const;
-const FIRST_LAND = 30;
-const FALL = 15;
-const RETRACT_AFTER = 20;
-const RETRACT_LEN = 22;
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_FALL = Easing.bezier(0.5, 0, 0.9, 0.5);
@@ -162,34 +169,36 @@ function ScaleLayer({
   );
 }
 
-export function BaselineDrop({
-  text = "Ship the story.",
-  words: wordsProp,
-  stagger = 11,
-  fall = FALL,
-  hold = RETRACT_AFTER,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: BaselineDropProps) {
+export function BaselineDrop(props: BaselineDropProps) {
+  const {
+    text = DEFAULT_TEXT,
+    words: wordsProp,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
   const glide = useGlide();
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    baselineDropTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
-  const words = useMemo(
-    () => wordsProp ?? text.trim().split(/\s+/),
-    [wordsProp, text],
-  );
+  const words = useMemo(() => wordsOf(text, wordsProp), [wordsProp, text]);
   const total = useMemo(
     () => words.reduce((s, w) => s + em(w), 0) + SPACE * (words.length - 1),
     [words],
@@ -200,28 +209,32 @@ export function BaselineDrop({
   const line = Math.max(1, (H / 720) * 1.5);
   const margin = W * 0.08;
 
-  const land = (k: number) => FIRST_LAND + k * stagger;
-  const lastLand = land(words.length - 1);
-  const retractStart = lastLand + hold;
+  // A word lands at the end of its fall.
+  const fallOf = (k: number) => tl.get(`word:${k}`);
+  const land = (k: number) => fallOf(k).end;
+  const draw = tl.get("draw");
+  const retract = tl.get("retract");
+  const glowEnd = retract.start + retract.beat("glow");
 
-  const drawn = interpolate(t, DRAW, [0, 1], { ...CLAMP, easing: EASE_IO });
-  const retracted = interpolate(
-    t,
-    [retractStart, retractStart + RETRACT_LEN],
-    [0, 1],
-    { ...CLAMP, easing: EASE_IO },
-  );
-  const push = interpolate(t, [0, retractStart + 60], [0, 1], CLAMP);
+  const drawn = interpolate(t, [draw.start, draw.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
+  const retracted = interpolate(t, [retract.start, retract.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
+  const push = interpolate(t, [0, glowEnd], [0, 1], CLAMP);
 
   const dropOf = (k: number) => {
     const tau = t - land(k);
     if (tau >= 0) return { y: landing(tau, F * 0.04), seen: true };
-    const p = interpolate(t, [land(k) - fall, land(k)], [0, 1], {
+    const p = interpolate(t, [fallOf(k).start, land(k)], [0, 1], {
       ...CLAMP,
       easing: EASE_FALL,
     });
     const fallFrom = rowTop + F * 1.4;
-    return { y: -fallFrom * (1 - p), seen: t > land(k) - fall };
+    return { y: -fallFrom * (1 - p), seen: t > fallOf(k).start };
   };
 
   const landed = words.reduce(
@@ -234,7 +247,7 @@ export function BaselineDrop({
     c.glow,
     c.glowMix,
     c.bandMix,
-    interpolate(t, [0, retractStart + 60], [0, 1], CLAMP),
+    interpolate(t, [0, glowEnd], [0, 1], CLAMP),
   );
 
   const contact = (k: number) =>
