@@ -6,6 +6,8 @@ import type React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type RoundSlamElementId, roundSlamTimeline } from "./timeline";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["400", "500"],
@@ -70,6 +72,12 @@ export interface RoundSlamProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the round call, the call word, the band and
+   * the logo, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<RoundSlamElementId>;
 }
 
 // Beat sheet (30fps, speed 1):
@@ -83,15 +91,6 @@ export interface RoundSlamProps {
 //  44–53   speed slashes crack outward from the centre, the main "chrome" band
 //          opens behind the word
 //  56–66   the logo rises in under the band; poster hold to the end
-const ROUND_AT = 0;
-const ROUND_LEN = 6;
-const NUM_AT = 6;
-const NUM_LEN = 6;
-const DUCK_AT = 34;
-const DUCK_LEN = 9;
-const CALL_AT = 38;
-const CALL_LEN = 6;
-const LOGO_AT = 56;
 
 // Steep cuts slashed through the band, outside the word.
 const CUTS = [
@@ -181,24 +180,38 @@ function ScaleLayer({
   );
 }
 
-export function RoundSlam({
-  round = "ROUND 1",
-  call = "SHIP!",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = display,
-  fontWeight = 500,
-  shake: shakeAmp = 1,
-  logo,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: RoundSlamProps) {
+export function RoundSlam(props: RoundSlamProps) {
+  const {
+    round = "ROUND 1",
+    call = "SHIP!",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display,
+    fontWeight = 500,
+    shake: shakeAmp = 1,
+    logo,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    roundSlamTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const roundEl = tl.get("round");
+  const numEl = tl.get("number");
+  const duckEl = tl.get("duck");
+  const callEl = tl.get("call");
+  const band = tl.get("band");
+  const logoEl = tl.get("logo");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const stage =
@@ -210,41 +223,56 @@ export function RoundSlam({
   const tail = words.length > 1 ? words[words.length - 1] : "";
 
   // ── Impact frames ─────────────────────────────────────────────────────────
-  const numHit = NUM_AT + NUM_LEN;
-  const callHit = CALL_AT + CALL_LEN;
+  const numHit = numEl.end;
+  const callHit = callEl.end;
+  const bandAt = band.start;
   const inverted =
     (t >= numHit && t < numHit + speed) ||
     (t >= callHit && t < callHit + speed);
-  const s1 = shake(t, ROUND_AT + ROUND_LEN, 5, 5 * u * shakeAmp);
+  const s1 = shake(t, roundEl.end, 5, 5 * u * shakeAmp);
   const s2 = shake(t, numHit, 10, 13 * u * shakeAmp);
   const s3 = shake(t, callHit, 14, 20 * u * shakeAmp);
   const camX = s1.x + s2.x + s3.x;
   const camY = s1.y + s2.y + s3.y;
-  const push = interpolate(t, [numHit, DUCK_AT], [1, 1.035], CLAMP);
-  const settle = interpolate(t, [callHit, callHit + 70], [1, 1.025], CLAMP);
+  const push = interpolate(t, [numHit, duckEl.start], [1, 1.035], CLAMP);
+  const settle = interpolate(
+    t,
+    [bandAt, bandAt + band.beat("settle")],
+    [1, 1.025],
+    CLAMP,
+  );
 
   // ── Round call ────────────────────────────────────────────────────────────
   const roundFs = 150 * u;
   const roundScale = (d: number) =>
-    1.9 - 0.9 * SLAM(ramp(d, ROUND_AT, ROUND_LEN));
-  const numScale = (d: number) => 2.6 - 1.6 * SLAM(ramp(d, NUM_AT, NUM_LEN));
-  const duck = INOUT(ramp(t, DUCK_AT, DUCK_LEN));
+    1.9 - 0.9 * SLAM(ramp(d, roundEl.start, roundEl.length));
+  const numScale = (d: number) =>
+    2.6 - 1.6 * SLAM(ramp(d, numEl.start, numEl.length));
+  const duck = INOUT(ramp(t, duckEl.start, duckEl.length));
   const roundY = interpolate(duck, [0, 1], [0.5 * H, 0.205 * H]);
   const roundK = interpolate(duck, [0, 1], [push, 0.36]);
 
   // ── Call word and the band ────────────────────────────────────────────────
   const callFs = 250 * u;
   const callY = 0.54 * H;
-  const callScale = (d: number) => 2.8 - 1.8 * SLAM(ramp(d, CALL_AT, CALL_LEN));
-  const callOp = ramp(t, CALL_AT, 3);
+  const callScale = (d: number) =>
+    2.8 - 1.8 * SLAM(ramp(d, callEl.start, callEl.length));
+  const callOp = ramp(t, callEl.start, callEl.beat("fade"));
   const crack = Math.max(0, 1 - Math.max(0, t - callHit) / 9);
   const crackOff = t >= callHit ? 30 * u * crack * crack : 0;
 
   const half = 0.72 * W;
-  const bandOpen = OUT(ramp(t, callHit + 1, 9));
+  const bandOpen = OUT(
+    ramp(t, bandAt + band.beat("openAt"), band.beat("open")),
+  );
   const bandThick = interpolate(bandOpen, [0, 1], [6 * u, 0.4 * H]);
-  const bandReach = OUT(ramp(t, callHit, 5));
-  const drift = interpolate(t, [callHit, callHit + 80], [0, 10], CLAMP);
+  const bandReach = OUT(ramp(t, bandAt, band.beat("reach")));
+  const drift = interpolate(
+    t,
+    [bandAt, bandAt + band.beat("drift")],
+    [0, 10],
+    CLAMP,
+  );
 
   const slashes = [
     { dy: -0.27 * H, thick: 7 * u, delay: 0, fill: c.slashA },
@@ -259,7 +287,7 @@ export function RoundSlam({
     `linear-gradient(100deg, #4A0610 4%, ${CHROME[0]} 30%, #C0142A 64%, #2E0410 96%)`,
   ].join(", ");
 
-  const logoP = OUT(ramp(t, LOGO_AT, 10));
+  const logoP = OUT(ramp(t, logoEl.start, logoEl.length));
 
   const word = (
     text: string,
@@ -368,7 +396,9 @@ export function RoundSlam({
                   const bot = callY + bandThick / 2 + 2;
                   const lean = 0.32 * bandThick;
                   const w = k.w * u;
-                  const p = OUT(ramp(t, callHit + 2 + k.delay, 5));
+                  const p = OUT(
+                    ramp(t, bandAt + band.beat("cutsAt") + k.delay, 5),
+                  );
                   const yEnd = top + (bot - top) * p;
                   const xAt = (y: number) =>
                     x + lean - ((y - top) / (bot - top)) * 2 * lean;
@@ -385,7 +415,7 @@ export function RoundSlam({
                   );
                 })}
                 {slashes.map((s) => {
-                  const reach = OUT(ramp(t, callHit + s.delay, 6));
+                  const reach = OUT(ramp(t, bandAt + s.delay, 6));
                   return (
                     <div
                       key={s.dy}
@@ -414,8 +444,12 @@ export function RoundSlam({
               const ghost = lag > 0;
               const headK = roundScale(tt);
               const numK = numScale(tt);
-              const headOp = ramp(tt, ROUND_AT, 2) * (ghost ? 0.18 / lag : 1);
-              const numOp = ramp(tt, NUM_AT, 2) * (ghost ? 0.18 / lag : 1);
+              const headOp =
+                ramp(tt, roundEl.start, roundEl.beat("fade")) *
+                (ghost ? 0.18 / lag : 1);
+              const numOp =
+                ramp(tt, numEl.start, numEl.beat("fade")) *
+                (ghost ? 0.18 / lag : 1);
               if (ghost && t > numHit + lag) return null;
               return (
                 <div
@@ -450,18 +484,19 @@ export function RoundSlam({
             })}
 
             {/* Call word with echoes. */}
-            {t >= CALL_AT
+            {t >= callEl.start
               ? [4, 2].map((lag) =>
                   t < callHit + lag
                     ? callBox(
                         callScale(t - lag),
-                        ramp(t - lag, CALL_AT, 3) * (0.2 / lag),
+                        ramp(t - lag, callEl.start, callEl.beat("fade")) *
+                          (0.2 / lag),
                         `g${lag}`,
                       )
                     : null,
                 )
               : null}
-            {t >= CALL_AT ? callBox(callScale(t), callOp, "call") : null}
+            {t >= callEl.start ? callBox(callScale(t), callOp, "call") : null}
           </div>
 
           {/* Logo under the band. */}

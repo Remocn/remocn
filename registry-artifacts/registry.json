@@ -8977,12 +8977,21 @@
       "title": "Round Slam",
       "description": "'ROUND 1' slams in, then 'SHIP!' punches over a red slashed band.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/round-slam/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/round-slam.tsx"
+          "target": "components/remocn/round-slam/index.tsx"
+        },
+        {
+          "path": "registry/remocn/round-slam/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/round-slam/timeline.ts"
         }
       ],
       "type": "registry:component"
