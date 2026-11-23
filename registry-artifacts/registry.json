@@ -9982,12 +9982,21 @@
       "title": "Weight Wave",
       "description": "A wave of font weight travels across a line of text and settles on a highlighted word.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/weight-wave/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/weight-wave.tsx"
+          "target": "components/remocn/weight-wave/index.tsx"
+        },
+        {
+          "path": "registry/remocn/weight-wave/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/weight-wave/timeline.ts"
         }
       ],
       "type": "registry:component"
