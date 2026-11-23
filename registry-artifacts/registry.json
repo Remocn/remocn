@@ -8,12 +8,21 @@
       "title": "Soft Blur In",
       "description": "Per-character fade-in with a gentle blur and upward motion. Apple's signature hero-title reveal.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/soft-blur-in/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/soft-blur-in.tsx"
+          "target": "components/remocn/soft-blur-in/index.tsx"
+        },
+        {
+          "path": "registry/remocn/soft-blur-in/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/soft-blur-in/timeline.ts"
         }
       ],
       "type": "registry:component"
