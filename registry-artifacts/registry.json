@@ -158,12 +158,21 @@
       "title": "Blur Out Up",
       "description": "Words arrive clean and depart upward with increasing blur for airy exits.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/blur-out-up/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/blur-out-up.tsx"
+          "target": "components/remocn/blur-out-up/index.tsx"
+        },
+        {
+          "path": "registry/remocn/blur-out-up/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/blur-out-up/timeline.ts"
         }
       ],
       "type": "registry:component"
