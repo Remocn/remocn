@@ -200,12 +200,21 @@
       "title": "Per-Word Crossfade",
       "description": "Words gently fade into place one after another, with a short vertical drift for a calm keynote rhythm.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/per-word-crossfade/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/per-word-crossfade.tsx"
+          "target": "components/remocn/per-word-crossfade/index.tsx"
+        },
+        {
+          "path": "registry/remocn/per-word-crossfade/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/per-word-crossfade/timeline.ts"
         }
       ],
       "type": "registry:component"
