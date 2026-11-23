@@ -1,7 +1,17 @@
 "use client";
 
-import { type CSSProperties, Fragment } from "react";
-import { Easing, interpolate } from "remotion";
+import {
+  type CSSProperties,
+  type ForwardedRef,
+  Fragment,
+  forwardRef,
+} from "react";
+import {
+  Easing,
+  Interactive,
+  type InteractiveTransformProps,
+  interpolate,
+} from "remotion";
 import {
   type CaptionBaseProps,
   type CaptionTokenState,
@@ -86,18 +96,22 @@ function CubeFace({
   );
 }
 
-export function CaptionCube({
-  captions,
-  combineTokensWithinMilliseconds = 800,
-  holdMs = DEFAULT_HOLD_MS,
-  fontSize = 64,
-  fontWeight = 800,
-  color = "#ffffff",
-  tintActive = false,
-  activeColor = "#facc15",
-  shadow = true,
-  className,
-}: CaptionCubeProps) {
+function CaptionCubeContent(
+  {
+    captions,
+    combineTokensWithinMilliseconds = 800,
+    holdMs = DEFAULT_HOLD_MS,
+    fontSize = 64,
+    fontWeight = 800,
+    color = "#ffffff",
+    tintActive = false,
+    activeColor = "#facc15",
+    shadow = true,
+    className,
+    style,
+  }: CaptionCubeProps & InteractiveTransformProps,
+  ref: ForwardedRef<HTMLDivElement>,
+) {
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
@@ -105,7 +119,7 @@ export function CaptionCube({
   });
   const { fps } = useSceneConfig();
   const glide = useGlide();
-  if (!state) return null;
+  if (!state) return <div ref={ref} style={style} />;
 
   const turnMs = Math.max(
     1,
@@ -144,50 +158,59 @@ export function CaptionCube({
     glide(around.some((a) => Math.abs(a[face] - now[face]) > 1e-5));
 
   return (
-    <div
-      className={className}
-      style={{
-        position: "relative",
-        fontSize,
-        fontWeight,
-        color,
-        lineHeight: LINE_HEIGHT,
-        height: `${LINE_HEIGHT}em`,
-        textAlign: "center",
-        textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
-        perspective: `${PERSPECTIVE_EM}em`,
-      }}
-    >
+    <div ref={ref} style={style}>
       <div
+        className={className}
         style={{
           position: "relative",
-          height: "100%",
-          transformStyle: "preserve-3d",
-          transform: `translateZ(${-DEPTH_EM}em)`,
+          fontSize,
+          fontWeight,
+          color,
+          lineHeight: LINE_HEIGHT,
+          height: `${LINE_HEIGHT}em`,
+          textAlign: "center",
+          textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
+          perspective: `${PERSPECTIVE_EM}em`,
         }}
       >
-        {state.previous && turn < 1 ? (
+        <div
+          style={{
+            position: "relative",
+            height: "100%",
+            transformStyle: "preserve-3d",
+            transform: `translateZ(${-DEPTH_EM}em)`,
+          }}
+        >
+          {state.previous && turn < 1 ? (
+            <CubeFace
+              key={`page-${state.previous.pageIndex}`}
+              tokens={state.previous.tokens}
+              activeIndex={-1}
+              activeColor={undefined}
+              angle={now.previous}
+              mark={markOf("previous")}
+              before="translateX(-50%) "
+              style={{ position: "absolute", top: 0, left: "50%" }}
+            />
+          ) : null}
           <CubeFace
-            key={`page-${state.previous.pageIndex}`}
-            tokens={state.previous.tokens}
-            activeIndex={-1}
-            activeColor={undefined}
-            angle={now.previous}
-            mark={markOf("previous")}
-            before="translateX(-50%) "
-            style={{ position: "absolute", top: 0, left: "50%" }}
+            key={`page-${state.pageIndex}`}
+            tokens={state.tokens}
+            activeIndex={state.activeIndex}
+            activeColor={tintActive ? activeColor : undefined}
+            angle={currentAngle}
+            mark={markOf("current")}
+            before=""
           />
-        ) : null}
-        <CubeFace
-          key={`page-${state.pageIndex}`}
-          tokens={state.tokens}
-          activeIndex={state.activeIndex}
-          activeColor={tintActive ? activeColor : undefined}
-          angle={currentAngle}
-          mark={markOf("current")}
-          before=""
-        />
+        </div>
       </div>
     </div>
   );
 }
+
+export const CaptionCube = Interactive.create({
+  Component: forwardRef(CaptionCubeContent),
+  componentName: "<CaptionCube>",
+  layout: "none",
+  schema: Interactive.captionsSchema,
+});

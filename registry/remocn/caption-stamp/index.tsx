@@ -1,7 +1,13 @@
 "use client";
 
-import { Fragment, useId } from "react";
-import { Easing, interpolate, random } from "remotion";
+import { type ForwardedRef, Fragment, forwardRef, useId } from "react";
+import {
+  Easing,
+  Interactive,
+  type InteractiveTransformProps,
+  interpolate,
+  random,
+} from "remotion";
 import {
   type CaptionBaseProps,
   captionWordText,
@@ -57,19 +63,23 @@ function stampScale(sinceMs: number): number {
   });
 }
 
-export function CaptionStamp({
-  captions,
-  combineTokensWithinMilliseconds = 1200,
-  holdMs = DEFAULT_HOLD_MS,
-  fontSize = 64,
-  fontWeight = 800,
-  color = "#ffffff",
-  keywords,
-  stampColor = "#ef4444",
-  texture = true,
-  shadow = true,
-  className,
-}: CaptionStampProps) {
+function CaptionStampContent(
+  {
+    captions,
+    combineTokensWithinMilliseconds = 1200,
+    holdMs = DEFAULT_HOLD_MS,
+    fontSize = 64,
+    fontWeight = 800,
+    color = "#ffffff",
+    keywords,
+    stampColor = "#ef4444",
+    texture = true,
+    shadow = true,
+    className,
+    style,
+  }: CaptionStampProps & InteractiveTransformProps,
+  ref: ForwardedRef<HTMLDivElement>,
+) {
   const glide = useGlide();
   const filterId = `caption-stamp-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const state = useCaptions({
@@ -77,7 +87,7 @@ export function CaptionStamp({
     combineTokensWithinMilliseconds,
     holdMs,
   });
-  if (!state) return null;
+  if (!state) return <div ref={ref} style={style} />;
 
   const enter = interpolate(
     state.previous ? ENTER_MS : state.sinceStartMs,
@@ -111,133 +121,143 @@ export function CaptionStamp({
   const textShadow = shadow ? LEGIBILITY_SHADOW : undefined;
 
   return (
-    <div
-      className={className}
-      style={{
-        position: "relative",
-        fontSize,
-        fontWeight,
-        color,
-        lineHeight: 1.2,
-        textAlign: "center",
-        opacity: Math.min(enter, exit),
-        transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
-      }}
-    >
-      {texture && (
-        <svg
-          aria-hidden
-          width={0}
-          height={0}
-          style={{ position: "absolute", overflow: "hidden" }}
-        >
-          <filter id={filterId} x="-10%" y="-20%" width="120%" height="140%">
-            <feTurbulence
-              type="fractalNoise"
-              baseFrequency="0.45"
-              numOctaves={2}
-              seed={4}
-              result="warp"
-            />
-            <feDisplacementMap
-              in="SourceGraphic"
-              in2="warp"
-              scale={fontSize * 0.035}
-              xChannelSelector="R"
-              yChannelSelector="G"
-              result="rough"
-            />
-            <feTurbulence
-              type="fractalNoise"
-              baseFrequency="0.8"
-              numOctaves={1}
-              seed={9}
-              result="grain"
-            />
-            <feColorMatrix
-              in="grain"
-              type="matrix"
-              values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -10 6.8"
-              result="holes"
-            />
-            <feComposite in="rough" in2="holes" operator="in" />
-          </filter>
-        </svg>
-      )}
-      {words.map((word, w) => {
-        const key = `${state.pageIndex}-${word[0].index}`;
-        const text = captionWordText(word);
-        const stamped = byKeyword ? isKeyword(text) : w === longest;
-        if (!stamped) {
+    <div ref={ref} style={style}>
+      <div
+        className={className}
+        style={{
+          position: "relative",
+          fontSize,
+          fontWeight,
+          color,
+          lineHeight: 1.2,
+          textAlign: "center",
+          opacity: Math.min(enter, exit),
+          transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
+        }}
+      >
+        {texture && (
+          <svg
+            aria-hidden
+            width={0}
+            height={0}
+            style={{ position: "absolute", overflow: "hidden" }}
+          >
+            <filter id={filterId} x="-10%" y="-20%" width="120%" height="140%">
+              <feTurbulence
+                type="fractalNoise"
+                baseFrequency="0.45"
+                numOctaves={2}
+                seed={4}
+                result="warp"
+              />
+              <feDisplacementMap
+                in="SourceGraphic"
+                in2="warp"
+                scale={fontSize * 0.035}
+                xChannelSelector="R"
+                yChannelSelector="G"
+                result="rough"
+              />
+              <feTurbulence
+                type="fractalNoise"
+                baseFrequency="0.8"
+                numOctaves={1}
+                seed={9}
+                result="grain"
+              />
+              <feColorMatrix
+                in="grain"
+                type="matrix"
+                values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -10 6.8"
+                result="holes"
+              />
+              <feComposite in="rough" in2="holes" operator="in" />
+            </filter>
+          </svg>
+        )}
+        {words.map((word, w) => {
+          const key = `${state.pageIndex}-${word[0].index}`;
+          const text = captionWordText(word);
+          const stamped = byKeyword ? isKeyword(text) : w === longest;
+          if (!stamped) {
+            return (
+              <Fragment key={key}>
+                {w > 0 && " "}
+                <span
+                  style={{
+                    display: "inline-block",
+                    whiteSpace: "nowrap",
+                    textShadow,
+                  }}
+                >
+                  {text}
+                </span>
+              </Fragment>
+            );
+          }
+          const sinceMs = state.timeMs - word[0].token.fromMs;
+          const rotation =
+            -8 +
+            random(`caption-stamp-${state.pageIndex}-${word[0].index}`) * 5;
           return (
             <Fragment key={key}>
               {w > 0 && " "}
               <span
                 style={{
+                  position: "relative",
                   display: "inline-block",
                   whiteSpace: "nowrap",
-                  textShadow,
                 }}
               >
-                {text}
-              </span>
-            </Fragment>
-          );
-        }
-        const sinceMs = state.timeMs - word[0].token.fromMs;
-        const rotation =
-          -8 + random(`caption-stamp-${state.pageIndex}-${word[0].index}`) * 5;
-        return (
-          <Fragment key={key}>
-            {w > 0 && " "}
-            <span
-              style={{
-                position: "relative",
-                display: "inline-block",
-                whiteSpace: "nowrap",
-              }}
-            >
-              <span
-                style={{
-                  opacity: interpolate(
-                    sinceMs,
-                    [SLAM_MS * 0.6, SLAM_MS],
-                    [1, 0],
-                    clamp,
-                  ),
-                  textShadow,
-                }}
-              >
-                {text}
-              </span>
-              {sinceMs >= 0 && (
                 <span
-                  aria-hidden
                   style={{
-                    position: "absolute",
-                    left: `-${PAD_EM}em`,
-                    right: `-${PAD_EM}em`,
-                    top: "8%",
-                    bottom: "4%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    lineHeight: 1,
-                    color: stampColor,
-                    border: `${BORDER_EM}em solid ${stampColor}`,
-                    borderRadius: `${RADIUS_EM}em`,
-                    opacity: interpolate(sinceMs, [0, INK_MS], [0, 1], clamp),
-                    transform: `rotate(${rotation}deg) scale(${stampScale(sinceMs)})`,
-                    filter: texture ? `url(#${filterId})` : undefined,
+                    opacity: interpolate(
+                      sinceMs,
+                      [SLAM_MS * 0.6, SLAM_MS],
+                      [1, 0],
+                      clamp,
+                    ),
+                    textShadow,
                   }}
                 >
                   {text}
                 </span>
-              )}
-            </span>
-          </Fragment>
-        );
-      })}
+                {sinceMs >= 0 && (
+                  <span
+                    aria-hidden
+                    style={{
+                      position: "absolute",
+                      left: `-${PAD_EM}em`,
+                      right: `-${PAD_EM}em`,
+                      top: "8%",
+                      bottom: "4%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      lineHeight: 1,
+                      color: stampColor,
+                      border: `${BORDER_EM}em solid ${stampColor}`,
+                      borderRadius: `${RADIUS_EM}em`,
+                      opacity: interpolate(sinceMs, [0, INK_MS], [0, 1], clamp),
+                      transform: `rotate(${rotation}deg) scale(${stampScale(sinceMs)})`,
+                      filter: texture ? `url(#${filterId})` : undefined,
+                    }}
+                  >
+                    {text}
+                  </span>
+                )}
+              </span>
+            </Fragment>
+          );
+        })}
+      </div>
     </div>
   );
 }
+
+export const CaptionStamp = Interactive.create({
+  Component: forwardRef(CaptionStampContent),
+  componentName: "<CaptionStamp>",
+  layout: "none",
+  schema: Interactive.captionsSchema,
+});

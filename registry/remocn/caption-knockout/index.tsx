@@ -1,7 +1,12 @@
 "use client";
 
-import { Fragment, useId } from "react";
-import { Easing, interpolate } from "remotion";
+import { type ForwardedRef, Fragment, forwardRef, useId } from "react";
+import {
+  Easing,
+  Interactive,
+  type InteractiveTransformProps,
+  interpolate,
+} from "remotion";
 import {
   type CaptionBaseProps,
   type CaptionTokenState,
@@ -51,17 +56,21 @@ function holeFill(
   return `rgb(${level}, ${level}, ${level})`;
 }
 
-export function CaptionKnockout({
-  captions,
-  combineTokensWithinMilliseconds = 1200,
-  holdMs = DEFAULT_HOLD_MS,
-  fontSize = 64,
-  fontWeight = 800,
-  plateColor = "#ffffff",
-  upcomingOpacity = 0.15,
-  radius = 0.16,
-  className,
-}: CaptionKnockoutProps) {
+function CaptionKnockoutContent(
+  {
+    captions,
+    combineTokensWithinMilliseconds = 1200,
+    holdMs = DEFAULT_HOLD_MS,
+    fontSize = 64,
+    fontWeight = 800,
+    plateColor = "#ffffff",
+    upcomingOpacity = 0.15,
+    radius = 0.16,
+    className,
+    style,
+  }: CaptionKnockoutProps & InteractiveTransformProps,
+  ref: ForwardedRef<HTMLDivElement>,
+) {
   const glide = useGlide();
   const maskId = `caption-knockout-${useId().replace(/[^a-zA-Z0-9-]/g, "")}`;
   const state = useCaptions({
@@ -74,7 +83,7 @@ export function CaptionKnockout({
     state ? state.pageIndex : -1,
     words.length,
   );
-  if (!state) return null;
+  if (!state) return <div ref={ref} style={style} />;
 
   const enter = interpolate(
     state.previous ? ENTER_MS : state.sinceStartMs,
@@ -92,91 +101,100 @@ export function CaptionKnockout({
     : 1;
 
   return (
-    <div
-      className={className}
-      style={{
-        position: "relative",
-        fontSize,
-        fontWeight,
-        lineHeight: 1.2,
-        textAlign: "center",
-        padding: `${PAD_Y_EM}em ${PAD_X_EM}em`,
-        opacity: Math.min(enter, exit),
-        transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(enter > 5e-4 && enter < 1 - 5e-4)}`,
-      }}
-    >
-      {rects && (
-        <svg
-          aria-hidden
-          width="100%"
-          height="100%"
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            overflow: "visible",
-          }}
-        >
-          <defs>
-            <mask
-              id={maskId}
-              maskUnits="userSpaceOnUse"
-              x="0"
-              y="0"
-              width="100%"
-              height="100%"
-            >
-              <rect width="100%" height="100%" fill="#ffffff" />
-              {words.map((word, w) => {
-                const rect = rects[w];
-                if (!rect) return null;
-                return (
-                  <text
-                    key={`${state.pageIndex}-${word[0].index}`}
-                    x={rect.left}
-                    y={rect.top + rect.height / 2}
-                    dominantBaseline="central"
-                  >
-                    {word.map(({ index, token }) => (
-                      <tspan
-                        key={index}
-                        fill={holeFill(token, state.timeMs, upcomingOpacity)}
-                      >
-                        {token.text}
-                      </tspan>
-                    ))}
-                  </text>
-                );
-              })}
-            </mask>
-          </defs>
-          <rect
+    <div ref={ref} style={style}>
+      <div
+        className={className}
+        style={{
+          position: "relative",
+          fontSize,
+          fontWeight,
+          lineHeight: 1.2,
+          textAlign: "center",
+          padding: `${PAD_Y_EM}em ${PAD_X_EM}em`,
+          opacity: Math.min(enter, exit),
+          transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(enter > 5e-4 && enter < 1 - 5e-4)}`,
+        }}
+      >
+        {rects && (
+          <svg
+            aria-hidden
             width="100%"
             height="100%"
-            rx={radius * fontSize}
-            fill={plateColor}
-            mask={`url(#${maskId})`}
-          />
-        </svg>
-      )}
-      {words.map((word, w) => (
-        <Fragment key={`${state.pageIndex}-${word[0].index}`}>
-          {w > 0 && " "}
-          <span
-            ref={wordRef(w)}
             style={{
-              display: "inline-block",
-              whiteSpace: "nowrap",
-              color: "transparent",
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              overflow: "visible",
             }}
           >
-            {word.map(({ index, token }) => (
-              <span key={index}>{token.text}</span>
-            ))}
-          </span>
-        </Fragment>
-      ))}
+            <defs>
+              <mask
+                id={maskId}
+                maskUnits="userSpaceOnUse"
+                x="0"
+                y="0"
+                width="100%"
+                height="100%"
+              >
+                <rect width="100%" height="100%" fill="#ffffff" />
+                {words.map((word, w) => {
+                  const rect = rects[w];
+                  if (!rect) return null;
+                  return (
+                    <text
+                      key={`${state.pageIndex}-${word[0].index}`}
+                      x={rect.left}
+                      y={rect.top + rect.height / 2}
+                      dominantBaseline="central"
+                    >
+                      {word.map(({ index, token }) => (
+                        <tspan
+                          key={index}
+                          fill={holeFill(token, state.timeMs, upcomingOpacity)}
+                        >
+                          {token.text}
+                        </tspan>
+                      ))}
+                    </text>
+                  );
+                })}
+              </mask>
+            </defs>
+            <rect
+              width="100%"
+              height="100%"
+              rx={radius * fontSize}
+              fill={plateColor}
+              mask={`url(#${maskId})`}
+            />
+          </svg>
+        )}
+        {words.map((word, w) => (
+          <Fragment key={`${state.pageIndex}-${word[0].index}`}>
+            {w > 0 && " "}
+            <span
+              ref={wordRef(w)}
+              style={{
+                display: "inline-block",
+                whiteSpace: "nowrap",
+                color: "transparent",
+              }}
+            >
+              {word.map(({ index, token }) => (
+                <span key={index}>{token.text}</span>
+              ))}
+            </span>
+          </Fragment>
+        ))}
+      </div>
     </div>
   );
 }
+
+export const CaptionKnockout = Interactive.create({
+  Component: forwardRef(CaptionKnockoutContent),
+  componentName: "<CaptionKnockout>",
+  layout: "none",
+  schema: Interactive.captionsSchema,
+});

@@ -1,7 +1,12 @@
 "use client";
 
-import { Fragment } from "react";
-import { Easing, interpolate } from "remotion";
+import { type ForwardedRef, Fragment, forwardRef } from "react";
+import {
+  Easing,
+  Interactive,
+  type InteractiveTransformProps,
+  interpolate,
+} from "remotion";
 import {
   type CaptionBaseProps,
   captionWordText,
@@ -36,24 +41,28 @@ const clamp = {
   extrapolateRight: "clamp",
 } as const;
 
-export function CaptionWeight({
-  captions,
-  combineTokensWithinMilliseconds = 1200,
-  holdMs = DEFAULT_HOLD_MS,
-  fontSize = 64,
-  fontWeight = 400,
-  activeWeight = 900,
-  color = "#ffffff",
-  shadow = true,
-  className,
-}: CaptionWeightProps) {
+function CaptionWeightContent(
+  {
+    captions,
+    combineTokensWithinMilliseconds = 1200,
+    holdMs = DEFAULT_HOLD_MS,
+    fontSize = 64,
+    fontWeight = 400,
+    activeWeight = 900,
+    color = "#ffffff",
+    shadow = true,
+    className,
+    style,
+  }: CaptionWeightProps & InteractiveTransformProps,
+  ref: ForwardedRef<HTMLDivElement>,
+) {
   const glide = useGlide();
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
     holdMs,
   });
-  if (!state) return null;
+  if (!state) return <div ref={ref} style={style} />;
 
   const enter = interpolate(
     state.previous ? ENTER_MS : state.sinceStartMs,
@@ -101,50 +110,59 @@ export function CaptionWeight({
   };
 
   return (
-    <div
-      className={className}
-      style={{
-        fontSize,
-        fontWeight,
-        color,
-        lineHeight: 1.2,
-        textAlign: "center",
-        opacity: Math.min(enter, exit),
-        transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
-      }}
-    >
-      {words.map((word, w) => {
-        const weight = fontWeight + (activeWeight - fontWeight) * emphasis(w);
-        return (
-          <Fragment key={`${state.pageIndex}-${word[0].index}`}>
-            {w > 0 && " "}
-            <span style={{ display: "inline-grid", whiteSpace: "nowrap" }}>
-              <span
-                aria-hidden
-                style={{
-                  gridArea: "1 / 1",
-                  fontWeight: Math.max(fontWeight, activeWeight),
-                  visibility: "hidden",
-                }}
-              >
-                {captionWordText(word)}
+    <div ref={ref} style={style}>
+      <div
+        className={className}
+        style={{
+          fontSize,
+          fontWeight,
+          color,
+          lineHeight: 1.2,
+          textAlign: "center",
+          opacity: Math.min(enter, exit),
+          transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
+        }}
+      >
+        {words.map((word, w) => {
+          const weight = fontWeight + (activeWeight - fontWeight) * emphasis(w);
+          return (
+            <Fragment key={`${state.pageIndex}-${word[0].index}`}>
+              {w > 0 && " "}
+              <span style={{ display: "inline-grid", whiteSpace: "nowrap" }}>
+                <span
+                  aria-hidden
+                  style={{
+                    gridArea: "1 / 1",
+                    fontWeight: Math.max(fontWeight, activeWeight),
+                    visibility: "hidden",
+                  }}
+                >
+                  {captionWordText(word)}
+                </span>
+                <span
+                  style={{
+                    gridArea: "1 / 1",
+                    justifySelf: "center",
+                    fontWeight: weight,
+                    textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
+                  }}
+                >
+                  {word.map(({ index, token }) => (
+                    <span key={index}>{token.text}</span>
+                  ))}
+                </span>
               </span>
-              <span
-                style={{
-                  gridArea: "1 / 1",
-                  justifySelf: "center",
-                  fontWeight: weight,
-                  textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
-                }}
-              >
-                {word.map(({ index, token }) => (
-                  <span key={index}>{token.text}</span>
-                ))}
-              </span>
-            </span>
-          </Fragment>
-        );
-      })}
+            </Fragment>
+          );
+        })}
+      </div>
     </div>
   );
 }
+
+export const CaptionWeight = Interactive.create({
+  Component: forwardRef(CaptionWeightContent),
+  componentName: "<CaptionWeight>",
+  layout: "none",
+  schema: Interactive.captionsSchema,
+});

@@ -1,7 +1,11 @@
 "use client";
 
-import { Fragment } from "react";
-import { interpolate } from "remotion";
+import { type ForwardedRef, Fragment, forwardRef } from "react";
+import {
+  Interactive,
+  type InteractiveTransformProps,
+  interpolate,
+} from "remotion";
 import {
   type CaptionBaseProps,
   DEFAULT_HOLD_MS,
@@ -26,23 +30,27 @@ function typedCount(text: string, progress: number): number {
   return Math.min(length, Math.ceil(progress * length));
 }
 
-export function CaptionTypewriter({
-  captions,
-  combineTokensWithinMilliseconds = 1200,
-  holdMs = DEFAULT_HOLD_MS,
-  fontSize = 64,
-  fontWeight = 800,
-  color = "#ffffff",
-  caret = true,
-  shadow = true,
-  className,
-}: CaptionTypewriterProps) {
+function CaptionTypewriterContent(
+  {
+    captions,
+    combineTokensWithinMilliseconds = 1200,
+    holdMs = DEFAULT_HOLD_MS,
+    fontSize = 64,
+    fontWeight = 800,
+    color = "#ffffff",
+    caret = true,
+    shadow = true,
+    className,
+    style,
+  }: CaptionTypewriterProps & InteractiveTransformProps,
+  ref: ForwardedRef<HTMLDivElement>,
+) {
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
     holdMs,
   });
-  if (!state) return null;
+  if (!state) return <div ref={ref} style={style} />;
 
   const exit = state.endsInSilence
     ? interpolate(
@@ -62,58 +70,67 @@ export function CaptionTypewriter({
   const caretOn = typing || Math.floor(idleMs / BLINK_MS) % 2 === 0;
 
   return (
-    <div
-      className={className}
-      style={{
-        fontSize,
-        fontWeight,
-        color,
-        lineHeight: 1.2,
-        textAlign: "center",
-        opacity: exit,
-      }}
-    >
-      {groupCaptionWords(state.tokens).map((word, w) => (
-        <Fragment key={`${state.pageIndex}-${word[0].index}`}>
-          {w > 0 && " "}
-          <span style={{ display: "inline-block", whiteSpace: "nowrap" }}>
-            {word.map(({ index, token }) => {
-              const chars = Array.from(token.text);
-              const typed = typedCount(token.text, token.progress);
-              return (
-                <Fragment key={index}>
-                  <span
-                    style={{
-                      textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
-                    }}
-                  >
-                    {chars.slice(0, typed).join("")}
-                  </span>
-                  {caret && index === state.activeIndex ? (
-                    <span style={{ position: "relative" }}>
-                      <span
-                        style={{
-                          position: "absolute",
-                          left: "0.03em",
-                          top: "0.1em",
-                          bottom: "0.1em",
-                          width: "0.07em",
-                          backgroundColor: color,
-                          boxShadow: shadow ? CARET_SHADOW : undefined,
-                          opacity: caretOn ? 1 : 0,
-                        }}
-                      />
+    <div ref={ref} style={style}>
+      <div
+        className={className}
+        style={{
+          fontSize,
+          fontWeight,
+          color,
+          lineHeight: 1.2,
+          textAlign: "center",
+          opacity: exit,
+        }}
+      >
+        {groupCaptionWords(state.tokens).map((word, w) => (
+          <Fragment key={`${state.pageIndex}-${word[0].index}`}>
+            {w > 0 && " "}
+            <span style={{ display: "inline-block", whiteSpace: "nowrap" }}>
+              {word.map(({ index, token }) => {
+                const chars = Array.from(token.text);
+                const typed = typedCount(token.text, token.progress);
+                return (
+                  <Fragment key={index}>
+                    <span
+                      style={{
+                        textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
+                      }}
+                    >
+                      {chars.slice(0, typed).join("")}
                     </span>
-                  ) : null}
-                  <span aria-hidden style={{ color: "transparent" }}>
-                    {chars.slice(typed).join("")}
-                  </span>
-                </Fragment>
-              );
-            })}
-          </span>
-        </Fragment>
-      ))}
+                    {caret && index === state.activeIndex ? (
+                      <span style={{ position: "relative" }}>
+                        <span
+                          style={{
+                            position: "absolute",
+                            left: "0.03em",
+                            top: "0.1em",
+                            bottom: "0.1em",
+                            width: "0.07em",
+                            backgroundColor: color,
+                            boxShadow: shadow ? CARET_SHADOW : undefined,
+                            opacity: caretOn ? 1 : 0,
+                          }}
+                        />
+                      </span>
+                    ) : null}
+                    <span aria-hidden style={{ color: "transparent" }}>
+                      {chars.slice(typed).join("")}
+                    </span>
+                  </Fragment>
+                );
+              })}
+            </span>
+          </Fragment>
+        ))}
+      </div>
     </div>
   );
 }
+
+export const CaptionTypewriter = Interactive.create({
+  Component: forwardRef(CaptionTypewriterContent),
+  componentName: "<CaptionTypewriter>",
+  layout: "none",
+  schema: Interactive.captionsSchema,
+});

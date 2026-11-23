@@ -1,7 +1,12 @@
 "use client";
 
-import { Fragment } from "react";
-import { Easing, interpolate } from "remotion";
+import { type ForwardedRef, Fragment, forwardRef } from "react";
+import {
+  Easing,
+  Interactive,
+  type InteractiveTransformProps,
+  interpolate,
+} from "remotion";
 import {
   type CaptionBaseProps,
   DEFAULT_HOLD_MS,
@@ -40,19 +45,23 @@ function mix(a: number, b: number, t: number): number {
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
-export function CaptionUnderline({
-  captions,
-  combineTokensWithinMilliseconds = 1200,
-  holdMs = DEFAULT_HOLD_MS,
-  fontSize = 64,
-  fontWeight = 800,
-  color = "#ffffff",
-  underlineColor = "#facc15",
-  thickness = 0.08,
-  underlineOffset = 0.02,
-  shadow = true,
-  className,
-}: CaptionUnderlineProps) {
+function CaptionUnderlineContent(
+  {
+    captions,
+    combineTokensWithinMilliseconds = 1200,
+    holdMs = DEFAULT_HOLD_MS,
+    fontSize = 64,
+    fontWeight = 800,
+    color = "#ffffff",
+    underlineColor = "#facc15",
+    thickness = 0.08,
+    underlineOffset = 0.02,
+    shadow = true,
+    className,
+    style,
+  }: CaptionUnderlineProps & InteractiveTransformProps,
+  ref: ForwardedRef<HTMLDivElement>,
+) {
   const glide = useGlide();
   const state = useCaptions({
     captions,
@@ -63,7 +72,7 @@ export function CaptionUnderline({
   const pageIndex = state ? state.pageIndex : -1;
   const { wordRef, rects } = useCaptionWordRects(pageIndex, words.length);
 
-  if (!state) return null;
+  if (!state) return <div ref={ref} style={style} />;
 
   const enter = interpolate(
     state.previous ? ENTER_MS : state.sinceStartMs,
@@ -121,52 +130,61 @@ export function CaptionUnderline({
     : null;
 
   return (
-    <div
-      className={className}
-      style={{
-        position: "relative",
-        fontSize,
-        fontWeight,
-        color,
-        lineHeight: 1.2,
-        textAlign: "center",
-        opacity: Math.min(enter, exit),
-        transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
-      }}
-    >
-      {words.map((word, w) => (
-        <Fragment key={`${state.pageIndex}-${word[0].index}`}>
-          {w > 0 && " "}
+    <div ref={ref} style={style}>
+      <div
+        className={className}
+        style={{
+          position: "relative",
+          fontSize,
+          fontWeight,
+          color,
+          lineHeight: 1.2,
+          textAlign: "center",
+          opacity: Math.min(enter, exit),
+          transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
+        }}
+      >
+        {words.map((word, w) => (
+          <Fragment key={`${state.pageIndex}-${word[0].index}`}>
+            {w > 0 && " "}
+            <span
+              ref={wordRef(w)}
+              style={{
+                position: "relative",
+                display: "inline-block",
+                whiteSpace: "nowrap",
+                textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
+              }}
+            >
+              {word.map(({ index, token }) => (
+                <span key={index}>{token.text}</span>
+              ))}
+            </span>
+          </Fragment>
+        ))}
+        {bar && (
           <span
-            ref={wordRef(w)}
+            aria-hidden
             style={{
-              position: "relative",
-              display: "inline-block",
-              whiteSpace: "nowrap",
-              textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
+              position: "absolute",
+              left: bar.left,
+              top: bar.top + gap,
+              width: bar.width,
+              height: barHeight,
+              borderRadius: barHeight / 2,
+              background: underlineColor,
+              opacity: bar.opacity,
             }}
-          >
-            {word.map(({ index, token }) => (
-              <span key={index}>{token.text}</span>
-            ))}
-          </span>
-        </Fragment>
-      ))}
-      {bar && (
-        <span
-          aria-hidden
-          style={{
-            position: "absolute",
-            left: bar.left,
-            top: bar.top + gap,
-            width: bar.width,
-            height: barHeight,
-            borderRadius: barHeight / 2,
-            background: underlineColor,
-            opacity: bar.opacity,
-          }}
-        />
-      )}
+          />
+        )}
+      </div>
     </div>
   );
 }
+
+export const CaptionUnderline = Interactive.create({
+  Component: forwardRef(CaptionUnderlineContent),
+  componentName: "<CaptionUnderline>",
+  layout: "none",
+  schema: Interactive.captionsSchema,
+});

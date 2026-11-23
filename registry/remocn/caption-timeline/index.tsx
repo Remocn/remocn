@@ -1,8 +1,19 @@
 "use client";
 
 import type { Caption } from "@remotion/captions";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
-import { interpolate } from "remotion";
+import {
+  type ForwardedRef,
+  forwardRef,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  Interactive,
+  type InteractiveTransformProps,
+  interpolate,
+} from "remotion";
 import type { CaptionBaseProps } from "@/lib/remocn/caption-core";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 
@@ -94,19 +105,23 @@ function sameWidths(a: number[], b: number[]): boolean {
   return a.length === b.length && a.every((w, i) => w === b[i]);
 }
 
-export function CaptionTimeline({
-  captions,
-  fontSize = 64,
-  fontWeight = 800,
-  color = "#ffffff",
-  width = 1100,
-  pxPerSecond = 260,
-  playheadPosition = 0.35,
-  playheadColor = "#facc15",
-  upcomingOpacity = 0.4,
-  shadow = true,
-  className,
-}: CaptionTimelineProps) {
+function CaptionTimelineContent(
+  {
+    captions,
+    fontSize = 64,
+    fontWeight = 800,
+    color = "#ffffff",
+    width = 1100,
+    pxPerSecond = 260,
+    playheadPosition = 0.35,
+    playheadColor = "#facc15",
+    upcomingOpacity = 0.4,
+    shadow = true,
+    className,
+    style,
+  }: CaptionTimelineProps & InteractiveTransformProps,
+  ref: ForwardedRef<HTMLDivElement>,
+) {
   const frame = useSceneFrame();
   const { fps } = useSceneConfig();
   const timeMs = (frame / fps) * 1000;
@@ -129,74 +144,83 @@ export function CaptionTimeline({
   const offset = timelineOffset(words, xs, timeMs, pxPerSecond);
   const thickness = Math.max(2, Math.round(fontSize * 0.04));
 
-  if (words.length === 0) return null;
+  if (words.length === 0) return <div ref={ref} style={style} />;
 
   return (
-    <div
-      className={className}
-      style={{
-        position: "relative",
-        width,
-        height: `${LINE_HEIGHT}em`,
-        fontSize,
-        fontWeight,
-        color,
-        lineHeight: LINE_HEIGHT,
-      }}
-    >
+    <div ref={ref} style={style}>
       <div
+        className={className}
         style={{
-          position: "absolute",
-          inset: 0,
-          overflow: "hidden",
-          maskImage: EDGE_FADE,
-          WebkitMaskImage: EDGE_FADE,
+          position: "relative",
+          width,
+          height: `${LINE_HEIGHT}em`,
+          fontSize,
+          fontWeight,
+          color,
+          lineHeight: LINE_HEIGHT,
         }}
       >
         <div
           style={{
             position: "absolute",
             inset: 0,
-            transform: `translateX(${playheadX - offset}px)`,
+            overflow: "hidden",
+            maskImage: EDGE_FADE,
+            WebkitMaskImage: EDGE_FADE,
           }}
         >
-          {words.map((word, i) => (
-            <span
-              key={word.id}
-              ref={(el) => {
-                elements.current[i] = el;
-              }}
-              style={{
-                position: "absolute",
-                left: xs[i],
-                top: 0,
-                whiteSpace: "nowrap",
-                opacity: interpolate(
-                  timeMs - word.startMs,
-                  [-LIGHT_MS, 0],
-                  [upcomingOpacity, 1],
-                  clamp,
-                ),
-                textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
-              }}
-            >
-              {word.text}
-            </span>
-          ))}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              transform: `translateX(${playheadX - offset}px)`,
+            }}
+          >
+            {words.map((word, i) => (
+              <span
+                key={word.id}
+                ref={(el) => {
+                  elements.current[i] = el;
+                }}
+                style={{
+                  position: "absolute",
+                  left: xs[i],
+                  top: 0,
+                  whiteSpace: "nowrap",
+                  opacity: interpolate(
+                    timeMs - word.startMs,
+                    [-LIGHT_MS, 0],
+                    [upcomingOpacity, 1],
+                    clamp,
+                  ),
+                  textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
+                }}
+              >
+                {word.text}
+              </span>
+            ))}
+          </div>
         </div>
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            top: "8%",
+            bottom: "8%",
+            left: playheadX - thickness / 2,
+            width: thickness,
+            borderRadius: thickness,
+            background: playheadColor,
+          }}
+        />
       </div>
-      <div
-        aria-hidden
-        style={{
-          position: "absolute",
-          top: "8%",
-          bottom: "8%",
-          left: playheadX - thickness / 2,
-          width: thickness,
-          borderRadius: thickness,
-          background: playheadColor,
-        }}
-      />
     </div>
   );
 }
+
+export const CaptionTimeline = Interactive.create({
+  Component: forwardRef(CaptionTimelineContent),
+  componentName: "<CaptionTimeline>",
+  layout: "none",
+  schema: Interactive.captionsSchema,
+});

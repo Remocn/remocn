@@ -1,7 +1,12 @@
 "use client";
 
-import { Fragment } from "react";
-import { Easing, interpolate } from "remotion";
+import { type ForwardedRef, Fragment, forwardRef } from "react";
+import {
+  Easing,
+  Interactive,
+  type InteractiveTransformProps,
+  interpolate,
+} from "remotion";
 import {
   type CaptionBaseProps,
   DEFAULT_HOLD_MS,
@@ -24,23 +29,27 @@ const LEGIBILITY_SHADOW =
 
 const riseEasing = Easing.bezier(0.16, 1, 0.3, 1);
 
-export function CaptionRise({
-  captions,
-  combineTokensWithinMilliseconds = 1200,
-  holdMs = DEFAULT_HOLD_MS,
-  fontSize = 64,
-  fontWeight = 800,
-  color = "#ffffff",
-  shadow = true,
-  className,
-}: CaptionRiseProps) {
+function CaptionRiseContent(
+  {
+    captions,
+    combineTokensWithinMilliseconds = 1200,
+    holdMs = DEFAULT_HOLD_MS,
+    fontSize = 64,
+    fontWeight = 800,
+    color = "#ffffff",
+    shadow = true,
+    className,
+    style,
+  }: CaptionRiseProps & InteractiveTransformProps,
+  ref: ForwardedRef<HTMLDivElement>,
+) {
   const glide = useGlide();
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
     holdMs,
   });
-  if (!state) return null;
+  if (!state) return <div ref={ref} style={style} />;
 
   const exit = state.endsInSilence
     ? interpolate(
@@ -55,55 +64,64 @@ export function CaptionRise({
     : 1;
 
   return (
-    <div
-      className={className}
-      style={{
-        fontSize,
-        fontWeight,
-        color,
-        lineHeight: 1.2,
-        textAlign: "center",
-        opacity: exit,
-      }}
-    >
-      {groupCaptionWords(state.tokens).map((word, w) => (
-        <Fragment key={`${state.pageIndex}-${word[0].index}`}>
-          {w > 0 && " "}
-          <span style={{ display: "inline-block", whiteSpace: "nowrap" }}>
-            {word.map(({ index, token }) => {
-              const sinceMs = state.timeMs - token.fromMs;
-              const p =
-                sinceMs < 0
-                  ? 0
-                  : interpolate(sinceMs, [0, RISE_MS], [0, 1], {
-                      easing: riseEasing,
-                      extrapolateLeft: "clamp",
-                      extrapolateRight: "clamp",
-                    });
-              return (
-                <span
-                  key={index}
-                  style={{
-                    display: "inline-block",
-                    clipPath: CLIP,
-                  }}
-                >
+    <div ref={ref} style={style}>
+      <div
+        className={className}
+        style={{
+          fontSize,
+          fontWeight,
+          color,
+          lineHeight: 1.2,
+          textAlign: "center",
+          opacity: exit,
+        }}
+      >
+        {groupCaptionWords(state.tokens).map((word, w) => (
+          <Fragment key={`${state.pageIndex}-${word[0].index}`}>
+            {w > 0 && " "}
+            <span style={{ display: "inline-block", whiteSpace: "nowrap" }}>
+              {word.map(({ index, token }) => {
+                const sinceMs = state.timeMs - token.fromMs;
+                const p =
+                  sinceMs < 0
+                    ? 0
+                    : interpolate(sinceMs, [0, RISE_MS], [0, 1], {
+                        easing: riseEasing,
+                        extrapolateLeft: "clamp",
+                        extrapolateRight: "clamp",
+                      });
+                return (
                   <span
+                    key={index}
                     style={{
                       display: "inline-block",
-                      opacity: sinceMs < 0 ? 0 : 1,
-                      transform: `translateY(${(1 - p) * START_EM}em)${glide(p > 0 && p < 1)}`,
-                      textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
+                      clipPath: CLIP,
                     }}
                   >
-                    {token.text}
+                    <span
+                      style={{
+                        display: "inline-block",
+                        opacity: sinceMs < 0 ? 0 : 1,
+                        transform: `translateY(${(1 - p) * START_EM}em)${glide(p > 0 && p < 1)}`,
+                        textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
+                      }}
+                    >
+                      {token.text}
+                    </span>
                   </span>
-                </span>
-              );
-            })}
-          </span>
-        </Fragment>
-      ))}
+                );
+              })}
+            </span>
+          </Fragment>
+        ))}
+      </div>
     </div>
   );
 }
+
+export const CaptionRise = Interactive.create({
+  Component: forwardRef(CaptionRiseContent),
+  componentName: "<CaptionRise>",
+  layout: "none",
+  schema: Interactive.captionsSchema,
+});

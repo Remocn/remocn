@@ -1,6 +1,11 @@
 "use client";
 
-import { interpolate } from "remotion";
+import { type ForwardedRef, forwardRef } from "react";
+import {
+  Interactive,
+  type InteractiveTransformProps,
+  interpolate,
+} from "remotion";
 import {
   type CaptionBaseProps,
   DEFAULT_HOLD_MS,
@@ -19,24 +24,28 @@ const EXIT_MS = 160;
 const LEGIBILITY_SHADOW =
   "0 2px 3px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.35)";
 
-export function CaptionSubtitle({
-  captions,
-  combineTokensWithinMilliseconds = 2500,
-  holdMs = DEFAULT_HOLD_MS,
-  fontSize = 44,
-  fontWeight = 600,
-  color = "#ffffff",
-  box = true,
-  boxColor = "#000000",
-  boxOpacity = 0.72,
-  className,
-}: CaptionSubtitleProps) {
+function CaptionSubtitleContent(
+  {
+    captions,
+    combineTokensWithinMilliseconds = 2500,
+    holdMs = DEFAULT_HOLD_MS,
+    fontSize = 44,
+    fontWeight = 600,
+    color = "#ffffff",
+    box = true,
+    boxColor = "#000000",
+    boxOpacity = 0.72,
+    className,
+    style,
+  }: CaptionSubtitleProps & InteractiveTransformProps,
+  ref: ForwardedRef<HTMLDivElement>,
+) {
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
     holdMs,
   });
-  if (!state) return null;
+  if (!state) return <div ref={ref} style={style} />;
 
   const enter = state.previous
     ? 1
@@ -58,33 +67,42 @@ export function CaptionSubtitle({
   const opacityPercent = Math.round(Math.min(1, Math.max(0, boxOpacity)) * 100);
 
   return (
-    <div
-      className={className}
-      style={{
-        fontSize,
-        fontWeight,
-        color,
-        lineHeight: 1.4,
-        textAlign: "center",
-        textWrap: "balance",
-        opacity: Math.min(enter, exit),
-      }}
-    >
-      <span
-        style={
-          box
-            ? {
-                backgroundColor: `color-mix(in srgb, ${boxColor} ${opacityPercent}%, transparent)`,
-                padding: "0.06em 0.36em",
-                borderRadius: "0.16em",
-                boxDecorationBreak: "clone",
-                WebkitBoxDecorationBreak: "clone",
-              }
-            : { textShadow: LEGIBILITY_SHADOW }
-        }
+    <div ref={ref} style={style}>
+      <div
+        className={className}
+        style={{
+          fontSize,
+          fontWeight,
+          color,
+          lineHeight: 1.4,
+          textAlign: "center",
+          textWrap: "balance",
+          opacity: Math.min(enter, exit),
+        }}
       >
-        {state.page.text}
-      </span>
+        <span
+          style={
+            box
+              ? {
+                  backgroundColor: `color-mix(in srgb, ${boxColor} ${opacityPercent}%, transparent)`,
+                  padding: "0.06em 0.36em",
+                  borderRadius: "0.16em",
+                  boxDecorationBreak: "clone",
+                  WebkitBoxDecorationBreak: "clone",
+                }
+              : { textShadow: LEGIBILITY_SHADOW }
+          }
+        >
+          {state.page.text}
+        </span>
+      </div>
     </div>
   );
 }
+
+export const CaptionSubtitle = Interactive.create({
+  Component: forwardRef(CaptionSubtitleContent),
+  componentName: "<CaptionSubtitle>",
+  layout: "none",
+  schema: Interactive.captionsSchema,
+});

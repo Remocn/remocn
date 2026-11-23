@@ -1,7 +1,12 @@
 "use client";
 
-import { Fragment } from "react";
-import { Easing, interpolate } from "remotion";
+import { type ForwardedRef, Fragment, forwardRef } from "react";
+import {
+  Easing,
+  Interactive,
+  type InteractiveTransformProps,
+  interpolate,
+} from "remotion";
 import {
   type CaptionBaseProps,
   captionWordText,
@@ -38,24 +43,28 @@ const clamp = {
   extrapolateRight: "clamp",
 } as const;
 
-export function CaptionRedact({
-  captions,
-  combineTokensWithinMilliseconds = 1200,
-  holdMs = DEFAULT_HOLD_MS,
-  fontSize = 64,
-  fontWeight = 800,
-  color = "#ffffff",
-  barColor = "#0a0a0a",
-  shadow = true,
-  className,
-}: CaptionRedactProps) {
+function CaptionRedactContent(
+  {
+    captions,
+    combineTokensWithinMilliseconds = 1200,
+    holdMs = DEFAULT_HOLD_MS,
+    fontSize = 64,
+    fontWeight = 800,
+    color = "#ffffff",
+    barColor = "#0a0a0a",
+    shadow = true,
+    className,
+    style,
+  }: CaptionRedactProps & InteractiveTransformProps,
+  ref: ForwardedRef<HTMLDivElement>,
+) {
   const glide = useGlide();
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
     holdMs,
   });
-  if (!state) return null;
+  if (!state) return <div ref={ref} style={style} />;
 
   const enter = interpolate(
     state.previous ? ENTER_MS : state.sinceStartMs,
@@ -74,70 +83,79 @@ export function CaptionRedact({
   const textShadow = shadow ? LEGIBILITY_SHADOW : undefined;
 
   return (
-    <div
-      className={className}
-      style={{
-        fontSize,
-        fontWeight,
-        color,
-        lineHeight: 1.2,
-        textAlign: "center",
-        opacity: Math.min(enter, exit),
-        transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
-      }}
-    >
-      {groupCaptionWords(state.tokens).map((word, w) => {
-        const fromMs = word[0].token.fromMs;
-        const toMs = word[word.length - 1].token.toMs;
-        const revealMs = Math.max(toMs - fromMs, MIN_REVEAL_MS);
-        const revealed = interpolate(
-          state.timeMs - fromMs,
-          [0, revealMs],
-          [0, 1],
-          { ...clamp, easing: revealEasing },
-        );
-        return (
-          <Fragment key={`${state.pageIndex}-${word[0].index}`}>
-            {w > 0 && " "}
-            <span
-              style={{
-                position: "relative",
-                display: "inline-block",
-                whiteSpace: "nowrap",
-              }}
-            >
+    <div ref={ref} style={style}>
+      <div
+        className={className}
+        style={{
+          fontSize,
+          fontWeight,
+          color,
+          lineHeight: 1.2,
+          textAlign: "center",
+          opacity: Math.min(enter, exit),
+          transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
+        }}
+      >
+        {groupCaptionWords(state.tokens).map((word, w) => {
+          const fromMs = word[0].token.fromMs;
+          const toMs = word[word.length - 1].token.toMs;
+          const revealMs = Math.max(toMs - fromMs, MIN_REVEAL_MS);
+          const revealed = interpolate(
+            state.timeMs - fromMs,
+            [0, revealMs],
+            [0, 1],
+            { ...clamp, easing: revealEasing },
+          );
+          return (
+            <Fragment key={`${state.pageIndex}-${word[0].index}`}>
+              {w > 0 && " "}
               <span
                 style={{
-                  textShadow,
-                  visibility: revealed > 0 ? "visible" : "hidden",
-                  clipPath:
-                    revealed >= 1
-                      ? undefined
-                      : `inset(-50% ${(1 - revealed) * 100}% -50% -50%)`,
+                  position: "relative",
+                  display: "inline-block",
+                  whiteSpace: "nowrap",
                 }}
               >
-                {captionWordText(word)}
-              </span>
-              {revealed < 1 && (
                 <span
-                  aria-hidden
                   style={{
-                    position: "absolute",
-                    left: `-${OVERHANG_EM}em`,
-                    right: `-${OVERHANG_EM}em`,
-                    top: BAR_TOP,
-                    bottom: BAR_BOTTOM,
-                    background: barColor,
-                    borderRadius: `${RADIUS_EM}em`,
-                    transformOrigin: "right center",
-                    transform: `scaleX(${1 - revealed})`,
+                    textShadow,
+                    visibility: revealed > 0 ? "visible" : "hidden",
+                    clipPath:
+                      revealed >= 1
+                        ? undefined
+                        : `inset(-50% ${(1 - revealed) * 100}% -50% -50%)`,
                   }}
-                />
-              )}
-            </span>
-          </Fragment>
-        );
-      })}
+                >
+                  {captionWordText(word)}
+                </span>
+                {revealed < 1 && (
+                  <span
+                    aria-hidden
+                    style={{
+                      position: "absolute",
+                      left: `-${OVERHANG_EM}em`,
+                      right: `-${OVERHANG_EM}em`,
+                      top: BAR_TOP,
+                      bottom: BAR_BOTTOM,
+                      background: barColor,
+                      borderRadius: `${RADIUS_EM}em`,
+                      transformOrigin: "right center",
+                      transform: `scaleX(${1 - revealed})`,
+                    }}
+                  />
+                )}
+              </span>
+            </Fragment>
+          );
+        })}
+      </div>
     </div>
   );
 }
+
+export const CaptionRedact = Interactive.create({
+  Component: forwardRef(CaptionRedactContent),
+  componentName: "<CaptionRedact>",
+  layout: "none",
+  schema: Interactive.captionsSchema,
+});

@@ -1,7 +1,12 @@
 "use client";
 
-import { Fragment } from "react";
-import { Easing, interpolate } from "remotion";
+import { type ForwardedRef, Fragment, forwardRef } from "react";
+import {
+  Easing,
+  Interactive,
+  type InteractiveTransformProps,
+  interpolate,
+} from "remotion";
 import {
   type CaptionBaseProps,
   type CaptionTokenState,
@@ -65,26 +70,30 @@ export function getProsodyScales(
   });
 }
 
-export function CaptionProsody({
-  captions,
-  combineTokensWithinMilliseconds = 1200,
-  holdMs = DEFAULT_HOLD_MS,
-  fontSize = 64,
-  fontWeight = 800,
-  color = "#ffffff",
-  minScale = 0.75,
-  maxScale = 1.6,
-  activeColor = "#facc15",
-  shadow = true,
-  className,
-}: CaptionProsodyProps) {
+function CaptionProsodyContent(
+  {
+    captions,
+    combineTokensWithinMilliseconds = 1200,
+    holdMs = DEFAULT_HOLD_MS,
+    fontSize = 64,
+    fontWeight = 800,
+    color = "#ffffff",
+    minScale = 0.75,
+    maxScale = 1.6,
+    activeColor = "#facc15",
+    shadow = true,
+    className,
+    style,
+  }: CaptionProsodyProps & InteractiveTransformProps,
+  ref: ForwardedRef<HTMLDivElement>,
+) {
   const glide = useGlide();
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
     holdMs,
   });
-  if (!state) return null;
+  if (!state) return <div ref={ref} style={style} />;
 
   const exit = state.endsInSilence
     ? interpolate(
@@ -98,44 +107,53 @@ export function CaptionProsody({
   const scales = getProsodyScales(words, minScale, maxScale);
 
   return (
-    <div
-      className={className}
-      style={{
-        fontSize,
-        fontWeight,
-        color,
-        lineHeight: 1.1,
-        textAlign: "center",
-        opacity: exit,
-      }}
-    >
-      {words.map((word, w) => {
-        const appear = interpolate(
-          state.timeMs - word[0].token.fromMs,
-          [0, WORD_IN_MS],
-          [0, 1],
-          { ...clamp, easing: appearEasing },
-        );
-        const active = word.some(({ index }) => index === state.activeIndex);
-        return (
-          <Fragment key={`${state.pageIndex}-${word[0].index}`}>
-            {w > 0 && " "}
-            <span
-              style={{
-                display: "inline-block",
-                whiteSpace: "nowrap",
-                fontSize: `${scales[w]}em`,
-                color: active ? activeColor : color,
-                opacity: appear,
-                transform: `translateY(${(1 - appear) * RISE_EM}em)${glide(midway(appear))}`,
-                textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
-              }}
-            >
-              {captionWordText(word)}
-            </span>
-          </Fragment>
-        );
-      })}
+    <div ref={ref} style={style}>
+      <div
+        className={className}
+        style={{
+          fontSize,
+          fontWeight,
+          color,
+          lineHeight: 1.1,
+          textAlign: "center",
+          opacity: exit,
+        }}
+      >
+        {words.map((word, w) => {
+          const appear = interpolate(
+            state.timeMs - word[0].token.fromMs,
+            [0, WORD_IN_MS],
+            [0, 1],
+            { ...clamp, easing: appearEasing },
+          );
+          const active = word.some(({ index }) => index === state.activeIndex);
+          return (
+            <Fragment key={`${state.pageIndex}-${word[0].index}`}>
+              {w > 0 && " "}
+              <span
+                style={{
+                  display: "inline-block",
+                  whiteSpace: "nowrap",
+                  fontSize: `${scales[w]}em`,
+                  color: active ? activeColor : color,
+                  opacity: appear,
+                  transform: `translateY(${(1 - appear) * RISE_EM}em)${glide(midway(appear))}`,
+                  textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
+                }}
+              >
+                {captionWordText(word)}
+              </span>
+            </Fragment>
+          );
+        })}
+      </div>
     </div>
   );
 }
+
+export const CaptionProsody = Interactive.create({
+  Component: forwardRef(CaptionProsodyContent),
+  componentName: "<CaptionProsody>",
+  layout: "none",
+  schema: Interactive.captionsSchema,
+});

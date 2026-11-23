@@ -1,7 +1,13 @@
 "use client";
 
-import { Fragment } from "react";
-import { Easing, interpolate, random } from "remotion";
+import { type ForwardedRef, Fragment, forwardRef } from "react";
+import {
+  Easing,
+  Interactive,
+  type InteractiveTransformProps,
+  interpolate,
+  random,
+} from "remotion";
 import {
   type CaptionBaseProps,
   captionWordText,
@@ -31,23 +37,27 @@ const clamp = {
   extrapolateRight: "clamp",
 } as const;
 
-export function CaptionHandwrite({
-  captions,
-  combineTokensWithinMilliseconds = 1200,
-  holdMs = DEFAULT_HOLD_MS,
-  fontSize = 64,
-  fontWeight = 800,
-  color = "#ffffff",
-  wobble = 1,
-  shadow = true,
-  className,
-}: CaptionHandwriteProps) {
+function CaptionHandwriteContent(
+  {
+    captions,
+    combineTokensWithinMilliseconds = 1200,
+    holdMs = DEFAULT_HOLD_MS,
+    fontSize = 64,
+    fontWeight = 800,
+    color = "#ffffff",
+    wobble = 1,
+    shadow = true,
+    className,
+    style,
+  }: CaptionHandwriteProps & InteractiveTransformProps,
+  ref: ForwardedRef<HTMLDivElement>,
+) {
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
     holdMs,
   });
-  if (!state) return null;
+  if (!state) return <div ref={ref} style={style} />;
 
   const enter = interpolate(
     state.previous ? ENTER_MS : state.sinceStartMs,
@@ -66,70 +76,79 @@ export function CaptionHandwrite({
   const textShadow = shadow ? LEGIBILITY_SHADOW : undefined;
 
   return (
-    <div
-      className={className}
-      style={{
-        fontSize,
-        fontWeight,
-        color,
-        lineHeight: 1.2,
-        textAlign: "center",
-        opacity: Math.min(enter, exit),
-      }}
-    >
-      {groupCaptionWords(state.tokens).map((word, w) => {
-        const text = captionWordText(word);
-        const fromMs = word[0].token.fromMs;
-        const toMs = word[word.length - 1].token.toMs;
-        const writeMs = Math.max(toMs - fromMs, MIN_WRITE_MS);
-        const written = interpolate(
-          state.timeMs - fromMs,
-          [0, writeMs],
-          [0, 1],
-          clamp,
-        );
-        const seed = `caption-handwrite-${state.pageIndex}-${word[0].index}`;
-        const tilt = (random(`${seed}-tilt`) * 3 - 1.5) * wobble;
-        const lift = (random(`${seed}-lift`) * 0.08 - 0.04) * wobble;
-        const head = written * (100 + EDGE_PERCENT);
-        const stop = (percent: number): string =>
-          `calc(${MASK_PAD_EM}em + (100% - ${MASK_PAD_EM * 2}em) * ${percent / 100})`;
-        const mask =
-          written > 0 && written < 1
-            ? `linear-gradient(90deg, #000 ${stop(head - EDGE_PERCENT)}, transparent ${stop(head)})`
-            : undefined;
-        return (
-          <Fragment key={`${state.pageIndex}-${word[0].index}`}>
-            {w > 0 && " "}
-            <span
-              style={{
-                display: "inline-block",
-                whiteSpace: "nowrap",
-                opacity: written > 0 ? 1 : 0,
-                padding: `${MASK_PAD_EM}em`,
-                margin: `-${MASK_PAD_EM}em`,
-                transform: `translateY(${lift}em) rotate(${tilt}deg)`,
-                WebkitMaskImage: mask,
-                maskImage: mask,
-                textShadow,
-              }}
-            >
-              {Array.from(text).map((char, c) => (
-                <span
-                  key={c}
-                  style={{
-                    display: "inline-block",
-                    whiteSpace: "pre",
-                    transform: `rotate(${(random(`${seed}-${c}`) * 6 - 3) * wobble}deg)`,
-                  }}
-                >
-                  {char}
-                </span>
-              ))}
-            </span>
-          </Fragment>
-        );
-      })}
+    <div ref={ref} style={style}>
+      <div
+        className={className}
+        style={{
+          fontSize,
+          fontWeight,
+          color,
+          lineHeight: 1.2,
+          textAlign: "center",
+          opacity: Math.min(enter, exit),
+        }}
+      >
+        {groupCaptionWords(state.tokens).map((word, w) => {
+          const text = captionWordText(word);
+          const fromMs = word[0].token.fromMs;
+          const toMs = word[word.length - 1].token.toMs;
+          const writeMs = Math.max(toMs - fromMs, MIN_WRITE_MS);
+          const written = interpolate(
+            state.timeMs - fromMs,
+            [0, writeMs],
+            [0, 1],
+            clamp,
+          );
+          const seed = `caption-handwrite-${state.pageIndex}-${word[0].index}`;
+          const tilt = (random(`${seed}-tilt`) * 3 - 1.5) * wobble;
+          const lift = (random(`${seed}-lift`) * 0.08 - 0.04) * wobble;
+          const head = written * (100 + EDGE_PERCENT);
+          const stop = (percent: number): string =>
+            `calc(${MASK_PAD_EM}em + (100% - ${MASK_PAD_EM * 2}em) * ${percent / 100})`;
+          const mask =
+            written > 0 && written < 1
+              ? `linear-gradient(90deg, #000 ${stop(head - EDGE_PERCENT)}, transparent ${stop(head)})`
+              : undefined;
+          return (
+            <Fragment key={`${state.pageIndex}-${word[0].index}`}>
+              {w > 0 && " "}
+              <span
+                style={{
+                  display: "inline-block",
+                  whiteSpace: "nowrap",
+                  opacity: written > 0 ? 1 : 0,
+                  padding: `${MASK_PAD_EM}em`,
+                  margin: `-${MASK_PAD_EM}em`,
+                  transform: `translateY(${lift}em) rotate(${tilt}deg)`,
+                  WebkitMaskImage: mask,
+                  maskImage: mask,
+                  textShadow,
+                }}
+              >
+                {Array.from(text).map((char, c) => (
+                  <span
+                    key={c}
+                    style={{
+                      display: "inline-block",
+                      whiteSpace: "pre",
+                      transform: `rotate(${(random(`${seed}-${c}`) * 6 - 3) * wobble}deg)`,
+                    }}
+                  >
+                    {char}
+                  </span>
+                ))}
+              </span>
+            </Fragment>
+          );
+        })}
+      </div>
     </div>
   );
 }
+
+export const CaptionHandwrite = Interactive.create({
+  Component: forwardRef(CaptionHandwriteContent),
+  componentName: "<CaptionHandwrite>",
+  layout: "none",
+  schema: Interactive.captionsSchema,
+});

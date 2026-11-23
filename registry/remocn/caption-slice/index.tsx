@@ -1,7 +1,12 @@
 "use client";
 
-import { Fragment } from "react";
-import { Easing, interpolate } from "remotion";
+import { type ForwardedRef, Fragment, forwardRef } from "react";
+import {
+  Easing,
+  Interactive,
+  type InteractiveTransformProps,
+  interpolate,
+} from "remotion";
 import {
   type CaptionBaseProps,
   DEFAULT_HOLD_MS,
@@ -30,23 +35,27 @@ const clamp = {
   extrapolateRight: "clamp",
 } as const;
 
-export function CaptionSlice({
-  captions,
-  combineTokensWithinMilliseconds = 1200,
-  holdMs = DEFAULT_HOLD_MS,
-  fontSize = 64,
-  fontWeight = 800,
-  color = "#ffffff",
-  distance = 0.6,
-  shadow = true,
-  className,
-}: CaptionSliceProps) {
+function CaptionSliceContent(
+  {
+    captions,
+    combineTokensWithinMilliseconds = 1200,
+    holdMs = DEFAULT_HOLD_MS,
+    fontSize = 64,
+    fontWeight = 800,
+    color = "#ffffff",
+    distance = 0.6,
+    shadow = true,
+    className,
+    style,
+  }: CaptionSliceProps & InteractiveTransformProps,
+  ref: ForwardedRef<HTMLDivElement>,
+) {
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
     holdMs,
   });
-  if (!state) return null;
+  if (!state) return <div ref={ref} style={style} />;
 
   const exit = state.endsInSilence
     ? interpolate(
@@ -59,89 +68,103 @@ export function CaptionSlice({
   const textShadow = shadow ? LEGIBILITY_SHADOW : undefined;
 
   return (
-    <div
-      className={className}
-      style={{
-        fontSize,
-        fontWeight,
-        color,
-        lineHeight: 1.2,
-        textAlign: "center",
-        opacity: exit,
-      }}
-    >
-      {groupCaptionWords(state.tokens).map((word, w) => (
-        <Fragment key={`${state.pageIndex}-${word[0].index}`}>
-          {w > 0 && " "}
-          <span style={{ display: "inline-block", whiteSpace: "nowrap" }}>
-            {word.map(({ index, token }) => {
-              const sinceMs = state.timeMs - token.fromMs;
-              if (sinceMs < 0) {
+    <div ref={ref} style={style}>
+      <div
+        className={className}
+        style={{
+          fontSize,
+          fontWeight,
+          color,
+          lineHeight: 1.2,
+          textAlign: "center",
+          opacity: exit,
+        }}
+      >
+        {groupCaptionWords(state.tokens).map((word, w) => (
+          <Fragment key={`${state.pageIndex}-${word[0].index}`}>
+            {w > 0 && " "}
+            <span style={{ display: "inline-block", whiteSpace: "nowrap" }}>
+              {word.map(({ index, token }) => {
+                const sinceMs = state.timeMs - token.fromMs;
+                if (sinceMs < 0) {
+                  return (
+                    <span
+                      key={index}
+                      style={{ display: "inline-block", color: "transparent" }}
+                    >
+                      {token.text}
+                    </span>
+                  );
+                }
+                const slide = interpolate(sinceMs, [0, SLIDE_MS], [0, 1], {
+                  ...clamp,
+                  easing: slideEasing,
+                });
+                if (slide >= 1) {
+                  return (
+                    <span
+                      key={index}
+                      style={{ display: "inline-block", textShadow }}
+                    >
+                      {token.text}
+                    </span>
+                  );
+                }
+                const opacity = interpolate(
+                  sinceMs,
+                  [0, FADE_MS],
+                  [0, 1],
+                  clamp,
+                );
+                const offset = (1 - slide) * distance;
                 return (
                   <span
                     key={index}
-                    style={{ display: "inline-block", color: "transparent" }}
+                    style={{ position: "relative", display: "inline-block" }}
                   >
-                    {token.text}
+                    <span style={{ color: "transparent" }}>{token.text}</span>
+                    <span
+                      aria-hidden
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        whiteSpace: "nowrap",
+                        clipPath: TOP_HALF,
+                        opacity,
+                        transform: `translateX(${-offset}em)`,
+                        textShadow,
+                      }}
+                    >
+                      {token.text}
+                    </span>
+                    <span
+                      aria-hidden
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        whiteSpace: "nowrap",
+                        clipPath: BOTTOM_HALF,
+                        opacity,
+                        transform: `translateX(${offset}em)`,
+                        textShadow,
+                      }}
+                    >
+                      {token.text}
+                    </span>
                   </span>
                 );
-              }
-              const slide = interpolate(sinceMs, [0, SLIDE_MS], [0, 1], {
-                ...clamp,
-                easing: slideEasing,
-              });
-              if (slide >= 1) {
-                return (
-                  <span
-                    key={index}
-                    style={{ display: "inline-block", textShadow }}
-                  >
-                    {token.text}
-                  </span>
-                );
-              }
-              const opacity = interpolate(sinceMs, [0, FADE_MS], [0, 1], clamp);
-              const offset = (1 - slide) * distance;
-              return (
-                <span
-                  key={index}
-                  style={{ position: "relative", display: "inline-block" }}
-                >
-                  <span style={{ color: "transparent" }}>{token.text}</span>
-                  <span
-                    aria-hidden
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      whiteSpace: "nowrap",
-                      clipPath: TOP_HALF,
-                      opacity,
-                      transform: `translateX(${-offset}em)`,
-                      textShadow,
-                    }}
-                  >
-                    {token.text}
-                  </span>
-                  <span
-                    aria-hidden
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      whiteSpace: "nowrap",
-                      clipPath: BOTTOM_HALF,
-                      opacity,
-                      transform: `translateX(${offset}em)`,
-                      textShadow,
-                    }}
-                  >
-                    {token.text}
-                  </span>
-                </span>
-              );
-            })}
-          </span>
-        </Fragment>
-      ))}
+              })}
+            </span>
+          </Fragment>
+        ))}
+      </div>
     </div>
   );
 }
+
+export const CaptionSlice = Interactive.create({
+  Component: forwardRef(CaptionSliceContent),
+  componentName: "<CaptionSlice>",
+  layout: "none",
+  schema: Interactive.captionsSchema,
+});

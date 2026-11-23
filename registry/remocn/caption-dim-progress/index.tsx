@@ -1,7 +1,12 @@
 "use client";
 
-import { Fragment } from "react";
-import { Easing, interpolate } from "remotion";
+import { type ForwardedRef, Fragment, forwardRef } from "react";
+import {
+  Easing,
+  Interactive,
+  type InteractiveTransformProps,
+  interpolate,
+} from "remotion";
 import {
   type CaptionBaseProps,
   DEFAULT_HOLD_MS,
@@ -32,24 +37,28 @@ const clamp = {
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
-export function CaptionDimProgress({
-  captions,
-  combineTokensWithinMilliseconds = 1200,
-  holdMs = DEFAULT_HOLD_MS,
-  fontSize = 64,
-  fontWeight = 800,
-  color = "#ffffff",
-  dimOpacity = 0.35,
-  shadow = true,
-  className,
-}: CaptionDimProgressProps) {
+function CaptionDimProgressContent(
+  {
+    captions,
+    combineTokensWithinMilliseconds = 1200,
+    holdMs = DEFAULT_HOLD_MS,
+    fontSize = 64,
+    fontWeight = 800,
+    color = "#ffffff",
+    dimOpacity = 0.35,
+    shadow = true,
+    className,
+    style,
+  }: CaptionDimProgressProps & InteractiveTransformProps,
+  ref: ForwardedRef<HTMLDivElement>,
+) {
   const glide = useGlide();
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
     holdMs,
   });
-  if (!state) return null;
+  if (!state) return <div ref={ref} style={style} />;
 
   const enter = interpolate(
     state.previous ? ENTER_MS : state.sinceStartMs,
@@ -70,41 +79,50 @@ export function CaptionDimProgress({
     : 1;
 
   return (
-    <div
-      className={className}
-      style={{
-        fontSize,
-        fontWeight,
-        color,
-        lineHeight: 1.2,
-        textAlign: "center",
-        opacity: Math.min(enter, exit),
-        transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
-      }}
-    >
-      {groupCaptionWords(state.tokens).map((word, w) => (
-        <Fragment key={`${state.pageIndex}-${word[0].index}`}>
-          {w > 0 && " "}
-          <span style={{ display: "inline-block", whiteSpace: "nowrap" }}>
-            {word.map(({ index, token }) => (
-              <span
-                key={index}
-                style={{
-                  opacity: interpolate(
-                    state.timeMs - token.fromMs,
-                    [0, BRIGHTEN_MS],
-                    [dimOpacity, 1],
-                    clamp,
-                  ),
-                  textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
-                }}
-              >
-                {token.text}
-              </span>
-            ))}
-          </span>
-        </Fragment>
-      ))}
+    <div ref={ref} style={style}>
+      <div
+        className={className}
+        style={{
+          fontSize,
+          fontWeight,
+          color,
+          lineHeight: 1.2,
+          textAlign: "center",
+          opacity: Math.min(enter, exit),
+          transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
+        }}
+      >
+        {groupCaptionWords(state.tokens).map((word, w) => (
+          <Fragment key={`${state.pageIndex}-${word[0].index}`}>
+            {w > 0 && " "}
+            <span style={{ display: "inline-block", whiteSpace: "nowrap" }}>
+              {word.map(({ index, token }) => (
+                <span
+                  key={index}
+                  style={{
+                    opacity: interpolate(
+                      state.timeMs - token.fromMs,
+                      [0, BRIGHTEN_MS],
+                      [dimOpacity, 1],
+                      clamp,
+                    ),
+                    textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
+                  }}
+                >
+                  {token.text}
+                </span>
+              ))}
+            </span>
+          </Fragment>
+        ))}
+      </div>
     </div>
   );
 }
+
+export const CaptionDimProgress = Interactive.create({
+  Component: forwardRef(CaptionDimProgressContent),
+  componentName: "<CaptionDimProgress>",
+  layout: "none",
+  schema: Interactive.captionsSchema,
+});

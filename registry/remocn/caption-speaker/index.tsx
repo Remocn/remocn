@@ -1,7 +1,12 @@
 "use client";
 
-import { Fragment, useMemo } from "react";
-import { Easing, interpolate } from "remotion";
+import { type ForwardedRef, Fragment, forwardRef, useMemo } from "react";
+import {
+  Easing,
+  Interactive,
+  type InteractiveTransformProps,
+  interpolate,
+} from "remotion";
 import {
   type CaptionBaseProps,
   DEFAULT_HOLD_MS,
@@ -37,18 +42,22 @@ const clamp = {
   extrapolateRight: "clamp",
 } as const;
 
-export function CaptionSpeaker({
-  captions,
-  combineTokensWithinMilliseconds = 1200,
-  holdMs = DEFAULT_HOLD_MS,
-  fontSize = 64,
-  fontWeight = 800,
-  color = "#ffffff",
-  speakerColors,
-  upcomingOpacity = 0.4,
-  shadow = true,
-  className,
-}: CaptionSpeakerProps) {
+function CaptionSpeakerContent(
+  {
+    captions,
+    combineTokensWithinMilliseconds = 1200,
+    holdMs = DEFAULT_HOLD_MS,
+    fontSize = 64,
+    fontWeight = 800,
+    color = "#ffffff",
+    speakerColors,
+    upcomingOpacity = 0.4,
+    shadow = true,
+    className,
+    style,
+  }: CaptionSpeakerProps & InteractiveTransformProps,
+  ref: ForwardedRef<HTMLDivElement>,
+) {
   const glide = useGlide();
   const state = useCaptions({
     captions,
@@ -73,7 +82,7 @@ export function CaptionSpeaker({
     }
     return assigned;
   }, [captions, speakerColors]);
-  if (!state) return null;
+  if (!state) return <div ref={ref} style={style} />;
 
   const enter = interpolate(
     state.previous ? ENTER_MS : state.sinceStartMs,
@@ -100,46 +109,55 @@ export function CaptionSpeaker({
       : (speakerColors?.[speaker] ?? autoColors.get(speaker) ?? color);
 
   return (
-    <div
-      className={className}
-      style={{
-        fontSize,
-        fontWeight,
-        color: speakerColor,
-        lineHeight: 1.2,
-        textAlign: "center",
-        opacity: Math.min(enter, exit),
-        transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
-      }}
-    >
-      {groupCaptionWords(state.tokens).map((word, w) => (
-        <Fragment key={`${state.pageIndex}-${word[0].index}`}>
-          {w > 0 && " "}
-          <span
-            style={{
-              display: "inline-block",
-              whiteSpace: "nowrap",
-              textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
-            }}
-          >
-            {word.map(({ index, token }) => (
-              <span
-                key={index}
-                style={{
-                  opacity: interpolate(
-                    state.timeMs - token.fromMs,
-                    [0, REVEAL_MS],
-                    [upcomingOpacity, 1],
-                    clamp,
-                  ),
-                }}
-              >
-                {token.text}
-              </span>
-            ))}
-          </span>
-        </Fragment>
-      ))}
+    <div ref={ref} style={style}>
+      <div
+        className={className}
+        style={{
+          fontSize,
+          fontWeight,
+          color: speakerColor,
+          lineHeight: 1.2,
+          textAlign: "center",
+          opacity: Math.min(enter, exit),
+          transform: `translateY(${(1 - enter) * RISE_EM}em)${glide(midway(enter))}`,
+        }}
+      >
+        {groupCaptionWords(state.tokens).map((word, w) => (
+          <Fragment key={`${state.pageIndex}-${word[0].index}`}>
+            {w > 0 && " "}
+            <span
+              style={{
+                display: "inline-block",
+                whiteSpace: "nowrap",
+                textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
+              }}
+            >
+              {word.map(({ index, token }) => (
+                <span
+                  key={index}
+                  style={{
+                    opacity: interpolate(
+                      state.timeMs - token.fromMs,
+                      [0, REVEAL_MS],
+                      [upcomingOpacity, 1],
+                      clamp,
+                    ),
+                  }}
+                >
+                  {token.text}
+                </span>
+              ))}
+            </span>
+          </Fragment>
+        ))}
+      </div>
     </div>
   );
 }
+
+export const CaptionSpeaker = Interactive.create({
+  Component: forwardRef(CaptionSpeakerContent),
+  componentName: "<CaptionSpeaker>",
+  layout: "none",
+  schema: Interactive.captionsSchema,
+});

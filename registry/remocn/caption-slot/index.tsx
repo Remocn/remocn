@@ -1,7 +1,17 @@
 "use client";
 
-import { type CSSProperties, Fragment } from "react";
-import { Easing, interpolate } from "remotion";
+import {
+  type CSSProperties,
+  type ForwardedRef,
+  Fragment,
+  forwardRef,
+} from "react";
+import {
+  Easing,
+  Interactive,
+  type InteractiveTransformProps,
+  interpolate,
+} from "remotion";
 import {
   type CaptionBaseProps,
   type CaptionTokenState,
@@ -65,24 +75,28 @@ function SlotLine({
   );
 }
 
-export function CaptionSlot({
-  captions,
-  combineTokensWithinMilliseconds = 800,
-  holdMs = DEFAULT_HOLD_MS,
-  fontSize = 64,
-  fontWeight = 800,
-  color = "#ffffff",
-  activeColor,
-  shadow = true,
-  className,
-}: CaptionSlotProps) {
+function CaptionSlotContent(
+  {
+    captions,
+    combineTokensWithinMilliseconds = 800,
+    holdMs = DEFAULT_HOLD_MS,
+    fontSize = 64,
+    fontWeight = 800,
+    color = "#ffffff",
+    activeColor,
+    shadow = true,
+    className,
+    style,
+  }: CaptionSlotProps & InteractiveTransformProps,
+  ref: ForwardedRef<HTMLDivElement>,
+) {
   const glide = useGlide();
   const state = useCaptions({
     captions,
     combineTokensWithinMilliseconds,
     holdMs,
   });
-  if (!state) return null;
+  if (!state) return <div ref={ref} style={style} />;
 
   const roll = interpolate(state.sinceStartMs, [0, ROLL_MS], [0, 1], {
     easing: rollIn,
@@ -97,42 +111,51 @@ export function CaptionSlot({
   const exiting = state.endsInSilence && midway(exitProgress);
 
   return (
-    <div
-      className={className}
-      style={{
-        position: "relative",
-        fontSize,
-        fontWeight,
-        color,
-        lineHeight: LINE_HEIGHT,
-        height: `${LINE_HEIGHT}em`,
-        textAlign: "center",
-        textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
-        clipPath: `inset(-${CLIP_MARGIN_EM}em -100000px)`,
-      }}
-    >
-      {state.previous && roll < 1 ? (
+    <div ref={ref} style={style}>
+      <div
+        className={className}
+        style={{
+          position: "relative",
+          fontSize,
+          fontWeight,
+          color,
+          lineHeight: LINE_HEIGHT,
+          height: `${LINE_HEIGHT}em`,
+          textAlign: "center",
+          textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
+          clipPath: `inset(-${CLIP_MARGIN_EM}em -100000px)`,
+        }}
+      >
+        {state.previous && roll < 1 ? (
+          <SlotLine
+            key={`page-${state.previous.pageIndex}`}
+            tokens={state.previous.tokens}
+            activeIndex={-1}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: "50%",
+              transform: `translate(-50%, ${-roll * TRAVEL_EM}em)${glide(midway(roll))}`,
+            }}
+          />
+        ) : null}
         <SlotLine
-          key={`page-${state.previous.pageIndex}`}
-          tokens={state.previous.tokens}
-          activeIndex={-1}
+          key={`page-${state.pageIndex}`}
+          tokens={state.tokens}
+          activeIndex={state.activeIndex}
+          activeColor={activeColor}
           style={{
-            position: "absolute",
-            top: 0,
-            left: "50%",
-            transform: `translate(-50%, ${-roll * TRAVEL_EM}em)${glide(midway(roll))}`,
+            transform: `translateY(${(1 - roll - exit) * TRAVEL_EM}em)${glide(midway(roll) || exiting)}`,
           }}
         />
-      ) : null}
-      <SlotLine
-        key={`page-${state.pageIndex}`}
-        tokens={state.tokens}
-        activeIndex={state.activeIndex}
-        activeColor={activeColor}
-        style={{
-          transform: `translateY(${(1 - roll - exit) * TRAVEL_EM}em)${glide(midway(roll) || exiting)}`,
-        }}
-      />
+      </div>
     </div>
   );
 }
+
+export const CaptionSlot = Interactive.create({
+  Component: forwardRef(CaptionSlotContent),
+  componentName: "<CaptionSlot>",
+  layout: "none",
+  schema: Interactive.captionsSchema,
+});

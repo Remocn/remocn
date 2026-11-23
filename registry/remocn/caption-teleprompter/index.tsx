@@ -1,8 +1,13 @@
 "use client";
 
 import type { TikTokPage } from "@remotion/captions";
-import { Fragment, useMemo } from "react";
-import { Easing, interpolate } from "remotion";
+import { type ForwardedRef, Fragment, forwardRef, useMemo } from "react";
+import {
+  Easing,
+  Interactive,
+  type InteractiveTransformProps,
+  interpolate,
+} from "remotion";
 import {
   buildCaptionPages,
   type CaptionBaseProps,
@@ -66,20 +71,24 @@ function lineWords(page: TikTokPage): PrompterWord[] {
   return words;
 }
 
-export function CaptionTeleprompter({
-  captions,
-  combineTokensWithinMilliseconds = 1500,
-  holdMs = DEFAULT_HOLD_MS,
-  fontSize = 64,
-  fontWeight = 800,
-  color = "#ffffff",
-  visibleLines = 3,
-  pastOpacity = 0.35,
-  futureOpacity = 0.35,
-  upcomingOpacity = 0.55,
-  shadow = true,
-  className,
-}: CaptionTeleprompterProps) {
+function CaptionTeleprompterContent(
+  {
+    captions,
+    combineTokensWithinMilliseconds = 1500,
+    holdMs = DEFAULT_HOLD_MS,
+    fontSize = 64,
+    fontWeight = 800,
+    color = "#ffffff",
+    visibleLines = 3,
+    pastOpacity = 0.35,
+    futureOpacity = 0.35,
+    upcomingOpacity = 0.55,
+    shadow = true,
+    className,
+    style,
+  }: CaptionTeleprompterProps & InteractiveTransformProps,
+  ref: ForwardedRef<HTMLDivElement>,
+) {
   const glide = useGlide();
   const frame = useSceneFrame();
   const { fps } = useSceneConfig();
@@ -137,63 +146,72 @@ export function CaptionTeleprompter({
         : center(k - 1) + (center(k) - center(k - 1)) * progress;
 
   return (
-    <div
-      className={className}
-      style={{
-        position: "relative",
-        height: windowHeight,
-        fontSize,
-        fontWeight,
-        color,
-        textAlign: "center",
-        overflow: "hidden",
-        maskImage: edgeFade(visibleLines),
-        WebkitMaskImage: edgeFade(visibleLines),
-      }}
-    >
+    <div ref={ref} style={style}>
       <div
+        className={className}
         style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: 0,
-          transform: `translateY(${windowHeight / 2 - centerY}px)${glide(k > 0 && midway(progress))}`,
+          position: "relative",
+          height: windowHeight,
+          fontSize,
+          fontWeight,
+          color,
+          textAlign: "center",
+          overflow: "hidden",
+          maskImage: edgeFade(visibleLines),
+          WebkitMaskImage: edgeFade(visibleLines),
         }}
       >
-        {lines.map((line, i) => {
-          const weight =
-            i === focus ? progress : i === focus - 1 ? 1 - progress : 0;
-          const rest = i < focus ? pastOpacity : futureOpacity;
-          return (
-            <div
-              key={line.index}
-              ref={lineRef(i)}
-              style={{
-                lineHeight: LINE_HEIGHT,
-                marginBottom: `${LINE_GAP_EM}em`,
-                textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
-              }}
-            >
-              {line.words.map((word, w) => {
-                const lit = interpolate(
-                  timeMs - word.fromMs,
-                  [-LIGHT_MS, 0],
-                  [upcomingOpacity, 1],
-                  clamp,
-                );
-                return (
-                  <Fragment key={word.key}>
-                    {w > 0 && " "}
-                    <span style={{ opacity: rest + (lit - rest) * weight }}>
-                      {word.text}
-                    </span>
-                  </Fragment>
-                );
-              })}
-            </div>
-          );
-        })}
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: 0,
+            transform: `translateY(${windowHeight / 2 - centerY}px)${glide(k > 0 && midway(progress))}`,
+          }}
+        >
+          {lines.map((line, i) => {
+            const weight =
+              i === focus ? progress : i === focus - 1 ? 1 - progress : 0;
+            const rest = i < focus ? pastOpacity : futureOpacity;
+            return (
+              <div
+                key={line.index}
+                ref={lineRef(i)}
+                style={{
+                  lineHeight: LINE_HEIGHT,
+                  marginBottom: `${LINE_GAP_EM}em`,
+                  textShadow: shadow ? LEGIBILITY_SHADOW : undefined,
+                }}
+              >
+                {line.words.map((word, w) => {
+                  const lit = interpolate(
+                    timeMs - word.fromMs,
+                    [-LIGHT_MS, 0],
+                    [upcomingOpacity, 1],
+                    clamp,
+                  );
+                  return (
+                    <Fragment key={word.key}>
+                      {w > 0 && " "}
+                      <span style={{ opacity: rest + (lit - rest) * weight }}>
+                        {word.text}
+                      </span>
+                    </Fragment>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
 }
+
+export const CaptionTeleprompter = Interactive.create({
+  Component: forwardRef(CaptionTeleprompterContent),
+  componentName: "<CaptionTeleprompter>",
+  layout: "none",
+  schema: Interactive.captionsSchema,
+});
