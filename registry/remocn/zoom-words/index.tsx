@@ -1,8 +1,14 @@
 "use client";
 
 import { Easing, interpolate } from "remotion";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  WORD_GAP,
+  type ZoomWordsElementId,
+  zoomWordsTimeline,
+} from "./timeline";
 
 export interface ZoomWordsProps {
   text: string;
@@ -16,6 +22,11 @@ export interface ZoomWordsProps {
   blurFrames?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the phrase and the blur, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<ZoomWordsElementId>;
 }
 
 const CHAR_WIDTH_EM = 0.52;
@@ -38,33 +49,40 @@ function wordWidthEm(word: string): number {
   return Array.from(word).length * CHAR_WIDTH_EM + SPACE_WIDTH_EM;
 }
 
-export function zoomWordsLength(text: string, wordGap = 12): number {
+export function zoomWordsLength(text: string, wordGap = WORD_GAP): number {
   const words = text.trim().split(/\s+/).filter(Boolean);
   return words.length * wordGap;
 }
 
-export function ZoomWords({
-  text,
-  fontSize = 64,
-  zoom = 2.2,
-  color = "#cfc2ff",
-  fontWeight = 400,
-  wordGap = 12,
-  anchor = 0.5,
-  blur = 0.04,
-  blurFrames = 60,
-  speed = 1,
-  className,
-}: ZoomWordsProps) {
+export function ZoomWords(props: ZoomWordsProps) {
+  const {
+    text,
+    fontSize = 64,
+    zoom = 2.2,
+    color = "#cfc2ff",
+    fontWeight = 400,
+    anchor = 0.5,
+    blur = 0.04,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame() * speed;
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    zoomWordsTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
 
   const words = text.trim().split(/\s+/).filter(Boolean);
 
-  const phraseFrames = words.length * wordGap;
+  const phrase = tl.get("phrase");
   const wordProgress =
     words.length *
-    interpolate(frame, [0, phraseFrames], [0, 1], {
+    interpolate(frame, [phrase.start, phrase.end], [0, 1], {
       extrapolateLeft: "clamp",
       extrapolateRight: "clamp",
       easing: phraseEasing,
@@ -85,11 +103,12 @@ export function ZoomWords({
   const cameraEm = firstHalfEm + travelMax * smoothstep(raw / travelMax);
   const cameraPct = totalEm > 0 ? (cameraEm / totalEm) * 100 : 0;
 
+  const focus = tl.get("focus");
   const blurNow =
     blur *
     fontSize *
     zoom *
-    interpolate(frame, [0, blurFrames], [1, 0], {
+    interpolate(frame, [focus.start, focus.end], [1, 0], {
       extrapolateLeft: "clamp",
       extrapolateRight: "clamp",
     });
