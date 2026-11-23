@@ -23,12 +23,21 @@
       "title": "Per Character Rise",
       "description": "Letters slide up from below with no blur — crisp, deliberate, kinetic.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/per-character-rise/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/per-character-rise.tsx"
+          "target": "components/remocn/per-character-rise/index.tsx"
+        },
+        {
+          "path": "registry/remocn/per-character-rise/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/per-character-rise/timeline.ts"
         }
       ],
       "type": "registry:component"
