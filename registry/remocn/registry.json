@@ -9918,10 +9918,19 @@
         {
           "path": "stack-letters/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/stack-letters.tsx"
+          "target": "components/remocn/stack-letters/index.tsx"
+        },
+        {
+          "path": "stack-letters/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/stack-letters/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "weight-wave",

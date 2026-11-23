@@ -9913,12 +9913,21 @@
       "title": "Stack Letters",
       "description": "Letters tumble and stack into place to spell a caps word over a warm gradient.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/stack-letters/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/stack-letters.tsx"
+          "target": "components/remocn/stack-letters/index.tsx"
+        },
+        {
+          "path": "registry/remocn/stack-letters/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/stack-letters/timeline.ts"
         }
       ],
       "type": "registry:component"
